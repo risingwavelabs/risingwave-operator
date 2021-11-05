@@ -1,0 +1,9 @@
+apiVersion: risingwave.singularity-data.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: test-risingwave-amd64
+  namespace: test
+spec:
+  arch: amd64
+  objectStorage:
+    minIO: {}

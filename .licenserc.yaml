@@ -1,0 +1,12 @@
+header:
+  license:
+    spdx-id: Apache-2.0
+    copyright-owner: Singularity Data
+
+  paths:
+    - 'apis/**/*.go'
+    - 'pkg/**/*.go'
+    - 'scripts/**/*.sh'
+    - '*.go'
+
+  comment: on-failure

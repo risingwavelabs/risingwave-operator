@@ -1,0 +1,6 @@
+apiVersion: risingwave.singularity-data.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-sample
+spec:
+  # TODO(user): Add fields here

@@ -1,0 +1,24 @@
+# permissions for end users to edit risingwaves.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: risingwave-editor-role
+rules:
+- apiGroups:
+  - risingwave.singularity-data.com
+  resources:
+  - risingwaves
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - risingwave.singularity-data.com
+  resources:
+  - risingwaves/status
+  verbs:
+  - get

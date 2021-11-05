@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{.Name}}
+  namespace: {{.Namespace}}
+data:
+  server.properties: |
+    # this is a template, risedev will not read this file
+    # defaults for local debugging
+    risingwave.pgserver.ip={{.IP}}
+    risingwave.pgserver.port=4567
+    risingwave.leader.clustermode=Distributed
+
+    ## optional metadata service config
+    risingwave.catalog.mode=Remote
+    risingwave.meta.node=metanode-service:5690

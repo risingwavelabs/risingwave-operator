@@ -1,0 +1,20 @@
+# permissions for end users to view risingwaves.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: risingwave-viewer-role
+rules:
+- apiGroups:
+  - risingwave.singularity-data.com
+  resources:
+  - risingwaves
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - risingwave.singularity-data.com
+  resources:
+  - risingwaves/status
+  verbs:
+  - get

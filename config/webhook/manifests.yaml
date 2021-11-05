@@ -1,0 +1,56 @@
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-risingwave-singularity-data-com-v1alpha1-risingwave
+  failurePolicy: Fail
+  name: mrisingwave.kb.io
+  rules:
+  - apiGroups:
+    - risingwave.singularity-data.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - risingwaves
+  sideEffects: None
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-risingwave-singularity-data-com-v1alpha1-risingwave
+  failurePolicy: Fail
+  name: vrisingwave.kb.io
+  rules:
+  - apiGroups:
+    - risingwave.singularity-data.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    - DELETE
+    resources:
+    - risingwaves
+  sideEffects: None

@@ -56,13 +56,9 @@ PHOST=`kubectl get node -o=jsonpath='{.items[0].status.addresses[?(@.type=="Inte
 PPORT=`kubectl get service -n test test-risingwave-amd64-frontend -o=jsonpath='{.spec.ports[0].nodePort}'`
 ``
 
-
-
 Connect to the frontend by `psql` as follows:
 
 `psql -h $PHOST -p $PPORT -d dev`
-
-![img_2.png](docs/images/first_query.png)
 
 
 

@@ -74,3 +74,7 @@ If you edit the configmap, please kill the risingwave-operator pods and configur
 ## License
 
 The risingwave-operator is under the Apache License 2.0. Please refer to [LICENSE](LICENSE) for more information.
+
+## Contributing
+
+Thanks for your interest in contributing to the project! Please refer to [Contribution and Development Guidelines](CONTRIBUTING.md) for more information.

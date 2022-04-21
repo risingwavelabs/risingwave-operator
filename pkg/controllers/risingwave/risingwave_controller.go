@@ -19,6 +19,7 @@ package risingwave
 import (
 	"context"
 	"fmt"
+	"github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave/hook"
 
 	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/singularity-data/risingwave-operator/pkg/manager"
@@ -26,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -126,23 +126,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{Requeue: false}, err
 	}
 
-	// if rw.condition nil, mark as Initializing
+	// if rw.condition nil, mark rw is Initializing
 	if len(rw.Status.Condition) == 0 {
-		rw.Status.Condition = []v1alpha1.RisingWaveCondition{
-			{
-				Type:    v1alpha1.Initializing,
-				Status:  metav1.ConditionTrue,
-				Message: "Initializing",
-
-				LastTransitionTime: metav1.Now(),
-			},
-		}
-
-		err = r.updateStatus(ctx, rw)
-		if err != nil {
-			return ctrl.Result{Requeue: true}, err
-		}
-		return ctrl.Result{}, nil
+		return r.markRisingWaveInitializing(ctx, rw)
 	}
 
 	for _, f := range r.process {
@@ -156,38 +142,33 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		}
 	}
 
-	// mark running and update rw status
-	if markRunningCondition(rw) {
-		err = r.updateStatus(ctx, rw)
-		if err != nil {
-			log.Error(err, "update risingwave status failed")
-			return ctrl.Result{Requeue: true}, err
-		}
-	}
-
-	return ctrl.Result{}, nil
+	// mark rw is running
+	return r.markRisingWaveRunning(ctx, rw)
 }
 
 // syncMetaService do meta node create,update,health check
 func (r *Reconciler) syncMetaService(ctx context.Context, rw *v1alpha1.RisingWave) (bool, error) {
 	log := logger.FromContext(ctx)
 
-	if rw.Status.MetaNode.Phase == v1alpha1.ComponentReady {
+	var opt = hook.LifeCycleOption{
+		PostReadyFunc: func() error {
+			rw.Status.MetaNode.Replicas = *rw.Spec.MetaNode.Replicas
+			return nil
+		},
+	}
+	var event = hook.GenLifeCycleEvent(rw.Status.MetaNode.Phase, *rw.Spec.MetaNode.Replicas, rw.Status.MetaNode.Replicas)
+	if event.Type == hook.SkipType {
 		return true, nil
 	}
 
 	log.Info("Begin sync meta service", "phase", rw.Status.MetaNode.Phase)
 
-	isReady, err := r.syncComponent(ctx, rw, manager.NewMetaMetaNodeManager(), rw.Status.MetaNode.Phase)
+	componentPhase, err := r.syncComponent(ctx, rw, manager.NewMetaMetaNodeManager(), event, opt)
 	if err != nil {
 		return false, err
 	}
 
-	if isReady {
-		rw.Status.MetaNode.Phase = v1alpha1.ComponentReady
-	} else {
-		rw.Status.MetaNode.Phase = v1alpha1.ComponentInitializing
-	}
+	rw.Status.MetaNode.Phase = componentPhase
 
 	err = r.updateStatus(ctx, rw)
 	if err != nil {
@@ -199,13 +180,12 @@ func (r *Reconciler) syncMetaService(ctx context.Context, rw *v1alpha1.RisingWav
 
 // syncObjectStorage do object-storage(MinIO,S3,etc...) create,update,health check
 func (r *Reconciler) syncObjectStorage(ctx context.Context, rw *v1alpha1.RisingWave) (bool, error) {
-	var phash = rw.Status.ObjectStorage.Phase
-	if phash == v1alpha1.ComponentReady {
+	var phase = rw.Status.ObjectStorage.Phase
+
+	// if not use minIO. return when phase==Ready
+	if phase == v1alpha1.ComponentReady && rw.Spec.ObjectStorage.MinIO == nil {
 		return true, nil
 	}
-
-	log := logger.FromContext(ctx)
-	log.Info("Begin sync object service", "phase", phash)
 
 	// update storage type
 	switch {
@@ -219,25 +199,40 @@ func (r *Reconciler) syncObjectStorage(ctx context.Context, rw *v1alpha1.RisingW
 		rw.Status.ObjectStorage.StorageType = v1alpha1.UnknownType
 	}
 
-	var ready bool
-	var err error
-
-	// ensure minIO service
-	if rw.Spec.ObjectStorage.MinIO != nil {
-		ready, err = r.syncComponent(ctx, rw, manager.NewMinIOManager(), phash)
+	if rw.Spec.ObjectStorage.MinIO == nil {
+		rw.Status.ObjectStorage.Phase = v1alpha1.ComponentReady
+		err := r.updateStatus(ctx, rw)
 		if err != nil {
 			return false, err
 		}
-	} else {
-		// TODO: support other type
-		ready = true
+
+		return false, nil
 	}
 
-	if ready {
-		rw.Status.ObjectStorage.Phase = v1alpha1.ComponentReady
-	} else {
-		rw.Status.ObjectStorage.Phase = v1alpha1.ComponentInitializing
+	// ensure minIO service
+	var realPodCount int32 = 0
+	if rw.Status.ObjectStorage.MinIOStatus != nil {
+		realPodCount = rw.Status.ObjectStorage.MinIOStatus.Replicas
 	}
+	var event = hook.GenLifeCycleEvent(rw.Status.ObjectStorage.Phase, *rw.Spec.ObjectStorage.MinIO.Replicas, realPodCount)
+	if event.Type == hook.SkipType {
+		return true, nil
+	}
+
+	var opt = hook.LifeCycleOption{
+		PostReadyFunc: func() error {
+			if rw.Status.ObjectStorage.MinIOStatus == nil {
+				rw.Status.ObjectStorage.MinIOStatus = &v1alpha1.MinIOStatus{}
+			}
+			rw.Status.ObjectStorage.MinIOStatus.Replicas = *rw.Spec.ObjectStorage.MinIO.Replicas
+			return nil
+		},
+	}
+	componentPhase, err := r.syncComponent(ctx, rw, manager.NewMinIOManager(), event, opt)
+	if err != nil {
+		return false, err
+	}
+	rw.Status.ObjectStorage.Phase = componentPhase
 
 	err = r.updateStatus(ctx, rw)
 	if err != nil {
@@ -249,20 +244,22 @@ func (r *Reconciler) syncObjectStorage(ctx context.Context, rw *v1alpha1.RisingW
 
 // syncComputeNode do compute-node create,update,health check
 func (r *Reconciler) syncComputeNode(ctx context.Context, rw *v1alpha1.RisingWave) (bool, error) {
-	if rw.Status.ComputeNode.Phase == v1alpha1.ComponentReady {
+	var event = hook.GenLifeCycleEvent(rw.Status.ComputeNode.Phase, *rw.Spec.ComputeNode.Replicas, rw.Status.ComputeNode.Replicas)
+	if event.Type == hook.SkipType {
 		return true, nil
 	}
 
-	ready, err := r.syncComponent(ctx, rw, manager.NewComputeNodeManager(), rw.Status.ComputeNode.Phase)
+	var opt = hook.LifeCycleOption{
+		PostReadyFunc: func() error {
+			rw.Status.ComputeNode.Replicas = *rw.Spec.ComputeNode.Replicas
+			return nil
+		},
+	}
+	componentPhase, err := r.syncComponent(ctx, rw, manager.NewComputeNodeManager(), event, opt)
 	if err != nil {
 		return false, err
 	}
-
-	if ready {
-		rw.Status.ComputeNode.Phase = v1alpha1.ComponentReady
-	} else {
-		rw.Status.ComputeNode.Phase = v1alpha1.ComponentInitializing
-	}
+	rw.Status.ComputeNode.Phase = componentPhase
 
 	err = r.updateStatus(ctx, rw)
 	if err != nil {
@@ -273,20 +270,22 @@ func (r *Reconciler) syncComputeNode(ctx context.Context, rw *v1alpha1.RisingWav
 }
 
 func (r *Reconciler) syncFrontend(ctx context.Context, rw *v1alpha1.RisingWave) (bool, error) {
-	if rw.Status.Frontend.Phase == v1alpha1.ComponentReady {
+	var event = hook.GenLifeCycleEvent(rw.Status.Frontend.Phase, *rw.Spec.Frontend.Replicas, rw.Status.Frontend.Replicas)
+	if event.Type == hook.SkipType {
 		return true, nil
 	}
 
-	ready, err := r.syncComponent(ctx, rw, manager.NewFrontendManager(), rw.Status.Frontend.Phase)
+	componentPhase, err := r.syncComponent(ctx, rw, manager.NewFrontendManager(), event, hook.LifeCycleOption{
+		PostReadyFunc: func() error {
+			rw.Status.ComputeNode.Replicas = *rw.Spec.ComputeNode.Replicas
+			return nil
+		},
+	})
 	if err != nil {
 		return false, err
 	}
 
-	if ready {
-		rw.Status.Frontend.Phase = v1alpha1.ComponentReady
-	} else {
-		rw.Status.Frontend.Phase = v1alpha1.ComponentInitializing
-	}
+	rw.Status.Frontend.Phase = componentPhase
 
 	err = r.updateStatus(ctx, rw)
 	if err != nil {
@@ -297,55 +296,87 @@ func (r *Reconciler) syncFrontend(ctx context.Context, rw *v1alpha1.RisingWave) 
 }
 
 // syncComponent will do creation or update
-// return ready flag and error
+// return componentPhase and error
 func (r *Reconciler) syncComponent(
 	ctx context.Context,
 	rw *v1alpha1.RisingWave,
-	m manager.ComponentManager,
-	phase v1alpha1.ComponentPhase,
-) (bool, error) {
-	log := logger.FromContext(ctx).WithValues("component", m.Name())
+	mgr manager.ComponentManager,
+	event hook.LifeCycleEvent,
+	lifeHook hook.LifeCycleOption,
+) (v1alpha1.ComponentPhase, error) {
+	log := logger.FromContext(ctx).WithValues("component", mgr.Name())
 
-	log.V(1).Info("Begin to sync component service")
 	var start = metav1.Now()
-
 	defer func() {
 		dur := metav1.Now().Sub(start.Time).Milliseconds()
-		log.V(1).Info("Complete to sync component service", "duration", dur)
+		log.V(1).Info("Complete to sync component service", "duration(ms)", dur)
 	}()
 
-	if len(phase) == 0 {
-		log.V(1).Info("Need to create component service")
-		err := m.CreateService(ctx, r.Client, rw)
+	switch event.Type {
+	case hook.CreateType:
+		log.Info("Need to create component service")
+		err := mgr.CreateService(ctx, r.Client, rw)
 		if err != nil {
-			return false, fmt.Errorf("create service failed, %w", err)
+			return v1alpha1.ComponentFailed, fmt.Errorf("create service failed, %w", err)
 		}
 
 		// return not ready, should wait and check
-		return false, nil
-	}
+		return v1alpha1.ComponentInitializing, nil
+	case hook.ScaleUpType, hook.ScaleDownType:
 
-	// check if changed and update if changed
-	changed, err := m.UpdateService(ctx, r.Client, rw)
-	if err != nil {
-		return false, fmt.Errorf("update service failed, %w", err)
-	}
+		// do post ready lifecycle hook
+		if lifeHook.PreUpdateFunc != nil {
+			err := lifeHook.PreUpdateFunc()
+			if err != nil {
+				return v1alpha1.ComponentFailed, fmt.Errorf("pre update hook failed, %w", err)
+			}
+		}
 
-	// if changed, return false and wait service ready
-	// TODO: support component upgrade
-	if changed {
-		log.Info("RisingWave has been changed, need to update and wait ready")
-		return false, nil
-	}
+		// check if changed and update if changed
+		changed, err := mgr.UpdateService(ctx, r.Client, rw)
+		if err != nil {
+			return v1alpha1.ComponentFailed, fmt.Errorf("update service failed, %w", err)
+		}
 
-	log.V(1).Info("Wait component service ready")
-	err = m.EnsureService(ctx, r.Client, rw)
-	if err != nil {
-		return false, fmt.Errorf("enservice service failed, %w", err)
-	}
+		// if changed, return false and wait service ready
+		if changed {
+			log.Info("RisingWave has been changed, need to update and wait ready")
+			// do post ready lifecycle hook
+			if lifeHook.PostUpdateFunc != nil {
+				err := lifeHook.PostUpdateFunc()
+				if err != nil {
+					return v1alpha1.ComponentFailed, fmt.Errorf("post update hook failed, %w", err)
+				}
+			}
+			return v1alpha1.ComponentScaling, nil
+		}
+	case hook.UpgradeType: // TODO: support component upgrade
+		log.Info("no support to event type", "type", event.Type)
 
-	// return ready
-	return true, nil
+		return v1alpha1.ComponentUpgrading, nil
+	case hook.HealthCheckType:
+		log.Info("Wait component service ready")
+
+		err := mgr.EnsureService(ctx, r.Client, rw)
+		if err != nil {
+			return v1alpha1.ComponentFailed, fmt.Errorf("enservice service failed, %w", err)
+		}
+
+		// do post ready lifecycle hook
+		if lifeHook.PostReadyFunc != nil {
+			err = lifeHook.PostReadyFunc()
+			if err != nil {
+				return v1alpha1.ComponentFailed, fmt.Errorf("post ready hook failed, %w", err)
+			}
+		}
+
+		// return ready phase
+		return v1alpha1.ComponentReady, nil
+	default:
+		log.Error(fmt.Errorf("no support to event type"), "type", event.Type)
+		return v1alpha1.ComponentUnknown, nil
+	}
+	return v1alpha1.ComponentUnknown, nil
 }
 
 func (r *Reconciler) doDeletion(ctx context.Context, rw *v1alpha1.RisingWave) (err error) {
@@ -415,30 +446,4 @@ func (r *Reconciler) deleteComponent(ctx context.Context, rw *v1alpha1.RisingWav
 
 	log.V(1).Info("Begin to delete risingwave component")
 	return m.DeleteService(ctx, r.Client, rw)
-}
-
-// updateStatus will update status. If conflict error, will get the latest and retry
-func (r *Reconciler) updateStatus(ctx context.Context, rw *v1alpha1.RisingWave) error {
-	var newR v1alpha1.RisingWave
-	// fetch from cache
-	err := r.Get(ctx, types.NamespacedName{Namespace: rw.Namespace, Name: rw.Name}, &newR)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return nil
-		}
-		return err
-	}
-
-	if reflect.DeepEqual(newR.Status, rw.Status) {
-		logger.FromContext(ctx).V(1).Info("update status, but no stats update, return")
-		return nil
-	}
-
-	newR.Status = *rw.Status.DeepCopy()
-	err = r.Status().Update(ctx, &newR)
-	if err != nil {
-		return fmt.Errorf("update failed, err %w", err)
-	}
-
-	return nil
 }

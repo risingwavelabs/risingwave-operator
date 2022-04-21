@@ -218,29 +218,48 @@ type ComponentPhase string
 const (
 	ComponentUpgrading    ComponentPhase = "Upgrading" // TODO: support component upgrade
 	ComponentInitializing ComponentPhase = "Initializing"
+	ComponentScaling      ComponentPhase = "Scaling"
 	ComponentReady        ComponentPhase = "Ready"
+	ComponentFailed       ComponentPhase = "Failed"
+	ComponentUnknown      ComponentPhase = "Unknown"
 )
 
 // MetaNodeStatus defines status of meta node
 type MetaNodeStatus struct {
 	Phase ComponentPhase `json:"phase,omitempty"`
+
+	// Total number of non-terminated pods.
+	Replicas int32 `json:"replicas,omitempty"`
 }
 
 // ObjectStorageStatus defines status of object storage
 type ObjectStorageStatus struct {
 	Phase ComponentPhase `json:"phase,omitempty"`
 
+	MinIOStatus *MinIOStatus `json:"minio,omitempty"`
+
 	StorageType ObjectStorageType `json:"type,omitempty"`
+}
+
+type MinIOStatus struct {
+	// Total number of non-terminated pods.
+	Replicas int32 `json:"replicas,omitempty"`
 }
 
 // ComputeNodeStatus defines status of compute node
 type ComputeNodeStatus struct {
 	Phase ComponentPhase `json:"phase,omitempty"`
+
+	// Total number of non-terminated pods.
+	Replicas int32 `json:"replicas,omitempty"`
 }
 
 // FrontendSpecStatus defines status of compute frontend
 type FrontendSpecStatus struct {
 	Phase ComponentPhase `json:"phase,omitempty"`
+
+	// Total number of non-terminated pods.
+	Replicas int32 `json:"replicas,omitempty"`
 }
 
 func init() {

@@ -4,7 +4,39 @@ Thanks for your interest in contributing to this project! We welcome and appreci
 
 If you have questions, please [create a Github issue](https://github.com/singularity-data/risingwave-operator/issues/new) or ask in the RisingWave Community channel on Slack. Please use the [invitation link](https://join.slack.com/t/risingwave-community/shared_invite/zt-120rft0mr-d8uGk3d~NZiZAQWPnElOfw) to join the channel.
 
+# Setting Up Development Environment
 
+## Go
+RisingWave Operator is written in [Go](https://golang.org). If you don't have a Go development environment, [set one up](https://golang.org/doc/code.html).
+
+The version of Go should be 1.16 or later.
+
+After Go is installed, you need to define `GOPATH` and modify `PATH` modified to access your Go binaries.
+
+You can configure them as follows, or you can Google a setup as you like.
+
+```shell
+$ export GOPATH=$HOME/go
+$ export PATH=$PATH:$GOPATH/bin
+```
+
+## PostgreSQL
+
+RisingWave is compatible with `PostgreSQL` (`psql`). To connect to the RisingWave server, you need to install `psql`.
+
+The version of `psql` should be 14.1 or later.
+
+To install it in macOS, run:
+
+```shell
+brew install postgresql
+```
+
+To install it in Debian-based Linux systems, run:
+
+```shell
+sudo apt install postgresql-client
+```
 
 ## Submit a PR
 
@@ -35,5 +67,3 @@ You may also check out previous PRs in the [PR list](https://github.com/singular
 
 - If your PR is small (such as a typo fix), you can go brief.
 - If it is large and you have changed a lot, it's better to write more details.
-
-

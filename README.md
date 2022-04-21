@@ -40,9 +40,8 @@ kubectl apply -f https://raw.githubusercontent.com/singularity-data/risingwave-o
 
 #### Install psql
 
-To connect to the RisingWave server, you will need to install `psql` in advance.
+To connect to the RisingWave server, you will need to [install PostgreSQL shell](./CONTRIBUTING.md#PostgreSQL) (`psql`) in advance.
 
-[How to install psql](https://www.timescale.com/blog/how-to-install-psql-on-mac-ubuntu-debian-windows/)
 
 #### Query
 
@@ -61,7 +60,7 @@ PPORT=`kubectl get service -n test test-risingwave-amd64-frontend -o=jsonpath='{
 Connect to the frontend by `psql` as follows:
 
 ```shell
-psql -h $PHOST -p $PPORT -d dev`
+psql -h $PHOST -p $PPORT -d dev
 ```
 
 

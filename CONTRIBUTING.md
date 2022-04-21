@@ -11,9 +11,7 @@ RisingWave Operator is written in [Go](https://golang.org). If you don't have a 
 
 The version of Go should be 1.16 or later.
 
-After Go is installed, you need to define `GOPATH` and modify `PATH` modified to access your Go binaries.
-
-You can configure them as follows, or you can Google a setup as you like.
+After Go is installed, you need to define `GOPATH` and modify `PATH` to access your Go binaries. You can configure them as follows.
 
 ```shell
 $ export GOPATH=$HOME/go

@@ -33,6 +33,7 @@ kubectl apply -f https://raw.githubusercontent.com/singularity-data/risingwave-o
 You can deploy RisingWave which use MinIO on Linux/amd64 arch nodes as follows:
 
 ```shell
+kubectl create namespace test
 kubectl apply -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/examples/minio-risingwave-amd.yaml
 ```
 

@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -74,8 +73,9 @@ func (m *ComputeNodeManager) UpdateService(ctx context.Context, c client.Client,
 		}
 	}
 
-	// if statefulSet spec different. update it
-	if reflect.DeepEqual(sts.Spec, newSts.Spec) {
+	// if statefulSet rs different. update it
+	// TODO: add image change event for upgrading
+	if sts.Spec.Replicas != newSts.Spec.Replicas {
 		return true, CreateOrUpdateObject(ctx, c, newSts)
 	}
 

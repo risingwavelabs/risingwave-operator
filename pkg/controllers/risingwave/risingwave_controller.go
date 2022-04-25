@@ -150,20 +150,18 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) syncMetaService(ctx context.Context, rw *v1alpha1.RisingWave) (bool, error) {
 	log := logger.FromContext(ctx)
 
-	var opt = hook.LifeCycleOption{
-		PostReadyFunc: func() error {
-			rw.Status.MetaNode.Replicas = *rw.Spec.MetaNode.Replicas
-			return nil
-		},
-	}
 	var event = hook.GenLifeCycleEvent(rw.Status.MetaNode.Phase, *rw.Spec.MetaNode.Replicas, rw.Status.MetaNode.Replicas)
 	if event.Type == hook.SkipType {
 		return true, nil
 	}
-
 	log.Info("Begin sync meta service", "phase", rw.Status.MetaNode.Phase)
 
-	componentPhase, err := r.syncComponent(ctx, rw, manager.NewMetaMetaNodeManager(), event, opt)
+	componentPhase, err := r.syncComponent(ctx, rw, manager.NewMetaMetaNodeManager(), event, hook.LifeCycleOption{
+		PostReadyFunc: func() error {
+			rw.Status.MetaNode.Replicas = *rw.Spec.MetaNode.Replicas
+			return nil
+		},
+	})
 	if err != nil {
 		return false, err
 	}
@@ -219,7 +217,7 @@ func (r *Reconciler) syncObjectStorage(ctx context.Context, rw *v1alpha1.RisingW
 		return true, nil
 	}
 
-	var opt = hook.LifeCycleOption{
+	componentPhase, err := r.syncComponent(ctx, rw, manager.NewMinIOManager(), event, hook.LifeCycleOption{
 		PostReadyFunc: func() error {
 			if rw.Status.ObjectStorage.MinIOStatus == nil {
 				rw.Status.ObjectStorage.MinIOStatus = &v1alpha1.MinIOStatus{}
@@ -227,8 +225,7 @@ func (r *Reconciler) syncObjectStorage(ctx context.Context, rw *v1alpha1.RisingW
 			rw.Status.ObjectStorage.MinIOStatus.Replicas = *rw.Spec.ObjectStorage.MinIO.Replicas
 			return nil
 		},
-	}
-	componentPhase, err := r.syncComponent(ctx, rw, manager.NewMinIOManager(), event, opt)
+	})
 	if err != nil {
 		return false, err
 	}
@@ -249,13 +246,12 @@ func (r *Reconciler) syncComputeNode(ctx context.Context, rw *v1alpha1.RisingWav
 		return true, nil
 	}
 
-	var opt = hook.LifeCycleOption{
+	componentPhase, err := r.syncComponent(ctx, rw, manager.NewComputeNodeManager(), event, hook.LifeCycleOption{
 		PostReadyFunc: func() error {
 			rw.Status.ComputeNode.Replicas = *rw.Spec.ComputeNode.Replicas
 			return nil
 		},
-	}
-	componentPhase, err := r.syncComponent(ctx, rw, manager.NewComputeNodeManager(), event, opt)
+	})
 	if err != nil {
 		return false, err
 	}
@@ -277,7 +273,7 @@ func (r *Reconciler) syncFrontend(ctx context.Context, rw *v1alpha1.RisingWave) 
 
 	componentPhase, err := r.syncComponent(ctx, rw, manager.NewFrontendManager(), event, hook.LifeCycleOption{
 		PostReadyFunc: func() error {
-			rw.Status.ComputeNode.Replicas = *rw.Spec.ComputeNode.Replicas
+			rw.Status.Frontend.Replicas = *rw.Spec.Frontend.Replicas
 			return nil
 		},
 	})
@@ -338,7 +334,7 @@ func (r *Reconciler) syncComponent(
 			return v1alpha1.ComponentFailed, fmt.Errorf("update service failed, %w", err)
 		}
 
-		// if changed, return false and wait service ready
+		// if changed, return scaling state and wait service ready
 		if changed {
 			log.Info("RisingWave has been changed, need to update and wait ready")
 			// do post ready lifecycle hook
@@ -349,8 +345,11 @@ func (r *Reconciler) syncComponent(
 				}
 			}
 			return v1alpha1.ComponentScaling, nil
+		} else {
+			return v1alpha1.ComponentReady, nil
 		}
-	case hook.UpgradeType: // TODO: support component upgrade
+	case hook.UpgradeType:
+		// TODO: support component upgrade
 		log.Info("no support to event type", "type", event.Type)
 
 		return v1alpha1.ComponentUpgrading, nil
@@ -376,7 +375,6 @@ func (r *Reconciler) syncComponent(
 		log.Error(fmt.Errorf("no support to event type"), "type", event.Type)
 		return v1alpha1.ComponentUnknown, nil
 	}
-	return v1alpha1.ComponentUnknown, nil
 }
 
 func (r *Reconciler) doDeletion(ctx context.Context, rw *v1alpha1.RisingWave) (err error) {

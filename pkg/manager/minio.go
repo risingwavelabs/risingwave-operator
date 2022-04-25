@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logger "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -67,7 +66,8 @@ func (m MinIOManager) UpdateService(ctx context.Context, c client.Client, rw *v1
 
 	deployment := generateMinIODeployment(rw)
 	// if deployment spec different. update it
-	if reflect.DeepEqual(deployment.Spec, oldDeploy.Spec) {
+	// TODO: add image change event for upgrading
+	if deployment.Spec.Replicas != oldDeploy.Spec.Replicas {
 		return true, CreateOrUpdateObject(ctx, c, deployment)
 	}
 

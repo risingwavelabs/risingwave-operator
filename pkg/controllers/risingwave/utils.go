@@ -74,6 +74,7 @@ func (r *Reconciler) markRisingWaveRunning(ctx context.Context, rw *v1alpha1.Ris
 			Type:               v1alpha1.Running,
 			LastTransitionTime: metav1.Now(),
 			Status:             metav1.ConditionTrue,
+			Message:            "Running",
 		}
 		rw.Status.Condition = conditionMapToArray(m)
 		needUpdate = true
@@ -90,7 +91,7 @@ func (r *Reconciler) markRisingWaveRunning(ctx context.Context, rw *v1alpha1.Ris
 	return ctrl.Result{}, nil
 }
 
-// markRisingWaveInitializing will mark rw is Initializing and update status
+// markRisingWaveInitializing will mark rw as Initializing and update status
 func (r *Reconciler) markRisingWaveInitializing(ctx context.Context, rw *v1alpha1.RisingWave) (ctrl.Result, error) {
 	rw.Status.Condition = []v1alpha1.RisingWaveCondition{
 		{
@@ -122,7 +123,7 @@ func (r *Reconciler) updateStatus(ctx context.Context, rw *v1alpha1.RisingWave) 
 	}
 
 	if reflect.DeepEqual(newR.Status, rw.Status) {
-		logger.FromContext(ctx).V(1).Info("update status, but no stats update, return")
+		logger.FromContext(ctx).V(1).Info("update status, but no status update, return")
 		return nil
 	}
 

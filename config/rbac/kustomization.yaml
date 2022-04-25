@@ -1,9 +1,9 @@
 resources:
-# All RBAC will be applied under this manger account in
+# All RBAC will be applied under this manager account in
 # the deployment namespace. You may comment out this resource
-# if your manager will use a manger account that exists at
+# if your manager will use a manager account that exists at
 # runtime. Be sure to update RoleBinding and ClusterRoleBinding
-# subjects if changing manger account names.
+# subjects if changing manager account names.
 - service_account.yaml
 - role.yaml
 - role_binding.yaml

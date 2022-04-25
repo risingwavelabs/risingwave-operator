@@ -17,7 +17,7 @@ The default static configuration cert-manager can be installed as follows:
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml
 ```
 
-More information on this install cert-manger method [can be found here](https://cert-manager.io/docs/installation/#default-static-install).
+More information on this install cert-manager method [can be found here](https://cert-manager.io/docs/installation/#default-static-install).
 
 
 #### Install risingwave-operator

@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     control-plane: controller-manager
-  name: controller-manager-metrics-manger
+  name: controller-manager-metrics-manager
   namespace: system
 spec:
   ports:

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manger
+package manager
 
 import "time"
 

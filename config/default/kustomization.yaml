@@ -60,15 +60,15 @@ vars:
     group: cert-manager.io
     version: v1
     name: serving-cert # this name should match the one in certificate.yaml
-#- name: SERVICE_NAMESPACE # namespace of the manger
+#- name: SERVICE_NAMESPACE # namespace of the manager
 #  objref:
 #    kind: Service
 #    version: v1
-#    name: webhook-manger
+#    name: webhook-manager
 #  fieldref:
 #    fieldpath: metadata.namespace
 #- name: SERVICE_NAME
 #  objref:
 #    kind: Service
 #    version: v1
-#    name: webhook-manger
+#    name: webhook-manager

@@ -18,7 +18,7 @@ spec:
     webhook:
       clientConfig:
         service:
-          name: webhook-manger
+          name: webhook-manager
           namespace: risingwave-operator-system
           path: /convert
       conversionReviewVersions:
@@ -4277,7 +4277,7 @@ kind: Service
 metadata:
   labels:
     control-plane: controller-manager
-  name: risingwave-operator-controller-manager-metrics-manger
+  name: risingwave-operator-controller-manager-metrics-manager
   namespace: risingwave-operator-system
 spec:
   ports:

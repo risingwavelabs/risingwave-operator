@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/manger"
+	"github.com/singularity-data/risingwave-operator/pkg/manager"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -178,7 +178,7 @@ func (r *Reconciler) syncMetaService(ctx context.Context, rw *v1alpha1.RisingWav
 
 	log.Info("Begin sync meta service", "phase", rw.Status.MetaNode.Phase)
 
-	isReady, err := r.syncComponent(ctx, rw, manger.NewMetaMetaNodeManager(), rw.Status.MetaNode.Phase)
+	isReady, err := r.syncComponent(ctx, rw, manager.NewMetaMetaNodeManager(), rw.Status.MetaNode.Phase)
 	if err != nil {
 		return false, err
 	}
@@ -224,7 +224,7 @@ func (r *Reconciler) syncObjectStorage(ctx context.Context, rw *v1alpha1.RisingW
 
 	// ensure minIO service
 	if rw.Spec.ObjectStorage.MinIO != nil {
-		ready, err = r.syncComponent(ctx, rw, manger.NewMinIOManager(), phash)
+		ready, err = r.syncComponent(ctx, rw, manager.NewMinIOManager(), phash)
 		if err != nil {
 			return false, err
 		}
@@ -253,7 +253,7 @@ func (r *Reconciler) syncComputeNode(ctx context.Context, rw *v1alpha1.RisingWav
 		return true, nil
 	}
 
-	ready, err := r.syncComponent(ctx, rw, manger.NewComputeNodeManager(), rw.Status.ComputeNode.Phase)
+	ready, err := r.syncComponent(ctx, rw, manager.NewComputeNodeManager(), rw.Status.ComputeNode.Phase)
 	if err != nil {
 		return false, err
 	}
@@ -277,7 +277,7 @@ func (r *Reconciler) syncFrontend(ctx context.Context, rw *v1alpha1.RisingWave) 
 		return true, nil
 	}
 
-	ready, err := r.syncComponent(ctx, rw, manger.NewFrontendManager(), rw.Status.Frontend.Phase)
+	ready, err := r.syncComponent(ctx, rw, manager.NewFrontendManager(), rw.Status.Frontend.Phase)
 	if err != nil {
 		return false, err
 	}
@@ -301,7 +301,7 @@ func (r *Reconciler) syncFrontend(ctx context.Context, rw *v1alpha1.RisingWave) 
 func (r *Reconciler) syncComponent(
 	ctx context.Context,
 	rw *v1alpha1.RisingWave,
-	m manger.ComponentManager,
+	m manager.ComponentManager,
 	phase v1alpha1.ComponentPhase,
 ) (bool, error) {
 	log := logger.FromContext(ctx).WithValues("component", m.Name())
@@ -374,7 +374,7 @@ func (r *Reconciler) doDeletion(ctx context.Context, rw *v1alpha1.RisingWave) (e
 	//TODO: do deletion here
 
 	// delete meta service
-	err = r.deleteComponent(ctx, rw, manger.NewMetaMetaNodeManager())
+	err = r.deleteComponent(ctx, rw, manager.NewMetaMetaNodeManager())
 	if err != nil {
 		log.Error(err, "Delete meta failed")
 		return
@@ -383,7 +383,7 @@ func (r *Reconciler) doDeletion(ctx context.Context, rw *v1alpha1.RisingWave) (e
 
 	// delete object storage
 	if rw.Status.ObjectStorage.StorageType == v1alpha1.MinIOType {
-		err = r.deleteComponent(ctx, rw, manger.NewMinIOManager())
+		err = r.deleteComponent(ctx, rw, manager.NewMinIOManager())
 		if err != nil {
 			log.Error(err, "Delete minIO failed")
 			return
@@ -392,7 +392,7 @@ func (r *Reconciler) doDeletion(ctx context.Context, rw *v1alpha1.RisingWave) (e
 	fSet.Delete(v1alpha1.ObjectStorageFinalizer)
 
 	// delete computeNode
-	err = r.deleteComponent(ctx, rw, manger.NewComputeNodeManager())
+	err = r.deleteComponent(ctx, rw, manager.NewComputeNodeManager())
 	if err != nil {
 		log.Error(err, "Delete compute node failed")
 		return
@@ -400,7 +400,7 @@ func (r *Reconciler) doDeletion(ctx context.Context, rw *v1alpha1.RisingWave) (e
 	fSet.Delete(v1alpha1.ComputeNodeFinalizer)
 
 	// delete frontend
-	err = r.deleteComponent(ctx, rw, manger.NewFrontendManager())
+	err = r.deleteComponent(ctx, rw, manager.NewFrontendManager())
 	if err != nil {
 		log.Error(err, "Delete frontend failed")
 		return
@@ -410,7 +410,7 @@ func (r *Reconciler) doDeletion(ctx context.Context, rw *v1alpha1.RisingWave) (e
 	return nil
 }
 
-func (r *Reconciler) deleteComponent(ctx context.Context, rw *v1alpha1.RisingWave, m manger.ComponentManager) error {
+func (r *Reconciler) deleteComponent(ctx context.Context, rw *v1alpha1.RisingWave, m manager.ComponentManager) error {
 	log := logger.FromContext(ctx).WithValues("component", m.Name())
 
 	log.V(1).Info("Begin to delete risingwave component")

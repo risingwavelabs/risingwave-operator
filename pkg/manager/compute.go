@@ -267,6 +267,7 @@ func generateComputeStatefulSet(rw *v1alpha1.RisingWave) *v1.StatefulSet {
 		},
 
 		Spec: v1.StatefulSetSpec{
+			Replicas: spec.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					RisingWaveKey:  RisingWaveComputeValue,

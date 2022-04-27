@@ -126,7 +126,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{Requeue: false}, err
 	}
 
-	// if rw.condition nil, mark rw is Initializing
+	// if rw.condition nil, mark rw as Initializing
 	if len(rw.Status.Condition) == 0 {
 		return r.markRisingWaveInitializing(ctx, rw)
 	}
@@ -142,7 +142,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		}
 	}
 
-	// mark rw is running
+	// mark rw as running
 	return r.markRisingWaveRunning(ctx, rw)
 }
 

@@ -18,6 +18,7 @@ package rendor
 
 import (
 	"bytes"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/resource"
 )

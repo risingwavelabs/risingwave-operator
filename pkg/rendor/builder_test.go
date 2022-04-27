@@ -19,7 +19,9 @@ package rendor
 import (
 	"bytes"
 	"fmt"
-	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+	"os"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/meta/testrestmapper"
@@ -30,8 +32,8 @@ import (
 	"k8s.io/client-go/rest/fake"
 	"k8s.io/client-go/restmapper"
 	"k8s.io/client-go/tools/clientcmd"
-	"os"
-	"testing"
+
+	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 var serviceStr = `apiVersion: v1

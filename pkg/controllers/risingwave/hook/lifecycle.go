@@ -44,7 +44,7 @@ type LifeCycleOption struct {
 }
 
 // GenLifeCycleEvent will gen lifeCycleEvent according to phase and rs.
-// TODO: support upgrade
+// TODO: support upgrade.
 func GenLifeCycleEvent(phase v1alpha1.ComponentPhase, targetRS, currentRS int32) LifeCycleEvent {
 	if len(phase) == 0 {
 		return LifeCycleEvent{

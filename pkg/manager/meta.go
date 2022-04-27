@@ -19,7 +19,7 @@ package manager
 import (
 	"context"
 	"fmt"
-	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -29,6 +29,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logger "sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 type MetaNodeManager struct {
@@ -88,7 +90,7 @@ func (m *MetaNodeManager) UpdateService(ctx context.Context, c client.Client, rw
 }
 
 // DeleteService do deletion for meta node.
-// TODO: add some func calls to ensure stop gracefully
+// TODO: add some func calls to ensure stop gracefully.
 func (m *MetaNodeManager) DeleteService(ctx context.Context, c client.Client, rw *v1alpha1.RisingWave) error {
 	log := logger.FromContext(ctx)
 	log.V(1).Info("Delete meta service")

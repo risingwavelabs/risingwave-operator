@@ -17,10 +17,12 @@
 package risingwave
 
 import (
-	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+	"testing"
+
 	"gotest.tools/v3/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
+
+	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 var conditions = []v1alpha1.RisingWaveCondition{

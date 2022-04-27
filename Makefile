@@ -96,7 +96,10 @@ vendor: ## Ensure go vendor files
 vet: ## Run go vet against code.
 	go vet ./...
 
-test: manifests generate fmt vet envtest ## Run tests.
+lint: golangci-lint
+	$(GOLANGCI-LINT) run --config .golangci.yaml --fix
+
+test: manifests generate fmt vet lint envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
 
 buildx:
@@ -104,10 +107,10 @@ buildx:
 
 ##@ Build
 
-build: generate fmt vet ## Build manager binary.
+build: generate fmt vet lint ## Build manager binary.
 	go build -o bin/manager main.go
 
-run: manifests generate fmt vet ## Run a controller from your host.
+run: manifests generate fmt vet lint ## Run a controller from your host.
 	go run main.go
 
 docker-cross-build: test buildx## Build docker image with the manager.
@@ -154,6 +157,19 @@ kustomize: ## Download kustomize locally if necessary.
 ENVTEST = $(shell pwd)/bin/setup-envtest
 envtest: ## Download envtest-setup locally if necessary.
 	$(call go-get-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
+
+GOLANGCI-LINT = $(shell pwd)/bin/golangci-lint
+golangci-lint: ## Download envtest-setup locally if necessary.
+	$(call get-golangci-lint)
+
+# get-golangci-lint will download golangci-lint binary into ./bin
+define get-golangci-lint
+@[ -f $(GOLANGCI-LINT) ] || { \
+set -e ;\
+echo "Downloading golangci-lint" ;\
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_DIR)/bin v1.45.2; \
+}
+endef
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))

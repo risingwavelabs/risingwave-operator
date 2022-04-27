@@ -30,7 +30,7 @@ import (
 // +kubebuilder:printcolumn:name="Running",type=string,JSONPath=`.status.conditions[?(@.type=="Running")].status`
 // +kubebuilder:printcolumn:name="Storage",type=string,JSONPath=`.status.objectStorage.type`
 
-// RisingWave is the Schema for the risingwaves API
+// RisingWave is the Schema for the risingwaves API.
 type RisingWave struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -41,14 +41,14 @@ type RisingWave struct {
 
 //+kubebuilder:object:root=true
 
-// RisingWaveList contains a list of RisingWave
+// RisingWaveList contains a list of RisingWave.
 type RisingWaveList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []RisingWave `json:"items"`
 }
 
-// RisingWaveSpec defines the desired state of RisingWave
+// RisingWaveSpec defines the desired state of RisingWave.
 type RisingWaveSpec struct {
 	Arch Arch `json:"arch,omitempty"`
 
@@ -61,7 +61,7 @@ type RisingWaveSpec struct {
 	Frontend *FrontendSpec `json:"frontend,omitempty"`
 }
 
-// Arch defines what machine architecture on which RisingWave should run
+// Arch defines what machine architecture on which RisingWave should run.
 type Arch string
 
 const (
@@ -69,7 +69,7 @@ const (
 	ARM64Arch Arch = "arm64"
 )
 
-// RisingWaveStatus defines the observed state of RisingWave
+// RisingWaveStatus defines the observed state of RisingWave.
 type RisingWaveStatus struct {
 	MetaNode      MetaNodeStatus      `json:"metaNode,omitempty"`
 	ObjectStorage ObjectStorageStatus `json:"objectStorage,omitempty"`
@@ -89,7 +89,7 @@ const (
 	Unknown      RisingWaveType = "Unknown"
 )
 
-// RisingWaveCondition describes the condition for RisingWave
+// RisingWaveCondition describes the condition for RisingWave.
 type RisingWaveCondition struct {
 	// Type of the condition
 	Type RisingWaveType `json:"type"`
@@ -118,30 +118,30 @@ type MetaNodeSpec struct {
 	Storage *MetaStorage `json:"storage"`
 }
 
-//MetaStorageType defines the storage type of meta node
+//MetaStorageType defines the storage type of meta node.
 type MetaStorageType string
 
 const (
-	// InMemory - use memory for meta node storage
+	// InMemory - use memory for meta node storage.
 	InMemory MetaStorageType = "InMemory"
-	// ETCD - use ETCD for meta node storage
+	// ETCD - use ETCD for meta node storage.
 	ETCD MetaStorageType = "ETCD"
 )
 
-// MetaStorage defines spec of meta service
+// MetaStorage defines spec of meta service.
 type MetaStorage struct {
 	Type MetaStorageType `json:"type"`
 }
 
 // ComputeNodeSpec defines the spec of compute-node
 // No need storage information.
-// Which storage to use depends on spec.objectStorageSpec
+// Which storage to use depends on spec.objectStorageSpec.
 type ComputeNodeSpec struct {
 	DeployDescriptor `json:",inline"`
 }
 
 // ObjectStorageSpec defines spec of object storage
-// TODO: support more backend types
+// TODO: support more backend types.
 type ObjectStorageSpec struct {
 	// TODO: support s3 config
 	S3 bool `json:"s3,omitempty"`
@@ -154,12 +154,12 @@ type ObjectStorageSpec struct {
 	CloudService *CloudService `json:"cloudService,omitempty"`
 }
 
-// FrontendSpec defines spec of frontend
+// FrontendSpec defines spec of frontend.
 type FrontendSpec struct {
 	DeployDescriptor `json:",inline"`
 }
 
-// DeployDescriptor describe the deploy information
+// DeployDescriptor describe the deploy information.
 type DeployDescriptor struct {
 	// +optional
 	Image *ImageDescriptor `json:"image,omitempty"`
@@ -180,7 +180,7 @@ type DeployDescriptor struct {
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 }
 
-// ImageDescriptor describe the image information
+// ImageDescriptor describe the image information.
 type ImageDescriptor struct {
 	Repository *string `json:"repository,omitempty"`
 	Tag        *string `json:"tag,omitempty"`
@@ -190,17 +190,17 @@ type ImageDescriptor struct {
 	PullPolicy *corev1.PullPolicy `json:"pullPolicy,omitempty"`
 }
 
-// MinIO defines minIO deploy information
+// MinIO defines minIO deploy information.
 type MinIO struct {
 	DeployDescriptor `json:",inline"`
 }
 
-// CloudService defines storage provider
+// CloudService defines storage provider.
 type CloudService struct {
 	Provider string `json:"provider"`
 }
 
-// ObjectStorageType defines storage provider
+// ObjectStorageType defines storage provider.
 type ObjectStorageType string
 
 const (
@@ -224,7 +224,7 @@ const (
 	ComponentUnknown      ComponentPhase = "Unknown"
 )
 
-// MetaNodeStatus defines status of meta node
+// MetaNodeStatus defines status of meta node.
 type MetaNodeStatus struct {
 	Phase ComponentPhase `json:"phase,omitempty"`
 
@@ -232,7 +232,7 @@ type MetaNodeStatus struct {
 	Replicas int32 `json:"replicas,omitempty"`
 }
 
-// ObjectStorageStatus defines status of object storage
+// ObjectStorageStatus defines status of object storage.
 type ObjectStorageStatus struct {
 	Phase ComponentPhase `json:"phase,omitempty"`
 
@@ -246,7 +246,7 @@ type MinIOStatus struct {
 	Replicas int32 `json:"replicas,omitempty"`
 }
 
-// ComputeNodeStatus defines status of compute node
+// ComputeNodeStatus defines status of compute node.
 type ComputeNodeStatus struct {
 	Phase ComponentPhase `json:"phase,omitempty"`
 
@@ -254,7 +254,7 @@ type ComputeNodeStatus struct {
 	Replicas int32 `json:"replicas,omitempty"`
 }
 
-// FrontendSpecStatus defines status of compute frontend
+// FrontendSpecStatus defines status of compute frontend.
 type FrontendSpecStatus struct {
 	Phase ComponentPhase `json:"phase,omitempty"`
 

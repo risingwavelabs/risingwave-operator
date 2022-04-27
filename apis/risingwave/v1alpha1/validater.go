@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
@@ -27,7 +28,7 @@ import (
 
 var _ webhook.Validator = &RisingWave{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
+// ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
 func (r *RisingWave) ValidateCreate() error {
 	logger.V(1).Info("validate create", "name", r.Name)
 
@@ -42,7 +43,7 @@ func (r *RisingWave) ValidateCreate() error {
 	return nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
+// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
 func (r *RisingWave) ValidateUpdate(old runtime.Object) error {
 	logger.V(1).Info("validate update", "name", r.Name)
 
@@ -121,7 +122,7 @@ func validateDeployDescriptor(n, o DeployDescriptor) *validateError {
 	return nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
+// ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
 func (r *RisingWave) ValidateDelete() error {
 	logger.V(1).Info("validate delete", "name", r.Name)
 

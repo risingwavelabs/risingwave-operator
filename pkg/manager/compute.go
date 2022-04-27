@@ -19,7 +19,7 @@ package manager
 import (
 	"context"
 	"fmt"
-	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -28,6 +28,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 type ComputeNodeManager struct {

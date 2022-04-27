@@ -3940,6 +3940,10 @@ spec:
                 properties:
                   phase:
                     type: string
+                  replicas:
+                    description: Total number of non-terminated pods.
+                    format: int32
+                    type: integer
                 type: object
               conditions:
                 items:
@@ -3974,16 +3978,31 @@ spec:
                 properties:
                   phase:
                     type: string
+                  replicas:
+                    description: Total number of non-terminated pods.
+                    format: int32
+                    type: integer
                 type: object
               metaNode:
                 description: MetaNodeStatus defines status of meta node
                 properties:
                   phase:
                     type: string
+                  replicas:
+                    description: Total number of non-terminated pods.
+                    format: int32
+                    type: integer
                 type: object
               objectStorage:
                 description: ObjectStorageStatus defines status of object storage
                 properties:
+                  minio:
+                    properties:
+                      replicas:
+                        description: Total number of non-terminated pods.
+                        format: int32
+                        type: integer
+                    type: object
                   phase:
                     type: string
                   type:

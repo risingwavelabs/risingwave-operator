@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -70,7 +69,8 @@ func (m *FrontendManager) UpdateService(ctx context.Context, c client.Client, rw
 	}
 
 	// if statefulSet spec different. update it
-	if reflect.DeepEqual(newDeploy.Spec, deploy.Spec) {
+	// TODO: add image change event for upgrading
+	if newDeploy.Spec.Replicas != deploy.Spec.Replicas {
 		return true, CreateOrUpdateObject(ctx, c, newDeploy)
 	}
 

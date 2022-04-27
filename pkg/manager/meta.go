@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logger "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -48,7 +47,7 @@ func (m *MetaNodeManager) CreateService(ctx context.Context, c client.Client, rw
 
 	deployment := generateMetaDeployment(rw)
 
-	log.V(1).Info("Render deploy succeed", "key", deployment.Namespace+"/"+deployment.Name)
+	log.Info("Render deploy succeed", "key", deployment.Namespace+"/"+deployment.Name)
 	err := CreateIfNotFound(ctx, c, deployment)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		log.Error(err, "create or update object failed", "name", deployment.Namespace+"/"+deployment.Name)
@@ -64,10 +63,10 @@ func (m *MetaNodeManager) CreateService(ctx context.Context, c client.Client, rw
 }
 
 func (m *MetaNodeManager) UpdateService(ctx context.Context, c client.Client, rw *v1alpha1.RisingWave) (bool, error) {
-	deploymentSpec := generateMetaDeployment(rw)
+	newDeploy := generateMetaDeployment(rw)
 	var namespacedName = types.NamespacedName{
-		Namespace: deploymentSpec.Namespace,
-		Name:      deploymentSpec.Name,
+		Namespace: newDeploy.Namespace,
+		Name:      newDeploy.Name,
 	}
 	var deploy v1.Deployment
 	err := c.Get(ctx, namespacedName, &deploy)
@@ -78,8 +77,11 @@ func (m *MetaNodeManager) UpdateService(ctx context.Context, c client.Client, rw
 	}
 
 	// if deployment spec different. update it
-	if reflect.DeepEqual(deploymentSpec.Spec, deploy.Spec) {
-		return true, CreateOrUpdateObject(ctx, c, deploymentSpec)
+	// TODO: add image change event for upgrading
+	if newDeploy.Spec.Replicas != deploy.Spec.Replicas {
+		log := logger.FromContext(ctx)
+		log.Info("Need update deployment", "key", newDeploy.Namespace+"/"+newDeploy.Name)
+		return true, CreateOrUpdateObject(ctx, c, newDeploy)
 	}
 
 	return false, nil

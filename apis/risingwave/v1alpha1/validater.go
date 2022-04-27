@@ -23,7 +23,7 @@ import (
 )
 
 // change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-//+kubebuilder:webhook:path=/validate-risingwave-singularity-data-com-v1alpha1-risingwave,mutating=false,failurePolicy=fail,sideEffects=None,groups=risingwave.singularity-data.com,resources=risingwaves,verbs=create;update;delete,versions=v1alpha1,name=vrisingwave.kb.io,admissionReviewVersions=v1
+// +kubebuilder:webhook:path=/validate-risingwave-singularity-data-com-v1alpha1-risingwave,mutating=false,failurePolicy=fail,sideEffects=None,groups=risingwave.singularity-data.com,resources=risingwaves,verbs=create;update;delete,versions=v1alpha1,name=vrisingwave.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &RisingWave{}
 
@@ -46,7 +46,78 @@ func (r *RisingWave) ValidateCreate() error {
 func (r *RisingWave) ValidateUpdate(old runtime.Object) error {
 	logger.V(1).Info("validate update", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object update.
+	oldRisingWave := old.(*RisingWave)
+
+	newSpec := r.Spec
+	oldSpec := oldRisingWave.Spec
+
+	if newSpec.Arch != oldSpec.Arch {
+		return NewValidateError("Arch cannot be changed")
+	}
+
+	err := validateMetaNode(newSpec.MetaNode, oldSpec.MetaNode)
+	if err != nil {
+		return err
+	}
+
+	err = validateObjectStorage(newSpec.ObjectStorage, oldSpec.ObjectStorage)
+	if err != nil {
+		return err
+	}
+
+	err = validateComputeNode(newSpec.ComputeNode, oldSpec.ComputeNode)
+	if err != nil {
+		return err
+	}
+
+	err = validateFrontend(newSpec.Frontend, oldSpec.Frontend)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateMetaNode(n, o *MetaNodeSpec) error {
+	if o.Storage == nil || n.Storage == nil || n.Storage.Type != o.Storage.Type {
+		return NewValidateError("Meta storage cannot be changed")
+	}
+
+	err := validateDeployDescriptor(n.DeployDescriptor, o.DeployDescriptor)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func validateObjectStorage(n, o *ObjectStorageSpec) error {
+	if n.MinIO != nil {
+		err := validateDeployDescriptor(n.MinIO.DeployDescriptor, o.MinIO.DeployDescriptor)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateComputeNode(n, o *ComputeNodeSpec) error {
+	err := validateDeployDescriptor(n.DeployDescriptor, o.DeployDescriptor)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func validateFrontend(n, o *FrontendSpec) error {
+	err := validateDeployDescriptor(n.DeployDescriptor, o.DeployDescriptor)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func validateDeployDescriptor(n, o DeployDescriptor) *validateError {
 	return nil
 }
 

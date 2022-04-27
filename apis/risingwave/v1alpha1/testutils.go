@@ -18,13 +18,14 @@ package v1alpha1
 
 import (
 	"fmt"
-	"k8s.io/client-go/tools/clientcmd"
 	"os"
+
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // CheckConfigFile
 // if $HOME/.kube/config exist
-// return ture
+// return ture.
 func CheckConfigFile() bool {
 	home, e := os.LookupEnv("HOME")
 	if !e {

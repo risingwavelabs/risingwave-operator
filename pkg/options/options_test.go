@@ -17,10 +17,11 @@
 package options
 
 import (
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_ConfigRead(t *testing.T) {

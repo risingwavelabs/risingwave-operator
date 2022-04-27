@@ -19,27 +19,27 @@ package risingwave
 import (
 	"context"
 	"fmt"
-	"github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave/hook"
-
-	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/manager"
+	"reflect"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logger "sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave/hook"
+	"github.com/singularity-data/risingwave-operator/pkg/manager"
 )
 
 // processFunc need return ready flag and error
 // if return ture, means continue to sync, only when Phase==Ready, return true
-// if return false, means break this sync and put back into queue and reconcile
+// if return false, means break this sync and put back into queue and reconcile.
 type processFunc func(ctx context.Context, rw *v1alpha1.RisingWave) (bool, error)
 
-// Reconciler reconciles a RisingWave object
+// Reconciler reconciles a RisingWave object.
 type Reconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
@@ -146,7 +146,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	return r.markRisingWaveRunning(ctx, rw)
 }
 
-// syncMetaService do meta node create,update,health check
+// syncMetaService do meta node create,update,health check.
 func (r *Reconciler) syncMetaService(ctx context.Context, rw *v1alpha1.RisingWave) (bool, error) {
 	log := logger.FromContext(ctx)
 
@@ -176,7 +176,7 @@ func (r *Reconciler) syncMetaService(ctx context.Context, rw *v1alpha1.RisingWav
 	return false, nil
 }
 
-// syncObjectStorage do object-storage(MinIO,S3,etc...) create,update,health check
+// syncObjectStorage do object-storage(MinIO,S3,etc...) create,update,health check.
 func (r *Reconciler) syncObjectStorage(ctx context.Context, rw *v1alpha1.RisingWave) (bool, error) {
 	var phase = rw.Status.ObjectStorage.Phase
 
@@ -239,7 +239,7 @@ func (r *Reconciler) syncObjectStorage(ctx context.Context, rw *v1alpha1.RisingW
 	return false, nil
 }
 
-// syncComputeNode do compute-node create,update,health check
+// syncComputeNode do compute-node create,update,health check.
 func (r *Reconciler) syncComputeNode(ctx context.Context, rw *v1alpha1.RisingWave) (bool, error) {
 	var event = hook.GenLifeCycleEvent(rw.Status.ComputeNode.Phase, *rw.Spec.ComputeNode.Replicas, rw.Status.ComputeNode.Replicas)
 	if event.Type == hook.SkipType {
@@ -292,7 +292,7 @@ func (r *Reconciler) syncFrontend(ctx context.Context, rw *v1alpha1.RisingWave) 
 }
 
 // syncComponent will do creation or update
-// return componentPhase and error
+// return componentPhase and error.
 func (r *Reconciler) syncComponent(
 	ctx context.Context,
 	rw *v1alpha1.RisingWave,

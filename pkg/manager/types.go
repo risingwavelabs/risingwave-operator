@@ -18,8 +18,10 @@ package manager
 
 import (
 	"context"
-	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 type ComponentManager interface {

@@ -17,13 +17,14 @@
 package rendor
 
 import (
+	"time"
+
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/discovery/cached/disk"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
-	"time"
 )
 
 type InnerRESTClientGetter struct {

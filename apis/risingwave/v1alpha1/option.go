@@ -31,7 +31,7 @@ type RisingWaveOptions struct {
 	Frontend    BaseOptions
 }
 
-// ImageOptions TODO: remove this map after all images support docker multi platform
+// ImageOptions TODO: remove this map after all images support docker multi platform.
 type ImageOptions struct {
 	Repository string `yaml:"repository"`
 	Tag        string `yaml:"tag"`

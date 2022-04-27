@@ -26,7 +26,7 @@ import (
 
 var _ webhook.Defaulter = &RisingWave{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
+// Default implements webhook.Defaulter so a webhook will be registered for the type.
 func (r *RisingWave) Default() {
 	logger.Info("default", "name", r.Name)
 

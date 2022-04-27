@@ -19,14 +19,16 @@ package risingwave
 import (
 	"context"
 	"fmt"
-	v1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+	"reflect"
+
 	"github.com/thoas/go-funk"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logger "sigs.k8s.io/controller-runtime/pkg/log"
+
+	v1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 type SynType string
@@ -64,7 +66,7 @@ func conditionMapToArray(m map[v1alpha1.RisingWaveType]v1alpha1.RisingWaveCondit
 }
 
 // markRisingWaveRunning will update condition if necessary,
-// and update if necessary
+// and update if necessary.
 func (r *Reconciler) markRisingWaveRunning(ctx context.Context, rw *v1alpha1.RisingWave) (ctrl.Result, error) {
 	var needUpdate = false
 	m := conditionsToMap(rw.Status.Condition)
@@ -91,7 +93,7 @@ func (r *Reconciler) markRisingWaveRunning(ctx context.Context, rw *v1alpha1.Ris
 	return ctrl.Result{}, nil
 }
 
-// markRisingWaveInitializing will mark rw as Initializing and update status
+// markRisingWaveInitializing will mark rw as Initializing and update status.
 func (r *Reconciler) markRisingWaveInitializing(ctx context.Context, rw *v1alpha1.RisingWave) (ctrl.Result, error) {
 	rw.Status.Condition = []v1alpha1.RisingWaveCondition{
 		{
@@ -110,7 +112,7 @@ func (r *Reconciler) markRisingWaveInitializing(ctx context.Context, rw *v1alpha
 	return ctrl.Result{}, nil
 }
 
-// updateStatus will update status. If conflict error, will get the latest and retry
+// updateStatus will update status. If conflict error, will get the latest and retry.
 func (r *Reconciler) updateStatus(ctx context.Context, rw *v1alpha1.RisingWave) error {
 	var newR v1alpha1.RisingWave
 	// fetch from cache

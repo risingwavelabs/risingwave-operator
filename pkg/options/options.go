@@ -17,14 +17,16 @@
 package options
 
 import (
-	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	"reflect"
 	"strings"
 	"unsafe"
+
+	"gopkg.in/yaml.v3"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+
+	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 type ResourceList map[corev1.ResourceName]string

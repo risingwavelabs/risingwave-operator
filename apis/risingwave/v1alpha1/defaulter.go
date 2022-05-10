@@ -147,7 +147,12 @@ func (r *RisingWave) defaultStorage() {
 
 	}
 
-	// TODO: support S3 and other storage
+	if r.Spec.ObjectStorage.S3 != nil {
+		s3 := r.Spec.ObjectStorage.S3
+		if len(s3.SecretName) == 0 {
+			s3.SecretName = CloudProviderConfigureSecretName
+		}
+	}
 }
 
 func (r *RisingWave) defaultComputeNode() {

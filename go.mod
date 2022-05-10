@@ -3,6 +3,9 @@ module github.com/singularity-data/risingwave-operator
 go 1.16
 
 require (
+	github.com/aws/aws-sdk-go-v2 v1.16.3 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.15.4
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.26.6
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.13.0
 	github.com/stretchr/testify v1.7.0

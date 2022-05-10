@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"reflect"
 
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -75,13 +76,14 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwaves/finalizers,verbs=update
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;
+// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;delete;
 // +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
+// Modify the Reconcile function to compare the state specified by
 // the RisingWave object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
@@ -189,49 +191,70 @@ func (r *Reconciler) syncObjectStorage(ctx context.Context, rw *v1alpha1.RisingW
 	switch {
 	case rw.Spec.ObjectStorage.MinIO != nil:
 		rw.Status.ObjectStorage.StorageType = v1alpha1.MinIOType
-	case rw.Spec.ObjectStorage.S3:
+		// ensure minIO service
+		var realPodCount int32 = 0
+		if rw.Status.ObjectStorage.MinIOStatus != nil {
+			realPodCount = rw.Status.ObjectStorage.MinIOStatus.Replicas
+		}
+		var event = hook.GenLifeCycleEvent(rw.Status.ObjectStorage.Phase, *rw.Spec.ObjectStorage.MinIO.Replicas, realPodCount)
+		if event.Type == hook.SkipType {
+			return true, nil
+		}
+
+		componentPhase, err := r.syncComponent(ctx, rw, manager.NewMinIOManager(), event, hook.LifeCycleOption{
+			PostReadyFunc: func() error {
+				if rw.Status.ObjectStorage.MinIOStatus == nil {
+					rw.Status.ObjectStorage.MinIOStatus = &v1alpha1.MinIOStatus{}
+				}
+				rw.Status.ObjectStorage.MinIOStatus.Replicas = *rw.Spec.ObjectStorage.MinIO.Replicas
+				return nil
+			},
+		})
+		if err != nil {
+			return false, err
+		}
+		rw.Status.ObjectStorage.Phase = componentPhase
+	case rw.Spec.ObjectStorage.S3 != nil:
 		rw.Status.ObjectStorage.StorageType = v1alpha1.S3Type
+		if rw.Status.ObjectStorage.S3 != nil && len(rw.Status.ObjectStorage.S3.Bucket) != 0 {
+			return true, nil
+		}
+
+		// if set bucket, use it
+		if len(rw.Spec.ObjectStorage.S3.Bucket) != 0 {
+			rw.Status.ObjectStorage.S3 = &v1alpha1.S3Status{
+				Bucket: rw.Spec.ObjectStorage.S3.Bucket,
+			}
+			rw.Status.ObjectStorage.Phase = v1alpha1.ComponentReady
+		} else {
+			// we need get cloud provider configure secret.
+			var secret = v1.Secret{}
+			err := r.Client.Get(ctx, client.ObjectKey{
+				Namespace: rw.Namespace,
+				Name:      rw.Spec.ObjectStorage.S3.SecretName,
+			}, &secret)
+			if err != nil {
+				return false, fmt.Errorf("get cloud provider configure secret failed")
+			}
+			mgr := manager.NewS3Manager(rw.Spec.ObjectStorage.S3.Provider, secret)
+			event := hook.LifeCycleEvent{
+				Type: hook.CreateType,
+			}
+
+			componentPhase, err := r.syncComponent(ctx, rw, mgr, event, hook.LifeCycleOption{})
+			if err != nil {
+				return false, err
+			}
+			rw.Status.ObjectStorage.Phase = componentPhase
+		}
 	case rw.Spec.ObjectStorage.Memory:
 		rw.Status.ObjectStorage.StorageType = v1alpha1.MemoryType
+		rw.Status.ObjectStorage.Phase = v1alpha1.ComponentReady
 	default:
 		rw.Status.ObjectStorage.StorageType = v1alpha1.UnknownType
 	}
 
-	if rw.Spec.ObjectStorage.MinIO == nil {
-		rw.Status.ObjectStorage.Phase = v1alpha1.ComponentReady
-		err := r.updateStatus(ctx, rw)
-		if err != nil {
-			return false, err
-		}
-
-		return false, nil
-	}
-
-	// ensure minIO service
-	var realPodCount int32 = 0
-	if rw.Status.ObjectStorage.MinIOStatus != nil {
-		realPodCount = rw.Status.ObjectStorage.MinIOStatus.Replicas
-	}
-	var event = hook.GenLifeCycleEvent(rw.Status.ObjectStorage.Phase, *rw.Spec.ObjectStorage.MinIO.Replicas, realPodCount)
-	if event.Type == hook.SkipType {
-		return true, nil
-	}
-
-	componentPhase, err := r.syncComponent(ctx, rw, manager.NewMinIOManager(), event, hook.LifeCycleOption{
-		PostReadyFunc: func() error {
-			if rw.Status.ObjectStorage.MinIOStatus == nil {
-				rw.Status.ObjectStorage.MinIOStatus = &v1alpha1.MinIOStatus{}
-			}
-			rw.Status.ObjectStorage.MinIOStatus.Replicas = *rw.Spec.ObjectStorage.MinIO.Replicas
-			return nil
-		},
-	})
-	if err != nil {
-		return false, err
-	}
-	rw.Status.ObjectStorage.Phase = componentPhase
-
-	err = r.updateStatus(ctx, rw)
+	err := r.updateStatus(ctx, rw)
 	if err != nil {
 		return false, err
 	}

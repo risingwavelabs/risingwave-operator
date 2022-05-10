@@ -144,14 +144,23 @@ type ComputeNodeSpec struct {
 // TODO: support more backend types.
 type ObjectStorageSpec struct {
 	// TODO: support s3 config
-	S3 bool `json:"s3,omitempty"`
+	S3 *S3 `json:"s3,omitempty"`
 
 	Memory bool `json:"memory,omitempty"`
 
 	MinIO *MinIO `json:"minIO,omitempty"`
+}
 
-	// TODO: remove or merge into S3 filed
-	CloudService *CloudService `json:"cloudService,omitempty"`
+// S3 store the s3 information.
+type S3 struct {
+	// the name of Provider, default AWS
+	Provider string `json:"provider"`
+
+	// the name of s3 bucket, if not set, operator will create new bucket
+	Bucket string `json:"bucket,omitempty"`
+
+	// the secret name of s3 client configure
+	SecretName string `json:"secret,omitempty"`
 }
 
 // FrontendSpec defines spec of frontend.
@@ -238,9 +247,17 @@ type ObjectStorageStatus struct {
 
 	MinIOStatus *MinIOStatus `json:"minio,omitempty"`
 
+	S3 *S3Status `json:"s3,omitempty"`
+
 	StorageType ObjectStorageType `json:"type,omitempty"`
 }
 
+// S3Status define the status of S3 storage.
+type S3Status struct {
+	Bucket string `json:"bucket,omitempty"`
+}
+
+// MinIOStatus define the status of MinIO storage.
 type MinIOStatus struct {
 	// Total number of non-terminated pods.
 	Replicas int32 `json:"replicas,omitempty"`

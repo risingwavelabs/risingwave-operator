@@ -28,6 +28,7 @@ RUN if [ "$USE_VENDOR" = "true" ] ; then \
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
 FROM ubuntu:20.04
 WORKDIR /
+RUN apt-get update && apt-get -y install ca-certificates && rm -rf /var/cache/apk/*
 COPY --from=builder /workspace/manager .
 COPY template/ template/
 USER 65532:65532

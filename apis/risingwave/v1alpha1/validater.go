@@ -39,7 +39,6 @@ func (r *RisingWave) ValidateCreate() error {
 		}
 	}
 
-	// TODO(user): fill in your validation logic upon object creation.
 	return nil
 }
 

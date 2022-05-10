@@ -64,15 +64,11 @@ const (
 	FrontendName    string = "Frontend"
 	ComputeNodeName string = "ComputeNode"
 	MinIOName       string = "MinIO"
+	S3Name          string = "S3"
 )
 
 const (
-	FrontendTemplateStr = `
-    risingwave.pgserver.ip=$(MY_POD_IP)
-    risingwave.pgserver.port=%d
-    risingwave.leader.clustermode=Distributed
-
-    ## optional metadata service config
-    risingwave.catalog.mode=Remote
-    risingwave.meta.node=%s:%d`
+	AccessKeyID     string = "AccessKeyID"
+	SecretAccessKey string = "SecretAccessKey"
+	Region          string = "Region"
 )

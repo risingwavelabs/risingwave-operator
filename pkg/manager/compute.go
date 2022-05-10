@@ -177,8 +177,12 @@ func genComputeConfigMap(rw *v1alpha1.RisingWave) *corev1.ConfigMap {
 func computeNodeStoreParam(rw *v1alpha1.RisingWave) string {
 	storage := rw.Spec.ObjectStorage
 	switch {
-	case storage.S3:
-		return fmt.Sprintf("hummock+s3://fake-bucket") // TODO: support s3 config
+	case storage.S3 != nil:
+		var bucket string
+		if rw.Status.ObjectStorage.S3 != nil {
+			bucket = rw.Status.ObjectStorage.S3.Bucket
+		}
+		return fmt.Sprintf("hummock+s3://%s", bucket)
 	case storage.Memory:
 		return "in-memory"
 	case storage.MinIO != nil:
@@ -232,6 +236,45 @@ func generateComputeStatefulSet(rw *v1alpha1.RisingWave) *v1.StatefulSet {
 				ReadOnly:  true,
 			},
 		},
+	}
+
+	if rw.Spec.ObjectStorage.S3 != nil {
+		var env = []corev1.EnvVar{
+			{
+				Name: "AWS_REGION",
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: rw.Spec.ObjectStorage.S3.SecretName,
+						},
+						Key: Region,
+					},
+				},
+			},
+			{
+				Name: "AWS_ACCESS_KEY_ID",
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: rw.Spec.ObjectStorage.S3.SecretName,
+						},
+						Key: AccessKeyID,
+					},
+				},
+			},
+			{
+				Name: "AWS_SECRET_ACCESS_KEY",
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: rw.Spec.ObjectStorage.S3.SecretName,
+						},
+						Key: SecretAccessKey,
+					},
+				},
+			},
+		}
+		container.Env = append(container.Env, env...)
 	}
 
 	podSpec := corev1.PodSpec{

@@ -178,10 +178,7 @@ func computeNodeStoreParam(rw *v1alpha1.RisingWave) string {
 	storage := rw.Spec.ObjectStorage
 	switch {
 	case storage.S3 != nil:
-		var bucket string
-		if rw.Status.ObjectStorage.S3 != nil {
-			bucket = rw.Status.ObjectStorage.S3.Bucket
-		}
+		var bucket = *storage.S3.Bucket
 		return fmt.Sprintf("hummock+s3://%s", bucket)
 	case storage.Memory:
 		return "in-memory"

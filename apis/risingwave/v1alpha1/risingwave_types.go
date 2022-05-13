@@ -157,7 +157,7 @@ type S3 struct {
 	Provider string `json:"provider"`
 
 	// the name of s3 bucket, if not set, operator will create new bucket
-	Bucket string `json:"bucket,omitempty"`
+	Bucket *string `json:"bucket,omitempty"`
 
 	// the secret name of s3 client configure
 	SecretName string `json:"secret,omitempty"`
@@ -247,14 +247,9 @@ type ObjectStorageStatus struct {
 
 	MinIOStatus *MinIOStatus `json:"minio,omitempty"`
 
-	S3 *S3Status `json:"s3,omitempty"`
+	S3 bool `json:"s3,omitempty"`
 
 	StorageType ObjectStorageType `json:"type,omitempty"`
-}
-
-// S3Status define the status of S3 storage.
-type S3Status struct {
-	Bucket string `json:"bucket,omitempty"`
 }
 
 // MinIOStatus define the status of MinIO storage.

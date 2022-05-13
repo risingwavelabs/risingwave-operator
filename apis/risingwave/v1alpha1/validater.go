@@ -98,6 +98,14 @@ func validateObjectStorage(n, o *ObjectStorageSpec) error {
 		}
 	}
 
+	if n.S3 != nil {
+		if n.S3.Bucket == nil {
+			return &validateError{
+				Msg: fmt.Sprintf("bucket cannot empty when use S3"),
+			}
+		}
+	}
+
 	return nil
 }
 

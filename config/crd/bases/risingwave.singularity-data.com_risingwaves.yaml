@@ -3997,11 +3997,7 @@ spec:
                   phase:
                     type: string
                   s3:
-                    description: S3Status define the status of S3 storage.
-                    properties:
-                      bucket:
-                        type: string
-                    type: object
+                    type: boolean
                   type:
                     description: ObjectStorageType defines storage provider.
                     type: string

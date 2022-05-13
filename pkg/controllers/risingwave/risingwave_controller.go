@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"reflect"
 
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -76,7 +75,6 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwaves/finalizers,verbs=update
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;
-// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;delete;
 // +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
@@ -216,37 +214,7 @@ func (r *Reconciler) syncObjectStorage(ctx context.Context, rw *v1alpha1.RisingW
 		rw.Status.ObjectStorage.Phase = componentPhase
 	case rw.Spec.ObjectStorage.S3 != nil:
 		rw.Status.ObjectStorage.StorageType = v1alpha1.S3Type
-		if rw.Status.ObjectStorage.S3 != nil && len(rw.Status.ObjectStorage.S3.Bucket) != 0 {
-			return true, nil
-		}
-
-		// if set bucket, use it
-		if len(rw.Spec.ObjectStorage.S3.Bucket) != 0 {
-			rw.Status.ObjectStorage.S3 = &v1alpha1.S3Status{
-				Bucket: rw.Spec.ObjectStorage.S3.Bucket,
-			}
-			rw.Status.ObjectStorage.Phase = v1alpha1.ComponentReady
-		} else {
-			// we need get cloud provider configure secret.
-			var secret = v1.Secret{}
-			err := r.Client.Get(ctx, client.ObjectKey{
-				Namespace: rw.Namespace,
-				Name:      rw.Spec.ObjectStorage.S3.SecretName,
-			}, &secret)
-			if err != nil {
-				return false, fmt.Errorf("get cloud provider configure secret failed")
-			}
-			mgr := manager.NewS3Manager(rw.Spec.ObjectStorage.S3.Provider, secret)
-			event := hook.LifeCycleEvent{
-				Type: hook.CreateType,
-			}
-
-			componentPhase, err := r.syncComponent(ctx, rw, mgr, event, hook.LifeCycleOption{})
-			if err != nil {
-				return false, err
-			}
-			rw.Status.ObjectStorage.Phase = componentPhase
-		}
+		rw.Status.ObjectStorage.Phase = v1alpha1.ComponentReady
 	case rw.Spec.ObjectStorage.Memory:
 		rw.Status.ObjectStorage.StorageType = v1alpha1.MemoryType
 		rw.Status.ObjectStorage.Phase = v1alpha1.ComponentReady

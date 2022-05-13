@@ -32,7 +32,6 @@ import (
 	risingwavecontrollers "github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave"
 	"github.com/singularity-data/risingwave-operator/pkg/options"
 	"github.com/singularity-data/risingwave-operator/pkg/rendor"
-	_ "github.com/singularity-data/risingwave-operator/pkg/s3"
 	//+kubebuilder:scaffold:imports
 )
 

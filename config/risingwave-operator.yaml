@@ -45,7 +45,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: RisingWave is the Schema for the risingwaves API
+        description: RisingWave is the Schema for the risingwaves API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -60,15 +60,15 @@ spec:
           metadata:
             type: object
           spec:
-            description: RisingWaveSpec defines the desired state of RisingWave
+            description: RisingWaveSpec defines the desired state of RisingWave.
             properties:
               arch:
                 description: Arch defines what machine architecture on which RisingWave
-                  should run
+                  should run.
                 type: string
               computeNode:
                 description: ComputeNodeSpec defines the spec of compute-node No need
-                  storage information. Which storage to use depends on spec.objectStorageSpec
+                  storage information. Which storage to use depends on spec.objectStorageSpec.
                 properties:
                   affinity:
                     description: Affinity is a group of affinity scheduling rules.
@@ -936,7 +936,7 @@ spec:
                         type: object
                     type: object
                   image:
-                    description: ImageDescriptor describe the image information
+                    description: ImageDescriptor describe the image information.
                     properties:
                       pullPolicy:
                         description: 'PullPolicy for the image. Default: IfNotPresent'
@@ -1017,7 +1017,7 @@ spec:
                     type: object
                 type: object
               frontend:
-                description: FrontendSpec defines spec of frontend
+                description: FrontendSpec defines spec of frontend.
                 properties:
                   affinity:
                     description: Affinity is a group of affinity scheduling rules.
@@ -1885,7 +1885,7 @@ spec:
                         type: object
                     type: object
                   image:
-                    description: ImageDescriptor describe the image information
+                    description: ImageDescriptor describe the image information.
                     properties:
                       pullPolicy:
                         description: 'PullPolicy for the image. Default: IfNotPresent'
@@ -2833,7 +2833,7 @@ spec:
                         type: object
                     type: object
                   image:
-                    description: ImageDescriptor describe the image information
+                    description: ImageDescriptor describe the image information.
                     properties:
                       pullPolicy:
                         description: 'PullPolicy for the image. Default: IfNotPresent'
@@ -2917,7 +2917,7 @@ spec:
                     properties:
                       type:
                         description: MetaStorageType defines the storage type of meta
-                          node
+                          node.
                         type: string
                     required:
                     - type
@@ -2927,7 +2927,7 @@ spec:
                 type: object
               objectStorage:
                 description: 'ObjectStorageSpec defines spec of object storage TODO:
-                  support more backend types'
+                  support more backend types.'
                 properties:
                   cloudService:
                     description: 'TODO: remove or merge into S3 filed'
@@ -2940,7 +2940,7 @@ spec:
                   memory:
                     type: boolean
                   minIO:
-                    description: MinIO defines minIO deploy information
+                    description: MinIO defines minIO deploy information.
                     properties:
                       affinity:
                         description: Affinity is a group of affinity scheduling rules.
@@ -3844,7 +3844,7 @@ spec:
                             type: object
                         type: object
                       image:
-                        description: ImageDescriptor describe the image information
+                        description: ImageDescriptor describe the image information.
                         properties:
                           pullPolicy:
                             description: 'PullPolicy for the image. Default: IfNotPresent'
@@ -3933,10 +3933,10 @@ spec:
                 type: object
             type: object
           status:
-            description: RisingWaveStatus defines the observed state of RisingWave
+            description: RisingWaveStatus defines the observed state of RisingWave.
             properties:
               computeNode:
-                description: ComputeNodeStatus defines status of compute node
+                description: ComputeNodeStatus defines status of compute node.
                 properties:
                   phase:
                     type: string
@@ -3947,7 +3947,7 @@ spec:
                 type: object
               conditions:
                 items:
-                  description: RisingWaveCondition describes the condition for RisingWave
+                  description: RisingWaveCondition describes the condition for RisingWave.
                   properties:
                     lastTransitionTime:
                       description: Last time the condition transitioned from one status
@@ -3974,7 +3974,7 @@ spec:
                   type: object
                 type: array
               frontend:
-                description: FrontendSpecStatus defines status of compute frontend
+                description: FrontendSpecStatus defines status of compute frontend.
                 properties:
                   phase:
                     type: string
@@ -3984,7 +3984,7 @@ spec:
                     type: integer
                 type: object
               metaNode:
-                description: MetaNodeStatus defines status of meta node
+                description: MetaNodeStatus defines status of meta node.
                 properties:
                   phase:
                     type: string
@@ -3994,7 +3994,7 @@ spec:
                     type: integer
                 type: object
               objectStorage:
-                description: ObjectStorageStatus defines status of object storage
+                description: ObjectStorageStatus defines status of object storage.
                 properties:
                   minio:
                     properties:
@@ -4006,7 +4006,7 @@ spec:
                   phase:
                     type: string
                   type:
-                    description: ObjectStorageType defines storage provider
+                    description: ObjectStorageType defines storage provider.
                     type: string
                 type: object
             type: object

@@ -37,26 +37,9 @@ const (
 )
 
 const (
-	ComputeNodeTomlName  = "compute-config"
-	ComputeNodeTomlKey   = "risingwave.toml"
-	ComputeNodeTomlPath  = "risingwave.toml"
-	ComputeNodeTomlValue = `[ server ]
-heartbeat_interval = 1000
-
-[ batch ]
-chunk_size = 1024
-
-[ streaming ]
-chunk_size = 1024
-
-[ storage ]
-sstable_size = 268435456
-block_size = 4096
-bloom_false_positive = 0.1
-data_directory = "hummock_001"
-checksum_algo = "crc32c"
-async_checkpoint_enabled = true
-`
+	ComputeNodeTomlName = "compute-config"
+	ComputeNodeTomlKey  = "risingwave.toml"
+	ComputeNodeTomlPath = "risingwave.toml"
 )
 
 const (
@@ -67,12 +50,6 @@ const (
 )
 
 const (
-	FrontendTemplateStr = `
-    risingwave.pgserver.ip=$(MY_POD_IP)
-    risingwave.pgserver.port=%d
-    risingwave.leader.clustermode=Distributed
-
-    ## optional metadata service config
-    risingwave.catalog.mode=Remote
-    risingwave.meta.node=%s:%d`
+	TemplateFileDir           = "/template"
+	ComputeNodeConfigTemplate = "compute-config.yaml"
 )

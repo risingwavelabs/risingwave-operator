@@ -122,7 +122,7 @@ docker-cross-build-vendor: test buildx vendor
 docker-build: test ## Build docker image with the manager.
 	docker build -f docker/Dockerfile --build-arg USE_VENDOR=false -t ${IMG} . --output=type=docker
 
-docker-build-vendor: test vendor
+docker-build-vendor: vendor test
 	docker build -f docker/Dockerfile --build-arg USE_VENDOR=true -t ${IMG} . --output=type=docker
 
 docker-push: ## Push docker image with the manager.

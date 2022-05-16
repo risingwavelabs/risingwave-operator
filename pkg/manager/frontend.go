@@ -165,7 +165,7 @@ func generateFrontendDeployment(rw *v1alpha1.RisingWave) *v1.Deployment {
 				},
 			},
 		},
-		Command: []string{"/risingwave/bin/frontend-v2"},
+		Command: []string{"/risingwave/bin/frontend"},
 		Args: []string{
 			"--host",
 			fmt.Sprintf("$(POD_IP):%d", v1alpha1.FrontendPort),

@@ -18,8 +18,8 @@ package rendor
 
 import (
 	"bytes"
+	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/resource"
 )
 
@@ -37,7 +37,21 @@ func NewParser(clientGetter resource.RESTClientGetter) {
 	parser = p
 }
 
-func ParseFile(path string, obj interface{}) ([]runtime.Object, error) {
+func CreateObjectByTem(path string, obj interface{}) error {
+	infos, err := ParseFile(path, obj)
+	if err != nil {
+		return fmt.Errorf("parse file failed, %w", err)
+	}
+	for i := range infos {
+		err := createObject(infos[i])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func ParseFile(path string, obj interface{}) ([]*resource.Info, error) {
 	data, err := Template(path, obj)
 	if err != nil {
 		return nil, err
@@ -50,9 +64,14 @@ func ParseFile(path string, obj interface{}) ([]runtime.Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := make([]runtime.Object, len(infos))
-	for i := range infos {
-		res[i] = infos[i].Object
+	return infos, nil
+}
+
+func createObject(info *resource.Info) error {
+	h := resource.NewHelper(info.Client, info.Mapping)
+	_, err := h.Create(info.Namespace, true, info.Object)
+	if err != nil {
+		return err
 	}
-	return res, nil
+	return nil
 }

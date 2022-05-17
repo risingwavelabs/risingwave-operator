@@ -183,7 +183,7 @@ func generateMinIODeployment(rw *v1alpha1.RisingWave) *v1.Deployment {
 			"${PREFIX_BIN}/set_minio.sh",
 		},
 		ReadinessProbe: &corev1.Probe{
-			Handler: corev1.Handler{
+			ProbeHandler: corev1.ProbeHandler{
 				Exec: &corev1.ExecAction{
 					Command: []string{
 						"/bin/bash",
@@ -196,7 +196,7 @@ func generateMinIODeployment(rw *v1alpha1.RisingWave) *v1.Deployment {
 		},
 		LivenessProbe: &corev1.Probe{
 			// URL: curl -I http://127.0.0.1:9301/minio/health/live
-			Handler: corev1.Handler{
+			ProbeHandler: corev1.ProbeHandler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Port: intstr.IntOrString{
 						Type:   intstr.Int,

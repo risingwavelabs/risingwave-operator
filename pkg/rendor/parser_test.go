@@ -61,13 +61,13 @@ func TestParseFile(t *testing.T) {
 		"Namespace": "test-ns",
 	}
 
-	objs, err := ParseFile(path, opt)
+	infos, err := ParseFile(path, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// test for risingwave with namespace
-	obj := objs[0]
+	obj := infos[0].Object
 	assert.Equal(t, obj.GetObjectKind().GroupVersionKind().Kind, "ConfigMap")
 	m := meta.NewAccessor()
 	name, _ := m.Name(obj)

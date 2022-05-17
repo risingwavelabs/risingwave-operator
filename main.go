@@ -20,6 +20,10 @@ import (
 	"flag"
 	"os"
 
+	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -55,6 +59,22 @@ var (
 	enableLeaderElection bool
 )
 
+func NewCachingClient(cache cache.Cache, config *rest.Config, options client.Options, uncachedObjects ...client.Object) (client.Client, error) {
+	c, err := client.New(config, options)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.NewDelegatingClient(client.NewDelegatingClientInput{
+		CacheReader:     cache,
+		Client:          c,
+		UncachedObjects: uncachedObjects,
+
+		// THIS IS THE MAGIC
+		CacheUnstructured: true,
+	})
+}
+
 func main() {
 	flag.StringVar(&configPath, "config-file", "/config/config.yaml", "The file path of the configuration file.")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
@@ -75,6 +95,7 @@ func main() {
 	rendor.NewParser(&rendor.InnerRESTClientGetter{Config: config})
 
 	mgr, err := ctrl.NewManager(config, ctrl.Options{
+		NewClient:              NewCachingClient,
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
 		Port:                   9443,

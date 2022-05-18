@@ -165,14 +165,22 @@ func generateFrontendDeployment(rw *v1alpha1.RisingWave) *v1.Deployment {
 				},
 			},
 		},
-		Command: []string{"/risingwave/bin/frontend"},
+		Command: []string{
+			"/risingwave/bin/risingwave",
+		},
 		Args: []string{
+			"frontend-node",
 			"--host",
 			fmt.Sprintf("$(POD_IP):%d", v1alpha1.FrontendPort),
 			"--meta-addr",
 			fmt.Sprintf("http://%s:%d", MetaNodeComponentName(rw.Name), v1alpha1.MetaServerPort),
 		},
 		Ports: spec.Ports,
+	}
+
+	if len(spec.CMD) != 0 {
+		c.Command = make([]string, len(spec.CMD))
+		copy(c.Command, spec.CMD)
 	}
 
 	podSpec := corev1.PodSpec{

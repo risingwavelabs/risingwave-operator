@@ -9,8 +9,8 @@ data:
     default:
       image:
         arm64:
-          repository: public.ecr.aws/x5u3w5h6/singularity-data/risingwave
-          tag: ${ARCH}
+          repository: public.ecr.aws/x5u3w5h6/risingwave-arm
+          tag: latest
         amd64:
           repository: ghcr.io/singularity-data/risingwave
           tag: latest

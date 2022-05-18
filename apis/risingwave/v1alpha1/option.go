@@ -25,10 +25,11 @@ var defaultOption RisingWaveOptions
 type RisingWaveOptions struct {
 	Arch Arch
 
-	MetaNode    BaseOptions
-	ComputeNode BaseOptions
-	MinIO       BaseOptions
-	Frontend    BaseOptions
+	MetaNode      BaseOptions
+	ComputeNode   BaseOptions
+	CompactorNode BaseOptions
+	MinIO         BaseOptions
+	Frontend      BaseOptions
 }
 
 // ImageOptions TODO: remove this map after all images support docker multi platform.

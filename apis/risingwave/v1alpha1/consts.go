@@ -41,6 +41,9 @@ const (
 
 	FrontendPortName = "frontend"
 	FrontendPort     = 4567
+
+	CompactorNodePortName = "compactor-node"
+	CompactorNodePort     = 6660
 )
 
 const (

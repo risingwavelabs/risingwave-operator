@@ -19,6 +19,9 @@ package manager
 import (
 	"context"
 	"fmt"
+	"path"
+
+	"github.com/singularity-data/risingwave-operator/pkg/rendor"
 
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -44,9 +47,22 @@ func (m *ComputeNodeManager) Name() string {
 }
 
 func (m *ComputeNodeManager) CreateService(ctx context.Context, c client.Client, rw *v1alpha1.RisingWave) error {
-	err := CreateIfNotFound(ctx, c, genComputeConfigMap(rw))
-	if err != nil && !errors.IsAlreadyExists(err) {
-		return err
+	var p = path.Join(TemplateFileDir, ComputeNodeConfigTemplate)
+	var opt = map[string]interface{}{
+		"NAME":       computeNodeConfigmapName(rw.Name),
+		"NAME_SPACE": rw.Namespace,
+	}
+	objList, err := rendor.ParseFile(p, opt)
+	if err != nil {
+		return fmt.Errorf("rendor parse file failed, %w", err)
+	}
+
+	for i := range objList {
+		obj := objList[i].(client.Object)
+		err := CreateIfNotFound(ctx, c, obj)
+		if err != nil && !errors.IsAlreadyExists(err) {
+			return fmt.Errorf("create objecet by template failed, %w", err)
+		}
 	}
 
 	err = CreateIfNotFound(ctx, c, generateComputeStatefulSet(rw))
@@ -117,7 +133,10 @@ func (m *ComputeNodeManager) EnsureService(ctx context.Context, c client.Client,
 	err := wait.PollImmediate(RetryPeriod, RetryTimeout, func() (bool, error) {
 		err := c.Get(ctx, namespacedName, &oldSts)
 		if err != nil {
-			return false, fmt.Errorf("get deploy failed, %w", err)
+			if errors.IsNotFound(err) {
+				return false, nil
+			}
+			return false, fmt.Errorf("get statefulset failed, %w", err)
 		}
 
 		if oldSts.Status.ReadyReplicas == oldSts.Status.Replicas &&
@@ -159,19 +178,6 @@ var _ ComponentManager = &ComputeNodeManager{}
 
 func computeNodeConfigmapName(name string) string {
 	return fmt.Sprintf("%s-compute-configmap", name)
-}
-
-func genComputeConfigMap(rw *v1alpha1.RisingWave) *corev1.ConfigMap {
-	c := &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      computeNodeConfigmapName(rw.Name),
-			Namespace: rw.Namespace,
-		},
-		Data: map[string]string{ //TODO: mv value as file
-			ComputeNodeTomlKey: ComputeNodeTomlValue,
-		},
-	}
-	return c
 }
 
 func computeNodeStoreParam(rw *v1alpha1.RisingWave) string {

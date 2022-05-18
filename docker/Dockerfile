@@ -16,6 +16,7 @@ COPY main.go main.go
 COPY apis/ apis/
 COPY pkg/ pkg/
 COPY vendor* vendor/
+COPY template/ template/
 
 # Build
 RUN if [ "$USE_VENDOR" = "true" ] ; then \

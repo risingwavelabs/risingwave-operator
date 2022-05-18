@@ -47,6 +47,7 @@ const (
 	FrontendName    string = "Frontend"
 	ComputeNodeName string = "ComputeNode"
 	MinIOName       string = "MinIO"
+	S3Name          string = "S3"
 )
 
 const (

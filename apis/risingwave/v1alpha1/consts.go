@@ -46,3 +46,7 @@ const (
 const (
 	ArchKey = "kubernetes.io/arch"
 )
+
+const (
+	CloudProviderConfigureSecretName string = "cloud-provider-configure"
+)

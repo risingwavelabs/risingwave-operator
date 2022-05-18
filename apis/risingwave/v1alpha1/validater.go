@@ -39,7 +39,6 @@ func (r *RisingWave) ValidateCreate() error {
 		}
 	}
 
-	// TODO(user): fill in your validation logic upon object creation.
 	return nil
 }
 
@@ -96,6 +95,14 @@ func validateObjectStorage(n, o *ObjectStorageSpec) error {
 		err := validateDeployDescriptor(n.MinIO.DeployDescriptor, o.MinIO.DeployDescriptor)
 		if err != nil {
 			return err
+		}
+	}
+
+	if n.S3 != nil {
+		if n.S3.Bucket == nil {
+			return &validateError{
+				Msg: fmt.Sprintf("bucket cannot empty when use S3"),
+			}
 		}
 	}
 

@@ -29,7 +29,7 @@ type ComponentManager interface {
 	CreateService(context.Context, client.Client, *v1alpha1.RisingWave) error
 
 	// UpdateService will update service if service spec changed
-	//if no change, do nothing
+	// return changed flag. If true, means this component has been changed
 	UpdateService(context.Context, client.Client, *v1alpha1.RisingWave) (bool, error)
 
 	// DeleteService ...
@@ -39,7 +39,7 @@ type ComponentManager interface {
 	CheckService(context.Context, client.Client, *v1alpha1.RisingWave) (bool, error)
 
 	// EnsureService block util the service is ready, or failed
-	//if failed. return the error
+	// if failed. return the error
 	EnsureService(context.Context, client.Client, *v1alpha1.RisingWave) error
 
 	Name() string

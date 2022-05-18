@@ -2914,14 +2914,6 @@ spec:
                 description: 'ObjectStorageSpec defines spec of object storage TODO:
                   support more backend types.'
                 properties:
-                  cloudService:
-                    description: 'TODO: remove or merge into S3 filed'
-                    properties:
-                      provider:
-                        type: string
-                    required:
-                    - provider
-                    type: object
                   memory:
                     type: boolean
                   minIO:
@@ -3914,7 +3906,20 @@ spec:
                     type: object
                   s3:
                     description: 'TODO: support s3 config'
-                    type: boolean
+                    properties:
+                      bucket:
+                        description: the name of s3 bucket, if not set, operator will
+                          create new bucket
+                        type: string
+                      provider:
+                        description: the name of Provider, default AWS
+                        type: string
+                      secret:
+                        description: the secret name of s3 client configure
+                        type: string
+                    required:
+                    - provider
+                    type: object
                 type: object
             type: object
           status:
@@ -3982,6 +3987,7 @@ spec:
                 description: ObjectStorageStatus defines status of object storage.
                 properties:
                   minio:
+                    description: MinIOStatus define the status of MinIO storage.
                     properties:
                       replicas:
                         description: Total number of non-terminated pods.
@@ -3990,6 +3996,8 @@ spec:
                     type: object
                   phase:
                     type: string
+                  s3:
+                    type: boolean
                   type:
                     description: ObjectStorageType defines storage provider.
                     type: string

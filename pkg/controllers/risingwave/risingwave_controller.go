@@ -81,7 +81,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
+// Modify the Reconcile function to compare the state specified by
 // the RisingWave object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
@@ -189,49 +189,40 @@ func (r *Reconciler) syncObjectStorage(ctx context.Context, rw *v1alpha1.RisingW
 	switch {
 	case rw.Spec.ObjectStorage.MinIO != nil:
 		rw.Status.ObjectStorage.StorageType = v1alpha1.MinIOType
-	case rw.Spec.ObjectStorage.S3:
+		// ensure minIO service
+		var realPodCount int32 = 0
+		if rw.Status.ObjectStorage.MinIOStatus != nil {
+			realPodCount = rw.Status.ObjectStorage.MinIOStatus.Replicas
+		}
+		var event = hook.GenLifeCycleEvent(rw.Status.ObjectStorage.Phase, *rw.Spec.ObjectStorage.MinIO.Replicas, realPodCount)
+		if event.Type == hook.SkipType {
+			return true, nil
+		}
+
+		componentPhase, err := r.syncComponent(ctx, rw, manager.NewMinIOManager(), event, hook.LifeCycleOption{
+			PostReadyFunc: func() error {
+				if rw.Status.ObjectStorage.MinIOStatus == nil {
+					rw.Status.ObjectStorage.MinIOStatus = &v1alpha1.MinIOStatus{}
+				}
+				rw.Status.ObjectStorage.MinIOStatus.Replicas = *rw.Spec.ObjectStorage.MinIO.Replicas
+				return nil
+			},
+		})
+		if err != nil {
+			return false, err
+		}
+		rw.Status.ObjectStorage.Phase = componentPhase
+	case rw.Spec.ObjectStorage.S3 != nil:
 		rw.Status.ObjectStorage.StorageType = v1alpha1.S3Type
+		rw.Status.ObjectStorage.Phase = v1alpha1.ComponentReady
 	case rw.Spec.ObjectStorage.Memory:
 		rw.Status.ObjectStorage.StorageType = v1alpha1.MemoryType
+		rw.Status.ObjectStorage.Phase = v1alpha1.ComponentReady
 	default:
 		rw.Status.ObjectStorage.StorageType = v1alpha1.UnknownType
 	}
 
-	if rw.Spec.ObjectStorage.MinIO == nil {
-		rw.Status.ObjectStorage.Phase = v1alpha1.ComponentReady
-		err := r.updateStatus(ctx, rw)
-		if err != nil {
-			return false, err
-		}
-
-		return false, nil
-	}
-
-	// ensure minIO service
-	var realPodCount int32 = 0
-	if rw.Status.ObjectStorage.MinIOStatus != nil {
-		realPodCount = rw.Status.ObjectStorage.MinIOStatus.Replicas
-	}
-	var event = hook.GenLifeCycleEvent(rw.Status.ObjectStorage.Phase, *rw.Spec.ObjectStorage.MinIO.Replicas, realPodCount)
-	if event.Type == hook.SkipType {
-		return true, nil
-	}
-
-	componentPhase, err := r.syncComponent(ctx, rw, manager.NewMinIOManager(), event, hook.LifeCycleOption{
-		PostReadyFunc: func() error {
-			if rw.Status.ObjectStorage.MinIOStatus == nil {
-				rw.Status.ObjectStorage.MinIOStatus = &v1alpha1.MinIOStatus{}
-			}
-			rw.Status.ObjectStorage.MinIOStatus.Replicas = *rw.Spec.ObjectStorage.MinIO.Replicas
-			return nil
-		},
-	})
-	if err != nil {
-		return false, err
-	}
-	rw.Status.ObjectStorage.Phase = componentPhase
-
-	err = r.updateStatus(ctx, rw)
+	err := r.updateStatus(ctx, rw)
 	if err != nil {
 		return false, err
 	}

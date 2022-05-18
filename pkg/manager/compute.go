@@ -52,17 +52,9 @@ func (m *ComputeNodeManager) CreateService(ctx context.Context, c client.Client,
 		"NAME":       computeNodeConfigmapName(rw.Name),
 		"NAME_SPACE": rw.Namespace,
 	}
-	objList, err := rendor.ParseFile(p, opt)
-	if err != nil {
+	err := rendor.CreateObjectByTem(p, opt)
+	if err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("rendor parse file failed, %w", err)
-	}
-
-	for i := range objList {
-		obj := objList[i].(client.Object)
-		err := CreateIfNotFound(ctx, c, obj)
-		if err != nil && !errors.IsAlreadyExists(err) {
-			return fmt.Errorf("create objecet by template failed, %w", err)
-		}
 	}
 
 	err = CreateIfNotFound(ctx, c, generateComputeStatefulSet(rw))

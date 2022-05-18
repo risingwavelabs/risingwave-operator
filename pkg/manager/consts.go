@@ -53,4 +53,8 @@ const (
 const (
 	TemplateFileDir           = "/template"
 	ComputeNodeConfigTemplate = "compute-config.yaml"
+
+	AccessKeyID     string = "AccessKeyID"
+	SecretAccessKey string = "SecretAccessKey"
+	Region          string = "Region"
 )

@@ -17,13 +17,9 @@
 
 set -e
 
-info() {
-    echo "[e2e] $1"
-}
-
 # cert-manager
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml
-threshold=50
+threshold=40
 current_epoch=0
 while :
 do  
@@ -32,20 +28,19 @@ do
         break
     fi
     if [ $current_epoch -eq $threshold ]; then
-        info "ERROR: timeout waiting for cert-manager"
+        echo "ERROR: timeout waiting for cert-manager"
         exit 1
     fi
     sleep 2
     current_epoch=$((current_epoch+1))
-    info "waiting for cert-manager to be ready ($current_epoch / $threshold)..."
+    echo "waiting for cert-manager to be ready ($current_epoch / $threshold)..."
 done
-info "cert-manager is ready."
+echo "cert-manager is ready."
 
 
 # risingwave-operator-system
 make build
 make deploy
-threshold=10
 current_epoch=0
 while :
 do  
@@ -54,19 +49,18 @@ do
         break
     fi
     if [ $current_epoch -eq $threshold ]; then
-        info "ERROR: timeout waiting for risingwave-operator-system"
+        echo "ERROR: timeout waiting for risingwave-operator-system"
         exit 1
     fi
     sleep 2
     current_epoch=$((current_epoch+1))
-    info "waiting for risingwave-operator-system to be ready ($current_epoch / $threshold)..."
+    echo "waiting for risingwave-operator-system to be ready ($current_epoch / $threshold)..."
 done
 # check if the webhook endpoint is ready for connection
 webhook_ip=$(kubectl get svc -n risingwave-operator-system | grep risingwave-operator-webhook-service  | awk '{print $3}')
 webhook_port_raw=$(kubectl get svc -n risingwave-operator-system | grep risingwave-operator-webhook-service  | awk '{print $5}')
 webhook_port=$(echo ${webhook_port_raw/\/TCP/""})
 current_epoch=0
-threshold=10
 set +e
 while :
 do
@@ -76,14 +70,14 @@ do
         break
     fi
     if [ $current_epoch -eq $threshold ]; then
-        info "ERROR: timeout waiting for risingwave-operator webhook."
+        echo "ERROR: timeout waiting for risingwave-operator webhook."
         exit 1
     fi
     current_epoch=$((current_epoch+1))
-    info "waiting for risingwave-operator webhook to be ready ($current_epoch / $threshold)"
+    echo "waiting for risingwave-operator webhook to be ready ($current_epoch / $threshold)"
     sleep 2
 done
-info "risingwave-operator-system is ready."
+echo "risingwave-operator-system is ready."
 set -e
 
 # risingwave
@@ -92,7 +86,6 @@ if [ $namespace_exit -ne 1 ]; then
     kubectl create namespace test
 fi
 kubectl apply -f examples/minio-risingwave-amd.yaml
-threshold=10
 current_epoch=0
 while :
 do  
@@ -102,17 +95,16 @@ do
         break
     fi
     if [ $current_epoch -eq $threshold ]; then
-        info "ERROR: timeout waiting for risingwave"
+        echo "ERROR: timeout waiting for risingwave"
         exit 1
     fi
     current_epoch=$((current_epoch+1))
-    info "waiting for risingwave to be ready ($current_epoch / $threshold)"
+    echo "waiting for risingwave to be ready ($current_epoch / $threshold)"
     sleep 2
 done
-info "risingwave is ready."
+echo "risingwave is ready."
 
 # checking event log to see if there is some errors
-threshold=20
 current_epoch=0
 while :
 do 
@@ -123,6 +115,6 @@ do
         exit 1
     fi
     current_epoch=$((current_epoch+1))
-    info "checking failed event ($current_epoch / $threshold)"
+    echo "checking failed event ($current_epoch / $threshold)"
     sleep 2
 done

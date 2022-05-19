@@ -38,6 +38,7 @@ func (r *RisingWave) Default() {
 		MetaNodeFinalizer,
 		ObjectStorageFinalizer,
 		ComputeNodeFinalizer,
+		CompactorNodeFinalizer,
 		FrontendFinalizer,
 	}
 

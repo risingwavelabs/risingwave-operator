@@ -104,6 +104,7 @@ jobs:
       - name: e2e-test
         run: |
           KUBECONFIG=/etc/kubernetes/admin.conf make e2e-test
+        shell: bash
 
   stop-control-plane:
     name: stop-control-plane

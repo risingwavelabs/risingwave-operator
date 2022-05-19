@@ -41,12 +41,12 @@ jobs:
       - start-control-plane
     runs-on: ${{ needs.start-control-plane.outputs.label }}
     outputs:
-      token: ${{ steps.setup-control-plane.outpus.token }}
-      cert: ${{ steps.setup-control-plane.outpus.cert }}
-      endpoint: ${{ steps.setup-control-plane.outpus.endpoint }}
+      token: ${{ steps.control-plane-kubeadm-init.outpus.token }}
+      cert: ${{ steps.control-plane-kubeadm-init.outpus.cert }}
+      endpoint: ${{ steps.control-plane-kubeadm-init.outpus.endpoint }}
     steps:
       - name: Kubeadm init
-        id: setup-control-plane
+        id: control-plane-kubeadm-init
         run: |
           sudo kubeadm init --cri-socket unix:///var/run/crio/crio.sock --pod-network-cidr 10.244.0.0/16 --control-plane-endpoint $(hostname):6443
           export KUBECONFIG=/etc/kubernetes/admin.conf
@@ -57,6 +57,9 @@ jobs:
           echo "::set-output name=cert::$cert"
           token=$(sudo kubeadm token create)
           echo "::set-output name=token::$token"
+          echo $endpoint
+          echo $token
+          echo $cert
 
   start-worker-node:
     name: start-worker-node

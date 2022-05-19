@@ -45,11 +45,8 @@ jobs:
         id: setup-control-plane
         run: |
           sudo kubeadm init --cri-socket unix:///var/run/crio/crio.sock --pod-network-cidr 10.244.0.0/16 --control-plane-endpoint $(hostname):6443
-          unset KUBECONFIG
           mkdir -p $HOME/.kube
-          sudo rm -f $HOME/.kube/config
-          sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-          sudo chown $(id -u):$(id -g) $HOME/.kube/config
+          export KUBECONFIG=/etc/kubernetes/admin.conf
           sudo kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
           endpoint=$(hostname):6443
           echo "::set-output name=CONTROL_PLANE_ENDPOINT::$endpoint"

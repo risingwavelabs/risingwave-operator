@@ -15,6 +15,12 @@
 # limitations under the License.
 #
 
+if ! command -v jq &> /dev/null
+then
+    sudo apt update
+    sudo apt install jq
+fi
+
 # cert-manager
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml
 threshold=40
@@ -58,6 +64,7 @@ done
 webhook_ip=$(kubectl get svc -n risingwave-operator-system | grep risingwave-operator-webhook-service  | awk '{print $3}')
 webhook_port_raw=$(kubectl get svc -n risingwave-operator-system | grep risingwave-operator-webhook-service  | awk '{print $5}')
 webhook_port=$(echo ${webhook_port_raw/\/TCP/""})
+echo "cert-manager webhook endpoint found $webhook_ip:$webhook_port"
 current_epoch=0
 
 while :

@@ -41,9 +41,9 @@ jobs:
       - start-control-plane
     runs-on: ${{ needs.start-control-plane.outputs.label }}
     outputs:
-      token: ${{ steps.control-plane-kubeadm-init.outpus.token }}
-      cert: ${{ steps.control-plane-kubeadm-init.outpus.cert }}
-      endpoint: ${{ steps.control-plane-kubeadm-init.outpus.endpoint }}
+      token: ${{ steps.control-plane-kubeadm-init.outputs.token }}
+      cert: ${{ steps.control-plane-kubeadm-init.outputs.cert }}
+      endpoint: ${{ steps.control-plane-kubeadm-init.outputs.endpoint }}
     steps:
       - name: Kubeadm init
         id: control-plane-kubeadm-init

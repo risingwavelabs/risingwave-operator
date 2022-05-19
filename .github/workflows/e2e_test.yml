@@ -129,7 +129,7 @@ jobs:
         if: ${{ always() }}
 
   stop-worker-node:
-    name: stop-control-plane
+    name: stop-worker-node
     needs:
       - e2e
     runs-on: ubuntu-latest

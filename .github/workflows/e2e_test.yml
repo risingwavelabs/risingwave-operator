@@ -97,7 +97,7 @@ jobs:
       - kubeadm-init
       - kubeadm-join
       - start-control-plane
-    runs-on: ${{ needs.start-control-plane.outpus.label }}
+    runs-on: ${{ needs.start-control-plane.outputs.label }}
     steps:
       - name: checkout
         uses: actions/checkout@v2

@@ -1,4 +1,4 @@
-name: Daily build of risingwave-operator image
+name: e2e test
 
 on:
   pull_request:

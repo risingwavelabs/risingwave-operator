@@ -109,7 +109,7 @@ jobs:
         run: |
           echo "::set-env name=GOPATH::$(go env GOPATH)"
           echo "::add-path::$(go env GOPATH)/bin"
-      shell: bash
+        shell: bash
       - name: e2e-test
         run: |
           sudo KUBECONFIG=/etc/kubernetes/admin.conf make e2e-test

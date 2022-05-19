@@ -102,6 +102,9 @@ lint: golangci-lint
 test: manifests generate fmt vet lint envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
 
+e2e-test:
+	bash ./scripts/e2e.sh
+
 buildx:
 	docker buildx install
 
@@ -236,3 +239,4 @@ catalog-build: opm ## Build a catalog image.
 .PHONY: catalog-push
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
+

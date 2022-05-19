@@ -40,13 +40,16 @@ jobs:
     needs:
       - start-control-plane
     runs-on: ${{ needs.start-control-plane.outputs.label }}
+    outputs:
+      token: ${{ steps.setup-control-plane.outpus.token }}
+      cert: ${{ steps.setup-control-plane.outpus.cert }}
+      endpoint: ${{ steps.setup-control-plane.outpus.endpoint }}
     steps:
       - name: Kubeadm init
         id: setup-control-plane
         run: |
           sudo kubeadm init --cri-socket unix:///var/run/crio/crio.sock --pod-network-cidr 10.244.0.0/16 --control-plane-endpoint $(hostname):6443
           export KUBECONFIG=/etc/kubernetes/admin.conf
-          cat /etc/kubernetes/admin.conf
           sudo KUBECONFIG=/etc/kubernetes/admin.conf kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
           endpoint=$(hostname):6443
           echo "::set-output name=CONTROL_PLANE_ENDPOINT::$endpoint"

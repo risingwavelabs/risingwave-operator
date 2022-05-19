@@ -31,7 +31,7 @@ jobs:
         with:
           mode: start
           github-token: ${{ secrets.PAT }}
-          ec2-image-id: ami-0043ac081599cfa72
+          ec2-image-id: ami-05f90245cf870a615
           ec2-instance-type: c5.xlarge
           subnet-id: subnet-08978fdb70c2d5d11
           security-group-id: sg-07252330b11a5c999
@@ -76,7 +76,7 @@ jobs:
         with:
           mode: start
           github-token: ${{ secrets.PAT }}
-          ec2-image-id: ami-0043ac081599cfa72
+          ec2-image-id: ami-05f90245cf870a615
           ec2-instance-type: c5.xlarge
           subnet-id: subnet-08978fdb70c2d5d11
           security-group-id: sg-07252330b11a5c999

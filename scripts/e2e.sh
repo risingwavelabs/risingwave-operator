@@ -15,8 +15,6 @@
 # limitations under the License.
 #
 
-set -e
-
 # cert-manager
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml
 threshold=40
@@ -61,7 +59,7 @@ webhook_ip=$(kubectl get svc -n risingwave-operator-system | grep risingwave-ope
 webhook_port_raw=$(kubectl get svc -n risingwave-operator-system | grep risingwave-operator-webhook-service  | awk '{print $5}')
 webhook_port=$(echo ${webhook_port_raw/\/TCP/""})
 current_epoch=0
-set +e
+
 while :
 do
     nc -zvw3 $webhook_ip $webhook_port
@@ -78,7 +76,6 @@ do
     sleep 2
 done
 echo "risingwave-operator-system is ready."
-set -e
 
 # risingwave
 namespace_exit=$(kubectl get namespaces | awk '{if($1 == "test")s=1}END{print s}')

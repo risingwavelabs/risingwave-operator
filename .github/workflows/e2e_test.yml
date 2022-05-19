@@ -101,8 +101,9 @@ jobs:
       - start-control-plane
     runs-on: ${{ needs.start-control-plane.outpus.label }}
     steps:
-      - name: e2e test
+      - name: checkout
         uses: actions/checkout@v2
+      - name: e2e-test
         run: |
           make e2e-test
 

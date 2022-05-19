@@ -103,7 +103,7 @@ jobs:
         uses: actions/checkout@v2
       - name: e2e-test
         run: |
-          sudo KUBECONFIG=/etc/kubernetes/admin.conf bash ./scripts/e2e.sh
+          sudo KUBECONFIG=/etc/kubernetes/admin.conf make e2e-test
         shell: bash
 
   stop-control-plane:

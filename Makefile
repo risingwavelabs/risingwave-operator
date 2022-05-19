@@ -103,7 +103,7 @@ test: manifests generate fmt vet lint envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
 
 e2e-test:
-	bash ./scripts/e2e.sh
+	./scripts/e2e.sh
 
 buildx:
 	docker buildx install

@@ -103,7 +103,8 @@ jobs:
         uses: actions/checkout@v2
       - name: run e2e test
         run: |
-          go version
+          sudo cat /etc/profile
+          sudo source /etc/profile
           sudo go version
           sudo chmod 777 ./scripts/e2e.sh
           sudo KUBECONFIG=/etc/kubernetes/admin.conf make e2e-test

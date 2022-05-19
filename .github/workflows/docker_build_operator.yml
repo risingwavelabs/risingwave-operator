@@ -5,6 +5,9 @@ on:
     paths:
       - '.github/workflows/docker_build_operator.yml'
       - 'docker/Dockerfile'
+  push:
+    branches:
+      - main
 
   # For manually triggering workflow
   workflow_dispatch:

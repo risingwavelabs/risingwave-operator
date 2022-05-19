@@ -33,8 +33,8 @@ jobs:
           github-token: ${{ secrets.PAT }}
           ec2-image-id: ami-09b6e7b589c69bf56
           ec2-instance-type: c5.xlarge
-          subnet-id: subnet-59743123
-          security-group-id: sg-9ec32bfe
+          subnet-id: subnet-08978fdb70c2d5d11
+          security-group-id: sg-07252330b11a5c999
 
   kubeadm-init:
     needs:
@@ -80,8 +80,8 @@ jobs:
           github-token: ${{ secrets.PAT }}
           ec2-image-id: ami-09b6e7b589c69bf56
           ec2-instance-type: c5.xlarge
-          subnet-id: subnet-59743123
-          security-group-id: sg-9ec32bfe
+          subnet-id: subnet-08978fdb70c2d5d11
+          security-group-id: sg-07252330b11a5c999
 
   kubeadm-join:
     needs:

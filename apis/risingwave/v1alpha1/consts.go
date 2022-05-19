@@ -20,6 +20,7 @@ const (
 	MetaNodeFinalizer      string = "meta"
 	ObjectStorageFinalizer string = "storage"
 	ComputeNodeFinalizer   string = "compute"
+	CompactorNodeFinalizer string = "compactor"
 	FrontendFinalizer      string = "frontend"
 )
 

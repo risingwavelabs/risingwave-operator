@@ -446,6 +446,14 @@ func (r *Reconciler) doDeletion(ctx context.Context, rw *v1alpha1.RisingWave) (e
 	}
 	fSet.Delete(v1alpha1.ComputeNodeFinalizer)
 
+	// delete compactorNode
+	err = r.deleteComponent(ctx, rw, manager.NewCompactorNodeManager())
+	if err != nil {
+		log.Error(err, "Delete compactor node failed")
+		return
+	}
+	fSet.Delete(v1alpha1.CompactorNodeFinalizer)
+
 	// delete frontend
 	err = r.deleteComponent(ctx, rw, manager.NewFrontendManager())
 	if err != nil {

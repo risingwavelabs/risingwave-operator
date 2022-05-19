@@ -101,6 +101,7 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
+      - name: run e2e test
         run: |
           go version
           sudo go version

@@ -5182,7 +5182,7 @@ data:
           tag: latest
       repository: ghcr.io/singularity-data/risingwave
       tag: latest
-      pullPolicy: IfNotPresent
+      pullPolicy: Always
       requests:
         cpu: 100m
         memory: 100Mi
@@ -5291,7 +5291,7 @@ spec:
         command:
         - /manager
         image: ghcr.io/singularity-data/risingwave-operator:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         livenessProbe:
           httpGet:
             path: /healthz

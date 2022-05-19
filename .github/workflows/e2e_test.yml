@@ -105,6 +105,7 @@ jobs:
         run: |
           sudo su
           source /etc/profile
+          export GOCACHE=/tmp
           go version
           chmod 777 ./scripts/e2e.sh
           KUBECONFIG=/etc/kubernetes/admin.conf make e2e-test

@@ -58,6 +58,8 @@ type RisingWaveSpec struct {
 
 	ComputeNode *ComputeNodeSpec `json:"computeNode,omitempty"`
 
+	CompactorNode *CompactorNodeSpec `json:"compactorNode,omitempty"`
+
 	Frontend *FrontendSpec `json:"frontend,omitempty"`
 }
 
@@ -74,6 +76,7 @@ type RisingWaveStatus struct {
 	MetaNode      MetaNodeStatus      `json:"metaNode,omitempty"`
 	ObjectStorage ObjectStorageStatus `json:"objectStorage,omitempty"`
 	ComputeNode   ComputeNodeStatus   `json:"computeNode,omitempty"`
+	CompactorNode CompactorNodeStatus `json:"compactorNode,omitempty"`
 	Frontend      FrontendSpecStatus  `json:"frontend,omitempty"`
 
 	Condition []RisingWaveCondition `json:"conditions,omitempty"`
@@ -140,6 +143,11 @@ type ComputeNodeSpec struct {
 	DeployDescriptor `json:",inline"`
 }
 
+// CompactorNodeSpec defines the spec of compactor-node.
+type CompactorNodeSpec struct {
+	DeployDescriptor `json:",inline"`
+}
+
 // ObjectStorageSpec defines spec of object storage
 // TODO: support more backend types.
 type ObjectStorageSpec struct {
@@ -187,6 +195,9 @@ type DeployDescriptor struct {
 
 	// +optional
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+
+	// +optional
+	CMD []string `json:"cmd,omitempty"`
 }
 
 // ImageDescriptor describe the image information.
@@ -260,6 +271,14 @@ type MinIOStatus struct {
 
 // ComputeNodeStatus defines status of compute node.
 type ComputeNodeStatus struct {
+	Phase ComponentPhase `json:"phase,omitempty"`
+
+	// Total number of non-terminated pods.
+	Replicas int32 `json:"replicas,omitempty"`
+}
+
+// CompactorNodeStatus defines status of compactor node.
+type CompactorNodeStatus struct {
 	Phase ComponentPhase `json:"phase,omitempty"`
 
 	// Total number of non-terminated pods.

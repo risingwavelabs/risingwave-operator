@@ -58,6 +58,7 @@ func NewReconciler(
 		r.syncMetaService,
 		r.syncObjectStorage,
 		r.syncComputeNode,
+		r.syncCompactorNode,
 		r.syncFrontend,
 	}
 	return r
@@ -247,6 +248,32 @@ func (r *Reconciler) syncComputeNode(ctx context.Context, rw *v1alpha1.RisingWav
 		return false, err
 	}
 	rw.Status.ComputeNode.Phase = componentPhase
+
+	err = r.updateStatus(ctx, rw)
+	if err != nil {
+		return false, err
+	}
+
+	return false, nil
+}
+
+// syncCompactorNode do compactor-node create,update,health check.
+func (r *Reconciler) syncCompactorNode(ctx context.Context, rw *v1alpha1.RisingWave) (bool, error) {
+	var event = hook.GenLifeCycleEvent(rw.Status.CompactorNode.Phase, *rw.Spec.CompactorNode.Replicas, rw.Status.CompactorNode.Replicas)
+	if event.Type == hook.SkipType {
+		return true, nil
+	}
+
+	componentPhase, err := r.syncComponent(ctx, rw, manager.NewCompactorNodeManager(), event, hook.LifeCycleOption{
+		PostReadyFunc: func() error {
+			rw.Status.CompactorNode.Replicas = *rw.Spec.CompactorNode.Replicas
+			return nil
+		},
+	})
+	if err != nil {
+		return false, err
+	}
+	rw.Status.CompactorNode.Phase = componentPhase
 
 	err = r.updateStatus(ctx, rw)
 	if err != nil {

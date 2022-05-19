@@ -44,6 +44,7 @@ func (r *RisingWave) Default() {
 	r.defaultMeta()
 	r.defaultStorage()
 	r.defaultComputeNode()
+	r.defaultCompactorNode()
 	r.defaultFrontend()
 }
 
@@ -182,6 +183,39 @@ func (r *RisingWave) defaultComputeNode() {
 	}
 
 	compute.NodeSelector = map[string]string{
+		ArchKey: string(r.Spec.Arch),
+	}
+}
+
+func (r *RisingWave) defaultCompactorNode() {
+	if r.Spec.CompactorNode == nil {
+		r.Spec.CompactorNode = &CompactorNodeSpec{}
+	}
+
+	compactor := r.Spec.CompactorNode
+	defaultValue := defaultOption.CompactorNode
+	if compactor.Image == nil {
+		compactor.Image = r.defaultImage(defaultValue)
+	}
+
+	if compactor.Replicas == nil {
+		compactor.Replicas = &defaultValue.Replicas
+	}
+
+	if len(compactor.Ports) == 0 {
+		compactor.Ports = []corev1.ContainerPort{
+			{
+				Name:          CompactorNodePortName,
+				ContainerPort: CompactorNodePort,
+			},
+		}
+	}
+
+	if compactor.Resources == nil {
+		compactor.Resources = defaultValue.Resources.DeepCopy()
+	}
+
+	compactor.NodeSelector = map[string]string{
 		ArchKey: string(r.Spec.Arch),
 	}
 }

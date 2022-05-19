@@ -19,12 +19,13 @@ package manager
 import "time"
 
 const (
-	RisingWaveKey           string = "risingwave-app"
-	RisingWaveName          string = "risingwave-name"
-	RisingWaveMetaValue     string = "meta-node"
-	RisingWaveComputeValue  string = "compute-node"
-	RisingWaveFrontendValue string = "frontend"
-	RisingWaveMinIOValue    string = "minio"
+	RisingWaveKey            string = "risingwave-app"
+	RisingWaveName           string = "risingwave-name"
+	RisingWaveMetaValue      string = "meta-node"
+	RisingWaveComputeValue   string = "compute-node"
+	RisingWaveCompactorValue string = "compactor-node"
+	RisingWaveFrontendValue  string = "frontend"
+	RisingWaveMinIOValue     string = "minio"
 )
 
 const (
@@ -43,11 +44,11 @@ const (
 )
 
 const (
-	MetaNodeName    string = "MetaNode"
-	FrontendName    string = "Frontend"
-	ComputeNodeName string = "ComputeNode"
-	MinIOName       string = "MinIO"
-	S3Name          string = "S3"
+	MetaNodeName      string = "MetaNode"
+	FrontendName      string = "Frontend"
+	ComputeNodeName   string = "ComputeNode"
+	CompactorNodeName string = "CompactorNode"
+	MinIOName         string = "MinIO"
 )
 
 const (

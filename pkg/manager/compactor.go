@@ -19,9 +19,6 @@ package manager
 import (
 	"context"
 	"fmt"
-	"path"
-
-	"github.com/singularity-data/risingwave-operator/pkg/rendor"
 
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -35,95 +32,73 @@ import (
 	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
-type ComputeNodeManager struct {
+type CompactorNodeManager struct {
 }
 
-func NewComputeNodeManager() *ComputeNodeManager {
-	return &ComputeNodeManager{}
+func NewCompactorNodeManager() *CompactorNodeManager {
+	return &CompactorNodeManager{}
 }
 
-func (m *ComputeNodeManager) Name() string {
-	return ComputeNodeName
+func (m *CompactorNodeManager) Name() string {
+	return CompactorNodeName
 }
 
-func (m *ComputeNodeManager) CreateService(ctx context.Context, c client.Client, rw *v1alpha1.RisingWave) error {
-	var p = path.Join(TemplateFileDir, ComputeNodeConfigTemplate)
-	var opt = map[string]interface{}{
-		"NAME":       computeNodeConfigmapName(rw.Name),
-		"NAME_SPACE": rw.Namespace,
-	}
-	err := rendor.CreateObjectByTem(p, opt)
-	if err != nil && !errors.IsNotFound(err) {
-		return fmt.Errorf("rendor parse file failed, %w", err)
-	}
-
-	err = CreateIfNotFound(ctx, c, generateComputeStatefulSet(rw))
+func (m *CompactorNodeManager) CreateService(ctx context.Context, c client.Client, rw *v1alpha1.RisingWave) error {
+	err := CreateIfNotFound(ctx, c, generateCompactorDeploy(rw))
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return err
 	}
 
-	err = CreateIfNotFound(ctx, c, generateComputeService(rw))
+	err = CreateIfNotFound(ctx, c, generateCompactorService(rw))
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return err
 	}
 	return nil
 }
 
-func (m *ComputeNodeManager) UpdateService(ctx context.Context, c client.Client, rw *v1alpha1.RisingWave) (bool, error) {
-	newSts := generateComputeStatefulSet(rw)
+func (m *CompactorNodeManager) UpdateService(ctx context.Context, c client.Client, rw *v1alpha1.RisingWave) (bool, error) {
+	newDeploy := generateCompactorDeploy(rw)
 	var namespacedName = types.NamespacedName{
-		Namespace: newSts.Namespace,
-		Name:      newSts.Name,
+		Namespace: newDeploy.Namespace,
+		Name:      newDeploy.Name,
 	}
-	var sts v1.StatefulSet
-	err := c.Get(ctx, namespacedName, &sts)
+	var deploy v1.Deployment
+	err := c.Get(ctx, namespacedName, &deploy)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return false, nil
 		}
 	}
 
-	// if statefulSet rs different. update it
-	// TODO: add image change event for upgrading
-	if sts.Spec.Replicas != newSts.Spec.Replicas {
-		return true, CreateOrUpdateObject(ctx, c, newSts)
+	if deploy.Spec.Replicas != newDeploy.Spec.Replicas {
+		return true, CreateOrUpdateObject(ctx, c, newDeploy)
 	}
 
 	return false, nil
 }
 
-func (m *ComputeNodeManager) DeleteService(ctx context.Context, c client.Client, rw *v1alpha1.RisingWave) error {
+func (m *CompactorNodeManager) DeleteService(ctx context.Context, c client.Client, rw *v1alpha1.RisingWave) error {
 	var namespacedName = types.NamespacedName{
 		Namespace: rw.Namespace,
-		Name:      ComputeNodeComponentName(rw.Name),
+		Name:      CompactorNodeComponentName(rw.Name),
 	}
 	err := DeleteObjectByObjectKey(ctx, c, namespacedName, &corev1.Service{})
 	if err != nil {
 		return err
 	}
 
-	err = DeleteObjectByObjectKey(ctx, c, types.NamespacedName{
-		Namespace: rw.Namespace,
-		Name:      computeNodeConfigmapName(rw.Name),
-	}, &corev1.ConfigMap{})
-	if err != nil {
-		return err
-	}
-
-	return DeleteObjectByObjectKey(ctx, c, namespacedName, &v1.StatefulSet{})
+	return DeleteObjectByObjectKey(ctx, c, namespacedName, &v1.Deployment{})
 }
 
-func (m *ComputeNodeManager) EnsureService(ctx context.Context, c client.Client, rw *v1alpha1.RisingWave) error {
-	var oldSts v1.StatefulSet
+func (m *CompactorNodeManager) EnsureService(ctx context.Context, c client.Client, rw *v1alpha1.RisingWave) error {
+	var old v1.Deployment
 	var namespacedName = types.NamespacedName{
 		Namespace: rw.Namespace,
-		Name:      ComputeNodeComponentName(rw.Name),
+		Name:      CompactorNodeComponentName(rw.Name),
 	}
 
-	// if stats.Replicas == spec.Replicas, means ready
-	// TODO: add health check
 	err := wait.PollImmediate(RetryPeriod, RetryTimeout, func() (bool, error) {
-		err := c.Get(ctx, namespacedName, &oldSts)
+		err := c.Get(ctx, namespacedName, &old)
 		if err != nil {
 			if errors.IsNotFound(err) {
 				return false, nil
@@ -131,26 +106,26 @@ func (m *ComputeNodeManager) EnsureService(ctx context.Context, c client.Client,
 			return false, fmt.Errorf("get statefulset failed, %w", err)
 		}
 
-		if oldSts.Status.ReadyReplicas == oldSts.Status.Replicas &&
-			oldSts.Status.ReadyReplicas == *oldSts.Spec.Replicas {
+		if old.Status.ReadyReplicas == old.Status.Replicas &&
+			old.Status.ReadyReplicas == *old.Spec.Replicas {
 			return true, nil
 		}
 		return false, nil
 	})
 
 	if err != nil {
-		return fmt.Errorf("could not ensure compute service, %w", err)
+		return fmt.Errorf("could not ensure compactor service, %w", err)
 	}
 	return nil
 }
 
-func (m *ComputeNodeManager) CheckService(ctx context.Context, c client.Client, rw *v1alpha1.RisingWave) (bool, error) {
-	var sts v1.StatefulSet
+func (m *CompactorNodeManager) CheckService(ctx context.Context, c client.Client, rw *v1alpha1.RisingWave) (bool, error) {
+	var deploy v1.Deployment
 	var namespacedName = types.NamespacedName{
 		Namespace: rw.Namespace,
-		Name:      ComputeNodeComponentName(rw.Name),
+		Name:      CompactorNodeComponentName(rw.Name),
 	}
-	err := c.Get(ctx, namespacedName, &sts)
+	err := c.Get(ctx, namespacedName, &deploy)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return false, nil
@@ -158,22 +133,18 @@ func (m *ComputeNodeManager) CheckService(ctx context.Context, c client.Client, 
 		return false, fmt.Errorf("get sts failed, %w", err)
 	}
 
-	if sts.Status.ReadyReplicas == sts.Status.Replicas &&
-		sts.Status.ReadyReplicas == *sts.Spec.Replicas {
+	if deploy.Status.ReadyReplicas == deploy.Status.Replicas &&
+		deploy.Status.ReadyReplicas == *deploy.Spec.Replicas {
 		return true, nil
 	}
 
 	return false, nil
 }
 
-var _ ComponentManager = &ComputeNodeManager{}
+var _ ComponentManager = &CompactorNodeManager{}
 
-func computeNodeConfigmapName(name string) string {
-	return fmt.Sprintf("%s-compute-configmap", name)
-}
-
-func generateComputeStatefulSet(rw *v1alpha1.RisingWave) *v1.StatefulSet {
-	spec := rw.Spec.ComputeNode
+func generateCompactorDeploy(rw *v1alpha1.RisingWave) *v1.Deployment {
+	spec := rw.Spec.CompactorNode
 
 	var tag = "latest"
 	if spec.Image.Tag != nil {
@@ -181,7 +152,7 @@ func generateComputeStatefulSet(rw *v1alpha1.RisingWave) *v1.StatefulSet {
 	}
 
 	container := corev1.Container{
-		Name:            "compute-node",
+		Name:            "compactor-node",
 		Resources:       *spec.Resources,
 		Image:           fmt.Sprintf("%s:%s", *spec.Image.Repository, tag),
 		ImagePullPolicy: *spec.Image.PullPolicy,
@@ -189,13 +160,11 @@ func generateComputeStatefulSet(rw *v1alpha1.RisingWave) *v1.StatefulSet {
 		Command: []string{
 			"/risingwave/bin/risingwave",
 		},
-		Args: []string{ // TODO: mv args -> configuration file
-			"compute-node",
-			"--config-path",
-			"/risingwave/config/risingwave.toml",
+		Args: []string{
+			"compactor-node",
 			"--host",
-			fmt.Sprintf("$(POD_IP):%d", v1alpha1.ComputeNodePort),
-			"--prometheus-listener-addr=0.0.0.0:1222",
+			fmt.Sprintf("$(POD_IP):%d", v1alpha1.CompactorNodePort),
+			"--prometheus-listener-addr=0.0.0.0:1260",
 			"--metrics-level=1",
 			fmt.Sprintf("--state-store=%s", StoreParam(rw)),
 			fmt.Sprintf("--meta-address=http://%s:%d", MetaNodeComponentName(rw.Name), v1alpha1.MetaServerPort),
@@ -208,13 +177,6 @@ func generateComputeStatefulSet(rw *v1alpha1.RisingWave) *v1.StatefulSet {
 						FieldPath: "status.podIP",
 					},
 				},
-			},
-		},
-		VolumeMounts: []corev1.VolumeMount{
-			{
-				Name:      ComputeNodeTomlName,
-				MountPath: "/risingwave/config",
-				ReadOnly:  true,
 			},
 		},
 	}
@@ -267,48 +229,30 @@ func generateComputeStatefulSet(rw *v1alpha1.RisingWave) *v1.StatefulSet {
 		Containers: []corev1.Container{
 			container,
 		},
-		Volumes: []corev1.Volume{
-			{
-				Name: ComputeNodeTomlName,
-				VolumeSource: corev1.VolumeSource{
-					ConfigMap: &corev1.ConfigMapVolumeSource{
-						Items: []corev1.KeyToPath{
-							{
-								Key:  ComputeNodeTomlKey,
-								Path: ComputeNodeTomlPath,
-							},
-						},
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: computeNodeConfigmapName(rw.Name),
-						},
-					},
-				},
-			},
-		},
 	}
 
 	if len(spec.NodeSelector) != 0 {
 		podSpec.NodeSelector = spec.NodeSelector
 	}
 
-	sts := &v1.StatefulSet{
+	deploy := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: rw.Namespace,
-			Name:      ComputeNodeComponentName(rw.Name),
+			Name:      CompactorNodeComponentName(rw.Name),
 		},
 
-		Spec: v1.StatefulSetSpec{
+		Spec: v1.DeploymentSpec{
 			Replicas: spec.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					RisingWaveKey:  RisingWaveComputeValue,
+					RisingWaveKey:  RisingWaveCompactorValue,
 					RisingWaveName: rw.Name,
 				},
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						RisingWaveKey:  RisingWaveComputeValue,
+						RisingWaveKey:  RisingWaveCompactorValue,
 						RisingWaveName: rw.Name,
 					},
 				},
@@ -317,21 +261,21 @@ func generateComputeStatefulSet(rw *v1alpha1.RisingWave) *v1.StatefulSet {
 		},
 	}
 
-	return sts
+	return deploy
 }
 
-func generateComputeService(rw *v1alpha1.RisingWave) *corev1.Service {
+func generateCompactorService(rw *v1alpha1.RisingWave) *corev1.Service {
 	spec := corev1.ServiceSpec{
 		Type: corev1.ServiceTypeClusterIP,
 		Selector: map[string]string{
-			RisingWaveKey:  RisingWaveComputeValue,
+			RisingWaveKey:  RisingWaveCompactorValue,
 			RisingWaveName: rw.Name,
 		},
 		ClusterIP: "None",
 	}
 
 	var ports []corev1.ServicePort
-	for _, p := range rw.Spec.ComputeNode.Ports {
+	for _, p := range rw.Spec.CompactorNode.Ports {
 		ports = append(ports, corev1.ServicePort{
 			Protocol:   corev1.ProtocolTCP,
 			Port:       p.ContainerPort,
@@ -344,7 +288,7 @@ func generateComputeService(rw *v1alpha1.RisingWave) *corev1.Service {
 	s := corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: rw.Namespace,
-			Name:      ComputeNodeComponentName(rw.Name),
+			Name:      CompactorNodeComponentName(rw.Name),
 		},
 		Spec: spec,
 	}

@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -38,6 +40,10 @@ func FrontendComponentName(name string) string {
 
 func MinIOComponentName(name string) string {
 	return fmt.Sprintf("%s-minio", name)
+}
+
+func CompactorNodeComponentName(name string) string {
+	return fmt.Sprintf("%s-compactor-node", name)
 }
 
 func CreateOrUpdateObject(ctx context.Context, c client.Client, o client.Object) error {
@@ -90,4 +96,19 @@ func DeleteObjectByObjectKey(ctx context.Context, c client.Client, key client.Ob
 		return err
 	}
 	return nil
+}
+
+func StoreParam(rw *v1alpha1.RisingWave) string {
+	storage := rw.Spec.ObjectStorage
+	switch {
+	case storage.S3 != nil:
+		var bucket = *storage.S3.Bucket
+		return fmt.Sprintf("hummock+s3://%s", bucket)
+	case storage.Memory:
+		return "in-memory"
+	case storage.MinIO != nil:
+		return fmt.Sprintf("hummock+minio://hummock:12345678@%s:%d/hummock001", MinIOComponentName(rw.Name), v1alpha1.MinIOServerPort)
+	default:
+		return fmt.Sprint("no-support")
+	}
 }

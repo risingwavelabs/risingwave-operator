@@ -89,11 +89,12 @@ func copyImage(im map[v1alpha1.Arch]v1alpha1.ImageOptions) map[v1alpha1.Arch]v1a
 type InnerRisingWaveOptions struct {
 	Arch v1alpha1.Arch
 
-	Default     *InnerBaseOptions `yaml:"default"`
-	MetaNode    *InnerBaseOptions `yaml:"metaNode"`
-	ComputeNode *InnerBaseOptions `yaml:"computeNode"`
-	MinIO       *InnerBaseOptions `yaml:"minIO"`
-	Frontend    *InnerBaseOptions `yaml:"frontend"`
+	Default       *InnerBaseOptions `yaml:"default"`
+	MetaNode      *InnerBaseOptions `yaml:"metaNode"`
+	ComputeNode   *InnerBaseOptions `yaml:"computeNode"`
+	CompactorNode *InnerBaseOptions `yaml:"compactorNode"`
+	MinIO         *InnerBaseOptions `yaml:"minIO"`
+	Frontend      *InnerBaseOptions `yaml:"frontend"`
 }
 
 func (o *InnerRisingWaveOptions) BuildConfigFromFile(filePath string) error {
@@ -107,11 +108,12 @@ func (o *InnerRisingWaveOptions) BuildConfigFromFile(filePath string) error {
 	}
 	o.install()
 	v1alpha1.SetDefaultOption(v1alpha1.RisingWaveOptions{
-		Arch:        o.Arch,
-		MetaNode:    o.MetaNode.DeepCopyToBaseOptions(o.Arch),
-		MinIO:       o.MinIO.DeepCopyToBaseOptions(o.Arch),
-		Frontend:    o.Frontend.DeepCopyToBaseOptions(o.Arch),
-		ComputeNode: o.ComputeNode.DeepCopyToBaseOptions(o.Arch),
+		Arch:          o.Arch,
+		MetaNode:      o.MetaNode.DeepCopyToBaseOptions(o.Arch),
+		MinIO:         o.MinIO.DeepCopyToBaseOptions(o.Arch),
+		Frontend:      o.Frontend.DeepCopyToBaseOptions(o.Arch),
+		ComputeNode:   o.ComputeNode.DeepCopyToBaseOptions(o.Arch),
+		CompactorNode: o.CompactorNode.DeepCopyToBaseOptions(o.Arch),
 	})
 
 	return nil
@@ -153,6 +155,7 @@ func (o *InnerRisingWaveOptions) install() {
 	o.ComputeNode = o.installCommonDefaultValue(o.ComputeNode)
 	o.MinIO = o.installCommonDefaultValue(o.MinIO)
 	o.Frontend = o.installCommonDefaultValue(o.Frontend)
+	o.CompactorNode = o.installCommonDefaultValue(o.CompactorNode)
 }
 
 func (o *InnerRisingWaveOptions) installCommonDefaultValue(targetOption *InnerBaseOptions) *InnerBaseOptions {

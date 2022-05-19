@@ -177,9 +177,10 @@ func generateMetaDeployment(rw *v1alpha1.RisingWave) *v1.Deployment {
 		ImagePullPolicy: *spec.Image.PullPolicy,
 		Ports:           spec.Ports,
 		Command: []string{
-			"/risingwave/bin/meta-node",
+			"/risingwave/bin/risingwave",
 		},
 		Args: []string{
+			"meta-node",
 			"--host",
 			"0.0.0.0:5690",
 			"--dashboard-host",
@@ -187,6 +188,19 @@ func generateMetaDeployment(rw *v1alpha1.RisingWave) *v1.Deployment {
 			"--prometheus-host",
 			"0.0.0.0:1250",
 		},
+	}
+
+	var storage []string
+	if spec.Storage.Type == v1alpha1.InMemory {
+		storage = []string{"--backend", "mem"}
+	}
+
+	// TODO: maybe support other storage
+	container.Args = append(container.Args, storage...)
+
+	if len(spec.CMD) != 0 {
+		container.Command = make([]string, len(spec.CMD))
+		copy(container.Command, spec.CMD)
 	}
 
 	podSpec := corev1.PodSpec{

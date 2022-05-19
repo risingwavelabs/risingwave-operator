@@ -5,8 +5,8 @@ on:
     paths:
       - "*/**"
   push:
-    branches:
-      - main
+    paths:
+      - "*/**"
 
   # For manually triggering workflow
   workflow_dispatch:

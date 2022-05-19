@@ -101,12 +101,9 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: Set up Go 1.17
-        uses: actions/setup-go@v3
-        with:
-          go-version: '>=1.17.0'
-      - name: e2e-test
         run: |
+          go version
+          sudo go version
           sudo chmod 777 ./scripts/e2e.sh
           sudo KUBECONFIG=/etc/kubernetes/admin.conf make e2e-test
         shell: bash

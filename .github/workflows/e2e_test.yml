@@ -53,8 +53,7 @@ jobs:
           registry: ghcr.io
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_TOKEN }}
-      - name: Get Image Tag
-        name: Build risingwave-operator Image
+      - name: Build risingwave-operator Image
         uses: docker/build-push-action@v2
         with:
           context: .

@@ -37,7 +37,7 @@ jobs:
           security-group-id: sg-08d84a86ca86067a8
           aws-resource-tags: > # optional, requires additional permissions
             [
-              {"Key": "Key pair", "Value": "custom-cluster"},
+              {"Key": "Key pair", "Value": "custom-cluster"}
             ]
 
   kubeadm-init:
@@ -86,7 +86,7 @@ jobs:
           security-group-id: sg-08d84a86ca86067a8
           aws-resource-tags: > # optional, requires additional permissions
             [
-              {"Key": "Key pair", "Value": "custom-cluster"},
+              {"Key": "Key pair", "Value": "custom-cluster"}
             ]
 
   kubeadm-join:

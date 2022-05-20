@@ -66,7 +66,6 @@ echo "cert-manager is ready."
 
 
 # risingwave-operator-system
-make build
 make deploy
 current_epoch=0
 while :

@@ -12,6 +12,81 @@ on:
   workflow_dispatch:
 
 jobs:
+  start-builder:
+    name: start-builder
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: start
+          github-token: ${{ secrets.PAT }}
+          ec2-image-id: ami-05a99cf0eb100c377
+          ec2-instance-type: c5.4xlarge
+          subnet-id: subnet-59743123
+          security-group-id: sg-9ec32bfe
+          
+  build-docker-images:
+    needs:
+      - start-builder
+    runs-on: ${{ needs.start-builder.outputs.label }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to Github Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME }}
+          password: ${{ secrets.GHCR_TOKEN }}
+      - name: Get Image Tag
+        name: Build risingwave-operator Image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/singularity-data/risingwave-operator:pr-${{ github.REF_NAME }}
+
+  stop-builder:
+    name: stop-builder
+    needs:
+      - start-builder
+      - build-docker-images
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+      - name: Stop EC2 runner A
+        uses: machulav/ec2-github-runner@v2
+        with:
+          mode: stop
+          github-token: ${{ secrets.PAT }}
+          label: ${{ needs.start-builder.outputs.label }}
+          ec2-instance-id: ${{ needs.start-builder.outputs.ec2-instance-id }}
+        if: ${{ always() }}
+
   start-control-plane:
     name: start-control-plane
     runs-on: ubuntu-latest
@@ -98,6 +173,7 @@ jobs:
       - kubeadm-init
       - kubeadm-join
       - start-control-plane
+      - build-docker-images
     runs-on: ${{ needs.start-control-plane.outputs.label }}
     steps:
       - name: checkout
@@ -109,7 +185,7 @@ jobs:
           export GOCACHE=/tmp
           go version
           chmod 777 ./scripts/e2e.sh
-          KUBECONFIG=/etc/kubernetes/admin.conf make e2e-test
+          KUBECONFIG=/etc/kubernetes/admin.conf TAG=pr-${{ github.REF_NAME }} make e2e-test
         shell: bash
 
   stop-control-plane:

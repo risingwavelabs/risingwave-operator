@@ -61,7 +61,7 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/singularity-data/risingwave-operator:pr-${{ github.REF_NAME }}
+            ghcr.io/singularity-data/risingwave-operator:pr-${{ github.event.number }}
 
   stop-builder:
     name: stop-builder
@@ -184,7 +184,7 @@ jobs:
           export GOCACHE=/tmp
           go version
           chmod 777 ./scripts/e2e.sh
-          KUBECONFIG=/etc/kubernetes/admin.conf TAG=pr-${{ github.REF_NAME }} make e2e-test
+          KUBECONFIG=/etc/kubernetes/admin.conf TAG=pr-${{ github.event.number }} make e2e-test
         shell: bash
 
   stop-control-plane:

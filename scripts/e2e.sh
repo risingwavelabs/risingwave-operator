@@ -66,7 +66,10 @@ echo "cert-manager is ready."
 
 
 # risingwave-operator-system
-make deploy
+if [ "$TAG" == "" ]; then
+    TAG=latest
+fi
+TAG=$TAG make deploy
 current_epoch=0
 while :
 do  

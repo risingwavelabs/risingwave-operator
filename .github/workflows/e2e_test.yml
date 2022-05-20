@@ -34,7 +34,7 @@ jobs:
           ec2-image-id: ami-05f90245cf870a615
           ec2-instance-type: c5.xlarge
           subnet-id: subnet-08978fdb70c2d5d11
-          security-group-id: sg-07252330b11a5c999
+          security-group-id: sg-08d84a86ca86067a8
 
   kubeadm-init:
     needs:
@@ -79,7 +79,7 @@ jobs:
           ec2-image-id: ami-05f90245cf870a615
           ec2-instance-type: c5.xlarge
           subnet-id: subnet-08978fdb70c2d5d11
-          security-group-id: sg-07252330b11a5c999
+          security-group-id: sg-08d84a86ca86067a8
 
   kubeadm-join:
     needs:

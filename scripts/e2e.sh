@@ -39,6 +39,28 @@ do
     current_epoch=$((current_epoch+1))
     echo "waiting for cert-manager to be ready ($current_epoch / $threshold)..."
 done
+### check if endpoint is available
+webhook_ip=$(kubectl get svc -n cert-manager | grep cert-manager-webhook  | awk '{print $3}')
+webhook_port_raw=$(kubectl get svc -n cert-manager | grep cert-manager-webhook  | awk '{print $5}')
+webhook_port=$(echo ${webhook_port_raw/\/TCP/""})
+echo "cert-manager webhook endpoint found $webhook_ip:$webhook_port"
+current_epoch=0
+while :
+do
+    nc -zvw3 $webhook_ip $webhook_port
+    nc_exit_code=$?
+    if [ $nc_exit_code -eq 0 ]; then
+        break
+    fi
+    if [ $current_epoch -eq $threshold ]; then
+        echo "ERROR: timeout waiting for cert-manager webhook."
+        exit 1
+    fi
+    current_epoch=$((current_epoch+1))
+    echo "waiting for cert-manager webhook to be ready ($current_epoch / $threshold)"
+    sleep 2
+done
+###
 echo "cert-manager is ready."
 
 
@@ -60,11 +82,11 @@ do
     current_epoch=$((current_epoch+1))
     echo "waiting for risingwave-operator-system to be ready ($current_epoch / $threshold)..."
 done
-# check if the webhook endpoint is ready for connection
+### check if the webhook endpoint is ready for connection
 webhook_ip=$(kubectl get svc -n risingwave-operator-system | grep risingwave-operator-webhook-service  | awk '{print $3}')
 webhook_port_raw=$(kubectl get svc -n risingwave-operator-system | grep risingwave-operator-webhook-service  | awk '{print $5}')
 webhook_port=$(echo ${webhook_port_raw/\/TCP/""})
-echo "cert-manager webhook endpoint found $webhook_ip:$webhook_port"
+echo "risingwave operator webhook endpoint found $webhook_ip:$webhook_port"
 current_epoch=0
 
 while :
@@ -83,6 +105,7 @@ do
     sleep 2
 done
 echo "risingwave-operator-system is ready."
+###
 
 # risingwave
 namespace_exit=$(kubectl get namespaces | awk '{if($1 == "test")s=1}END{print s}')
@@ -117,6 +140,9 @@ do
         echo "Failed events found in the system"
         echo $failed_event
         exit 1
+    fi
+    if [ $current_epoch -eq $threshold ]; then
+        break
     fi
     current_epoch=$((current_epoch+1))
     echo "checking failed event ($current_epoch / $threshold)"

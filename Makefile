@@ -140,6 +140,7 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | kubectl delete -f -
 
 generate-yaml: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+	@echo "Image registry endpoint: ${IMG}"
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default --output config/risingwave-operator.yaml
 

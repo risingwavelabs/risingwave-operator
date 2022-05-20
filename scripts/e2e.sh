@@ -44,6 +44,7 @@ webhook_ip=$(kubectl get svc -n cert-manager | grep cert-manager-webhook  | awk 
 webhook_port_raw=$(kubectl get svc -n cert-manager | grep cert-manager-webhook  | awk '{print $5}')
 webhook_port=$(echo ${webhook_port_raw/\/TCP/""})
 echo "cert-manager webhook endpoint found $webhook_ip:$webhook_port"
+threshold=40
 current_epoch=0
 while :
 do
@@ -88,7 +89,7 @@ webhook_port_raw=$(kubectl get svc -n risingwave-operator-system | grep risingwa
 webhook_port=$(echo ${webhook_port_raw/\/TCP/""})
 echo "risingwave operator webhook endpoint found $webhook_ip:$webhook_port"
 current_epoch=0
-
+threshold=40
 while :
 do
     nc -zvw3 $webhook_ip $webhook_port
@@ -102,7 +103,7 @@ do
     fi
     current_epoch=$((current_epoch+1))
     echo "waiting for risingwave-operator webhook to be ready ($current_epoch / $threshold)"
-    sleep 2
+    sleep 3
 done
 echo "risingwave-operator-system is ready."
 ###
@@ -114,6 +115,7 @@ if [ $namespace_exit -ne 1 ]; then
 fi
 kubectl apply -f examples/minio-risingwave-amd.yaml
 current_epoch=0
+threshold=40
 while :
 do  
     # result=$(kubectl get po -n test  -o jsonpath={.items[*].status.conditions[*]} | jq .status | awk '{if($1 ==  "\"True\"") s += 1}END{print s == NR}')

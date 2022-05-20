@@ -94,6 +94,7 @@ jobs:
           kubeadm join ${{ needs.kubeadm-init.outputs.endpoint }} --cri-socket unix:///var/run/crio/crio.sock --token ${{ needs.kubeadm-init.outputs.token }} --discovery-token-ca-cert-hash sha256:${{ needs.kubeadm-init.outputs.cert }}
           apt install net-tools
           set +e
+          ls /etc/cni/net.d
           ifconfig cni0
           ifconfig cni0 down
           ip link delete cni0

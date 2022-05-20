@@ -133,6 +133,7 @@ echo "risingwave is ready."
 
 # checking event log to see if there is some errors
 current_epoch=0
+check_times=30
 while :
 do 
     failed_event=$(kubectl get events -A  | awk '{if($3 == "Failed")print $0}')
@@ -141,10 +142,10 @@ do
         echo $failed_event
         exit 1
     fi
-    if [ $current_epoch -eq $threshold ]; then
+    if [ $current_epoch -eq $check_times ]; then
         break
     fi
     current_epoch=$((current_epoch+1))
-    echo "checking failed event ($current_epoch / $threshold)"
-    sleep 2
+    echo "checking failed event ($current_epoch / $check_times)"
+    sleep 1
 done

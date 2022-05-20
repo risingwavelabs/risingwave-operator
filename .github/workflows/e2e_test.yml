@@ -31,7 +31,7 @@ jobs:
         with:
           mode: start
           github-token: ${{ secrets.PAT }}
-          ec2-image-id: ami-05f90245cf870a615
+          ec2-image-id: ami-00d88be5b8d09499f
           ec2-instance-type: c5.xlarge
           subnet-id: subnet-08978fdb70c2d5d11
           security-group-id: sg-08d84a86ca86067a8
@@ -76,7 +76,7 @@ jobs:
         with:
           mode: start
           github-token: ${{ secrets.PAT }}
-          ec2-image-id: ami-05f90245cf870a615
+          ec2-image-id: ami-00d88be5b8d09499f
           ec2-instance-type: c5.xlarge
           subnet-id: subnet-08978fdb70c2d5d11
           security-group-id: sg-08d84a86ca86067a8
@@ -91,7 +91,6 @@ jobs:
         id: setup-worker-node
         run: |
           sudo su
-          apt install net-tools
           kubeadm join ${{ needs.kubeadm-init.outputs.endpoint }} --cri-socket unix:///var/run/crio/crio.sock --token ${{ needs.kubeadm-init.outputs.token }} --discovery-token-ca-cert-hash sha256:${{ needs.kubeadm-init.outputs.cert }}
 
   e2e:

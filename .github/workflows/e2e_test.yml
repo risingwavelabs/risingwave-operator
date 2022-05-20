@@ -35,10 +35,6 @@ jobs:
           ec2-instance-type: c5.xlarge
           subnet-id: subnet-08978fdb70c2d5d11
           security-group-id: sg-08d84a86ca86067a8
-          aws-resource-tags: > # optional, requires additional permissions
-            [
-              {"Key": "Key pair", "Value": "custom-cluster"}
-            ]
 
   kubeadm-init:
     needs:
@@ -84,10 +80,6 @@ jobs:
           ec2-instance-type: c5.xlarge
           subnet-id: subnet-08978fdb70c2d5d11
           security-group-id: sg-08d84a86ca86067a8
-          aws-resource-tags: > # optional, requires additional permissions
-            [
-              {"Key": "Key pair", "Value": "custom-cluster"}
-            ]
 
   kubeadm-join:
     needs:
@@ -101,6 +93,8 @@ jobs:
           sudo su
           kubeadm join ${{ needs.kubeadm-init.outputs.endpoint }} --cri-socket unix:///var/run/crio/crio.sock --token ${{ needs.kubeadm-init.outputs.token }} --discovery-token-ca-cert-hash sha256:${{ needs.kubeadm-init.outputs.cert }}
           apt install net-tools
+          set +e
+          ifconfig cni0
           ifconfig cni0 down
           ip link delete cni0
 

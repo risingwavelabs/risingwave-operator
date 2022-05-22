@@ -113,6 +113,14 @@ build: generate fmt vet lint ## Build manager binary.
 run: manifests generate fmt vet lint ## Run a controller from your host.
 	go run main.go
 
+run-local: manifests generate fmt vet lint
+	mkdir -p /tmp/k8s-webhook-server/serving-certs
+	openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout /tmp/k8s-webhook-server/serving-certs/tls.key -out /tmp/k8s-webhook-server/serving-certs/tls.crt -subj "/CN=localhost"
+	go run main.go --config-file testing/manager-config.yaml
+
+e2e-test: 
+	bash testing/kind_test.sh
+
 docker-cross-build: test buildx## Build docker image with the manager.
 	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=false --platform=linux/amd64,linux/arm64 -t ${IMG} . --push
 

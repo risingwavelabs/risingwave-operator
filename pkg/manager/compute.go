@@ -19,6 +19,7 @@ package manager
 import (
 	"context"
 	"fmt"
+	"os"
 	"path"
 
 	"github.com/singularity-data/risingwave-operator/pkg/rendor"
@@ -47,7 +48,9 @@ func (m *ComputeNodeManager) Name() string {
 }
 
 func (m *ComputeNodeManager) CreateService(ctx context.Context, c client.Client, rw *v1alpha1.RisingWave) error {
-	var p = path.Join(TemplateFileDir, ComputeNodeConfigTemplate)
+	cwd, _ := os.Getwd()
+	var p = path.Join(cwd, TemplateFileDir, ComputeNodeConfigTemplate)
+
 	var opt = map[string]interface{}{
 		"NAME":       computeNodeConfigmapName(rw.Name),
 		"NAME_SPACE": rw.Namespace,

@@ -14,28 +14,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-RW_DEPLOYMENT=examples/minio-risingwave-amd.yaml
+TESTING_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+set -e
+
+RW_DEPLOYMENT=rw.yaml
 OPERATOR_DEPLOYMENT=config/risingwave-operator.yaml
+NAMESPACE=e2e-rw
+
 if [ "$TAG" == "" ]; then
     IMG_TAG=latest
 fi
 
-source ./utils.sh
+source $TESTING_DIR/utils.sh
 
 function kind_test() {
     # prepare kind cluster
     delete_kind_cluster
-    start_kind_cluster ./kind-config.yaml
-
-    # apply cert manager
-    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml
-    wait_cert_manager
+    start_kind_cluster $TESTING_DIR/kind-config.yaml
 
     make install
-    wait_rw_operator $OPERATOR_DEPLOYMENT
+    make run-local &
+    export tmp_test_operator_pid=$!
 
-    deploy "test" ../examples/minio-risingwave-amd.yaml
+    deploy $NAMESPACE $RW_DEPLOYMENT
     wait_risingwave $RW_DEPLOYMENT
 
     check_event_logs
 }
+
+function end_test() {
+    if [ "$tmp_test_operator_pid" != "" ]; then
+        kill tmp_test_operator_pid
+    fi
+    check_namespace=$(kubectl get namespace | grep $NAMESPACE)
+    if [ "$check_namespace" != "" ]; then
+        kubectl delete all --all -n $NAMESPACE
+        kubectl delete namespace $NAMESPACE
+    fi
+}
+
+# kind_test
+# end_test

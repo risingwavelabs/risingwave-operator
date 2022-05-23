@@ -118,7 +118,7 @@ run-local: manifests generate fmt vet lint
 	openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout /tmp/k8s-webhook-server/serving-certs/tls.key -out /tmp/k8s-webhook-server/serving-certs/tls.crt -subj "/CN=localhost"
 	go run main.go --config-file testing/manager-config.yaml
 
-e2e-test: 
+e2e-test: generate-test-yaml 
 	testing/kind_test.sh
 
 docker-cross-build: test buildx## Build docker image with the manager.
@@ -149,7 +149,6 @@ generate-yaml: manifests kustomize ## Deploy controller to the K8s cluster speci
 	$(KUSTOMIZE) build config/default --output config/risingwave-operator.yaml
 
 generate-test-yaml: manifests kustomize 
-	cd config/manager && $(KUSTOMIZE) edit set image controller=docker.io/singularity-data/risingwave-operator:dev
 	$(KUSTOMIZE) build config/default --output config/risingwave-operator-test.yaml
 
 deploy: generate-yaml

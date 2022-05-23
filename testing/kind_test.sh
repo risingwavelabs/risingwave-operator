@@ -15,17 +15,16 @@
 # limitations under the License.
 #
 TESTING_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-
-set -e
-
-RW_DEPLOYMENT=rw.yaml
-OPERATOR_DEPLOYMENT=config/risingwave-operator.yaml
+OPERATOR_DEPLOYMENT=config/risingwave-operator-test.yaml
+RW_DEPLOYMENT=$TESTING_DIR/rw.yaml
 NAMESPACE=e2e-rw
+OPERATOR_IMG=singularity-data/risingwave-operator:dev
 
 if [ "$TAG" == "" ]; then
     IMG_TAG=latest
 fi
 
+echo $TESTING_DIR/utils.sh
 source $TESTING_DIR/utils.sh
 
 function kind_test() {
@@ -33,26 +32,17 @@ function kind_test() {
     delete_kind_cluster
     start_kind_cluster $TESTING_DIR/kind-config.yaml
 
-    make install
-    make run-local &
-    export tmp_test_operator_pid=$!
+    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml
+    wait_cert_manager
 
+    kind load docker-image $OPERATOR_IMG
+    kubectl apply -f $OPERATOR_DEPLOYMENT
+    wait_rw_operator $OPERATOR_DEPLOYMENT
+    sleep 30
+
+    echo 'Deploying risingwave...'
     deploy $NAMESPACE $RW_DEPLOYMENT
-    wait_risingwave $RW_DEPLOYMENT
-
-    check_event_logs
+    wait_risingwave $NAMESPACE    
 }
 
-function end_test() {
-    if [ "$tmp_test_operator_pid" != "" ]; then
-        kill tmp_test_operator_pid
-    fi
-    check_namespace=$(kubectl get namespace | grep $NAMESPACE)
-    if [ "$check_namespace" != "" ]; then
-        kubectl delete all --all -n $NAMESPACE
-        kubectl delete namespace $NAMESPACE
-    fi
-}
-
-# kind_test
-# end_test
+kind_test

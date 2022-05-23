@@ -30,17 +30,17 @@ function delete_kind_cluster() {
 }
 
 function wait_webhook() {
-    service_name = $1
-    webhook_name = $2
-    webhook_ip=$(kubectl get svc -n $service_name | grep $service_name  | awk '{print $3}')
-    webhook_port_raw=$(kubectl get svc -n $service_name | grep $service_name  | awk '{print $5}')
+    service_name=$1
+    webhook_name=$2
+    webhook_ip=$(kubectl get svc -n $service_name | grep $webhook_name  | awk '{print $3}')
+    webhook_port_raw=$(kubectl get svc -n $service_name | grep $webhook_name  | awk '{print $5}')
     webhook_port=$(echo ${webhook_port_raw/\/TCP/""})
-    echo "cert-manager webhook endpoint found $webhook_ip:$webhook_port"
+    echo "$service_name webhook endpoint found $webhook_ip:$webhook_port"
     threshold=40
     current_epoch=0
     while :
     do
-        nc -zvw3 $webhook_ip $webhook_port
+        nc -zvuw3 $webhook_ip $webhook_port
         nc_exit_code=$?
         if [ $nc_exit_code -eq 0 ]; then
             break
@@ -108,44 +108,39 @@ function deploy() {
 }
 
 function wait_risingwave() {
-    deployment = examples/minio-risingwave-amd.yaml
+    namespace=$1
     current_epoch=0
-    threshold=40
+    check_times=40
     while :
-    do  
-        result=$(kubectl get -f $deployment -o jsonpath='{.status.conditions[?(.type == "Running")]}' | jq .status | awk '{if($1 ==  "\"True\"") s += 1}END{print s == NR}')
-        if [ $result -eq 1 ]; then
-            break
-        fi
+    do
+        echo "Waiting for risingwave..."
+        sleep 3
+        current_epoch=$((current_epoch+1))
         if [ $current_epoch -eq $threshold ]; then
-            echo "ERROR: timeout waiting for risingwave ($deployment)"
+            echo "ERROR: timeout waiting for risingwave"
             exit 1
         fi
-        current_epoch=$((current_epoch+1))
-        echo "waiting for risingwave ($deployment) to be ready ($current_epoch / $threshold)"
-        sleep 2
+        c=$(check_svc $namespace meta-node)
+        if [ "$c" == "0" ];then continue; fi
+        c=$(check_svc $namespace compute-node)
+        if [ "$c" == "0" ];then continue; fi
+        c=$(check_svc $namespace compactor-node)
+        if [ "$c" == "0" ];then continue; fi
+        c=$(check_svc $namespace frontend)
+        if [ "$c" == "0" ];then continue; fi
+        break 
     done
+
     echo "risingwave ($deployment) is ready."
 }
 
-function check_event_logs() {
-    # checking event log to see if there is some errors
-    current_epoch=0
-    check_times=20
-    while :
-    do 
-        failed_event=$(kubectl get events -A  | awk '{if($3 == "Failed")print $0}')
-        if [ "$failed_event" != "" ]; then
-            echo "Failed events found in the system"
-            echo $failed_event
-            exit 1
-        fi
-        if [ $current_epoch -eq $check_times ]; then
-            break
-        fi
-        current_epoch=$((current_epoch+1))
-        echo "checking failed event ($current_epoch / $check_times)"
-        sleep 1
-    done
+function check_svc() {
+    namespace=$1
+    svc_name=$2
+    result=$(kubectl get svc -n $namespace | grep $svc_name)
+    if [ "$result" != "" ]; then
+        echo 1
+    else 
+        echo 0
+    fi
 }
-

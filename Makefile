@@ -119,7 +119,7 @@ run-local: manifests generate fmt vet lint
 	go run main.go --config-file testing/manager-config.yaml
 
 e2e-test: 
-	bash testing/kind_test.sh
+	testing/kind_test.sh
 
 docker-cross-build: test buildx## Build docker image with the manager.
 	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=false --platform=linux/amd64,linux/arm64 -t ${IMG} . --push
@@ -147,6 +147,10 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 generate-yaml: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default --output config/risingwave-operator.yaml
+
+generate-test-yaml: manifests kustomize 
+	cd config/manager && $(KUSTOMIZE) edit set image controller=docker.io/singularity-data/risingwave-operator:dev
+	$(KUSTOMIZE) build config/default --output config/risingwave-operator-test.yaml
 
 deploy: generate-yaml
 	kubectl apply -f config/risingwave-operator.yaml

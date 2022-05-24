@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 TESTING_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 OPERATOR_DEPLOYMENT=config/risingwave-operator-test.yaml
 RW_DEPLOYMENT=$TESTING_DIR/rw.yaml
@@ -29,8 +30,7 @@ source $TESTING_DIR/utils.sh
 
 function kind_test() {
     # prepare kind cluster
-    delete_kind_cluster
-    start_kind_cluster $TESTING_DIR/kind-config.yaml
+    prepare_e2e $TESTING_DIR/kind-config.yaml
 
     kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml
     wait_cert_manager
@@ -38,7 +38,6 @@ function kind_test() {
     kind load docker-image $OPERATOR_IMG
     kubectl apply -f $OPERATOR_DEPLOYMENT
     wait_rw_operator $OPERATOR_DEPLOYMENT
-    sleep 30
 
     echo 'Deploying risingwave...'
     deploy $NAMESPACE $RW_DEPLOYMENT

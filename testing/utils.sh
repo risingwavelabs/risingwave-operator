@@ -21,12 +21,40 @@ then
     sudo apt install jq
 fi
 
+function prepare_e2e() {
+    kind_config=$1
+    delete_kind_cluster
+    start_kind_cluster $kind_config
+    start_test_pod 
+}
+
 function start_kind_cluster() {
     kind create cluster --config $1
 }
 
 function delete_kind_cluster() {
     kind delete cluster
+    sleep 5
+}
+
+function start_test_pod() {
+    kubectl apply -f testing/test-pod.yaml
+    threshold=40
+    current_epoch=0
+    while :
+    do
+        result=$(kubectl get po -A -n default | grep debug-pod | grep Running)
+        if [ "$result" != "" ]; then
+            break
+        fi
+        if [ $current_epoch -eq $threshold ]; then
+            echo "ERROR: timeout waiting for test pod"
+            exit 1
+        fi
+        current_epoch=$((current_epoch+1))
+        echo "waiting for debug-pod"
+        sleep 2
+    done
 }
 
 function wait_webhook() {
@@ -40,9 +68,8 @@ function wait_webhook() {
     current_epoch=0
     while :
     do
-        nc -zvuw3 $webhook_ip $webhook_port
-        nc_exit_code=$?
-        if [ $nc_exit_code -eq 0 ]; then
+        result=$(kubectl exec --stdin --tty debug-pod -n default -- nc -zvw3 $webhook_ip $webhook_port | grep succeeded)
+        if [ "$result" != "" ]; then
             break
         fi
         if [ $current_epoch -eq $threshold ]; then

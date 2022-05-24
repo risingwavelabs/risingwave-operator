@@ -18,7 +18,7 @@
 if ! command -v jq &> /dev/null
 then
     sudo apt update
-    sudo apt install jq
+    sudo apt install -y jq
 fi
 
 function prepare_e2e() {

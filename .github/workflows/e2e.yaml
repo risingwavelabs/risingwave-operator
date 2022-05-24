@@ -49,6 +49,7 @@ jobs:
           source /etc/bash.bashrc
           mkdir -p /home/ubuntu/go/pkg/mod
           export GOCACHE=/tmp
+          export GOPATH=/usr/local/go
           make e2e-test
         shell: bash -leo pipefail {0}
 

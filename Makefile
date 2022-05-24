@@ -148,8 +148,8 @@ generate-yaml: manifests kustomize ## Deploy controller to the K8s cluster speci
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default --output config/risingwave-operator.yaml
 
-generate-test-yaml: manifests kustomize 
-	$(KUSTOMIZE) build config/default --output config/risingwave-operator-test.yaml
+generate-test-yaml: generate-yaml
+	$(KUSTOMIZE) build config --output config/risingwave-operator-test.yaml
 
 deploy: generate-yaml
 	kubectl apply -f config/risingwave-operator.yaml

@@ -118,7 +118,7 @@ run-local: manifests generate fmt vet lint
 	openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout /tmp/k8s-webhook-server/serving-certs/tls.key -out /tmp/k8s-webhook-server/serving-certs/tls.crt -subj "/CN=localhost"
 	go run main.go --config-file testing/manager-config.yaml
 
-e2e-test: generate-test-yaml
+e2e-test: generate-test-yaml vendor
 	docker build -f docker/Dockerfile --build-arg USE_VENDOR=true -t docker.io/singularity-data/risingwave-operator:dev . --output=type=docker
 	testing/kind_test.sh
 
@@ -198,7 +198,7 @@ bundle: manifests kustomize ## Generate bundle manifests and metadata, then vali
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
-	operator-sdk bundle validate ./bundle
+	operator-sdk bundle validate ./bundlehttps://github.com/singularity-data/risingwave-operator.git
 
 .PHONY: bundle-build
 bundle-build: ## Build the bundle image.

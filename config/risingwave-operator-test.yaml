@@ -5291,7 +5291,7 @@ spec:
         command:
         - /manager
         image: docker.io/singularity-data/risingwave-operator:dev
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
             path: /healthz

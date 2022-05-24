@@ -1,15 +1,21 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: debugger
-  namespace: default
+  name: debug-pod
 spec:
   containers:
-  - name: ubuntu-utils
-    image: arunvelsriram/utils
-    command:
-      - sleep
-      - "3600"
-    imagePullPolicy: IfNotPresent
-  restartPolicy: Always
-  
+    - image: arunvelsriram/utils
+      imagePullPolicy: IfNotPresent
+      name: debug-pod
+      command:
+        - sleep
+        - "3600"
+      volumeMounts:
+        - name: host
+          mountPath: /host
+  volumes:
+    - name: host
+      hostPath:
+        path: /
+        type: Directory
+      

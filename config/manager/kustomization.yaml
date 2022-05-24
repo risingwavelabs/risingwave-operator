@@ -15,6 +15,3 @@ images:
 - name: controller
   newName: ghcr.io/singularity-data/risingwave-operator
   newTag: latest
-- name: ghcr.io/singularity-data/risingwave-operator
-  newName: docker.io/singularity-data/risingwave-operator
-  newTag: dev

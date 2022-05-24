@@ -52,7 +52,7 @@ function start_test_pod() {
             exit 1
         fi
         current_epoch=$((current_epoch+1))
-        echo "waiting for debug-pod"
+        echo "waiting for debug-pod ($current_epoch / $threshold)"
         sleep 2
     done
 }

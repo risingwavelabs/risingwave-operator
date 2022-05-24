@@ -68,8 +68,9 @@ function wait_webhook() {
     current_epoch=0
     while :
     do
-        result=$(kubectl exec debug-pod -n default -- nc -zvw3 $webhook_ip $webhook_port | grep succeeded)
-        if [ "$result" != "" ]; then
+        kubectl exec debug-pod -n default -- nc -zvw3 $webhook_ip $webhook_port
+        result=$?
+        if [ result -eq 0 ]; then
             break
         fi
         if [ $current_epoch -eq $threshold ]; then

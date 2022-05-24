@@ -142,10 +142,11 @@ function wait_risingwave() {
     while :
     do
         echo "Waiting for risingwave..."
-        sleep 4
+        sleep 6
         current_epoch=$((current_epoch+1))
         if [ $current_epoch -eq $threshold ]; then
             echo "ERROR: timeout waiting for risingwave"
+            kubectl get po -n $namespace
             exit 1
         fi
         c=$(check_svc $namespace meta-node)

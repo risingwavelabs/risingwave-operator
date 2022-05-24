@@ -137,11 +137,11 @@ function deploy() {
 function wait_risingwave() {
     namespace=$1
     current_epoch=0
-    check_times=40
+    check_times=60
     while :
     do
         echo "Waiting for risingwave..."
-        sleep 3
+        sleep 4
         current_epoch=$((current_epoch+1))
         if [ $current_epoch -eq $threshold ]; then
             echo "ERROR: timeout waiting for risingwave"

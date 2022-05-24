@@ -118,7 +118,7 @@ run-local: manifests generate fmt vet lint
 	openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout /tmp/k8s-webhook-server/serving-certs/tls.key -out /tmp/k8s-webhook-server/serving-certs/tls.crt -subj "/CN=localhost"
 	go run main.go --config-file testing/manager-config.yaml
 
-e2e-test: generate-test-yaml 
+e2e-test: generate-test-yaml docker-build-vendor
 	testing/kind_test.sh
 
 docker-cross-build: test buildx## Build docker image with the manager.

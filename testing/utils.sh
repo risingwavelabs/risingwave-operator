@@ -68,7 +68,7 @@ function wait_webhook() {
     current_epoch=0
     while :
     do
-        result=$(kubectl exec --stdin --tty debug-pod -n default -- nc -zvw3 $webhook_ip $webhook_port | grep succeeded)
+        result=$(kubectl exec debug-pod -n default -- nc -zvw3 $webhook_ip $webhook_port | grep succeeded)
         if [ "$result" != "" ]; then
             break
         fi

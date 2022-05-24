@@ -259,9 +259,6 @@ func (r *Reconciler) syncComputeNode(ctx context.Context, rw *v1alpha1.RisingWav
 
 // syncCompactorNode do compactor-node create,update,health check.
 func (r *Reconciler) syncCompactorNode(ctx context.Context, rw *v1alpha1.RisingWave) (bool, error) {
-	fmt.Printf("%v", rw.Status.CompactorNode.Phase)
-	fmt.Printf("%v", *rw.Spec.CompactorNode.Replicas)
-	fmt.Printf("%v", rw.Status.CompactorNode.Replicas)
 	var event = hook.GenLifeCycleEvent(rw.Status.CompactorNode.Phase, *rw.Spec.CompactorNode.Replicas, rw.Status.CompactorNode.Replicas)
 	if event.Type == hook.SkipType {
 		return true, nil

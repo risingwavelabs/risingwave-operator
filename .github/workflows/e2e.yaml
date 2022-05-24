@@ -47,6 +47,8 @@ jobs:
         run: |
           sudo su
           source /etc/bash.bashrc
+          mkdir -p /home/ubuntu/go/pkg/mod
+          export GOCACHE=/tmp
           make e2e-test
         shell: bash -leo pipefail {0}
 

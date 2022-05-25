@@ -1,0 +1,111 @@
+apiVersion: risingwave.singularity-data.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: test-risingwave
+  namespace: e2e-rw
+spec:
+  arch: amd64
+  computeNode:
+    image:
+      pullPolicy: IfNotPresent
+      repository: ghcr.io/singularity-data/risingwave
+      tag: latest
+    nodeSelector:
+      kubernetes.io/arch: amd64
+    ports:
+    - containerPort: 5688
+      name: compute-node
+      protocol: TCP
+    replicas: 1
+    resources:
+      limits:
+        cpu: "1"
+        memory: 2000Mi
+      requests:
+        cpu: 200m
+        memory: 2000Mi
+  frontend:
+    image:
+      pullPolicy: IfNotPresent
+      repository: ghcr.io/singularity-data/risingwave
+      tag: latest
+    nodeSelector:
+      kubernetes.io/arch: amd64
+    ports:
+    - containerPort: 4567
+      name: frontend
+      protocol: TCP
+    replicas: 1
+    resources:
+      limits:
+        cpu: "1"
+        memory: 2000Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  compactorNode:
+    image:
+      pullPolicy: IfNotPresent
+      repository: ghcr.io/singularity-data/risingwave
+      tag: latest
+    nodeSelector:
+      kubernetes.io/arch: amd64
+    ports:
+    - containerPort: 6660
+      name: compactor-node
+      protocol: TCP
+    replicas: 1
+    resources:
+      limits:
+        cpu: "1"
+        memory: 2000Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  metaNode:
+    image:
+      pullPolicy: IfNotPresent
+      repository: ghcr.io/singularity-data/risingwave
+      tag: latest
+    nodeSelector:
+      kubernetes.io/arch: amd64
+    ports:
+    - containerPort: 5690
+      name: meta-server
+      protocol: TCP
+    - containerPort: 5691
+      name: meta-dashboard
+      protocol: TCP
+    replicas: 1
+    resources:
+      limits:
+        cpu: "1"
+        memory: 2000Mi
+      requests:
+        cpu: 200m
+        memory: 1000Mi
+    storage:
+      type: InMemory
+  objectStorage:
+    minIO:
+      image:
+        pullPolicy: IfNotPresent
+        repository: ghcr.io/singularity-data/risingwave-minio
+        tag: latest
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      ports:
+      - containerPort: 9301
+        name: minio-server
+        protocol: TCP
+      - containerPort: 9400
+        name: minio-console
+        protocol: TCP
+      replicas: 1
+      resources:
+        limits:
+          cpu: "1"
+          memory: 2000Mi
+        requests:
+          cpu: 100m
+          memory: 100Mi

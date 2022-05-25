@@ -1,0 +1,23 @@
+resources:
+- risingwave-operator.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+patches:
+- patch: |-
+    - op: replace
+      path: "/spec/template/spec/containers/0/imagePullPolicy"
+      value: "IfNotPresent"
+  target:
+    kind: Deployment
+    name: risingwave-operator-controller-manager
+    namespace: risingwave-operator-system
+
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: ghcr.io/singularity-data/risingwave-operator
+  newName: docker.io/singularity-data/risingwave-operator
+  newTag: dev

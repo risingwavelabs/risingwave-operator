@@ -113,6 +113,15 @@ build: generate fmt vet lint ## Build manager binary.
 run: manifests generate fmt vet lint ## Run a controller from your host.
 	go run main.go
 
+run-local: manifests generate fmt vet lint
+	mkdir -p /tmp/k8s-webhook-server/serving-certs
+	openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout /tmp/k8s-webhook-server/serving-certs/tls.key -out /tmp/k8s-webhook-server/serving-certs/tls.crt -subj "/CN=localhost"
+	go run main.go --config-file testing/manager-config.yaml
+
+e2e-test: generate-test-yaml vendor
+	docker build -f docker/Dockerfile --build-arg USE_VENDOR=true -t docker.io/singularity-data/risingwave-operator:dev . --output=type=docker
+	testing/kind_test.sh
+
 docker-cross-build: test buildx## Build docker image with the manager.
 	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=false --platform=linux/amd64,linux/arm64 -t ${IMG} . --push
 
@@ -139,6 +148,9 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 generate-yaml: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default --output config/risingwave-operator.yaml
+
+generate-test-yaml: generate-yaml
+	$(KUSTOMIZE) build config --output config/risingwave-operator-test.yaml
 
 deploy: generate-yaml
 	kubectl apply -f config/risingwave-operator.yaml
@@ -186,7 +198,7 @@ bundle: manifests kustomize ## Generate bundle manifests and metadata, then vali
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
-	operator-sdk bundle validate ./bundle
+	operator-sdk bundle validate ./bundlehttps://github.com/singularity-data/risingwave-operator.git
 
 .PHONY: bundle-build
 bundle-build: ## Build the bundle image.

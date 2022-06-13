@@ -75,6 +75,24 @@ kubectl get cm risingwave-operator-controller-manager-config -n risingwave-opera
 
 If you edit the configmap, please kill the risingwave-operator pods and configuration file will be load.
 
+## Monitoring
+
+We recommend to use [prometheus-operator](https://github.com/prometheus-operator/prometheus-operator#quickstart) to install Prometheus.
+
+You can use the command to install `prometheus-operator` as follows:
+
+```shell
+kc create -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/bundle.yaml
+```
+
+You can use the command to create a `Prometheus` in your cluster as follows:
+
+```shell
+kc create -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/examples/monitoring/prometheus.yaml
+```
+
+If you already deployed prometheus-operator in your cluster, risingwave-operator will create `ServiceMonitor` when create RisingWave service. 
+
 ## License
 
 The risingwave-operator is under the Apache License 2.0. Please refer to [LICENSE](LICENSE) for more information.

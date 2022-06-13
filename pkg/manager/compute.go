@@ -56,7 +56,7 @@ func (m *ComputeNodeManager) CreateService(ctx context.Context, c client.Client,
 		"NAME_SPACE": rw.Namespace,
 	}
 	err := rendor.CreateObjectByTem(p, opt)
-	if err != nil && !errors.IsNotFound(err) {
+	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("rendor parse file failed, %w", err)
 	}
 
@@ -68,6 +68,14 @@ func (m *ComputeNodeManager) CreateService(ctx context.Context, c client.Client,
 	err = CreateIfNotFound(ctx, c, generateComputeService(rw))
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return err
+	}
+
+	if ServiceMonitorFlagFromContext(ctx) {
+		sm := GenerateServiceMonitor(ComputeNodeComponentName(rw.Name), v1alpha1.ComputeNodeMetricsPortName, rw)
+		err = CreateIfNotFound(ctx, c, sm)
+		if err != nil && !errors.IsAlreadyExists(err) {
+			return fmt.Errorf("create service monitor failed, %w", err)
+		}
 	}
 	return nil
 }
@@ -111,6 +119,13 @@ func (m *ComputeNodeManager) DeleteService(ctx context.Context, c client.Client,
 	}, &corev1.ConfigMap{})
 	if err != nil {
 		return err
+	}
+
+	if ServiceMonitorFlagFromContext(ctx) {
+		err := DeleteServiceMonitor(ctx, c, computeNodeConfigmapName(rw.Name), rw)
+		if err != nil {
+			return err
+		}
 	}
 
 	return DeleteObjectByObjectKey(ctx, c, namespacedName, &v1.StatefulSet{})
@@ -198,7 +213,7 @@ func generateComputeStatefulSet(rw *v1alpha1.RisingWave) *v1.StatefulSet {
 			"/risingwave/config/risingwave.toml",
 			"--host",
 			fmt.Sprintf("$(POD_IP):%d", v1alpha1.ComputeNodePort),
-			"--prometheus-listener-addr=0.0.0.0:1222",
+			fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", v1alpha1.ComputeNodeMetricsPort),
 			"--metrics-level=1",
 			fmt.Sprintf("--state-store=%s", StoreParam(rw)),
 			fmt.Sprintf("--meta-address=http://%s:%d", MetaNodeComponentName(rw.Name), v1alpha1.MetaServerPort),
@@ -348,6 +363,11 @@ func generateComputeService(rw *v1alpha1.RisingWave) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: rw.Namespace,
 			Name:      ComputeNodeComponentName(rw.Name),
+
+			Labels: map[string]string{
+				ServiceNameKey: ComputeNodeComponentName(rw.Name),
+				UIDKey:         string(rw.UID),
+			},
 		},
 		Spec: spec,
 	}

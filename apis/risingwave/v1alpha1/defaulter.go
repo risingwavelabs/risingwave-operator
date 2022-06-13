@@ -90,6 +90,11 @@ func (r *RisingWave) defaultMeta() {
 
 				ContainerPort: MetaDashboardPort,
 			},
+			{
+				Name: MetaMetricsPortName,
+
+				ContainerPort: MetaMetricsPort,
+			},
 		}
 	}
 
@@ -176,6 +181,11 @@ func (r *RisingWave) defaultComputeNode() {
 				Name:          ComputeNodePortName,
 				ContainerPort: ComputeNodePort,
 			},
+			{
+				Name: ComputeNodeMetricsPortName,
+
+				ContainerPort: ComputeNodeMetricsPort,
+			},
 		}
 	}
 
@@ -208,6 +218,10 @@ func (r *RisingWave) defaultCompactorNode() {
 			{
 				Name:          CompactorNodePortName,
 				ContainerPort: CompactorNodePort,
+			},
+			{
+				Name:          CompactorNodeMetricsPortName,
+				ContainerPort: CompactorNodeMetricsPort,
 			},
 		}
 	}

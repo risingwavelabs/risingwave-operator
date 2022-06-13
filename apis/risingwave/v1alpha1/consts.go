@@ -37,14 +37,23 @@ const (
 	MetaDashboardPortName = "meta-dashboard"
 	MetaDashboardPort     = 5691
 
+	MetaMetricsPortName = "metrics"
+	MetaMetricsPort     = 1250
+
 	ComputeNodePortName = "compute-node"
 	ComputeNodePort     = 5688
+
+	ComputeNodeMetricsPortName = "metrics"
+	ComputeNodeMetricsPort     = 1222
 
 	FrontendPortName = "frontend"
 	FrontendPort     = 4567
 
 	CompactorNodePortName = "compactor-node"
 	CompactorNodePort     = 6660
+
+	CompactorNodeMetricsPortName = "metrics"
+	CompactorNodeMetricsPort     = 1260
 )
 
 const (

@@ -28,7 +28,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logger "sigs.k8s.io/controller-runtime/pkg/log"
 
-	v1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+
+	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 type SynType string
@@ -136,4 +138,19 @@ func (r *Reconciler) updateStatus(ctx context.Context, rw *v1alpha1.RisingWave) 
 	}
 
 	return nil
+}
+
+func (r *Reconciler) checkServiceMonitorCRD(ctx context.Context) (bool, error) {
+	var namespacedName = types.NamespacedName{
+		Name: "servicemonitors.monitoring.coreos.com",
+	}
+	var crd = apiextensionsv1.CustomResourceDefinition{}
+	err := r.Get(ctx, namespacedName, &crd)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }

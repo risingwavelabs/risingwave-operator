@@ -58,4 +58,8 @@ const (
 	AccessKeyID     string = "AccessKeyID"
 	SecretAccessKey string = "SecretAccessKey"
 	Region          string = "Region"
+
+	ServiceNameKey = "service-name"
+
+	UIDKey = "risingwave-uid"
 )

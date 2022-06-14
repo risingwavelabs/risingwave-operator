@@ -53,6 +53,14 @@ func (m *CompactorNodeManager) CreateService(ctx context.Context, c client.Clien
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return err
 	}
+
+	if ServiceMonitorFlagFromContext(ctx) {
+		sm := GenerateServiceMonitor(CompactorNodeComponentName(rw.Name), v1alpha1.CompactorNodeMetricsPortName, rw)
+		err = CreateIfNotFound(ctx, c, sm)
+		if err != nil && !errors.IsAlreadyExists(err) {
+			return fmt.Errorf("create service monitor failed, %w", err)
+		}
+	}
 	return nil
 }
 
@@ -82,6 +90,14 @@ func (m *CompactorNodeManager) DeleteService(ctx context.Context, c client.Clien
 		Namespace: rw.Namespace,
 		Name:      CompactorNodeComponentName(rw.Name),
 	}
+
+	if ServiceMonitorFlagFromContext(ctx) {
+		err := DeleteServiceMonitor(ctx, c, CompactorNodeComponentName(rw.Name), rw)
+		if err != nil {
+			return err
+		}
+	}
+
 	err := DeleteObjectByObjectKey(ctx, c, namespacedName, &corev1.Service{})
 	if err != nil {
 		return err
@@ -164,7 +180,7 @@ func generateCompactorDeploy(rw *v1alpha1.RisingWave) *v1.Deployment {
 			"compactor-node",
 			"--host",
 			fmt.Sprintf("$(POD_IP):%d", v1alpha1.CompactorNodePort),
-			"--prometheus-listener-addr=0.0.0.0:1260",
+			fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", v1alpha1.CompactorNodeMetricsPort),
 			"--metrics-level=1",
 			fmt.Sprintf("--state-store=%s", StoreParam(rw)),
 			fmt.Sprintf("--meta-address=http://%s:%d", MetaNodeComponentName(rw.Name), v1alpha1.MetaServerPort),
@@ -289,6 +305,11 @@ func generateCompactorService(rw *v1alpha1.RisingWave) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: rw.Namespace,
 			Name:      CompactorNodeComponentName(rw.Name),
+
+			Labels: map[string]string{
+				ServiceNameKey: CompactorNodeComponentName(rw.Name),
+				UIDKey:         string(rw.UID),
+			},
 		},
 		Spec: spec,
 	}

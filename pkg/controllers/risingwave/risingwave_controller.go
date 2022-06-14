@@ -79,6 +79,8 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;delete;
 // +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=get;list;watch
+// +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=get;list;watch;create;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -92,9 +94,15 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := logger.FromContext(ctx).WithValues("ns", req.Namespace, "name", req.Name)
 
+	useServiceMonitor, err := r.checkServiceMonitorCRD(ctx)
+	if err != nil {
+		log.Error(err, "check service monitor failed")
+	}
+	ctx = manager.ContextWithServiceMonitorFlag(ctx, useServiceMonitor)
+
 	var obj v1alpha1.RisingWave
 	// fetch from cache
-	err := r.Get(ctx, req.NamespacedName, &obj)
+	err = r.Get(ctx, req.NamespacedName, &obj)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return ctrl.Result{Requeue: false}, nil

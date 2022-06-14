@@ -61,6 +61,15 @@ func (m *MetaNodeManager) CreateService(ctx context.Context, c client.Client, rw
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return err
 	}
+
+	if ServiceMonitorFlagFromContext(ctx) {
+		sm := GenerateServiceMonitor(MetaNodeComponentName(rw.Name), v1alpha1.MetaMetricsPortName, rw)
+		err = CreateIfNotFound(ctx, c, sm)
+		if err != nil && !errors.IsAlreadyExists(err) {
+			return fmt.Errorf("create service monitor failed, %w", err)
+		}
+	}
+
 	return nil
 }
 
@@ -102,6 +111,13 @@ func (m *MetaNodeManager) DeleteService(ctx context.Context, c client.Client, rw
 	err := DeleteObjectByObjectKey(ctx, c, namespacedName, &corev1.Service{})
 	if err != nil {
 		return err
+	}
+
+	if ServiceMonitorFlagFromContext(ctx) {
+		err := DeleteServiceMonitor(ctx, c, MetaNodeComponentName(rw.Name), rw)
+		if err != nil {
+			return err
+		}
 	}
 
 	return DeleteObjectByObjectKey(ctx, c, namespacedName, &v1.Deployment{})
@@ -182,11 +198,11 @@ func generateMetaDeployment(rw *v1alpha1.RisingWave) *v1.Deployment {
 		Args: []string{
 			"meta-node",
 			"--host",
-			"0.0.0.0:5690",
+			fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaServerPort),
 			"--dashboard-host",
-			"0.0.0.0:5691",
+			fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaDashboardPort),
 			"--prometheus-host",
-			"0.0.0.0:1250",
+			fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaMetricsPort),
 		},
 	}
 
@@ -268,6 +284,11 @@ func generateMetaService(rw *v1alpha1.RisingWave) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: rw.Namespace,
 			Name:      MetaNodeComponentName(rw.Name),
+
+			Labels: map[string]string{
+				ServiceNameKey: MetaNodeComponentName(rw.Name),
+				UIDKey:         string(rw.UID),
+			},
 		},
 		Spec: spec,
 	}

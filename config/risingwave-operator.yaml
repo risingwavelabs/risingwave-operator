@@ -5018,6 +5018,14 @@ metadata:
   name: risingwave-operator-manager-role
 rules:
 - apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - apps
   resources:
   - deployments
@@ -5072,6 +5080,16 @@ rules:
   - get
   - list
   - update
+  - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
   - watch
 - apiGroups:
   - risingwave.singularity-data.com
@@ -5291,7 +5309,7 @@ spec:
         command:
         - /manager
         image: ghcr.io/singularity-data/risingwave-operator:latest
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
             path: /healthz

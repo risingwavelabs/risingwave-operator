@@ -20,11 +20,70 @@ import (
 	"context"
 	"fmt"
 
+	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+
 	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+type ServiceMonitorContextKey struct{}
+
+func ContextWithServiceMonitorFlag(ctx context.Context, useServiceMonitor bool) context.Context {
+	return context.WithValue(ctx, ServiceMonitorContextKey{}, useServiceMonitor)
+}
+
+func ServiceMonitorFlagFromContext(ctx context.Context) bool {
+	if v, ok := ctx.Value(ServiceMonitorContextKey{}).(bool); ok {
+		return v
+	}
+	return false
+}
+
+func GenerateServiceMonitor(serviceName string, portName string, rw *v1alpha1.RisingWave) *prometheusv1.ServiceMonitor {
+
+	var sm = prometheusv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-sm", serviceName),
+			Namespace: rw.Namespace,
+			Labels: map[string]string{
+				"Name": fmt.Sprintf("%s-sm", serviceName),
+			},
+		},
+		Spec: prometheusv1.ServiceMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					ServiceNameKey: serviceName,
+					UIDKey:         string(rw.UID),
+				},
+			},
+			NamespaceSelector: prometheusv1.NamespaceSelector{
+				MatchNames: []string{rw.Namespace},
+			},
+			Endpoints: []prometheusv1.Endpoint{
+				{
+					Port: portName,
+				},
+			},
+		},
+	}
+
+	return &sm
+}
+
+func DeleteServiceMonitor(ctx context.Context, c client.Client, serviceName string, rw *v1alpha1.RisingWave) error {
+	err := DeleteObjectByObjectKey(ctx, c, types.NamespacedName{
+		Namespace: rw.Namespace,
+		Name:      fmt.Sprintf("%s-sm", serviceName),
+	}, &prometheusv1.ServiceMonitor{})
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+	return nil
+}
 
 func MetaNodeComponentName(name string) string {
 	return fmt.Sprintf("%s-meta-node", name)

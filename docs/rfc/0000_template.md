@@ -16,7 +16,7 @@ One paragraph explanation of the feature.
 
 Why are we doing this? What use cases does it support? What is the expected outcome?
 
-# **Explaination**
+# **Explanation**
 
 This is the technical portion of the RFC. Explain the design in sufficient detail.
 

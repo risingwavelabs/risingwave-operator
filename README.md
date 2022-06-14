@@ -64,6 +64,26 @@ Connect to the frontend by `psql` as follows:
 psql -h $PHOST -p $PPORT -d dev
 ```
 
+## Storage
+
+### S3
+
+We support using AWS S3 as storage. You can use S3 as follows:
+
+1. Create a `secret` named `cloud-provider-configure` in your namespace.
+```shell
+kubectl create secret generic -n test cloud-provider-configure --from-literal AccessKeyID=XXXXXXX --from-literal SecretAccessKey=YYYYYYY --from-literal Region=ZZZZZ
+```
+
+2. Create a `bucket` in the AWS Console.
+3. Cse the bucket by setting the following fields: 
+```yamlex
+objectStorage:
+  s3:
+    provider: aws
+    bucket: xxxx #your-bucket-name
+```
+
 
 ## Configuration
 

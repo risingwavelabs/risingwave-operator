@@ -76,7 +76,7 @@ kubectl create secret generic -n test cloud-provider-configure --from-literal Ac
 ```
 
 2. Create a `bucket` in the AWS Console.
-3. Cse the bucket by setting the following fields: 
+3. Use the bucket by setting the following fields: 
 ```yamlex
 objectStorage:
   s3:

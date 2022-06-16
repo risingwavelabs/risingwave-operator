@@ -30,7 +30,7 @@ type timeoutAction struct {
 }
 
 func (act *timeoutAction) Description() string {
-	return fmt.Sprintf("Timeout(%s, %s)", act.inner.Description(), act.timeout)
+	return fmt.Sprintf("Timeout(%s, timeout=%s)", act.inner.Description(), act.timeout)
 }
 
 func (act *timeoutAction) Run(ctx context.Context) (ctrl.Result, error) {

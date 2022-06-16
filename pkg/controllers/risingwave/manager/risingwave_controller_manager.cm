@@ -1,0 +1,137 @@
+bind v1 k8s.io/api/core/v1
+bind apps/v1 k8s.io/api/apps/v1
+bind risingwave.singularity-data.com/v1alpha1 github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1
+
+alias Pod v1/Pod
+alias Service v1/Service
+alias Secret v1/Secret
+alias ConfigMap v1/ConfigMap
+alias Deployment apps/v1/Deployment
+alias RisingWave risingwave.singularity-data.com/v1alpha1/RisingWave
+
+// RisingWaveControllerManager encapsulates the states and actions used by RisingWaveController.
+decl RisingWaveControllerManager for RisingWave {
+    // ===================================================
+    // States and actions for RisingWave components.
+    // ===================================================
+
+    state {
+        // Service for meta nodes.
+        metaService Service {
+            name=${target.Name}-meta
+            owned
+        }
+
+        // Service for frontend nodes.
+        frontendService Service {
+            name=${target.Name}-frontend
+            owned
+        }
+
+        // Service for compute nodes.
+        computeService Service {
+            name=${target.Name}-compute
+            owned
+        }
+        
+        // Service for compactor nodes.
+        compactorService Service {
+            name=${target.Name}-compactor
+            owned
+        }
+
+        // Deployment for meta nodes.
+        metaDeployment Deployment {
+            name=${target.Name}-meta
+            owned
+        }
+
+        // Deployment for frontend nodes.
+        frontendDeployment Deployment {
+            name=${target.Name}-frontend
+            owned
+        }
+
+        // Deployment for compute nodes.
+        computeDeployment Deployment {
+            name=${target.Name}-compute
+            owned
+        }
+
+        // Deployment for compactor nodes.
+        compactorDeployment Deployment {
+            name=${target.Name}-compactor
+            owned
+        }
+    }
+    
+    action {
+        // SyncMetaService creates or updates the service for meta nodes.
+        SyncMetaService(metaService)
+
+        // SyncMetaDeployment creates or updates the deployment for meta nodes.
+        SyncMetaDeployment(metaDeployment)
+
+        // WaitBeforeMetaServiceIsAvailable waits (aborts the workflow) before the meta service is available.
+        WaitBeforeMetaServiceIsAvailable(metaService)
+
+        // WaitBeforeMetaDeploymentReady waits (aborts the workflow) before the meta deployment is ready.
+        WaitBeforeMetaDeploymentReady(metaDeployment)
+
+        // SyncFrontendService creates or updates the service for frontend nodes. 
+        SyncFrontendService(frontendService)
+
+        // SyncFrontendDeployment creates or updates the deployment for frontend nodes.
+        SyncFrontendDeployment(frontendDeployment)
+
+        // WaitBeforeFrontendDeploymentReady waits (aborts the workflow) before the frontend deployment is ready.
+        WaitBeforeFrontendDeploymentReady(frontendDeployment)
+
+        // SyncComputeSerivce creates or updates the service for compute nodes.
+        SyncComputeSerivce(computeService)
+
+        // SyncComputeDeployment creates or updates the deployment for compute nodes.
+        SyncComputeDeployment(computeDeployment)
+
+        // WaitBeforeComputeDeploymentReady waits (aborts the workflow) before the compute deployment is ready.
+        WaitBeforeComputeDeploymentReady(computeDeployment)
+
+        // SyncCompactorService creates or updates the service for compactor nodes.
+        SyncCompactorService(compactorService)
+
+        // SyncCompactorDeployment creates or updates the deployment for compactor nodes.
+        SyncCompactorDeployment(compactorDeployment)
+
+        // WaitBeforeCompactorDeploymentReady waits (aborts the workflow) before the compactor deployment is ready.
+        WaitBeforeCompactorDeploymentReady(compactorDeployment)
+    }
+
+    // ===================================================
+    // States and actions for third-party components.
+    // ===================================================
+
+    state {
+        // Service for minio.
+        minioService Service {
+            name=${target.Name}-minio
+            owned
+        }
+
+        // Deployment for minio.
+        minioDeployment Deployment {
+            name=${target.Name}-minio
+            owned
+        }
+    }
+
+    action {
+        // SyncMinioService creates or updates the service for minio.
+        SyncMinIOService(minioService)
+
+        // SyncMinioDeployment creates or updates the deployment for minio nodes.
+        SyncMinIODeployment(minioDeployment)
+
+        // WaitBeforeMinioDeploymentReady waits (aborts the workflow) before the minio deployment is ready.
+        WaitBeforeMinIODeploymentReady(minioDeployment)
+    }
+}

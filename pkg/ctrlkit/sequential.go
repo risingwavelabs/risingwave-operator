@@ -22,15 +22,15 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-type sequentialActions struct {
+type sequentialAction struct {
 	actions []ReconcileAction
 }
 
-func (act *sequentialActions) Description() string {
+func (act *sequentialAction) Description() string {
 	return describeGroup("Sequential", act.actions...)
 }
 
-func (act *sequentialActions) Run(ctx context.Context) (ctrl.Result, error) {
+func (act *sequentialAction) Run(ctx context.Context) (ctrl.Result, error) {
 	// Run actions one-by-one. If one action needs to requeue or requeue after, then the
 	// control flow is broken and control is returned to the outer scope.
 	for _, act := range act.actions {
@@ -54,5 +54,5 @@ func Sequential(actions ...ReconcileAction) ReconcileAction {
 		return actions[0]
 	}
 
-	return &sequentialActions{actions: actions}
+	return &sequentialAction{actions: actions}
 }

@@ -18,6 +18,7 @@ package risingwave
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
@@ -39,6 +40,15 @@ type RisingWaveController struct {
 	Client client.Client
 	Logger logr.Logger
 	DryRun bool
+}
+
+func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit.ReconcileAction) (result reconcile.Result, err error) {
+	if c.DryRun {
+		ctrlkit.DryRun(workflow)
+		return ctrlkit.NoRequeue()
+	} else {
+		return workflow.Run(ctx)
+	}
 }
 
 func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (result reconcile.Result, err error) {
@@ -73,7 +83,7 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 
 	if !c.DryRun {
 		defer func() {
-			if _, err1 := mgr.UpdateRisingWaveStatus().Run(ctx); err1 != nil {
+			if _, err1 := c.runWorkflow(ctx, mgr.UpdateRisingWaveStatus()); err1 != nil {
 				// Overwrite err if it's nil.
 				if err == nil {
 					err = err1
@@ -107,11 +117,7 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 
 	logger.Info("Describe workflow", "workflow", workflow.Description())
 
-	if !c.DryRun {
-		return workflow.Run(ctx)
-	} else {
-		return ctrlkit.NoRequeue()
-	}
+	return c.runWorkflow(ctx, workflow)
 }
 
 func (c *RisingWaveController) buildWorkflow(condition risingwavev1alpha1.RisingWaveType, risingwave *risingwavev1alpha1.RisingWave,
@@ -123,7 +129,7 @@ func (c *RisingWaveController) buildWorkflow(condition risingwavev1alpha1.Rising
 			ctrlkit.Join(mgr.SyncMetaService(), mgr.SyncMetaDeployment()),
 
 			// Wait before meta deployment's ready.
-			mgr.WaitBeforeMetaDeploymentReady(),
+			ctrlkit.Timeout(5*time.Second, mgr.WaitBeforeMetaDeploymentReady()),
 
 			// Sync object storage and wait.
 			ctrlkit.If(risingwave.Spec.ObjectStorage.MinIO != nil,

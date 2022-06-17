@@ -61,13 +61,16 @@ func (mgr *risingWaveControllerManagerImpl) isObjectSynced(obj client.Object) bo
 }
 
 func ensureTheSameObject(obj, newObj client.Object) client.Object {
-	// Ensure that they are the same object.
-	if obj.GetName() != newObj.GetName() || obj.GetNamespace() != newObj.GetNamespace() {
-		panic(fmt.Sprintf("objects not the same: %s/%s vs. %s/%s",
-			obj.GetNamespace(), obj.GetName(),
-			newObj.GetNamespace(), newObj.GetName(),
-		))
+	// Ensure that they are the same object in Kubernetes.
+	if obj != nil {
+		if obj.GetName() != newObj.GetName() || obj.GetNamespace() != newObj.GetNamespace() {
+			panic(fmt.Sprintf("objects not the same: %s/%s vs. %s/%s",
+				obj.GetNamespace(), obj.GetName(),
+				newObj.GetNamespace(), newObj.GetName(),
+			))
+		}
 	}
+
 	if reflect.TypeOf(obj) == reflect.TypeOf(newObj) {
 		panic(fmt.Sprintf("object types' not equal: %T vs. %T", obj, newObj))
 	}
@@ -168,7 +171,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncMinIOService(ctx context.Context
 
 // WaitBeforeCompactorDeploymentReady implements RisingWaveControllerManagerImpl
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeCompactorDeploymentReady(ctx context.Context, logger logr.Logger, compactorDeployment *appsv1.Deployment) (reconcile.Result, error) {
-	if utils.IsDeploymentRolledOut(compactorDeployment) {
+	if mgr.isObjectSynced(compactorDeployment) && utils.IsDeploymentRolledOut(compactorDeployment) {
 		return ctrlkit.NoRequeue()
 	} else {
 		logger.Info("Compactor deployment hasn't been rolled out")
@@ -178,7 +181,7 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeCompactorDeploymentReady(c
 
 // WaitBeforeComputeDeploymentReady implements RisingWaveControllerManagerImpl
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeComputeDeploymentReady(ctx context.Context, logger logr.Logger, computeDeployment *appsv1.Deployment) (reconcile.Result, error) {
-	if utils.IsDeploymentRolledOut(computeDeployment) {
+	if mgr.isObjectSynced(computeDeployment) && utils.IsDeploymentRolledOut(computeDeployment) {
 		return ctrlkit.NoRequeue()
 	} else {
 		logger.Info("Compute deployment hasn't been rolled out")
@@ -188,7 +191,7 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeComputeDeploymentReady(ctx
 
 // WaitBeforeFrontendDeploymentReady implements RisingWaveControllerManagerImpl
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendDeploymentReady(ctx context.Context, logger logr.Logger, frontendDeployment *appsv1.Deployment) (reconcile.Result, error) {
-	if utils.IsDeploymentRolledOut(frontendDeployment) {
+	if mgr.isObjectSynced(frontendDeployment) && utils.IsDeploymentRolledOut(frontendDeployment) {
 		return ctrlkit.NoRequeue()
 	} else {
 		logger.Info("Frontend deployment hasn't been rolled out")
@@ -198,7 +201,7 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendDeploymentReady(ct
 
 // WaitBeforeMetaDeploymentReady implements RisingWaveControllerManagerImpl
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaDeploymentReady(ctx context.Context, logger logr.Logger, metaDeployment *appsv1.Deployment) (reconcile.Result, error) {
-	if utils.IsDeploymentRolledOut(metaDeployment) {
+	if mgr.isObjectSynced(metaDeployment) && utils.IsDeploymentRolledOut(metaDeployment) {
 		return ctrlkit.NoRequeue()
 	} else {
 		logger.Info("Meta deployment hasn't been rolled out")
@@ -208,7 +211,7 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaDeploymentReady(ctx co
 
 // WaitBeforeMetaServiceIsAvailable implements RisingWaveControllerManagerImpl
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaServiceIsAvailable(ctx context.Context, logger logr.Logger, metaService *corev1.Service) (reconcile.Result, error) {
-	if utils.IsServiceReady(metaService) {
+	if mgr.isObjectSynced(metaService) && utils.IsServiceReady(metaService) {
 		return ctrlkit.NoRequeue()
 	} else {
 		logger.Info("Meta service hasn't been ready")
@@ -218,12 +221,21 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaServiceIsAvailable(ctx
 
 // WaitBeforeMinIODeploymentReady implements RisingWaveControllerManagerImpl
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeMinIODeploymentReady(ctx context.Context, logger logr.Logger, minioDeployment *appsv1.Deployment) (reconcile.Result, error) {
-	if utils.IsDeploymentRolledOut(minioDeployment) {
+	if mgr.isObjectSynced(minioDeployment) && utils.IsDeploymentRolledOut(minioDeployment) {
 		return ctrlkit.NoRequeue()
 	} else {
 		logger.Info("MinIO deployment hasn't been rolled out")
 		return ctrlkit.Exit()
 	}
+}
+
+// UpdateRisingWaveStatus implements RisingWaveControllerManagerImpl
+func (mgr *risingWaveControllerManagerImpl) UpdateRisingWaveStatus(ctx context.Context, logger logr.Logger) (reconcile.Result, error) {
+	if err := mgr.risingwaveManager.UpdateRisingWaveStatus(ctx); err != nil {
+		logger.Error(err, "Failed to update status")
+		return ctrlkit.RequeueIfErrorAndWrap("unable to update status", err)
+	}
+	return ctrlkit.NoRequeue()
 }
 
 func NewRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager) RisingWaveControllerManagerImpl {

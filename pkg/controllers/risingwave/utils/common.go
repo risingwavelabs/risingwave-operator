@@ -24,3 +24,7 @@ import (
 func GetNamespacedName(obj client.Object) types.NamespacedName {
 	return types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()}
 }
+
+func IsDeleted(obj client.Object) bool {
+	return obj != nil && !obj.GetDeletionTimestamp().IsZero()
+}

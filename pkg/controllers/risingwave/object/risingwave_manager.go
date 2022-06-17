@@ -19,7 +19,9 @@ package object
 import (
 	"context"
 
+	"github.com/samber/lo"
 	"k8s.io/apimachinery/pkg/api/equality"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
@@ -27,12 +29,53 @@ import (
 
 type RisingWaveManager struct {
 	client           client.Client
-	risingwave       *risingwavev1alpha1.RisingWave
-	risingwaveStatus *risingwavev1alpha1.RisingWaveStatus
+	risingwave       *risingwavev1alpha1.RisingWave       // Status mutable.
+	risingwaveStatus *risingwavev1alpha1.RisingWaveStatus // Immutable copy of original.
 }
 
 func (mgr *RisingWaveManager) RisingWave() *risingwavev1alpha1.RisingWave {
 	return mgr.risingwave
+}
+
+func (mgr *RisingWaveManager) GetCondition(conditionType risingwavev1alpha1.RisingWaveType) *risingwavev1alpha1.RisingWaveCondition {
+	for _, cond := range mgr.risingwaveStatus.Conditions {
+		if cond.Type == conditionType {
+			return cond.DeepCopy()
+		}
+	}
+	return nil
+}
+
+func (mgr *RisingWaveManager) RemoveCondition(conditionType risingwavev1alpha1.RisingWaveType) {
+	conditions := mgr.risingwave.Status.Conditions
+	for i, cond := range conditions {
+		if cond.Type == conditionType {
+			// Remove it.
+			conditions = append(conditions[:i], conditions[i+1:]...)
+			mgr.risingwave.Status.Conditions = conditions
+			return
+		}
+	}
+}
+
+func (mgr *RisingWaveManager) UpdateCondition(condition risingwavev1alpha1.RisingWaveCondition) {
+	// Set the last transition time to now if it's a new condition or status changed.
+	lastObservedCondition := mgr.GetCondition(condition.Type)
+	if lastObservedCondition == nil || lastObservedCondition.Status != condition.Status {
+		condition.LastTransitionTime = metav1.Now()
+	}
+
+	// Add or update the conidtion.
+	conditions := mgr.risingwave.Status.Conditions
+	_, curIndex, found := lo.FindIndexOf(conditions, func(cond risingwavev1alpha1.RisingWaveCondition) bool {
+		return cond.Type == condition.Type
+	})
+	if found {
+		conditions[curIndex] = condition
+	} else {
+		conditions = append(conditions, condition)
+		mgr.risingwave.Status.Conditions = conditions
+	}
 }
 
 func (mgr *RisingWaveManager) UpdateRisingWaveStatus(ctx context.Context) error {

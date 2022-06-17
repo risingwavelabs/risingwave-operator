@@ -110,28 +110,37 @@ decl RisingWaveControllerManager for RisingWave {
     // States and actions for third-party components.
     // ===================================================
 
+    action {
+        // UpdateRisingWaveStatus updates the status of RisingWave object.
+        UpdateRisingWaveStatus()
+    }
+
+    // ===================================================
+    // States and actions for third-party components.
+    // ===================================================
+
     state {
-        // Service for minio.
-        minioService Service {
+        // Service for MinIO.
+        minIOService Service {
             name=${target.Name}-minio
             owned
         }
 
-        // Deployment for minio.
-        minioDeployment Deployment {
+        // Deployment for MinIO.
+        minIODeployment Deployment {
             name=${target.Name}-minio
             owned
         }
     }
 
     action {
-        // SyncMinioService creates or updates the service for minio.
-        SyncMinIOService(minioService)
+        // SyncMinioService creates or updates the service for MinIO.
+        SyncMinIOService(minIOService)
 
         // SyncMinioDeployment creates or updates the deployment for minio nodes.
-        SyncMinIODeployment(minioDeployment)
+        SyncMinIODeployment(minIODeployment)
 
         // WaitBeforeMinioDeploymentReady waits (aborts the workflow) before the minio deployment is ready.
-        WaitBeforeMinIODeploymentReady(minioDeployment)
+        WaitBeforeMinIODeploymentReady(minIODeployment)
     }
 }

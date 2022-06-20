@@ -98,6 +98,50 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 }
 
 func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingWaveManager, mgr *manager.RisingWaveControllerManager) ctrlkit.ReconcileAction {
+	firstTimeObservedBarrier := mgr.WrapAction("BarrierFirstTimeObserved", func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
+		return ctrlkit.ExitIf(len(risingwaveManger.RisingWave().Status.Conditions) != 0)
+	})
+	markConditionInitializingAsTrue := mgr.WrapAction("MarkConditionInitializingAsTrue", func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
+		risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
+			Type:   risingwavev1alpha1.Initializing,
+			Status: metav1.ConditionTrue,
+		})
+		return ctrlkit.Continue()
+	})
+	conditionInitializingIsTrueBarrier := mgr.WrapAction("BarrierConditionInitializingIsTrue", func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
+		condition := risingwaveManger.GetCondition(risingwavev1alpha1.Initializing)
+		return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
+	})
+	markConditionRunningAsTrueAndRemoveConditionInitializing := mgr.WrapAction("MarkConditionRunningAsTrueAndRemoveConditionInitializing", func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
+		risingwaveManger.RemoveCondition(risingwavev1alpha1.Initializing)
+		risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
+			Type:   risingwavev1alpha1.Initializing,
+			Status: metav1.ConditionTrue,
+		})
+		return ctrlkit.Continue()
+	})
+	conditionRunningIsTrueBarrier := mgr.WrapAction("BarrierConditionRunningIsTrue", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+		condition := risingwaveManger.GetCondition(risingwavev1alpha1.Running)
+		return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
+	})
+	markConditionUpgradingAsTrue := mgr.WrapAction("MarkConditionUpgradingAsTrue", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+		risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
+			Type:   risingwavev1alpha1.Upgrading,
+			Status: metav1.ConditionTrue,
+		})
+		return ctrlkit.Continue()
+	})
+	conditionUpgradingIsTrueBarrier := mgr.WrapAction("BarrierConditionUpgradingIsTrue", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+		condition := risingwaveManger.GetCondition(risingwavev1alpha1.Upgrading)
+		return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
+	})
+	markConditionUpgradingAsFalse := mgr.WrapAction("MarkConditionUpgradingAsFalse", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+		risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
+			Type:   risingwavev1alpha1.Upgrading,
+			Status: metav1.ConditionFalse,
+		})
+		return ctrlkit.Continue()
+	})
 	syncMetaComponent := ctrlkit.Join(ctrlkit.Join(mgr.SyncMetaService(), mgr.SyncMetaDeployment()))
 	metaComponentReadyBarrier := ctrlkit.Join(mgr.WaitBeforeMetaDeploymentReady(), mgr.WaitBeforeMetaServiceIsAvailable())
 	syncOtherComponents := ctrlkit.Join(
@@ -124,24 +168,13 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	return ctrlkit.Join(
 		// => Initializing
 		ctrlkit.Sequential(
-			mgr.WrapAction("BarrierFirstTimeObserved", func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
-				return ctrlkit.ExitIf(len(risingwaveManger.RisingWave().Status.Conditions) != 0)
-			}),
-			mgr.WrapAction("MarkConditionInitializingAsTrue", func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
-				risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
-					Type:   risingwavev1alpha1.Initializing,
-					Status: metav1.ConditionTrue,
-				})
-				return ctrlkit.Continue()
-			}),
+			firstTimeObservedBarrier,
+			markConditionInitializingAsTrue,
 		),
 
 		// Initializing => Running
 		ctrlkit.Sequential(
-			mgr.WrapAction("BarrierConditionInitializingIsTrue", func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
-				condition := risingwaveManger.GetCondition(risingwavev1alpha1.Initializing)
-				return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
-			}),
+			conditionInitializingIsTrueBarrier,
 
 			// Sync observed generation.
 			syncObservedGeneration,
@@ -152,22 +185,12 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			// Sync other components, and wait for the ready barrier.
 			syncOtherComponents, otherComponentsReadyBarrier,
 
-			mgr.WrapAction("MarkConditionRunningAsTrueAndInitializingToFalse", func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
-				risingwaveManger.RemoveCondition(risingwavev1alpha1.Initializing)
-				risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
-					Type:   risingwavev1alpha1.Initializing,
-					Status: metav1.ConditionTrue,
-				})
-				return ctrlkit.Continue()
-			}),
+			markConditionRunningAsTrueAndRemoveConditionInitializing,
 		),
 
 		// Running maintenance, => Upgrading
 		ctrlkit.Sequential(
-			mgr.WrapAction("BarrierConditionRunningIsTrue", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-				condition := risingwaveManger.GetCondition(risingwavev1alpha1.Running)
-				return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
-			}),
+			conditionRunningIsTrueBarrier,
 
 			ctrlkit.Join(
 				// Branch, upgrade detection.
@@ -176,13 +199,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 
 					syncObservedGeneration,
 
-					mgr.WrapAction("MarkConditionUpgradingToTrue", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-						risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
-							Type:   risingwavev1alpha1.Upgrading,
-							Status: metav1.ConditionTrue,
-						})
-						return ctrlkit.Continue()
-					}),
+					markConditionUpgradingAsTrue,
 				),
 
 				// Branch, running maintenance.
@@ -194,10 +211,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 
 		// Upgrading
 		ctrlkit.Sequential(
-			mgr.WrapAction("BarrierConditionUpgradingIsTrue", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-				condition := risingwaveManger.GetCondition(risingwavev1alpha1.Upgrading)
-				return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
-			}),
+			conditionUpgradingIsTrueBarrier,
 
 			// Sync observed generation.
 			syncObservedGeneration,
@@ -205,13 +219,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			// Sync all components, and wait for the ready barrier.
 			syncAllComponents, allComponentsReadyBarrier,
 
-			mgr.WrapAction("MarkConditionUpgradingToFalse", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-				risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
-					Type:   risingwavev1alpha1.Upgrading,
-					Status: metav1.ConditionFalse,
-				})
-				return ctrlkit.Continue()
-			}),
+			markConditionUpgradingAsFalse,
 		),
 	)
 }

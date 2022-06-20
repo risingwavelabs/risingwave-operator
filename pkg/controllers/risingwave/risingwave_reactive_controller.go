@@ -205,8 +205,6 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 				ctrlkit.Sequential(
 					observedGenerationOutdatedBarrier,
 
-					syncObservedGeneration,
-
 					markConditionUpgradingAsTrue,
 				),
 

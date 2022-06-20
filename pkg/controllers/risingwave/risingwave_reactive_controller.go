@@ -243,6 +243,7 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 		}).
 		For(&risingwavev1alpha1.RisingWave{}).
 		Owns(&appsv1.Deployment{}).
+		Owns(&appsv1.StatefulSet{}).
 		Owns(&corev1.Service{}).
 		Complete(c)
 }

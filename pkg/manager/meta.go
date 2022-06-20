@@ -204,6 +204,16 @@ func generateMetaDeployment(rw *v1alpha1.RisingWave) *v1.Deployment {
 			"--prometheus-host",
 			fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaMetricsPort),
 		},
+		// tcp livenes probe
+		LivenessProbe: &corev1.Probe{
+			InitialDelaySeconds: 10,
+			PeriodSeconds:       10,
+			ProbeHandler: corev1.ProbeHandler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.FromInt(v1alpha1.MetaServerPort),
+				},
+			},
+		},
 	}
 
 	var storage []string

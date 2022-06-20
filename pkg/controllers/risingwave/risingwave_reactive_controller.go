@@ -148,7 +148,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		return ctrlkit.Continue()
 	})
 	syncMetaComponent := ctrlkit.JoinInParallel(mgr.SyncMetaService(), mgr.SyncMetaDeployment())
-	metaComponentReadyBarrier := ctrlkit.Join(
+	metaComponentReadyBarrier := ctrlkit.Sequential(
 		mgr.WaitBeforeMetaDeploymentReady(),
 		ctrlkit.Timeout(time.Second, mgr.WaitBeforeMetaServiceIsAvailable()),
 	)

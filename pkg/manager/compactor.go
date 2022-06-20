@@ -195,6 +195,16 @@ func generateCompactorDeploy(rw *v1alpha1.RisingWave) *v1.Deployment {
 				},
 			},
 		},
+		// tcp livenes probe
+		LivenessProbe: &corev1.Probe{
+			InitialDelaySeconds: 10,
+			PeriodSeconds:       10,
+			ProbeHandler: corev1.ProbeHandler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.FromInt(v1alpha1.CompactorNodePort),
+				},
+			},
+		},
 	}
 
 	if len(spec.CMD) != 0 {

@@ -146,19 +146,22 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		})
 		return ctrlkit.Continue()
 	})
-	syncMetaComponent := ctrlkit.Join(ctrlkit.Join(mgr.SyncMetaService(), mgr.SyncMetaDeployment()))
-	metaComponentReadyBarrier := ctrlkit.Join(mgr.WaitBeforeMetaDeploymentReady(), mgr.WaitBeforeMetaServiceIsAvailable())
-	syncOtherComponents := ctrlkit.Join(
-		ctrlkit.Join(mgr.SyncComputeSerivce(), mgr.SyncComputeStatefulSet()),
-		ctrlkit.Join(mgr.SyncCompactorService(), mgr.SyncCompactorDeployment()),
-		ctrlkit.Join(mgr.SyncFrontendService(), mgr.SyncFrontendDeployment()),
+	syncMetaComponent := ctrlkit.JoinInParallel(mgr.SyncMetaService(), mgr.SyncMetaDeployment())
+	metaComponentReadyBarrier := ctrlkit.Join(
+		mgr.WaitBeforeMetaDeploymentReady(),
+		ctrlkit.Timeout(time.Second, mgr.WaitBeforeMetaServiceIsAvailable()),
+	)
+	syncOtherComponents := ctrlkit.JoinInParallel(
+		ctrlkit.JoinInParallel(mgr.SyncComputeSerivce(), mgr.SyncComputeStatefulSet()),
+		ctrlkit.JoinInParallel(mgr.SyncCompactorService(), mgr.SyncCompactorDeployment()),
+		ctrlkit.JoinInParallel(mgr.SyncFrontendService(), mgr.SyncFrontendDeployment()),
 	)
 	otherComponentsReadyBarrier := ctrlkit.Join(
 		mgr.WaitBeforeFrontendDeploymentReady(),
 		mgr.WaitBeforeComputeStatefulSetReady(),
 		mgr.WaitBeforeCompactorDeploymentReady(),
 	)
-	syncAllComponents := ctrlkit.Join(syncMetaComponent, syncOtherComponents)
+	syncAllComponents := ctrlkit.JoinInParallel(syncMetaComponent, syncOtherComponents)
 	allComponentsReadyBarrier := ctrlkit.Join(metaComponentReadyBarrier, otherComponentsReadyBarrier)
 
 	observedGenerationOutdatedBarrier := mgr.WrapAction("ObservedGenerationOutdatedBarrier", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
@@ -169,7 +172,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		return ctrlkit.Continue()
 	})
 
-	return ctrlkit.Join(
+	return ctrlkit.JoinInParallel(
 		// => Initializing
 		ctrlkit.Sequential(
 			firstTimeObservedBarrier,
@@ -196,7 +199,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		ctrlkit.Sequential(
 			conditionRunningIsTrueBarrier,
 
-			ctrlkit.Join(
+			ctrlkit.JoinInParallel(
 				// Branch, upgrade detection.
 				ctrlkit.Sequential(
 					observedGenerationOutdatedBarrier,

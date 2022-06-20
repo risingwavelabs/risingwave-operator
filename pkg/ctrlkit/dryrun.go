@@ -36,7 +36,11 @@ func dryRun(act ReconcileAction, indent string) {
 		fmt.Print(indent)
 		fmt.Println(")")
 	case *joinAction:
-		fmt.Println("Join(")
+		if act.runner.IsParallel() {
+			fmt.Println("ParallelJoin(")
+		} else {
+			fmt.Println("Join(")
+		}
 
 		for _, act := range act.actions {
 			fmt.Print(indent + "  ")

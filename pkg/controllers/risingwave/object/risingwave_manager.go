@@ -18,6 +18,7 @@ package object
 
 import (
 	"context"
+	"sync"
 
 	"github.com/samber/lo"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -28,25 +29,33 @@ import (
 )
 
 type RisingWaveManager struct {
-	client           client.Client
-	risingwave       *risingwavev1alpha1.RisingWave       // Status mutable.
-	risingwaveStatus *risingwavev1alpha1.RisingWaveStatus // Immutable copy of original.
+	client            client.Client
+	risingwave        *risingwavev1alpha1.RisingWave // Immutable.
+	mutableRisingWave *risingwavev1alpha1.RisingWave // Mutable copy of original.
+
+	mu sync.RWMutex
 }
 
+// RisingWave returns the risingwave immutable reference.
 func (mgr *RisingWaveManager) RisingWave() *risingwavev1alpha1.RisingWave {
 	return mgr.risingwave
 }
 
+// IsObservedGenerationOutdated tells whether the observed generation is outdated.
 func (mgr *RisingWaveManager) IsObservedGenerationOutdated() bool {
-	return mgr.risingwaveStatus.ObservedGeneration < mgr.risingwave.Generation
+	return mgr.risingwave.Status.ObservedGeneration < mgr.risingwave.Generation
 }
 
+// SyncObservedGeneration updates the observed generation to the current generation.
 func (mgr *RisingWaveManager) SyncObservedGeneration() {
-	mgr.risingwave.Generation = mgr.risingwaveStatus.ObservedGeneration
+	mgr.mu.Lock()
+	defer mgr.mu.Unlock()
+
+	mgr.mutableRisingWave.Status.ObservedGeneration = mgr.risingwave.Generation
 }
 
 func (mgr *RisingWaveManager) GetCondition(conditionType risingwavev1alpha1.RisingWaveType) *risingwavev1alpha1.RisingWaveCondition {
-	for _, cond := range mgr.risingwaveStatus.Conditions {
+	for _, cond := range mgr.risingwave.Status.Conditions {
 		if cond.Type == conditionType {
 			return cond.DeepCopy()
 		}
@@ -55,18 +64,24 @@ func (mgr *RisingWaveManager) GetCondition(conditionType risingwavev1alpha1.Risi
 }
 
 func (mgr *RisingWaveManager) RemoveCondition(conditionType risingwavev1alpha1.RisingWaveType) {
-	conditions := mgr.risingwave.Status.Conditions
+	mgr.mu.Lock()
+	defer mgr.mu.Unlock()
+
+	conditions := mgr.mutableRisingWave.Status.Conditions
 	for i, cond := range conditions {
 		if cond.Type == conditionType {
 			// Remove it.
 			conditions = append(conditions[:i], conditions[i+1:]...)
-			mgr.risingwave.Status.Conditions = conditions
+			mgr.mutableRisingWave.Status.Conditions = conditions
 			return
 		}
 	}
 }
 
 func (mgr *RisingWaveManager) UpdateCondition(condition risingwavev1alpha1.RisingWaveCondition) {
+	mgr.mu.Lock()
+	defer mgr.mu.Unlock()
+
 	// Set the last transition time to now if it's a new condition or status changed.
 	lastObservedCondition := mgr.GetCondition(condition.Type)
 	if lastObservedCondition == nil || lastObservedCondition.Status != condition.Status {
@@ -74,7 +89,7 @@ func (mgr *RisingWaveManager) UpdateCondition(condition risingwavev1alpha1.Risin
 	}
 
 	// Add or update the conidtion.
-	conditions := mgr.risingwave.Status.Conditions
+	conditions := mgr.mutableRisingWave.Status.Conditions
 	_, curIndex, found := lo.FindIndexOf(conditions, func(cond risingwavev1alpha1.RisingWaveCondition) bool {
 		return cond.Type == condition.Type
 	})
@@ -82,23 +97,26 @@ func (mgr *RisingWaveManager) UpdateCondition(condition risingwavev1alpha1.Risin
 		conditions[curIndex] = condition
 	} else {
 		conditions = append(conditions, condition)
-		mgr.risingwave.Status.Conditions = conditions
+		mgr.mutableRisingWave.Status.Conditions = conditions
 	}
 }
 
 func (mgr *RisingWaveManager) UpdateRisingWaveStatus(ctx context.Context) error {
+	mgr.mu.RLock()
+	defer mgr.mu.RUnlock()
+
 	// Do nothing if not changed.
-	if equality.Semantic.DeepEqual(mgr.risingwaveStatus, &mgr.risingwave.Status) {
+	if equality.Semantic.DeepEqual(&mgr.mutableRisingWave.Status, &mgr.risingwave.Status) {
 		return nil
 	}
 
-	return mgr.client.Status().Update(ctx, mgr.risingwave)
+	return mgr.client.Status().Update(ctx, mgr.mutableRisingWave)
 }
 
 func NewRisingWaveManager(client client.Client, risingwave *risingwavev1alpha1.RisingWave) *RisingWaveManager {
 	return &RisingWaveManager{
-		client:           client,
-		risingwave:       risingwave,
-		risingwaveStatus: risingwave.Status.DeepCopy(),
+		client:            client,
+		risingwave:        risingwave,
+		mutableRisingWave: risingwave.DeepCopy(),
 	}
 }

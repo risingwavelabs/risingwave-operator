@@ -18,6 +18,17 @@ package ctrlkit
 
 import "github.com/samber/lo"
 
+func unwrapParallel(act ReconcileAction) ReconcileAction {
+	for {
+		switch innerAct := act.(type) {
+		case *parallelAction:
+			act = innerAct.inner
+		default:
+			return act
+		}
+	}
+}
+
 // OptimizeWorkflow optimizes the workflow by eliminating unnecessary layers:
 //   * Nop in Sequential or Join will be removed
 //   * Empty Join and Sequential will be omitted
@@ -32,9 +43,11 @@ func OptimizeWorkflow(workflow ReconcileAction) ReconcileAction {
 		actions := make([]ReconcileAction, 0)
 		for _, act := range workflow.actions {
 			act = OptimizeWorkflow(act)
-			if innerSeq, ok := act.(*sequentialAction); ok {
-				actions = append(actions, innerSeq.actions...)
-			} else {
+			act = unwrapParallel(act)
+			switch innerAct := act.(type) {
+			case *sequentialAction:
+				actions = append(actions, innerAct.actions...)
+			default:
 				actions = append(actions, act)
 			}
 		}
@@ -49,10 +62,21 @@ func OptimizeWorkflow(workflow ReconcileAction) ReconcileAction {
 		}
 		return workflow
 	case *joinAction:
+		actions := make([]ReconcileAction, 0)
 		for i, act := range workflow.actions {
 			workflow.actions[i] = OptimizeWorkflow(act)
+			// If they are the same Join type, lift the inner one into the outer one.
+			if innerJoin, ok := act.(*joinAction); ok {
+				if innerJoin.runner.IsParallel() == workflow.runner.IsParallel() {
+					actions = append(actions, innerJoin.actions...)
+				} else {
+					actions = append(actions, act)
+				}
+			} else {
+				actions = append(actions, act)
+			}
 		}
-		workflow.actions = lo.Filter(workflow.actions, func(act ReconcileAction, _ int) bool {
+		workflow.actions = lo.Filter(actions, func(act ReconcileAction, _ int) bool {
 			return act != Nop
 		})
 		if len(workflow.actions) == 0 {
@@ -68,6 +92,9 @@ func OptimizeWorkflow(workflow ReconcileAction) ReconcileAction {
 		return workflow
 	case *parallelAction:
 		workflow.inner = OptimizeWorkflow(workflow.inner)
+		if workflow.inner == Nop {
+			return Nop
+		}
 		if _, ok := workflow.inner.(*parallelAction); ok {
 			return workflow.inner
 		} else {
@@ -75,9 +102,15 @@ func OptimizeWorkflow(workflow ReconcileAction) ReconcileAction {
 		}
 	case *retryAction:
 		workflow.inner = OptimizeWorkflow(workflow.inner)
+		if workflow.inner == Nop {
+			return Nop
+		}
 		return workflow
 	case *timeoutAction:
 		workflow.inner = OptimizeWorkflow(workflow.inner)
+		if workflow.inner == Nop {
+			return Nop
+		}
 		if innerTimeout, ok := workflow.inner.(*timeoutAction); ok {
 			if innerTimeout.timeout > workflow.timeout {
 				innerTimeout.timeout = workflow.timeout

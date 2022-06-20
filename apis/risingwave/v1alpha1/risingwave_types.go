@@ -135,6 +135,8 @@ const (
 // MetaStorage defines spec of meta service.
 type MetaStorage struct {
 	Type MetaStorageType `json:"type"`
+	// +optional
+	EtcdEndpoint string `json:"etcdEndpoint"`
 }
 
 // ComputeNodeSpec defines the spec of compute-node

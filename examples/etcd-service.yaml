@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: etcd-0
+  labels:
+    app: etcd-0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: etcd-0
+  template:
+    metadata:
+      labels:
+        app: etcd-0
+    spec:
+      containers:
+      - name: etcd-0
+        image: "quay.io/coreos/etcd:latest"
+        command:
+          - /usr/local/bin/etcd
+          - "--listen-client-urls"
+          - "http://0.0.0.0:2388"
+          - "--advertise-client-urls"
+          - "http://etcd-0:2388"
+          - "--listen-metrics-urls"
+          - "http://0.0.0.0:2379"
+          - "--name"
+          - risedev-meta
+          - "--max-txn-ops"
+          - "999999"
+          - "--auto-compaction-mode"
+          - revision
+          - "--auto-compaction-retention"
+          - "100"
+        ports:
+        - containerPort: 2388
+        - containerPort: 2389
+---
+apiVersion: risingwave.singularity-data.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: test-risingwave-amd64
+  namespace: test
+spec:
+  arch: amd64
+  objectStorage:
+    minIO: {}
+  metaNode:
+    storage:
+      type: ETCD
+      etcdEndpoint: "etcd-0:2388"
+    

@@ -22,7 +22,6 @@ import (
 
 	"github.com/samber/lo"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -128,59 +127,54 @@ func (f *RisingWaveObjectFactory) NewMetaService() *corev1.Service {
 	return mustSetControllerReference(f.risingwave, metaService, f.scheme)
 }
 
+type containerPatch func(c *corev1.Container)
+
+func (f *RisingWaveObjectFactory) newContainerFor(name string, descriptor *risingwavev1alpha1.DeployDescriptor, patches ...containerPatch) corev1.Container {
+	image := fmt.Sprintf("%s:%s", *descriptor.Image.Repository, lo.If(descriptor.Image.Tag != nil, *descriptor.Image.Tag).Else("latest"))
+
+	c := corev1.Container{
+		Name:            name,
+		Resources:       *descriptor.Resources.DeepCopy(),
+		Image:           image,
+		ImagePullPolicy: *descriptor.Image.PullPolicy,
+		Ports:           descriptor.Ports,
+		Command:         lo.If(len(descriptor.CMD) > 0, descriptor.DeepCopy().CMD).Else([]string{"/risingwave/bin/risingwave"}),
+	}
+
+	for _, patch := range patches {
+		patch(&c)
+	}
+
+	return c
+}
+
+func (f *RisingWaveObjectFactory) patchArgsForMeta(c *corev1.Container) {
+	metaNodeSpec := f.risingwave.Spec.MetaNode
+
+	args := []string{
+		"meta-node",
+		"--host",
+		fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaServerPort),
+		"--dashboard-host",
+		fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaDashboardPort),
+		"--prometheus-host",
+		fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaMetricsPort),
+	}
+
+	// TODO support other storages.
+	if metaNodeSpec.Storage.Type == v1alpha1.InMemory {
+		args = append(args, "--backend", "mem")
+	}
+
+	c.Args = args
+}
+
 func (f *RisingWaveObjectFactory) NewMetaDeployment() *appsv1.Deployment {
 	metaNodeSpec := f.risingwave.Spec.MetaNode
 
-	container := corev1.Container{
-		Name:            "meta-node",
-		Resources:       *metaNodeSpec.Resources,
-		Image:           fmt.Sprintf("%s:%s", *metaNodeSpec.Image.Repository, lo.If(metaNodeSpec.Image.Tag != nil, *metaNodeSpec.Image.Tag).Else("latest")),
-		ImagePullPolicy: *metaNodeSpec.Image.PullPolicy,
-		Ports:           metaNodeSpec.Ports,
-		Command: []string{
-			"/risingwave/bin/risingwave",
-		},
-		Args: []string{
-			"meta-node",
-			"--host",
-			fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaServerPort),
-			"--dashboard-host",
-			fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaDashboardPort),
-			"--prometheus-host",
-			fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaMetricsPort),
-		},
-	}
-
-	var storage []string
-	if metaNodeSpec.Storage.Type == v1alpha1.InMemory {
-		storage = []string{"--backend", "mem"}
-	}
-
-	// TODO: maybe support other storage
-	container.Args = append(container.Args, storage...)
-
-	if len(metaNodeSpec.CMD) != 0 {
-		container.Command = make([]string, len(metaNodeSpec.CMD))
-		copy(container.Command, metaNodeSpec.CMD)
-	}
-
-	podSpec := corev1.PodSpec{
-		Containers: []corev1.Container{
-			container,
-		},
-	}
-
-	if len(metaNodeSpec.NodeSelector) != 0 {
-		podSpec.NodeSelector = metaNodeSpec.NodeSelector
-	}
-
-	if metaNodeSpec.Affinity != nil {
-		podSpec.Affinity = metaNodeSpec.Affinity
-	}
-
-	metaDeployment := &v1.Deployment{
+	metaDeployment := &appsv1.Deployment{
 		ObjectMeta: f.objectMeta(consts.ComponentMeta),
-		Spec: v1.DeploymentSpec{
+		Spec: appsv1.DeploymentSpec{
 			Replicas: metaNodeSpec.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: f.podLabelsOrSelectors(consts.ComponentMeta),
@@ -189,7 +183,13 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment() *appsv1.Deployment {
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: f.podLabelsOrSelectors(consts.ComponentMeta),
 				},
-				Spec: podSpec,
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						f.newContainerFor("meta-node", &metaNodeSpec.DeployDescriptor, f.patchArgsForMeta),
+					},
+					NodeSelector: metaNodeSpec.NodeSelector,
+					Affinity:     metaNodeSpec.Affinity,
+				},
 			},
 		},
 	}
@@ -201,7 +201,7 @@ func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 	frontendService := &corev1.Service{
 		ObjectMeta: f.objectMeta(consts.ComponentFrontend),
 		Spec: corev1.ServiceSpec{
-			Type:     corev1.ServiceTypeNodePort,
+			Type:     corev1.ServiceTypeClusterIP,
 			Selector: f.podLabelsOrSelectors(consts.ComponentFrontend),
 			Ports:    f.convertContainerPortsToServicePorts(f.risingwave.Spec.Frontend.Ports),
 		},
@@ -209,58 +209,40 @@ func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 	return mustSetControllerReference(f.risingwave, frontendService, f.scheme)
 }
 
+func (f *RisingWaveObjectFactory) patchPodIPEnv(c *corev1.Container) {
+	for _, envVar := range c.Env {
+		if envVar.Name == "POD_IP" {
+			return
+		}
+	}
+	c.Env = append(c.Env, corev1.EnvVar{
+		Name: "POD_IP",
+		ValueFrom: &corev1.EnvVarSource{
+			FieldRef: &corev1.ObjectFieldSelector{
+				FieldPath: "status.podIP",
+			},
+		},
+	})
+}
+
+func (f *RisingWaveObjectFactory) patchArgsForFrontend(c *corev1.Container) {
+	args := []string{
+		"frontend-node",
+		"--host",
+		fmt.Sprintf("$(POD_IP):%d", v1alpha1.FrontendPort),
+		"--meta-addr",
+		fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta), v1alpha1.MetaServerPort),
+	}
+
+	c.Args = args
+}
+
 func (f *RisingWaveObjectFactory) NewFrontendDeployment() *appsv1.Deployment {
 	frontendSpec := f.risingwave.Spec.Frontend
 
-	var c = corev1.Container{
-		Name:      "frontend",
-		Image:     fmt.Sprintf("%s:%s", *frontendSpec.Image.Repository, lo.If(frontendSpec.Image.Tag != nil, *frontendSpec.Image.Tag).Else("latest")),
-		Resources: *frontendSpec.Resources,
-		Env: []corev1.EnvVar{
-			{
-				Name: "POD_IP",
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
-						FieldPath: "status.podIP",
-					},
-				},
-			},
-		},
-		Command: []string{
-			"/risingwave/bin/risingwave",
-		},
-		Args: []string{
-			"frontend-node",
-			"--host",
-			fmt.Sprintf("$(POD_IP):%d", v1alpha1.FrontendPort),
-			"--meta-addr",
-			fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta), v1alpha1.MetaServerPort),
-		},
-		Ports: frontendSpec.Ports,
-	}
-
-	if len(frontendSpec.CMD) != 0 {
-		c.Command = make([]string, len(frontendSpec.CMD))
-		copy(c.Command, frontendSpec.CMD)
-	}
-
-	podSpec := corev1.PodSpec{
-		Containers: []corev1.Container{
-			c,
-		},
-	}
-
-	if len(frontendSpec.NodeSelector) != 0 {
-		podSpec.NodeSelector = frontendSpec.NodeSelector
-	}
-
-	if frontendSpec.Affinity != nil {
-		podSpec.Affinity = frontendSpec.Affinity
-	}
-
-	frontendDeployment := &v1.Deployment{
+	frontendDeployment := &appsv1.Deployment{
 		ObjectMeta: f.objectMeta(consts.ComponentFrontend),
-		Spec: v1.DeploymentSpec{
+		Spec: appsv1.DeploymentSpec{
 			Replicas: frontendSpec.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: f.podLabelsOrSelectors(consts.ComponentFrontend),
@@ -269,7 +251,13 @@ func (f *RisingWaveObjectFactory) NewFrontendDeployment() *appsv1.Deployment {
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: f.podLabelsOrSelectors(consts.ComponentFrontend),
 				},
-				Spec: podSpec,
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						f.newContainerFor("frontend", &frontendSpec.DeployDescriptor, f.patchPodIPEnv, f.patchArgsForFrontend),
+					},
+					NodeSelector: frontendSpec.NodeSelector,
+					Affinity:     frontendSpec.Affinity,
+				},
 			},
 		},
 	}
@@ -281,7 +269,7 @@ func (f *RisingWaveObjectFactory) NewComputeService() *corev1.Service {
 	computeService := &corev1.Service{
 		ObjectMeta: f.objectMeta(consts.ComponentCompute),
 		Spec: corev1.ServiceSpec{
-			Type:     corev1.ServiceTypeNodePort,
+			Type:     corev1.ServiceTypeClusterIP,
 			Selector: f.podLabelsOrSelectors(consts.ComponentCompute),
 			Ports:    f.convertContainerPortsToServicePorts(f.risingwave.Spec.ComputeNode.Ports),
 		},
@@ -325,88 +313,59 @@ func (f *RisingWaveObjectFactory) s3EnvVars() []corev1.EnvVar {
 	}
 }
 
+func (f *RisingWaveObjectFactory) patchStorageEnvs(c *corev1.Container) {
+	if f.isObjectStorageS3() {
+		c.Env = append(c.Env, f.s3EnvVars()...)
+	}
+}
+
+func (f *RisingWaveObjectFactory) configVolumeForCompute() corev1.Volume {
+	return corev1.Volume{
+		Name: "compute-config",
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				Items: []corev1.KeyToPath{
+					{
+						Key:  "risingwave.toml",
+						Path: "risingwave.toml",
+					},
+				},
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: f.risingwave.Name + "-compute-configmap",
+				},
+			},
+		},
+	}
+}
+
+func (f *RisingWaveObjectFactory) patchConfigVolumeMountForCompute(c *corev1.Container) {
+	c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
+		Name:      "compute-config",
+		MountPath: "/risingwave/config",
+		ReadOnly:  true,
+	})
+}
+
+func (f *RisingWaveObjectFactory) patchArgsForCompute(c *corev1.Container) {
+	c.Args = []string{ // TODO: mv args -> configuration file
+		"compute-node",
+		"--config-path",
+		"/risingwave/config/risingwave.toml",
+		"--host",
+		fmt.Sprintf("$(POD_IP):%d", v1alpha1.ComputeNodePort),
+		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", v1alpha1.ComputeNodeMetricsPort),
+		"--metrics-level=1",
+		fmt.Sprintf("--state-store=%s", f.storeParam()),
+		fmt.Sprintf("--meta-address=http://%s:%d", f.componentName(consts.ComponentMeta), v1alpha1.MetaServerPort),
+	}
+}
+
 func (f *RisingWaveObjectFactory) NewComputeDeployment() *appsv1.StatefulSet {
 	computeNodeSpec := f.risingwave.Spec.ComputeNode
 
-	container := corev1.Container{
-		Name:            "compute-node",
-		Resources:       *computeNodeSpec.Resources,
-		Image:           fmt.Sprintf("%s:%s", *computeNodeSpec.Image.Repository, lo.If(computeNodeSpec.Image.Tag != nil, *computeNodeSpec.Image.Tag).Else("latest")),
-		ImagePullPolicy: *computeNodeSpec.Image.PullPolicy,
-		Ports:           computeNodeSpec.Ports,
-		Command: []string{
-			"/risingwave/bin/risingwave",
-		},
-		Args: []string{ // TODO: mv args -> configuration file
-			"compute-node",
-			"--config-path",
-			"/risingwave/config/risingwave.toml",
-			"--host",
-			fmt.Sprintf("$(POD_IP):%d", v1alpha1.ComputeNodePort),
-			fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", v1alpha1.ComputeNodeMetricsPort),
-			"--metrics-level=1",
-			fmt.Sprintf("--state-store=%s", f.storeParam()),
-			fmt.Sprintf("--meta-address=http://%s:%d", f.componentName(consts.ComponentMeta), v1alpha1.MetaServerPort),
-		},
-		Env: []corev1.EnvVar{
-			{
-				Name: "POD_IP",
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
-						FieldPath: "status.podIP",
-					},
-				},
-			},
-		},
-		VolumeMounts: []corev1.VolumeMount{
-			{
-				Name:      "compute-config",
-				MountPath: "/risingwave/config",
-				ReadOnly:  true,
-			},
-		},
-	}
-
-	if len(computeNodeSpec.CMD) != 0 {
-		container.Command = make([]string, len(computeNodeSpec.CMD))
-		copy(container.Command, computeNodeSpec.CMD)
-	}
-
-	if f.isObjectStorageS3() {
-		container.Env = append(container.Env, f.s3EnvVars()...)
-	}
-
-	podSpec := corev1.PodSpec{
-		Containers: []corev1.Container{
-			container,
-		},
-		Volumes: []corev1.Volume{
-			{
-				Name: "compute-config",
-				VolumeSource: corev1.VolumeSource{
-					ConfigMap: &corev1.ConfigMapVolumeSource{
-						Items: []corev1.KeyToPath{
-							{
-								Key:  "risingwave.toml",
-								Path: "risingwave.toml",
-							},
-						},
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: f.risingwave.Name + "-compute-configmap",
-						},
-					},
-				},
-			},
-		},
-	}
-
-	if len(computeNodeSpec.NodeSelector) != 0 {
-		podSpec.NodeSelector = computeNodeSpec.NodeSelector
-	}
-
-	computeStatefulSet := &v1.StatefulSet{
+	computeStatefulSet := &appsv1.StatefulSet{
 		ObjectMeta: f.objectMeta(consts.ComponentCompute),
-		Spec: v1.StatefulSetSpec{
+		Spec: appsv1.StatefulSetSpec{
 			Replicas: computeNodeSpec.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: f.podLabelsOrSelectors(consts.ComponentCompute),
@@ -415,7 +374,21 @@ func (f *RisingWaveObjectFactory) NewComputeDeployment() *appsv1.StatefulSet {
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: f.podLabelsOrSelectors(consts.ComponentCompute),
 				},
-				Spec: podSpec,
+				Spec: corev1.PodSpec{
+					Volumes: []corev1.Volume{
+						f.configVolumeForCompute(),
+					},
+					NodeSelector: computeNodeSpec.NodeSelector,
+					Affinity:     computeNodeSpec.Affinity,
+					Containers: []corev1.Container{
+						f.newContainerFor("compute-node", &computeNodeSpec.DeployDescriptor,
+							f.patchPodIPEnv,
+							f.patchArgsForCompute,
+							f.patchStorageEnvs,
+							f.patchConfigVolumeMountForCompute,
+						),
+					},
+				},
 			},
 		},
 	}
@@ -427,7 +400,7 @@ func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 	compactorService := &corev1.Service{
 		ObjectMeta: f.objectMeta(consts.ComponentCompactor),
 		Spec: corev1.ServiceSpec{
-			Type:     corev1.ServiceTypeNodePort,
+			Type:     corev1.ServiceTypeClusterIP,
 			Selector: f.podLabelsOrSelectors(consts.ComponentCompactor),
 			Ports:    f.convertContainerPortsToServicePorts(f.risingwave.Spec.ComputeNode.Ports),
 		},
@@ -435,63 +408,25 @@ func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 	return mustSetControllerReference(f.risingwave, compactorService, f.scheme)
 }
 
+func (f *RisingWaveObjectFactory) patchArgsForCompactor(c *corev1.Container) {
+	c.Args = []string{
+		"compactor-node",
+		"--host",
+		fmt.Sprintf("$(POD_IP):%d", v1alpha1.CompactorNodePort),
+		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", v1alpha1.CompactorNodeMetricsPort),
+		"--metrics-level=1",
+		fmt.Sprintf("--state-store=%s", f.storeParam()),
+		fmt.Sprintf("--meta-address=http://%s:%d", f.componentName(consts.ComponentMeta), v1alpha1.MetaServerPort),
+	}
+}
+
 func (f *RisingWaveObjectFactory) NewCompactorDeployment() *appsv1.Deployment {
 	compactorNodeSpec := f.risingwave.Spec.CompactorNode
-	imageTag := lo.If(compactorNodeSpec.Image.Tag != nil, *compactorNodeSpec.Image.Tag).Else("latest")
 
-	container := corev1.Container{
-		Name:            "compactor-node",
-		Resources:       *compactorNodeSpec.Resources,
-		Image:           fmt.Sprintf("%s:%s", *compactorNodeSpec.Image.Repository, imageTag),
-		ImagePullPolicy: *compactorNodeSpec.Image.PullPolicy,
-		Ports:           compactorNodeSpec.Ports,
-		Command: []string{
-			"/risingwave/bin/risingwave",
-		},
-		Args: []string{
-			"compactor-node",
-			"--host",
-			fmt.Sprintf("$(POD_IP):%d", v1alpha1.CompactorNodePort),
-			fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", v1alpha1.CompactorNodeMetricsPort),
-			"--metrics-level=1",
-			fmt.Sprintf("--state-store=%s", f.storeParam()),
-			fmt.Sprintf("--meta-address=http://%s:%d", f.componentName(consts.ComponentMeta), v1alpha1.MetaServerPort),
-		},
-		Env: []corev1.EnvVar{
-			{
-				Name: "POD_IP",
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
-						FieldPath: "status.podIP",
-					},
-				},
-			},
-		},
-	}
-
-	if len(compactorNodeSpec.CMD) != 0 {
-		container.Command = make([]string, len(compactorNodeSpec.CMD))
-		copy(container.Command, compactorNodeSpec.CMD)
-	}
-
-	if f.isObjectStorageS3() {
-		container.Env = append(container.Env, f.s3EnvVars()...)
-	}
-
-	podSpec := corev1.PodSpec{
-		Containers: []corev1.Container{
-			container,
-		},
-	}
-
-	if len(compactorNodeSpec.NodeSelector) != 0 {
-		podSpec.NodeSelector = compactorNodeSpec.NodeSelector
-	}
-
-	compactorDeployment := &v1.Deployment{
+	compactorDeployment := &appsv1.Deployment{
 		ObjectMeta: f.objectMeta(consts.ComponentCompactor),
 
-		Spec: v1.DeploymentSpec{
+		Spec: appsv1.DeploymentSpec{
 			Replicas: compactorNodeSpec.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: f.podLabelsOrSelectors(consts.ComponentCompactor),
@@ -500,7 +435,17 @@ func (f *RisingWaveObjectFactory) NewCompactorDeployment() *appsv1.Deployment {
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: f.podLabelsOrSelectors(consts.ComponentCompactor),
 				},
-				Spec: podSpec,
+				Spec: corev1.PodSpec{
+					NodeSelector: compactorNodeSpec.NodeSelector,
+					Affinity:     compactorNodeSpec.Affinity,
+					Containers: []corev1.Container{
+						f.newContainerFor("compactor-node", &compactorNodeSpec.DeployDescriptor,
+							f.patchPodIPEnv,
+							f.patchArgsForCompactor,
+							f.patchStorageEnvs,
+						),
+					},
+				},
 			},
 		},
 	}

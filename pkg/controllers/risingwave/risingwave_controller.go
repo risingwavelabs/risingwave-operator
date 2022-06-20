@@ -114,6 +114,7 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 			workflow = ctrlkit.Join(actions...)
 		}
 	}
+	workflow = ctrlkit.OptimizeWorkflow(workflow)
 
 	logger.Info("Describe workflow", "workflow", workflow.Description())
 

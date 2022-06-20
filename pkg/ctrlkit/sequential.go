@@ -46,7 +46,7 @@ func (act *sequentialAction) Run(ctx context.Context) (ctrl.Result, error) {
 // Sequential organizes the actions into a sequential flow.
 func Sequential(actions ...ReconcileAction) ReconcileAction {
 	if len(actions) == 0 {
-		panic("must provide actions to sequential")
+		return Nop
 	}
 
 	// Simply return the first action if there's only one.

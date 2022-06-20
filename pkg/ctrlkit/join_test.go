@@ -25,7 +25,7 @@ func Test_Join(t *testing.T) {
 }
 
 func Test_JoinInParallel(t *testing.T) {
-	if JoinInParallel(Nop) != Nop {
+	if JoinInParallel(Nop).Description() != Parallel(Nop).Description() {
 		t.Fatal("one join should be optimized")
 	}
 

@@ -157,7 +157,7 @@ func (act *joinAction) Run(ctx context.Context) (ctrl.Result, error) {
 
 func join(actions []ReconcileAction, runner joinRunner) ReconcileAction {
 	if len(actions) == 0 {
-		panic("must provide actions to join")
+		return Nop
 	}
 
 	if len(actions) == 1 {
@@ -179,5 +179,9 @@ func JoinOrdered(actions ...ReconcileAction) ReconcileAction {
 
 // JoinInParallel organizes the actions in a split-join flow and executes them in parallel.
 func JoinInParallel(actions ...ReconcileAction) ReconcileAction {
+	if len(actions) == 1 {
+		return Parallel(actions[0])
+	}
+
 	return join(actions, parallelJoinRunner)
 }

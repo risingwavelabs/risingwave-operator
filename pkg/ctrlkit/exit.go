@@ -30,6 +30,15 @@ func Exit() (ctrl.Result, error) {
 	return ctrl.Result{}, ErrExit
 }
 
+// ExitIf exits if the condition is true.
+func ExitIf(cond bool) (ctrl.Result, error) {
+	if cond {
+		return Exit()
+	} else {
+		return NoRequeue()
+	}
+}
+
 // IgnoreExit keeps the result but returns a nil when err == ErrExit.
 func IgnoreExit(r ctrl.Result, err error) (ctrl.Result, error) {
 	// If it's ErrExit, ignore it.

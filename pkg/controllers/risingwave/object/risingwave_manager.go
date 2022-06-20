@@ -37,6 +37,14 @@ func (mgr *RisingWaveManager) RisingWave() *risingwavev1alpha1.RisingWave {
 	return mgr.risingwave
 }
 
+func (mgr *RisingWaveManager) IsObservedGenerationOutdated() bool {
+	return mgr.risingwaveStatus.ObservedGeneration < mgr.risingwave.Generation
+}
+
+func (mgr *RisingWaveManager) SyncObservedGeneration() {
+	mgr.risingwave.Generation = mgr.risingwaveStatus.ObservedGeneration
+}
+
 func (mgr *RisingWaveManager) GetCondition(conditionType risingwavev1alpha1.RisingWaveType) *risingwavev1alpha1.RisingWaveCondition {
 	for _, cond := range mgr.risingwaveStatus.Conditions {
 		if cond.Type == conditionType {

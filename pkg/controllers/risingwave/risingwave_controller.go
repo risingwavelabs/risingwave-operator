@@ -18,7 +18,6 @@ package risingwave
 
 import (
 	"context"
-	"time"
 
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
@@ -81,121 +80,140 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 		logger,
 	)
 
-	if !c.DryRun {
-		defer func() {
-			if _, err1 := c.runWorkflow(ctx, mgr.UpdateRisingWaveStatus()); err1 != nil {
-				// Overwrite err if it's nil.
-				if err == nil {
-					err = err1
-				}
+	// Defer the status update.
+	defer func() {
+		if _, err1 := c.runWorkflow(ctx, mgr.UpdateRisingWaveStatus()); err1 != nil {
+			// Overwrite err if it's nil.
+			if err == nil {
+				err = err1
 			}
-		}()
-	}
+		}
+	}()
 
-	var workflow ctrlkit.ReconcileAction
-	if len(risingwave.Status.Conditions) == 0 {
-		workflow = ctrlkit.WrapAction("MarkConditionInitializing", func(ctx context.Context) (ctrl.Result, error) {
-			risingwaveManager.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
-				Type:   risingwavev1alpha1.Initializing,
-				Status: metav1.ConditionTrue,
-			})
-			return ctrlkit.RequeueImmediately()
-		})
-	} else {
-		actions := make([]ctrlkit.ReconcileAction, 0)
-		for _, cond := range risingwave.Status.Conditions {
-			if cond.Status == metav1.ConditionTrue {
-				actions = append(actions, c.buildWorkflow(cond.Type, &risingwave, risingwaveManager, &mgr))
-			}
-		}
-		if len(actions) == 0 {
-			workflow = ctrlkit.Nop
-		} else {
-			workflow = ctrlkit.Join(actions...)
-		}
-	}
-	workflow = ctrlkit.OptimizeWorkflow(workflow)
+	workflow := ctrlkit.OptimizeWorkflow(c.reactiveWorkflow(risingwaveManager, &mgr))
 
 	logger.Info("Describe workflow", "workflow", workflow.Description())
 
 	return c.runWorkflow(ctx, workflow)
 }
 
-func (c *RisingWaveController) buildWorkflow(condition risingwavev1alpha1.RisingWaveType, risingwave *risingwavev1alpha1.RisingWave,
-	risingwaveManger *object.RisingWaveManager, mgr *manager.RisingWaveControllerManager) ctrlkit.ReconcileAction {
-	switch condition {
-	case risingwavev1alpha1.Initializing:
-		return ctrlkit.Sequential(
-			// Sync the service and deployment for meta components.
-			ctrlkit.Join(mgr.SyncMetaService(), mgr.SyncMetaDeployment()),
+func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingWaveManager, mgr *manager.RisingWaveControllerManager) ctrlkit.ReconcileAction {
+	syncMetaComponent := ctrlkit.Join(ctrlkit.Join(mgr.SyncMetaService(), mgr.SyncMetaDeployment()))
+	metaComponentReadyBarrier := ctrlkit.Join(mgr.WaitBeforeMetaDeploymentReady(), mgr.WaitBeforeMetaServiceIsAvailable())
+	syncOtherComponents := ctrlkit.Join(
+		ctrlkit.Join(mgr.SyncComputeSerivce(), mgr.SyncComputeDeployment()),
+		ctrlkit.Join(mgr.SyncCompactorService(), mgr.SyncCompactorDeployment()),
+		ctrlkit.Join(mgr.SyncFrontendService(), mgr.SyncFrontendDeployment()),
+	)
+	otherComponentsReadyBarrier := ctrlkit.Join(
+		mgr.WaitBeforeFrontendDeploymentReady(),
+		mgr.WaitBeforeComputeDeploymentReady(),
+		mgr.WaitBeforeCompactorDeploymentReady(),
+	)
+	syncAllComponents := ctrlkit.Join(syncMetaComponent, syncOtherComponents)
+	allComponentsReadyBarrier := ctrlkit.Join(metaComponentReadyBarrier, otherComponentsReadyBarrier)
 
-			// Wait before meta deployment's ready.
-			ctrlkit.Timeout(5*time.Second, mgr.WaitBeforeMetaDeploymentReady()),
+	observedGenerationOutdatedBarrier := mgr.WrapAction("ObservedGenerationOutdatedBarrier", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+		return ctrlkit.ExitIf(!risingwaveManger.IsObservedGenerationOutdated())
+	})
+	syncObservedGeneration := mgr.WrapAction("SyncObservedGeneration", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+		risingwaveManger.SyncObservedGeneration()
+		return ctrlkit.Continue()
+	})
 
-			// Sync object storage and wait.
-			ctrlkit.If(risingwave.Spec.ObjectStorage.MinIO != nil,
-				ctrlkit.Sequential(
-					ctrlkit.Join(mgr.SyncMinIOService(), mgr.SyncMinIODeployment()),
-					mgr.WaitBeforeMinIODeploymentReady(),
-				),
-			),
-
-			// Sync the other components.
-			ctrlkit.Join(
-				ctrlkit.Join(mgr.SyncFrontendService(), mgr.SyncFrontendDeployment()),
-				ctrlkit.Join(mgr.SyncComputeSerivce(), mgr.SyncComputeDeployment()),
-				ctrlkit.Join(mgr.SyncCompactorService(), mgr.SyncCompactorDeployment()),
-			),
-
-			// Wait before these components' ready.
-			ctrlkit.Join(
-				mgr.WaitBeforeFrontendDeploymentReady(),
-				mgr.WaitBeforeComputeDeploymentReady(),
-				mgr.WaitBeforeCompactorDeploymentReady(),
-			),
-
-			// Update the condition to Running.
-			ctrlkit.WrapAction("MarkConditionRunning", func(ctx context.Context) (ctrl.Result, error) {
-				risingwaveManger.RemoveCondition(risingwavev1alpha1.Initializing)
+	return ctrlkit.Join(
+		// => Initializing
+		ctrlkit.Sequential(
+			mgr.WrapAction("BarrierFirstTimeObserved", func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
+				return ctrlkit.ExitIf(len(risingwaveManger.RisingWave().Status.Conditions) != 0)
+			}),
+			mgr.WrapAction("MarkConditionInitializingAsTrue", func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
 				risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
-					Type:   risingwavev1alpha1.Running,
+					Type:   risingwavev1alpha1.Initializing,
 					Status: metav1.ConditionTrue,
 				})
-				return ctrlkit.RequeueImmediately()
+				return ctrlkit.Continue()
 			}),
-		)
-	case risingwavev1alpha1.Running:
-		return ctrlkit.Nop
-	case risingwavev1alpha1.Upgrading:
-		return ctrlkit.Sequential(
-			// Sync all these components.
+		),
+
+		// Initializing => Running
+		ctrlkit.Sequential(
+			mgr.WrapAction("BarrierConditionInitializingIsTrue", func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
+				condition := risingwaveManger.GetCondition(risingwavev1alpha1.Initializing)
+				return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
+			}),
+
+			// Sync observed generation.
+			syncObservedGeneration,
+
+			// Sync component for meta, and wait for the ready barrier.
+			syncMetaComponent, metaComponentReadyBarrier,
+
+			// Sync other components, and wait for the ready barrier.
+			syncOtherComponents, otherComponentsReadyBarrier,
+
+			mgr.WrapAction("MarkConditionRunningAsTrueAndInitializingToFalse", func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
+				risingwaveManger.RemoveCondition(risingwavev1alpha1.Initializing)
+				risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
+					Type:   risingwavev1alpha1.Initializing,
+					Status: metav1.ConditionTrue,
+				})
+				return ctrlkit.Continue()
+			}),
+		),
+
+		// Running maintenance, => Upgrading
+		ctrlkit.Sequential(
+			mgr.WrapAction("BarrierConditionRunningIsTrue", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+				condition := risingwaveManger.GetCondition(risingwavev1alpha1.Running)
+				return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
+			}),
+
 			ctrlkit.Join(
-				mgr.SyncMetaService(), mgr.SyncMetaDeployment(),
-				mgr.SyncFrontendService(), mgr.SyncFrontendDeployment(),
-				mgr.SyncComputeSerivce(), mgr.SyncComputeDeployment(),
-				mgr.SyncCompactorService(), mgr.SyncCompactorDeployment(),
-				ctrlkit.If(risingwave.Spec.ObjectStorage.MinIO != nil,
-					ctrlkit.Join(mgr.SyncMinIOService(), mgr.SyncMinIODeployment()),
+				// Branch, upgrade detection.
+				ctrlkit.Sequential(
+					observedGenerationOutdatedBarrier,
+
+					syncObservedGeneration,
+
+					mgr.WrapAction("MarkConditionUpgradingToTrue", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+						risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
+							Type:   risingwavev1alpha1.Upgrading,
+							Status: metav1.ConditionTrue,
+						})
+						return ctrlkit.Continue()
+					}),
+				),
+
+				// Branch, running maintenance.
+				ctrlkit.Sequential(
+				// TODO, nothing to do now.
 				),
 			),
-			// Wait before these components' ready.
-			ctrlkit.Join(
-				mgr.WaitBeforeMetaDeploymentReady(),
-				mgr.WaitBeforeFrontendDeploymentReady(),
-				mgr.WaitBeforeComputeDeploymentReady(),
-				mgr.WaitBeforeCompactorDeploymentReady(),
-				ctrlkit.If(risingwave.Spec.ObjectStorage.MinIO != nil,
-					mgr.WaitBeforeMinIODeploymentReady(),
-				),
-			),
-			ctrlkit.WrapAction("RemoveConditionUpgrading", func(ctx context.Context) (ctrl.Result, error) {
-				risingwaveManger.RemoveCondition(risingwavev1alpha1.Upgrading)
-				return ctrlkit.NoRequeue()
+		),
+
+		// Upgrading
+		ctrlkit.Sequential(
+			mgr.WrapAction("BarrierConditionUpgradingIsTrue", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+				condition := risingwaveManger.GetCondition(risingwavev1alpha1.Upgrading)
+				return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
 			}),
-		)
-	default:
-		return ctrlkit.Nop
-	}
+
+			// Sync observed generation.
+			syncObservedGeneration,
+
+			// Sync all components, and wait for the ready barrier.
+			syncAllComponents, allComponentsReadyBarrier,
+
+			mgr.WrapAction("MarkConditionUpgradingToFalse", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+				risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
+					Type:   risingwavev1alpha1.Upgrading,
+					Status: metav1.ConditionFalse,
+				})
+				return ctrlkit.Continue()
+			}),
+		),
+	)
 }
 
 func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {

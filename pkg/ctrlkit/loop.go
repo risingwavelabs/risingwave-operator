@@ -52,3 +52,6 @@ func RequeueIfErrorAndWrap(explain string, err error) (ctrl.Result, error) {
 func NoRequeue() (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
+
+// Continue is an alias of NoRequeue.
+var Continue = NoRequeue

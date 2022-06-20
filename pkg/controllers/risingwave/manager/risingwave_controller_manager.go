@@ -106,25 +106,25 @@ func (s *RisingWaveControllerManagerState) GetCompactorDeployment(ctx context.Co
 	return &compactorDeployment, nil
 }
 
-// GetMinIOService gets minIOService with name equals to ${target.Name}-minio.
-func (s *RisingWaveControllerManagerState) GetMinIOService(ctx context.Context) (*corev1.Service, error) {
-	var minIOService corev1.Service
+// GetMinIODeployment gets minIODeployment with name equals to ${target.Name}-minio.
+func (s *RisingWaveControllerManagerState) GetMinIODeployment(ctx context.Context) (*appsv1.Deployment, error) {
+	var minIODeployment appsv1.Deployment
 
 	err := s.Get(ctx, types.NamespacedName{
 		Namespace: s.target.Namespace,
 		Name:      s.target.Name + "-minio",
-	}, &minIOService)
+	}, &minIODeployment)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("unable to get state 'minIOService': %w", err)
+		return nil, fmt.Errorf("unable to get state 'minIODeployment': %w", err)
 	}
-	if !ctrlkit.ValidateOwnership(&minIOService, s.target) {
-		return nil, fmt.Errorf("unable to get state 'minIOService': object not owned by target")
+	if !ctrlkit.ValidateOwnership(&minIODeployment, s.target) {
+		return nil, fmt.Errorf("unable to get state 'minIODeployment': object not owned by target")
 	}
 
-	return &minIOService, nil
+	return &minIODeployment, nil
 }
 
 // GetFrontendService gets frontendService with name equals to ${target.Name}-frontend.
@@ -148,6 +148,27 @@ func (s *RisingWaveControllerManagerState) GetFrontendService(ctx context.Contex
 	return &frontendService, nil
 }
 
+// GetComputeService gets computeService with name equals to ${target.Name}-compute.
+func (s *RisingWaveControllerManagerState) GetComputeService(ctx context.Context) (*corev1.Service, error) {
+	var computeService corev1.Service
+
+	err := s.Get(ctx, types.NamespacedName{
+		Namespace: s.target.Namespace,
+		Name:      s.target.Name + "-compute",
+	}, &computeService)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to get state 'computeService': %w", err)
+	}
+	if !ctrlkit.ValidateOwnership(&computeService, s.target) {
+		return nil, fmt.Errorf("unable to get state 'computeService': object not owned by target")
+	}
+
+	return &computeService, nil
+}
+
 // GetCompactorService gets compactorService with name equals to ${target.Name}-compactor.
 func (s *RisingWaveControllerManagerState) GetCompactorService(ctx context.Context) (*corev1.Service, error) {
 	var compactorService corev1.Service
@@ -167,48 +188,6 @@ func (s *RisingWaveControllerManagerState) GetCompactorService(ctx context.Conte
 	}
 
 	return &compactorService, nil
-}
-
-// GetMetaDeployment gets metaDeployment with name equals to ${target.Name}-meta.
-func (s *RisingWaveControllerManagerState) GetMetaDeployment(ctx context.Context) (*appsv1.Deployment, error) {
-	var metaDeployment appsv1.Deployment
-
-	err := s.Get(ctx, types.NamespacedName{
-		Namespace: s.target.Namespace,
-		Name:      s.target.Name + "-meta",
-	}, &metaDeployment)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to get state 'metaDeployment': %w", err)
-	}
-	if !ctrlkit.ValidateOwnership(&metaDeployment, s.target) {
-		return nil, fmt.Errorf("unable to get state 'metaDeployment': object not owned by target")
-	}
-
-	return &metaDeployment, nil
-}
-
-// GetMinIODeployment gets minIODeployment with name equals to ${target.Name}-minio.
-func (s *RisingWaveControllerManagerState) GetMinIODeployment(ctx context.Context) (*appsv1.Deployment, error) {
-	var minIODeployment appsv1.Deployment
-
-	err := s.Get(ctx, types.NamespacedName{
-		Namespace: s.target.Namespace,
-		Name:      s.target.Name + "-minio",
-	}, &minIODeployment)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to get state 'minIODeployment': %w", err)
-	}
-	if !ctrlkit.ValidateOwnership(&minIODeployment, s.target) {
-		return nil, fmt.Errorf("unable to get state 'minIODeployment': object not owned by target")
-	}
-
-	return &minIODeployment, nil
 }
 
 // GetMetaService gets metaService with name equals to ${target.Name}-meta.
@@ -232,25 +211,46 @@ func (s *RisingWaveControllerManagerState) GetMetaService(ctx context.Context) (
 	return &metaService, nil
 }
 
-// GetComputeService gets computeService with name equals to ${target.Name}-compute.
-func (s *RisingWaveControllerManagerState) GetComputeService(ctx context.Context) (*corev1.Service, error) {
-	var computeService corev1.Service
+// GetMetaDeployment gets metaDeployment with name equals to ${target.Name}-meta.
+func (s *RisingWaveControllerManagerState) GetMetaDeployment(ctx context.Context) (*appsv1.Deployment, error) {
+	var metaDeployment appsv1.Deployment
 
 	err := s.Get(ctx, types.NamespacedName{
 		Namespace: s.target.Namespace,
-		Name:      s.target.Name + "-compute",
-	}, &computeService)
+		Name:      s.target.Name + "-meta",
+	}, &metaDeployment)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("unable to get state 'computeService': %w", err)
+		return nil, fmt.Errorf("unable to get state 'metaDeployment': %w", err)
 	}
-	if !ctrlkit.ValidateOwnership(&computeService, s.target) {
-		return nil, fmt.Errorf("unable to get state 'computeService': object not owned by target")
+	if !ctrlkit.ValidateOwnership(&metaDeployment, s.target) {
+		return nil, fmt.Errorf("unable to get state 'metaDeployment': object not owned by target")
 	}
 
-	return &computeService, nil
+	return &metaDeployment, nil
+}
+
+// GetMinIOService gets minIOService with name equals to ${target.Name}-minio.
+func (s *RisingWaveControllerManagerState) GetMinIOService(ctx context.Context) (*corev1.Service, error) {
+	var minIOService corev1.Service
+
+	err := s.Get(ctx, types.NamespacedName{
+		Namespace: s.target.Namespace,
+		Name:      s.target.Name + "-minio",
+	}, &minIOService)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to get state 'minIOService': %w", err)
+	}
+	if !ctrlkit.ValidateOwnership(&minIOService, s.target) {
+		return nil, fmt.Errorf("unable to get state 'minIOService': object not owned by target")
+	}
+
+	return &minIOService, nil
 }
 
 // NewRisingWaveControllerManagerState returns a RisingWaveControllerManagerState (target is not copied).
@@ -322,6 +322,17 @@ type RisingWaveControllerManager struct {
 	state  RisingWaveControllerManagerState
 	impl   RisingWaveControllerManagerImpl
 	logger logr.Logger
+}
+
+// WrapAction returns an action from manager.
+func (m *RisingWaveControllerManager) WrapAction(description string, f func(context.Context, logr.Logger) (ctrl.Result, error)) ctrlkit.ReconcileAction {
+	return ctrlkit.WrapAction(description, func(ctx context.Context) (ctrl.Result, error) {
+		logger := m.logger.WithValues("action", description)
+
+		defer m.impl.AfterActionRun(description, ctx, logger)
+		m.impl.BeforeActionRun(description, ctx, logger)
+		return f(ctx, logger)
+	})
 }
 
 // SyncMetaService generates the action of "SyncMetaService".

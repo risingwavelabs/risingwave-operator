@@ -18,14 +18,18 @@ package risingwave
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-logr/logr"
+	"golang.org/x/time/rate"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
@@ -145,13 +149,13 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	syncMetaComponent := ctrlkit.Join(ctrlkit.Join(mgr.SyncMetaService(), mgr.SyncMetaDeployment()))
 	metaComponentReadyBarrier := ctrlkit.Join(mgr.WaitBeforeMetaDeploymentReady(), mgr.WaitBeforeMetaServiceIsAvailable())
 	syncOtherComponents := ctrlkit.Join(
-		ctrlkit.Join(mgr.SyncComputeSerivce(), mgr.SyncComputeDeployment()),
+		ctrlkit.Join(mgr.SyncComputeSerivce(), mgr.SyncComputeStatefulSet()),
 		ctrlkit.Join(mgr.SyncCompactorService(), mgr.SyncCompactorDeployment()),
 		ctrlkit.Join(mgr.SyncFrontendService(), mgr.SyncFrontendDeployment()),
 	)
 	otherComponentsReadyBarrier := ctrlkit.Join(
 		mgr.WaitBeforeFrontendDeploymentReady(),
-		mgr.WaitBeforeComputeDeploymentReady(),
+		mgr.WaitBeforeComputeStatefulSetReady(),
 		mgr.WaitBeforeCompactorDeploymentReady(),
 	)
 	syncAllComponents := ctrlkit.Join(syncMetaComponent, syncOtherComponents)
@@ -226,6 +230,15 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 
 func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
+		WithOptions(controller.Options{
+			MaxConcurrentReconciles: 64,
+			RateLimiter: workqueue.NewMaxOfRateLimiter(
+				// Exponential rate limiter, for immediate requeues (result.Requeue == true || err != nil).
+				workqueue.NewItemExponentialFailureRateLimiter(5*time.Millisecond, 10*time.Second),
+				// Bucket limiter of 10 qps, 100 bucket size.
+				&workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(10), 100)},
+			),
+		}).
 		For(&risingwavev1alpha1.RisingWave{}).
 		Owns(&appsv1.Deployment{}).
 		Owns(&corev1.Service{}).

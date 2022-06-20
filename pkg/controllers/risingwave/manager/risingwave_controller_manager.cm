@@ -7,6 +7,7 @@ alias Service v1/Service
 alias Secret v1/Secret
 alias ConfigMap v1/ConfigMap
 alias Deployment apps/v1/Deployment
+alias StatefulSet apps/v1/StatefulSet
 alias RisingWave risingwave.singularity-data.com/v1alpha1/RisingWave
 
 // RisingWaveControllerManager encapsulates the states and actions used by RisingWaveController.
@@ -52,8 +53,8 @@ decl RisingWaveControllerManager for RisingWave {
             owned
         }
 
-        // Deployment for compute nodes.
-        computeDeployment Deployment {
+        // StatefulSet for compute nodes.
+        computeStatefulSet StatefulSet {
             name=${target.Name}-compute
             owned
         }
@@ -90,11 +91,11 @@ decl RisingWaveControllerManager for RisingWave {
         // SyncComputeSerivce creates or updates the service for compute nodes.
         SyncComputeSerivce(computeService)
 
-        // SyncComputeDeployment creates or updates the deployment for compute nodes.
-        SyncComputeDeployment(computeDeployment)
+        // SyncComputeStatefulSet creates or updates the statefulset for compute nodes.
+        SyncComputeStatefulSet(computeStatefulSet)
 
-        // WaitBeforeComputeDeploymentReady waits (aborts the workflow) before the compute deployment is ready.
-        WaitBeforeComputeDeploymentReady(computeDeployment)
+        // WaitBeforeComputeStatefulSetReady waits (aborts the workflow) before the compute deployment is ready.
+        WaitBeforeComputeStatefulSetReady(computeStatefulSet)
 
         // SyncCompactorService creates or updates the service for compactor nodes.
         SyncCompactorService(compactorService)
@@ -113,34 +114,5 @@ decl RisingWaveControllerManager for RisingWave {
     action {
         // UpdateRisingWaveStatus updates the status of RisingWave object.
         UpdateRisingWaveStatus()
-    }
-
-    // ===================================================
-    // States and actions for third-party components.
-    // ===================================================
-
-    state {
-        // Service for MinIO.
-        minIOService Service {
-            name=${target.Name}-minio
-            owned
-        }
-
-        // Deployment for MinIO.
-        minIODeployment Deployment {
-            name=${target.Name}-minio
-            owned
-        }
-    }
-
-    action {
-        // SyncMinioService creates or updates the service for MinIO.
-        SyncMinIOService(minIOService)
-
-        // SyncMinioDeployment creates or updates the deployment for minio nodes.
-        SyncMinIODeployment(minIODeployment)
-
-        // WaitBeforeMinioDeploymentReady waits (aborts the workflow) before the minio deployment is ready.
-        WaitBeforeMinIODeploymentReady(minIODeployment)
     }
 }

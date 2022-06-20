@@ -21,9 +21,8 @@ package consts
 // =================================================
 
 const (
-	LabelRisingWaveRole       = "risingwave/role"
+	LabelRisingWaveComponent  = "risingwave/component"
 	LabelRisingWaveName       = "risingwave/name"
-	LabelRisingWaveUID        = "risingwave/uid"
 	LabelRisingWaveGeneration = "risingwave/generation"
 )
 
@@ -37,18 +36,17 @@ const ()
 // Consts.
 // =================================================
 
-// Label values of LabelRisingWaveRole.
+// Label values of LabelRisingWaveComponent.
 const (
-	MetaNode      = "meta"
-	FrontendNode  = "frontend"
-	ComputeNode   = "compute"
-	CompactorNode = "compactor"
-	MinioNode     = "minio"
+	ComponentMeta      = "meta"
+	ComponentFrontend  = "frontend"
+	ComponentCompute   = "compute"
+	ComponentCompactor = "compactor"
 )
 
 // Credential keys for AWS S3.
 const (
-	AccessKeyID     string = "AccessKeyID"
-	SecretAccessKey string = "SecretAccessKey"
-	Region          string = "Region"
+	AWSS3AccessKeyID     string = "AccessKeyID"
+	AWSS3SecretAccessKey string = "SecretAccessKey"
+	AWSS3Region          string = "Region"
 )

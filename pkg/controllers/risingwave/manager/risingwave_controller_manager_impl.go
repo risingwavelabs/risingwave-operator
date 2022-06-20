@@ -121,10 +121,10 @@ func (mgr *risingWaveControllerManagerImpl) SyncCompactorService(ctx context.Con
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compactor service", err)
 }
 
-// SyncComputeDeployment implements RisingWaveControllerManagerImpl
-func (mgr *risingWaveControllerManagerImpl) SyncComputeDeployment(ctx context.Context, logger logr.Logger, computeDeployment *appsv1.Deployment) (reconcile.Result, error) {
-	err := syncObject(mgr, ctx, computeDeployment, mgr.objectFactory.NewComputeDeployment, logger)
-	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compute deployment", err)
+// SyncComputeStatefulSet implements RisingWaveControllerManagerImpl
+func (mgr *risingWaveControllerManagerImpl) SyncComputeStatefulSet(ctx context.Context, logger logr.Logger, computeStatefulSet *appsv1.StatefulSet) (reconcile.Result, error) {
+	err := syncObject(mgr, ctx, computeStatefulSet, mgr.objectFactory.NewComputeDeployment, logger)
+	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compute statefulset", err)
 }
 
 // SyncComputeSerivce implements RisingWaveControllerManagerImpl
@@ -157,18 +157,6 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaService(ctx context.Context,
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync meta service", err)
 }
 
-// SyncMinIODeployment implements RisingWaveControllerManagerImpl
-func (mgr *risingWaveControllerManagerImpl) SyncMinIODeployment(ctx context.Context, logger logr.Logger, minioDeployment *appsv1.Deployment) (reconcile.Result, error) {
-	err := syncObject(mgr, ctx, minioDeployment, mgr.objectFactory.NewMinIODeployment, logger)
-	return ctrlkit.RequeueIfErrorAndWrap("unable to sync minio deployment", err)
-}
-
-// SyncMinIOService implements RisingWaveControllerManagerImpl
-func (mgr *risingWaveControllerManagerImpl) SyncMinIOService(ctx context.Context, logger logr.Logger, minioService *corev1.Service) (reconcile.Result, error) {
-	err := syncObject(mgr, ctx, minioService, mgr.objectFactory.NewMinIOService, logger)
-	return ctrlkit.RequeueIfErrorAndWrap("unable to sync minio service", err)
-}
-
 // WaitBeforeCompactorDeploymentReady implements RisingWaveControllerManagerImpl
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeCompactorDeploymentReady(ctx context.Context, logger logr.Logger, compactorDeployment *appsv1.Deployment) (reconcile.Result, error) {
 	if mgr.isObjectSynced(compactorDeployment) && utils.IsDeploymentRolledOut(compactorDeployment) {
@@ -179,9 +167,9 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeCompactorDeploymentReady(c
 	}
 }
 
-// WaitBeforeComputeDeploymentReady implements RisingWaveControllerManagerImpl
-func (mgr *risingWaveControllerManagerImpl) WaitBeforeComputeDeploymentReady(ctx context.Context, logger logr.Logger, computeDeployment *appsv1.Deployment) (reconcile.Result, error) {
-	if mgr.isObjectSynced(computeDeployment) && utils.IsDeploymentRolledOut(computeDeployment) {
+// WaitBeforeComputeStatefulSetReady implements RisingWaveControllerManagerImpl
+func (mgr *risingWaveControllerManagerImpl) WaitBeforeComputeStatefulSetReady(ctx context.Context, logger logr.Logger, computeStatefulSet *appsv1.StatefulSet) (reconcile.Result, error) {
+	if mgr.isObjectSynced(computeStatefulSet) && utils.IsStatefulSetRolledOut(computeStatefulSet) {
 		return ctrlkit.NoRequeue()
 	} else {
 		logger.Info("Compute deployment hasn't been rolled out")
@@ -215,16 +203,6 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaServiceIsAvailable(ctx
 		return ctrlkit.NoRequeue()
 	} else {
 		logger.Info("Meta service hasn't been ready")
-		return ctrlkit.Exit()
-	}
-}
-
-// WaitBeforeMinIODeploymentReady implements RisingWaveControllerManagerImpl
-func (mgr *risingWaveControllerManagerImpl) WaitBeforeMinIODeploymentReady(ctx context.Context, logger logr.Logger, minioDeployment *appsv1.Deployment) (reconcile.Result, error) {
-	if mgr.isObjectSynced(minioDeployment) && utils.IsDeploymentRolledOut(minioDeployment) {
-		return ctrlkit.NoRequeue()
-	} else {
-		logger.Info("MinIO deployment hasn't been rolled out")
 		return ctrlkit.Exit()
 	}
 }

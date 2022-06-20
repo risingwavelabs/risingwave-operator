@@ -45,3 +45,22 @@ func IsDeploymentRolledOut(deploy *appsv1.Deployment) bool {
 	}
 	return true
 }
+
+func IsStatefulSetRolledOut(statefulSet *appsv1.StatefulSet) bool {
+	if statefulSet == nil {
+		return false
+	}
+	if statefulSet.Status.ObservedGeneration < statefulSet.Generation {
+		return false
+	}
+	if statefulSet.Spec.Replicas != nil && statefulSet.Status.UpdatedReplicas < *statefulSet.Spec.Replicas {
+		return false
+	}
+	if statefulSet.Status.Replicas > statefulSet.Status.UpdatedReplicas {
+		return false
+	}
+	if statefulSet.Status.AvailableReplicas < statefulSet.Status.UpdatedReplicas {
+		return false
+	}
+	return true
+}

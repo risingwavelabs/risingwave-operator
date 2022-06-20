@@ -47,7 +47,7 @@ type Reconciler struct {
 	process []processFunc
 }
 
-func NewReconciler(
+func NewLegacyReconciler(
 	c client.Client,
 	s *runtime.Scheme) *Reconciler {
 	r := &Reconciler{

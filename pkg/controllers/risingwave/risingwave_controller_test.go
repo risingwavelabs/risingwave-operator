@@ -20,8 +20,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/go-logr/zapr"
-	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -61,7 +59,6 @@ func Test_RisingWaveController_DryRun(t *testing.T) {
 				},
 			}).
 			Build(),
-		Logger: zapr.NewLogger(zap.NewExample()),
 		DryRun: true,
 	}
 

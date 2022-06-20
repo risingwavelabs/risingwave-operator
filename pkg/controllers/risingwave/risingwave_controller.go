@@ -26,10 +26,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
@@ -41,7 +43,6 @@ import (
 
 type RisingWaveController struct {
 	Client client.Client
-	Logger logr.Logger
 	DryRun bool
 }
 
@@ -55,7 +56,7 @@ func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit
 }
 
 func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (result reconcile.Result, err error) {
-	logger := c.Logger.WithValues("risingwave", request)
+	logger := log.FromContext(ctx, "risingwave", request)
 
 	// Get the risingwave object.
 	var risingwave risingwavev1alpha1.RisingWave
@@ -246,4 +247,10 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.Deployment{}).
 		Owns(&corev1.Service{}).
 		Complete(c)
+}
+
+func NewReconciler(client client.Client, _ *runtime.Scheme) *RisingWaveController {
+	return &RisingWaveController{
+		Client: client,
+	}
 }

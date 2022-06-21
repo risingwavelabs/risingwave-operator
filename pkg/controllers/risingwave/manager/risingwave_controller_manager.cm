@@ -41,9 +41,9 @@ decl RisingWaveControllerManager for RisingWave {
             owned
         }
 
-        // ConfigMap for compute nodes.
-        computeConfigMap ConfigMap {
-            name=${target.Name}-compute
+        // ConfigMap for RisingWave configs.
+        configConfigMap ConfigMap {
+            name=${target.Name}-config
             owned
         }
 
@@ -112,8 +112,8 @@ decl RisingWaveControllerManager for RisingWave {
         // WaitBeforeCompactorDeploymentReady waits (aborts the workflow) before the compactor deployment is ready.
         WaitBeforeCompactorDeploymentReady(compactorDeployment)
 
-        // SyncComputeConfigMap creates or updates the configmap for compute nodes.
-        SyncComputeConfigMap(computeConfigMap)
+        // SyncConfigConfigMap creates or updates the configmap for RisingWave configs.
+        SyncConfigConfigMap(configConfigMap)
     }
 
     // ===================================================
@@ -122,6 +122,6 @@ decl RisingWaveControllerManager for RisingWave {
 
     action {
         // CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
-        CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaDeployment, frontendDeployment, computeStatefulSet, compactorDeployment, computeConfigMap)
+        CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaDeployment, frontendDeployment, computeStatefulSet, compactorDeployment, configConfigMap)
     }
 }

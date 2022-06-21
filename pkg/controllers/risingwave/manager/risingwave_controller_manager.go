@@ -26,21 +26,125 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit"
 )
 
 // RisingWaveControllerManagerState is the state manager of RisingWaveControllerManager.
 type RisingWaveControllerManagerState struct {
 	client.Reader
 	target *risingwavev1alpha1.RisingWave
+}
+
+// GetCompactorService gets compactorService with name equals to ${target.Name}-compactor.
+func (s *RisingWaveControllerManagerState) GetCompactorService(ctx context.Context) (*corev1.Service, error) {
+	var compactorService corev1.Service
+
+	err := s.Get(ctx, types.NamespacedName{
+		Namespace: s.target.Namespace,
+		Name:      s.target.Name + "-compactor",
+	}, &compactorService)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to get state 'compactorService': %w", err)
+	}
+	if !ctrlkit.ValidateOwnership(&compactorService, s.target) {
+		return nil, fmt.Errorf("unable to get state 'compactorService': object not owned by target")
+	}
+
+	return &compactorService, nil
+}
+
+// GetCompactorDeployment gets compactorDeployment with name equals to ${target.Name}-compactor.
+func (s *RisingWaveControllerManagerState) GetCompactorDeployment(ctx context.Context) (*appsv1.Deployment, error) {
+	var compactorDeployment appsv1.Deployment
+
+	err := s.Get(ctx, types.NamespacedName{
+		Namespace: s.target.Namespace,
+		Name:      s.target.Name + "-compactor",
+	}, &compactorDeployment)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to get state 'compactorDeployment': %w", err)
+	}
+	if !ctrlkit.ValidateOwnership(&compactorDeployment, s.target) {
+		return nil, fmt.Errorf("unable to get state 'compactorDeployment': object not owned by target")
+	}
+
+	return &compactorDeployment, nil
+}
+
+// GetConfigConfigMap gets configConfigMap with name equals to ${target.Name}-config.
+func (s *RisingWaveControllerManagerState) GetConfigConfigMap(ctx context.Context) (*corev1.ConfigMap, error) {
+	var configConfigMap corev1.ConfigMap
+
+	err := s.Get(ctx, types.NamespacedName{
+		Namespace: s.target.Namespace,
+		Name:      s.target.Name + "-config",
+	}, &configConfigMap)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to get state 'configConfigMap': %w", err)
+	}
+	if !ctrlkit.ValidateOwnership(&configConfigMap, s.target) {
+		return nil, fmt.Errorf("unable to get state 'configConfigMap': object not owned by target")
+	}
+
+	return &configConfigMap, nil
+}
+
+// GetMetaDeployment gets metaDeployment with name equals to ${target.Name}-meta.
+func (s *RisingWaveControllerManagerState) GetMetaDeployment(ctx context.Context) (*appsv1.Deployment, error) {
+	var metaDeployment appsv1.Deployment
+
+	err := s.Get(ctx, types.NamespacedName{
+		Namespace: s.target.Namespace,
+		Name:      s.target.Name + "-meta",
+	}, &metaDeployment)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to get state 'metaDeployment': %w", err)
+	}
+	if !ctrlkit.ValidateOwnership(&metaDeployment, s.target) {
+		return nil, fmt.Errorf("unable to get state 'metaDeployment': object not owned by target")
+	}
+
+	return &metaDeployment, nil
+}
+
+// GetFrontendDeployment gets frontendDeployment with name equals to ${target.Name}-frontend.
+func (s *RisingWaveControllerManagerState) GetFrontendDeployment(ctx context.Context) (*appsv1.Deployment, error) {
+	var frontendDeployment appsv1.Deployment
+
+	err := s.Get(ctx, types.NamespacedName{
+		Namespace: s.target.Namespace,
+		Name:      s.target.Name + "-frontend",
+	}, &frontendDeployment)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to get state 'frontendDeployment': %w", err)
+	}
+	if !ctrlkit.ValidateOwnership(&frontendDeployment, s.target) {
+		return nil, fmt.Errorf("unable to get state 'frontendDeployment': object not owned by target")
+	}
+
+	return &frontendDeployment, nil
 }
 
 // GetComputeStatefulSet gets computeStatefulSet with name equals to ${target.Name}-compute.
@@ -64,25 +168,25 @@ func (s *RisingWaveControllerManagerState) GetComputeStatefulSet(ctx context.Con
 	return &computeStatefulSet, nil
 }
 
-// GetCompactorDeployment gets compactorDeployment with name equals to ${target.Name}-compactor.
-func (s *RisingWaveControllerManagerState) GetCompactorDeployment(ctx context.Context) (*appsv1.Deployment, error) {
-	var compactorDeployment appsv1.Deployment
+// GetMetaService gets metaService with name equals to ${target.Name}-meta.
+func (s *RisingWaveControllerManagerState) GetMetaService(ctx context.Context) (*corev1.Service, error) {
+	var metaService corev1.Service
 
 	err := s.Get(ctx, types.NamespacedName{
 		Namespace: s.target.Namespace,
-		Name:      s.target.Name + "-compactor",
-	}, &compactorDeployment)
+		Name:      s.target.Name + "-meta",
+	}, &metaService)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("unable to get state 'compactorDeployment': %w", err)
+		return nil, fmt.Errorf("unable to get state 'metaService': %w", err)
 	}
-	if !ctrlkit.ValidateOwnership(&compactorDeployment, s.target) {
-		return nil, fmt.Errorf("unable to get state 'compactorDeployment': object not owned by target")
+	if !ctrlkit.ValidateOwnership(&metaService, s.target) {
+		return nil, fmt.Errorf("unable to get state 'metaService': object not owned by target")
 	}
 
-	return &compactorDeployment, nil
+	return &metaService, nil
 }
 
 // GetFrontendService gets frontendService with name equals to ${target.Name}-frontend.
@@ -125,111 +229,6 @@ func (s *RisingWaveControllerManagerState) GetComputeService(ctx context.Context
 	}
 
 	return &computeService, nil
-}
-
-// GetCompactorService gets compactorService with name equals to ${target.Name}-compactor.
-func (s *RisingWaveControllerManagerState) GetCompactorService(ctx context.Context) (*corev1.Service, error) {
-	var compactorService corev1.Service
-
-	err := s.Get(ctx, types.NamespacedName{
-		Namespace: s.target.Namespace,
-		Name:      s.target.Name + "-compactor",
-	}, &compactorService)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to get state 'compactorService': %w", err)
-	}
-	if !ctrlkit.ValidateOwnership(&compactorService, s.target) {
-		return nil, fmt.Errorf("unable to get state 'compactorService': object not owned by target")
-	}
-
-	return &compactorService, nil
-}
-
-// GetComputeConfigMap gets computeConfigMap with name equals to ${target.Name}-compute.
-func (s *RisingWaveControllerManagerState) GetComputeConfigMap(ctx context.Context) (*corev1.ConfigMap, error) {
-	var computeConfigMap corev1.ConfigMap
-
-	err := s.Get(ctx, types.NamespacedName{
-		Namespace: s.target.Namespace,
-		Name:      s.target.Name + "-compute",
-	}, &computeConfigMap)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to get state 'computeConfigMap': %w", err)
-	}
-	if !ctrlkit.ValidateOwnership(&computeConfigMap, s.target) {
-		return nil, fmt.Errorf("unable to get state 'computeConfigMap': object not owned by target")
-	}
-
-	return &computeConfigMap, nil
-}
-
-// GetFrontendDeployment gets frontendDeployment with name equals to ${target.Name}-frontend.
-func (s *RisingWaveControllerManagerState) GetFrontendDeployment(ctx context.Context) (*appsv1.Deployment, error) {
-	var frontendDeployment appsv1.Deployment
-
-	err := s.Get(ctx, types.NamespacedName{
-		Namespace: s.target.Namespace,
-		Name:      s.target.Name + "-frontend",
-	}, &frontendDeployment)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to get state 'frontendDeployment': %w", err)
-	}
-	if !ctrlkit.ValidateOwnership(&frontendDeployment, s.target) {
-		return nil, fmt.Errorf("unable to get state 'frontendDeployment': object not owned by target")
-	}
-
-	return &frontendDeployment, nil
-}
-
-// GetMetaService gets metaService with name equals to ${target.Name}-meta.
-func (s *RisingWaveControllerManagerState) GetMetaService(ctx context.Context) (*corev1.Service, error) {
-	var metaService corev1.Service
-
-	err := s.Get(ctx, types.NamespacedName{
-		Namespace: s.target.Namespace,
-		Name:      s.target.Name + "-meta",
-	}, &metaService)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to get state 'metaService': %w", err)
-	}
-	if !ctrlkit.ValidateOwnership(&metaService, s.target) {
-		return nil, fmt.Errorf("unable to get state 'metaService': object not owned by target")
-	}
-
-	return &metaService, nil
-}
-
-// GetMetaDeployment gets metaDeployment with name equals to ${target.Name}-meta.
-func (s *RisingWaveControllerManagerState) GetMetaDeployment(ctx context.Context) (*appsv1.Deployment, error) {
-	var metaDeployment appsv1.Deployment
-
-	err := s.Get(ctx, types.NamespacedName{
-		Namespace: s.target.Namespace,
-		Name:      s.target.Name + "-meta",
-	}, &metaDeployment)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to get state 'metaDeployment': %w", err)
-	}
-	if !ctrlkit.ValidateOwnership(&metaDeployment, s.target) {
-		return nil, fmt.Errorf("unable to get state 'metaDeployment': object not owned by target")
-	}
-
-	return &metaDeployment, nil
 }
 
 // NewRisingWaveControllerManagerState returns a RisingWaveControllerManagerState (target is not copied).
@@ -283,11 +282,11 @@ type RisingWaveControllerManagerImpl interface {
 	// WaitBeforeCompactorDeploymentReady waits (aborts the workflow) before the compactor deployment is ready.
 	WaitBeforeCompactorDeploymentReady(ctx context.Context, logger logr.Logger, compactorDeployment *appsv1.Deployment) (ctrl.Result, error)
 
-	// SyncComputeConfigMap creates or updates the configmap for compute nodes.
-	SyncComputeConfigMap(ctx context.Context, logger logr.Logger, computeConfigMap *corev1.ConfigMap) (ctrl.Result, error)
+	// SyncConfigConfigMap creates or updates the configmap for RisingWave configs.
+	SyncConfigConfigMap(ctx context.Context, logger logr.Logger, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 
 	// CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
-	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaDeployment *appsv1.Deployment, frontendDeployment *appsv1.Deployment, computeStatefulSet *appsv1.StatefulSet, compactorDeployment *appsv1.Deployment, computeConfigMap *corev1.ConfigMap) (ctrl.Result, error)
+	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaDeployment *appsv1.Deployment, frontendDeployment *appsv1.Deployment, computeStatefulSet *appsv1.StatefulSet, compactorDeployment *appsv1.Deployment, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 }
 
 // RisingWaveControllerManager encapsulates the states and actions used by RisingWaveController.
@@ -555,22 +554,22 @@ func (m *RisingWaveControllerManager) WaitBeforeCompactorDeploymentReady() ctrlk
 	})
 }
 
-// SyncComputeConfigMap generates the action of "SyncComputeConfigMap".
-func (m *RisingWaveControllerManager) SyncComputeConfigMap() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("SyncComputeConfigMap", func(ctx context.Context) (ctrl.Result, error) {
-		logger := m.logger.WithValues("action", "SyncComputeConfigMap")
+// SyncConfigConfigMap generates the action of "SyncConfigConfigMap".
+func (m *RisingWaveControllerManager) SyncConfigConfigMap() ctrlkit.ReconcileAction {
+	return ctrlkit.WrapAction("SyncConfigConfigMap", func(ctx context.Context) (ctrl.Result, error) {
+		logger := m.logger.WithValues("action", "SyncConfigConfigMap")
 
 		// Get states.
-		computeConfigMap, err := m.state.GetComputeConfigMap(ctx)
+		configConfigMap, err := m.state.GetConfigConfigMap(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("SyncComputeConfigMap", ctx, logger)
-		m.impl.BeforeActionRun("SyncComputeConfigMap", ctx, logger)
+		defer m.impl.AfterActionRun("SyncConfigConfigMap", ctx, logger)
+		m.impl.BeforeActionRun("SyncConfigConfigMap", ctx, logger)
 
-		return m.impl.SyncComputeConfigMap(ctx, logger, computeConfigMap)
+		return m.impl.SyncConfigConfigMap(ctx, logger, configConfigMap)
 	})
 }
 
@@ -620,7 +619,7 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 			return ctrlkit.RequeueIfError(err)
 		}
 
-		computeConfigMap, err := m.state.GetComputeConfigMap(ctx)
+		configConfigMap, err := m.state.GetConfigConfigMap(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
@@ -629,7 +628,7 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 		defer m.impl.AfterActionRun("CollectRunningStatisticsAndSyncStatus", ctx, logger)
 		m.impl.BeforeActionRun("CollectRunningStatisticsAndSyncStatus", ctx, logger)
 
-		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaDeployment, frontendDeployment, computeStatefulSet, compactorDeployment, computeConfigMap)
+		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaDeployment, frontendDeployment, computeStatefulSet, compactorDeployment, configConfigMap)
 	})
 }
 

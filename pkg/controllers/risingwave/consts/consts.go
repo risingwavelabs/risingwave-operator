@@ -47,6 +47,7 @@ const (
 	ComponentFrontend  = "frontend"
 	ComponentCompute   = "compute"
 	ComponentCompactor = "compactor"
+	ComponentConfig    = "config"
 )
 
 // Credential keys for AWS S3.

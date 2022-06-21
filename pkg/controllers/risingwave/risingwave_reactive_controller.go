@@ -152,6 +152,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		})
 		return ctrlkit.Continue()
 	})
+	syncConfigs := mgr.SyncConfigConfigMap()
 	syncMetaComponent := ctrlkit.JoinInParallel(mgr.SyncMetaService(), mgr.SyncMetaDeployment())
 	metaComponentReadyBarrier := ctrlkit.Sequential(
 		mgr.WaitBeforeMetaDeploymentReady(),
@@ -160,16 +161,11 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	syncOtherComponents := ctrlkit.JoinInParallel(
 		ctrlkit.JoinInParallel(
 			mgr.SyncComputeSerivce(),
-			ctrlkit.Sequential(
-				mgr.SyncComputeConfigMap(),
-				mgr.SyncComputeStatefulSet(),
-			),
+			mgr.SyncComputeStatefulSet(),
 		),
-		ctrlkit.If(risingwaveManger.ObjectStorageType() != risingwavev1alpha1.MemoryType,
-			ctrlkit.JoinInParallel(
-				mgr.SyncCompactorService(),
-				mgr.SyncCompactorDeployment(),
-			),
+		ctrlkit.JoinInParallel(
+			mgr.SyncCompactorService(),
+			mgr.SyncCompactorDeployment(),
 		),
 
 		ctrlkit.JoinInParallel(
@@ -180,11 +176,9 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	otherComponentsReadyBarrier := ctrlkit.Join(
 		mgr.WaitBeforeFrontendDeploymentReady(),
 		mgr.WaitBeforeComputeStatefulSetReady(),
-		ctrlkit.If(risingwaveManger.ObjectStorageType() != risingwavev1alpha1.MemoryType,
-			mgr.WaitBeforeCompactorDeploymentReady(),
-		),
+		mgr.WaitBeforeCompactorDeploymentReady(),
 	)
-	syncAllComponents := ctrlkit.JoinInParallel(syncMetaComponent, syncOtherComponents)
+	syncAllComponents := ctrlkit.JoinInParallel(syncConfigs, syncMetaComponent, syncOtherComponents)
 	allComponentsReadyBarrier := ctrlkit.Join(metaComponentReadyBarrier, otherComponentsReadyBarrier)
 
 	observedGenerationOutdatedBarrier := mgr.WrapAction("ObservedGenerationOutdatedBarrier", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
@@ -211,6 +205,9 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			ctrlkit.Sequential(
 				// Sync observed generation.
 				syncObservedGeneration,
+
+				// Sync configs.
+				syncConfigs,
 
 				// Sync component for meta, and wait for the ready barrier.
 				syncMetaComponent, metaComponentReadyBarrier,

@@ -283,7 +283,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 	frontendDeployment *appsv1.Deployment,
 	computeStatefulSet *appsv1.StatefulSet,
 	compactorDeployment *appsv1.Deployment,
-	computeConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
+	configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
@@ -296,37 +296,31 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 		}
 
 		status.MetaNode = risingwavev1alpha1.MetaNodeStatus{
-			Phase:    mgr.reportComponentPhase(metaService, metaDeployment),
+			Phase:    mgr.reportComponentPhase(configConfigMap, metaService, metaDeployment),
 			Replicas: *risingwave.Spec.MetaNode.Replicas,
 		}
 		status.ComputeNode = risingwavev1alpha1.ComputeNodeStatus{
-			Phase:    mgr.reportComponentPhase(computeConfigMap, computeService, computeStatefulSet),
+			Phase:    mgr.reportComponentPhase(configConfigMap, computeService, computeStatefulSet),
 			Replicas: *risingwave.Spec.ComputeNode.Replicas,
 		}
 		status.Frontend = risingwavev1alpha1.FrontendSpecStatus{
-			Phase:    mgr.reportComponentPhase(frontendService, frontendDeployment),
+			Phase:    mgr.reportComponentPhase(configConfigMap, frontendService, frontendDeployment),
 			Replicas: *risingwave.Spec.Frontend.Replicas,
 		}
 
-		if mgr.risingwaveManager.ObjectStorageType() != risingwavev1alpha1.MemoryType {
-			status.CompactorNode = risingwavev1alpha1.CompactorNodeStatus{
-				Phase:    mgr.reportComponentPhase(compactorService, compactorDeployment),
-				Replicas: *risingwave.Spec.CompactorNode.Replicas,
-			}
-		} else {
-			status.CompactorNode = risingwavev1alpha1.CompactorNodeStatus{
-				Phase: risingwavev1alpha1.ComponentUnknown,
-			}
+		status.CompactorNode = risingwavev1alpha1.CompactorNodeStatus{
+			Phase:    mgr.reportComponentPhase(configConfigMap, compactorService, compactorDeployment),
+			Replicas: *risingwave.Spec.CompactorNode.Replicas,
 		}
 	})
 
 	return ctrlkit.Continue()
 }
 
-// SyncComputeConfigMap implements RisingWaveControllerManagerImpl
-func (mgr *risingWaveControllerManagerImpl) SyncComputeConfigMap(ctx context.Context, logger logr.Logger, computeConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
-	err := syncObject(mgr, ctx, computeConfigMap, mgr.objectFactory.NewComputeConfigMap, logger)
-	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compute configmap", err)
+// SyncConfigConfigMap implements RisingWaveControllerManagerImpl
+func (mgr *risingWaveControllerManagerImpl) SyncConfigConfigMap(ctx context.Context, logger logr.Logger, configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
+	err := syncObject(mgr, ctx, configConfigMap, mgr.objectFactory.NewConfigConfigMap, logger)
+	return ctrlkit.RequeueIfErrorAndWrap("unable to sync config configmap", err)
 }
 
 func NewRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager) RisingWaveControllerManagerImpl {

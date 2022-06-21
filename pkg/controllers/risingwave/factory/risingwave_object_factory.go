@@ -35,9 +35,9 @@ import (
 )
 
 const (
-	computeConfigVolume       = "config"
-	computeNodeConfigKey      = "risingwave.toml"
-	computeNodeConfigTemplate = `[ server ]
+	risingWaveConfigVolume   = "risingwave-config"
+	risingWaveConfigMapKey   = "risingwave.toml"
+	risingWaveConfigTemplate = `[ server ]
 heartbeat_interval = 1000
 
 [ streaming ]
@@ -86,7 +86,7 @@ func (f *RisingWaveObjectFactory) storeParam() string {
 		var bucket = *storage.S3.Bucket
 		return fmt.Sprintf("hummock+s3://%s", bucket)
 	case storage.Memory:
-		return "in-memory"
+		return "hummock+memory"
 	case storage.MinIO != nil:
 		return fmt.Sprintf("hummock+minio://hummock:12345678@%s:%d/hummock001", f.risingwave.Name+"-minio", v1alpha1.MinIOServerPort)
 	default:
@@ -104,6 +104,8 @@ func (f *RisingWaveObjectFactory) componentName(component string) string {
 		return f.risingwave.Name + "-frontend"
 	case consts.ComponentCompactor:
 		return f.risingwave.Name + "-compactor"
+	case consts.ComponentConfig:
+		return f.risingwave.Name + "-config"
 	default:
 		panic("never reach here")
 	}
@@ -185,6 +187,7 @@ func (f *RisingWaveObjectFactory) patchArgsForMeta(c *corev1.Container) {
 
 	args := []string{
 		"meta-node",
+		"--config-path", "/risingwave/config/risingwave.toml",
 		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaServerPort),
 		"--host", "$(POD_IP)",
 		"--dashboard-host", fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaDashboardPort),
@@ -214,9 +217,15 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment() *appsv1.Deployment {
 					Labels: f.podLabelsOrSelectors(consts.ComponentMeta),
 				},
 				Spec: corev1.PodSpec{
+					Volumes: []corev1.Volume{
+						f.risingWaveConfigVolume(),
+					},
+					NodeSelector: metaNodeSpec.NodeSelector,
+					Affinity:     metaNodeSpec.Affinity,
 					Containers: []corev1.Container{
 						f.newContainerFor("meta-node", &metaNodeSpec.DeployDescriptor,
 							f.patchArgsForMeta,
+							f.patchRisingWaveConfigVolumeMount,
 							f.patchReadinessProbe(&corev1.Probe{
 								InitialDelaySeconds: 10,
 								PeriodSeconds:       10,
@@ -228,8 +237,6 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment() *appsv1.Deployment {
 							}),
 						),
 					},
-					NodeSelector: metaNodeSpec.NodeSelector,
-					Affinity:     metaNodeSpec.Affinity,
 				},
 			},
 		},
@@ -311,6 +318,8 @@ func (f *RisingWaveObjectFactory) NewFrontendDeployment() *appsv1.Deployment {
 					Labels: f.podLabelsOrSelectors(consts.ComponentFrontend),
 				},
 				Spec: corev1.PodSpec{
+					NodeSelector: frontendSpec.NodeSelector,
+					Affinity:     frontendSpec.Affinity,
 					Containers: []corev1.Container{
 						f.newContainerFor("frontend", &frontendSpec.DeployDescriptor,
 							f.patchPodIPEnv,
@@ -326,8 +335,6 @@ func (f *RisingWaveObjectFactory) NewFrontendDeployment() *appsv1.Deployment {
 							}),
 						),
 					},
-					NodeSelector: frontendSpec.NodeSelector,
-					Affinity:     frontendSpec.Affinity,
 				},
 			},
 		},
@@ -390,9 +397,9 @@ func (f *RisingWaveObjectFactory) patchStorageEnvs(c *corev1.Container) {
 	}
 }
 
-func (f *RisingWaveObjectFactory) configVolumeForCompute() corev1.Volume {
+func (f *RisingWaveObjectFactory) risingWaveConfigVolume() corev1.Volume {
 	return corev1.Volume{
-		Name: computeConfigVolume,
+		Name: risingWaveConfigVolume,
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				Items: []corev1.KeyToPath{
@@ -402,16 +409,16 @@ func (f *RisingWaveObjectFactory) configVolumeForCompute() corev1.Volume {
 					},
 				},
 				LocalObjectReference: corev1.LocalObjectReference{
-					Name: f.componentName(consts.ComponentCompute),
+					Name: f.componentName(consts.ComponentConfig),
 				},
 			},
 		},
 	}
 }
 
-func (f *RisingWaveObjectFactory) patchConfigVolumeMountForCompute(c *corev1.Container) {
+func (f *RisingWaveObjectFactory) patchRisingWaveConfigVolumeMount(c *corev1.Container) {
 	c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
-		Name:      computeConfigVolume,
+		Name:      risingWaveConfigVolume,
 		MountPath: "/risingwave/config",
 		ReadOnly:  true,
 	})
@@ -420,10 +427,8 @@ func (f *RisingWaveObjectFactory) patchConfigVolumeMountForCompute(c *corev1.Con
 func (f *RisingWaveObjectFactory) patchArgsForCompute(c *corev1.Container) {
 	c.Args = []string{ // TODO: mv args -> configuration file
 		"compute-node",
-		"--config-path",
-		"/risingwave/config/risingwave.toml",
-		"--host",
-		fmt.Sprintf("$(POD_IP):%d", v1alpha1.ComputeNodePort),
+		"--config-path", "/risingwave/config/risingwave.toml",
+		"--host", fmt.Sprintf("$(POD_IP):%d", v1alpha1.ComputeNodePort),
 		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", v1alpha1.ComputeNodeMetricsPort),
 		"--metrics-level=1",
 		fmt.Sprintf("--state-store=%s", f.storeParam()),
@@ -447,7 +452,7 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet() *appsv1.StatefulSet {
 				},
 				Spec: corev1.PodSpec{
 					Volumes: []corev1.Volume{
-						f.configVolumeForCompute(),
+						f.risingWaveConfigVolume(),
 					},
 					NodeSelector: computeNodeSpec.NodeSelector,
 					Affinity:     computeNodeSpec.Affinity,
@@ -456,7 +461,7 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet() *appsv1.StatefulSet {
 							f.patchPodIPEnv,
 							f.patchArgsForCompute,
 							f.patchStorageEnvs,
-							f.patchConfigVolumeMountForCompute,
+							f.patchRisingWaveConfigVolumeMount,
 							f.patchReadinessProbe(&corev1.Probe{
 								InitialDelaySeconds: 10,
 								PeriodSeconds:       10,
@@ -491,8 +496,8 @@ func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 func (f *RisingWaveObjectFactory) patchArgsForCompactor(c *corev1.Container) {
 	c.Args = []string{
 		"compactor-node",
-		"--host",
-		fmt.Sprintf("$(POD_IP):%d", v1alpha1.CompactorNodePort),
+		"--config-path", "/risingwave/config/risingwave.toml",
+		"--host", fmt.Sprintf("$(POD_IP):%d", v1alpha1.CompactorNodePort),
 		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", v1alpha1.CompactorNodeMetricsPort),
 		"--metrics-level=1",
 		fmt.Sprintf("--state-store=%s", f.storeParam()),
@@ -516,6 +521,9 @@ func (f *RisingWaveObjectFactory) NewCompactorDeployment() *appsv1.Deployment {
 					Labels: f.podLabelsOrSelectors(consts.ComponentCompactor),
 				},
 				Spec: corev1.PodSpec{
+					Volumes: []corev1.Volume{
+						f.risingWaveConfigVolume(),
+					},
 					NodeSelector: compactorNodeSpec.NodeSelector,
 					Affinity:     compactorNodeSpec.Affinity,
 					Containers: []corev1.Container{
@@ -523,6 +531,7 @@ func (f *RisingWaveObjectFactory) NewCompactorDeployment() *appsv1.Deployment {
 							f.patchPodIPEnv,
 							f.patchArgsForCompactor,
 							f.patchStorageEnvs,
+							f.patchRisingWaveConfigVolumeMount,
 							f.patchReadinessProbe(&corev1.Probe{
 								InitialDelaySeconds: 10,
 								PeriodSeconds:       10,
@@ -542,16 +551,16 @@ func (f *RisingWaveObjectFactory) NewCompactorDeployment() *appsv1.Deployment {
 	return mustSetControllerReference(f.risingwave, compactorDeployment, f.scheme)
 }
 
-func (f *RisingWaveObjectFactory) NewComputeConfigMap() *corev1.ConfigMap {
+func (f *RisingWaveObjectFactory) NewConfigConfigMap() *corev1.ConfigMap {
 	// Not going to sync.
-	computeConfigMap := &corev1.ConfigMap{
-		ObjectMeta: f.objectMetaNoSync(consts.ComponentCompute),
+	risingwaveConfigConfigMap := &corev1.ConfigMap{
+		ObjectMeta: f.objectMetaNoSync(consts.ComponentConfig),
 		Data: map[string]string{
-			computeNodeConfigKey: computeNodeConfigTemplate,
+			risingWaveConfigMapKey: risingWaveConfigTemplate,
 		},
 	}
 
-	return mustSetControllerReference(f.risingwave, computeConfigMap, f.scheme)
+	return mustSetControllerReference(f.risingwave, risingwaveConfigConfigMap, f.scheme)
 }
 
 func NewRisingWaveObjectFactory(risingwave *risingwavev1alpha1.RisingWave, scheme *runtime.Scheme) *RisingWaveObjectFactory {

@@ -360,7 +360,7 @@ func (f *RisingWaveObjectFactory) patchArgsForCompute(c *corev1.Container) {
 	}
 }
 
-func (f *RisingWaveObjectFactory) NewComputeDeployment() *appsv1.StatefulSet {
+func (f *RisingWaveObjectFactory) NewComputeStatefulSet() *appsv1.StatefulSet {
 	computeNodeSpec := f.risingwave.Spec.ComputeNode
 
 	computeStatefulSet := &appsv1.StatefulSet{

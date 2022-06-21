@@ -250,7 +250,7 @@ type RisingWaveControllerManagerImpl interface {
 	// SyncComputeStatefulSet creates or updates the statefulset for compute nodes.
 	SyncComputeStatefulSet(ctx context.Context, logger logr.Logger, computeStatefulSet *appsv1.StatefulSet) (ctrl.Result, error)
 
-	// WaitBeforeComputeStatefulSetReady waits (aborts the workflow) before the compute deployment is ready.
+	// WaitBeforeComputeStatefulSetReady waits (aborts the workflow) before the compute statefulset is ready.
 	WaitBeforeComputeStatefulSetReady(ctx context.Context, logger logr.Logger, computeStatefulSet *appsv1.StatefulSet) (ctrl.Result, error)
 
 	// SyncCompactorService creates or updates the service for compactor nodes.

@@ -123,7 +123,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncCompactorService(ctx context.Con
 
 // SyncComputeStatefulSet implements RisingWaveControllerManagerImpl
 func (mgr *risingWaveControllerManagerImpl) SyncComputeStatefulSet(ctx context.Context, logger logr.Logger, computeStatefulSet *appsv1.StatefulSet) (reconcile.Result, error) {
-	err := syncObject(mgr, ctx, computeStatefulSet, mgr.objectFactory.NewComputeDeployment, logger)
+	err := syncObject(mgr, ctx, computeStatefulSet, mgr.objectFactory.NewComputeStatefulSet, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compute statefulset", err)
 }
 
@@ -172,7 +172,7 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeComputeStatefulSetReady(ct
 	if mgr.isObjectSynced(computeStatefulSet) && utils.IsStatefulSetRolledOut(computeStatefulSet) {
 		return ctrlkit.NoRequeue()
 	} else {
-		logger.Info("Compute deployment hasn't been rolled out")
+		logger.Info("Compute statefulset hasn't been rolled out")
 		return ctrlkit.Exit()
 	}
 }

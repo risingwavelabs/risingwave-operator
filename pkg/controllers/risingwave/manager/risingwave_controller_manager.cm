@@ -94,7 +94,7 @@ decl RisingWaveControllerManager for RisingWave {
         // SyncComputeStatefulSet creates or updates the statefulset for compute nodes.
         SyncComputeStatefulSet(computeStatefulSet)
 
-        // WaitBeforeComputeStatefulSetReady waits (aborts the workflow) before the compute deployment is ready.
+        // WaitBeforeComputeStatefulSetReady waits (aborts the workflow) before the compute statefulset is ready.
         WaitBeforeComputeStatefulSetReady(computeStatefulSet)
 
         // SyncCompactorService creates or updates the service for compactor nodes.

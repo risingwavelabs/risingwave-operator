@@ -197,15 +197,27 @@ func generateMetaDeployment(rw *v1alpha1.RisingWave) *v1.Deployment {
 		},
 		Args: []string{
 			"meta-node",
-			"--host",
+			"--listen-addr",
 			fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaServerPort),
+			"--host",
+			"$(POD_IP)",
 			"--dashboard-host",
 			fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaDashboardPort),
 			"--prometheus-host",
 			fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaMetricsPort),
 		},
-		// tcp livenes probe
-		LivenessProbe: &corev1.Probe{
+		Env: []corev1.EnvVar{
+			{
+				Name: "POD_IP",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						FieldPath: "status.podIP",
+					},
+				},
+			},
+		},
+		// tcp readiness probe
+		ReadinessProbe: &corev1.Probe{
 			InitialDelaySeconds: 10,
 			PeriodSeconds:       10,
 			ProbeHandler: corev1.ProbeHandler{

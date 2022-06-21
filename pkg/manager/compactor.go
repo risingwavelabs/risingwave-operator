@@ -195,8 +195,8 @@ func generateCompactorDeploy(rw *v1alpha1.RisingWave) *v1.Deployment {
 				},
 			},
 		},
-		// tcp livenes probe
-		LivenessProbe: &corev1.Probe{
+		// tcp readiness probe
+		ReadinessProbe: &corev1.Probe{
 			InitialDelaySeconds: 10,
 			PeriodSeconds:       10,
 			ProbeHandler: corev1.ProbeHandler{

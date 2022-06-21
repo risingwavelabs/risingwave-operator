@@ -204,8 +204,8 @@ func generateMetaDeployment(rw *v1alpha1.RisingWave) *v1.Deployment {
 			"--prometheus-host",
 			fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaMetricsPort),
 		},
-		// tcp livenes probe
-		LivenessProbe: &corev1.Probe{
+		// tcp readiness probe
+		ReadinessProbe: &corev1.Probe{
 			InitialDelaySeconds: 10,
 			PeriodSeconds:       10,
 			ProbeHandler: corev1.ProbeHandler{

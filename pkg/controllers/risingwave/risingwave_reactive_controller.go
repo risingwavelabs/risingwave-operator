@@ -57,7 +57,7 @@ func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit
 }
 
 func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (result reconcile.Result, err error) {
-	logger := log.FromContext(ctx, "risingwave", request)
+	logger := log.FromContext(ctx)
 
 	// Get the risingwave object.
 	var risingwave risingwavev1alpha1.RisingWave

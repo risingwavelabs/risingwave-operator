@@ -141,7 +141,7 @@ func (f *RisingWaveObjectFactory) convertContainerPortsToServicePorts(containerP
 		return corev1.ServicePort{
 			Protocol:   corev1.ProtocolTCP,
 			Port:       p.ContainerPort,
-			TargetPort: intstr.FromInt(int(p.ContainerPort)),
+			TargetPort: intstr.FromString(p.Name),
 			Name:       p.Name,
 		}
 	})
@@ -185,12 +185,10 @@ func (f *RisingWaveObjectFactory) patchArgsForMeta(c *corev1.Container) {
 
 	args := []string{
 		"meta-node",
-		"--host",
-		fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaServerPort),
-		"--dashboard-host",
-		fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaDashboardPort),
-		"--prometheus-host",
-		fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaMetricsPort),
+		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaServerPort),
+		"--host", "$(POD_IP)",
+		"--dashboard-host", fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaDashboardPort),
+		"--prometheus-host", fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaMetricsPort),
 	}
 
 	// TODO support other storages.
@@ -217,7 +215,18 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment() *appsv1.Deployment {
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						f.newContainerFor("meta-node", &metaNodeSpec.DeployDescriptor, f.patchArgsForMeta),
+						f.newContainerFor("meta-node", &metaNodeSpec.DeployDescriptor,
+							f.patchArgsForMeta,
+							f.patchReadinessProbe(&corev1.Probe{
+								InitialDelaySeconds: 10,
+								PeriodSeconds:       10,
+								ProbeHandler: corev1.ProbeHandler{
+									TCPSocket: &corev1.TCPSocketAction{
+										Port: intstr.FromString(risingwavev1alpha1.MetaServerPortName),
+									},
+								},
+							}),
+						),
 					},
 					NodeSelector: metaNodeSpec.NodeSelector,
 					Affinity:     metaNodeSpec.Affinity,
@@ -239,6 +248,24 @@ func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 		},
 	}
 	return mustSetControllerReference(f.risingwave, frontendService, f.scheme)
+}
+
+func (f *RisingWaveObjectFactory) patchStartupProbe(probe *corev1.Probe) containerPatch {
+	return func(c *corev1.Container) {
+		c.StartupProbe = probe
+	}
+}
+
+func (f *RisingWaveObjectFactory) patchLivenessProbe(probe *corev1.Probe) containerPatch {
+	return func(c *corev1.Container) {
+		c.LivenessProbe = probe
+	}
+}
+
+func (f *RisingWaveObjectFactory) patchReadinessProbe(probe *corev1.Probe) containerPatch {
+	return func(c *corev1.Container) {
+		c.ReadinessProbe = probe
+	}
 }
 
 func (f *RisingWaveObjectFactory) patchPodIPEnv(c *corev1.Container) {
@@ -285,7 +312,19 @@ func (f *RisingWaveObjectFactory) NewFrontendDeployment() *appsv1.Deployment {
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						f.newContainerFor("frontend", &frontendSpec.DeployDescriptor, f.patchPodIPEnv, f.patchArgsForFrontend),
+						f.newContainerFor("frontend", &frontendSpec.DeployDescriptor,
+							f.patchPodIPEnv,
+							f.patchArgsForFrontend,
+							f.patchReadinessProbe(&corev1.Probe{
+								InitialDelaySeconds: 10,
+								PeriodSeconds:       10,
+								ProbeHandler: corev1.ProbeHandler{
+									TCPSocket: &corev1.TCPSocketAction{
+										Port: intstr.FromString(risingwavev1alpha1.FrontendPortName),
+									},
+								},
+							}),
+						),
 					},
 					NodeSelector: frontendSpec.NodeSelector,
 					Affinity:     frontendSpec.Affinity,
@@ -418,6 +457,15 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet() *appsv1.StatefulSet {
 							f.patchArgsForCompute,
 							f.patchStorageEnvs,
 							f.patchConfigVolumeMountForCompute,
+							f.patchReadinessProbe(&corev1.Probe{
+								InitialDelaySeconds: 10,
+								PeriodSeconds:       10,
+								ProbeHandler: corev1.ProbeHandler{
+									TCPSocket: &corev1.TCPSocketAction{
+										Port: intstr.FromString(risingwavev1alpha1.ComputeNodePortName),
+									},
+								},
+							}),
 						),
 					},
 				},
@@ -475,6 +523,15 @@ func (f *RisingWaveObjectFactory) NewCompactorDeployment() *appsv1.Deployment {
 							f.patchPodIPEnv,
 							f.patchArgsForCompactor,
 							f.patchStorageEnvs,
+							f.patchReadinessProbe(&corev1.Probe{
+								InitialDelaySeconds: 10,
+								PeriodSeconds:       10,
+								ProbeHandler: corev1.ProbeHandler{
+									TCPSocket: &corev1.TCPSocketAction{
+										Port: intstr.FromString(risingwavev1alpha1.CompactorNodePortName),
+									},
+								},
+							}),
 						),
 					},
 				},

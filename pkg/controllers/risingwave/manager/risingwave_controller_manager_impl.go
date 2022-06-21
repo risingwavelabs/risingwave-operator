@@ -23,12 +23,14 @@ import (
 	"strconv"
 
 	"github.com/go-logr/logr"
+	"github.com/samber/lo"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave/consts"
 	"github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave/factory"
 	"github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave/object"
@@ -45,11 +47,17 @@ type risingWaveControllerManagerImpl struct {
 }
 
 func (mgr *risingWaveControllerManagerImpl) isObjectSynced(obj client.Object) bool {
-	if obj == nil {
-		return true
+	if isObjectNil(obj) {
+		return false
 	}
 
 	generationLabel := obj.GetLabels()[consts.LabelRisingWaveGeneration]
+
+	// Do not sync, so return true here.
+	if consts.NoSync == generationLabel {
+		return true
+	}
+
 	// Ignore the parse error, as generation label should always be numbers.
 	// And if not, it must be synced. So a default value of 0 on error is good enough.
 	observedGeneration, _ := strconv.ParseInt(generationLabel, 10, 64)
@@ -62,7 +70,7 @@ func (mgr *risingWaveControllerManagerImpl) isObjectSynced(obj client.Object) bo
 
 func ensureTheSameObject(obj, newObj client.Object) client.Object {
 	// Ensure that they are the same object in Kubernetes.
-	if obj != nil {
+	if !isObjectNil(obj) {
 		if obj.GetName() != newObj.GetName() || obj.GetNamespace() != newObj.GetNamespace() {
 			panic(fmt.Sprintf("objects not the same: %s/%s vs. %s/%s",
 				obj.GetNamespace(), obj.GetName(),
@@ -71,26 +79,42 @@ func ensureTheSameObject(obj, newObj client.Object) client.Object {
 		}
 	}
 
-	if reflect.TypeOf(obj) == reflect.TypeOf(newObj) {
+	objType, newObjType := reflect.TypeOf(obj).Elem(), reflect.TypeOf(newObj).Elem()
+	if objType != newObjType {
 		panic(fmt.Sprintf("object types' not equal: %T vs. %T", obj, newObj))
 	}
 
 	return newObj
 }
 
+func isObjectNil(obj client.Object) bool {
+	if obj == nil {
+		return true
+	}
+	v := reflect.ValueOf(obj)
+	return v.IsNil()
+}
+
 func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj client.Object, factory func() client.Object, logger logr.Logger) error {
 	scheme := mgr.client.Scheme()
-	gvk, err := apiutil.GVKForObject(obj, scheme)
-	if err != nil {
-		return err
-	}
 
-	if obj == nil {
+	if isObjectNil(obj) {
 		// Not found. Going to create one.
 		newObj := ensureTheSameObject(obj, factory())
+
+		gvk, err := apiutil.GVKForObject(newObj, scheme)
+		if err != nil {
+			return err
+		}
+
 		logger.Info(fmt.Sprintf("Create an object of %s", gvk.Kind), "object", utils.GetNamespacedName(newObj))
 		return mgr.client.Create(ctx, newObj)
 	} else {
+		gvk, err := apiutil.GVKForObject(obj, scheme)
+		if err != nil {
+			return err
+		}
+
 		// Found. Update/Sync if not synced.
 		if !mgr.isObjectSynced(obj) {
 			newObj := ensureTheSameObject(obj, factory())
@@ -207,13 +231,102 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaServiceIsAvailable(ctx
 	}
 }
 
-// UpdateRisingWaveStatus implements RisingWaveControllerManagerImpl
-func (mgr *risingWaveControllerManagerImpl) UpdateRisingWaveStatus(ctx context.Context, logger logr.Logger) (reconcile.Result, error) {
-	if err := mgr.risingwaveManager.UpdateRisingWaveStatus(ctx); err != nil {
-		logger.Error(err, "Failed to update status")
-		return ctrlkit.RequeueIfErrorAndWrap("unable to update status", err)
+func (mgr *risingWaveControllerManagerImpl) isObjectSyncedAndReady(obj client.Object) (bool, bool) {
+	if isObjectNil(obj) {
+		return false, false
 	}
-	return ctrlkit.NoRequeue()
+	switch obj := obj.(type) {
+	case *corev1.Service:
+		return mgr.isObjectSynced(obj), utils.IsServiceReady(obj)
+	case *appsv1.Deployment:
+		return mgr.isObjectSynced(obj), utils.IsDeploymentRolledOut(obj)
+	case *appsv1.StatefulSet:
+		return mgr.isObjectSynced(obj), utils.IsStatefulSetRolledOut(obj)
+	default:
+		return mgr.isObjectSynced(obj), true
+	}
+}
+
+func (mgr *risingWaveControllerManagerImpl) reportComponentPhase(objs ...client.Object) risingwavev1alpha1.ComponentPhase {
+	inInitializing := mgr.risingwaveManager.GetCondition(risingwavev1alpha1.Initializing) != nil
+
+	if _, foundNil := lo.Find(objs, isObjectNil); foundNil {
+		return risingwavev1alpha1.ComponentInitializing
+	}
+
+	synced, ready := true, true
+	for _, obj := range objs {
+		s, r := mgr.isObjectSyncedAndReady(obj)
+		synced, ready = synced && s, ready && r
+	}
+
+	if synced && ready {
+		return risingwavev1alpha1.ComponentReady
+	} else {
+		if inInitializing {
+			return risingwavev1alpha1.ComponentInitializing
+		} else {
+			return risingwavev1alpha1.ComponentUpgrading
+		}
+	}
+}
+
+// CollectRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl
+func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatus(
+	ctx context.Context,
+	logger logr.Logger,
+	frontendService *corev1.Service,
+	metaService *corev1.Service,
+	computeService *corev1.Service,
+	compactorService *corev1.Service,
+	metaDeployment *appsv1.Deployment,
+	frontendDeployment *appsv1.Deployment,
+	computeStatefulSet *appsv1.StatefulSet,
+	compactorDeployment *appsv1.Deployment,
+	computeConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
+	risingwave := mgr.risingwaveManager.RisingWave()
+
+	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
+		// TODO support more object status here.
+		if risingwave.Spec.ObjectStorage.Memory {
+			status.ObjectStorage = risingwavev1alpha1.ObjectStorageStatus{
+				Phase:       risingwavev1alpha1.ComponentReady,
+				StorageType: risingwavev1alpha1.MemoryType,
+			}
+		}
+
+		status.MetaNode = risingwavev1alpha1.MetaNodeStatus{
+			Phase:    mgr.reportComponentPhase(metaService, metaDeployment),
+			Replicas: *risingwave.Spec.MetaNode.Replicas,
+		}
+		status.ComputeNode = risingwavev1alpha1.ComputeNodeStatus{
+			Phase:    mgr.reportComponentPhase(computeConfigMap, computeService, computeStatefulSet),
+			Replicas: *risingwave.Spec.ComputeNode.Replicas,
+		}
+		status.Frontend = risingwavev1alpha1.FrontendSpecStatus{
+			Phase:    mgr.reportComponentPhase(frontendService, frontendDeployment),
+			Replicas: *risingwave.Spec.Frontend.Replicas,
+		}
+
+		if mgr.risingwaveManager.ObjectStorageType() != risingwavev1alpha1.MemoryType {
+			status.CompactorNode = risingwavev1alpha1.CompactorNodeStatus{
+				Phase:    mgr.reportComponentPhase(compactorService, compactorDeployment),
+				Replicas: *risingwave.Spec.CompactorNode.Replicas,
+			}
+		} else {
+			status.CompactorNode = risingwavev1alpha1.CompactorNodeStatus{
+				Phase: risingwavev1alpha1.ComponentUnknown,
+			}
+		}
+	})
+
+	return ctrlkit.Continue()
+}
+
+// SyncComputeConfigMap implements RisingWaveControllerManagerImpl
+func (mgr *risingWaveControllerManagerImpl) SyncComputeConfigMap(ctx context.Context, logger logr.Logger, computeConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
+	err := syncObject(mgr, ctx, computeConfigMap, mgr.objectFactory.NewComputeConfigMap, logger)
+	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compute configmap", err)
 }
 
 func NewRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager) RisingWaveControllerManagerImpl {

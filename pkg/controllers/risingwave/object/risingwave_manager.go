@@ -54,6 +54,20 @@ func (mgr *RisingWaveManager) SyncObservedGeneration() {
 	mgr.mutableRisingWave.Status.ObservedGeneration = mgr.risingwave.Generation
 }
 
+func (mgr *RisingWaveManager) ObjectStorageType() risingwavev1alpha1.ObjectStorageType {
+	objectStorage := mgr.risingwave.Spec.ObjectStorage
+	switch {
+	case objectStorage.Memory:
+		return risingwavev1alpha1.MemoryType
+	case objectStorage.MinIO != nil:
+		return risingwavev1alpha1.MinIOType
+	case objectStorage.S3 != nil:
+		return risingwavev1alpha1.S3Type
+	default:
+		return risingwavev1alpha1.UnknownType
+	}
+}
+
 func (mgr *RisingWaveManager) GetCondition(conditionType risingwavev1alpha1.RisingWaveType) *risingwavev1alpha1.RisingWaveCondition {
 	for _, cond := range mgr.risingwave.Status.Conditions {
 		if cond.Type == conditionType {
@@ -101,7 +115,14 @@ func (mgr *RisingWaveManager) UpdateCondition(condition risingwavev1alpha1.Risin
 	}
 }
 
-func (mgr *RisingWaveManager) UpdateRisingWaveStatus(ctx context.Context) error {
+func (mgr *RisingWaveManager) UpdateStatus(f func(*risingwavev1alpha1.RisingWaveStatus)) {
+	mgr.mu.Lock()
+	defer mgr.mu.Unlock()
+
+	f(&mgr.mutableRisingWave.Status)
+}
+
+func (mgr *RisingWaveManager) UpdateRemoteRisingWaveStatus(ctx context.Context) error {
 	mgr.mu.RLock()
 	defer mgr.mu.RUnlock()
 

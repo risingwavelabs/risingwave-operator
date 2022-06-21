@@ -18,6 +18,7 @@ package risingwave
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -51,7 +52,7 @@ func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit
 		ctrlkit.DryRun(workflow)
 		return ctrlkit.NoRequeue()
 	} else {
-		return workflow.Run(ctx)
+		return ctrlkit.IgnoreExit(workflow.Run(ctx))
 	}
 }
 
@@ -87,10 +88,10 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 
 	// Defer the status update.
 	defer func() {
-		if _, err1 := c.runWorkflow(ctx, mgr.UpdateRisingWaveStatus()); err1 != nil {
+		if err1 := risingwaveManager.UpdateRemoteRisingWaveStatus(ctx); err1 != nil {
 			// Overwrite err if it's nil.
 			if err == nil {
-				err = err1
+				err = fmt.Errorf("unable to update status: %w", err1)
 			}
 		}
 	}()
@@ -113,6 +114,13 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		})
 		return ctrlkit.Continue()
 	})
+	markConditionRunningAsFalse := mgr.WrapAction("MarkConditionInitializingAsTrue", func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
+		risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
+			Type:   risingwavev1alpha1.Running,
+			Status: metav1.ConditionFalse,
+		})
+		return ctrlkit.Continue()
+	})
 	conditionInitializingIsTrueBarrier := mgr.WrapAction("BarrierConditionInitializingIsTrue", func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
 		condition := risingwaveManger.GetCondition(risingwavev1alpha1.Initializing)
 		return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
@@ -120,7 +128,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	markConditionRunningAsTrueAndRemoveConditionInitializing := mgr.WrapAction("MarkConditionRunningAsTrueAndRemoveConditionInitializing", func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
 		risingwaveManger.RemoveCondition(risingwavev1alpha1.Initializing)
 		risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
-			Type:   risingwavev1alpha1.Initializing,
+			Type:   risingwavev1alpha1.Running,
 			Status: metav1.ConditionTrue,
 		})
 		return ctrlkit.Continue()
@@ -153,14 +161,31 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		ctrlkit.Timeout(time.Second, mgr.WaitBeforeMetaServiceIsAvailable()),
 	)
 	syncOtherComponents := ctrlkit.JoinInParallel(
-		ctrlkit.JoinInParallel(mgr.SyncComputeSerivce(), mgr.SyncComputeStatefulSet()),
-		ctrlkit.JoinInParallel(mgr.SyncCompactorService(), mgr.SyncCompactorDeployment()),
-		ctrlkit.JoinInParallel(mgr.SyncFrontendService(), mgr.SyncFrontendDeployment()),
+		ctrlkit.JoinInParallel(
+			mgr.SyncComputeSerivce(),
+			ctrlkit.Sequential(
+				mgr.SyncComputeConfigMap(),
+				mgr.SyncComputeStatefulSet(),
+			),
+		),
+		ctrlkit.If(risingwaveManger.ObjectStorageType() != risingwavev1alpha1.MemoryType,
+			ctrlkit.JoinInParallel(
+				mgr.SyncCompactorService(),
+				mgr.SyncCompactorDeployment(),
+			),
+		),
+
+		ctrlkit.JoinInParallel(
+			mgr.SyncFrontendService(),
+			mgr.SyncFrontendDeployment(),
+		),
 	)
 	otherComponentsReadyBarrier := ctrlkit.Join(
 		mgr.WaitBeforeFrontendDeploymentReady(),
 		mgr.WaitBeforeComputeStatefulSetReady(),
-		mgr.WaitBeforeCompactorDeploymentReady(),
+		ctrlkit.If(risingwaveManger.ObjectStorageType() != risingwavev1alpha1.MemoryType,
+			mgr.WaitBeforeCompactorDeploymentReady(),
+		),
 	)
 	syncAllComponents := ctrlkit.JoinInParallel(syncMetaComponent, syncOtherComponents)
 	allComponentsReadyBarrier := ctrlkit.Join(metaComponentReadyBarrier, otherComponentsReadyBarrier)
@@ -172,28 +197,32 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		risingwaveManger.SyncObservedGeneration()
 		return ctrlkit.Continue()
 	})
+	syncStorageAndComponentStatus := mgr.CollectRunningStatisticsAndSyncStatus()
 
 	return ctrlkit.JoinInParallel(
-		// => Initializing
+		// => Initializing (Running=false)
 		ctrlkit.Sequential(
 			firstTimeObservedBarrier,
 			markConditionInitializingAsTrue,
+			markConditionRunningAsFalse,
 		),
 
 		// Initializing => Running
 		ctrlkit.Sequential(
 			conditionInitializingIsTrueBarrier,
 
-			// Sync observed generation.
-			syncObservedGeneration,
+			ctrlkit.Sequential(
+				// Sync observed generation.
+				syncObservedGeneration,
 
-			// Sync component for meta, and wait for the ready barrier.
-			syncMetaComponent, metaComponentReadyBarrier,
+				// Sync component for meta, and wait for the ready barrier.
+				syncMetaComponent, metaComponentReadyBarrier,
 
-			// Sync other components, and wait for the ready barrier.
-			syncOtherComponents, otherComponentsReadyBarrier,
+				// Sync other components, and wait for the ready barrier.
+				syncOtherComponents, otherComponentsReadyBarrier,
 
-			markConditionRunningAsTrueAndRemoveConditionInitializing,
+				markConditionRunningAsTrueAndRemoveConditionInitializing,
+			),
 		),
 
 		// Running maintenance, => Upgrading
@@ -227,6 +256,12 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 
 			markConditionUpgradingAsFalse,
 		),
+
+		// Always run.
+		ctrlkit.Join(
+			// Sync the storage and component status after syncing them.
+			syncStorageAndComponentStatus,
+		),
 	)
 }
 
@@ -245,6 +280,7 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.Deployment{}).
 		Owns(&appsv1.StatefulSet{}).
 		Owns(&corev1.Service{}).
+		Owns(&corev1.ConfigMap{}).
 		Complete(c)
 }
 

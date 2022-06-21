@@ -85,11 +85,12 @@ func runJoinActionsInParallel(ctx context.Context, actions ...ReconcileAction) (
 	lerrs := make([]error, len(actions))
 
 	// Run each action in a new goroutine and organize with WaitGroup.
-	wg := sync.WaitGroup{}
+	wg := &sync.WaitGroup{}
 
 	for i := range actions {
 		act := actions[i]
 		lresult, lerr := &lresults[i], &lerrs[i]
+		wg.Add(1)
 		go func() {
 			defer wg.Done()
 

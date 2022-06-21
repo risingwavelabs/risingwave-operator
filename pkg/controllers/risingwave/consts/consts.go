@@ -36,6 +36,11 @@ const ()
 // Consts.
 // =================================================
 
+// Special label values of LabelRisingWaveGeneration.
+const (
+	NoSync = "nosync"
+)
+
 // Label values of LabelRisingWaveComponent.
 const (
 	ComponentMeta      = "meta"

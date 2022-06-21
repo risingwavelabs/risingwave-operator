@@ -34,6 +34,30 @@ import (
 	"github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave/consts"
 )
 
+const (
+	computeConfigVolume       = "config"
+	computeNodeConfigKey      = "risingwave.toml"
+	computeNodeConfigTemplate = `[ server ]
+heartbeat_interval = 1000
+
+[ streaming ]
+checkpoint_interval_ms = 100
+
+[ storage ]
+sstable_size_mb = 256
+block_size_kb = 16
+bloom_false_positive = 0.1
+share_buffers_sync_parallelism = 2
+shared_buffer_capacity_mb = 1024
+data_directory = "hummock_001"
+write_conflict_detection_enabled = true
+block_cache_capacity_mb = 256
+meta_cache_capacity_mb = 64
+disable_remote_compactor = false
+enable_local_spill = true
+local_object_store = "tempdisk"`
+)
+
 type RisingWaveObjectFactory struct {
 	scheme     *runtime.Scheme
 	risingwave *risingwavev1alpha1.RisingWave
@@ -85,16 +109,24 @@ func (f *RisingWaveObjectFactory) componentName(component string) string {
 	}
 }
 
-func (f *RisingWaveObjectFactory) objectMeta(component string) metav1.ObjectMeta {
+func (f *RisingWaveObjectFactory) objectMeta(component string, noSync bool) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Name:      f.componentName(component),
 		Namespace: f.namespace(),
 		Labels: map[string]string{
 			consts.LabelRisingWaveName:       f.risingwave.Name,
 			consts.LabelRisingWaveComponent:  component,
-			consts.LabelRisingWaveGeneration: strconv.FormatInt(f.risingwave.Generation, 10),
+			consts.LabelRisingWaveGeneration: lo.If(noSync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
 		},
 	}
+}
+
+func (f *RisingWaveObjectFactory) objectMetaSync(component string) metav1.ObjectMeta {
+	return f.objectMeta(component, false)
+}
+
+func (f *RisingWaveObjectFactory) objectMetaNoSync(component string) metav1.ObjectMeta {
+	return f.objectMeta(component, true)
 }
 
 func (f *RisingWaveObjectFactory) podLabelsOrSelectors(component string) map[string]string {
@@ -117,7 +149,7 @@ func (f *RisingWaveObjectFactory) convertContainerPortsToServicePorts(containerP
 
 func (f *RisingWaveObjectFactory) NewMetaService() *corev1.Service {
 	metaService := &corev1.Service{
-		ObjectMeta: f.objectMeta(consts.ComponentMeta),
+		ObjectMeta: f.objectMetaSync(consts.ComponentMeta),
 		Spec: corev1.ServiceSpec{
 			Type:     corev1.ServiceTypeClusterIP,
 			Selector: f.podLabelsOrSelectors(consts.ComponentMeta),
@@ -173,7 +205,7 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment() *appsv1.Deployment {
 	metaNodeSpec := f.risingwave.Spec.MetaNode
 
 	metaDeployment := &appsv1.Deployment{
-		ObjectMeta: f.objectMeta(consts.ComponentMeta),
+		ObjectMeta: f.objectMetaSync(consts.ComponentMeta),
 		Spec: appsv1.DeploymentSpec{
 			Replicas: metaNodeSpec.Replicas,
 			Selector: &metav1.LabelSelector{
@@ -199,7 +231,7 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment() *appsv1.Deployment {
 
 func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 	frontendService := &corev1.Service{
-		ObjectMeta: f.objectMeta(consts.ComponentFrontend),
+		ObjectMeta: f.objectMetaSync(consts.ComponentFrontend),
 		Spec: corev1.ServiceSpec{
 			Type:     corev1.ServiceTypeClusterIP,
 			Selector: f.podLabelsOrSelectors(consts.ComponentFrontend),
@@ -241,7 +273,7 @@ func (f *RisingWaveObjectFactory) NewFrontendDeployment() *appsv1.Deployment {
 	frontendSpec := f.risingwave.Spec.Frontend
 
 	frontendDeployment := &appsv1.Deployment{
-		ObjectMeta: f.objectMeta(consts.ComponentFrontend),
+		ObjectMeta: f.objectMetaSync(consts.ComponentFrontend),
 		Spec: appsv1.DeploymentSpec{
 			Replicas: frontendSpec.Replicas,
 			Selector: &metav1.LabelSelector{
@@ -267,7 +299,7 @@ func (f *RisingWaveObjectFactory) NewFrontendDeployment() *appsv1.Deployment {
 
 func (f *RisingWaveObjectFactory) NewComputeService() *corev1.Service {
 	computeService := &corev1.Service{
-		ObjectMeta: f.objectMeta(consts.ComponentCompute),
+		ObjectMeta: f.objectMetaSync(consts.ComponentCompute),
 		Spec: corev1.ServiceSpec{
 			Type:     corev1.ServiceTypeClusterIP,
 			Selector: f.podLabelsOrSelectors(consts.ComponentCompute),
@@ -321,7 +353,7 @@ func (f *RisingWaveObjectFactory) patchStorageEnvs(c *corev1.Container) {
 
 func (f *RisingWaveObjectFactory) configVolumeForCompute() corev1.Volume {
 	return corev1.Volume{
-		Name: "compute-config",
+		Name: computeConfigVolume,
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				Items: []corev1.KeyToPath{
@@ -331,7 +363,7 @@ func (f *RisingWaveObjectFactory) configVolumeForCompute() corev1.Volume {
 					},
 				},
 				LocalObjectReference: corev1.LocalObjectReference{
-					Name: f.risingwave.Name + "-compute-configmap",
+					Name: f.componentName(consts.ComponentCompute),
 				},
 			},
 		},
@@ -340,7 +372,7 @@ func (f *RisingWaveObjectFactory) configVolumeForCompute() corev1.Volume {
 
 func (f *RisingWaveObjectFactory) patchConfigVolumeMountForCompute(c *corev1.Container) {
 	c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
-		Name:      "compute-config",
+		Name:      computeConfigVolume,
 		MountPath: "/risingwave/config",
 		ReadOnly:  true,
 	})
@@ -364,7 +396,7 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet() *appsv1.StatefulSet {
 	computeNodeSpec := f.risingwave.Spec.ComputeNode
 
 	computeStatefulSet := &appsv1.StatefulSet{
-		ObjectMeta: f.objectMeta(consts.ComponentCompute),
+		ObjectMeta: f.objectMetaSync(consts.ComponentCompute),
 		Spec: appsv1.StatefulSetSpec{
 			Replicas: computeNodeSpec.Replicas,
 			Selector: &metav1.LabelSelector{
@@ -398,7 +430,7 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet() *appsv1.StatefulSet {
 
 func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 	compactorService := &corev1.Service{
-		ObjectMeta: f.objectMeta(consts.ComponentCompactor),
+		ObjectMeta: f.objectMetaSync(consts.ComponentCompactor),
 		Spec: corev1.ServiceSpec{
 			Type:     corev1.ServiceTypeClusterIP,
 			Selector: f.podLabelsOrSelectors(consts.ComponentCompactor),
@@ -424,7 +456,7 @@ func (f *RisingWaveObjectFactory) NewCompactorDeployment() *appsv1.Deployment {
 	compactorNodeSpec := f.risingwave.Spec.CompactorNode
 
 	compactorDeployment := &appsv1.Deployment{
-		ObjectMeta: f.objectMeta(consts.ComponentCompactor),
+		ObjectMeta: f.objectMetaSync(consts.ComponentCompactor),
 
 		Spec: appsv1.DeploymentSpec{
 			Replicas: compactorNodeSpec.Replicas,
@@ -451,6 +483,18 @@ func (f *RisingWaveObjectFactory) NewCompactorDeployment() *appsv1.Deployment {
 	}
 
 	return mustSetControllerReference(f.risingwave, compactorDeployment, f.scheme)
+}
+
+func (f *RisingWaveObjectFactory) NewComputeConfigMap() *corev1.ConfigMap {
+	// Not going to sync.
+	computeConfigMap := &corev1.ConfigMap{
+		ObjectMeta: f.objectMetaNoSync(consts.ComponentCompute),
+		Data: map[string]string{
+			computeNodeConfigKey: computeNodeConfigTemplate,
+		},
+	}
+
+	return mustSetControllerReference(f.risingwave, computeConfigMap, f.scheme)
 }
 
 func NewRisingWaveObjectFactory(risingwave *risingwavev1alpha1.RisingWave, scheme *runtime.Scheme) *RisingWaveObjectFactory {

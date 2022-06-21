@@ -79,7 +79,6 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 
 	risingwaveManager := object.NewRisingWaveManager(c.Client, risingwave.DeepCopy())
 
-	// Build a workflow and run.
 	mgr := manager.NewRisingWaveControllerManager(
 		manager.NewRisingWaveControllerManagerState(c.Client, risingwave.DeepCopy()),
 		manager.NewRisingWaveControllerManagerImpl(c.Client, risingwaveManager),
@@ -96,10 +95,8 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 		}
 	}()
 
+	// Build a workflow and run.
 	workflow := ctrlkit.OptimizeWorkflow(c.reactiveWorkflow(risingwaveManager, &mgr))
-
-	logger.Info("Describe workflow", "workflow", workflow.Description())
-
 	return c.runWorkflow(ctx, workflow)
 }
 

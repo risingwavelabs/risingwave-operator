@@ -259,7 +259,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 
 		// Always run.
 		ctrlkit.Join(
-			// Sync the storage and component status after syncing them.
+			// Sync the storage and component status each time we run.
 			syncStorageAndComponentStatus,
 		),
 	)

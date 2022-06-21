@@ -87,25 +87,4 @@ spec:
     storage:
       type: InMemory
   objectStorage:
-    minIO:
-      image:
-        pullPolicy: IfNotPresent
-        repository: ghcr.io/singularity-data/risingwave-minio
-        tag: latest
-      nodeSelector:
-        kubernetes.io/arch: amd64
-      ports:
-      - containerPort: 9301
-        name: minio-server
-        protocol: TCP
-      - containerPort: 9400
-        name: minio-console
-        protocol: TCP
-      replicas: 1
-      resources:
-        limits:
-          cpu: "1"
-          memory: 2000Mi
-        requests:
-          cpu: 100m
-          memory: 100Mi
+    memory: true

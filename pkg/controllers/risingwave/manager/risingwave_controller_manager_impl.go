@@ -133,55 +133,55 @@ func syncObject[T client.Object](mgr *risingWaveControllerManagerImpl, ctx conte
 	}, logger)
 }
 
-// SyncCompactorDeployment implements RisingWaveControllerManagerImpl
+// SyncCompactorDeployment implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncCompactorDeployment(ctx context.Context, logger logr.Logger, compactorDeployment *appsv1.Deployment) (reconcile.Result, error) {
 	err := syncObject(mgr, ctx, compactorDeployment, mgr.objectFactory.NewCompactorDeployment, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compactor deployment", err)
 }
 
-// SyncCompactorService implements RisingWaveControllerManagerImpl
+// SyncCompactorService implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncCompactorService(ctx context.Context, logger logr.Logger, compactorService *corev1.Service) (reconcile.Result, error) {
 	err := syncObject(mgr, ctx, compactorService, mgr.objectFactory.NewCompactorService, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compactor service", err)
 }
 
-// SyncComputeStatefulSet implements RisingWaveControllerManagerImpl
+// SyncComputeStatefulSet implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncComputeStatefulSet(ctx context.Context, logger logr.Logger, computeStatefulSet *appsv1.StatefulSet) (reconcile.Result, error) {
 	err := syncObject(mgr, ctx, computeStatefulSet, mgr.objectFactory.NewComputeStatefulSet, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compute statefulset", err)
 }
 
-// SyncComputeSerivce implements RisingWaveControllerManagerImpl
+// SyncComputeSerivce implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncComputeSerivce(ctx context.Context, logger logr.Logger, computeService *corev1.Service) (reconcile.Result, error) {
 	err := syncObject(mgr, ctx, computeService, mgr.objectFactory.NewComputeService, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compute service", err)
 }
 
-// SyncFrontendDeployment implements RisingWaveControllerManagerImpl
+// SyncFrontendDeployment implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncFrontendDeployment(ctx context.Context, logger logr.Logger, frontendDeployment *appsv1.Deployment) (reconcile.Result, error) {
 	err := syncObject(mgr, ctx, frontendDeployment, mgr.objectFactory.NewFrontendDeployment, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync frontend deployment", err)
 }
 
-// SyncFrontendService implements RisingWaveControllerManagerImpl
+// SyncFrontendService implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncFrontendService(ctx context.Context, logger logr.Logger, frontendService *corev1.Service) (reconcile.Result, error) {
 	err := syncObject(mgr, ctx, frontendService, mgr.objectFactory.NewFrontendService, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync frontend service", err)
 }
 
-// SyncMetaDeployment implements RisingWaveControllerManagerImpl
+// SyncMetaDeployment implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncMetaDeployment(ctx context.Context, logger logr.Logger, metaDeployment *appsv1.Deployment) (reconcile.Result, error) {
 	err := syncObject(mgr, ctx, metaDeployment, mgr.objectFactory.NewMetaDeployment, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync meta deployment", err)
 }
 
-// SyncMetaService implements RisingWaveControllerManagerImpl
+// SyncMetaService implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncMetaService(ctx context.Context, logger logr.Logger, metaService *corev1.Service) (reconcile.Result, error) {
 	err := syncObject(mgr, ctx, metaService, mgr.objectFactory.NewMetaService, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync meta service", err)
 }
 
-// WaitBeforeCompactorDeploymentReady implements RisingWaveControllerManagerImpl
+// WaitBeforeCompactorDeploymentReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeCompactorDeploymentReady(ctx context.Context, logger logr.Logger, compactorDeployment *appsv1.Deployment) (reconcile.Result, error) {
 	if mgr.isObjectSynced(compactorDeployment) && utils.IsDeploymentRolledOut(compactorDeployment) {
 		return ctrlkit.NoRequeue()
@@ -191,7 +191,7 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeCompactorDeploymentReady(c
 	}
 }
 
-// WaitBeforeComputeStatefulSetReady implements RisingWaveControllerManagerImpl
+// WaitBeforeComputeStatefulSetReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeComputeStatefulSetReady(ctx context.Context, logger logr.Logger, computeStatefulSet *appsv1.StatefulSet) (reconcile.Result, error) {
 	if mgr.isObjectSynced(computeStatefulSet) && utils.IsStatefulSetRolledOut(computeStatefulSet) {
 		return ctrlkit.NoRequeue()
@@ -201,7 +201,7 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeComputeStatefulSetReady(ct
 	}
 }
 
-// WaitBeforeFrontendDeploymentReady implements RisingWaveControllerManagerImpl
+// WaitBeforeFrontendDeploymentReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendDeploymentReady(ctx context.Context, logger logr.Logger, frontendDeployment *appsv1.Deployment) (reconcile.Result, error) {
 	if mgr.isObjectSynced(frontendDeployment) && utils.IsDeploymentRolledOut(frontendDeployment) {
 		return ctrlkit.NoRequeue()
@@ -211,7 +211,7 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendDeploymentReady(ct
 	}
 }
 
-// WaitBeforeMetaDeploymentReady implements RisingWaveControllerManagerImpl
+// WaitBeforeMetaDeploymentReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaDeploymentReady(ctx context.Context, logger logr.Logger, metaDeployment *appsv1.Deployment) (reconcile.Result, error) {
 	if mgr.isObjectSynced(metaDeployment) && utils.IsDeploymentRolledOut(metaDeployment) {
 		return ctrlkit.NoRequeue()
@@ -221,7 +221,7 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaDeploymentReady(ctx co
 	}
 }
 
-// WaitBeforeMetaServiceIsAvailable implements RisingWaveControllerManagerImpl
+// WaitBeforeMetaServiceIsAvailable implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaServiceIsAvailable(ctx context.Context, logger logr.Logger, metaService *corev1.Service) (reconcile.Result, error) {
 	if mgr.isObjectSynced(metaService) && utils.IsServiceReady(metaService) {
 		return ctrlkit.NoRequeue()
@@ -271,7 +271,7 @@ func (mgr *risingWaveControllerManagerImpl) reportComponentPhase(objs ...client.
 	}
 }
 
-// CollectRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl
+// CollectRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatus(
 	ctx context.Context,
 	logger logr.Logger,
@@ -317,7 +317,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 	return ctrlkit.Continue()
 }
 
-// SyncConfigConfigMap implements RisingWaveControllerManagerImpl
+// SyncConfigConfigMap implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncConfigConfigMap(ctx context.Context, logger logr.Logger, configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
 	err := syncObject(mgr, ctx, configConfigMap, mgr.objectFactory.NewConfigConfigMap, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync config configmap", err)

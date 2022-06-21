@@ -29,7 +29,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave/consts"
 )
@@ -88,7 +87,7 @@ func (f *RisingWaveObjectFactory) storeParam() string {
 	case storage.Memory:
 		return "hummock+memory"
 	case storage.MinIO != nil:
-		return fmt.Sprintf("hummock+minio://hummock:12345678@%s:%d/hummock001", f.risingwave.Name+"-minio", v1alpha1.MinIOServerPort)
+		return fmt.Sprintf("hummock+minio://hummock:12345678@%s:%d/hummock001", f.risingwave.Name+"-minio", risingwavev1alpha1.MinIOServerPort)
 	default:
 		return "not-supported"
 	}
@@ -188,14 +187,14 @@ func (f *RisingWaveObjectFactory) patchArgsForMeta(c *corev1.Container) {
 	args := []string{
 		"meta-node",
 		"--config-path", "/risingwave/config/risingwave.toml",
-		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaServerPort),
+		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", risingwavev1alpha1.MetaServerPort),
 		"--host", "$(POD_IP)",
-		"--dashboard-host", fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaDashboardPort),
-		"--prometheus-host", fmt.Sprintf("0.0.0.0:%d", v1alpha1.MetaMetricsPort),
+		"--dashboard-host", fmt.Sprintf("0.0.0.0:%d", risingwavev1alpha1.MetaDashboardPort),
+		"--prometheus-host", fmt.Sprintf("0.0.0.0:%d", risingwavev1alpha1.MetaMetricsPort),
 	}
 
 	// TODO support other storages.
-	if metaNodeSpec.Storage.Type == v1alpha1.InMemory {
+	if metaNodeSpec.Storage.Type == risingwavev1alpha1.InMemory {
 		args = append(args, "--backend", "mem")
 	}
 
@@ -295,9 +294,9 @@ func (f *RisingWaveObjectFactory) patchArgsForFrontend(c *corev1.Container) {
 	args := []string{
 		"frontend-node",
 		"--host",
-		fmt.Sprintf("$(POD_IP):%d", v1alpha1.FrontendPort),
+		fmt.Sprintf("$(POD_IP):%d", risingwavev1alpha1.FrontendPort),
 		"--meta-addr",
-		fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta), v1alpha1.MetaServerPort),
+		fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta), risingwavev1alpha1.MetaServerPort),
 	}
 
 	c.Args = args
@@ -428,11 +427,11 @@ func (f *RisingWaveObjectFactory) patchArgsForCompute(c *corev1.Container) {
 	c.Args = []string{ // TODO: mv args -> configuration file
 		"compute-node",
 		"--config-path", "/risingwave/config/risingwave.toml",
-		"--host", fmt.Sprintf("$(POD_IP):%d", v1alpha1.ComputeNodePort),
-		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", v1alpha1.ComputeNodeMetricsPort),
+		"--host", fmt.Sprintf("$(POD_IP):%d", risingwavev1alpha1.ComputeNodePort),
+		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", risingwavev1alpha1.ComputeNodeMetricsPort),
 		"--metrics-level=1",
 		fmt.Sprintf("--state-store=%s", f.storeParam()),
-		fmt.Sprintf("--meta-address=http://%s:%d", f.componentName(consts.ComponentMeta), v1alpha1.MetaServerPort),
+		fmt.Sprintf("--meta-address=http://%s:%d", f.componentName(consts.ComponentMeta), risingwavev1alpha1.MetaServerPort),
 	}
 }
 
@@ -497,11 +496,11 @@ func (f *RisingWaveObjectFactory) patchArgsForCompactor(c *corev1.Container) {
 	c.Args = []string{
 		"compactor-node",
 		"--config-path", "/risingwave/config/risingwave.toml",
-		"--host", fmt.Sprintf("$(POD_IP):%d", v1alpha1.CompactorNodePort),
-		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", v1alpha1.CompactorNodeMetricsPort),
+		"--host", fmt.Sprintf("$(POD_IP):%d", risingwavev1alpha1.CompactorNodePort),
+		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", risingwavev1alpha1.CompactorNodeMetricsPort),
 		"--metrics-level=1",
 		fmt.Sprintf("--state-store=%s", f.storeParam()),
-		fmt.Sprintf("--meta-address=http://%s:%d", f.componentName(consts.ComponentMeta), v1alpha1.MetaServerPort),
+		fmt.Sprintf("--meta-address=http://%s:%d", f.componentName(consts.ComponentMeta), risingwavev1alpha1.MetaServerPort),
 	}
 }
 

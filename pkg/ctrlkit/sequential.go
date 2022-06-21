@@ -58,7 +58,7 @@ func Sequential(actions ...ReconcileAction) ReconcileAction {
 }
 
 // SequentialJoin is an alias of JoinOrdered, because it runs the actions in both join and sequential style.
-// It is useful to use `JoinSequential` to declare something that must run after something else. E.g., if
+// It is useful to use `SequentialJoin` to declare something that must run after something else. E.g., if
 // B must run after A, but you want B to run no matter what A returns, you can use
 // SequentialJoin(A, B) instead of Sequential(A, B).
 var SequentialJoin = JoinOrdered

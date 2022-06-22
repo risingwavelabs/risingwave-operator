@@ -13,3 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package ctrlkit
+
+// If returns the given action if predicate is true, or an Nop otherwise.
+func If(predicate bool, act ReconcileAction) ReconcileAction {
+	if predicate {
+		return act
+	} else {
+		return Nop
+	}
+}

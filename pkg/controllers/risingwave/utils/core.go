@@ -13,3 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package utils
+
+import (
+	corev1 "k8s.io/api/core/v1"
+)
+
+func IsServiceReady(svc *corev1.Service) bool {
+	if svc == nil {
+		return false
+	}
+
+	// FIXME(shunjie.dsj)
+	return true
+}

@@ -47,7 +47,7 @@ type Reconciler struct {
 	process []processFunc
 }
 
-func NewReconciler(
+func NewLegacyReconciler(
 	c client.Client,
 	s *runtime.Scheme) *Reconciler {
 	r := &Reconciler{
@@ -136,7 +136,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	// if rw.condition nil, mark rw as Initializing
-	if len(rw.Status.Condition) == 0 {
+	if len(rw.Status.Conditions) == 0 {
 		return r.markRisingWaveInitializing(ctx, rw)
 	}
 

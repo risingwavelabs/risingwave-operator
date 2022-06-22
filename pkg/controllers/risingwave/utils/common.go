@@ -13,3 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package utils
+
+import (
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+func GetNamespacedName(obj client.Object) types.NamespacedName {
+	return types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()}
+}
+
+func IsDeleted(obj client.Object) bool {
+	return obj != nil && !obj.GetDeletionTimestamp().IsZero()
+}

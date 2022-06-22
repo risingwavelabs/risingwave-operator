@@ -22,18 +22,18 @@ import (
 	"github.com/go-logr/logr"
 )
 
-// CrontollerManagerActionLifeCycleHook provides lifecycle hooks for actions.
-type CrontollerManagerActionLifeCycleHook interface {
+// ControllerManagerActionLifeCycleHook provides lifecycle hooks for actions.
+type ControllerManagerActionLifeCycleHook interface {
 	BeforeActionRun(action string, ctx context.Context, logger logr.Logger)
 	AfterActionRun(action string, ctx context.Context, logger logr.Logger)
 }
 
-// EmptyCrontollerManagerActionLifeCycleHook implements empty hooks.
-type EmptyCrontollerManagerActionLifeCycleHook struct {
+// EmptyControllerManagerActionLifeCycleHook implements empty hooks.
+type EmptyControllerManagerActionLifeCycleHook struct {
 }
 
-func (hook *EmptyCrontollerManagerActionLifeCycleHook) BeforeActionRun(action string, ctx context.Context, logger logr.Logger) {
+func (hook *EmptyControllerManagerActionLifeCycleHook) BeforeActionRun(action string, ctx context.Context, logger logr.Logger) {
 }
 
-func (hook *EmptyCrontollerManagerActionLifeCycleHook) AfterActionRun(action string, ctx context.Context, logger logr.Logger) {
+func (hook *EmptyControllerManagerActionLifeCycleHook) AfterActionRun(action string, ctx context.Context, logger logr.Logger) {
 }

@@ -242,7 +242,7 @@ func NewRisingWaveControllerManagerState(reader client.Reader, target *risingwav
 
 // RisingWaveControllerManagerImpl declares the implementation interface for RisingWaveControllerManager.
 type RisingWaveControllerManagerImpl interface {
-	ctrlkit.CrontollerManagerActionLifeCycleHook
+	ctrlkit.ControllerManagerActionLifeCycleHook
 
 	// SyncMetaService creates or updates the service for meta nodes.
 	SyncMetaService(ctx context.Context, logger logr.Logger, metaService *corev1.Service) (ctrl.Result, error)

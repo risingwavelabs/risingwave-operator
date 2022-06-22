@@ -39,7 +39,7 @@ import (
 )
 
 type risingWaveControllerManagerImpl struct {
-	ctrlkit.EmptyCrontollerManagerActionLifeCycleHook
+	ctrlkit.EmptyControllerManagerActionLifeCycleHook
 
 	client            client.Client
 	risingwaveManager *object.RisingWaveManager

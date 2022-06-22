@@ -151,8 +151,8 @@ func (mgr *risingWaveControllerManagerImpl) SyncComputeStatefulSet(ctx context.C
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compute statefulset", err)
 }
 
-// SyncComputeSerivce implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) SyncComputeSerivce(ctx context.Context, logger logr.Logger, computeService *corev1.Service) (reconcile.Result, error) {
+// SyncComputeService implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) SyncComputeService(ctx context.Context, logger logr.Logger, computeService *corev1.Service) (reconcile.Result, error) {
 	err := syncObject(mgr, ctx, computeService, mgr.objectFactory.NewComputeService, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compute service", err)
 }

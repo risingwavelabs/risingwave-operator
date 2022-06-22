@@ -168,12 +168,12 @@ func join(actions []ReconcileAction, runner joinRunner) ReconcileAction {
 	return &joinAction{actions: actions, runner: runner}
 }
 
-// Join organizes the actions in a split-join flow, which doesn't gurantee the execution order.
+// Join organizes the actions in a split-join flow, which doesn't guarantee the execution order.
 func Join(actions ...ReconcileAction) ReconcileAction {
 	return join(lo.Shuffle(actions), defaultJoinRunner)
 }
 
-// JoinOrdered organizes the actions in a split-join flow and gurantees the execution order.
+// JoinOrdered organizes the actions in a split-join flow and guarantees the execution order.
 func JoinOrdered(actions ...ReconcileAction) ReconcileAction {
 	return join(actions, defaultJoinRunner)
 }

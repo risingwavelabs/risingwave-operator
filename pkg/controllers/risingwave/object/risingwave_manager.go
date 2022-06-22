@@ -102,7 +102,7 @@ func (mgr *RisingWaveManager) UpdateCondition(condition risingwavev1alpha1.Risin
 		condition.LastTransitionTime = metav1.Now()
 	}
 
-	// Add or update the conidtion.
+	// Add or update the condition.
 	conditions := mgr.mutableRisingWave.Status.Conditions
 	_, curIndex, found := lo.FindIndexOf(conditions, func(cond risingwavev1alpha1.RisingWaveCondition) bool {
 		return cond.Type == condition.Type

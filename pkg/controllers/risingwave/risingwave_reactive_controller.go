@@ -160,7 +160,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	)
 	syncOtherComponents := ctrlkit.JoinInParallel(
 		ctrlkit.JoinInParallel(
-			mgr.SyncComputeSerivce(),
+			mgr.SyncComputeService(),
 			mgr.SyncComputeStatefulSet(),
 		),
 		ctrlkit.JoinInParallel(
@@ -264,7 +264,7 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: 64,
 			RateLimiter: workqueue.NewMaxOfRateLimiter(
-				// Exponential rate limiter, for immediate requeues (result.Requeue == true || err != nil).
+				// Exponential rate limiter, for immediate requeue (result.Requeue == true || err != nil).
 				workqueue.NewItemExponentialFailureRateLimiter(5*time.Millisecond, 10*time.Second),
 				// Bucket limiter of 10 qps, 100 bucket size.
 				&workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(10), 100)},

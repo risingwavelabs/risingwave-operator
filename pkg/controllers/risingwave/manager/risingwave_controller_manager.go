@@ -265,8 +265,8 @@ type RisingWaveControllerManagerImpl interface {
 	// WaitBeforeFrontendDeploymentReady waits (aborts the workflow) before the frontend deployment is ready.
 	WaitBeforeFrontendDeploymentReady(ctx context.Context, logger logr.Logger, frontendDeployment *appsv1.Deployment) (ctrl.Result, error)
 
-	// SyncComputeSerivce creates or updates the service for compute nodes.
-	SyncComputeSerivce(ctx context.Context, logger logr.Logger, computeService *corev1.Service) (ctrl.Result, error)
+	// SyncComputeService creates or updates the service for compute nodes.
+	SyncComputeService(ctx context.Context, logger logr.Logger, computeService *corev1.Service) (ctrl.Result, error)
 
 	// SyncComputeStatefulSet creates or updates the statefulset for compute nodes.
 	SyncComputeStatefulSet(ctx context.Context, logger logr.Logger, computeStatefulSet *appsv1.StatefulSet) (ctrl.Result, error)
@@ -441,10 +441,10 @@ func (m *RisingWaveControllerManager) WaitBeforeFrontendDeploymentReady() ctrlki
 	})
 }
 
-// SyncComputeSerivce generates the action of "SyncComputeSerivce".
-func (m *RisingWaveControllerManager) SyncComputeSerivce() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("SyncComputeSerivce", func(ctx context.Context) (ctrl.Result, error) {
-		logger := m.logger.WithValues("action", "SyncComputeSerivce")
+// SyncComputeService generates the action of "SyncComputeService".
+func (m *RisingWaveControllerManager) SyncComputeService() ctrlkit.ReconcileAction {
+	return ctrlkit.WrapAction("SyncComputeService", func(ctx context.Context) (ctrl.Result, error) {
+		logger := m.logger.WithValues("action", "SyncComputeService")
 
 		// Get states.
 		computeService, err := m.state.GetComputeService(ctx)
@@ -453,10 +453,10 @@ func (m *RisingWaveControllerManager) SyncComputeSerivce() ctrlkit.ReconcileActi
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("SyncComputeSerivce", ctx, logger)
-		m.impl.BeforeActionRun("SyncComputeSerivce", ctx, logger)
+		defer m.impl.AfterActionRun("SyncComputeService", ctx, logger)
+		m.impl.BeforeActionRun("SyncComputeService", ctx, logger)
 
-		return m.impl.SyncComputeSerivce(ctx, logger, computeService)
+		return m.impl.SyncComputeService(ctx, logger, computeService)
 	})
 }
 

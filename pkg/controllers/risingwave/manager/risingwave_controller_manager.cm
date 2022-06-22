@@ -94,8 +94,8 @@ decl RisingWaveControllerManager for RisingWave {
         // WaitBeforeFrontendDeploymentReady waits (aborts the workflow) before the frontend deployment is ready.
         WaitBeforeFrontendDeploymentReady(frontendDeployment)
 
-        // SyncComputeSerivce creates or updates the service for compute nodes.
-        SyncComputeSerivce(computeService)
+        // SyncComputeService creates or updates the service for compute nodes.
+        SyncComputeService(computeService)
 
         // SyncComputeStatefulSet creates or updates the statefulset for compute nodes.
         SyncComputeStatefulSet(computeStatefulSet)

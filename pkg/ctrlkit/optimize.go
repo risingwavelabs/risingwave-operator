@@ -32,7 +32,7 @@ func unwrapParallel(act ReconcileAction) ReconcileAction {
 // OptimizeWorkflow optimizes the workflow by eliminating unnecessary layers:
 //   * Nop in Sequential or Join will be removed
 //   * Empty Join and Sequential will be omitted
-//   * Sequentail and Join with single child will be simpilified by removing them
+//   * Sequential and Join with single child will be simplified by removing them
 //   * Sequential(Sequential) will be flattened
 //   * Join(Join) will be flattened
 //   * Parallel(Parallel) will be simplified with only one Parallel

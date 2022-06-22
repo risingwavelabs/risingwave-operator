@@ -36,6 +36,11 @@ spec:
         ports:
         - containerPort: 2388
         - containerPort: 2389
+      volumes:
+      - name: etcd-0-data
+        hostPath:
+          path: /var/lib/etcd
+          type: Directory
 ---
 apiVersion: risingwave.singularity-data.com/v1alpha1
 kind: RisingWave

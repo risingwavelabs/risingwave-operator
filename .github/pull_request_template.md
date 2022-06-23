@@ -11,7 +11,7 @@ Please explain **IN DETAIL** what the changes are in this PR and why they are ne
 
 ## Checklist
 
-- [ ] I have written necessary docs and comments
+- [ ] I have written the necessary docs and comments
 - [ ] I have added necessary unit tests and integration tests
 
 ## Refer to a related PR or issue link (optional)

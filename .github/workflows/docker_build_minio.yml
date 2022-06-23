@@ -2,6 +2,7 @@ name: Build of risingwave-minio image
 
 on:
   pull_request:
+    types: [review_requested, ready_for_review]
     paths:
       - '.github/workflows/docker_build_minio.yml'
       - 'docker/minio/Dockerfile'

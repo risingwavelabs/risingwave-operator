@@ -10,7 +10,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: risingwave-operator-system/risingwave-operator-serving-cert
-    controller-gen.kubebuilder.io/version: v0.6.1
+    controller-gen.kubebuilder.io/version: v0.9.0
   name: risingwaves.risingwave.singularity-data.com
 spec:
   conversion:
@@ -3848,6 +3848,8 @@ spec:
                   storage:
                     description: default Memory
                     properties:
+                      etcdEndpoint:
+                        type: string
                       type:
                         description: MetaStorageType defines the storage type of meta
                           node.
@@ -4954,18 +4956,15 @@ spec:
                     description: ObjectStorageType defines storage provider.
                     type: string
                 type: object
+              observedGeneration:
+                format: int64
+                type: integer
             type: object
         type: object
     served: true
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
 ---
 apiVersion: v1
 kind: ServiceAccount

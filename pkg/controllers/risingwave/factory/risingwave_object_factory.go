@@ -196,6 +196,10 @@ func (f *RisingWaveObjectFactory) patchArgsForMeta(c *corev1.Container) {
 	// TODO support other storages.
 	if metaNodeSpec.Storage.Type == risingwavev1alpha1.InMemory {
 		args = append(args, "--backend", "mem")
+	} else if metaNodeSpec.Storage.Type == risingwavev1alpha1.ETCD {
+		args = append(args, "--backend", "etcd", "--etcd-endpoints", metaNodeSpec.Storage.EtcdEndpoint)
+	} else {
+		panic("unknown storage type")
 	}
 
 	c.Args = args

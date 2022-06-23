@@ -3832,6 +3832,8 @@ spec:
                   storage:
                     description: default Memory
                     properties:
+                      etcdEndpoint:
+                        type: string
                       type:
                         description: MetaStorageType defines the storage type of meta
                           node.

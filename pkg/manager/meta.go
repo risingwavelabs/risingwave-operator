@@ -231,6 +231,10 @@ func generateMetaDeployment(rw *v1alpha1.RisingWave) *v1.Deployment {
 	var storage []string
 	if spec.Storage.Type == v1alpha1.InMemory {
 		storage = []string{"--backend", "mem"}
+	} else if spec.Storage.Type == v1alpha1.ETCD {
+		storage = []string{"--backend", "etcd", "--etcd-endpoints", spec.Storage.EtcdEndpoint}
+	} else {
+		panic("unknown storage type")
 	}
 
 	// TODO: maybe support other storage

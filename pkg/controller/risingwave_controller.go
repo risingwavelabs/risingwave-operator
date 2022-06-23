@@ -36,11 +36,22 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave/manager"
-	"github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave/object"
-	"github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave/utils"
 	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit"
+	"github.com/singularity-data/risingwave-operator/pkg/manager"
+	"github.com/singularity-data/risingwave-operator/pkg/object"
+	"github.com/singularity-data/risingwave-operator/pkg/utils"
 )
+
+// +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwaves,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwaves/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwaves/finalizers,verbs=update
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;
+// +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;delete;
+// +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=get;list;watch
+// +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=get;list;watch;create;delete
 
 type RisingWaveController struct {
 	Client client.Client

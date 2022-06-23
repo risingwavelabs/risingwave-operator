@@ -31,11 +31,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave/consts"
-	"github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave/factory"
-	"github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave/object"
-	"github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave/utils"
+	"github.com/singularity-data/risingwave-operator/pkg/consts"
 	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit"
+	"github.com/singularity-data/risingwave-operator/pkg/factory"
+	"github.com/singularity-data/risingwave-operator/pkg/object"
+	"github.com/singularity-data/risingwave-operator/pkg/utils"
 )
 
 type risingWaveControllerManagerImpl struct {

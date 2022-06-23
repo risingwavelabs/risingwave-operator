@@ -34,7 +34,7 @@ decl RisingWaveControllerManager for RisingWave {
             name=${target.Name}-compute
             owned
         }
-        
+
         // Service for compactor nodes.
         compactorService Service {
             name=${target.Name}-compactor
@@ -71,7 +71,7 @@ decl RisingWaveControllerManager for RisingWave {
             owned
         }
     }
-    
+
     action {
         // SyncMetaService creates or updates the service for meta nodes.
         SyncMetaService(metaService)
@@ -85,7 +85,7 @@ decl RisingWaveControllerManager for RisingWave {
         // WaitBeforeMetaDeploymentReady waits (aborts the workflow) before the meta deployment is ready.
         WaitBeforeMetaDeploymentReady(metaDeployment)
 
-        // SyncFrontendService creates or updates the service for frontend nodes. 
+        // SyncFrontendService creates or updates the service for frontend nodes.
         SyncFrontendService(frontendService)
 
         // SyncFrontendDeployment creates or updates the deployment for frontend nodes.

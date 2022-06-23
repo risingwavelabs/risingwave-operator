@@ -31,9 +31,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	risingwavecontrollers "github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave"
+	risingwavecontroller "github.com/singularity-data/risingwave-operator/pkg/controller"
 	"github.com/singularity-data/risingwave-operator/pkg/options"
-	"github.com/singularity-data/risingwave-operator/pkg/rendor"
 )
 
 var (
@@ -74,8 +73,6 @@ func main() {
 
 	config := ctrl.GetConfigOrDie()
 
-	rendor.NewParser(&rendor.InnerRESTClientGetter{Config: config})
-
 	mgr, err := ctrl.NewManager(config, ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
@@ -89,7 +86,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = risingwavecontrollers.NewReconciler(
+	if err = risingwavecontroller.NewReconciler(
 		mgr.GetClient(),
 		mgr.GetScheme(),
 	).SetupWithManager(mgr); err != nil {

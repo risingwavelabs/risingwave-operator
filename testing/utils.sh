@@ -149,11 +149,11 @@ function wait_risingwave() {
             kubectl describe po -n $namespace
             exit 1
         fi
-        c=$(check_svc $namespace meta)
+        c=$(check_svc $namespace meta-node)
         if [ "$c" == "0" ];then continue; fi
-        c=$(check_svc $namespace compute)
+        c=$(check_svc $namespace compute-node)
         if [ "$c" == "0" ];then continue; fi
-        c=$(check_svc $namespace compactor)
+        c=$(check_svc $namespace compactor-node)
         if [ "$c" == "0" ];then continue; fi
         c=$(check_svc $namespace frontend)
         if [ "$c" == "0" ];then continue; fi

@@ -34,6 +34,7 @@ import (
 	risingwavecontrollers "github.com/singularity-data/risingwave-operator/pkg/controllers/risingwave"
 	"github.com/singularity-data/risingwave-operator/pkg/options"
 	"github.com/singularity-data/risingwave-operator/pkg/rendor"
+	//+kubebuilder:scaffold:imports
 )
 
 var (
@@ -43,8 +44,11 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+
 	utilruntime.Must(risingwavev1alpha1.AddToScheme(scheme))
+
 	utilruntime.Must(apiextensionsv1.AddToScheme(scheme))
+
 	utilruntime.Must(prometheusv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }

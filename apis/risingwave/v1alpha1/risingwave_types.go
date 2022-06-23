@@ -79,8 +79,7 @@ type RisingWaveStatus struct {
 	CompactorNode CompactorNodeStatus `json:"compactorNode,omitempty"`
 	Frontend      FrontendSpecStatus  `json:"frontend,omitempty"`
 
-	ObservedGeneration int64                 `json:"observedGeneration,omitempty"`
-	Conditions         []RisingWaveCondition `json:"conditions,omitempty"`
+	Condition []RisingWaveCondition `json:"conditions,omitempty"`
 }
 
 type RisingWaveType string

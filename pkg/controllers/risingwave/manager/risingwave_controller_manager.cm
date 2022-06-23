@@ -1,0 +1,127 @@
+bind v1 k8s.io/api/core/v1
+bind apps/v1 k8s.io/api/apps/v1
+bind risingwave.singularity-data.com/v1alpha1 github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1
+
+alias Pod v1/Pod
+alias Service v1/Service
+alias Secret v1/Secret
+alias ConfigMap v1/ConfigMap
+alias Deployment apps/v1/Deployment
+alias StatefulSet apps/v1/StatefulSet
+alias RisingWave risingwave.singularity-data.com/v1alpha1/RisingWave
+
+// RisingWaveControllerManager encapsulates the states and actions used by RisingWaveController.
+decl RisingWaveControllerManager for RisingWave {
+    // ===================================================
+    // States and actions for RisingWave components.
+    // ===================================================
+
+    state {
+        // Service for meta nodes.
+        metaService Service {
+            name=${target.Name}-meta
+            owned
+        }
+
+        // Service for frontend nodes.
+        frontendService Service {
+            name=${target.Name}-frontend
+            owned
+        }
+
+        // Service for compute nodes.
+        computeService Service {
+            name=${target.Name}-compute
+            owned
+        }
+        
+        // Service for compactor nodes.
+        compactorService Service {
+            name=${target.Name}-compactor
+            owned
+        }
+
+        // ConfigMap for RisingWave configs.
+        configConfigMap ConfigMap {
+            name=${target.Name}-config
+            owned
+        }
+
+        // Deployment for meta nodes.
+        metaDeployment Deployment {
+            name=${target.Name}-meta
+            owned
+        }
+
+        // Deployment for frontend nodes.
+        frontendDeployment Deployment {
+            name=${target.Name}-frontend
+            owned
+        }
+
+        // StatefulSet for compute nodes.
+        computeStatefulSet StatefulSet {
+            name=${target.Name}-compute
+            owned
+        }
+
+        // Deployment for compactor nodes.
+        compactorDeployment Deployment {
+            name=${target.Name}-compactor
+            owned
+        }
+    }
+    
+    action {
+        // SyncMetaService creates or updates the service for meta nodes.
+        SyncMetaService(metaService)
+
+        // SyncMetaDeployment creates or updates the deployment for meta nodes.
+        SyncMetaDeployment(metaDeployment)
+
+        // WaitBeforeMetaServiceIsAvailable waits (aborts the workflow) before the meta service is available.
+        WaitBeforeMetaServiceIsAvailable(metaService)
+
+        // WaitBeforeMetaDeploymentReady waits (aborts the workflow) before the meta deployment is ready.
+        WaitBeforeMetaDeploymentReady(metaDeployment)
+
+        // SyncFrontendService creates or updates the service for frontend nodes. 
+        SyncFrontendService(frontendService)
+
+        // SyncFrontendDeployment creates or updates the deployment for frontend nodes.
+        SyncFrontendDeployment(frontendDeployment)
+
+        // WaitBeforeFrontendDeploymentReady waits (aborts the workflow) before the frontend deployment is ready.
+        WaitBeforeFrontendDeploymentReady(frontendDeployment)
+
+        // SyncComputeService creates or updates the service for compute nodes.
+        SyncComputeService(computeService)
+
+        // SyncComputeStatefulSet creates or updates the statefulset for compute nodes.
+        SyncComputeStatefulSet(computeStatefulSet)
+
+        // WaitBeforeComputeStatefulSetReady waits (aborts the workflow) before the compute statefulset is ready.
+        WaitBeforeComputeStatefulSetReady(computeStatefulSet)
+
+        // SyncCompactorService creates or updates the service for compactor nodes.
+        SyncCompactorService(compactorService)
+
+        // SyncCompactorDeployment creates or updates the deployment for compactor nodes.
+        SyncCompactorDeployment(compactorDeployment)
+
+        // WaitBeforeCompactorDeploymentReady waits (aborts the workflow) before the compactor deployment is ready.
+        WaitBeforeCompactorDeploymentReady(compactorDeployment)
+
+        // SyncConfigConfigMap creates or updates the configmap for RisingWave configs.
+        SyncConfigConfigMap(configConfigMap)
+    }
+
+    // ===================================================
+    // States and actions for third-party components.
+    // ===================================================
+
+    action {
+        // CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
+        CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaDeployment, frontendDeployment, computeStatefulSet, compactorDeployment, configConfigMap)
+    }
+}

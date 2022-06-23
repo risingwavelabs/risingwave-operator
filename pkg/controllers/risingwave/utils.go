@@ -71,7 +71,7 @@ func conditionMapToArray(m map[v1alpha1.RisingWaveType]v1alpha1.RisingWaveCondit
 // and update if necessary.
 func (r *Reconciler) markRisingWaveRunning(ctx context.Context, rw *v1alpha1.RisingWave) (ctrl.Result, error) {
 	var needUpdate = false
-	m := conditionsToMap(rw.Status.Conditions)
+	m := conditionsToMap(rw.Status.Condition)
 	v, e := m[v1alpha1.Running]
 	if !e || v.Status == metav1.ConditionFalse {
 		m[v1alpha1.Running] = v1alpha1.RisingWaveCondition{
@@ -80,11 +80,11 @@ func (r *Reconciler) markRisingWaveRunning(ctx context.Context, rw *v1alpha1.Ris
 			Status:             metav1.ConditionTrue,
 			Message:            "Running",
 		}
-		rw.Status.Conditions = conditionMapToArray(m)
+		rw.Status.Condition = conditionMapToArray(m)
 		needUpdate = true
 	}
 
-	rw.Status.Conditions = conditionMapToArray(m)
+	rw.Status.Condition = conditionMapToArray(m)
 	if !needUpdate {
 		return ctrl.Result{}, nil
 	}
@@ -97,7 +97,7 @@ func (r *Reconciler) markRisingWaveRunning(ctx context.Context, rw *v1alpha1.Ris
 
 // markRisingWaveInitializing will mark rw as Initializing and update status.
 func (r *Reconciler) markRisingWaveInitializing(ctx context.Context, rw *v1alpha1.RisingWave) (ctrl.Result, error) {
-	rw.Status.Conditions = []v1alpha1.RisingWaveCondition{
+	rw.Status.Condition = []v1alpha1.RisingWaveCondition{
 		{
 			Type:    v1alpha1.Initializing,
 			Status:  metav1.ConditionTrue,

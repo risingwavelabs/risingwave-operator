@@ -136,7 +136,7 @@ const (
 type MetaStorage struct {
 	Type MetaStorageType `json:"type"`
 	// +optional
-	EtcdEndpoint string `json:"etcdEndpoint"`
+	EtcdEndpoint string `json:"etcdEndpoint,omitempty"`
 }
 
 // ComputeNodeSpec defines the spec of compute-node

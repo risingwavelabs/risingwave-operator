@@ -1,15 +1,13 @@
 ## Introduction
 
-The RisingWave Kubernetes Operator is a RisingWave deployment management tool based on kubernetes. The risingwave-operator currently supports the following custom resources:
+The RisingWave Kubernetes Operator is a RisingWave deployment management tool based on Kubernetes. The `risingwave-operator` provides the following custom resources:
 - risingwave.singularity-data.com
-- risingwave-monitor.singularity-data.com(not implement)
-
 
 ## Quick Start
 
 #### Install cert-manager
 
-We need install `cert-manager` in cluster before install risingwave-operator.
+We need to install the `cert-manager` in the cluster before installing the `risingwave-operator`.
 
 The default static configuration cert-manager can be installed as follows:
 
@@ -22,7 +20,7 @@ More information on this install cert-manager method [can be found here](https:/
 
 #### Install risingwave-operator
 
-Install risingwave-operator can be installed as follows:
+`risingwave-operator` can be installed as follows:
 
 ```shell
 kubectl apply -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/config/risingwave-operator.yaml
@@ -30,7 +28,7 @@ kubectl apply -f https://raw.githubusercontent.com/singularity-data/risingwave-o
 
 ## Examples
 
-You can deploy RisingWave which use MinIO on Linux/amd64 arch nodes as follows:
+You can deploy RisingWave which uses MinIO on Linux/amd64 arch nodes as follows:
 
 ```shell
 kubectl create namespace test
@@ -46,7 +44,7 @@ To connect to the RisingWave server, you will need to [install PostgreSQL shell]
 
 #### Query
 
-We use kubernetes `NodePort` service for frontend.   
+We use `NodePort` service for the frontend.
 
 Please get the nodePort of the frontend service as `psql port` and get the `INTERNAL-IP` address of any node as follows:
 
@@ -87,36 +85,36 @@ objectStorage:
 
 ## Configuration
 
-You can get risingwave-operator configuration as follows:
+You can get the `risingwave-operator` configuration as follows:
 
 ```shell
-kubectl get cm risingwave-operator-controller-manager-config -n risingwave-operator-system -oyaml
+kubectl get cm risingwave-operator-controller-manager-config -n risingwave-operator-system -o yaml
 ```
 
-If you edit the configmap, please kill the risingwave-operator pods and configuration file will be load.
+If you edit the `ConfigMap`, please restart the `risingwave-operator` to reload the configuration.
 
 ## Monitoring
 
-We recommend to use [prometheus-operator](https://github.com/prometheus-operator/prometheus-operator#quickstart) to install Prometheus.
+We recommend using the [prometheus-operator](https://github.com/prometheus-operator/prometheus-operator#quickstart) to install Prometheus.
 
 You can use the command to install `prometheus-operator` as follows:
 
 ```shell
-kc create -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/bundle.yaml
+kubectl create -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/bundle.yaml
 ```
 
 You can use the command to create a `Prometheus` in your cluster as follows:
 
 ```shell
-kc create -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/examples/monitoring/prometheus.yaml
+kubectl create -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/examples/monitoring/prometheus.yaml
 ```
 
-If you already deployed prometheus-operator in your cluster, risingwave-operator will create `ServiceMonitor` when create RisingWave service. 
+If you already deployed the `prometheus-operator` in your cluster, `risingwave-operator` will create `ServiceMonitor` when creating the RisingWave cluster.
 
 ## License
 
-The risingwave-operator is under the Apache License 2.0. Please refer to [LICENSE](LICENSE) for more information.
+The `risingwave-operator` is under the Apache License 2.0. Please refer to [LICENSE](LICENSE) for more information.
 
 ## Contributing
 
-Thanks for your interest in contributing to the project! Please refer to [Contribution and Development Guidelines](CONTRIBUTING.md) for more information.
+Thanks for your interest in contributing to the project! Please refer to the [Contribution and Development Guidelines](CONTRIBUTING.md) for more information.

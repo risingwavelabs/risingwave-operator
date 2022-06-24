@@ -17,17 +17,27 @@
 package ctrlkit
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"context"
+
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-func ValidateOwnership(obj, owner client.Object) bool {
-	ref := metav1.GetControllerOfNoCopy(obj)
-	if ref == nil {
-		return false
-	}
-	if ref.UID == owner.GetUID() {
-		return true
-	}
-	return false
+type ActionFunc func(context.Context) (ctrl.Result, error)
+
+type action struct {
+	description string
+	actionFunc  ActionFunc
+}
+
+func (w *action) Description() string {
+	return w.description
+}
+
+func (w *action) Run(ctx context.Context) (ctrl.Result, error) {
+	return w.actionFunc(ctx)
+}
+
+// NewAction wraps the given description and function into an action.
+func NewAction(description string, f ActionFunc) Action {
+	return &action{description: description, actionFunc: f}
 }

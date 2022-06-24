@@ -86,7 +86,11 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 	@$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./pkg/..." output:crd:artifacts:config=config/crd/bases
 
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./apis/..."
+	@$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./apis/..."
+
+generate-manager: ctrlkit-gen goimports-reviser
+	@$(CTRLKIT-GEN) -o pkg/manager/ -p "github.com/singularity-data/risingwave-operator/pkg/ctrlkit" -b hack/boilerplate.go.txt pkg/manager/risingwave_controller_manager.cm
+	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_controller_manager.go -local "github.com/singularity-data/risingwave-operator"
 
 fmt: ## Run go fmt against code.
 	go fmt ./...
@@ -174,6 +178,14 @@ envtest: ## Download envtest-setup locally if necessary.
 GOLANGCI-LINT = $(shell pwd)/bin/golangci-lint
 golangci-lint: ## Download envtest-setup locally if necessary.
 	$(call get-golangci-lint)
+
+CTRLKIT-GEN = $(shell pwd)/bin/ctrlkit-gen
+ctrlkit-gen: ## Download ctrlkit locally if necessary.
+	$(call go-get-tool,$(CTRLKIT-GEN),github.com/arkbriar/ctrlkit/ctrlkit/cmd/ctrlkit-gen@4549157c1ee)
+
+GOIMPORTS-REVISER = $(shell pwd)/bin/goimports-reviser
+goimports-reviser: ## Download goimports-reviser locally if neccessary.
+	$(call go-get-tool,$(GOIMPORTS-REVISER),github.com/incu6us/goimports-reviser/v2@v2.5.1)
 
 # get-golangci-lint will download golangci-lint binary into ./bin
 define get-golangci-lint

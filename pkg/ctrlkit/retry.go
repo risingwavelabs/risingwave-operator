@@ -21,11 +21,27 @@ import (
 	"fmt"
 
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit/internal"
 )
 
+var _ internal.Decorator = &retryAction{}
+
 type retryAction struct {
-	inner ReconcileAction
+	inner Action
 	limit int
+}
+
+func (act *retryAction) Inner() Action {
+	return act.inner
+}
+
+func (act *retryAction) SetInner(inner Action) {
+	act.inner = inner
+}
+
+func (act *retryAction) Name() string {
+	return "Retry"
 }
 
 func (act *retryAction) Description() string {
@@ -44,7 +60,7 @@ func (act *retryAction) Run(ctx context.Context) (result reconcile.Result, err e
 
 // Retry wraps an action into a retryable action.
 // It reruns the action iff. there is a non-exit error.
-func Retry(limit int, act ReconcileAction) ReconcileAction {
+func Retry(limit int, act Action) Action {
 	if limit < 1 {
 		panic("limit must be positive")
 	}

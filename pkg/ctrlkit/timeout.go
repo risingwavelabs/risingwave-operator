@@ -22,11 +22,27 @@ import (
 	"time"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+
+	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit/internal"
 )
+
+var _ internal.Decorator = &timeoutAction{}
 
 type timeoutAction struct {
 	timeout time.Duration
-	inner   ReconcileAction
+	inner   Action
+}
+
+func (act *timeoutAction) Inner() Action {
+	return act.inner
+}
+
+func (act *timeoutAction) SetInner(inner Action) {
+	act.inner = inner
+}
+
+func (act *timeoutAction) Name() string {
+	return "Timeout"
 }
 
 func (act *timeoutAction) Description() string {
@@ -41,6 +57,6 @@ func (act *timeoutAction) Run(ctx context.Context) (ctrl.Result, error) {
 }
 
 // Timeout wraps the reconcile action with a timeout.
-func Timeout(timeout time.Duration, act ReconcileAction) ReconcileAction {
+func Timeout(timeout time.Duration, act Action) Action {
 	return &timeoutAction{timeout: timeout, inner: act}
 }

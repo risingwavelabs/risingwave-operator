@@ -19,13 +19,13 @@ package ctrlkit
 import "fmt"
 
 // DryRun reports actions with a structured output without run them.
-func DryRun(act ReconcileAction) {
+func DryRun(act Action) {
 	dryRun(act, "")
 }
 
-func dryRun(act ReconcileAction, indent string) {
+func dryRun(act Action, indent string) {
 	switch act := act.(type) {
-	case *sequentialAction:
+	case *sequentialGroup:
 		fmt.Println("Sequential(")
 
 		for _, act := range act.actions {
@@ -35,7 +35,7 @@ func dryRun(act ReconcileAction, indent string) {
 
 		fmt.Print(indent)
 		fmt.Println(")")
-	case *joinAction:
+	case *joinGroup:
 		if act.runner.IsParallel() {
 			fmt.Println("ParallelJoin(")
 		} else {

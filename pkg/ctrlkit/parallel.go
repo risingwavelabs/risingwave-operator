@@ -21,10 +21,26 @@ import (
 	"fmt"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+
+	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit/internal"
 )
 
+var _ internal.Decorator = &parallelAction{}
+
 type parallelAction struct {
-	inner ReconcileAction
+	inner Action
+}
+
+func (act *parallelAction) Inner() Action {
+	return act.inner
+}
+
+func (act *parallelAction) SetInner(inner Action) {
+	act.inner = inner
+}
+
+func (act *parallelAction) Name() string {
+	return "Parallel"
 }
 
 func (act *parallelAction) Description() string {
@@ -43,7 +59,7 @@ func (act *parallelAction) Run(ctx context.Context) (result ctrl.Result, err err
 }
 
 // Parallel wraps the action and runs it in parallel.
-func Parallel(act ReconcileAction) ReconcileAction {
+func Parallel(act Action) Action {
 	switch act := act.(type) {
 	case *parallelAction:
 		return act

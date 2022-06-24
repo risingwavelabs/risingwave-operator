@@ -16,11 +16,33 @@
 
 package ctrlkit
 
-// If returns the given action if predicate is true, or an Nop otherwise.
-func If(predicate bool, act ReconcileAction) ReconcileAction {
-	if predicate {
-		return act
-	} else {
-		return Nop
+import "testing"
+
+func Test_If(t *testing.T) {
+	var action = NewAction("", nil)
+
+	testcases := map[string]struct {
+		condition bool
+		action    Action
+		expect    Action
+	}{
+		"if-false-then-nop": {
+			condition: false,
+			action:    action,
+			expect:    Nop,
+		},
+		"if-true-then-self": {
+			condition: true,
+			action:    action,
+			expect:    action,
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			if tc.expect != If(tc.condition, tc.action) {
+				t.Fail()
+			}
+		})
 	}
 }

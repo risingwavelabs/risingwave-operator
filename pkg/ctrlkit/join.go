@@ -23,6 +23,8 @@ import (
 	multierr "github.com/hashicorp/go-multierror"
 	"github.com/samber/lo"
 	ctrl "sigs.k8s.io/controller-runtime"
+
+	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit/internal"
 )
 
 // Join the errors with the following rules:
@@ -71,7 +73,7 @@ func joinResultAndErr(result ctrl.Result, err error, lresult ctrl.Result, lerr e
 	return result, err
 }
 
-func runJoinActions(ctx context.Context, actions ...ReconcileAction) (result ctrl.Result, err error) {
+func runJoinActions(ctx context.Context, actions ...Action) (result ctrl.Result, err error) {
 	// Run actions one-by-one and join results.
 	for _, act := range actions {
 		lr, lerr := act.Run(ctx)
@@ -80,7 +82,7 @@ func runJoinActions(ctx context.Context, actions ...ReconcileAction) (result ctr
 	return
 }
 
-func runJoinActionsInParallel(ctx context.Context, actions ...ReconcileAction) (result ctrl.Result, err error) {
+func runJoinActionsInParallel(ctx context.Context, actions ...Action) (result ctrl.Result, err error) {
 	lresults := make([]ctrl.Result, len(actions))
 	lerrs := make([]error, len(actions))
 
@@ -111,10 +113,10 @@ func runJoinActionsInParallel(ctx context.Context, actions ...ReconcileAction) (
 
 type joinRunner interface {
 	IsParallel() bool
-	Run(ctx context.Context, actions ...ReconcileAction) (ctrl.Result, error)
+	Run(ctx context.Context, actions ...Action) (ctrl.Result, error)
 }
 
-type joinRunFunc func(ctx context.Context, actions ...ReconcileAction) (ctrl.Result, error)
+type joinRunFunc func(ctx context.Context, actions ...Action) (ctrl.Result, error)
 
 type parallelJoinRunFunc joinRunFunc
 
@@ -122,7 +124,7 @@ func (r joinRunFunc) IsParallel() bool {
 	return false
 }
 
-func (r joinRunFunc) Run(ctx context.Context, actions ...ReconcileAction) (ctrl.Result, error) {
+func (r joinRunFunc) Run(ctx context.Context, actions ...Action) (ctrl.Result, error) {
 	return r(ctx, actions...)
 }
 
@@ -130,7 +132,7 @@ func (r parallelJoinRunFunc) IsParallel() bool {
 	return true
 }
 
-func (r parallelJoinRunFunc) Run(ctx context.Context, actions ...ReconcileAction) (ctrl.Result, error) {
+func (r parallelJoinRunFunc) Run(ctx context.Context, actions ...Action) (ctrl.Result, error) {
 	return r(ctx, actions...)
 }
 
@@ -139,24 +141,38 @@ var (
 	parallelJoinRunner = parallelJoinRunFunc(runJoinActionsInParallel)
 )
 
-type joinAction struct {
-	actions []ReconcileAction
+var _ internal.Group = &joinGroup{}
+
+type joinGroup struct {
+	actions []Action
 	runner  joinRunner
 }
 
-func (act *joinAction) Description() string {
-	if act.runner.IsParallel() {
-		return describeGroup("ParallelJoin", act.actions...)
+func (grp *joinGroup) Children() []Action {
+	return grp.actions
+}
+
+func (grp *joinGroup) SetChildren(actions []Action) {
+	grp.actions = actions
+}
+
+func (grp *joinGroup) Name() string {
+	if grp.runner.IsParallel() {
+		return "ParallelJoin"
 	} else {
-		return describeGroup("Join", act.actions...)
+		return "Join"
 	}
 }
 
-func (act *joinAction) Run(ctx context.Context) (ctrl.Result, error) {
-	return act.runner.Run(ctx, act.actions...)
+func (grp *joinGroup) Description() string {
+	return internal.DescribeGroup(grp.Name(), grp.actions...)
 }
 
-func join(actions []ReconcileAction, runner joinRunner) ReconcileAction {
+func (grp *joinGroup) Run(ctx context.Context) (ctrl.Result, error) {
+	return grp.runner.Run(ctx, grp.actions...)
+}
+
+func join(actions []Action, runner joinRunner) Action {
 	if len(actions) == 0 {
 		return Nop
 	}
@@ -165,21 +181,21 @@ func join(actions []ReconcileAction, runner joinRunner) ReconcileAction {
 		return actions[0]
 	}
 
-	return &joinAction{actions: actions, runner: runner}
+	return &joinGroup{actions: actions, runner: runner}
 }
 
 // Join organizes the actions in a split-join flow, which doesn't guarantee the execution order.
-func Join(actions ...ReconcileAction) ReconcileAction {
+func Join(actions ...Action) Action {
 	return join(lo.Shuffle(actions), defaultJoinRunner)
 }
 
 // JoinOrdered organizes the actions in a split-join flow and guarantees the execution order.
-func JoinOrdered(actions ...ReconcileAction) ReconcileAction {
+func JoinOrdered(actions ...Action) Action {
 	return join(actions, defaultJoinRunner)
 }
 
 // JoinInParallel organizes the actions in a split-join flow and executes them in parallel.
-func JoinInParallel(actions ...ReconcileAction) ReconcileAction {
+func JoinInParallel(actions ...Action) Action {
 	if len(actions) == 1 {
 		return Parallel(actions[0])
 	}

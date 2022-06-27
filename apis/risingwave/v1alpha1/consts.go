@@ -17,14 +17,6 @@
 package v1alpha1
 
 const (
-	MetaNodeFinalizer      string = "meta"
-	ObjectStorageFinalizer string = "storage"
-	ComputeNodeFinalizer   string = "compute"
-	CompactorNodeFinalizer string = "compactor"
-	FrontendFinalizer      string = "frontend"
-)
-
-const (
 	MinIOServerPortName = "minio-server"
 	MinIOServerPort     = 9301
 

@@ -248,14 +248,25 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment() *appsv1.Deployment {
 	return mustSetControllerReference(f.risingwave, metaDeployment, f.scheme)
 }
 
+func (f *RisingWaveObjectFactory) newFrontendServiceSpec() corev1.ServiceSpec {
+	frontendSpec := f.risingwave.Spec.Frontend
+
+	var frontendServiceSpec corev1.ServiceSpec
+	if frontendSpec.ServiceSpec != nil {
+		frontendSpec.ServiceSpec.DeepCopyInto(&frontendServiceSpec)
+	}
+
+	// Override the selector and ports.
+	frontendServiceSpec.Selector = f.podLabelsOrSelectors(consts.ComponentFrontend)
+	frontendServiceSpec.Ports = f.convertContainerPortsToServicePorts(f.risingwave.Spec.Frontend.Ports)
+
+	return frontendServiceSpec
+}
+
 func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 	frontendService := &corev1.Service{
 		ObjectMeta: f.objectMetaSync(consts.ComponentFrontend),
-		Spec: corev1.ServiceSpec{
-			Type:     corev1.ServiceTypeClusterIP,
-			Selector: f.podLabelsOrSelectors(consts.ComponentFrontend),
-			Ports:    f.convertContainerPortsToServicePorts(f.risingwave.Spec.Frontend.Ports),
-		},
+		Spec:       f.newFrontendServiceSpec(),
 	}
 	return mustSetControllerReference(f.risingwave, frontendService, f.scheme)
 }

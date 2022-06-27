@@ -1,0 +1,10 @@
+apiVersion: risingwave.singularity-data.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-cloud-lb
+  namespace: test
+spec:
+  arch: arm64
+  frontend:
+    serviceSpec:
+      type: LoadBalancer

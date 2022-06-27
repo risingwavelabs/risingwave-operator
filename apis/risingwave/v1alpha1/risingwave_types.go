@@ -176,6 +176,8 @@ type S3 struct {
 
 // FrontendSpec defines spec of frontend.
 type FrontendSpec struct {
+	ServiceSpec *corev1.ServiceSpec `json:"serviceSpec,omitempty"`
+
 	DeployDescriptor `json:",inline"`
 }
 

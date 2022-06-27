@@ -18,7 +18,6 @@ package risingwave
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -67,7 +66,7 @@ func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit
 	}
 }
 
-func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (result reconcile.Result, err error) {
+func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	logger := log.FromContext(ctx)
 
 	// Get the risingwave object.
@@ -96,19 +95,18 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 		logger,
 	)
 
-	// Defer the status update.
-	defer func() {
-		if err1 := risingwaveManager.UpdateRemoteRisingWaveStatus(ctx); err1 != nil {
-			// Overwrite err if it's nil.
-			if err == nil {
-				err = fmt.Errorf("unable to update status: %w", err1)
-			}
-		}
-	}()
-
 	// Build a workflow and run.
-	workflow := ctrlkit.OptimizeWorkflow(c.reactiveWorkflow(risingwaveManager, &mgr))
-	return c.runWorkflow(ctx, workflow)
+	workflow := c.reactiveWorkflow(risingwaveManager, &mgr)
+
+	updateRisingWaveStatus := mgr.NewAction("UpdateRisingWaveStatusViaClient", func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+		err := risingwaveManager.UpdateRemoteRisingWaveStatus(ctx)
+		return ctrlkit.RequeueIfErrorAndWrap("unable to update status", err)
+	})
+
+	return c.runWorkflow(ctx, ctrlkit.OptimizeWorkflow(ctrlkit.SequentialJoin(
+		workflow,               // Run workflow first,
+		updateRisingWaveStatus, // then update the status, and join the result.
+	)))
 }
 
 func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingWaveManager, mgr *manager.RisingWaveControllerManager) ctrlkit.Action {

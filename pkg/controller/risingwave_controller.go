@@ -220,11 +220,8 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 				// Sync configs.
 				syncConfigs,
 
-				// Sync component for meta, and wait for the ready barrier.
-				syncMetaComponent, metaComponentReadyBarrier,
-
-				// Sync other components, and wait for the ready barrier.
-				syncOtherComponents, otherComponentsReadyBarrier,
+				// Sync all components, and wait for the ready barrier.
+				syncAllComponents, allComponentsReadyBarrier,
 
 				markConditionRunningAsTrueAndRemoveConditionInitializing,
 			),

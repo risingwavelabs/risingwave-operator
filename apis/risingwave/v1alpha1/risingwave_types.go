@@ -27,8 +27,9 @@ import (
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=rw,categories=all
-// +kubebuilder:printcolumn:name="Running",type=string,JSONPath=`.status.conditions[?(@.type=="Running")].status`
-// +kubebuilder:printcolumn:name="Storage",type=string,JSONPath=`.status.objectStorage.type`
+// +kubebuilder:printcolumn:name="RUNNING",type=string,JSONPath=`.status.conditions[?(@.type=="Running")].status`
+// +kubebuilder:printcolumn:name="STORAGE",type=string,JSONPath=`.status.objectStorage.type`
+// +kubebuilder:printcolumn:name="AGE",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // RisingWave is the Schema for the risingwaves API.
 type RisingWave struct {

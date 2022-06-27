@@ -242,8 +242,6 @@ func NewRisingWaveControllerManagerState(reader client.Reader, target *risingwav
 
 // RisingWaveControllerManagerImpl declares the implementation interface for RisingWaveControllerManager.
 type RisingWaveControllerManagerImpl interface {
-	ctrlkit.ControllerManagerActionLifeCycleHook
-
 	// SyncMetaService creates or updates the service for meta nodes.
 	SyncMetaService(ctx context.Context, logger logr.Logger, metaService *corev1.Service) (ctrl.Result, error)
 
@@ -292,25 +290,29 @@ type RisingWaveControllerManagerImpl interface {
 
 // RisingWaveControllerManager encapsulates the states and actions used by RisingWaveController.
 type RisingWaveControllerManager struct {
+	hook   ctrlkit.ActionHook
 	state  RisingWaveControllerManagerState
 	impl   RisingWaveControllerManagerImpl
 	logger logr.Logger
 }
 
-// WrapAction returns an action from manager.
-func (m *RisingWaveControllerManager) WrapAction(description string, f func(context.Context, logr.Logger) (ctrl.Result, error)) ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction(description, func(ctx context.Context) (ctrl.Result, error) {
+// NewAction returns a new action controlled by the manager.
+func (m *RisingWaveControllerManager) NewAction(description string, f func(context.Context, logr.Logger) (ctrl.Result, error)) ctrlkit.Action {
+	return ctrlkit.NewAction(description, func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", description)
 
-		defer m.impl.AfterActionRun(description, ctx, logger)
-		m.impl.BeforeActionRun(description, ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, description, result, err)
+			m.hook.PreRun(ctx, logger, description, nil)
+		}
+
 		return f(ctx, logger)
 	})
 }
 
 // SyncMetaService generates the action of "SyncMetaService".
-func (m *RisingWaveControllerManager) SyncMetaService() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("SyncMetaService", func(ctx context.Context) (ctrl.Result, error) {
+func (m *RisingWaveControllerManager) SyncMetaService() ctrlkit.Action {
+	return ctrlkit.NewAction("SyncMetaService", func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", "SyncMetaService")
 
 		// Get states.
@@ -320,16 +322,20 @@ func (m *RisingWaveControllerManager) SyncMetaService() ctrlkit.ReconcileAction 
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("SyncMetaService", ctx, logger)
-		m.impl.BeforeActionRun("SyncMetaService", ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, "SyncMetaService", result, err)
+			m.hook.PreRun(ctx, logger, "SyncMetaService", map[string]client.Object{
+				"metaService": metaService,
+			})
+		}
 
 		return m.impl.SyncMetaService(ctx, logger, metaService)
 	})
 }
 
 // SyncMetaDeployment generates the action of "SyncMetaDeployment".
-func (m *RisingWaveControllerManager) SyncMetaDeployment() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("SyncMetaDeployment", func(ctx context.Context) (ctrl.Result, error) {
+func (m *RisingWaveControllerManager) SyncMetaDeployment() ctrlkit.Action {
+	return ctrlkit.NewAction("SyncMetaDeployment", func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", "SyncMetaDeployment")
 
 		// Get states.
@@ -339,16 +345,20 @@ func (m *RisingWaveControllerManager) SyncMetaDeployment() ctrlkit.ReconcileActi
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("SyncMetaDeployment", ctx, logger)
-		m.impl.BeforeActionRun("SyncMetaDeployment", ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, "SyncMetaDeployment", result, err)
+			m.hook.PreRun(ctx, logger, "SyncMetaDeployment", map[string]client.Object{
+				"metaDeployment": metaDeployment,
+			})
+		}
 
 		return m.impl.SyncMetaDeployment(ctx, logger, metaDeployment)
 	})
 }
 
 // WaitBeforeMetaServiceIsAvailable generates the action of "WaitBeforeMetaServiceIsAvailable".
-func (m *RisingWaveControllerManager) WaitBeforeMetaServiceIsAvailable() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("WaitBeforeMetaServiceIsAvailable", func(ctx context.Context) (ctrl.Result, error) {
+func (m *RisingWaveControllerManager) WaitBeforeMetaServiceIsAvailable() ctrlkit.Action {
+	return ctrlkit.NewAction("WaitBeforeMetaServiceIsAvailable", func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", "WaitBeforeMetaServiceIsAvailable")
 
 		// Get states.
@@ -358,16 +368,20 @@ func (m *RisingWaveControllerManager) WaitBeforeMetaServiceIsAvailable() ctrlkit
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("WaitBeforeMetaServiceIsAvailable", ctx, logger)
-		m.impl.BeforeActionRun("WaitBeforeMetaServiceIsAvailable", ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, "WaitBeforeMetaServiceIsAvailable", result, err)
+			m.hook.PreRun(ctx, logger, "WaitBeforeMetaServiceIsAvailable", map[string]client.Object{
+				"metaService": metaService,
+			})
+		}
 
 		return m.impl.WaitBeforeMetaServiceIsAvailable(ctx, logger, metaService)
 	})
 }
 
 // WaitBeforeMetaDeploymentReady generates the action of "WaitBeforeMetaDeploymentReady".
-func (m *RisingWaveControllerManager) WaitBeforeMetaDeploymentReady() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("WaitBeforeMetaDeploymentReady", func(ctx context.Context) (ctrl.Result, error) {
+func (m *RisingWaveControllerManager) WaitBeforeMetaDeploymentReady() ctrlkit.Action {
+	return ctrlkit.NewAction("WaitBeforeMetaDeploymentReady", func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", "WaitBeforeMetaDeploymentReady")
 
 		// Get states.
@@ -377,16 +391,20 @@ func (m *RisingWaveControllerManager) WaitBeforeMetaDeploymentReady() ctrlkit.Re
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("WaitBeforeMetaDeploymentReady", ctx, logger)
-		m.impl.BeforeActionRun("WaitBeforeMetaDeploymentReady", ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, "WaitBeforeMetaDeploymentReady", result, err)
+			m.hook.PreRun(ctx, logger, "WaitBeforeMetaDeploymentReady", map[string]client.Object{
+				"metaDeployment": metaDeployment,
+			})
+		}
 
 		return m.impl.WaitBeforeMetaDeploymentReady(ctx, logger, metaDeployment)
 	})
 }
 
 // SyncFrontendService generates the action of "SyncFrontendService".
-func (m *RisingWaveControllerManager) SyncFrontendService() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("SyncFrontendService", func(ctx context.Context) (ctrl.Result, error) {
+func (m *RisingWaveControllerManager) SyncFrontendService() ctrlkit.Action {
+	return ctrlkit.NewAction("SyncFrontendService", func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", "SyncFrontendService")
 
 		// Get states.
@@ -396,16 +414,20 @@ func (m *RisingWaveControllerManager) SyncFrontendService() ctrlkit.ReconcileAct
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("SyncFrontendService", ctx, logger)
-		m.impl.BeforeActionRun("SyncFrontendService", ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, "SyncFrontendService", result, err)
+			m.hook.PreRun(ctx, logger, "SyncFrontendService", map[string]client.Object{
+				"frontendService": frontendService,
+			})
+		}
 
 		return m.impl.SyncFrontendService(ctx, logger, frontendService)
 	})
 }
 
 // SyncFrontendDeployment generates the action of "SyncFrontendDeployment".
-func (m *RisingWaveControllerManager) SyncFrontendDeployment() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("SyncFrontendDeployment", func(ctx context.Context) (ctrl.Result, error) {
+func (m *RisingWaveControllerManager) SyncFrontendDeployment() ctrlkit.Action {
+	return ctrlkit.NewAction("SyncFrontendDeployment", func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", "SyncFrontendDeployment")
 
 		// Get states.
@@ -415,16 +437,20 @@ func (m *RisingWaveControllerManager) SyncFrontendDeployment() ctrlkit.Reconcile
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("SyncFrontendDeployment", ctx, logger)
-		m.impl.BeforeActionRun("SyncFrontendDeployment", ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, "SyncFrontendDeployment", result, err)
+			m.hook.PreRun(ctx, logger, "SyncFrontendDeployment", map[string]client.Object{
+				"frontendDeployment": frontendDeployment,
+			})
+		}
 
 		return m.impl.SyncFrontendDeployment(ctx, logger, frontendDeployment)
 	})
 }
 
 // WaitBeforeFrontendDeploymentReady generates the action of "WaitBeforeFrontendDeploymentReady".
-func (m *RisingWaveControllerManager) WaitBeforeFrontendDeploymentReady() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("WaitBeforeFrontendDeploymentReady", func(ctx context.Context) (ctrl.Result, error) {
+func (m *RisingWaveControllerManager) WaitBeforeFrontendDeploymentReady() ctrlkit.Action {
+	return ctrlkit.NewAction("WaitBeforeFrontendDeploymentReady", func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", "WaitBeforeFrontendDeploymentReady")
 
 		// Get states.
@@ -434,16 +460,20 @@ func (m *RisingWaveControllerManager) WaitBeforeFrontendDeploymentReady() ctrlki
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("WaitBeforeFrontendDeploymentReady", ctx, logger)
-		m.impl.BeforeActionRun("WaitBeforeFrontendDeploymentReady", ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, "WaitBeforeFrontendDeploymentReady", result, err)
+			m.hook.PreRun(ctx, logger, "WaitBeforeFrontendDeploymentReady", map[string]client.Object{
+				"frontendDeployment": frontendDeployment,
+			})
+		}
 
 		return m.impl.WaitBeforeFrontendDeploymentReady(ctx, logger, frontendDeployment)
 	})
 }
 
 // SyncComputeService generates the action of "SyncComputeService".
-func (m *RisingWaveControllerManager) SyncComputeService() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("SyncComputeService", func(ctx context.Context) (ctrl.Result, error) {
+func (m *RisingWaveControllerManager) SyncComputeService() ctrlkit.Action {
+	return ctrlkit.NewAction("SyncComputeService", func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", "SyncComputeService")
 
 		// Get states.
@@ -453,16 +483,20 @@ func (m *RisingWaveControllerManager) SyncComputeService() ctrlkit.ReconcileActi
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("SyncComputeService", ctx, logger)
-		m.impl.BeforeActionRun("SyncComputeService", ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, "SyncComputeService", result, err)
+			m.hook.PreRun(ctx, logger, "SyncComputeService", map[string]client.Object{
+				"computeService": computeService,
+			})
+		}
 
 		return m.impl.SyncComputeService(ctx, logger, computeService)
 	})
 }
 
 // SyncComputeStatefulSet generates the action of "SyncComputeStatefulSet".
-func (m *RisingWaveControllerManager) SyncComputeStatefulSet() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("SyncComputeStatefulSet", func(ctx context.Context) (ctrl.Result, error) {
+func (m *RisingWaveControllerManager) SyncComputeStatefulSet() ctrlkit.Action {
+	return ctrlkit.NewAction("SyncComputeStatefulSet", func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", "SyncComputeStatefulSet")
 
 		// Get states.
@@ -472,16 +506,20 @@ func (m *RisingWaveControllerManager) SyncComputeStatefulSet() ctrlkit.Reconcile
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("SyncComputeStatefulSet", ctx, logger)
-		m.impl.BeforeActionRun("SyncComputeStatefulSet", ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, "SyncComputeStatefulSet", result, err)
+			m.hook.PreRun(ctx, logger, "SyncComputeStatefulSet", map[string]client.Object{
+				"computeStatefulSet": computeStatefulSet,
+			})
+		}
 
 		return m.impl.SyncComputeStatefulSet(ctx, logger, computeStatefulSet)
 	})
 }
 
 // WaitBeforeComputeStatefulSetReady generates the action of "WaitBeforeComputeStatefulSetReady".
-func (m *RisingWaveControllerManager) WaitBeforeComputeStatefulSetReady() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("WaitBeforeComputeStatefulSetReady", func(ctx context.Context) (ctrl.Result, error) {
+func (m *RisingWaveControllerManager) WaitBeforeComputeStatefulSetReady() ctrlkit.Action {
+	return ctrlkit.NewAction("WaitBeforeComputeStatefulSetReady", func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", "WaitBeforeComputeStatefulSetReady")
 
 		// Get states.
@@ -491,16 +529,20 @@ func (m *RisingWaveControllerManager) WaitBeforeComputeStatefulSetReady() ctrlki
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("WaitBeforeComputeStatefulSetReady", ctx, logger)
-		m.impl.BeforeActionRun("WaitBeforeComputeStatefulSetReady", ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, "WaitBeforeComputeStatefulSetReady", result, err)
+			m.hook.PreRun(ctx, logger, "WaitBeforeComputeStatefulSetReady", map[string]client.Object{
+				"computeStatefulSet": computeStatefulSet,
+			})
+		}
 
 		return m.impl.WaitBeforeComputeStatefulSetReady(ctx, logger, computeStatefulSet)
 	})
 }
 
 // SyncCompactorService generates the action of "SyncCompactorService".
-func (m *RisingWaveControllerManager) SyncCompactorService() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("SyncCompactorService", func(ctx context.Context) (ctrl.Result, error) {
+func (m *RisingWaveControllerManager) SyncCompactorService() ctrlkit.Action {
+	return ctrlkit.NewAction("SyncCompactorService", func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", "SyncCompactorService")
 
 		// Get states.
@@ -510,16 +552,20 @@ func (m *RisingWaveControllerManager) SyncCompactorService() ctrlkit.ReconcileAc
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("SyncCompactorService", ctx, logger)
-		m.impl.BeforeActionRun("SyncCompactorService", ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, "SyncCompactorService", result, err)
+			m.hook.PreRun(ctx, logger, "SyncCompactorService", map[string]client.Object{
+				"compactorService": compactorService,
+			})
+		}
 
 		return m.impl.SyncCompactorService(ctx, logger, compactorService)
 	})
 }
 
 // SyncCompactorDeployment generates the action of "SyncCompactorDeployment".
-func (m *RisingWaveControllerManager) SyncCompactorDeployment() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("SyncCompactorDeployment", func(ctx context.Context) (ctrl.Result, error) {
+func (m *RisingWaveControllerManager) SyncCompactorDeployment() ctrlkit.Action {
+	return ctrlkit.NewAction("SyncCompactorDeployment", func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", "SyncCompactorDeployment")
 
 		// Get states.
@@ -529,16 +575,20 @@ func (m *RisingWaveControllerManager) SyncCompactorDeployment() ctrlkit.Reconcil
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("SyncCompactorDeployment", ctx, logger)
-		m.impl.BeforeActionRun("SyncCompactorDeployment", ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, "SyncCompactorDeployment", result, err)
+			m.hook.PreRun(ctx, logger, "SyncCompactorDeployment", map[string]client.Object{
+				"compactorDeployment": compactorDeployment,
+			})
+		}
 
 		return m.impl.SyncCompactorDeployment(ctx, logger, compactorDeployment)
 	})
 }
 
 // WaitBeforeCompactorDeploymentReady generates the action of "WaitBeforeCompactorDeploymentReady".
-func (m *RisingWaveControllerManager) WaitBeforeCompactorDeploymentReady() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("WaitBeforeCompactorDeploymentReady", func(ctx context.Context) (ctrl.Result, error) {
+func (m *RisingWaveControllerManager) WaitBeforeCompactorDeploymentReady() ctrlkit.Action {
+	return ctrlkit.NewAction("WaitBeforeCompactorDeploymentReady", func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", "WaitBeforeCompactorDeploymentReady")
 
 		// Get states.
@@ -548,16 +598,20 @@ func (m *RisingWaveControllerManager) WaitBeforeCompactorDeploymentReady() ctrlk
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("WaitBeforeCompactorDeploymentReady", ctx, logger)
-		m.impl.BeforeActionRun("WaitBeforeCompactorDeploymentReady", ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, "WaitBeforeCompactorDeploymentReady", result, err)
+			m.hook.PreRun(ctx, logger, "WaitBeforeCompactorDeploymentReady", map[string]client.Object{
+				"compactorDeployment": compactorDeployment,
+			})
+		}
 
 		return m.impl.WaitBeforeCompactorDeploymentReady(ctx, logger, compactorDeployment)
 	})
 }
 
 // SyncConfigConfigMap generates the action of "SyncConfigConfigMap".
-func (m *RisingWaveControllerManager) SyncConfigConfigMap() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("SyncConfigConfigMap", func(ctx context.Context) (ctrl.Result, error) {
+func (m *RisingWaveControllerManager) SyncConfigConfigMap() ctrlkit.Action {
+	return ctrlkit.NewAction("SyncConfigConfigMap", func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", "SyncConfigConfigMap")
 
 		// Get states.
@@ -567,16 +621,20 @@ func (m *RisingWaveControllerManager) SyncConfigConfigMap() ctrlkit.ReconcileAct
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("SyncConfigConfigMap", ctx, logger)
-		m.impl.BeforeActionRun("SyncConfigConfigMap", ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, "SyncConfigConfigMap", result, err)
+			m.hook.PreRun(ctx, logger, "SyncConfigConfigMap", map[string]client.Object{
+				"configConfigMap": configConfigMap,
+			})
+		}
 
 		return m.impl.SyncConfigConfigMap(ctx, logger, configConfigMap)
 	})
 }
 
 // CollectRunningStatisticsAndSyncStatus generates the action of "CollectRunningStatisticsAndSyncStatus".
-func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ctrlkit.ReconcileAction {
-	return ctrlkit.WrapAction("CollectRunningStatisticsAndSyncStatus", func(ctx context.Context) (ctrl.Result, error) {
+func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ctrlkit.Action {
+	return ctrlkit.NewAction("CollectRunningStatisticsAndSyncStatus", func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", "CollectRunningStatisticsAndSyncStatus")
 
 		// Get states.
@@ -626,18 +684,44 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 		}
 
 		// Invoke action.
-		defer m.impl.AfterActionRun("CollectRunningStatisticsAndSyncStatus", ctx, logger)
-		m.impl.BeforeActionRun("CollectRunningStatisticsAndSyncStatus", ctx, logger)
+		if m.hook != nil {
+			defer m.hook.PostRun(ctx, logger, "CollectRunningStatisticsAndSyncStatus", result, err)
+			m.hook.PreRun(ctx, logger, "CollectRunningStatisticsAndSyncStatus", map[string]client.Object{
+				"frontendService":     frontendService,
+				"metaService":         metaService,
+				"computeService":      computeService,
+				"compactorService":    compactorService,
+				"metaDeployment":      metaDeployment,
+				"frontendDeployment":  frontendDeployment,
+				"computeStatefulSet":  computeStatefulSet,
+				"compactorDeployment": compactorDeployment,
+				"configConfigMap":     configConfigMap,
+			})
+		}
 
 		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaDeployment, frontendDeployment, computeStatefulSet, compactorDeployment, configConfigMap)
 	})
 }
 
+type RisingWaveControllerManagerOption func(*RisingWaveControllerManager)
+
+func WithActionHook(hook ctrlkit.ActionHook) RisingWaveControllerManagerOption {
+	return func(m *RisingWaveControllerManager) {
+		m.hook = hook
+	}
+}
+
 // NewRisingWaveControllerManager returns a new RisingWaveControllerManager with given state and implementation.
-func NewRisingWaveControllerManager(state RisingWaveControllerManagerState, impl RisingWaveControllerManagerImpl, logger logr.Logger) RisingWaveControllerManager {
-	return RisingWaveControllerManager{
+func NewRisingWaveControllerManager(state RisingWaveControllerManagerState, impl RisingWaveControllerManagerImpl, logger logr.Logger, opts ...RisingWaveControllerManagerOption) RisingWaveControllerManager {
+	m := RisingWaveControllerManager{
 		state:  state,
 		impl:   impl,
 		logger: logger,
 	}
+
+	for _, opt := range opts {
+		opt(&m)
+	}
+
+	return m
 }

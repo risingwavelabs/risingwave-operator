@@ -14,30 +14,29 @@
  * limitations under the License.
  */
 
-package ctrlkit
+package internal
 
-import (
-	"context"
+import "bytes"
 
-	ctrl "sigs.k8s.io/controller-runtime"
-)
-
-type actionFunc func(context.Context) (ctrl.Result, error)
-
-type actionWrapper struct {
-	description string
-	actionFunc
+// Group describes a groups of actions.
+type Group interface {
+	Children() []Action
+	SetChildren([]Action)
+	Name() string
 }
 
-func (w *actionWrapper) Description() string {
-	return w.description
-}
+// DescribeGroup describes actions grouped, must be a slice with at least 1 elements.
+func DescribeGroup(head string, actions ...Action) string {
+	buf := &bytes.Buffer{}
 
-func (w *actionWrapper) Run(ctx context.Context) (ctrl.Result, error) {
-	return w.actionFunc(ctx)
-}
+	buf.WriteString(head)
+	buf.WriteString("(")
+	for _, act := range actions[:len(actions)-1] {
+		buf.WriteString(act.Description())
+		buf.WriteString(", ")
+	}
+	buf.WriteString(actions[len(actions)-1].Description())
+	buf.WriteString(")")
 
-// WrapAction wraps the given description and function into an action.
-func WrapAction(description string, f actionFunc) ReconcileAction {
-	return &actionWrapper{description: description, actionFunc: f}
+	return buf.String()
 }

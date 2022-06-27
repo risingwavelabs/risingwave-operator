@@ -17,15 +17,10 @@
 package ctrlkit
 
 import (
-	"context"
-
-	ctrl "sigs.k8s.io/controller-runtime"
+	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit/internal"
 )
 
-// ReconcileAction is the basic unit to form a workflow. It represents some reaction
+// Action is the basic unit to form a workflow. It represents some reaction
 // to the states it observes. It is recommended to follow the Single-Responsibility-Rule
-// while designing a ReconcileAction.
-type ReconcileAction interface {
-	Description() string
-	Run(ctx context.Context) (ctrl.Result, error)
-}
+// while designing a Action.
+type Action = internal.Action

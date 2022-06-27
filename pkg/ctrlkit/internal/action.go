@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package ctrlkit
+package internal
 
 import (
 	"context"
 
-	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ActionHook provides hooks for actions implementations in controller manager.
-type ActionHook interface {
-	PreRun(ctx context.Context, logger logr.Logger, action string, states map[string]client.Object)
-	PostRun(ctx context.Context, logger logr.Logger, action string, result ctrl.Result, err error)
+type Action interface {
+	Description() string
+	Run(ctx context.Context) (ctrl.Result, error)
 }

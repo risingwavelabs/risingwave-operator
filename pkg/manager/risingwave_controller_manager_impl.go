@@ -39,8 +39,6 @@ import (
 )
 
 type risingWaveControllerManagerImpl struct {
-	ctrlkit.EmptyControllerManagerActionLifeCycleHook
-
 	client            client.Client
 	risingwaveManager *object.RisingWaveManager
 	objectFactory     *factory.RisingWaveObjectFactory

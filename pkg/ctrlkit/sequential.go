@@ -20,20 +20,36 @@ import (
 	"context"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+
+	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit/internal"
 )
 
-type sequentialAction struct {
-	actions []ReconcileAction
+var _ internal.Group = &sequentialGroup{}
+
+type sequentialGroup struct {
+	actions []Action
 }
 
-func (act *sequentialAction) Description() string {
-	return describeGroup("Sequential", act.actions...)
+func (grp *sequentialGroup) Children() []Action {
+	return grp.actions
 }
 
-func (act *sequentialAction) Run(ctx context.Context) (ctrl.Result, error) {
+func (grp *sequentialGroup) SetChildren(actions []Action) {
+	grp.actions = actions
+}
+
+func (grp *sequentialGroup) Name() string {
+	return "Sequential"
+}
+
+func (grp *sequentialGroup) Description() string {
+	return internal.DescribeGroup(grp.Name(), grp.actions...)
+}
+
+func (grp *sequentialGroup) Run(ctx context.Context) (ctrl.Result, error) {
 	// Run actions one-by-one. If one action needs to requeue or requeue after, then the
 	// control flow is broken and control is returned to the outer scope.
-	for _, act := range act.actions {
+	for _, act := range grp.actions {
 		result, err := act.Run(ctx)
 		if NeedsRequeue(result, err) {
 			return result, err
@@ -44,7 +60,7 @@ func (act *sequentialAction) Run(ctx context.Context) (ctrl.Result, error) {
 }
 
 // Sequential organizes the actions into a sequential flow.
-func Sequential(actions ...ReconcileAction) ReconcileAction {
+func Sequential(actions ...Action) Action {
 	if len(actions) == 0 {
 		return Nop
 	}
@@ -54,7 +70,7 @@ func Sequential(actions ...ReconcileAction) ReconcileAction {
 		return actions[0]
 	}
 
-	return &sequentialAction{actions: actions}
+	return &sequentialGroup{actions: actions}
 }
 
 // SequentialJoin is an alias of JoinOrdered, because it runs the actions in both join and sequential style.

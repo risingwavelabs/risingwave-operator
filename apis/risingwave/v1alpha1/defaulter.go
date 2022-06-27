@@ -34,14 +34,6 @@ func (r *RisingWave) Default() {
 		r.Spec.Arch = defaultOption.Arch
 	}
 
-	r.Finalizers = []string{
-		MetaNodeFinalizer,
-		ObjectStorageFinalizer,
-		ComputeNodeFinalizer,
-		CompactorNodeFinalizer,
-		FrontendFinalizer,
-	}
-
 	r.defaultMeta()
 	r.defaultStorage()
 	r.defaultComputeNode()

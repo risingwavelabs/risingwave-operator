@@ -109,7 +109,7 @@ test: manifests generate fmt vet lint envtest ## Run tests.
 
 spell:
 	@if command -v cspell > /dev/null 2>&1 ; then \
-	    cspell lint --no-progress --show-suggestions --gitignore **/*.go; \
+	    cspell lint --no-progress --no-summary --show-suggestions --gitignore **/*.go **/*.md; \
 	else \
 		echo "ERROR: cspell not found, install it manually! Link: https://cspell.org/docs/getting-started"; \
 		exit 1; \

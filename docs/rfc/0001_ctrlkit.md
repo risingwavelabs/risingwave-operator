@@ -3,7 +3,7 @@
 | Feature            | CtrlKit: A human-friendly framework for Kubernetes Operators         |
 | Status             | In-progress                                                          |
 | Date               | 2022-06-14                                                           |
-| Authors            | arkbriar                                                             |
+| Authors            | <!-- cspell:disable-line -->arkbriar                                                             |
 | RFC PR #           | [#49](https://github.com/singularity-data/risingwave-operator/pull/49) |
 | Implementation PR #| [#53](https://github.com/singularity-data/risingwave-operator/pull/53), [#61](https://github.com/singularity-data/risingwave-operator/pull/61), [#67](https://github.com/singularity-data/risingwave-operator/pull/67)               |
 |                    |                                                                      |
@@ -102,7 +102,7 @@ bind controller-kit-demo/v1 controller-kit-demo/api/v1
 alias CronJob controller-kit-demo/v1/CronJob
 alias Job batch/v1/Job
 
-// CronJobControllerManager declaras all the actions needed by the CronJobController.
+// CronJobControllerManager declares all the actions needed by the CronJobController.
 decl CronJobControllerManager for CronJob {
     state {
         jobs []Job {
@@ -146,7 +146,7 @@ func (s *CronJobControllerManagerState) GetJobs(ctx context.Context) ([]batchv1.
 }
 
 type CronJobControllerManagerImpl interface {
-	ctrlkit.CrontollerManagerActionLifeCycleHook
+	ctrlkit.ControllerManagerActionLifeCycleHook
 
 	ListActiveJobsAndUpdateStatus(ctx context.Context, logger logr.Logger, jobs []batchv1.Job) (ctrl.Result, error)
 
@@ -202,7 +202,7 @@ type ReconcileAction interface {
 
 Function | Example | Effect 
 :---: | :---: | :---: 
-`Join(actions...)`, `ParallelJoin(actions...)`, `JoinOrdered(actions...)` | `Join(Action_A, Action_B)` | Run all actions joined, and return the results joint from each action (while keep the semantic of the results). `ParallelJoin` provides parallism besides the `Join` semantic. `JoinOrdered` guarantees the execution order.
+`Join(actions...)`, `ParallelJoin(actions...)`, `JoinOrdered(actions...)` | `Join(Action_A, Action_B)` | Run all actions joined, and return the results joint from each action (while keep the semantic of the results). `ParallelJoin` provides parallelism besides the `Join` semantic. `JoinOrdered` guarantees the execution order.
 `Sequential(actions...)` | `Sequential(Action_A, Action_B)` | Run all actions one-by-one. If any of the actions interrupts the workflow, left actions will not be executed and the result of that action will be returned.
 `Timeout(timeout, action)` | `Timeout(5 * time.Second, Action_A)` | Abort the action if specified time is used.
 `If(condition, action)` | `If(x == 1, Action_A)` | Action's only valid when condition is true.
@@ -216,7 +216,7 @@ An example workflow with the actions defined above:
 ctrlkit.Join(
 	// Update the status of CronJob as always.
 	mgr.ListActiveJobsAndUpdateStatus(),
-	// Clean the old completed/failed jobs accroding to the limits.
+	// Clean the old completed/failed jobs according to the limits.
 	mgr.CleanUpOldJobsExceedsHistoryLimits(),
 	// Try to run the next scheduled job when not suspended, otherwise do nothing.
 	ctrlkit.If(cronJob.Spec.Suspend == nil || *cronJob.Spec.Suspend, mgr.RunNextScheduledJob()),
@@ -285,7 +285,7 @@ func (c *CronJobController) Reconcile(ctx context.Context, request reconcile.Req
 		ctrlkit.Join(
 			// Update the status of CronJob as always.
 			mgr.ListActiveJobsAndUpdateStatus(),
-			// Clean the old completed/failed jobs accroding to the limits.
+			// Clean the old completed/failed jobs according to the limits.
 			mgr.CleanUpOldJobsExceedsHistoryLimits(),
 			// Try to run the next scheduled job when not suspended, otherwise do nothing.
 			ctrlkit.If(cronJob.Spec.Suspend == nil || *cronJob.Spec.Suspend, mgr.RunNextScheduledJob()),

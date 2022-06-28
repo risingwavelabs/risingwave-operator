@@ -1,16 +1,18 @@
 # Project words.
 
-apierrors
-apiextensions
-apimachinery
-apiutil
-appsv
+api+
++errors
++extensions
++machinery
++util
+apps+
++v
 AWSS
 clientgoscheme
 configmap
 configmaps
 consts
-corev
+core+
 ctrlkit
 customresourcedefinitions
 finalizers
@@ -70,3 +72,19 @@ clientcmd
 kube
 clientcmd
 mrisingwave
+GOPATH
+protobuf
+subresources
+pingcap
+tidb
+cockroachdb
+apsara
+polardbx
+struct
+structs
+batch+
+galaxykube
+PHOST
+PPORT
+jsonpath
+yamlex

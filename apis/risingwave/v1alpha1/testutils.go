@@ -25,7 +25,7 @@ import (
 
 // CheckConfigFile
 // if $HOME/.kube/config exist
-// return ture.
+// return true.
 func CheckConfigFile() bool {
 	home, e := os.LookupEnv("HOME")
 	if !e {

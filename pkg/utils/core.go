@@ -25,6 +25,7 @@ func IsServiceReady(svc *corev1.Service) bool {
 		return false
 	}
 
+	/* spellchecker: disable */
 	// FIXME(shunjie.dsj)
 	return true
 }

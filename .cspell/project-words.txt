@@ -1,18 +1,24 @@
 # Project words.
 
-api+
++v1alpha1
++v1beta1
++v1
 +errors
 +extensions
 +machinery
 +util
+
+api+
+core+
 apps+
-+v
-AWSS
+meta+
+risingwave+
+
+AWSS3
 clientgoscheme
 configmap
 configmaps
 consts
-core+
 ctrlkit
 customresourcedefinitions
 finalizers
@@ -29,7 +35,6 @@ lerrs
 logr
 lresult
 lresults
-metav
 minio
 multierr
 multierror
@@ -41,7 +46,6 @@ retryable
 risingwave
 risingwavecontroller
 risingwaves
-risingwavev
 samber
 selfsigned
 servicemonitors
@@ -88,3 +92,6 @@ PHOST
 PPORT
 jsonpath
 yamlex
+Kustomization
+mrisingwave
+vrisingwave

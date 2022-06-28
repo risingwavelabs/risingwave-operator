@@ -1,0 +1,9 @@
+namespace: risingwave-operator-system
+
+namePrefix: risingwave-operator-
+
+resources:
+  - webhook.yaml
+
+bases:
+- ../crd

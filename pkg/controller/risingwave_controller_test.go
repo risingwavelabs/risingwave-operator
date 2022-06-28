@@ -91,10 +91,11 @@ func (h *actionAssertionHook) PreRun(ctx context.Context, logger logr.Logger, ac
 	}
 }
 
-func newActionAsserts(t *testing.T, asserts map[string]resultErr) ctrlkit.ActionHook {
+func newActionAsserts(t *testing.T, asserts map[string]resultErr, mustCover bool) ctrlkit.ActionHook {
 	return &actionAssertionHook{
-		t:       t,
-		asserts: asserts,
+		t:         t,
+		asserts:   asserts,
+		mustCover: mustCover,
 	}
 }
 
@@ -126,14 +127,26 @@ func Test_RisingWaveController_New(t *testing.T) {
 			Build(),
 		ActionHookFactory: func() ctrlkit.ActionHook {
 			return newActionAsserts(t, map[string]resultErr{
-				"BarrierFirstTimeObserved":           newResultErr(ctrlkit.Continue()),
-				"MarkConditionInitializingAsTrue":    newResultErr(ctrlkit.Continue()),
-				"MarkConditionRunningAsFalse":        newResultErr(ctrlkit.Continue()),
-				"ConditionInitializingIsTrueBarrier": newResultErr(ctrlkit.Exit()),
-				"ConditionRunningIsTrueBarrier":      newResultErr(ctrlkit.Exit()),
-				"ConditionUpgradingIsTrueBarrier":    newResultErr(ctrlkit.Exit()),
-				"SyncStorageAndComponentStatus":      newResultErr(ctrlkit.Continue()),
-			})
+				// New => Initializing(true), Running(false)
+				RisingWaveAction_BarrierFirstTimeObserved:        newResultErr(ctrlkit.Continue()),
+				RisingWaveAction_MarkConditionInitializingAsTrue: newResultErr(ctrlkit.Continue()),
+				RisingWaveAction_MarkConditionRunningAsFalse:     newResultErr(ctrlkit.Continue()),
+
+				// Initializing(true) => stop
+				RisingWaveAction_BarrierConditionInitializingIsTrue: newResultErr(ctrlkit.Exit()),
+
+				// Running(true) => stop
+				RisingWaveAction_BarrierConditionRunningIsTrue: newResultErr(ctrlkit.Exit()),
+
+				// Upgrading(true) => stop
+				RisingWaveAction_BarrierConditionUpgradingIsTrue: newResultErr(ctrlkit.Exit()),
+
+				// Sync status with running stats
+				RisingWaveAction_CollectRunningStatisticsAndSyncStatus: newResultErr(ctrlkit.Continue()),
+
+				// Update status
+				RisingWaveAction_UpdateRisingWaveStatusViaClient: newResultErr(ctrlkit.Continue()),
+			}, true)
 		},
 	}
 

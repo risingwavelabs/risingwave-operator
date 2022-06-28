@@ -203,7 +203,7 @@ golangci-lint: ## Download envtest-setup locally if necessary.
 
 CTRLKIT-GEN = $(shell pwd)/bin/ctrlkit-gen
 ctrlkit-gen: ## Download ctrlkit locally if necessary.
-	$(call go-get-tool,$(CTRLKIT-GEN),github.com/arkbriar/ctrlkit/ctrlkit/cmd/ctrlkit-gen@4549157c1ee)
+	$(call go-get-tool,$(CTRLKIT-GEN),github.com/arkbriar/ctrlkit/ctrlkit/cmd/ctrlkit-gen@afc39fa4)
 
 GOIMPORTS-REVISER = $(shell pwd)/bin/goimports-reviser
 goimports-reviser: ## Download goimports-reviser locally if necessary.

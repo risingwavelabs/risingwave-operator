@@ -73,7 +73,7 @@ jobs:
           if ${IS_PR}; then
             IMAGE_TAG="pr-${EVENT_NUMBER}"
           elif ${IS_NIGHTLY}; then
-            IMAGE_TAG="nightly"-$(date)
+            IMAGE_TAG="nightly"-$(date +'%Y-%m-%d')
           elif ${IS_MAIN}; then
             IMAGE_TAG="latest"
           else

@@ -21,11 +21,14 @@ spec:
   versions:
   - additionalPrinterColumns:
     - jsonPath: .status.conditions[?(@.type=="Running")].status
-      name: Running
+      name: RUNNING
       type: string
     - jsonPath: .status.objectStorage.type
-      name: Storage
+      name: STORAGE
       type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:

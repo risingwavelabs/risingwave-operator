@@ -107,6 +107,14 @@ lint: golangci-lint
 test: manifests generate fmt vet lint envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
 
+spell:
+	@if command -v cspell > /dev/null 2>&1 ; then \
+	    cspell lint --no-progress --show-suggestions --gitignore **/*.go; \
+	else \
+		echo "ERROR: cspell not found, install it manually! Link: https://cspell.org/docs/getting-started"; \
+		exit 1; \
+	fi
+
 buildx:
 	docker buildx install
 

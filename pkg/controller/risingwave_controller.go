@@ -54,8 +54,9 @@ import (
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=get;list;watch;create;delete
 
 type RisingWaveController struct {
-	Client client.Client
-	DryRun bool
+	Client            client.Client
+	ActionHookFactory func() ctrlkit.ActionHook
+	DryRun            bool
 }
 
 func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit.Action) (result reconcile.Result, err error) {
@@ -65,6 +66,14 @@ func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit
 	} else {
 		return ctrlkit.IgnoreExit(workflow.Run(ctx))
 	}
+}
+
+func (c *RisingWaveController) managerOpts() []manager.RisingWaveControllerManagerOption {
+	opts := make([]manager.RisingWaveControllerManagerOption, 0)
+	if c.ActionHookFactory != nil {
+		opts = append(opts, manager.WithActionHook(c.ActionHookFactory()))
+	}
+	return opts
 }
 
 func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (result reconcile.Result, err error) {
@@ -94,6 +103,7 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 		manager.NewRisingWaveControllerManagerState(c.Client, risingwave.DeepCopy()),
 		manager.NewRisingWaveControllerManagerImpl(c.Client, risingwaveManager),
 		logger,
+		c.managerOpts()...,
 	)
 
 	// Defer the status update.

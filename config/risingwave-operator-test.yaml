@@ -3846,7 +3846,7 @@ spec:
                         type: object
                     type: object
                   storage:
-                    description: default Memory
+                    description: MetaStorage defines spec of meta service.
                     properties:
                       type:
                         description: MetaStorageType defines the storage type of meta

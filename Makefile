@@ -93,13 +93,13 @@ generate-manager: ctrlkit-gen goimports-reviser
 	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_controller_manager.go -local "github.com/singularity-data/risingwave-operator"
 
 fmt: ## Run go fmt against code.
-	go fmt ./...
+	@go fmt ./...
 
 vendor: ## Ensure go vendor files
-	go mod vendor
+	@go mod vendor
 
 vet: ## Run go vet against code.
-	go vet ./...
+	@go vet ./...
 
 lint: golangci-lint
 	$(GOLANGCI-LINT) run --config .golangci.yaml --fix
@@ -109,7 +109,7 @@ test: manifests generate fmt vet lint envtest ## Run tests.
 
 spell:
 	@if command -v cspell > /dev/null 2>&1 ; then \
-	    cspell lint --relative --no-progress --no-summary --show-suggestions --gitignore **/*.go **/*.md; \
+	    cspell lint --relative --no-progress --no-summary --show-suggestions --gitignore **/*.go **/*.md Makefile; \
 	else \
 		echo "ERROR: cspell not found, install it manually! Link: https://cspell.org/docs/getting-started"; \
 		exit 1; \
@@ -126,9 +126,23 @@ build: generate fmt vet lint ## Build manager binary.
 run: manifests generate fmt vet lint ## Run a controller from your host.
 	go run main.go
 
-run-local: manifests generate fmt vet lint
-	mkdir -p /tmp/k8s-webhook-server/serving-certs
-	openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout /tmp/k8s-webhook-server/serving-certs/tls.key -out /tmp/k8s-webhook-server/serving-certs/tls.crt -subj "/CN=localhost"
+# Helper target for generating new local certs used in development. Use install-local instead
+# if you also use Docker for Desktop as your development environment.
+build-local-certs:
+	mkdir -p ${TMPDIR}/k8s-webhook-server/serving-certs
+	openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes \
+		-keyout ${TMPDIR}/k8s-webhook-server/serving-certs/tls.key \
+		-out ${TMPDIR}/k8s-webhook-server/serving-certs/tls.crt -subj "/CN=localhost" \
+		-extensions san -config <(echo '[req]'; echo 'distinguished_name=req'; echo '[san]'; echo 'subjectAltName=DNS:host.docker.internal')
+
+install-local: kustomize manifests
+	$(KUSTOMIZE) build config/local | kubectl apply -f - >/dev/null
+
+copy-local-certs:
+	mkdir -p ${TMPDIR}/k8s-webhook-server/serving-certs
+	cp -R config/local/certs/* ${TMPDIR}/k8s-webhook-server/serving-certs
+
+run-local: manifests generate fmt vet lint install-local copy-local-certs
 	go run main.go --config-file testing/manager-config.yaml
 
 e2e-test: generate-test-yaml vendor
@@ -192,7 +206,7 @@ ctrlkit-gen: ## Download ctrlkit locally if necessary.
 	$(call go-get-tool,$(CTRLKIT-GEN),github.com/arkbriar/ctrlkit/ctrlkit/cmd/ctrlkit-gen@4549157c1ee)
 
 GOIMPORTS-REVISER = $(shell pwd)/bin/goimports-reviser
-goimports-reviser: ## Download goimports-reviser locally if neccessary.
+goimports-reviser: ## Download goimports-reviser locally if necessary.
 	$(call go-get-tool,$(GOIMPORTS-REVISER),github.com/incu6us/goimports-reviser/v2@v2.5.1)
 
 # get-golangci-lint will download golangci-lint binary into ./bin

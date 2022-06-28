@@ -66,11 +66,14 @@ jobs:
         name: Get Image Tag
         env:
           IS_PR: ${{ github.EVENT_NAME == 'pull_request' }}
+          IS_NIGHTLY: ${{ (github.EVENT_NAME == 'schedule' || github.EVENT_NAME == 'workflow_dispatch') && github.REF_NAME == 'main'}}
           IS_MAIN: ${{ github.REF_NAME == 'main' }}
           EVENT_NUMBER: ${{ github.event.number }}
         run: |
           if ${IS_PR}; then
             IMAGE_TAG="pr-${EVENT_NUMBER}"
+          elif ${IS_NIGHTLY}; then
+            IMAGE_TAG="nightly"-$(date)
           elif ${IS_MAIN}; then
             IMAGE_TAG="latest"
           else

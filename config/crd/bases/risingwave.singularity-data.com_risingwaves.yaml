@@ -4154,7 +4154,7 @@ spec:
                         type: object
                     type: object
                   storage:
-                    description: default Memory
+                    description: MetaStorage defines spec of meta service.
                     properties:
                       etcdEndpoint:
                         type: string

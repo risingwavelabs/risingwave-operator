@@ -119,7 +119,6 @@ type RisingWaveCondition struct {
 type MetaNodeSpec struct {
 	DeployDescriptor `json:",inline"`
 
-	//default Memory
 	Storage *MetaStorage `json:"storage"`
 }
 

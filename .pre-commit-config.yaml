@@ -17,7 +17,7 @@ repos:
     - id: go-vet
     # - id: go-lint
     - id: go-imports
-      exclude: ^zz_generated.*.go$
+      exclude: ^.*zz_generated.*.go$
     - id: go-cyclo
       args: [-over=25]
     - id: validate-toml

@@ -272,7 +272,7 @@ Debugging in VSCode requires a launch configuration, you can use the following c
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/main.go",
+            "program": "${workspaceFolder}/cmd/manager/manager.go",
             "args": [
                 "-zap-time-encoding", "rfc3339",
                 "-config-file",
@@ -287,8 +287,8 @@ Debugging in VSCode requires a launch configuration, you can use the following c
 ```
 
 Now start debugging by clicking the menu **[Run > Start Debugging]** or pressing **F5**. The following is a list of significant functions/methods/files that might be useful as breakpoints:
-+ `main() main.go`, the entry point of the program
-+ `RisingWaveController.Reconcile() pkg/controller/risingwave_controller.go`, the entry point of the RisingWave operator
++ `main() cmd/manager/manager.go`, the entry point of the RisingWave operator
++ `RisingWaveController.Reconcile() pkg/controller/risingwave_controller.go`, the core function of the RisingWave operator
 + `RisingWave.Default() apis/risingwave/v1alpha1/defaulter.go`, the entry point of the mutating admission webhook for RisingWave
 + `apis/risingwave/v1alpha1/validator.go`, the callbacks of the validating admission webhook for RisingWave
 

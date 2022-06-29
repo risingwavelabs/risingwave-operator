@@ -12,7 +12,7 @@ ARG TARGETARCH
 ARG USE_VENDOR
 
 # Copy the go source
-COPY main.go main.go
+COPY cmd/ cmd/
 COPY apis/ apis/
 COPY pkg/ pkg/
 COPY vendor* vendor/
@@ -20,9 +20,9 @@ COPY template/ template/
 
 # Build
 RUN if [ "$USE_VENDOR" = "true" ] ; then \
-    CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -mod=vendor -a -o manager main.go ;  \
+    CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -mod=vendor -a -o manager cmd/manager/manager.go ;  \
     else  \
-    CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -a -o manager main.go ;  \
+    CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -a -o manager cmd/manager/manager.go ;  \
     fi
 
 # Use distroless as minimal base image to package the manager binary

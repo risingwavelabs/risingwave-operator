@@ -142,7 +142,7 @@ copy-local-certs:
 	mkdir -p ${TMPDIR}/k8s-webhook-server/serving-certs
 	cp -R config/local/certs/* ${TMPDIR}/k8s-webhook-server/serving-certs
 
-run-local: manifests generate fmt vet lint install-local copy-local-certs
+run-local: manifests generate fmt vet lint install-local
 	go run main.go --config-file testing/manager-config.yaml -zap-time-encoding rfc3339
 
 e2e-test: generate-test-yaml vendor

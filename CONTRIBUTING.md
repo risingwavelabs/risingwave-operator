@@ -6,46 +6,18 @@ If you have questions, please [create a Github issue](https://github.com/singula
 
 ## Setting Up Development Environment
 
-### Go
-RisingWave Operator is written in [Go](https://golang.org). If you don't have a Go development environment, [set one up](https://golang.org/doc/code.html).
-
-The version of Go should be 1.16 or later.
-
-After Go is installed, you need to define `GOPATH` and modify `PATH` to access your Go binaries. You can configure them as follows.
-
-```shell
-$ export GOPATH=$HOME/go
-$ export PATH=$PATH:$GOPATH/bin
-```
-
-### PostgreSQL
-
-RisingWave is compatible with `PostgreSQL` (`psql`). To connect to the RisingWave server, you need to install `psql`.
-
-The version of `psql` should be 14.1 or later.
-
-To install it in macOS, run:
-
-```shell
-brew install postgresql
-```
-
-To install it in Debian-based Linux systems, run:
-
-```shell
-sudo apt install postgresql-client
-```
+Please refer to the [Development Guide](/docs/dev/development.md) for more information.
 
 ## Submit a PR
 
 ### Pull Request Title
 
-As described in [here](https://github.com/commitizen/conventional-commit-types/blob/master/index.json), a valid PR title should begin with one of the following prefixes:
+As described [here](https://github.com/commitizen/conventional-commit-types/blob/master/index.json), a valid PR title should begin with one of the following prefixes:
 
 - `feat`: A new feature
 - `fix`: A bug fix
 - `docs`: Documentation only changes
-- `style`: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+- `style`: Changes that do not affect the meaning of the code (white space, formatting, missing semi-colons, etc)
 - `refactor`: A code change that neither fixes a bug nor adds a feature
 - `perf`: A code change that improves performance
 - `test`: Adding missing tests or correcting existing tests

@@ -95,3 +95,11 @@ yamlex
 Kustomization
 mrisingwave
 vrisingwave
+minikube
+
+mutating+
+validating+
+*webhook+
++configuration
+admission+
++registration

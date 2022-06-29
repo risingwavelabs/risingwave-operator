@@ -120,11 +120,10 @@ buildx:
 
 ##@ Build
 
-build: generate fmt vet lint ## Build manager binary.
-	go build -o bin/manager main.go
+build: build-manager
 
-run: manifests generate fmt vet lint ## Run a controller from your host.
-	go run main.go
+build-manager: generate fmt vet lint ## Build manager binary.
+	go build -o bin/manager cmd/manager/manager.go
 
 # Helper target for generating new local certs used in development. Use install-local instead
 # if you also use Docker for Desktop as your development environment.
@@ -143,7 +142,7 @@ copy-local-certs:
 	cp -R config/local/certs/* ${TMPDIR}/k8s-webhook-server/serving-certs
 
 run-local: manifests generate fmt vet lint install-local
-	go run main.go --config-file testing/manager-config.yaml -zap-time-encoding rfc3339
+	go run cmd/manager/manager.go --config-file testing/manager-config.yaml -zap-time-encoding rfc3339
 
 e2e-test: generate-test-yaml vendor
 	docker build -f docker/Dockerfile --build-arg USE_VENDOR=true -t docker.io/singularity-data/risingwave-operator:dev . --output=type=docker

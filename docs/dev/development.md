@@ -260,7 +260,7 @@ Now stop the process and we're ready for debugging.
 
 Debugging in VSCode requires a launch configuration, you can use the following configuration:
 
-```json launch.json
+```jsonc launch.json
 {
     // Use IntelliSense to learn about possible attributes.
     // Hover to view descriptions of existing attributes.

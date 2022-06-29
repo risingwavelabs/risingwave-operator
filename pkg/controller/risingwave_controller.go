@@ -71,7 +71,7 @@ const (
 	RisingWaveAction_MarkConditionUpgradingAsTrue       = "MarkConditionUpgradingAsTrue"
 	RisingWaveAction_BarrierConditionUpgradingIsTrue    = "BarrierConditionUpgradingIsTrue"
 	RisingWaveAction_MarkConditionUpgradingAsFalse      = "MarkConditionUpgradingAsFalse"
-	RisingWaveAction_ObservedGenerationOutdatedBarrier  = "ObservedGenerationOutdatedBarrier"
+	RisingWaveAction_BarrierObservedGenerationOutdated  = "BarrierObservedGenerationOutdated"
 	RisingWaveAction_SyncObservedGeneration             = "SyncObservedGeneration"
 )
 
@@ -239,7 +239,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	syncAllComponents := ctrlkit.JoinInParallel(syncConfigs, syncMetaComponent, syncOtherComponents)
 	allComponentsReadyBarrier := ctrlkit.Join(metaComponentReadyBarrier, otherComponentsReadyBarrier)
 
-	observedGenerationOutdatedBarrier := mgr.NewAction(RisingWaveAction_ObservedGenerationOutdatedBarrier, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+	observedGenerationOutdatedBarrier := mgr.NewAction(RisingWaveAction_BarrierObservedGenerationOutdated, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
 		return ctrlkit.ExitIf(!risingwaveManger.IsObservedGenerationOutdated())
 	})
 	syncObservedGeneration := mgr.NewAction(RisingWaveAction_SyncObservedGeneration, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {

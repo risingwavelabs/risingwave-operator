@@ -37,6 +37,10 @@ func (r *RisingWave) ValidateCreate() error {
 		if err != nil {
 			return err
 		}
+
+		if r.Spec.MetaNode.Storage.Type == ETCD && r.Spec.MetaNode.Storage.EtcdEndpoint == "" {
+			return NewValidateError("etcd endpoint cannot be empty")
+		}
 	}
 
 	return nil

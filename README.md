@@ -39,7 +39,7 @@ kubectl apply -f https://raw.githubusercontent.com/singularity-data/risingwave-o
 
 #### Install psql
 
-To connect to the RisingWave server, you will need to [install PostgreSQL shell](./CONTRIBUTING.md#PostgreSQL) (`psql`) in advance.
+To connect to the RisingWave server, you will need to [install PostgreSQL shell](./docs/dev/development.md#psql) (`psql`) in advance.
 
 
 #### Query

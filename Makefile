@@ -125,6 +125,9 @@ build: build-manager
 build-manager: generate fmt vet lint ## Build manager binary.
 	go build -o bin/manager cmd/manager/manager.go
 
+build-plugin: generate fmt vet lint ## Build manager binary.
+	go build -o bin/kubectl-rw cmd/plugin/main.go
+
 # Helper target for generating new local certs used in development. Use install-local instead
 # if you also use Docker for Desktop as your development environment.
 build-local-certs:

@@ -16,7 +16,6 @@ COPY cmd/ cmd/
 COPY apis/ apis/
 COPY pkg/ pkg/
 COPY vendor* vendor/
-COPY template/ template/
 
 # Build
 RUN if [ "$USE_VENDOR" = "true" ] ; then \
@@ -31,7 +30,6 @@ FROM ubuntu:20.04
 WORKDIR /
 RUN apt-get update && apt-get -y install ca-certificates && rm -rf /var/cache/apk/*
 COPY --from=builder /workspace/manager .
-COPY template/ template/
 USER 65532:65532
 
 ENTRYPOINT ["/manager"]

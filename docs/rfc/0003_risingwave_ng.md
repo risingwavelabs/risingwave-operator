@@ -101,22 +101,7 @@ kind: RisingWave
 metadata:
   name: test-risingwave
 spec:
-  global:
-    image: ghcr.io/singularity-data/risingwave:latest
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
-      compactor: 1
-    resources:
-      limits:
-        cpu: 1
-        memory: 1Gi
-  storages:
-    meta:
-      memory: true
-    object:
-      memory: true
+  # ...
   components:
     compactor:
       groups:
@@ -124,6 +109,28 @@ spec:
         replicas: 2
         nodeSelector:
           node-group: spot
+```
+
++ Setting the Pods to be privileged
+
+```yaml
+apiVersion: risingwave.singularity-data.com/v1alpha1
+kind: RisingWavePodTemplate
+metadata:
+  name: privileged-pods
+spec:
+  spec:
+    containers:
+    - securityContext:
+        privileged: true
+---
+apiVersion: risingwave.singularity-data.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: test-risingwave
+spec:
+  global:
+    podTemplate: privileged-pods
 ```
 
 # **Drawbacks**

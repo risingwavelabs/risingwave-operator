@@ -168,6 +168,19 @@ spec:
           kubernetes.io/arch: arm64
 ```
 
++ Restart the frontend Pods (update)
+
+```yaml
+apiVersion: risingwave.singularity-data.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: test-risingwave
+spec:
+  components:
+    frontend:
+      restartAt: 123456789  # restart timestamp
+```
+
 # **Drawbacks**
 
 It's more complex than the previous version and is expected to be harder to understand and write a correct YAML file if the users want an instance with advanced topology.

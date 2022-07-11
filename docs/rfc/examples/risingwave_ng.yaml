@@ -107,6 +107,7 @@ spec:
             storage: 1Gi
   components:
     meta: 
+      restartAt: # *metav1.Time, controls the restart of component
       ports:
         service: 1234
         metrics: 2345
@@ -127,6 +128,7 @@ spec:
         nodeSelector: 
           node-group: spot
     frontend:
+      restartAt: # *metav1.Time, controls the restart of component
       ports:
         service: 1234
         metrics: 2345
@@ -148,6 +150,7 @@ spec:
         nodeSelector: 
           node-group: spot
     compute:
+      restartAt: # *metav1.Time, controls the restart of component
       ports:
         service: 1234
         metrics: 2345
@@ -169,6 +172,7 @@ spec:
         nodeSelector: 
           node-group: spot
     compactor:
+      restartAt: # *metav1.Time, controls the restart of component
       ports:
         service: 1234
         metrics: 2345

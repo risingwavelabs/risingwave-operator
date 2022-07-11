@@ -33,9 +33,10 @@ type RisingWaveComponentGroupTemplate struct {
 }
 
 type RisingWaveComponentGroup struct {
-	Name     string                            `json:"name,omitempty"`
-	Replicas int64                             `json:"replicas,omitempty"`
-	Template *RisingWaveComponentGroupTemplate `json:",inline"`
+	Name      string                            `json:"name,omitempty"`
+	Replicas  int64                             `json:"replicas,omitempty"`
+	RestartAt *metav1.Time                      `json:"restartAt,omitempty"`
+	Template  *RisingWaveComponentGroupTemplate `json:",inline"`
 }
 
 type RisingWaveComputeGroupTemplate struct {
@@ -44,9 +45,10 @@ type RisingWaveComputeGroupTemplate struct {
 }
 
 type RisingWaveComputeGroup struct {
-	Name     string                          `json:"name,omitempty"`
-	Replicas int64                           `json:"replicas,omitempty"`
-	Template *RisingWaveComputeGroupTemplate `json:",inline"`
+	Name      string                          `json:"name,omitempty"`
+	Replicas  int64                           `json:"replicas,omitempty"`
+	RestartAt *metav1.Time                    `json:"restartAt,omitempty"`
+	Template  *RisingWaveComputeGroupTemplate `json:",inline"`
 }
 
 type RisingWaveComponentMetaPorts struct {

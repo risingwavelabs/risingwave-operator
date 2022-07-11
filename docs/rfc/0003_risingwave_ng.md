@@ -133,6 +133,41 @@ spec:
     podTemplate: privileged-pods
 ```
 
++ Mixed arch instance (compactors, explicitly)
+
+```yaml
+apiVersion: risingwave.singularity-data.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: test-risingwave
+spec:
+  global:
+    image: ghcr.io/singularity-data/risingwave:latest
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+    nodeSelector:
+      kubernetes.io/arch: amd64
+  components:
+    compactor:
+      groups:
+      - name: group-amd64
+        replicas: 1
+        image: ghcr.io/singularity-data/risingwave:latest
+        nodeSelector:
+          kubernetes.io/arch: amd64
+      - name: group-arm64
+        image: public.ecr.aws/x5u3w5h6/risingwave-arm:latest
+        replicas: 1
+        nodeSelector:
+          kubernetes.io/arch: arm64
+```
+
 # **Drawbacks**
 
 It's more complex than the previous version and is expected to be harder to understand and write a correct YAML file if the users want an instance with advanced topology.

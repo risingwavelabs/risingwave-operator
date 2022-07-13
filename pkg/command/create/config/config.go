@@ -14,7 +14,30 @@
  * limitations under the License.
  */
 
-package install
+package config
 
-type UninstallOptions struct {
+import "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+
+const (
+	Image = "ghcr.io/singularity-data/risingwave"
+)
+
+// TODO:
+
+// Config contain the fields needed that creating a instance
+// TODO: add more fields to create a instance flexibly.
+type Config struct {
+	Arch  v1alpha1.Arch
+	Image string
+}
+
+var DefaultConfig = Config{
+	Arch:  v1alpha1.AMD64Arch,
+	Image: Image,
+}
+
+// ApplyConfigFile
+// TODO: support creating config by file.
+func ApplyConfigFile(path string) (Config, error) {
+	return DefaultConfig, nil
 }

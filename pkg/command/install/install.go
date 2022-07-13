@@ -17,13 +17,22 @@
 package install
 
 import (
+	"context"
+	"fmt"
+	"time"
+
+	v1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"k8s.io/apimachinery/pkg/api/errors"
+
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
-	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/command/context"
+	cmdcontext "github.com/singularity-data/risingwave-operator/pkg/command/context"
 	"github.com/singularity-data/risingwave-operator/pkg/command/util"
 )
 
@@ -36,13 +45,7 @@ const (
 `
 )
 
-var scheme = runtime.NewScheme()
-
-func init() {
-	utilruntime.Must(v1alpha1.AddToScheme(scheme))
-}
-
-// InstallOptions contains the options to the install command.
+// InstallOptions contains the options to the installation command.
 type InstallOptions struct {
 	version string
 
@@ -58,7 +61,7 @@ func NewInstallOptions(streams genericclioptions.IOStreams) *InstallOptions {
 }
 
 // NewInstallCommand creates the installation command which can install the operator in the kubernetes cluster.
-func NewInstallCommand(ctx *context.RWContext, streams genericclioptions.IOStreams) *cobra.Command {
+func NewInstallCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) *cobra.Command {
 	o := NewInstallOptions(streams)
 
 	cmd := &cobra.Command{
@@ -77,7 +80,7 @@ func NewInstallCommand(ctx *context.RWContext, streams genericclioptions.IOStrea
 	return cmd
 }
 
-func (o *InstallOptions) Complete(ctx *context.RWContext, cmd *cobra.Command, args []string) error {
+func (o *InstallOptions) Complete(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
 	if len(o.version) == 0 {
 		o.version = "latest"
 	}
@@ -85,11 +88,152 @@ func (o *InstallOptions) Complete(ctx *context.RWContext, cmd *cobra.Command, ar
 	return nil
 }
 
+// Run will run the command as followed:
 // 1. check cert-manager
 // 2. install cert-manager or give the installation guide
 // 3. wait cert-manager ready
-// 4. install risingwave operator
+// 4. install risingwave operator.
+func (o *InstallOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
 
-func (o *InstallOptions) Run(ctx *context.RWContext, cmd *cobra.Command, args []string) error {
+	exist, err := hasOperator(ctx)
+	if err != nil {
+		return err
+	}
+	if exist {
+		fmt.Fprintln(o.Out, "RisingWave Operator already exists")
+		return nil
+	}
+	fmt.Fprintln(o.Out, "RisingWave Operator not exists, need to install it!")
+
+	// check cert-manager
+	exist, err = hasCertManagerCR(ctx)
+	if err != nil {
+		return err
+	}
+	if !exist {
+		fmt.Fprintln(o.Out, "Install the cert-manager!")
+		err := installCertManager(ctx)
+		if err != nil {
+			return fmt.Errorf("install cert-manager failed, %w", err)
+		}
+		fmt.Fprintln(o.Out, "Wait the cert-manager ready!")
+		err = waitCertManager(ctx)
+		if err != nil {
+			return fmt.Errorf("wait cert-manager failed, %w", err)
+		}
+	}
+
+	fmt.Fprintln(o.Out, fmt.Sprintf("Install the %s! risingwave-operator", o.version))
+	err = installOperator(ctx, o.version)
+	if err != nil {
+		return fmt.Errorf("install risingwave failed, %w", err)
+	}
+
+	fmt.Fprintln(o.Out, "RisingWave Operator has been installed")
+
+	return nil
+}
+
+func waitCertManager(ctx *cmdcontext.RWContext) error {
+	err := wait.PollImmediate(time.Second, time.Minute*TimeOut, func() (bool, error) {
+		ready, inErr := checkCertManagerReady(ctx)
+		if inErr != nil {
+			return false, inErr
+		}
+		return ready, inErr
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func checkCertManagerReady(ctx *cmdcontext.RWContext) (bool, error) {
+	list := &corev1.PodList{}
+	err := ctx.Client().List(context.Background(), list, client.InNamespace(CertNamespace))
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	for _, pod := range list.Items {
+		if pod.Status.Phase != corev1.PodRunning {
+			return false, nil
+		}
+		for _, s := range pod.Status.ContainerStatuses {
+			if !s.Ready {
+				return false, nil
+			}
+		}
+	}
+
+	return true, nil
+}
+
+func hasOperator(ctx *cmdcontext.RWContext) (bool, error) {
+	deploy := &v1.Deployment{}
+
+	operatorKey := client.ObjectKey{
+		Namespace: OperatorNamespace,
+		Name:      OperatorName,
+	}
+	err := ctx.Client().Get(context.Background(), operatorKey, deploy)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
+func hasCertManagerCR(ctx *cmdcontext.RWContext) (bool, error) {
+	list := &apiextensionsv1.CustomResourceDefinitionList{}
+
+	err := ctx.Client().List(context.Background(), list)
+	if err != nil && !errors.IsNotFound(err) {
+		return false, err
+	}
+
+	for _, item := range list.Items {
+		if item.Spec.Group == "cert-manager.io" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// download the cert-manager.yaml
+// apply into the cluster.
+func installCertManager(ctx *cmdcontext.RWContext) error {
+	certFile, err := Download(CertManagerUrl, TemDir+"/cert-manager")
+	if err != nil {
+		return err
+	}
+
+	err = ctx.Applier().Apply(certFile)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// download the operator.yaml
+// apply into the cluster
+// TODO(xinyu): add the version for risingwave.yaml.
+func installOperator(ctx *cmdcontext.RWContext, version string) error {
+	yamlFile, err := Download(RisingWaveUrl, TemDir+"/operator")
+	if err != nil {
+		return err
+	}
+
+	err = ctx.Applier().Apply(yamlFile)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

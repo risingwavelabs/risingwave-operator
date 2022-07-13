@@ -21,10 +21,7 @@ import (
 	"io"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/klog/v2"
 
 	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/singularity-data/risingwave-operator/pkg/command/context"
@@ -47,12 +44,6 @@ By specifying namespace or label-selectors, you can filter instances.
   kubectl rw list -l foo=bar
 `
 )
-
-var scheme = runtime.NewScheme()
-
-func init() {
-	utilruntime.Must(v1alpha1.AddToScheme(scheme))
-}
 
 // Options contains the input to the list command.
 type Options struct {
@@ -77,9 +68,9 @@ func NewListOptions(streams genericclioptions.IOStreams) *Options {
 	}
 }
 
-// NewListCommand creates the list command which lists all the risingwave instances
+// NewCommand creates the list command which lists all the risingwave instances
 // in the specified kubernetes cluster and sync to local config file.
-func NewListCommand(ctx *context.RWContext, streams genericclioptions.IOStreams) *cobra.Command {
+func NewCommand(ctx *context.RWContext, streams genericclioptions.IOStreams) *cobra.Command {
 	o := NewListOptions(streams)
 
 	cmd := &cobra.Command{
@@ -99,14 +90,13 @@ func NewListCommand(ctx *context.RWContext, streams genericclioptions.IOStreams)
 	//o.printFlags.AddFlags(cmd)
 
 	cmd.Flags().StringVarP(&o.selector, "selector", "l", o.selector, "Selector (label query) to filter on, not including uninitialized ones, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2).")
-	cmd.Flags().BoolVarP(&o.allNamespaces, "all-namespaces", "A", false, "whether list instances in all namespaces.")
+	cmd.Flags().BoolVarP(&o.allNamespaces, "all-namespaces", "A", false, "Whether list instances in all namespaces.")
 
 	return cmd
 }
 
 func (o *Options) Complete(ctx *context.RWContext, cmd *cobra.Command, args []string) error {
 	namespace := ctx.Namespace()
-	klog.Info(namespace)
 	o.namespace = namespace
 
 	//printer, err := o.printFlags.ToPrinter()
@@ -149,7 +139,7 @@ func (o *Options) Run(ctx *context.RWContext, cmd *cobra.Command, args []string)
 
 	var rwList []*v1alpha1.RisingWave
 	for _, info := range infos {
-		internalObj, _ := scheme.ConvertToVersion(info.Object, v1alpha1.GroupVersion)
+		internalObj, _ := ctx.Scheme().ConvertToVersion(info.Object, v1alpha1.GroupVersion)
 		rw := internalObj.(*v1alpha1.RisingWave)
 		rwList = append(rwList, rw)
 	}

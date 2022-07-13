@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-package util
+package install
 
-import "fmt"
+const (
+	TimeOut           = 5
+	OperatorNamespace = "risingwave-operator-system"
+	OperatorName      = "risingwave-operator-controller-manager"
 
-// TODO: do some check for error
+	CertNamespace = "cert-manager"
 
-func CheckErr(err error) {
-	if err != nil {
-		fmt.Println(err)
-	}
-}
+	TemDir = "/tmp/kubectl-rw"
+
+	RisingWaveUrl = "https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/config/risingwave-operator.yaml"
+
+	CertManagerUrl = "https://github.com/cert-manager/cert-manager/releases/download/v1.8.0/cert-manager.yaml"
+)

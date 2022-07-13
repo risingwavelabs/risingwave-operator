@@ -23,8 +23,11 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 
 	"github.com/singularity-data/risingwave-operator/pkg/command/context"
+	"github.com/singularity-data/risingwave-operator/pkg/command/create"
+	"github.com/singularity-data/risingwave-operator/pkg/command/delete"
 	"github.com/singularity-data/risingwave-operator/pkg/command/install"
 	"github.com/singularity-data/risingwave-operator/pkg/command/list"
+	"github.com/singularity-data/risingwave-operator/pkg/command/scale"
 	"github.com/singularity-data/risingwave-operator/pkg/command/version"
 )
 
@@ -56,12 +59,21 @@ func NewCtlCommand(streams genericclioptions.IOStreams) *cobra.Command {
 			Message: "Operator Management Commands:",
 			Commands: []*cobra.Command{
 				install.NewInstallCommand(ctx, streams),
+				install.NewUninstallCommand(ctx, streams),
 			},
 		},
 		{
-			Message: "Instance Management Commands:",
+			Message: "Basic Commands:",
 			Commands: []*cobra.Command{
-				list.NewListCommand(ctx, streams),
+				create.NewCommand(ctx, streams),
+				delete.NewCommand(ctx, streams),
+				list.NewCommand(ctx, streams),
+			},
+		},
+		{
+			Message: "Deploy Commands:",
+			Commands: []*cobra.Command{
+				scale.NewCommand(ctx, streams),
 			},
 		},
 	}

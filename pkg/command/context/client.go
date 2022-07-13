@@ -14,14 +14,32 @@
  * limitations under the License.
  */
 
-package util
+package context
 
-import "fmt"
+import (
+	"context"
 
-// TODO: do some check for error
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
 
-func CheckErr(err error) {
-	if err != nil {
-		fmt.Println(err)
+type BypassCacheClient struct {
+	apiReader client.Reader
+
+	client.Client
+}
+
+func (b *BypassCacheClient) Get(ctx context.Context, key client.ObjectKey, obj client.Object) error {
+	return b.apiReader.Get(ctx, key, obj)
+}
+
+func (b *BypassCacheClient) List(ctx context.Context, list client.ObjectList, opts ...client.ListOption) error {
+	return b.apiReader.List(ctx, list, opts...)
+}
+
+func NewBypassClient(c client.Client) *BypassCacheClient {
+	return &BypassCacheClient{
+		apiReader: c,
+
+		Client: c,
 	}
 }

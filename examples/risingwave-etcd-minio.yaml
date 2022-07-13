@@ -2,7 +2,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: risingwave-etcd
-  namespace: e2e-rw
   labels:
     app: risingwave-etcd
 spec:
@@ -20,7 +19,6 @@ metadata:
   labels:
     app: risingwave-etcd
   name: risingwave-etcd
-  namespace: e2e-rw
 spec:
   replicas: 1
   selector:
@@ -74,7 +72,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: risingwave-minio
-  namespace: e2e-rw
   labels:
     app: risingwave-minio
 spec:
@@ -90,7 +87,6 @@ apiVersion: v1
 kind: Secret
 metadata: 
   name: risingwave-minio-credentials
-  namespace: e2e-rw
 data:
   username: hummockadmin
   password: hummockadmin
@@ -101,7 +97,6 @@ metadata:
   labels:
     app: risingwave-minio
   name: risingwave-minio
-  namespace: e2e-rw
 spec:
   replicas: 1
   selector:
@@ -144,8 +139,7 @@ spec:
 apiVersion: risingwave.singularity-data.com/v1alpha1
 kind: RisingWave
 metadata:
-  name: test-risingwave
-  namespace: e2e-rw
+  name: risingwave-etcd-minio
 spec:
   storages:
     meta:
@@ -158,6 +152,7 @@ spec:
         bucket: hummock001
   global:
     image: ghcr.io/singularity-data/risingwave:latest
+    # image: public.ecr.aws/x5u3w5h6/risingwave-arm:latest
     imagePullPolicy: IfNotPresent
     resources:
       limits:

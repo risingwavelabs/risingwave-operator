@@ -186,7 +186,7 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.9.1)
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.9.2)
 
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
@@ -202,7 +202,7 @@ golangci-lint: ## Download envtest-setup locally if necessary.
 
 CTRLKIT-GEN = $(shell pwd)/bin/ctrlkit-gen
 ctrlkit-gen: ## Download ctrlkit locally if necessary.
-	$(call go-get-tool,$(CTRLKIT-GEN),github.com/arkbriar/ctrlkit/ctrlkit/cmd/ctrlkit-gen@afc39fa4)
+	$(call go-get-tool,$(CTRLKIT-GEN),github.com/arkbriar/ctrlkit/ctrlkit/cmd/ctrlkit-gen@latest)
 
 GOIMPORTS-REVISER = $(shell pwd)/bin/goimports-reviser
 goimports-reviser: ## Download goimports-reviser locally if necessary.

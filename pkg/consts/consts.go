@@ -24,13 +24,16 @@ const (
 	LabelRisingWaveComponent  = "risingwave/component"
 	LabelRisingWaveName       = "risingwave/name"
 	LabelRisingWaveGeneration = "risingwave/generation"
+	LabelRisingWaveGroup      = "risingwave/group"
 )
 
 // =================================================
 // Annotations.
 // =================================================
 
-const ()
+const (
+	AnnotationRestartAt = "risingwave/restart-at"
+)
 
 // =================================================
 // Consts.
@@ -50,9 +53,41 @@ const (
 	ComponentConfig    = "config"
 )
 
+// Credential keys for MinIO.
+const (
+	SecretKeyMinIOUsername string = "username"
+	SecretKeyMinIOPassword string = "password"
+)
+
+// Credential keys for etcd.
+const (
+	SecretKeyEtcdUsername string = "username"
+	SecretKeyEtcdPassword string = "password"
+)
+
 // Credential keys for AWS S3.
 const (
-	AWSS3AccessKeyID     string = "AccessKeyID"
-	AWSS3SecretAccessKey string = "SecretAccessKey"
-	AWSS3Region          string = "Region"
+	SecretKeyAWSS3AccessKeyID     string = "AccessKeyID"
+	SecretKeyAWSS3SecretAccessKey string = "SecretAccessKey"
+	SecretKeyAWSS3Region          string = "Region"
+)
+
+// Port names of components.
+const (
+	PortService   string = "service"
+	PortMetrics   string = "metrics"
+	PortDashboard string = "dashboard"
+)
+
+// Default port values of components.
+const (
+	DefaultMetaServicePort      int32 = 5690
+	DefaultMetaDashboardPort    int32 = 5691
+	DefaultMetaMetricsPort      int32 = 1250
+	DefaultComputeServicePort   int32 = 5688
+	DefaultComputeMetricsPort   int32 = 1222
+	DefaultFrontendServicePort  int32 = 4567
+	DefaultFrontendMetricsPort  int32 = 8080
+	DefaultCompactorServicePort int32 = 6660
+	DefaultCompactorMetricsPort int32 = 1260
 )

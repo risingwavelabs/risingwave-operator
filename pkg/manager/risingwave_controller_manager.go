@@ -29,6 +29,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -43,25 +44,32 @@ type RisingWaveControllerManagerState struct {
 	target *risingwavev1alpha1.RisingWave
 }
 
-// GetCompactorDeployment gets compactorDeployment with name equals to ${target.Name}-compactor.
-func (s *RisingWaveControllerManagerState) GetCompactorDeployment(ctx context.Context) (*appsv1.Deployment, error) {
-	var compactorDeployment appsv1.Deployment
+// GetCompactorDeployments lists compactorDeployments with the following selectors:
+//   + labels/risingwave/component=compactor
+//   + labels/risingwave/name=${target.Name}
+//   + owned
+func (s *RisingWaveControllerManagerState) GetCompactorDeployments(ctx context.Context) ([]appsv1.Deployment, error) {
+	var compactorDeploymentsList appsv1.DeploymentList
 
-	err := s.Get(ctx, types.NamespacedName{
-		Namespace: s.target.Namespace,
-		Name:      s.target.Name + "-compactor",
-	}, &compactorDeployment)
+	matchingLabels := map[string]string{
+		"risingwave/component": "compactor",
+		"risingwave/name":      s.target.Name,
+	}
+
+	err := s.List(ctx, &compactorDeploymentsList, client.InNamespace(s.target.Namespace),
+		client.MatchingLabels(matchingLabels))
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to get state 'compactorDeployment': %w", err)
-	}
-	if !ctrlkit.ValidateOwnership(&compactorDeployment, s.target) {
-		return nil, fmt.Errorf("unable to get state 'compactorDeployment': object not owned by target")
+		return nil, fmt.Errorf("unable to get state 'compactorDeployments': %w", err)
 	}
 
-	return &compactorDeployment, nil
+	var validated []appsv1.Deployment
+	for _, obj := range compactorDeploymentsList.Items {
+		if ctrlkit.ValidateOwnership(&obj, s.target) {
+			validated = append(validated, obj)
+		}
+	}
+
+	return validated, nil
 }
 
 // GetCompactorService gets compactorService with name equals to ${target.Name}-compactor.
@@ -106,25 +114,32 @@ func (s *RisingWaveControllerManagerState) GetComputeService(ctx context.Context
 	return &computeService, nil
 }
 
-// GetComputeStatefulSet gets computeStatefulSet with name equals to ${target.Name}-compute.
-func (s *RisingWaveControllerManagerState) GetComputeStatefulSet(ctx context.Context) (*appsv1.StatefulSet, error) {
-	var computeStatefulSet appsv1.StatefulSet
+// GetComputeStatefulSets lists computeStatefulSets with the following selectors:
+//   + labels/risingwave/component=compute
+//   + labels/risingwave/name=${target.Name}
+//   + owned
+func (s *RisingWaveControllerManagerState) GetComputeStatefulSets(ctx context.Context) ([]appsv1.StatefulSet, error) {
+	var computeStatefulSetsList appsv1.StatefulSetList
 
-	err := s.Get(ctx, types.NamespacedName{
-		Namespace: s.target.Namespace,
-		Name:      s.target.Name + "-compute",
-	}, &computeStatefulSet)
+	matchingLabels := map[string]string{
+		"risingwave/component": "compute",
+		"risingwave/name":      s.target.Name,
+	}
+
+	err := s.List(ctx, &computeStatefulSetsList, client.InNamespace(s.target.Namespace),
+		client.MatchingLabels(matchingLabels))
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to get state 'computeStatefulSet': %w", err)
-	}
-	if !ctrlkit.ValidateOwnership(&computeStatefulSet, s.target) {
-		return nil, fmt.Errorf("unable to get state 'computeStatefulSet': object not owned by target")
+		return nil, fmt.Errorf("unable to get state 'computeStatefulSets': %w", err)
 	}
 
-	return &computeStatefulSet, nil
+	var validated []appsv1.StatefulSet
+	for _, obj := range computeStatefulSetsList.Items {
+		if ctrlkit.ValidateOwnership(&obj, s.target) {
+			validated = append(validated, obj)
+		}
+	}
+
+	return validated, nil
 }
 
 // GetConfigConfigMap gets configConfigMap with name equals to ${target.Name}-config.
@@ -148,25 +163,32 @@ func (s *RisingWaveControllerManagerState) GetConfigConfigMap(ctx context.Contex
 	return &configConfigMap, nil
 }
 
-// GetFrontendDeployment gets frontendDeployment with name equals to ${target.Name}-frontend.
-func (s *RisingWaveControllerManagerState) GetFrontendDeployment(ctx context.Context) (*appsv1.Deployment, error) {
-	var frontendDeployment appsv1.Deployment
+// GetFrontendDeployments lists frontendDeployments with the following selectors:
+//   + labels/risingwave/component=frontend
+//   + labels/risingwave/name=${target.Name}
+//   + owned
+func (s *RisingWaveControllerManagerState) GetFrontendDeployments(ctx context.Context) ([]appsv1.Deployment, error) {
+	var frontendDeploymentsList appsv1.DeploymentList
 
-	err := s.Get(ctx, types.NamespacedName{
-		Namespace: s.target.Namespace,
-		Name:      s.target.Name + "-frontend",
-	}, &frontendDeployment)
+	matchingLabels := map[string]string{
+		"risingwave/component": "frontend",
+		"risingwave/name":      s.target.Name,
+	}
+
+	err := s.List(ctx, &frontendDeploymentsList, client.InNamespace(s.target.Namespace),
+		client.MatchingLabels(matchingLabels))
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to get state 'frontendDeployment': %w", err)
-	}
-	if !ctrlkit.ValidateOwnership(&frontendDeployment, s.target) {
-		return nil, fmt.Errorf("unable to get state 'frontendDeployment': object not owned by target")
+		return nil, fmt.Errorf("unable to get state 'frontendDeployments': %w", err)
 	}
 
-	return &frontendDeployment, nil
+	var validated []appsv1.Deployment
+	for _, obj := range frontendDeploymentsList.Items {
+		if ctrlkit.ValidateOwnership(&obj, s.target) {
+			validated = append(validated, obj)
+		}
+	}
+
+	return validated, nil
 }
 
 // GetFrontendService gets frontendService with name equals to ${target.Name}-frontend.
@@ -190,25 +212,32 @@ func (s *RisingWaveControllerManagerState) GetFrontendService(ctx context.Contex
 	return &frontendService, nil
 }
 
-// GetMetaDeployment gets metaDeployment with name equals to ${target.Name}-meta.
-func (s *RisingWaveControllerManagerState) GetMetaDeployment(ctx context.Context) (*appsv1.Deployment, error) {
-	var metaDeployment appsv1.Deployment
+// GetMetaDeployments lists metaDeployments with the following selectors:
+//   + labels/risingwave/component=meta
+//   + labels/risingwave/name=${target.Name}
+//   + owned
+func (s *RisingWaveControllerManagerState) GetMetaDeployments(ctx context.Context) ([]appsv1.Deployment, error) {
+	var metaDeploymentsList appsv1.DeploymentList
 
-	err := s.Get(ctx, types.NamespacedName{
-		Namespace: s.target.Namespace,
-		Name:      s.target.Name + "-meta",
-	}, &metaDeployment)
+	matchingLabels := map[string]string{
+		"risingwave/component": "meta",
+		"risingwave/name":      s.target.Name,
+	}
+
+	err := s.List(ctx, &metaDeploymentsList, client.InNamespace(s.target.Namespace),
+		client.MatchingLabels(matchingLabels))
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to get state 'metaDeployment': %w", err)
-	}
-	if !ctrlkit.ValidateOwnership(&metaDeployment, s.target) {
-		return nil, fmt.Errorf("unable to get state 'metaDeployment': object not owned by target")
+		return nil, fmt.Errorf("unable to get state 'metaDeployments': %w", err)
 	}
 
-	return &metaDeployment, nil
+	var validated []appsv1.Deployment
+	for _, obj := range metaDeploymentsList.Items {
+		if ctrlkit.ValidateOwnership(&obj, s.target) {
+			validated = append(validated, obj)
+		}
+	}
+
+	return validated, nil
 }
 
 // GetMetaService gets metaService with name equals to ${target.Name}-meta.
@@ -245,64 +274,64 @@ type RisingWaveControllerManagerImpl interface {
 	// SyncMetaService creates or updates the service for meta nodes.
 	SyncMetaService(ctx context.Context, logger logr.Logger, metaService *corev1.Service) (ctrl.Result, error)
 
-	// SyncMetaDeployment creates or updates the deployment for meta nodes.
-	SyncMetaDeployment(ctx context.Context, logger logr.Logger, metaDeployment *appsv1.Deployment) (ctrl.Result, error)
+	// SyncMetaDeployments creates or updates the deployments for meta nodes.
+	SyncMetaDeployments(ctx context.Context, logger logr.Logger, metaDeployments []appsv1.Deployment) (ctrl.Result, error)
 
 	// WaitBeforeMetaServiceIsAvailable waits (aborts the workflow) before the meta service is available.
 	WaitBeforeMetaServiceIsAvailable(ctx context.Context, logger logr.Logger, metaService *corev1.Service) (ctrl.Result, error)
 
-	// WaitBeforeMetaDeploymentReady waits (aborts the workflow) before the meta deployment is ready.
-	WaitBeforeMetaDeploymentReady(ctx context.Context, logger logr.Logger, metaDeployment *appsv1.Deployment) (ctrl.Result, error)
+	// WaitBeforeMetaDeploymentsReady waits (aborts the workflow) before the meta deployments are ready.
+	WaitBeforeMetaDeploymentsReady(ctx context.Context, logger logr.Logger, metaDeployments []appsv1.Deployment) (ctrl.Result, error)
 
 	// SyncFrontendService creates or updates the service for frontend nodes.
 	SyncFrontendService(ctx context.Context, logger logr.Logger, frontendService *corev1.Service) (ctrl.Result, error)
 
-	// SyncFrontendDeployment creates or updates the deployment for frontend nodes.
-	SyncFrontendDeployment(ctx context.Context, logger logr.Logger, frontendDeployment *appsv1.Deployment) (ctrl.Result, error)
+	// SyncFrontendDeployments creates or updates the deployments for frontend nodes.
+	SyncFrontendDeployments(ctx context.Context, logger logr.Logger, frontendDeployments []appsv1.Deployment) (ctrl.Result, error)
 
-	// WaitBeforeFrontendDeploymentReady waits (aborts the workflow) before the frontend deployment is ready.
-	WaitBeforeFrontendDeploymentReady(ctx context.Context, logger logr.Logger, frontendDeployment *appsv1.Deployment) (ctrl.Result, error)
+	// WaitBeforeFrontendDeploymentsReady waits (aborts the workflow) before the frontend deployments are ready.
+	WaitBeforeFrontendDeploymentsReady(ctx context.Context, logger logr.Logger, frontendDeployments []appsv1.Deployment) (ctrl.Result, error)
 
 	// SyncComputeService creates or updates the service for compute nodes.
 	SyncComputeService(ctx context.Context, logger logr.Logger, computeService *corev1.Service) (ctrl.Result, error)
 
-	// SyncComputeStatefulSet creates or updates the statefulset for compute nodes.
-	SyncComputeStatefulSet(ctx context.Context, logger logr.Logger, computeStatefulSet *appsv1.StatefulSet) (ctrl.Result, error)
+	// SyncComputeStatefulSets creates or updates the statefulsets for compute nodes.
+	SyncComputeStatefulSets(ctx context.Context, logger logr.Logger, computeStatefulSets []appsv1.StatefulSet) (ctrl.Result, error)
 
-	// WaitBeforeComputeStatefulSetReady waits (aborts the workflow) before the compute statefulset is ready.
-	WaitBeforeComputeStatefulSetReady(ctx context.Context, logger logr.Logger, computeStatefulSet *appsv1.StatefulSet) (ctrl.Result, error)
+	// WaitBeforeComputeStatefulSetsReady waits (aborts the workflow) before the compute statefulsets are ready.
+	WaitBeforeComputeStatefulSetsReady(ctx context.Context, logger logr.Logger, computeStatefulSets []appsv1.StatefulSet) (ctrl.Result, error)
 
 	// SyncCompactorService creates or updates the service for compactor nodes.
 	SyncCompactorService(ctx context.Context, logger logr.Logger, compactorService *corev1.Service) (ctrl.Result, error)
 
-	// SyncCompactorDeployment creates or updates the deployment for compactor nodes.
-	SyncCompactorDeployment(ctx context.Context, logger logr.Logger, compactorDeployment *appsv1.Deployment) (ctrl.Result, error)
+	// SyncCompactorDeployments creates or updates the deployments for compactor nodes.
+	SyncCompactorDeployments(ctx context.Context, logger logr.Logger, compactorDeployments []appsv1.Deployment) (ctrl.Result, error)
 
-	// WaitBeforeCompactorDeploymentReady waits (aborts the workflow) before the compactor deployment is ready.
-	WaitBeforeCompactorDeploymentReady(ctx context.Context, logger logr.Logger, compactorDeployment *appsv1.Deployment) (ctrl.Result, error)
+	// WaitBeforeCompactorDeploymentsReady waits (aborts the workflow) before the compactor deployments are ready.
+	WaitBeforeCompactorDeploymentsReady(ctx context.Context, logger logr.Logger, compactorDeployments []appsv1.Deployment) (ctrl.Result, error)
 
 	// SyncConfigConfigMap creates or updates the configmap for RisingWave configs.
 	SyncConfigConfigMap(ctx context.Context, logger logr.Logger, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 
 	// CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
-	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaDeployment *appsv1.Deployment, frontendDeployment *appsv1.Deployment, computeStatefulSet *appsv1.StatefulSet, compactorDeployment *appsv1.Deployment, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
+	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaDeployments []appsv1.Deployment, frontendDeployments []appsv1.Deployment, computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 }
 
 // Pre-defined actions in RisingWaveControllerManager.
 const (
 	RisingWaveAction_SyncMetaService                       = "SyncMetaService"
-	RisingWaveAction_SyncMetaDeployment                    = "SyncMetaDeployment"
+	RisingWaveAction_SyncMetaDeployments                   = "SyncMetaDeployments"
 	RisingWaveAction_WaitBeforeMetaServiceIsAvailable      = "WaitBeforeMetaServiceIsAvailable"
-	RisingWaveAction_WaitBeforeMetaDeploymentReady         = "WaitBeforeMetaDeploymentReady"
+	RisingWaveAction_WaitBeforeMetaDeploymentsReady        = "WaitBeforeMetaDeploymentsReady"
 	RisingWaveAction_SyncFrontendService                   = "SyncFrontendService"
-	RisingWaveAction_SyncFrontendDeployment                = "SyncFrontendDeployment"
-	RisingWaveAction_WaitBeforeFrontendDeploymentReady     = "WaitBeforeFrontendDeploymentReady"
+	RisingWaveAction_SyncFrontendDeployments               = "SyncFrontendDeployments"
+	RisingWaveAction_WaitBeforeFrontendDeploymentsReady    = "WaitBeforeFrontendDeploymentsReady"
 	RisingWaveAction_SyncComputeService                    = "SyncComputeService"
-	RisingWaveAction_SyncComputeStatefulSet                = "SyncComputeStatefulSet"
-	RisingWaveAction_WaitBeforeComputeStatefulSetReady     = "WaitBeforeComputeStatefulSetReady"
+	RisingWaveAction_SyncComputeStatefulSets               = "SyncComputeStatefulSets"
+	RisingWaveAction_WaitBeforeComputeStatefulSetsReady    = "WaitBeforeComputeStatefulSetsReady"
 	RisingWaveAction_SyncCompactorService                  = "SyncCompactorService"
-	RisingWaveAction_SyncCompactorDeployment               = "SyncCompactorDeployment"
-	RisingWaveAction_WaitBeforeCompactorDeploymentReady    = "WaitBeforeCompactorDeploymentReady"
+	RisingWaveAction_SyncCompactorDeployments              = "SyncCompactorDeployments"
+	RisingWaveAction_WaitBeforeCompactorDeploymentsReady   = "WaitBeforeCompactorDeploymentsReady"
 	RisingWaveAction_SyncConfigConfigMap                   = "SyncConfigConfigMap"
 	RisingWaveAction_CollectRunningStatisticsAndSyncStatus = "CollectRunningStatisticsAndSyncStatus"
 )
@@ -343,7 +372,7 @@ func (m *RisingWaveControllerManager) SyncMetaService() ctrlkit.Action {
 		// Invoke action.
 		if m.hook != nil {
 			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncMetaService, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncMetaService, map[string]client.Object{
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncMetaService, map[string]runtime.Object{
 				"metaService": metaService,
 			})
 		}
@@ -352,26 +381,26 @@ func (m *RisingWaveControllerManager) SyncMetaService() ctrlkit.Action {
 	})
 }
 
-// SyncMetaDeployment generates the action of "SyncMetaDeployment".
-func (m *RisingWaveControllerManager) SyncMetaDeployment() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_SyncMetaDeployment, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_SyncMetaDeployment)
+// SyncMetaDeployments generates the action of "SyncMetaDeployments".
+func (m *RisingWaveControllerManager) SyncMetaDeployments() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_SyncMetaDeployments, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_SyncMetaDeployments)
 
 		// Get states.
-		metaDeployment, err := m.state.GetMetaDeployment(ctx)
+		metaDeployments, err := m.state.GetMetaDeployments(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
 		// Invoke action.
 		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncMetaDeployment, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncMetaDeployment, map[string]client.Object{
-				"metaDeployment": metaDeployment,
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncMetaDeployments, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncMetaDeployments, map[string]runtime.Object{
+				"metaDeployments": &appsv1.DeploymentList{Items: metaDeployments},
 			})
 		}
 
-		return m.impl.SyncMetaDeployment(ctx, logger, metaDeployment)
+		return m.impl.SyncMetaDeployments(ctx, logger, metaDeployments)
 	})
 }
 
@@ -389,7 +418,7 @@ func (m *RisingWaveControllerManager) WaitBeforeMetaServiceIsAvailable() ctrlkit
 		// Invoke action.
 		if m.hook != nil {
 			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeMetaServiceIsAvailable, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeMetaServiceIsAvailable, map[string]client.Object{
+			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeMetaServiceIsAvailable, map[string]runtime.Object{
 				"metaService": metaService,
 			})
 		}
@@ -398,26 +427,26 @@ func (m *RisingWaveControllerManager) WaitBeforeMetaServiceIsAvailable() ctrlkit
 	})
 }
 
-// WaitBeforeMetaDeploymentReady generates the action of "WaitBeforeMetaDeploymentReady".
-func (m *RisingWaveControllerManager) WaitBeforeMetaDeploymentReady() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeMetaDeploymentReady, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeMetaDeploymentReady)
+// WaitBeforeMetaDeploymentsReady generates the action of "WaitBeforeMetaDeploymentsReady".
+func (m *RisingWaveControllerManager) WaitBeforeMetaDeploymentsReady() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeMetaDeploymentsReady, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeMetaDeploymentsReady)
 
 		// Get states.
-		metaDeployment, err := m.state.GetMetaDeployment(ctx)
+		metaDeployments, err := m.state.GetMetaDeployments(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
 		// Invoke action.
 		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeMetaDeploymentReady, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeMetaDeploymentReady, map[string]client.Object{
-				"metaDeployment": metaDeployment,
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeMetaDeploymentsReady, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeMetaDeploymentsReady, map[string]runtime.Object{
+				"metaDeployments": &appsv1.DeploymentList{Items: metaDeployments},
 			})
 		}
 
-		return m.impl.WaitBeforeMetaDeploymentReady(ctx, logger, metaDeployment)
+		return m.impl.WaitBeforeMetaDeploymentsReady(ctx, logger, metaDeployments)
 	})
 }
 
@@ -435,7 +464,7 @@ func (m *RisingWaveControllerManager) SyncFrontendService() ctrlkit.Action {
 		// Invoke action.
 		if m.hook != nil {
 			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncFrontendService, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncFrontendService, map[string]client.Object{
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncFrontendService, map[string]runtime.Object{
 				"frontendService": frontendService,
 			})
 		}
@@ -444,49 +473,49 @@ func (m *RisingWaveControllerManager) SyncFrontendService() ctrlkit.Action {
 	})
 }
 
-// SyncFrontendDeployment generates the action of "SyncFrontendDeployment".
-func (m *RisingWaveControllerManager) SyncFrontendDeployment() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_SyncFrontendDeployment, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_SyncFrontendDeployment)
+// SyncFrontendDeployments generates the action of "SyncFrontendDeployments".
+func (m *RisingWaveControllerManager) SyncFrontendDeployments() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_SyncFrontendDeployments, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_SyncFrontendDeployments)
 
 		// Get states.
-		frontendDeployment, err := m.state.GetFrontendDeployment(ctx)
+		frontendDeployments, err := m.state.GetFrontendDeployments(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
 		// Invoke action.
 		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncFrontendDeployment, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncFrontendDeployment, map[string]client.Object{
-				"frontendDeployment": frontendDeployment,
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncFrontendDeployments, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncFrontendDeployments, map[string]runtime.Object{
+				"frontendDeployments": &appsv1.DeploymentList{Items: frontendDeployments},
 			})
 		}
 
-		return m.impl.SyncFrontendDeployment(ctx, logger, frontendDeployment)
+		return m.impl.SyncFrontendDeployments(ctx, logger, frontendDeployments)
 	})
 }
 
-// WaitBeforeFrontendDeploymentReady generates the action of "WaitBeforeFrontendDeploymentReady".
-func (m *RisingWaveControllerManager) WaitBeforeFrontendDeploymentReady() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeFrontendDeploymentReady, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeFrontendDeploymentReady)
+// WaitBeforeFrontendDeploymentsReady generates the action of "WaitBeforeFrontendDeploymentsReady".
+func (m *RisingWaveControllerManager) WaitBeforeFrontendDeploymentsReady() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeFrontendDeploymentsReady, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeFrontendDeploymentsReady)
 
 		// Get states.
-		frontendDeployment, err := m.state.GetFrontendDeployment(ctx)
+		frontendDeployments, err := m.state.GetFrontendDeployments(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
 		// Invoke action.
 		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeFrontendDeploymentReady, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeFrontendDeploymentReady, map[string]client.Object{
-				"frontendDeployment": frontendDeployment,
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeFrontendDeploymentsReady, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeFrontendDeploymentsReady, map[string]runtime.Object{
+				"frontendDeployments": &appsv1.DeploymentList{Items: frontendDeployments},
 			})
 		}
 
-		return m.impl.WaitBeforeFrontendDeploymentReady(ctx, logger, frontendDeployment)
+		return m.impl.WaitBeforeFrontendDeploymentsReady(ctx, logger, frontendDeployments)
 	})
 }
 
@@ -504,7 +533,7 @@ func (m *RisingWaveControllerManager) SyncComputeService() ctrlkit.Action {
 		// Invoke action.
 		if m.hook != nil {
 			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncComputeService, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncComputeService, map[string]client.Object{
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncComputeService, map[string]runtime.Object{
 				"computeService": computeService,
 			})
 		}
@@ -513,49 +542,49 @@ func (m *RisingWaveControllerManager) SyncComputeService() ctrlkit.Action {
 	})
 }
 
-// SyncComputeStatefulSet generates the action of "SyncComputeStatefulSet".
-func (m *RisingWaveControllerManager) SyncComputeStatefulSet() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_SyncComputeStatefulSet, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_SyncComputeStatefulSet)
+// SyncComputeStatefulSets generates the action of "SyncComputeStatefulSets".
+func (m *RisingWaveControllerManager) SyncComputeStatefulSets() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_SyncComputeStatefulSets, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_SyncComputeStatefulSets)
 
 		// Get states.
-		computeStatefulSet, err := m.state.GetComputeStatefulSet(ctx)
+		computeStatefulSets, err := m.state.GetComputeStatefulSets(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
 		// Invoke action.
 		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncComputeStatefulSet, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncComputeStatefulSet, map[string]client.Object{
-				"computeStatefulSet": computeStatefulSet,
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncComputeStatefulSets, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncComputeStatefulSets, map[string]runtime.Object{
+				"computeStatefulSets": &appsv1.StatefulSetList{Items: computeStatefulSets},
 			})
 		}
 
-		return m.impl.SyncComputeStatefulSet(ctx, logger, computeStatefulSet)
+		return m.impl.SyncComputeStatefulSets(ctx, logger, computeStatefulSets)
 	})
 }
 
-// WaitBeforeComputeStatefulSetReady generates the action of "WaitBeforeComputeStatefulSetReady".
-func (m *RisingWaveControllerManager) WaitBeforeComputeStatefulSetReady() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeComputeStatefulSetReady, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeComputeStatefulSetReady)
+// WaitBeforeComputeStatefulSetsReady generates the action of "WaitBeforeComputeStatefulSetsReady".
+func (m *RisingWaveControllerManager) WaitBeforeComputeStatefulSetsReady() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeComputeStatefulSetsReady, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeComputeStatefulSetsReady)
 
 		// Get states.
-		computeStatefulSet, err := m.state.GetComputeStatefulSet(ctx)
+		computeStatefulSets, err := m.state.GetComputeStatefulSets(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
 		// Invoke action.
 		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeComputeStatefulSetReady, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeComputeStatefulSetReady, map[string]client.Object{
-				"computeStatefulSet": computeStatefulSet,
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeComputeStatefulSetsReady, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeComputeStatefulSetsReady, map[string]runtime.Object{
+				"computeStatefulSets": &appsv1.StatefulSetList{Items: computeStatefulSets},
 			})
 		}
 
-		return m.impl.WaitBeforeComputeStatefulSetReady(ctx, logger, computeStatefulSet)
+		return m.impl.WaitBeforeComputeStatefulSetsReady(ctx, logger, computeStatefulSets)
 	})
 }
 
@@ -573,7 +602,7 @@ func (m *RisingWaveControllerManager) SyncCompactorService() ctrlkit.Action {
 		// Invoke action.
 		if m.hook != nil {
 			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncCompactorService, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncCompactorService, map[string]client.Object{
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncCompactorService, map[string]runtime.Object{
 				"compactorService": compactorService,
 			})
 		}
@@ -582,49 +611,49 @@ func (m *RisingWaveControllerManager) SyncCompactorService() ctrlkit.Action {
 	})
 }
 
-// SyncCompactorDeployment generates the action of "SyncCompactorDeployment".
-func (m *RisingWaveControllerManager) SyncCompactorDeployment() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_SyncCompactorDeployment, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_SyncCompactorDeployment)
+// SyncCompactorDeployments generates the action of "SyncCompactorDeployments".
+func (m *RisingWaveControllerManager) SyncCompactorDeployments() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_SyncCompactorDeployments, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_SyncCompactorDeployments)
 
 		// Get states.
-		compactorDeployment, err := m.state.GetCompactorDeployment(ctx)
+		compactorDeployments, err := m.state.GetCompactorDeployments(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
 		// Invoke action.
 		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncCompactorDeployment, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncCompactorDeployment, map[string]client.Object{
-				"compactorDeployment": compactorDeployment,
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncCompactorDeployments, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncCompactorDeployments, map[string]runtime.Object{
+				"compactorDeployments": &appsv1.DeploymentList{Items: compactorDeployments},
 			})
 		}
 
-		return m.impl.SyncCompactorDeployment(ctx, logger, compactorDeployment)
+		return m.impl.SyncCompactorDeployments(ctx, logger, compactorDeployments)
 	})
 }
 
-// WaitBeforeCompactorDeploymentReady generates the action of "WaitBeforeCompactorDeploymentReady".
-func (m *RisingWaveControllerManager) WaitBeforeCompactorDeploymentReady() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeCompactorDeploymentReady, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeCompactorDeploymentReady)
+// WaitBeforeCompactorDeploymentsReady generates the action of "WaitBeforeCompactorDeploymentsReady".
+func (m *RisingWaveControllerManager) WaitBeforeCompactorDeploymentsReady() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeCompactorDeploymentsReady, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeCompactorDeploymentsReady)
 
 		// Get states.
-		compactorDeployment, err := m.state.GetCompactorDeployment(ctx)
+		compactorDeployments, err := m.state.GetCompactorDeployments(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
 		// Invoke action.
 		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeCompactorDeploymentReady, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeCompactorDeploymentReady, map[string]client.Object{
-				"compactorDeployment": compactorDeployment,
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeCompactorDeploymentsReady, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeCompactorDeploymentsReady, map[string]runtime.Object{
+				"compactorDeployments": &appsv1.DeploymentList{Items: compactorDeployments},
 			})
 		}
 
-		return m.impl.WaitBeforeCompactorDeploymentReady(ctx, logger, compactorDeployment)
+		return m.impl.WaitBeforeCompactorDeploymentsReady(ctx, logger, compactorDeployments)
 	})
 }
 
@@ -642,7 +671,7 @@ func (m *RisingWaveControllerManager) SyncConfigConfigMap() ctrlkit.Action {
 		// Invoke action.
 		if m.hook != nil {
 			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncConfigConfigMap, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncConfigConfigMap, map[string]client.Object{
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncConfigConfigMap, map[string]runtime.Object{
 				"configConfigMap": configConfigMap,
 			})
 		}
@@ -677,22 +706,22 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 			return ctrlkit.RequeueIfError(err)
 		}
 
-		metaDeployment, err := m.state.GetMetaDeployment(ctx)
+		metaDeployments, err := m.state.GetMetaDeployments(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
-		frontendDeployment, err := m.state.GetFrontendDeployment(ctx)
+		frontendDeployments, err := m.state.GetFrontendDeployments(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
-		computeStatefulSet, err := m.state.GetComputeStatefulSet(ctx)
+		computeStatefulSets, err := m.state.GetComputeStatefulSets(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
-		compactorDeployment, err := m.state.GetCompactorDeployment(ctx)
+		compactorDeployments, err := m.state.GetCompactorDeployments(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
@@ -707,20 +736,20 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 			defer func() {
 				m.hook.PostRun(ctx, logger, RisingWaveAction_CollectRunningStatisticsAndSyncStatus, result, err)
 			}()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_CollectRunningStatisticsAndSyncStatus, map[string]client.Object{
-				"frontendService":     frontendService,
-				"metaService":         metaService,
-				"computeService":      computeService,
-				"compactorService":    compactorService,
-				"metaDeployment":      metaDeployment,
-				"frontendDeployment":  frontendDeployment,
-				"computeStatefulSet":  computeStatefulSet,
-				"compactorDeployment": compactorDeployment,
-				"configConfigMap":     configConfigMap,
+			m.hook.PreRun(ctx, logger, RisingWaveAction_CollectRunningStatisticsAndSyncStatus, map[string]runtime.Object{
+				"frontendService":      frontendService,
+				"metaService":          metaService,
+				"computeService":       computeService,
+				"compactorService":     compactorService,
+				"metaDeployments":      &appsv1.DeploymentList{Items: metaDeployments},
+				"frontendDeployments":  &appsv1.DeploymentList{Items: frontendDeployments},
+				"computeStatefulSets":  &appsv1.StatefulSetList{Items: computeStatefulSets},
+				"compactorDeployments": &appsv1.DeploymentList{Items: compactorDeployments},
+				"configConfigMap":      configConfigMap,
 			})
 		}
 
-		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaDeployment, frontendDeployment, computeStatefulSet, compactorDeployment, configConfigMap)
+		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
 	})
 }
 

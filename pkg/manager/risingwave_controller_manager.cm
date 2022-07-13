@@ -47,27 +47,31 @@ decl RisingWaveControllerManager for RisingWave {
             owned
         }
 
-        // Deployment for meta nodes.
-        metaDeployment Deployment {
-            name=${target.Name}-meta
+        // Deployments for meta nodes.
+        metaDeployments []Deployment {
+            labels/risingwave/name=${target.Name}
+            labels/risingwave/component=meta
             owned
         }
 
-        // Deployment for frontend nodes.
-        frontendDeployment Deployment {
-            name=${target.Name}-frontend
+        // Deployments for frontend nodes.
+        frontendDeployments []Deployment {
+            labels/risingwave/name=${target.Name}
+            labels/risingwave/component=frontend
             owned
         }
 
-        // StatefulSet for compute nodes.
-        computeStatefulSet StatefulSet {
-            name=${target.Name}-compute
+        // StatefulSets for compute nodes.
+        computeStatefulSets []StatefulSet {
+            labels/risingwave/name=${target.Name}
+            labels/risingwave/component=compute
             owned
         }
 
-        // Deployment for compactor nodes.
-        compactorDeployment Deployment {
-            name=${target.Name}-compactor
+        // Deployments for compactor nodes.
+        compactorDeployments []Deployment {
+            labels/risingwave/name=${target.Name}
+            labels/risingwave/component=compactor
             owned
         }
     }
@@ -76,41 +80,41 @@ decl RisingWaveControllerManager for RisingWave {
         // SyncMetaService creates or updates the service for meta nodes.
         SyncMetaService(metaService)
 
-        // SyncMetaDeployment creates or updates the deployment for meta nodes.
-        SyncMetaDeployment(metaDeployment)
+        // SyncMetaDeployments creates or updates the deployments for meta nodes.
+        SyncMetaDeployments(metaDeployments)
 
         // WaitBeforeMetaServiceIsAvailable waits (aborts the workflow) before the meta service is available.
         WaitBeforeMetaServiceIsAvailable(metaService)
 
-        // WaitBeforeMetaDeploymentReady waits (aborts the workflow) before the meta deployment is ready.
-        WaitBeforeMetaDeploymentReady(metaDeployment)
+        // WaitBeforeMetaDeploymentsReady waits (aborts the workflow) before the meta deployments are ready.
+        WaitBeforeMetaDeploymentsReady(metaDeployments)
 
         // SyncFrontendService creates or updates the service for frontend nodes.
         SyncFrontendService(frontendService)
 
-        // SyncFrontendDeployment creates or updates the deployment for frontend nodes.
-        SyncFrontendDeployment(frontendDeployment)
+        // SyncFrontendDeployments creates or updates the deployments for frontend nodes.
+        SyncFrontendDeployments(frontendDeployments)
 
-        // WaitBeforeFrontendDeploymentReady waits (aborts the workflow) before the frontend deployment is ready.
-        WaitBeforeFrontendDeploymentReady(frontendDeployment)
+        // WaitBeforeFrontendDeploymentsReady waits (aborts the workflow) before the frontend deployments are ready.
+        WaitBeforeFrontendDeploymentsReady(frontendDeployments)
 
         // SyncComputeService creates or updates the service for compute nodes.
         SyncComputeService(computeService)
 
-        // SyncComputeStatefulSet creates or updates the statefulset for compute nodes.
-        SyncComputeStatefulSet(computeStatefulSet)
+        // SyncComputeStatefulSets creates or updates the statefulsets for compute nodes.
+        SyncComputeStatefulSets(computeStatefulSets)
 
-        // WaitBeforeComputeStatefulSetReady waits (aborts the workflow) before the compute statefulset is ready.
-        WaitBeforeComputeStatefulSetReady(computeStatefulSet)
+        // WaitBeforeComputeStatefulSetsReady waits (aborts the workflow) before the compute statefulsets are ready.
+        WaitBeforeComputeStatefulSetsReady(computeStatefulSets)
 
         // SyncCompactorService creates or updates the service for compactor nodes.
         SyncCompactorService(compactorService)
 
-        // SyncCompactorDeployment creates or updates the deployment for compactor nodes.
-        SyncCompactorDeployment(compactorDeployment)
+        // SyncCompactorDeployments creates or updates the deployments for compactor nodes.
+        SyncCompactorDeployments(compactorDeployments)
 
-        // WaitBeforeCompactorDeploymentReady waits (aborts the workflow) before the compactor deployment is ready.
-        WaitBeforeCompactorDeploymentReady(compactorDeployment)
+        // WaitBeforeCompactorDeploymentsReady waits (aborts the workflow) before the compactor deployments are ready.
+        WaitBeforeCompactorDeploymentsReady(compactorDeployments)
 
         // SyncConfigConfigMap creates or updates the configmap for RisingWave configs.
         SyncConfigConfigMap(configConfigMap)
@@ -122,6 +126,6 @@ decl RisingWaveControllerManager for RisingWave {
 
     action {
         // CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
-        CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaDeployment, frontendDeployment, computeStatefulSet, compactorDeployment, configConfigMap)
+        CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
     }
 }

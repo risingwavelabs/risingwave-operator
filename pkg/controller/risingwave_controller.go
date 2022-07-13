@@ -44,18 +44,18 @@ import (
 const (
 	// Pre-defined actions. Import from manager package.
 	RisingWaveAction_SyncMetaService                       = manager.RisingWaveAction_SyncMetaService
-	RisingWaveAction_SyncMetaDeployment                    = manager.RisingWaveAction_SyncMetaDeployment
+	RisingWaveAction_SyncMetaDeployments                   = manager.RisingWaveAction_SyncMetaDeployments
 	RisingWaveAction_WaitBeforeMetaServiceIsAvailable      = manager.RisingWaveAction_WaitBeforeMetaServiceIsAvailable
-	RisingWaveAction_WaitBeforeMetaDeploymentReady         = manager.RisingWaveAction_WaitBeforeMetaDeploymentReady
+	RisingWaveAction_WaitBeforeMetaDeploymentsReady        = manager.RisingWaveAction_WaitBeforeMetaDeploymentsReady
 	RisingWaveAction_SyncFrontendService                   = manager.RisingWaveAction_SyncFrontendService
-	RisingWaveAction_SyncFrontendDeployment                = manager.RisingWaveAction_SyncFrontendDeployment
-	RisingWaveAction_WaitBeforeFrontendDeploymentReady     = manager.RisingWaveAction_WaitBeforeFrontendDeploymentReady
+	RisingWaveAction_SyncFrontendDeployments               = manager.RisingWaveAction_SyncFrontendDeployments
+	RisingWaveAction_WaitBeforeFrontendDeploymentsReady    = manager.RisingWaveAction_WaitBeforeFrontendDeploymentsReady
 	RisingWaveAction_SyncComputeService                    = manager.RisingWaveAction_SyncComputeService
-	RisingWaveAction_SyncComputeStatefulSet                = manager.RisingWaveAction_SyncComputeStatefulSet
-	RisingWaveAction_WaitBeforeComputeStatefulSetReady     = manager.RisingWaveAction_WaitBeforeComputeStatefulSetReady
+	RisingWaveAction_SyncComputeStatefulSets               = manager.RisingWaveAction_SyncComputeStatefulSets
+	RisingWaveAction_WaitBeforeComputeStatefulSetsReady    = manager.RisingWaveAction_WaitBeforeComputeStatefulSetsReady
 	RisingWaveAction_SyncCompactorService                  = manager.RisingWaveAction_SyncCompactorService
-	RisingWaveAction_SyncCompactorDeployment               = manager.RisingWaveAction_SyncCompactorDeployment
-	RisingWaveAction_WaitBeforeCompactorDeploymentReady    = manager.RisingWaveAction_WaitBeforeCompactorDeploymentReady
+	RisingWaveAction_SyncCompactorDeployments              = manager.RisingWaveAction_SyncCompactorDeployments
+	RisingWaveAction_WaitBeforeCompactorDeploymentsReady   = manager.RisingWaveAction_WaitBeforeCompactorDeploymentsReady
 	RisingWaveAction_SyncConfigConfigMap                   = manager.RisingWaveAction_SyncConfigConfigMap
 	RisingWaveAction_CollectRunningStatisticsAndSyncStatus = manager.RisingWaveAction_CollectRunningStatisticsAndSyncStatus
 
@@ -159,82 +159,82 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	})
 	markConditionInitializingAsTrue := mgr.NewAction(RisingWaveAction_MarkConditionInitializingAsTrue, func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
 		risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
-			Type:   risingwavev1alpha1.Initializing,
+			Type:   risingwavev1alpha1.RisingWaveConditionInitializing,
 			Status: metav1.ConditionTrue,
 		})
 		return ctrlkit.Continue()
 	})
 	markConditionRunningAsFalse := mgr.NewAction(RisingWaveAction_MarkConditionRunningAsFalse, func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
 		risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
-			Type:   risingwavev1alpha1.Running,
+			Type:   risingwavev1alpha1.RisingWaveConditionRunning,
 			Status: metav1.ConditionFalse,
 		})
 		return ctrlkit.Continue()
 	})
 	conditionInitializingIsTrueBarrier := mgr.NewAction(RisingWaveAction_BarrierConditionInitializingIsTrue, func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
-		condition := risingwaveManger.GetCondition(risingwavev1alpha1.Initializing)
+		condition := risingwaveManger.GetCondition(risingwavev1alpha1.RisingWaveConditionInitializing)
 		return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
 	})
 	markConditionRunningAsTrue := mgr.NewAction(RisingWaveAction_MarkConditionRunningAsTrue, func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
 		risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
-			Type:   risingwavev1alpha1.Running,
+			Type:   risingwavev1alpha1.RisingWaveConditionRunning,
 			Status: metav1.ConditionTrue,
 		})
 		return ctrlkit.Continue()
 	})
 	removeConditionInitializing := mgr.NewAction(RisingWaveAction_RemoveConditionInitializing, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-		risingwaveManger.RemoveCondition(risingwavev1alpha1.Initializing)
+		risingwaveManger.RemoveCondition(risingwavev1alpha1.RisingWaveConditionInitializing)
 		return ctrlkit.Continue()
 	})
 	markConditionRunningAsTrueAndRemoveConditionInitializing := ctrlkit.Join(markConditionRunningAsTrue, removeConditionInitializing)
 
 	conditionRunningIsTrueBarrier := mgr.NewAction(RisingWaveAction_BarrierConditionRunningIsTrue, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-		condition := risingwaveManger.GetCondition(risingwavev1alpha1.Running)
+		condition := risingwaveManger.GetCondition(risingwavev1alpha1.RisingWaveConditionRunning)
 		return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
 	})
 	markConditionUpgradingAsTrue := mgr.NewAction(RisingWaveAction_MarkConditionUpgradingAsTrue, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
 		risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
-			Type:   risingwavev1alpha1.Upgrading,
+			Type:   risingwavev1alpha1.RisingWaveConditionUpgrading,
 			Status: metav1.ConditionTrue,
 		})
 		return ctrlkit.Continue()
 	})
 	conditionUpgradingIsTrueBarrier := mgr.NewAction(RisingWaveAction_BarrierConditionUpgradingIsTrue, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-		condition := risingwaveManger.GetCondition(risingwavev1alpha1.Upgrading)
+		condition := risingwaveManger.GetCondition(risingwavev1alpha1.RisingWaveConditionUpgrading)
 		return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
 	})
 	markConditionUpgradingAsFalse := mgr.NewAction(RisingWaveAction_MarkConditionUpgradingAsFalse, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
 		risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
-			Type:   risingwavev1alpha1.Upgrading,
+			Type:   risingwavev1alpha1.RisingWaveConditionUpgrading,
 			Status: metav1.ConditionFalse,
 		})
 		return ctrlkit.Continue()
 	})
 	syncConfigs := mgr.SyncConfigConfigMap()
-	syncMetaComponent := ctrlkit.JoinInParallel(mgr.SyncMetaService(), mgr.SyncMetaDeployment())
+	syncMetaComponent := ctrlkit.JoinInParallel(mgr.SyncMetaService(), mgr.SyncMetaDeployments())
 	metaComponentReadyBarrier := ctrlkit.Sequential(
-		mgr.WaitBeforeMetaDeploymentReady(),
+		mgr.WaitBeforeMetaDeploymentsReady(),
 		ctrlkit.Timeout(time.Second, mgr.WaitBeforeMetaServiceIsAvailable()),
 	)
 	syncOtherComponents := ctrlkit.JoinInParallel(
 		ctrlkit.JoinInParallel(
 			mgr.SyncComputeService(),
-			mgr.SyncComputeStatefulSet(),
+			mgr.SyncComputeStatefulSets(),
 		),
 		ctrlkit.JoinInParallel(
 			mgr.SyncCompactorService(),
-			mgr.SyncCompactorDeployment(),
+			mgr.SyncCompactorDeployments(),
 		),
 
 		ctrlkit.JoinInParallel(
 			mgr.SyncFrontendService(),
-			mgr.SyncFrontendDeployment(),
+			mgr.SyncFrontendDeployments(),
 		),
 	)
 	otherComponentsReadyBarrier := ctrlkit.Join(
-		mgr.WaitBeforeFrontendDeploymentReady(),
-		mgr.WaitBeforeComputeStatefulSetReady(),
-		mgr.WaitBeforeCompactorDeploymentReady(),
+		mgr.WaitBeforeFrontendDeploymentsReady(),
+		mgr.WaitBeforeComputeStatefulSetsReady(),
+		mgr.WaitBeforeCompactorDeploymentsReady(),
 	)
 	syncAllComponents := ctrlkit.JoinInParallel(syncConfigs, syncMetaComponent, syncOtherComponents)
 	allComponentsReadyBarrier := ctrlkit.Join(metaComponentReadyBarrier, otherComponentsReadyBarrier)

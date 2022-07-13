@@ -55,20 +55,20 @@ func (mgr *RisingWaveManager) SyncObservedGeneration() {
 }
 
 func (mgr *RisingWaveManager) ObjectStorageType() risingwavev1alpha1.ObjectStorageType {
-	objectStorage := mgr.risingwave.Spec.ObjectStorage
+	objectStorage := mgr.risingwave.Spec.Storages.Object
 	switch {
-	case objectStorage.Memory:
-		return risingwavev1alpha1.MemoryType
+	case objectStorage.Memory != nil && *objectStorage.Memory:
+		return risingwavev1alpha1.ObjectStorageTypeMemory
 	case objectStorage.MinIO != nil:
-		return risingwavev1alpha1.MinIOType
+		return risingwavev1alpha1.ObjectStorageTypeMinIO
 	case objectStorage.S3 != nil:
-		return risingwavev1alpha1.S3Type
+		return risingwavev1alpha1.ObjectStorageTypeS3
 	default:
-		return risingwavev1alpha1.UnknownType
+		return risingwavev1alpha1.ObjectStorageTypeUnknown
 	}
 }
 
-func (mgr *RisingWaveManager) GetCondition(conditionType risingwavev1alpha1.RisingWaveType) *risingwavev1alpha1.RisingWaveCondition {
+func (mgr *RisingWaveManager) GetCondition(conditionType risingwavev1alpha1.RisingWaveConditionType) *risingwavev1alpha1.RisingWaveCondition {
 	for _, cond := range mgr.risingwave.Status.Conditions {
 		if cond.Type == conditionType {
 			return cond.DeepCopy()
@@ -77,7 +77,7 @@ func (mgr *RisingWaveManager) GetCondition(conditionType risingwavev1alpha1.Risi
 	return nil
 }
 
-func (mgr *RisingWaveManager) RemoveCondition(conditionType risingwavev1alpha1.RisingWaveType) {
+func (mgr *RisingWaveManager) RemoveCondition(conditionType risingwavev1alpha1.RisingWaveConditionType) {
 	mgr.mu.Lock()
 	defer mgr.mu.Unlock()
 

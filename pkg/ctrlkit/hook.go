@@ -20,12 +20,12 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ActionHook provides hooks for actions implementations in controller manager.
 type ActionHook interface {
-	PreRun(ctx context.Context, logger logr.Logger, action string, states map[string]client.Object)
+	PreRun(ctx context.Context, logger logr.Logger, action string, states map[string]runtime.Object)
 	PostRun(ctx context.Context, logger logr.Logger, action string, result ctrl.Result, err error)
 }

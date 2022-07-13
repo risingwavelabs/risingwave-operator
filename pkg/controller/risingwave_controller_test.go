@@ -24,12 +24,10 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/go-logr/logr"
-	"github.com/samber/lo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -37,7 +35,6 @@ import (
 
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit"
-	"github.com/singularity-data/risingwave-operator/pkg/options"
 )
 
 var schemeForTest = runtime.NewScheme()
@@ -45,9 +42,6 @@ var schemeForTest = runtime.NewScheme()
 func init() {
 	_ = clientgoscheme.AddToScheme(schemeForTest)
 	_ = risingwavev1alpha1.AddToScheme(schemeForTest)
-
-	opt := &options.InnerRisingWaveOptions{}
-	lo.Must0(opt.BuildConfigFromFile("../options/test_config.yaml"))
 }
 
 type resultErr struct {
@@ -83,7 +77,7 @@ func (h *actionAssertionHook) PostRun(ctx context.Context, logger logr.Logger, a
 	}
 }
 
-func (h *actionAssertionHook) PreRun(ctx context.Context, logger logr.Logger, action string, states map[string]client.Object) {
+func (h *actionAssertionHook) PreRun(ctx context.Context, logger logr.Logger, action string, states map[string]runtime.Object) {
 	if _, ok := h.asserts[action]; !ok {
 		if h.mustCover {
 			h.t.Fatalf("unexpected action: %s", action)
@@ -105,20 +99,9 @@ func Test_RisingWaveController_New(t *testing.T) {
 			Name:      "example",
 			Namespace: "default",
 		},
-		Spec: risingwavev1alpha1.RisingWaveSpec{
-			Arch: "arm64",
-			MetaNode: &risingwavev1alpha1.MetaNodeSpec{
-				Storage: &risingwavev1alpha1.MetaStorage{
-					Type: risingwavev1alpha1.InMemory,
-				},
-			},
-			ObjectStorage: &risingwavev1alpha1.ObjectStorageSpec{
-				Memory: true,
-			},
-		},
+		Spec:   risingwavev1alpha1.RisingWaveSpec{},
 		Status: risingwavev1alpha1.RisingWaveStatus{},
 	}
-	risingwave.Default()
 
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().

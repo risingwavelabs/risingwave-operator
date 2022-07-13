@@ -1,0 +1,233 @@
+apiVersion: risingwave.singularity-data.com/v1alpha1
+kind: RisingWavePodTemplate
+metadata:
+  name: template-a
+spec:
+  metadata:
+    labels:
+      a: b
+    annotations:
+      a: b
+  spec:
+    activeDeadlineSeconds: 1
+    affinity:
+    automountServiceAccountToken: false
+    dnsConfig:
+      nameservers: 
+      - 8.8.8.8
+      - 8.8.8.4
+      options:
+      - name: ndots
+        value: "2"
+      - name: edns0
+      searches:
+      - xxxx.local
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: false
+    hostAliases:
+    - ip: 123.123.123.123
+      hostnames: 
+      - a.b
+    hostIPC: false
+    hostNetwork: false
+    hostname: 
+    imagePullSecrets:
+    - name: s
+    # initContainers: # not allowed
+    nodeName: 
+    nodeSelector:
+      node-group: spot
+    os: # os specific
+    preemptionPolicy: PreemptLowerPriority
+    priority: 10
+    priorityClassName:
+    readinessGates:
+    - conditionType: Running
+    restartPolicy: Always
+    runtimeClassName: 
+    containers:
+    - image: ghcr.io/singularity-data/risingwave:latest
+---
+apiVersion: risingwave.singularity-data.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-ng
+spec:
+  global:
+    image: ghcr.io/singularity-data/risingwave:latest
+    imagePullPolicy: 
+    imagePullSecrets:
+    podTemplate: template-a
+    replicas: 
+      meta: 1
+      frontend: 1
+      compute: 1
+      compactor: 1
+    upgradeStrategy:
+      type: Recreate
+      rollingUpgrade: 
+        maxSurge:         
+        maxUnavailable:
+    resources: 
+      limits:
+        cpu: 4
+        memory: 8Gi
+    nodeSelector: 
+      node-group: spot
+  security:
+    tls:
+      enabled: true
+      secret:
+        name: certs
+        key: tls.key
+        cert: tls.crt
+  configuration:
+    configmap: 
+    - name: risingwave-config
+      key: risingwave.toml
+  storages:
+    meta: 
+      memory: true
+      etcd: etcd-endpoint:1234
+    object:
+      memory: true
+      minio:
+        endpoint: minio-endpoint:1234
+        bucket: test
+      s3: 
+        secret: s3-credentials
+    pvcTemplates:
+    - metadata:
+        name: cache
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "aws-ebs"
+        resources:
+          requests:
+            storage: 1Gi
+  components:
+    meta: 
+      restartAt: # *metav1.Time, controls the restart of component
+      ports:
+        service: 1234
+        metrics: 2345
+        dashboard: 3456
+      groups:
+      - name:               # empty for default
+        replicas: 1
+        podTemplate: template-a
+        upgradeStrategy:
+          type: RollingUpdate # or Recreate
+          rollingUpdate:
+            maxSurge:
+            maxUnavailable:
+        resources: 
+          limits:
+            cpu: 4
+            memory: 8Gi
+        nodeSelector: 
+          node-group: spot
+    frontend:
+      restartAt: # *metav1.Time, controls the restart of component
+      ports:
+        service: 1234
+        metrics: 2345
+      groups:
+      - name: 
+        image: 
+        imagePullPolicy: 
+        replicas: 1
+        podTemplate: template-a
+        upgradeStrategy:
+          type: RollingUpdate # or Recreate
+          rollingUpdate:
+            maxSurge:
+            maxUnavailable:
+        resources: 
+          limits:
+            cpu: 4
+            memory: 8Gi
+        nodeSelector: 
+          node-group: spot
+    compute:
+      restartAt: # *metav1.Time, controls the restart of component
+      ports:
+        service: 1234
+        metrics: 2345
+      groups:
+      - name: 
+        replicas: 1
+        podTemplate: template-a
+        upgradeStrategy:
+          type: RollingUpdate # or Recreate
+          rollingUpdate:
+            maxUnavailable:
+        resources: 
+          limits:
+            cpu: 4
+            memory: 8Gi
+        volumeMounts:
+        - name: cache
+          mountPath: /risingwave/cache
+        nodeSelector: 
+          node-group: spot
+    compactor:
+      restartAt: # *metav1.Time, controls the restart of component
+      ports:
+        service: 1234
+        metrics: 2345
+      groups:
+      - name: 
+        replicas: 1
+        podTemplate: template-a
+        upgradeStrategy:
+          type: RollingUpdate # or Recreate
+          rollingUpdate:
+            maxSurge:
+            maxUnavailable:
+        resources: 
+          limits:
+            cpu: 4
+            memory: 8Gi
+        nodeSelector: 
+          node-group: spot
+status:
+  observedGeneration: 1
+  componentReplicas:
+    meta:
+      target: 1
+      running: 1
+      groups:
+      - name: 
+        target: 1
+        running: 1
+    frontend: 
+      target: 1
+      running: 1
+      groups:
+      - name: 
+        target: 1
+        running: 1
+    compute:
+      target: 1
+      running: 1
+      groups:
+      - name: 
+        target: 1
+        running: 1
+    compactor:
+      target: 1
+      running: 1
+      groups:
+      - name: 
+        target: 1
+        running: 1
+  conditions:
+  - type: Running
+    status: True
+  storages: 
+    meta: 
+      type: Memory
+    object:
+      type: S3
+  

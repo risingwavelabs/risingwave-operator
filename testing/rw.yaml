@@ -91,7 +91,7 @@ kind: Secret
 metadata: 
   name: risingwave-minio-credentials
   namespace: e2e-rw
-data:
+stringData:
   username: hummockadmin
   password: hummockadmin
 ---

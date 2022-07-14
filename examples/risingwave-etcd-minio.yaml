@@ -87,7 +87,7 @@ apiVersion: v1
 kind: Secret
 metadata: 
   name: risingwave-minio-credentials
-data:
+stringData:
   username: hummockadmin
   password: hummockadmin
 ---

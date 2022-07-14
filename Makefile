@@ -88,7 +88,7 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	@$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./apis/..."
 
-generate-manager: ctrlkit-gen goimports-reviser
+generate-manager: ctrlkit-gen goimports-reviser ## Generate codes of controller managers.
 	@$(CTRLKIT-GEN) -o pkg/manager/ -p "github.com/singularity-data/risingwave-operator/pkg/ctrlkit" -b hack/boilerplate.go.txt pkg/manager/risingwave_controller_manager.cm
 	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_controller_manager.go -local "github.com/singularity-data/risingwave-operator"
 

@@ -15,9 +15,14 @@ metadata:
 spec:
   group: risingwave.singularity-data.com
   names:
+    categories:
+    - all
+    - streaming
     kind: RisingWavePodTemplate
     listKind: RisingWavePodTemplateList
     plural: risingwavepodtemplates
+    shortNames:
+    - rwpt
     singular: risingwavepodtemplate
   scope: Namespaced
   versions:
@@ -6880,6 +6885,7 @@ spec:
   names:
     categories:
     - all
+    - streaming
     kind: RisingWave
     listKind: RisingWaveList
     plural: risingwaves

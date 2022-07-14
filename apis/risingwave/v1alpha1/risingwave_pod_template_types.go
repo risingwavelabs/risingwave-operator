@@ -37,6 +37,7 @@ type RisingWavePodTemplateSpec struct {
 }
 
 // +kubebuilder:object:root=true
+// +kubebuilder:resource:shortName=rwpt,categories=all;streaming
 
 type RisingWavePodTemplate struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -45,7 +46,6 @@ type RisingWavePodTemplate struct {
 }
 
 // +kubebuilder:object:root=true
-// +kubebuilder:resource:shortName=rwpt,categories=all
 
 // RisingWavePodTemplateList contains a list of RisingWavePodTemplate.
 type RisingWavePodTemplateList struct {

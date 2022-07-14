@@ -11,6 +11,7 @@ spec:
   names:
     categories:
     - all
+    - streaming
     kind: RisingWave
     listKind: RisingWaveList
     plural: risingwaves

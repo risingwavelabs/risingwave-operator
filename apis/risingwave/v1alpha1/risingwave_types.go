@@ -543,9 +543,9 @@ type MetaStorageType string
 
 // These are valid values of MetaStorageType.
 const (
-	MetaStorageTypeMemory  MetaStorageType = "memory"
-	MetaStorageTypeEtcd    MetaStorageType = "etcd"
-	MetaStorageTypeUnknown MetaStorageType = "unknown"
+	MetaStorageTypeMemory  MetaStorageType = "Memory"
+	MetaStorageTypeEtcd    MetaStorageType = "Etcd"
+	MetaStorageTypeUnknown MetaStorageType = "Unknown"
 )
 
 // RisingWaveMetaStorageStatus is the status of meta storage.
@@ -558,10 +558,10 @@ type ObjectStorageType string
 
 // These are valid values of ObjectStorageType.
 const (
-	ObjectStorageTypeMemory  ObjectStorageType = "memory"
-	ObjectStorageTypeMinIO   ObjectStorageType = "minio"
-	ObjectStorageTypeS3      ObjectStorageType = "s3"
-	ObjectStorageTypeUnknown ObjectStorageType = "unknown"
+	ObjectStorageTypeMemory  ObjectStorageType = "Memory"
+	ObjectStorageTypeMinIO   ObjectStorageType = "MinIO"
+	ObjectStorageTypeS3      ObjectStorageType = "S3"
+	ObjectStorageTypeUnknown ObjectStorageType = "Unknown"
 )
 
 // RisingWaveObjectStorageStatus is the status of object storage.

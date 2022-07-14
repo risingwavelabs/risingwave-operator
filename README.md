@@ -58,8 +58,8 @@ kubectl get risingwave
 The expected output is like this:
 
 ```shell
-NAME                RUNNING   STORAGE(META)   STORAGE(OBJECT)   AGE
-risingwave-in-memory   True      memory          memory            6m39s
+NAME                    RUNNING   STORAGE(META)   STORAGE(OBJECT)   AGE
+risingwave-in-memory    False     Memory          Memory            2s
 ```
 
 ### Connect & Query

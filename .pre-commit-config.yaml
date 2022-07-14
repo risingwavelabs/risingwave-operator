@@ -10,7 +10,7 @@ repos:
     always_run: true
     stages:
       - commit
-- repo: https://github.com/dnephin/pre-commit-golang
+- repo: https://github.com/arkbriar/pre-commit-golang
   rev: master
   hooks:
     - id: go-fmt

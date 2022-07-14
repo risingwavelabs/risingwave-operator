@@ -1,7 +1,7 @@
 apiVersion: risingwave.singularity-data.com/v1alpha1
 kind: RisingWave
 metadata:
-  name: risingwave-memory
+  name: risingwave-in-memory
 spec:
   storages:
     meta:

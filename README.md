@@ -43,10 +43,10 @@ Now you can deploy a RisingWave instance with in-memory storage with the followi
 
 ```shell
 # It runs on the Linux/amd64 platform. If you want to run on Linux/arm64, you need to run the command below.
-kubectl apply -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/examples/risingwave-memory.yaml
+kubectl apply -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/examples/risingwave-in-memory.yaml
 
 # Linux/arm64
-curl https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/examples/risingwave-memory.yaml | sed -e 's/ghcr.io\/singularity-data\/risingwave/public.ecr.aws\/x5u3w5h6\/risingwave-arm/g' | kubectl apply -f -
+curl https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/examples/risingwave-in-memory.yaml | sed -e 's/ghcr.io\/singularity-data\/risingwave/public.ecr.aws\/x5u3w5h6\/risingwave-arm/g' | kubectl apply -f -
 ```
 
 Check the running status of RisingWave with the following command:
@@ -59,7 +59,7 @@ The expected output is like this:
 
 ```shell
 NAME                RUNNING   STORAGE(META)   STORAGE(OBJECT)   AGE
-risingwave-memory   True      memory          memory            6m39s
+risingwave-in-memory   True      memory          memory            6m39s
 ```
 
 ### Connect & Query
@@ -81,14 +81,14 @@ kubectl exec -it psql-console bash
 Finally, we can get access to the RisingWave with the `psql` command inside the Pod:
 
 ```shell
-psql -h risingwave-memory -p 4567 -d dev -U root
+psql -h risingwave-in-memory -p 4567 -d dev -U root
 ```
 
 ## Storages
 
 ### etcd (meta)
 
-We recommend to use the [etcd](https://etcd.io/) to store the metadata. You can specify the connection information of the `etcd` you'd like to use like the following:
+We recommend using the [etcd](https://etcd.io/)](https://etcd.io/) to store the metadata. You can specify the connection information of the `etcd` you'd like to use like the following:
 
 ```yamlex
 #...

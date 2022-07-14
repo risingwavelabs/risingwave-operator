@@ -124,6 +124,8 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 		}
 	}
 
+	logger = logger.WithValues("generation", risingwave.Generation)
+
 	// Abort if deleted.
 	if utils.IsDeleted(&risingwave) {
 		logger.Info("Deleted, abort")

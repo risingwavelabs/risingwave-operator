@@ -19,6 +19,7 @@ package factory
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/samber/lo"
 	appsv1 "k8s.io/api/apps/v1"
@@ -613,7 +614,10 @@ func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podT
 	// Set labels and annotations.
 	podTemplate.Labels = mergeMap(podTemplate.Labels, f.podLabelsOrSelectorsForGroup(component, group))
 	if restartAt != nil {
-		podTemplate.Annotations[consts.AnnotationRestartAt] = strconv.FormatInt(restartAt.Unix(), 10)
+		if podTemplate.Annotations == nil {
+			podTemplate.Annotations = make(map[string]string)
+		}
+		podTemplate.Annotations[consts.AnnotationRestartAt] = restartAt.In(time.UTC).Format("2006-01-02T15:04:05Z")
 	}
 
 	// Setup the first container.

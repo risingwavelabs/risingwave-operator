@@ -213,7 +213,7 @@ define get-golangci-lint
 @[ -f $(GOLANGCI-LINT) ] || { \
 set -e ;\
 echo "Downloading golangci-lint" ;\
-curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_DIR)/bin v1.45.2; \
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_DIR)/bin v1.46.2; \
 }
 endef
 

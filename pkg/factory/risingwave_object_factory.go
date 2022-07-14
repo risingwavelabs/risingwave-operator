@@ -99,6 +99,10 @@ func (f *RisingWaveObjectFactory) isObjectStorageMinIO() bool {
 	return f.risingwave.Spec.Storages.Object.MinIO != nil
 }
 
+func (f *RisingWaveObjectFactory) isMetaStorageEtcd() bool {
+	return f.risingwave.Spec.Storages.Meta.Etcd != nil
+}
+
 func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 	objectStorage := f.risingwave.Spec.Storages.Object
 	switch {
@@ -360,10 +364,8 @@ func (f *RisingWaveObjectFactory) argsForFrontend() []string {
 
 	return []string{
 		"frontend-node",
-		"--host",
-		fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
-		"--meta-addr",
-		fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		"--host", fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
+		"--meta-addr", fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 	}
 }
 
@@ -377,7 +379,8 @@ func (f *RisingWaveObjectFactory) argsForCompute() []string {
 		"--host", fmt.Sprintf("$(POD_IP):%d", computePorts.ServicePort),
 		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", computePorts.MetricsPort),
 		"--metrics-level=1",
-		fmt.Sprintf("--state-store=%s", f.hummockConnectionStr()),
+		"--state-store",
+		f.hummockConnectionStr(),
 		"--meta-address",
 		fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 	}
@@ -391,11 +394,10 @@ func (f *RisingWaveObjectFactory) argsForCompactor() []string {
 		"compactor-node",
 		"--config-path", "/risingwave/config/risingwave.toml",
 		"--host", fmt.Sprintf("$(POD_IP):%d", compactorPorts.ServicePort),
-		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", compactorPorts.MetricsPort),
+		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", compactorPorts.MetricsPort),
 		"--metrics-level=1",
-		fmt.Sprintf("--state-store=%s", f.hummockConnectionStr()),
-		"--meta-address",
-		fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		"--state-store", f.hummockConnectionStr(),
+		"--meta-address", fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 	}
 }
 
@@ -606,6 +608,16 @@ func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podT
 		podTemplate = buildPodTemplateSpecFrom(&t.Template)
 	}
 
+	// Set the image pull secrets.
+	podTemplate.Spec.ImagePullSecrets = append(podTemplate.Spec.ImagePullSecrets, lo.Map(groupTemplate.ImagePullSecrets, func(s string, _ int) corev1.LocalObjectReference {
+		return corev1.LocalObjectReference{
+			Name: s,
+		}
+	})...)
+
+	// Set the node selector.
+	podTemplate.Spec.NodeSelector = groupTemplate.NodeSelector
+
 	// Set config volume.
 	podTemplate.Spec.Volumes = mergeListWhenKeyEquals(podTemplate.Spec.Volumes, f.risingWaveConfigVolume(), func(a, b *corev1.Volume) bool {
 		return a.Name == b.Name
@@ -736,6 +748,14 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 	container.Name = "meta"
 	container.Args = f.argsForMeta()
 	container.Ports = f.portsForMetaContainer()
+
+	if f.isMetaStorageEtcd() {
+		for _, env := range f.envsForEtcd() {
+			container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+				return a.Name == b.Name
+			})
+		}
+	}
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
 		return a.MountPath == b.MountPath

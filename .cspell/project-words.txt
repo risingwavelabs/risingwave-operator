@@ -67,6 +67,7 @@ mutating+
 nosync
 objs
 onsi
+ownee
 PHOST
 pingcap
 polardbx

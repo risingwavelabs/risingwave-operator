@@ -221,19 +221,20 @@ func syncComponentGroupWorkloads[T any, TP ptrAsObject[T]](
 	toDelete := make([]TP, 0)
 	toSyncGroupObjects := make(map[string]TP, 0)
 	foundGroups := make(map[string]int)
-	for _, workloadObj := range objects {
-		group := TP(&workloadObj).GetLabels()[consts.LabelRisingWaveGroup]
+	for i := range objects {
+		workloadObjPtr := TP(&objects[i])
+		group := workloadObjPtr.GetLabels()[consts.LabelRisingWaveGroup]
 		foundGroups[group] = 1
 		if _, exists := observedGroupSet[group]; exists {
-			logger.Info("Duplicate group found, mark as to delete", "group", group, "workload", TP(&workloadObj).GetName())
-			toDelete = append(toDelete, TP(&workloadObj))
+			logger.Info("Duplicate group found, mark as to delete", "group", group, "workload", workloadObjPtr.GetName())
+			toDelete = append(toDelete, workloadObjPtr)
 		} else {
-			if !mgr.isObjectSynced(TP(&workloadObj)) {
+			if !mgr.isObjectSynced(workloadObjPtr) {
 				_, expectExists := expectedGroupSet[group]
 				if expectExists {
-					toSyncGroupObjects[group] = TP(&workloadObj)
+					toSyncGroupObjects[group] = workloadObjPtr
 				} else {
-					toDelete = append(toDelete, TP(&workloadObj))
+					toDelete = append(toDelete, workloadObjPtr)
 				}
 			}
 		}

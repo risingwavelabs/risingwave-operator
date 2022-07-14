@@ -181,9 +181,6 @@ spec:
                         - name
                         x-kubernetes-list-type: map
                       ports:
-                        default:
-                          metrics: 1260
-                          service: 6660
                         description: Ports are the ports to be listened by the compactor
                           Pods.
                         properties:
@@ -375,9 +372,6 @@ spec:
                         - name
                         x-kubernetes-list-type: map
                       ports:
-                        default:
-                          metrics: 1222
-                          service: 5688
                         description: Ports are the ports to be listened by the compute
                           Pods.
                         properties:
@@ -526,9 +520,6 @@ spec:
                         - name
                         x-kubernetes-list-type: map
                       ports:
-                        default:
-                          metrics: 8080
-                          service: 4567
                         description: Ports are the ports to be listened by the frontend
                           Pods.
                         properties:
@@ -676,10 +667,6 @@ spec:
                         - name
                         x-kubernetes-list-type: map
                       ports:
-                        default:
-                          dashboard: 5691
-                          metrics: 1250
-                          service: 5690
                         description: Ports are the ports to be listened by the meta
                           Pods.
                         properties:

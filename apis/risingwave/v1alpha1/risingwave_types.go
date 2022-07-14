@@ -186,7 +186,6 @@ type RisingWaveComponentMeta struct {
 
 	// Ports are the ports to be listened by the meta Pods.
 	// +optional
-	// +kubebuilder:default={service: 5690, metrics: 1250, dashboard: 5691}
 	Ports RisingWaveComponentMetaPorts `json:"ports,omitempty"`
 
 	// Groups are the groups of Pods of the meta component.
@@ -206,7 +205,6 @@ type RisingWaveComponentFrontend struct {
 
 	// Ports are the ports to be listened by the frontend Pods.
 	// +optional
-	// +kubebuilder:default={service: 4567, metrics: 8080}
 	Ports RisingWaveComponentCommonPorts `json:"ports,omitempty"`
 
 	// Groups are the groups of Pods of the frontend component.
@@ -226,7 +224,6 @@ type RisingWaveComponentCompute struct {
 
 	// Ports are the ports to be listened by the compute Pods.
 	// +optional
-	// +kubebuilder:default={service: 5688, metrics: 1222}
 	Ports RisingWaveComponentCommonPorts `json:"ports,omitempty"`
 
 	// Groups are the groups of Pods of the compute component.
@@ -246,7 +243,6 @@ type RisingWaveComponentCompactor struct {
 
 	// Ports are the ports to be listened by the compactor Pods.
 	// +optional
-	// +kubebuilder:default={service: 6660, metrics: 1260}
 	Ports RisingWaveComponentCommonPorts `json:"ports,omitempty"`
 
 	// Groups are the groups of Pods of the compactor component.

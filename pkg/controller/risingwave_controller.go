@@ -146,7 +146,16 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 
 	updateRisingWaveStatus := mgr.NewAction(RisingWaveAction_UpdateRisingWaveStatusViaClient, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
 		err := risingwaveManager.UpdateRemoteRisingWaveStatus(ctx)
-		return ctrlkit.RequeueIfErrorAndWrap("unable to update status", err)
+		switch {
+		case apierrors.IsNotFound(err):
+			logger.Info("Object not found, skip...")
+			return ctrlkit.NoRequeue()
+		case apierrors.IsConflict(err):
+			logger.Info("Conflict detected while updating status, retry...")
+			return ctrlkit.RequeueImmediately()
+		default:
+			return ctrlkit.RequeueIfErrorAndWrap("unable to update status", err)
+		}
 	})
 
 	return c.runWorkflow(ctx, ctrlkit.OptimizeWorkflow(ctrlkit.SequentialJoin(

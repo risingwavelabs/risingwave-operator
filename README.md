@@ -86,6 +86,21 @@ psql -h risingwave-in-memory -p 4567 -d dev -U root
 
 ## Storages
 
+### Memory
+
+Currently, memory storage is supported for test usage only. We highly discourage you use the memory storage for other purposes. For now, you can enable the memory metadata and object storage with the following configs:
+
+```yamlex
+#...
+spec:
+  storages:
+    meta:
+      memory: true
+    object:
+      memory: true
+#...
+```
+
 ### etcd (meta)
 
 We recommend using the [etcd](https://etcd.io/)](https://etcd.io/) to store the metadata. You can specify the connection information of the `etcd` you'd like to use like the following:

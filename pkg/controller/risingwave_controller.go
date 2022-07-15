@@ -116,7 +116,7 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 	var risingwave risingwavev1alpha1.RisingWave
 	if err := c.Client.Get(ctx, request.NamespacedName, &risingwave); err != nil {
 		if apierrors.IsNotFound(err) {
-			logger.Info("Not found, abort")
+			logger.V(1).Info("Not found, abort")
 			return ctrlkit.NoRequeue()
 		} else {
 			logger.Error(err, "Failed to get RisingWave")
@@ -148,7 +148,7 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 		err := risingwaveManager.UpdateRemoteRisingWaveStatus(ctx)
 		switch {
 		case apierrors.IsNotFound(err):
-			logger.Info("Object not found, skip...")
+			logger.Info("Object not found, skip")
 			return ctrlkit.NoRequeue()
 		case apierrors.IsConflict(err):
 			logger.Info("Conflict detected while updating status, retry...")

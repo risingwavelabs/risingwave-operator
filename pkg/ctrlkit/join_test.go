@@ -28,6 +28,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+func Test_Join_Group(t *testing.T) {
+	testGroup[joinGroup](t, "")
+}
+
 func Test_Join_Description(t *testing.T) {
 	if Join(Nop, Nop).Description() != "Join(Nop, Nop)" {
 		t.Fatal("description of join is not correct")
@@ -35,11 +39,11 @@ func Test_Join_Description(t *testing.T) {
 }
 
 func Test_JoinInParallel_Description(t *testing.T) {
-	if JoinInParallel(Nop).Description() != Parallel(Nop).Description() {
+	if ParallelJoin(Nop).Description() != Parallel(Nop).Description() {
 		t.Fatal("one join should be optimized")
 	}
 
-	if JoinInParallel(Nop, Nop).Description() != "ParallelJoin(Nop, Nop)" {
+	if ParallelJoin(Nop, Nop).Description() != "ParallelJoin(Nop, Nop)" {
 		t.Fatal("description of parallel join is not correct")
 	}
 }
@@ -172,7 +176,7 @@ func Test_Join_Simplify(t *testing.T) {
 
 func Test_JoinInParallel_Simplify(t *testing.T) {
 	x := NewAction("X", nothingFunc)
-	if JoinInParallel(x).Description() != "Parallel(X)" {
+	if ParallelJoin(x).Description() != "Parallel(X)" {
 		t.Fail()
 	}
 }
@@ -250,7 +254,7 @@ func Test_JoinInParallel_Run(t *testing.T) {
 		return NoRequeue()
 	})
 
-	_, err := JoinInParallel(ping, pong).Run(context.Background())
+	_, err := ParallelJoin(ping, pong).Run(context.Background())
 	if err == context.DeadlineExceeded {
 		t.Fail()
 	}
@@ -259,5 +263,5 @@ func Test_JoinInParallel_Run(t *testing.T) {
 func Test_JoinInOrder_Run(t *testing.T) {
 	// Should work only in order. Otherwise the count actions would panic.
 	cnt := 0
-	JoinInOrder(newSequentialCountActs(10, &cnt)...).Run(context.Background())
+	OrderedJoin(newSequentialCountActs(10, &cnt)...).Run(context.Background())
 }

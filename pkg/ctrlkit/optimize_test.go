@@ -60,106 +60,138 @@ func Test_OptimizeWorkflow(t *testing.T) {
 	x := NewAction("x", nothingFunc)
 	y := NewAction("y", nothingFunc)
 	testcases := map[string]struct {
-		action Action
-		desc   []string
+		beforeOpt  Action
+		expectDesc []string
 	}{
-		"remove-nop-in-sequential": {
-			action: Sequential(x, Nop, y),
-			desc: []string{
+		"remove-nop-in-sequential-2": {
+			beforeOpt: Sequential(Nop, y),
+			expectDesc: []string{
+				y.Description(),
+			},
+		},
+		"remove-nop-in-sequential-3": {
+			beforeOpt: Sequential(x, Nop, y),
+			expectDesc: []string{
 				Sequential(x, y).Description(),
 			},
 		},
-		"remove-nop-in-join": {
-			action: Join(x, Nop, y),
-			desc: []string{
+		"remove-nop-in-join-2": {
+			beforeOpt: Join(x, Nop),
+			expectDesc: []string{
+				x.Description(),
+			},
+		},
+		"remove-nop-in-join-3": {
+			beforeOpt: Join(x, Nop, y),
+			expectDesc: []string{
 				"Join(x, y)",
 				"Join(y, x)",
 			},
 		},
 		"remove-parallel-in-sequential": {
-			action: Sequential(x, Parallel(y)),
-			desc: []string{
+			beforeOpt: Sequential(x, Parallel(y)),
+			expectDesc: []string{
 				Sequential(x, y).Description(),
 			},
 		},
 		"empty-join-to-nop": {
-			action: Join(Nop, Nop),
-			desc:   []string{Nop.Description()},
+			beforeOpt:  Join(Nop, Nop),
+			expectDesc: []string{Nop.Description()},
 		},
 		"empty-sequential-to-nop": {
-			action: Sequential(Nop, Nop),
-			desc:   []string{Nop.Description()},
+			beforeOpt:  Sequential(Nop, Nop),
+			expectDesc: []string{Nop.Description()},
 		},
 		"single-join-unwrap": {
-			action: Join(x),
-			desc:   []string{x.Description()},
+			beforeOpt:  Join(x),
+			expectDesc: []string{x.Description()},
 		},
 		"single-sequential-unwrap": {
-			action: Sequential(y),
-			desc:   []string{y.Description()},
+			beforeOpt:  Sequential(y),
+			expectDesc: []string{y.Description()},
 		},
 		"flatten-sequential": {
-			action: Sequential(x, Sequential(x, y)),
-			desc: []string{
+			beforeOpt: Sequential(x, Sequential(x, y)),
+			expectDesc: []string{
 				Sequential(x, x, y).Description(),
 			},
 		},
-		"flatten-join": {
-			action: Join(x, Join(x, y)),
-			desc: []string{
+		"flatten-nested-join": {
+			beforeOpt: Join(x, Join(x, y)),
+			expectDesc: []string{
 				"Join(x, x, y)",
 				"Join(y, x, x)",
 				"Join(x, y, x)",
 			},
 		},
+		"not-flatten-different-nested-joins-1": {
+			beforeOpt: Join(x, ParallelJoin(x, y)),
+			expectDesc: []string{
+				"Join(x, ParallelJoin(x, y))",
+				"Join(ParallelJoin(x, y), x)",
+			},
+		},
+		"not-flatten-different-nested-joins-2": {
+			beforeOpt: ParallelJoin(x, Join(x, y)),
+			expectDesc: []string{
+				"ParallelJoin(x, Join(x, y))",
+				"ParallelJoin(x, Join(y, x))",
+			},
+		},
 		"unwrap-parallel-sequence": {
-			action: Parallel(Parallel(x)),
-			desc: []string{
+			beforeOpt: Parallel(Parallel(x)),
+			expectDesc: []string{
 				Parallel(x).Description(),
 			},
 		},
 		"timeout-big-timeout-small": {
-			action: Timeout(5*time.Second, Timeout(time.Second, x)),
-			desc: []string{
+			beforeOpt: Timeout(5*time.Second, Timeout(time.Second, x)),
+			expectDesc: []string{
 				Timeout(time.Second, x).Description(),
 			},
 		},
 		"timeout-small-timeout-big": {
-			action: Timeout(time.Second, Timeout(5*time.Second, x)),
-			desc: []string{
+			beforeOpt: Timeout(time.Second, Timeout(5*time.Second, x)),
+			expectDesc: []string{
 				Timeout(time.Second, x).Description(),
 			},
 		},
 		"join-in-parallel-with-nop": {
-			action: JoinInParallel(x, Nop),
-			desc: []string{
+			beforeOpt: ParallelJoin(x, Nop),
+			expectDesc: []string{
 				Parallel(x).Description(),
 			},
 		},
 		"parallel-nop": {
-			action: Parallel(Nop),
-			desc: []string{
+			beforeOpt: Parallel(Nop),
+			expectDesc: []string{
 				Nop.Description(),
 			},
 		},
 		"timeout-nop": {
-			action: Timeout(time.Second, Nop),
-			desc: []string{
+			beforeOpt: Timeout(time.Second, Nop),
+			expectDesc: []string{
 				Nop.Description(),
 			},
 		},
 		"retry-nop": {
-			action: Retry(2, Nop),
-			desc: []string{
+			beforeOpt: Retry(2, Nop),
+			expectDesc: []string{
 				Nop.Description(),
+			},
+		},
+		"retry-some": {
+			beforeOpt: Retry(2, x),
+			expectDesc: []string{
+				Retry(2, x).Description(),
 			},
 		},
 	}
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			desc := OptimizeWorkflow(tc.action).Description()
-			if !lo.Contains(tc.desc, desc) {
+			desc := OptimizeWorkflow(tc.beforeOpt).Description()
+			if !lo.Contains(tc.expectDesc, desc) {
 				t.Fail()
 			}
 		})

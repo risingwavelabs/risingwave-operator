@@ -23,6 +23,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+func Test_Parallel_Decorator(t *testing.T) {
+	testDecorator[parallelAction](t, "Parallel")
+}
+
 func Test_Parallel_Description(t *testing.T) {
 	x := NewAction("A", nothingFunc)
 	if Parallel(x).Description() != "Parallel(A)" {

@@ -25,6 +25,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+func Test_Timeout_Decorator(t *testing.T) {
+	testDecorator[timeoutAction](t, "Timeout")
+}
+
 func newSleepAction(t time.Duration) Action {
 	return NewAction("", func(ctx context.Context) (ctrl.Result, error) {
 		select {

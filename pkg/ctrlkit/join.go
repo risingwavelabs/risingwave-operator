@@ -141,6 +141,7 @@ var (
 var _ internal.Group = &joinGroup{}
 
 type joinGroup struct {
+	name    string
 	actions []Action
 	runner  joinRunner
 }
@@ -154,11 +155,7 @@ func (grp *joinGroup) SetChildren(actions []Action) {
 }
 
 func (grp *joinGroup) Name() string {
-	if grp.runner.IsParallel() {
-		return "ParallelJoin"
-	} else {
-		return "Join"
-	}
+	return grp.name
 }
 
 func (grp *joinGroup) Description() string {
@@ -169,7 +166,7 @@ func (grp *joinGroup) Run(ctx context.Context) (ctrl.Result, error) {
 	return grp.runner.Run(ctx, grp.actions...)
 }
 
-func join(actions []Action, runner joinRunner) Action {
+func join(name string, actions []Action, runner joinRunner) Action {
 	if len(actions) == 0 {
 		return Nop
 	}
@@ -178,24 +175,24 @@ func join(actions []Action, runner joinRunner) Action {
 		return actions[0]
 	}
 
-	return &joinGroup{actions: actions, runner: runner}
+	return &joinGroup{name: name, actions: actions, runner: runner}
 }
 
 // Join organizes the actions in a split-join flow, which doesn't guarantee the execution order.
 func Join(actions ...Action) Action {
-	return join(lo.Shuffle(actions), defaultJoinRunner)
+	return join("Join", lo.Shuffle(actions), defaultJoinRunner)
 }
 
-// JoinInOrder organizes the actions in a split-join flow and guarantees the execution order.
-func JoinInOrder(actions ...Action) Action {
-	return join(actions, defaultJoinRunner)
+// OrderedJoin organizes the actions in a split-join flow and guarantees the execution order.
+func OrderedJoin(actions ...Action) Action {
+	return join("Join", actions, defaultJoinRunner)
 }
 
-// JoinInParallel organizes the actions in a split-join flow and executes them in parallel.
-func JoinInParallel(actions ...Action) Action {
+// ParallelJoin organizes the actions in a split-join flow and executes them in parallel.
+func ParallelJoin(actions ...Action) Action {
 	if len(actions) == 1 {
 		return Parallel(actions[0])
 	}
 
-	return join(actions, parallelJoinRunner)
+	return join("ParallelJoin", actions, parallelJoinRunner)
 }

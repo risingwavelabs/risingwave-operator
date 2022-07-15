@@ -25,6 +25,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+func Test_Retry_Decorator(t *testing.T) {
+	testDecorator[retryAction](t, "Retry")
+}
+
 func newFailUntilAction(failCnt int, cnt *int) Action {
 	return NewAction("FailCnt-"+strconv.Itoa(failCnt), func(ctx context.Context) (ctrl.Result, error) {
 		if *cnt < failCnt {

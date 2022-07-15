@@ -86,6 +86,10 @@ func newSequentialCountActs(size int, cnt *int) []Action {
 	return acts
 }
 
+func Test_Sequential_Group(t *testing.T) {
+	testGroup[sequentialGroup](t, "Sequential")
+}
+
 func Test_Sequential_Run(t *testing.T) {
 	testcases := map[string]struct {
 		countSize  int

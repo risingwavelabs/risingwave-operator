@@ -54,20 +54,6 @@ func (mgr *RisingWaveManager) SyncObservedGeneration() {
 	mgr.mutableRisingWave.Status.ObservedGeneration = mgr.risingwave.Generation
 }
 
-func (mgr *RisingWaveManager) ObjectStorageType() risingwavev1alpha1.ObjectStorageType {
-	objectStorage := mgr.risingwave.Spec.Storages.Object
-	switch {
-	case objectStorage.Memory != nil && *objectStorage.Memory:
-		return risingwavev1alpha1.ObjectStorageTypeMemory
-	case objectStorage.MinIO != nil:
-		return risingwavev1alpha1.ObjectStorageTypeMinIO
-	case objectStorage.S3 != nil:
-		return risingwavev1alpha1.ObjectStorageTypeS3
-	default:
-		return risingwavev1alpha1.ObjectStorageTypeUnknown
-	}
-}
-
 func (mgr *RisingWaveManager) GetCondition(conditionType risingwavev1alpha1.RisingWaveConditionType) *risingwavev1alpha1.RisingWaveCondition {
 	for _, cond := range mgr.risingwave.Status.Conditions {
 		if cond.Type == conditionType {

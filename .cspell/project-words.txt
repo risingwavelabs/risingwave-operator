@@ -99,6 +99,7 @@ subresource
 subresources
 tempdisk
 testcases
+testutils
 tidb
 tolerations
 utilruntime

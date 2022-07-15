@@ -17,18 +17,20 @@
 package ctrlkit
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"context"
+
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-func ValidateOwnership(obj, owner client.Object) bool {
-	if obj == nil || owner == nil {
-		return false
-	}
+func zero[T any]() T {
+	var t T
+	return t
+}
 
-	ref := metav1.GetControllerOfNoCopy(obj)
-	if ref == nil {
-		return false
-	}
-	return ref.UID == owner.GetUID()
+var nothingFunc ActionFunc = func(ctx context.Context) (ctrl.Result, error) {
+	return NoRequeue()
+}
+
+var exitFunc ActionFunc = func(ctx context.Context) (ctrl.Result, error) {
+	return Exit()
 }

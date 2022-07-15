@@ -15,3 +15,66 @@
  */
 
 package ctrlkit
+
+import (
+	"context"
+	"testing"
+
+	ctrl "sigs.k8s.io/controller-runtime"
+)
+
+func Test_Parallel_Description(t *testing.T) {
+	x := NewAction("A", nothingFunc)
+	if Parallel(x).Description() != "Parallel(A)" {
+		t.Fail()
+	}
+}
+
+func Test_Parallel_Simplify(t *testing.T) {
+	testcases := map[string]struct {
+		inner Action
+		same  bool
+	}{
+		"simply": {
+			inner: Parallel(Nop),
+			same:  true,
+		},
+		"not-simply-nop": {
+			inner: Nop,
+			same:  false,
+		},
+		"not-simply": {
+			inner: NewAction("any", nothingFunc),
+			same:  false,
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			act := Parallel(tc.inner)
+			if tc.same && act != tc.inner {
+				t.Fail()
+			}
+		})
+	}
+}
+
+func Test_Parallel_Run(t *testing.T) {
+	blockChan := make(chan int)
+	x := NewAction("block chan", func(ctx context.Context) (ctrl.Result, error) {
+		select {
+		case <-blockChan:
+			return NoRequeue()
+		case <-ctx.Done():
+			t.Fail()
+			return Exit()
+		}
+	})
+
+	// Start a sender.
+	go func() {
+		blockChan <- 1
+	}()
+
+	Parallel(x).Run(context.Background())
+}

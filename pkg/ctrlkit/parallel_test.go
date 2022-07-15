@@ -15,33 +15,3 @@
  */
 
 package ctrlkit
-
-import (
-	"context"
-
-	ctrl "sigs.k8s.io/controller-runtime"
-)
-
-type ActionFunc func(context.Context) (ctrl.Result, error)
-
-type action struct {
-	description string
-	actionFunc  ActionFunc
-}
-
-func (w *action) Description() string {
-	return w.description
-}
-
-func (w *action) Run(ctx context.Context) (ctrl.Result, error) {
-	return w.actionFunc(ctx)
-}
-
-// NewAction wraps the given description and function into an action.
-func NewAction(description string, f ActionFunc) Action {
-	if f == nil {
-		panic("action func must be provided")
-	}
-
-	return &action{description: description, actionFunc: f}
-}

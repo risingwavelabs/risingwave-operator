@@ -31,3 +31,8 @@ func ValidateOwnership(obj, owner client.Object) bool {
 	}
 	return false
 }
+
+func zero[T any]() T {
+	var t T
+	return t
+}

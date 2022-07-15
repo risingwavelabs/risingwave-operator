@@ -83,7 +83,7 @@ kubectl exec -it psql-console bash
 Finally, we can get access to the RisingWave with the `psql` command inside the Pod:
 
 ```shell
-psql -h risingwave-in-memory -p 4567 -d dev -U root
+psql -h risingwave-in-memory-frontend -p 4567 -d dev -U root
 ```
 
 #### NodePort

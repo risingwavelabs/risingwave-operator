@@ -16,8 +16,6 @@
 
 package config
 
-import "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-
 const (
 	Image = "ghcr.io/singularity-data/risingwave"
 )
@@ -27,12 +25,12 @@ const (
 // Config contain the fields needed that creating a instance
 // TODO: add more fields to create a instance flexibly.
 type Config struct {
-	Arch  v1alpha1.Arch
+	Arch  string
 	Image string
 }
 
 var DefaultConfig = Config{
-	Arch:  v1alpha1.AMD64Arch,
+	Arch:  "arm64",
 	Image: Image,
 }
 

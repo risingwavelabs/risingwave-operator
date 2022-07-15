@@ -59,12 +59,14 @@ The expected output is like this:
 
 ```shell
 NAME                    RUNNING   STORAGE(META)   STORAGE(OBJECT)   AGE
-risingwave-in-memory    False     Memory          Memory            2s
+risingwave-in-memory    True      Memory          Memory            30s
 ```
 
 ### Connect & Query
 
-By default, the operator will create a service for the frontend component, with the type of ClusterIP if not specified. It is not accessible from the outside. So we will create a standalone Pod of PostgreSQL inside the Kubernetes, which runs an infinite loop so that we can attach to it.
+#### ClusterIP
+
+By default, the operator will create a service for the frontend component, with the type of `ClusterIP` if not specified. It is not accessible from the outside. So we will create a standalone Pod of PostgreSQL inside the Kubernetes, which runs an infinite loop so that we can attach to it.
 
 You can create one by following the commands below, or you can just do it yourself:
 
@@ -82,6 +84,50 @@ Finally, we can get access to the RisingWave with the `psql` command inside the 
 
 ```shell
 psql -h risingwave-in-memory -p 4567 -d dev -U root
+```
+
+#### NodePort
+
+If you want to connect to the RisingWave from the nodes (e.g., EC2) in the Kubernetes, you can set the service type to `NodePort`, and run the following commands on the node:
+
+```shell
+export RISINGWAVE_NAME=risingwave-in-memory
+export RISINGWAVE_NAMESPACE=default
+export RISINGWAVE_HOST=`kubectl -n ${RISINGWAVE_NAMESPACE} get node -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}'`
+export RISINGWAVE_PORT=`kubectl -n ${RISINGWAVE_NAMESPACE} get svc -l risingwave/name=${RISINGWAVE_NAME},risingwave/component=frontend -o jsonpath='{.items[0].spec.ports[0].nodePort}'`
+
+psql -h ${RISINGWAVE_HOST} -p ${RISINGWAVE_PORT} -d dev -U root
+```
+
+```yamlex
+# ...
+spec:
+  global:
+    serviceType: NodePort
+# ...
+```
+
+#### LoadBalancer
+
+For EKS/GCP and some other Kubernetes provided by cloud vendors, we can expose the Service to the public network with a load balancer on the cloud. We can simply achieve this by setting the service type to `LoadBalancer`, by setting the following field:
+
+```yamlex
+# ...
+spec:
+  global:
+    serviceType: LoadBalancer
+# ...
+```
+
+And then you can connect to the RisingWave with the following command:
+
+```shell
+export RISINGWAVE_NAME=risingwave-in-memory
+export RISINGWAVE_NAMESPACE=default
+export RISINGWAVE_HOST=`kubectl -n ${RISINGWAVE_NAMESPACE} get svc -l risingwave/name=${RISINGWAVE_NAME},risingwave/component=frontend -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'`
+export RISINGWAVE_PORT=`kubectl -n ${RISINGWAVE_NAMESPACE} get svc -l risingwave/name=${RISINGWAVE_NAME},risingwave/component=frontend -o jsonpath='{.items[0].spec.ports[0].port}'`
+
+psql -h ${RISINGWAVE_HOST} -p ${RISINGWAVE_PORT} -d dev -U root
 ```
 
 ## Storages

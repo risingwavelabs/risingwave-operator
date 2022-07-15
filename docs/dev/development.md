@@ -3,6 +3,7 @@
 This document is a guide to start developing the RisingWave operator.
 
 Please submit an [issue](https://github.com/singularity-data/risingwave-operator/issues) on Github if you
+
 * Notice a requirement that this doc does not capture
 * Find a different doc that specifies requirements (the doc should instead link here)
 
@@ -13,40 +14,41 @@ There are no restrictions in choosing the platform for development. However, we 
 ### Hardware Requirements
 
 We recommend the following for any physical or virtual machine being used for developing the RisingWave operator.
+
 * 8GB of RAM
 * 40GB of free disk space
 
 The hardware resources are mainly used for the Docker and Kubernetes.
 
-## Installing Required Software
+### Installing Required Software
 
-### Go
+#### Go
 
 If you don't have a Go development environment, please follow the instructions in the [Go Download and Install](https://go.dev/doc/install).
 
 Confirm that your `GOPATH` and `GOBIN` environment variables are correctly set as detailed in [How to Write Go Code](https://go.dev/doc/code) before proceeding.
 
-Currently, building the RisingWave operator requires Go 1.18 or later. 
+Currently, building the RisingWave operator requires Go 1.18 or later.
 
-### Docker
+#### Docker
 
 Debugging the RisingWave operator locally requires a Docker environment. To install Docker in your development environment, [follow the instructions from the Docker website](https://docs.docker.com/get-docker/).
 
-### kubectl
+#### kubectl
 
 You need to install the `kubectl` command-line tool to run commands against Kubernetes clusters. To install it, please follow the instructions in the [Install Tools](https://kubernetes.io/docs/tasks/tools/).
 
 The RisingWave operator now requires a 1.16+ Kubernetes cluster, which means you should also keep the requirements valid for `kubectl`.
 
-### CSpell
+#### CSpell
 
 We use `CSpell` now to check the spelling of our project. Please follow the instructions in the [Welcome to CSpell](https://cspell.org/).
 
-### pre-commit
+#### pre-commit
 
 We recommend using the [pre-commit](https://pre-commit.com/) to identify simple issues before submission to code review. We've already written [a pre-defined config](https://github.com/singularity-data/risingwave-operator/blob/main/.pre-commit-config.yaml). Please follow the instructions detailed in the [pre-commit website](https://pre-commit.com/) to install the tool and pre-commit hooks.
 
-### psql
+#### psql
 
 RisingWave provides the PostgreSQL protocol wire compatibility. You can connect the RisingWave with `psql` CLI tool. Please follow the instructions described in the [PostgreSQL Downloads](https://www.postgresql.org/download/) to install. Here're some convenient commands to use if you have the same platform and software management tool.
 
@@ -68,21 +70,22 @@ For Red Hat family (Red Hat Enterprise/Rocky/CentOS/Fedora) and SUSE family (SUS
 sudo yum install postgresql
 ```
 
-or 
+or
 
 ```bash
 sudo dnf install postgresql
 ```
 
-### Other tools
+#### Other tools
 
 We have several tools aside from those mentioned above, they would be automatically downloaded by the makefile target. You can also install them manually.
-+ [controller-gen](https://github.com/kubernetes-sigs/controller-tools), >= 0.9
-+ [goimports-reviser](https://github.com/incu6us/goimports-reviser), >= 2.5
-+ [golangci-lint](https://github.com/golangci/golangci-lint), >= 1.45
-+ [kustomize](https://github.com/kubernetes-sigs/kustomize), >= v0.13
-+ [setup-envtest](https://github.com/kubernetes-sigs/controller-runtime/tree/master/tools/setup-envtest), latest
-+ [ctrlkit-gen](https://github.com/arkbriar/ctrlkit/ctrlkit/cmd/ctrlkit-gen), latest
+
+* [controller-gen](https://github.com/kubernetes-sigs/controller-tools), >= 0.9
+* [goimports-reviser](https://github.com/incu6us/goimports-reviser), >= 2.5
+* [golangci-lint](https://github.com/golangci/golangci-lint), >= 1.45
+* [kustomize](https://github.com/kubernetes-sigs/kustomize), >= v0.13
+* [setup-envtest](https://github.com/kubernetes-sigs/controller-runtime/tree/master/tools/setup-envtest), latest
+* [ctrlkit-gen](https://github.com/arkbriar/ctrlkit/ctrlkit/cmd/ctrlkit-gen), latest
 
 ## Building the RisingWave operator
 
@@ -116,8 +119,9 @@ make docker-cross-build
 ## Debugging the RisingWave operator
 
 The RisingWave operator consists of two main components
-+ a webhook server serving the mutating and validation webhooks
-+ a set of controllers control the operation of CRs (RisingWave)
+
+* a webhook server serving the mutating and validation webhooks
+* a set of controllers control the operation of CRs (RisingWave)
 
 ### Provisioning a local Kubernetes cluster
 
@@ -138,7 +142,7 @@ If you use the Docker desktop to run the Kubernetes cluster (those mentioned abo
 make copy-local-certs
 ```
 
-and now you are ready to start a local operator and debug it. 
+and now you are ready to start a local operator and debug it.
 
 However, if you use other Kubernetes deployments, e.g., minikube in a VM, you have to prepare the certificates and manifests manually.
 
@@ -146,11 +150,12 @@ However, if you use other Kubernetes deployments, e.g., minikube in a VM, you ha
 
 To debug locally, one thing you have to ensure is that the `api-server` of the Kubernetes cluster must have access to your host environment, specifically the webhook server (HTTP server).
 
-**Generate the certificates**
+#### Generate the certificates
 
 Find the IP or hostname of your host that the `api-server` has access to, say that is:
-+ IP: 192.18.0.1
-+ or Hostname: host.minikube.local
+
+* IP: 192.18.0.1
+* or Hostname: host.minikube.local
 
 Run the following commands to generate a certificate for an IP:
 
@@ -174,14 +179,16 @@ openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes \
     -extensions san -config <(echo '[req]'; echo 'distinguished_name=req'; echo '[san]'; echo "subjectAltName=DNS:${HOST}")
 ```
 
-**Install the webhook configurations**
+#### Install the webhook configurations
 
 Modify the [config/local/webhook.yaml](/config/local/webhook.yaml) to match your IP/hostname and certificates:
+
 1. Replace the `webhooks.*.clientConfig.caBundle` with the base64 encoded CA certs, which can be obtained by running the following command:
 
 ```bash
 base64 ${TMPDIR}/k8s-webhook-server/serving-certs/tls.crt
 ```
+
 2. Replace the `host.docker.internal` in `webhooks.*.clientConfig.url` with your host IP or hostname used above, like this:
 
 ```yaml
@@ -196,7 +203,7 @@ Now you're all set! Let's start debugging the RisingWave operator!
 
 Before getting started, please run the following commands to perform some checks and try running the operator locally:
 
-**Check the Kubernetes cluster**
+#### Check the Kubernetes cluster
 
 ```bash
 kubectl version --short
@@ -210,7 +217,7 @@ Kustomize Version: v4.5.4
 Server Version: v1.24.0
 ```
 
-**Install the local manifests**
+#### Install the local manifests
 
 The local manifests contain the CRD and the webhook configurations, run the following command to install them:
 
@@ -245,8 +252,7 @@ NAME                                                                            
 validatingwebhookconfiguration.admissionregistration.k8s.io/risingwave-operator-validating-webhook-configuration   1          19h
 ```
 
-
-**Run the operator locally**
+#### Run the operator locally
 
 You can find an example of the expected output in this [PR](https://github.com/singularity-data/risingwave-operator/pull/87).
 
@@ -256,7 +262,7 @@ make run-local
 
 Now stop the process and we're ready for debugging.
 
-**Start debugging in VSCode**
+#### Start debugging in VSCode
 
 Debugging in VSCode requires a launch configuration, you can use the following configuration:
 
@@ -287,14 +293,14 @@ Debugging in VSCode requires a launch configuration, you can use the following c
 ```
 
 Now start debugging by clicking the menu **[Run > Start Debugging]** or pressing **F5**. The following is a list of significant functions/methods/files that might be useful as breakpoints:
-+ `main() cmd/manager/manager.go`, the entry point of the RisingWave operator
-+ `RisingWaveController.Reconcile() pkg/controller/risingwave_controller.go`, the core function of the RisingWave operator
-+ `RisingWave.Default() apis/risingwave/v1alpha1/defaulter.go`, the entry point of the mutating admission webhook for RisingWave
-+ `apis/risingwave/v1alpha1/validator.go`, the callbacks of the validating admission webhook for RisingWave
 
+* `main() cmd/manager/manager.go`, the entry point of the RisingWave operator
+* `RisingWaveController.Reconcile() pkg/controller/risingwave_controller.go`, the core function of the RisingWave operator
+* `pkg/webhook/risingwave_mutating_webhook.go`, the entry point of the mutating admission webhook for RisingWave
+* `pkg/webhook/risingwave_validating_webhook.go`, the callbacks of the validating admission webhook for RisingWave
 
 ![Screenshot -- Debugging with VSCode](./images/screenshot-vscode-debugging-risingwave-operator.png)
 
-**Start debugging in other IDEs**
+#### Start debugging in other IDEs
 
 Follow the instructions of [GoLand Debugging](https://www.jetbrains.com/help/go/debugging-code.html) to launch a debugging process like in VSCode.

@@ -1,13 +1,20 @@
+# RisingWave Operator
+
 ## Introduction
 
-The RisingWave Kubernetes Operator is a RisingWave deployment management tool based on Kubernetes. The `risingwave-operator` provides the following custom resources:
-- risingwave.singularity-data.com
+The RisingWave operator is a deployment and management system of the [RisingWave streaming database](https://github.com/singularity-data/risingwave) that runs on top of Kubernetes. It provides functionalities like provisioning, upgrading, scaling and destroying the `RisingWave` instances inside the Kubernetes cluster. It models the deployment and management progress with the concepts provided in Kubernetes and organizes them in a way called [Operator Pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/). Thus we can just declare what kind of `RisingWave` instances we want and create them as objects in the Kubernetes. The RisingWave operator will always make sure that they are finally there.
+
+The operator also contains several custom resources, as listed below:
+
+- `risingwave.singularity-data.com/v1alpha1`
+  - `RisingWave`
+  - `RisingWavePodTemplate`
 
 ## Quick Start
 
-#### Install cert-manager
+### Installation
 
-We need to install the `cert-manager` in the cluster before installing the `risingwave-operator`.
+First, you need to install the `cert-manager` in the cluster before installing the `risingwave-operator`.
 
 The default static configuration cert-manager can be installed as follows:
 
@@ -17,103 +24,190 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 
 More information on this install cert-manager method [can be found here](https://cert-manager.io/docs/installation/#default-static-install).
 
-
-#### Install risingwave-operator
-
-`risingwave-operator` can be installed as follows:
+Then, you can install the `risingwave-operator` with the following command:
 
 ```shell
 kubectl apply -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/config/risingwave-operator.yaml
 ```
 
-## Examples
-
-You can deploy RisingWave which uses MinIO on Linux/amd64 arch nodes as follows:
+To check if the installation is successful, you can run the following commands to check if the Pods are running.
 
 ```shell
-kubectl create namespace test
-kubectl apply -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/examples/single-risingwave.yaml
+kubectl -n cert-manager get pods
+kubectl -n risingwave-operator-system get pods
 ```
 
-## First Query
+### First RisingWave Instance
 
-#### Install psql
-
-To connect to the RisingWave server, you will need to [install PostgreSQL shell](./docs/dev/development.md#psql) (`psql`) in advance.
-
-
-#### Query
-
-We use `NodePort` service for the frontend.
-
-Please get the nodePort of the frontend service as `psql port` and get the `INTERNAL-IP` address of any node as follows:
+Now you can deploy a RisingWave instance with in-memory storage with the following command (be careful about the node arch):
 
 ```shell
-PHOST=`kubectl get node -o=jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}'`
+# It runs on the Linux/amd64 platform. If you want to run on Linux/arm64, you need to run the command below.
+kubectl apply -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/examples/risingwave-in-memory.yaml
+
+# Linux/arm64
+curl https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/examples/risingwave-in-memory.yaml | sed -e 's/ghcr.io\/singularity-data\/risingwave/public.ecr.aws\/x5u3w5h6\/risingwave-arm/g' | kubectl apply -f -
 ```
+
+Check the running status of RisingWave with the following command:
 
 ```shell
-PPORT=`kubectl get service -n test test-risingwave-amd64-frontend -o=jsonpath='{.spec.ports[0].nodePort}'`
+kubectl get risingwave
 ```
 
-Connect to the frontend by `psql` as follows:
+The expected output is like this:
 
 ```shell
-psql -h $PHOST -p $PPORT -d dev
+NAME                    RUNNING   STORAGE(META)   STORAGE(OBJECT)   AGE
+risingwave-in-memory    True      Memory          Memory            30s
 ```
 
-## Storage
+### Connect & Query
+
+#### ClusterIP
+
+By default, the operator will create a service for the frontend component, with the type of `ClusterIP` if not specified. It is not accessible from the outside. So we will create a standalone Pod of PostgreSQL inside the Kubernetes, which runs an infinite loop so that we can attach to it.
+
+You can create one by following the commands below, or you can just do it yourself:
+
+```shell
+kubectl apply -f examples/psql/psql-console.yaml
+```
+
+And then you will find a Pod named `psql-console` running in the Kubernetes, and you can attach to it to execute commands inside the container with the following command:
+
+```shell
+kubectl exec -it psql-console bash
+```
+
+Finally, we can get access to the RisingWave with the `psql` command inside the Pod:
+
+```shell
+psql -h risingwave-in-memory -p 4567 -d dev -U root
+```
+
+#### NodePort
+
+If you want to connect to the RisingWave from the nodes (e.g., EC2) in the Kubernetes, you can set the service type to `NodePort`, and run the following commands on the node:
+
+```shell
+export RISINGWAVE_NAME=risingwave-in-memory
+export RISINGWAVE_NAMESPACE=default
+export RISINGWAVE_HOST=`kubectl -n ${RISINGWAVE_NAMESPACE} get node -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}'`
+export RISINGWAVE_PORT=`kubectl -n ${RISINGWAVE_NAMESPACE} get svc -l risingwave/name=${RISINGWAVE_NAME},risingwave/component=frontend -o jsonpath='{.items[0].spec.ports[0].nodePort}'`
+
+psql -h ${RISINGWAVE_HOST} -p ${RISINGWAVE_PORT} -d dev -U root
+```
+
+```yamlex
+# ...
+spec:
+  global:
+    serviceType: NodePort
+# ...
+```
+
+#### LoadBalancer
+
+For EKS/GCP and some other Kubernetes provided by cloud vendors, we can expose the Service to the public network with a load balancer on the cloud. We can simply achieve this by setting the service type to `LoadBalancer`, by setting the following field:
+
+```yamlex
+# ...
+spec:
+  global:
+    serviceType: LoadBalancer
+# ...
+```
+
+And then you can connect to the RisingWave with the following command:
+
+```shell
+export RISINGWAVE_NAME=risingwave-in-memory
+export RISINGWAVE_NAMESPACE=default
+export RISINGWAVE_HOST=`kubectl -n ${RISINGWAVE_NAMESPACE} get svc -l risingwave/name=${RISINGWAVE_NAME},risingwave/component=frontend -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}'`
+export RISINGWAVE_PORT=`kubectl -n ${RISINGWAVE_NAMESPACE} get svc -l risingwave/name=${RISINGWAVE_NAME},risingwave/component=frontend -o jsonpath='{.items[0].spec.ports[0].port}'`
+
+psql -h ${RISINGWAVE_HOST} -p ${RISINGWAVE_PORT} -d dev -U root
+```
+
+## Storages
+
+### Memory
+
+Currently, memory storage is supported for test usage only. We highly discourage you use the memory storage for other purposes. For now, you can enable the memory metadata and object storage with the following configs:
+
+```yamlex
+#...
+spec:
+  storages:
+    meta:
+      memory: true
+    object:
+      memory: true
+#...
+```
+
+### etcd (meta)
+
+We recommend using the [etcd](https://etcd.io/)](https://etcd.io/) to store the metadata. You can specify the connection information of the `etcd` you'd like to use like the following:
+
+```yamlex
+#...
+spec:
+  storages:
+    meta:
+      etcd: 
+        endpoint: risingwave-etcd:2388
+        secret: etcd-credentials      # optional, empty means no authentication 
+#...
+```
+
+Check the [examples/risingwave-etcd-minio.yaml](./examples/risingwave-etcd-minio.yaml) for how to provision a simple RisingWave with an `etcd` instance as the metadata storage.
+
+### MinIO
+
+We support using MinIO as the object storage. Check the [examples/risingwave-etcd-minio.yaml](./examples/risingwave-etcd-minio.yaml) for details. The YAML structure is like the following:
+
+```yamlex
+#...
+spec:
+  storages:
+    object:
+      minio:
+        secret: minio-credentials
+        endpoint: minio-endpoint:2388
+        bucket: hummock001
+#...
+```
 
 ### S3
 
-We support using AWS S3 as storage. You can use S3 as follows:
+We support using AWS S3 as the object storage. Follow the steps below and check the [examples/risingwave-etcd-s3.yaml](./examples/risingwave-etcd-s3.yaml) for details:
 
-1. Create a `secret` named `cloud-provider-configure` in your namespace.
+First, you need to create a `Secret` with the name `s3-credentials`:
+
 ```shell
-kubectl create secret generic -n test cloud-provider-configure --from-literal AccessKeyID=XXXXXXX --from-literal SecretAccessKey=YYYYYYY --from-literal Region=ZZZZZ
+kubectl create secret generic s3-credentials --from-literal AccessKeyID=${ACCESS_KEY} --from-literal SecretAccessKey=${SECRET_ACCESS_KEY} --from-literal Region=${AWS_REGION}
 ```
 
-2. Create a `bucket` in the AWS Console.
-3. Use the bucket by setting the following fields: 
+Then, you need to create a `bucket` on the console, e.g., `hummock001`.
+
+Finally, you can specify S3 as the object storage in YAML, like the following:
+
 ```yamlex
-objectStorage:
-  s3:
-    provider: aws
-    bucket: xxxx #your-bucket-name
+#...
+spec:
+  storages:
+    object:
+      s3:
+        secret: s3-credentials
+        bucket: hummock001
+#...
 ```
-
-
-## Configuration
-
-You can get the `risingwave-operator` configuration as follows:
-
-```shell
-kubectl get cm risingwave-operator-controller-manager-config -n risingwave-operator-system -o yaml
-```
-
-If you edit the `ConfigMap`, please restart the `risingwave-operator` to reload the configuration.
-
-## Monitoring
-
-We recommend using the [prometheus-operator](https://github.com/prometheus-operator/prometheus-operator#quickstart) to install Prometheus.
-
-You can use the command to install `prometheus-operator` as follows:
-
-```shell
-kubectl create -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/bundle.yaml
-```
-
-You can use the command to create a `Prometheus` in your cluster as follows:
-
-```shell
-kubectl create -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/examples/monitoring/prometheus.yaml
-```
-
-If you already deployed the `prometheus-operator` in your cluster, `risingwave-operator` will create `ServiceMonitor` when creating the RisingWave cluster.
 
 ## License
 
-The `risingwave-operator` is under the Apache License 2.0. Please refer to [LICENSE](LICENSE) for more information.
+The RisingWave operator is developed under the Apache License 2.0. Please refer to [LICENSE](LICENSE) for more information.
 
 ## Contributing
 

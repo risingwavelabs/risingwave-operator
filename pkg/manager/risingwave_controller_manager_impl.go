@@ -26,6 +26,8 @@ import (
 	"github.com/samber/lo"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -42,6 +44,459 @@ type risingWaveControllerManagerImpl struct {
 	client            client.Client
 	risingwaveManager *object.RisingWaveManager
 	objectFactory     *factory.RisingWaveObjectFactory
+}
+
+func buildGroupStatus(globalReplicas int32, groups []risingwavev1alpha1.RisingWaveComponentGroup, deployments []appsv1.Deployment) risingwavev1alpha1.ComponentReplicasStatus {
+	status := risingwavev1alpha1.ComponentReplicasStatus{
+		Target: globalReplicas,
+	}
+
+	expectedGroups := make(map[string]int32)
+	expectedGroups[""] = globalReplicas
+	for _, group := range groups {
+		status.Target += group.Replicas
+		expectedGroups[group.Name] = group.Replicas
+	}
+
+	for _, deploy := range deployments {
+		status.Running += deploy.Status.ReadyReplicas
+		group := deploy.Labels[consts.LabelRisingWaveGroup]
+		if replicas, ok := expectedGroups[group]; ok {
+			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
+				Target:  replicas,
+				Running: deploy.Status.ReadyReplicas,
+			})
+		} else {
+			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
+				Target:  0,
+				Running: deploy.Status.ReadyReplicas,
+			})
+		}
+	}
+
+	return status
+}
+
+func buildComputeGroupStatus(globalReplicas int32, groups []risingwavev1alpha1.RisingWaveComputeGroup, deployments []appsv1.StatefulSet) risingwavev1alpha1.ComponentReplicasStatus {
+	status := risingwavev1alpha1.ComponentReplicasStatus{
+		Target: globalReplicas,
+	}
+
+	expectedGroups := make(map[string]int32)
+	expectedGroups[""] = globalReplicas
+	for _, group := range groups {
+		status.Target += group.Replicas
+		expectedGroups[group.Name] = group.Replicas
+	}
+
+	for _, deploy := range deployments {
+		status.Running += deploy.Status.ReadyReplicas
+		group := deploy.Labels[consts.LabelRisingWaveGroup]
+		if replicas, ok := expectedGroups[group]; ok {
+			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
+				Target:  replicas,
+				Running: deploy.Status.ReadyReplicas,
+			})
+		} else {
+			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
+				Target:  0,
+				Running: deploy.Status.ReadyReplicas,
+			})
+		}
+	}
+
+	return status
+}
+
+// CollectRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger,
+	frontendService *corev1.Service, metaService *corev1.Service,
+	computeService *corev1.Service, compactorService *corev1.Service,
+	metaDeployments []appsv1.Deployment, frontendDeployments []appsv1.Deployment,
+	computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment,
+	configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
+	risingwave := mgr.risingwaveManager.RisingWave()
+	globalSpec := &risingwave.Spec.Global
+	componentsSpec := &risingwave.Spec.Components
+
+	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
+		// Report meta storage status.
+		metaStorage := &risingwave.Spec.Storages.Meta
+		switch {
+		case metaStorage.Memory != nil && *metaStorage.Memory:
+			status.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorageStatus{
+				Type: risingwavev1alpha1.MetaStorageTypeMemory,
+			}
+		case metaStorage.Etcd != nil:
+			status.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorageStatus{
+				Type: risingwavev1alpha1.MetaStorageTypeEtcd,
+			}
+		default:
+			status.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorageStatus{
+				Type: risingwavev1alpha1.MetaStorageTypeUnknown,
+			}
+		}
+
+		// Report object storage status.
+		objectStorage := &risingwave.Spec.Storages.Object
+		switch {
+		case objectStorage.Memory != nil && *objectStorage.Memory:
+			status.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorageStatus{
+				Type: risingwavev1alpha1.ObjectStorageTypeMemory,
+			}
+		case objectStorage.MinIO != nil:
+			status.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorageStatus{
+				Type: risingwavev1alpha1.ObjectStorageTypeMinIO,
+			}
+		case objectStorage.S3 != nil:
+			status.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorageStatus{
+				Type: risingwavev1alpha1.ObjectStorageTypeS3,
+			}
+		default:
+			status.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorageStatus{
+				Type: risingwavev1alpha1.ObjectStorageTypeUnknown,
+			}
+		}
+
+		// Report component replicas.
+		status.ComponentReplicas = risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
+			Meta:      buildGroupStatus(globalSpec.Replicas.Meta, componentsSpec.Meta.Groups, metaDeployments),
+			Frontend:  buildGroupStatus(globalSpec.Replicas.Frontend, componentsSpec.Frontend.Groups, frontendDeployments),
+			Compactor: buildGroupStatus(globalSpec.Replicas.Compactor, componentsSpec.Compactor.Groups, compactorDeployments),
+			Compute:   buildComputeGroupStatus(globalSpec.Replicas.Compute, componentsSpec.Compute.Groups, computeStatefulSets),
+		}
+	})
+
+	return ctrlkit.Continue()
+}
+
+func (mgr *risingWaveControllerManagerImpl) getPodTemplates(ctx context.Context, logger logr.Logger, templateNames []string) (map[string]risingwavev1alpha1.RisingWavePodTemplate, error) {
+	podTemplates := make(map[string]risingwavev1alpha1.RisingWavePodTemplate)
+
+	for _, templateName := range lo.Uniq(templateNames) {
+		if templateName == "" {
+			continue
+		}
+
+		var podTemplate risingwavev1alpha1.RisingWavePodTemplate
+
+		if err := mgr.client.Get(ctx, types.NamespacedName{
+			Namespace: mgr.risingwaveManager.RisingWave().Namespace,
+			Name:      templateName,
+		}, &podTemplate); err != nil {
+			logger.Error(err, "Failed to get pod template", "template-name", templateName)
+			return nil, err
+		}
+
+		podTemplates[templateName] = podTemplate
+	}
+
+	return podTemplates, nil
+}
+
+type ptrAsObject[T any] interface {
+	client.Object
+	*T
+}
+
+func syncComponentGroupWorkloads[T any, TP ptrAsObject[T]](
+	mgr *risingWaveControllerManagerImpl,
+	ctx context.Context,
+	logger logr.Logger,
+	component string,
+	groupPodTemplates map[string]string,
+	objects []T,
+	factory func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) TP,
+) (reconcile.Result, error) {
+	logger = logger.WithValues("component", component)
+
+	// Build expected group set.
+	expectedGroupSet := make(map[string]int)
+	for group := range groupPodTemplates {
+		expectedGroupSet[group] = 1
+	}
+
+	// Decide to delete or to sync.
+	observedGroupSet := make(map[string]int)
+	toDelete := make([]TP, 0)
+	toSyncGroupObjects := make(map[string]TP, 0)
+	foundGroups := make(map[string]int)
+	for i := range objects {
+		workloadObjPtr := TP(&objects[i])
+		group := workloadObjPtr.GetLabels()[consts.LabelRisingWaveGroup]
+		foundGroups[group] = 1
+		if _, exists := observedGroupSet[group]; exists {
+			logger.Info("Duplicate group found, mark as to delete", "group", group, "workload", workloadObjPtr.GetName())
+			toDelete = append(toDelete, workloadObjPtr)
+		} else {
+			if !mgr.isObjectSynced(workloadObjPtr) {
+				_, expectExists := expectedGroupSet[group]
+				if expectExists {
+					toSyncGroupObjects[group] = workloadObjPtr
+				} else {
+					toDelete = append(toDelete, workloadObjPtr)
+				}
+			}
+		}
+		observedGroupSet[group] = 1
+	}
+
+	for group := range expectedGroupSet {
+		if _, found := foundGroups[group]; !found {
+			toSyncGroupObjects[group] = TP(nil) // Not found
+		}
+	}
+
+	// Delete the unexpected. Note it won't delete any workload object that is created with a newer generation,
+	// so it is safe to do the deletion.
+	for _, workloadObj := range toDelete {
+		group := workloadObj.GetLabels()[consts.LabelRisingWaveGroup]
+		if err := mgr.client.Delete(ctx, workloadObj, client.PropagationPolicy(metav1.DeletePropagationBackground)); client.IgnoreNotFound(err) != nil {
+			logger.Error(err, "Failed to delete object", "workload", workloadObj.GetName(), "group", group)
+			return ctrlkit.RequeueIfErrorAndWrap("unable to delete object", err)
+		}
+	}
+
+	// Sync the outdated.
+	if len(toSyncGroupObjects) > 0 {
+		// Build the pod templates.
+		templateNames := make([]string, 0)
+		for group, podTemplate := range groupPodTemplates {
+			_, toSync := toSyncGroupObjects[group]
+			if !toSync {
+				continue
+			}
+			if podTemplate != "" {
+				templateNames = append(templateNames, podTemplate)
+			}
+		}
+
+		podTemplates, err := mgr.getPodTemplates(ctx, logger, templateNames)
+		if err != nil {
+			return ctrlkit.RequeueIfErrorAndWrap("unable to get pod templates", err)
+		}
+
+		for group, workloadObj := range toSyncGroupObjects {
+			if err := syncObject(mgr, ctx, workloadObj, func() TP {
+				return factory(group, podTemplates)
+			}, logger.WithValues("group", group)); err != nil {
+				return ctrlkit.RequeueIfErrorAndWrap("unable to sync object", err)
+			}
+		}
+	}
+
+	return ctrlkit.Continue()
+}
+
+func extractNameAndPodTemplateFromComponentGroup(g *risingwavev1alpha1.RisingWaveComponentGroup) (string, string) {
+	podTemplate := ""
+	if g.RisingWaveComponentGroupTemplate != nil && g.PodTemplate != nil {
+		podTemplate = *g.PodTemplate
+	}
+	return g.Name, podTemplate
+}
+
+func extractNameAndPodTemplateFromComputeGroup(g *risingwavev1alpha1.RisingWaveComputeGroup) (string, string) {
+	podTemplate := ""
+	if g.RisingWaveComputeGroupTemplate != nil && g.PodTemplate != nil {
+		podTemplate = *g.PodTemplate
+	}
+	return g.Name, podTemplate
+}
+
+func followPtrOrDefault[T any](ptr *T) T {
+	if ptr == nil {
+		var zero T
+		return zero
+	}
+	return *ptr
+}
+
+func buildGroupPodTemplateMap[G any](groups []G, extract func(*G) (string, string)) map[string]string {
+	r := make(map[string]string)
+	for _, group := range groups {
+		name, podTemplate := extract(&group)
+		r[name] = podTemplate
+	}
+	return r
+}
+
+// SyncCompactorDeployments implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) SyncCompactorDeployments(ctx context.Context, logger logr.Logger, compactorDeployments []appsv1.Deployment) (reconcile.Result, error) {
+	risingwave := mgr.risingwaveManager.RisingWave()
+
+	groupPodTemplates := buildGroupPodTemplateMap(risingwave.Spec.Components.Compactor.Groups, extractNameAndPodTemplateFromComponentGroup)
+	groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+
+	return syncComponentGroupWorkloads(
+		mgr, ctx, logger,
+		consts.ComponentCompactor,
+		groupPodTemplates,
+		compactorDeployments,
+		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
+			return mgr.objectFactory.NewCompactorDeployment(group, podTemplates)
+		},
+	)
+}
+
+// SyncComputeStatefulSets implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) SyncComputeStatefulSets(ctx context.Context, logger logr.Logger, computeStatefulSets []appsv1.StatefulSet) (reconcile.Result, error) {
+	risingwave := mgr.risingwaveManager.RisingWave()
+
+	groupPodTemplates := buildGroupPodTemplateMap(risingwave.Spec.Components.Compute.Groups, extractNameAndPodTemplateFromComputeGroup)
+	groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+
+	return syncComponentGroupWorkloads(
+		mgr, ctx, logger,
+		consts.ComponentCompactor,
+		groupPodTemplates,
+		computeStatefulSets,
+		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.StatefulSet {
+			return mgr.objectFactory.NewComputeStatefulSet(group, podTemplates)
+		},
+	)
+}
+
+// SyncFrontendDeployments implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) SyncFrontendDeployments(ctx context.Context, logger logr.Logger, frontendDeployments []appsv1.Deployment) (reconcile.Result, error) {
+	risingwave := mgr.risingwaveManager.RisingWave()
+
+	groupPodTemplates := buildGroupPodTemplateMap(risingwave.Spec.Components.Frontend.Groups, extractNameAndPodTemplateFromComponentGroup)
+	groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+
+	return syncComponentGroupWorkloads(
+		mgr, ctx, logger,
+		consts.ComponentCompactor,
+		groupPodTemplates,
+		frontendDeployments,
+		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
+			return mgr.objectFactory.NewFrontendDeployment(group, podTemplates)
+		},
+	)
+}
+
+// SyncMetaDeployments implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) SyncMetaDeployments(ctx context.Context, logger logr.Logger, metaDeployments []appsv1.Deployment) (reconcile.Result, error) {
+	risingwave := mgr.risingwaveManager.RisingWave()
+
+	groupPodTemplates := buildGroupPodTemplateMap(risingwave.Spec.Components.Meta.Groups, extractNameAndPodTemplateFromComponentGroup)
+	groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+
+	return syncComponentGroupWorkloads(
+		mgr, ctx, logger,
+		consts.ComponentCompactor,
+		groupPodTemplates,
+		metaDeployments,
+		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
+			return mgr.objectFactory.NewMetaDeployment(group, podTemplates)
+		},
+	)
+}
+
+func waitComponentGroupWorkloadsReady[T any, TP ptrAsObject[T]](ctx context.Context, logger logr.Logger, component string,
+	groups map[string]int, objects []T, isReady func(*T) bool) (reconcile.Result, error) {
+	logger = logger.WithValues("component", component)
+
+	foundGroups := make(map[string]int)
+	for _, workloadObj := range objects {
+		group := TP(&workloadObj).GetLabels()[consts.LabelRisingWaveGroup]
+		foundGroups[group] = 1
+		_, expectGroup := groups[group]
+		if !expectGroup {
+			logger.Info("Found unexpected group, keep waiting...", "group", group)
+			return ctrlkit.Exit()
+		}
+
+		if !isReady(&workloadObj) {
+			logger.Info("Found not-ready groups, keep waiting...", "group", group)
+			return ctrlkit.Exit()
+		}
+	}
+
+	for group := range groups {
+		if _, found := foundGroups[group]; !found {
+			logger.Info("Workload object not found, keep waiting...", "group", group)
+			return ctrlkit.Exit()
+		}
+	}
+
+	return ctrlkit.Continue()
+}
+
+// WaitBeforeCompactorDeploymentsReady implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) WaitBeforeCompactorDeploymentsReady(ctx context.Context, logger logr.Logger, compactorDeployments []appsv1.Deployment) (reconcile.Result, error) {
+	risingwave := mgr.risingwaveManager.RisingWave()
+
+	groupMap := make(map[string]int)
+	groupMap[""] = 1
+	for _, group := range risingwave.Spec.Components.Compactor.Groups {
+		groupMap[group.Name] = 1
+	}
+
+	return waitComponentGroupWorkloadsReady(ctx, logger,
+		consts.ComponentCompactor, groupMap,
+		compactorDeployments,
+		func(t *appsv1.Deployment) bool {
+			return mgr.isObjectSynced(t) && utils.IsDeploymentRolledOut(t)
+		},
+	)
+}
+
+// WaitBeforeComputeStatefulSetsReady implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) WaitBeforeComputeStatefulSetsReady(ctx context.Context, logger logr.Logger, computeStatefulSets []appsv1.StatefulSet) (reconcile.Result, error) {
+	risingwave := mgr.risingwaveManager.RisingWave()
+
+	groupMap := make(map[string]int)
+	groupMap[""] = 1
+	for _, group := range risingwave.Spec.Components.Compute.Groups {
+		groupMap[group.Name] = 1
+	}
+
+	return waitComponentGroupWorkloadsReady(ctx, logger,
+		consts.ComponentCompute, groupMap,
+		computeStatefulSets,
+		func(t *appsv1.StatefulSet) bool {
+			return mgr.isObjectSynced(t) && utils.IsStatefulSetRolledOut(t)
+		},
+	)
+}
+
+// WaitBeforeFrontendDeploymentsReady implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendDeploymentsReady(ctx context.Context, logger logr.Logger, frontendDeployments []appsv1.Deployment) (reconcile.Result, error) {
+	risingwave := mgr.risingwaveManager.RisingWave()
+
+	groupMap := make(map[string]int)
+	groupMap[""] = 1
+	for _, group := range risingwave.Spec.Components.Frontend.Groups {
+		groupMap[group.Name] = 1
+	}
+
+	return waitComponentGroupWorkloadsReady(ctx, logger,
+		consts.ComponentFrontend, groupMap,
+		frontendDeployments,
+		func(t *appsv1.Deployment) bool {
+			return mgr.isObjectSynced(t) && utils.IsDeploymentRolledOut(t)
+		},
+	)
+}
+
+// WaitBeforeMetaDeploymentsReady implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaDeploymentsReady(ctx context.Context, logger logr.Logger, metaDeployments []appsv1.Deployment) (reconcile.Result, error) {
+	risingwave := mgr.risingwaveManager.RisingWave()
+
+	groupMap := make(map[string]int)
+	groupMap[""] = 1
+	for _, group := range risingwave.Spec.Components.Meta.Groups {
+		groupMap[group.Name] = 1
+	}
+
+	return waitComponentGroupWorkloadsReady(ctx, logger,
+		consts.ComponentMeta, groupMap,
+		metaDeployments,
+		func(t *appsv1.Deployment) bool {
+			return mgr.isObjectSynced(t) && utils.IsDeploymentRolledOut(t)
+		},
+	)
 }
 
 func (mgr *risingWaveControllerManagerImpl) isObjectSynced(obj client.Object) bool {
@@ -93,12 +548,16 @@ func isObjectNil(obj client.Object) bool {
 	return v.IsNil()
 }
 
-func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj client.Object, factory func() client.Object, logger logr.Logger) error {
+func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj client.Object, factory func() (client.Object, error), logger logr.Logger) error {
 	scheme := mgr.client.Scheme()
 
 	if isObjectNil(obj) {
 		// Not found. Going to create one.
-		newObj := ensureTheSameObject(obj, factory())
+		newObj, err := factory()
+		if err != nil {
+			return fmt.Errorf("unable to build new object: %w", err)
+		}
+		newObj = ensureTheSameObject(obj, newObj)
 
 		gvk, err := apiutil.GVKForObject(newObj, scheme)
 		if err != nil {
@@ -115,7 +574,11 @@ func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj 
 
 		// Found. Update/Sync if not synced.
 		if !mgr.isObjectSynced(obj) {
-			newObj := ensureTheSameObject(obj, factory())
+			newObj, err := factory()
+			if err != nil {
+				return fmt.Errorf("unable to build new object: %w", err)
+			}
+			newObj = ensureTheSameObject(obj, newObj)
 			logger.Info(fmt.Sprintf("Update the object of %s", gvk.Kind), "object", utils.GetNamespacedName(newObj),
 				"generation", mgr.risingwaveManager.RisingWave().Generation)
 			return mgr.client.Update(ctx, newObj)
@@ -126,15 +589,15 @@ func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj 
 
 // Helper function for compile time type assertion.
 func syncObject[T client.Object](mgr *risingWaveControllerManagerImpl, ctx context.Context, obj T, factory func() T, logger logr.Logger) error {
-	return mgr.syncObject(ctx, obj, func() client.Object {
-		return factory()
+	return mgr.syncObject(ctx, obj, func() (client.Object, error) {
+		return factory(), nil
 	}, logger)
 }
 
-// SyncCompactorDeployment implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) SyncCompactorDeployment(ctx context.Context, logger logr.Logger, compactorDeployment *appsv1.Deployment) (reconcile.Result, error) {
-	err := syncObject(mgr, ctx, compactorDeployment, mgr.objectFactory.NewCompactorDeployment, logger)
-	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compactor deployment", err)
+func syncObjectErr[T client.Object](mgr *risingWaveControllerManagerImpl, ctx context.Context, obj T, factory func() (T, error), logger logr.Logger) error {
+	return mgr.syncObject(ctx, obj, func() (client.Object, error) {
+		return factory()
+	}, logger)
 }
 
 // SyncCompactorService implements RisingWaveControllerManagerImpl.
@@ -143,22 +606,10 @@ func (mgr *risingWaveControllerManagerImpl) SyncCompactorService(ctx context.Con
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compactor service", err)
 }
 
-// SyncComputeStatefulSet implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) SyncComputeStatefulSet(ctx context.Context, logger logr.Logger, computeStatefulSet *appsv1.StatefulSet) (reconcile.Result, error) {
-	err := syncObject(mgr, ctx, computeStatefulSet, mgr.objectFactory.NewComputeStatefulSet, logger)
-	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compute statefulset", err)
-}
-
 // SyncComputeService implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncComputeService(ctx context.Context, logger logr.Logger, computeService *corev1.Service) (reconcile.Result, error) {
 	err := syncObject(mgr, ctx, computeService, mgr.objectFactory.NewComputeService, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync compute service", err)
-}
-
-// SyncFrontendDeployment implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) SyncFrontendDeployment(ctx context.Context, logger logr.Logger, frontendDeployment *appsv1.Deployment) (reconcile.Result, error) {
-	err := syncObject(mgr, ctx, frontendDeployment, mgr.objectFactory.NewFrontendDeployment, logger)
-	return ctrlkit.RequeueIfErrorAndWrap("unable to sync frontend deployment", err)
 }
 
 // SyncFrontendService implements RisingWaveControllerManagerImpl.
@@ -167,56 +618,10 @@ func (mgr *risingWaveControllerManagerImpl) SyncFrontendService(ctx context.Cont
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync frontend service", err)
 }
 
-// SyncMetaDeployment implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) SyncMetaDeployment(ctx context.Context, logger logr.Logger, metaDeployment *appsv1.Deployment) (reconcile.Result, error) {
-	err := syncObject(mgr, ctx, metaDeployment, mgr.objectFactory.NewMetaDeployment, logger)
-	return ctrlkit.RequeueIfErrorAndWrap("unable to sync meta deployment", err)
-}
-
 // SyncMetaService implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncMetaService(ctx context.Context, logger logr.Logger, metaService *corev1.Service) (reconcile.Result, error) {
 	err := syncObject(mgr, ctx, metaService, mgr.objectFactory.NewMetaService, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync meta service", err)
-}
-
-// WaitBeforeCompactorDeploymentReady implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) WaitBeforeCompactorDeploymentReady(ctx context.Context, logger logr.Logger, compactorDeployment *appsv1.Deployment) (reconcile.Result, error) {
-	if mgr.isObjectSynced(compactorDeployment) && utils.IsDeploymentRolledOut(compactorDeployment) {
-		return ctrlkit.NoRequeue()
-	} else {
-		logger.Info("Compactor deployment hasn't been rolled out")
-		return ctrlkit.Exit()
-	}
-}
-
-// WaitBeforeComputeStatefulSetReady implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) WaitBeforeComputeStatefulSetReady(ctx context.Context, logger logr.Logger, computeStatefulSet *appsv1.StatefulSet) (reconcile.Result, error) {
-	if mgr.isObjectSynced(computeStatefulSet) && utils.IsStatefulSetRolledOut(computeStatefulSet) {
-		return ctrlkit.NoRequeue()
-	} else {
-		logger.Info("Compute statefulset hasn't been rolled out")
-		return ctrlkit.Exit()
-	}
-}
-
-// WaitBeforeFrontendDeploymentReady implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendDeploymentReady(ctx context.Context, logger logr.Logger, frontendDeployment *appsv1.Deployment) (reconcile.Result, error) {
-	if mgr.isObjectSynced(frontendDeployment) && utils.IsDeploymentRolledOut(frontendDeployment) {
-		return ctrlkit.NoRequeue()
-	} else {
-		logger.Info("Frontend deployment hasn't been rolled out")
-		return ctrlkit.Exit()
-	}
-}
-
-// WaitBeforeMetaDeploymentReady implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaDeploymentReady(ctx context.Context, logger logr.Logger, metaDeployment *appsv1.Deployment) (reconcile.Result, error) {
-	if mgr.isObjectSynced(metaDeployment) && utils.IsDeploymentRolledOut(metaDeployment) {
-		return ctrlkit.NoRequeue()
-	} else {
-		logger.Info("Meta deployment hasn't been rolled out")
-		return ctrlkit.Exit()
-	}
 }
 
 // WaitBeforeMetaServiceIsAvailable implements RisingWaveControllerManagerImpl.
@@ -245,79 +650,28 @@ func (mgr *risingWaveControllerManagerImpl) isObjectSyncedAndReady(obj client.Ob
 	}
 }
 
-func (mgr *risingWaveControllerManagerImpl) reportComponentPhase(objs ...client.Object) risingwavev1alpha1.ComponentPhase {
-	inInitializing := mgr.risingwaveManager.GetCondition(risingwavev1alpha1.Initializing) != nil
-
-	if _, foundNil := lo.Find(objs, isObjectNil); foundNil {
-		return risingwavev1alpha1.ComponentInitializing
-	}
-
-	synced, ready := true, true
-	for _, obj := range objs {
-		s, r := mgr.isObjectSyncedAndReady(obj)
-		synced, ready = synced && s, ready && r
-	}
-
-	if synced && ready {
-		return risingwavev1alpha1.ComponentReady
-	} else {
-		if inInitializing {
-			return risingwavev1alpha1.ComponentInitializing
-		} else {
-			return risingwavev1alpha1.ComponentUpgrading
-		}
-	}
-}
-
-// CollectRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatus(
-	ctx context.Context,
-	logger logr.Logger,
-	frontendService *corev1.Service,
-	metaService *corev1.Service,
-	computeService *corev1.Service,
-	compactorService *corev1.Service,
-	metaDeployment *appsv1.Deployment,
-	frontendDeployment *appsv1.Deployment,
-	computeStatefulSet *appsv1.StatefulSet,
-	compactorDeployment *appsv1.Deployment,
-	configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
-		// TODO support more object status here.
-		if risingwave.Spec.ObjectStorage.Memory {
-			status.ObjectStorage = risingwavev1alpha1.ObjectStorageStatus{
-				Phase:       risingwavev1alpha1.ComponentReady,
-				StorageType: risingwavev1alpha1.MemoryType,
-			}
-		}
-
-		status.MetaNode = risingwavev1alpha1.MetaNodeStatus{
-			Phase:    mgr.reportComponentPhase(configConfigMap, metaService, metaDeployment),
-			Replicas: *risingwave.Spec.MetaNode.Replicas,
-		}
-		status.ComputeNode = risingwavev1alpha1.ComputeNodeStatus{
-			Phase:    mgr.reportComponentPhase(configConfigMap, computeService, computeStatefulSet),
-			Replicas: *risingwave.Spec.ComputeNode.Replicas,
-		}
-		status.Frontend = risingwavev1alpha1.FrontendSpecStatus{
-			Phase:    mgr.reportComponentPhase(configConfigMap, frontendService, frontendDeployment),
-			Replicas: *risingwave.Spec.Frontend.Replicas,
-		}
-
-		status.CompactorNode = risingwavev1alpha1.CompactorNodeStatus{
-			Phase:    mgr.reportComponentPhase(configConfigMap, compactorService, compactorDeployment),
-			Replicas: *risingwave.Spec.CompactorNode.Replicas,
-		}
-	})
-
-	return ctrlkit.Continue()
-}
-
 // SyncConfigConfigMap implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncConfigConfigMap(ctx context.Context, logger logr.Logger, configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
-	err := syncObject(mgr, ctx, configConfigMap, mgr.objectFactory.NewConfigConfigMap, logger)
+	err := syncObjectErr(mgr, ctx, configConfigMap, func() (*corev1.ConfigMap, error) {
+		configurationSpec := &mgr.risingwaveManager.RisingWave().Spec.Configuration
+		if configurationSpec.ConfigMap == nil {
+			return mgr.objectFactory.NewConfigConfigMap(""), nil
+		} else {
+			var cm corev1.ConfigMap
+			err := mgr.client.Get(ctx, types.NamespacedName{
+				Namespace: mgr.risingwaveManager.RisingWave().Namespace,
+				Name:      configurationSpec.ConfigMap.Name,
+			}, &cm)
+			if client.IgnoreNotFound(err) != nil {
+				return nil, fmt.Errorf("unable to get configmap %s: %w", configurationSpec.ConfigMap.Name, err)
+			}
+			val, ok := cm.Data[configurationSpec.ConfigMap.Key]
+			if !ok && (configurationSpec.ConfigMap.Optional == nil || !*configurationSpec.ConfigMap.Optional) {
+				return nil, fmt.Errorf("key not found in configmap")
+			}
+			return mgr.objectFactory.NewConfigConfigMap(val), nil
+		}
+	}, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync config configmap", err)
 }
 

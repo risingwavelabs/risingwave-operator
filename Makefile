@@ -88,7 +88,7 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	@$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./apis/..."
 
-generate-manager: ctrlkit-gen goimports-reviser
+generate-manager: ctrlkit-gen goimports-reviser ## Generate codes of controller managers.
 	@$(CTRLKIT-GEN) -o pkg/manager/ -p "github.com/singularity-data/risingwave-operator/pkg/ctrlkit" -b hack/boilerplate.go.txt pkg/manager/risingwave_controller_manager.cm
 	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_controller_manager.go -local "github.com/singularity-data/risingwave-operator"
 
@@ -186,7 +186,7 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.9.1)
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.9.2)
 
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
@@ -198,11 +198,12 @@ envtest: ## Download envtest-setup locally if necessary.
 
 GOLANGCI-LINT = $(shell pwd)/bin/golangci-lint
 golangci-lint: ## Download envtest-setup locally if necessary.
-	$(call get-golangci-lint)
+# $(call get-golangci-lint)
+	$(call go-get-tool,$(GOLANGCI-LINT),github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.3-0.20220714021010-0abb2981360f)
 
 CTRLKIT-GEN = $(shell pwd)/bin/ctrlkit-gen
 ctrlkit-gen: ## Download ctrlkit locally if necessary.
-	$(call go-get-tool,$(CTRLKIT-GEN),github.com/arkbriar/ctrlkit/ctrlkit/cmd/ctrlkit-gen@afc39fa4)
+	$(call go-get-tool,$(CTRLKIT-GEN),github.com/arkbriar/ctrlkit/ctrlkit/cmd/ctrlkit-gen@latest)
 
 GOIMPORTS-REVISER = $(shell pwd)/bin/goimports-reviser
 goimports-reviser: ## Download goimports-reviser locally if necessary.
@@ -213,7 +214,7 @@ define get-golangci-lint
 @[ -f $(GOLANGCI-LINT) ] || { \
 set -e ;\
 echo "Downloading golangci-lint" ;\
-curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_DIR)/bin v1.45.2; \
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(PROJECT_DIR)/bin v1.46.2; \
 }
 endef
 

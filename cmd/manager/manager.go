@@ -32,7 +32,7 @@ import (
 
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	risingwavecontroller "github.com/singularity-data/risingwave-operator/pkg/controller"
-	"github.com/singularity-data/risingwave-operator/pkg/options"
+	"github.com/singularity-data/risingwave-operator/pkg/webhook"
 )
 
 var (
@@ -86,6 +86,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = webhook.SetupWebhooksWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to setup webhooks")
+		os.Exit(1)
+	}
+
 	if err = risingwavecontroller.NewReconciler(
 		mgr.GetClient(),
 		mgr.GetScheme(),
@@ -94,17 +99,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	opt := &options.InnerRisingWaveOptions{}
-	err = opt.BuildConfigFromFile(configPath)
-	if err != nil {
-		setupLog.Error(err, "unable to create config", "controller", "RisingWave")
-		os.Exit(1)
-	}
-
-	if err = (&risingwavev1alpha1.RisingWave{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "RisingWave")
-		os.Exit(1)
-	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

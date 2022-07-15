@@ -31,6 +31,10 @@ var nothingFunc ActionFunc = func(ctx context.Context) (ctrl.Result, error) {
 	return NoRequeue()
 }
 
+var requeueFunc ActionFunc = func(ctx context.Context) (ctrl.Result, error) {
+	return RequeueImmediately()
+}
+
 var exitFunc ActionFunc = func(ctx context.Context) (ctrl.Result, error) {
 	return Exit()
 }

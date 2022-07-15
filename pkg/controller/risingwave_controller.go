@@ -89,16 +89,10 @@ const (
 type RisingWaveController struct {
 	Client            client.Client
 	ActionHookFactory func() ctrlkit.ActionHook
-	DryRun            bool
 }
 
 func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit.Action) (result reconcile.Result, err error) {
-	if c.DryRun {
-		ctrlkit.DryRun(workflow)
-		return ctrlkit.NoRequeue()
-	} else {
-		return ctrlkit.IgnoreExit(workflow.Run(ctx))
-	}
+	return ctrlkit.IgnoreExit(workflow.Run(ctx))
 }
 
 func (c *RisingWaveController) managerOpts() []manager.RisingWaveControllerManagerOption {

@@ -20,8 +20,8 @@ import (
 	"context"
 	"sync"
 
-	multierr "github.com/hashicorp/go-multierror"
 	"github.com/samber/lo"
+	"go.uber.org/multierr"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit/internal"
@@ -59,9 +59,6 @@ func joinErr(err1, err2 error) error {
 //   * If it sets a requeue after, set the requeue after if the global one
 //     if there's none or it's longer than the local one
 func joinResultAndErr(result ctrl.Result, err error, lresult ctrl.Result, lerr error) (ctrl.Result, error) {
-	if lerr != nil {
-		err = joinErr(err, lerr)
-	}
 	if lresult.Requeue {
 		result.Requeue = true
 	}
@@ -70,7 +67,7 @@ func joinResultAndErr(result ctrl.Result, err error, lresult ctrl.Result, lerr e
 			result.RequeueAfter = lresult.RequeueAfter
 		}
 	}
-	return result, err
+	return result, joinErr(err, lerr)
 }
 
 func runJoinActions(ctx context.Context, actions ...Action) (result ctrl.Result, err error) {
@@ -189,8 +186,8 @@ func Join(actions ...Action) Action {
 	return join(lo.Shuffle(actions), defaultJoinRunner)
 }
 
-// JoinOrdered organizes the actions in a split-join flow and guarantees the execution order.
-func JoinOrdered(actions ...Action) Action {
+// JoinInOrder organizes the actions in a split-join flow and guarantees the execution order.
+func JoinInOrder(actions ...Action) Action {
 	return join(actions, defaultJoinRunner)
 }
 

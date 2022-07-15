@@ -25,14 +25,14 @@ import (
 
 func Test_Action(t *testing.T) {
 	testcases := map[string]struct {
-		desc    string
-		f       ActionFunc
-		result  ctrl.Result
-		err     error
-		isPanic bool
+		desc        string
+		f           ActionFunc
+		result      ctrl.Result
+		err         error
+		shouldPanic bool
 	}{
 		"nil-func-panics": {
-			isPanic: true,
+			shouldPanic: true,
 		},
 		"desc-equals": {
 			desc: "some desc",
@@ -52,10 +52,9 @@ func Test_Action(t *testing.T) {
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			defer func() {
-				if r := recover(); r != nil {
-					if !tc.isPanic {
-						t.Fail()
-					}
+				r := recover()
+				if (!tc.shouldPanic && r != nil) || (tc.shouldPanic && r == nil) {
+					t.Fail()
 				}
 			}()
 			act := NewAction(tc.desc, tc.f)

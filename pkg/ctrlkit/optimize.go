@@ -96,11 +96,8 @@ func OptimizeWorkflow(workflow Action) Action {
 		if workflow.inner == Nop {
 			return Nop
 		}
-		if _, ok := workflow.inner.(*parallelAction); ok {
-			return workflow.inner
-		} else {
-			return workflow
-		}
+		workflow.inner = unwrapParallel(workflow.inner)
+		return workflow
 	case *retryAction:
 		workflow.inner = OptimizeWorkflow(workflow.inner)
 		if workflow.inner == Nop {

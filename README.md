@@ -149,7 +149,7 @@ spec:
 
 ### etcd (meta)
 
-We recommend using the [etcd](https://etcd.io/)](https://etcd.io/) to store the metadata. You can specify the connection information of the `etcd` you'd like to use like the following:
+We recommend using the [etcd](https://etcd.io/) to store the metadata. You can specify the connection information of the `etcd` you'd like to use like the following:
 
 ```yamlex
 #...

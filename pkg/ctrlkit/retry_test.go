@@ -25,6 +25,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+func Test_Retry_Decorator(t *testing.T) {
+	testDecorator[retryAction](t, "Retry")
+}
+
 func newFailUntilAction(failCnt int, cnt *int) Action {
 	return NewAction("FailCnt-"+strconv.Itoa(failCnt), func(ctx context.Context) (ctrl.Result, error) {
 		if *cnt < failCnt {
@@ -41,6 +45,46 @@ func newExitCountAction(cnt *int) Action {
 		*cnt++
 		return Exit()
 	})
+}
+
+func Test_Retry_Description(t *testing.T) {
+	x := NewAction("A", nothingFunc)
+	if Retry(3, x).Description() != "Retry(A, limit=3)" {
+		t.Fail()
+	}
+}
+
+func Test_Retry_LimitShouldGreaterThanZero(t *testing.T) {
+	testcases := map[string]struct {
+		shouldPanic bool
+		limit       int
+	}{
+		"minus-one-panics": {
+			shouldPanic: true,
+			limit:       -1,
+		},
+		"zero-panics": {
+			shouldPanic: true,
+			limit:       0,
+		},
+		"one-not-panics": {
+			shouldPanic: false,
+			limit:       1,
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			defer func() {
+				r := recover()
+				if (!tc.shouldPanic && r != nil) || (tc.shouldPanic && r == nil) {
+					t.Fail()
+				}
+			}()
+
+			Retry(tc.limit, Nop)
+		})
+	}
 }
 
 func Test_Retry(t *testing.T) {

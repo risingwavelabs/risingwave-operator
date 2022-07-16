@@ -18,11 +18,16 @@ package ctrlkit
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
+
+func Test_Timeout_Decorator(t *testing.T) {
+	testDecorator[timeoutAction](t, "Timeout")
+}
 
 func newSleepAction(t time.Duration) Action {
 	return NewAction("", func(ctx context.Context) (ctrl.Result, error) {
@@ -35,7 +40,14 @@ func newSleepAction(t time.Duration) Action {
 	})
 }
 
-func Test_Timeout(t *testing.T) {
+func Test_Timeout_Description(t *testing.T) {
+	x := NewAction("A", nothingFunc)
+	if Timeout(10*time.Second, x).Description() != fmt.Sprintf("Timeout(%s, timeout=%s)", x.Description(), "10s") {
+		t.Fail()
+	}
+}
+
+func Test_Timeout_Run(t *testing.T) {
 	testcases := map[string]struct {
 		action      Action
 		expectedErr error

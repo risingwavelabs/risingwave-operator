@@ -22,12 +22,13 @@ import (
 )
 
 func ValidateOwnership(obj, owner client.Object) bool {
+	if obj == nil || owner == nil {
+		return false
+	}
+
 	ref := metav1.GetControllerOfNoCopy(obj)
 	if ref == nil {
 		return false
 	}
-	if ref.UID == owner.GetUID() {
-		return true
-	}
-	return false
+	return ref.UID == owner.GetUID()
 }

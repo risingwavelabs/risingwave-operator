@@ -23,31 +23,46 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-func Test_If(t *testing.T) {
-	var action = NewAction("", func(ctx context.Context) (ctrl.Result, error) {
-		return NoRequeue()
-	})
-
+func Test_Action(t *testing.T) {
 	testcases := map[string]struct {
-		condition bool
-		action    Action
-		expect    Action
+		desc        string
+		f           ActionFunc
+		result      ctrl.Result
+		err         error
+		shouldPanic bool
 	}{
-		"if-false-then-nop": {
-			condition: false,
-			action:    action,
-			expect:    Nop,
+		"nil-func-panics": {
+			shouldPanic: true,
 		},
-		"if-true-then-self": {
-			condition: true,
-			action:    action,
-			expect:    action,
+		"desc-equals": {
+			desc: "some desc",
+			f: func(ctx context.Context) (ctrl.Result, error) {
+				return NoRequeue()
+			},
+		},
+		"result-equals": {
+			f: func(ctx context.Context) (ctrl.Result, error) {
+				return RequeueImmediately()
+			},
+			result: ctrl.Result{Requeue: true},
+			err:    nil,
 		},
 	}
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			if tc.expect != If(tc.condition, tc.action) {
+			defer func() {
+				r := recover()
+				if (!tc.shouldPanic && r != nil) || (tc.shouldPanic && r == nil) {
+					t.Fail()
+				}
+			}()
+			act := NewAction(tc.desc, tc.f)
+			if act.Description() != tc.desc {
+				t.Fail()
+			}
+			r, err := act.Run(context.Background())
+			if r != tc.result || err != tc.err {
 				t.Fail()
 			}
 		})

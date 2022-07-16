@@ -27,6 +27,7 @@ import (
 	"k8s.io/utils/pointer"
 
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/singularity-data/risingwave-operator/pkg/consts"
 )
 
 // Schema for test only.
@@ -52,7 +53,7 @@ var FakeRisingWave = &risingwavev1alpha1.RisingWave{
 	Spec: risingwavev1alpha1.RisingWaveSpec{
 		Storages: risingwavev1alpha1.RisingWaveStoragesSpec{
 			Meta: risingwavev1alpha1.RisingWaveMetaStorage{
-				Memory: pointer.Bool(false),
+				Memory: pointer.Bool(true),
 			},
 			Object: risingwavev1alpha1.RisingWaveObjectStorage{
 				Memory: pointer.Bool(true),
@@ -89,28 +90,28 @@ var FakeRisingWave = &risingwavev1alpha1.RisingWave{
 			Meta: risingwavev1alpha1.RisingWaveComponentMeta{
 				Ports: risingwavev1alpha1.RisingWaveComponentMetaPorts{
 					RisingWaveComponentCommonPorts: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-						ServicePort: 1111,
-						MetricsPort: 1111,
+						ServicePort: consts.DefaultMetaServicePort,
+						MetricsPort: consts.DefaultMetaMetricsPort,
 					},
-					DashboardPort: 1111,
+					DashboardPort: consts.DefaultMetaDashboardPort,
 				},
 			},
 			Frontend: risingwavev1alpha1.RisingWaveComponentFrontend{
 				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-					ServicePort: 1111,
-					MetricsPort: 1111,
+					ServicePort: consts.DefaultFrontendServicePort,
+					MetricsPort: consts.DefaultFrontendMetricsPort,
 				},
 			},
 			Compute: risingwavev1alpha1.RisingWaveComponentCompute{
 				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-					ServicePort: 1111,
-					MetricsPort: 1111,
+					ServicePort: consts.DefaultComputeServicePort,
+					MetricsPort: consts.DefaultComputeMetricsPort,
 				},
 			},
 			Compactor: risingwavev1alpha1.RisingWaveComponentCompactor{
 				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-					ServicePort: 1111,
-					MetricsPort: 1111,
+					ServicePort: consts.DefaultCompactorServicePort,
+					MetricsPort: consts.DefaultCompactorMetricsPort,
 				},
 			},
 		},

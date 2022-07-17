@@ -60,6 +60,19 @@ func (h *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 	return fieldErrs
 }
 
+func (h *RisingWaveValidatingWebhook) validateGlobal(path *field.Path, global *risingwavev1alpha1.RisingWaveGlobalSpec) field.ErrorList {
+	fieldErrs := h.validateGroupTemplate(path, &global.RisingWaveComponentGroupTemplate)
+
+	if global.Replicas.Meta > 0 || global.Replicas.Frontend > 0 ||
+		global.Replicas.Compute > 0 || global.Replicas.Compactor > 0 {
+		if global.Image == "" {
+			fieldErrs = append(fieldErrs, field.Required(path.Child("image"), "must be specified when there're global replicas"))
+		}
+	}
+
+	return fieldErrs
+}
+
 func ptrValueNotZero[T comparable](ptr *T) bool {
 	var zero T
 	return ptr != nil && *ptr != zero
@@ -109,22 +122,31 @@ func (h *RisingWaveValidatingWebhook) validateConfiguration(path *field.Path, co
 	return nil
 }
 
-func (h *RisingWaveValidatingWebhook) validateComponents(path *field.Path, components *risingwavev1alpha1.RisingWaveComponentsSpec, storages *risingwavev1alpha1.RisingWaveStoragesSpec) field.ErrorList {
+func (h *RisingWaveValidatingWebhook) validateComponents(path *field.Path, components *risingwavev1alpha1.RisingWaveComponentsSpec, storages *risingwavev1alpha1.RisingWaveStoragesSpec, globalImageProvided bool) field.ErrorList {
 	fieldErrs := field.ErrorList{}
 
 	metaGroupsPath := path.Child("meta", "groups")
 	for i, group := range components.Meta.Groups {
 		fieldErrs = append(fieldErrs, h.validateGroupTemplate(metaGroupsPath.Index(i), group.RisingWaveComponentGroupTemplate)...)
+		if !globalImageProvided && (group.RisingWaveComponentGroupTemplate == nil || group.Image == "") {
+			fieldErrs = append(fieldErrs, field.Required(metaGroupsPath.Index(i).Child("image"), "must be specified when there's no global image"))
+		}
 	}
 
 	frontendGroupsPath := path.Child("frontend", "groups")
 	for i, group := range components.Frontend.Groups {
 		fieldErrs = append(fieldErrs, h.validateGroupTemplate(frontendGroupsPath.Index(i), group.RisingWaveComponentGroupTemplate)...)
+		if !globalImageProvided && (group.RisingWaveComponentGroupTemplate == nil || group.Image == "") {
+			fieldErrs = append(fieldErrs, field.Required(frontendGroupsPath.Index(i).Child("image"), "must be specified when there's no global image"))
+		}
 	}
 
 	compactorGroupsPath := path.Child("compactor", "groups")
 	for i, group := range components.Compactor.Groups {
 		fieldErrs = append(fieldErrs, h.validateGroupTemplate(compactorGroupsPath.Index(i), group.RisingWaveComponentGroupTemplate)...)
+		if !globalImageProvided && (group.RisingWaveComponentGroupTemplate == nil || group.Image == "") {
+			fieldErrs = append(fieldErrs, field.Required(compactorGroupsPath.Index(i).Child("image"), "must be specified when there's no global image"))
+		}
 	}
 
 	pvClaims := make(map[string]int)
@@ -134,6 +156,10 @@ func (h *RisingWaveValidatingWebhook) validateComponents(path *field.Path, compo
 
 	computeGroupsPath := path.Child("compute", "groups")
 	for i, group := range components.Compute.Groups {
+		if !globalImageProvided && (group.RisingWaveComputeGroupTemplate == nil || group.Image == "") {
+			fieldErrs = append(fieldErrs, field.Required(computeGroupsPath.Index(i).Child("image"), "must be specified when there's no global image"))
+		}
+
 		if group.RisingWaveComputeGroupTemplate != nil {
 			fieldErrs = append(fieldErrs, h.validateGroupTemplate(computeGroupsPath.Index(i), &group.RisingWaveComponentGroupTemplate)...)
 
@@ -158,7 +184,8 @@ func (h *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 	fieldErrs := field.ErrorList{}
 
 	// Validate the global spec.
-	fieldErrs = append(fieldErrs, h.validateGroupTemplate(field.NewPath("spec", "global"), &obj.Spec.Global.RisingWaveComponentGroupTemplate)...)
+	//   * If global replicas of any component is larger than 1, then the image in global must not be empty.
+	fieldErrs = append(fieldErrs, h.validateGlobal(field.NewPath("spec", "global"), &obj.Spec.Global)...)
 
 	// Validate the storages spec.
 	fieldErrs = append(fieldErrs, h.validateStorages(field.NewPath("spec", "storages"), &obj.Spec.Storages)...)
@@ -170,7 +197,8 @@ func (h *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 	fieldErrs = append(fieldErrs, h.validateConfiguration(field.NewPath("spec", "configuration"), &obj.Spec.Configuration)...)
 
 	// Validate the components spec.
-	fieldErrs = append(fieldErrs, h.validateComponents(field.NewPath("spec", "components"), &obj.Spec.Components, &obj.Spec.Storages)...)
+	//   * If the global image is empty, then the image of all groups must not be empty.
+	fieldErrs = append(fieldErrs, h.validateComponents(field.NewPath("spec", "components"), &obj.Spec.Components, &obj.Spec.Storages, obj.Spec.Global.Image != "")...)
 
 	if len(fieldErrs) > 0 {
 		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, fieldErrs)

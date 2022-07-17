@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 
 	"github.com/go-logr/logr"
@@ -46,64 +47,44 @@ type risingWaveControllerManagerImpl struct {
 	objectFactory     *factory.RisingWaveObjectFactory
 }
 
-func buildGroupStatus(globalReplicas int32, groups []risingwavev1alpha1.RisingWaveComponentGroup, deployments []appsv1.Deployment) risingwavev1alpha1.ComponentReplicasStatus {
+func buildGroupStatus[T any, TP ptrAsObject[T], G any](globalReplicas int32, groups []G, nameAndReplicas func(*G) (string, int32), workloads []T, groupAndReadyReplicas func(*T) (string, int32)) risingwavev1alpha1.ComponentReplicasStatus {
 	status := risingwavev1alpha1.ComponentReplicasStatus{
 		Target: globalReplicas,
 	}
 
 	expectedGroups := make(map[string]int32)
-	expectedGroups[""] = globalReplicas
+	if globalReplicas > 0 {
+		expectedGroups[""] = globalReplicas
+	}
+	status.Target = globalReplicas
 	for _, group := range groups {
-		status.Target += group.Replicas
-		expectedGroups[group.Name] = group.Replicas
+		name, replicas := nameAndReplicas(&group)
+		expectedGroups[name] = replicas
+		status.Target += replicas
 	}
 
-	for _, deploy := range deployments {
-		status.Running += deploy.Status.ReadyReplicas
-		group := deploy.Labels[consts.LabelRisingWaveGroup]
+	for _, obj := range workloads {
+		group, readyReplicas := groupAndReadyReplicas(&obj)
+		status.Running += readyReplicas
 		if replicas, ok := expectedGroups[group]; ok {
 			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
+				Name:    group,
 				Target:  replicas,
-				Running: deploy.Status.ReadyReplicas,
+				Running: readyReplicas,
 			})
 		} else {
 			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
+				Name:    group + "(-)",
 				Target:  0,
-				Running: deploy.Status.ReadyReplicas,
+				Running: readyReplicas,
 			})
 		}
 	}
 
-	return status
-}
-
-func buildComputeGroupStatus(globalReplicas int32, groups []risingwavev1alpha1.RisingWaveComputeGroup, deployments []appsv1.StatefulSet) risingwavev1alpha1.ComponentReplicasStatus {
-	status := risingwavev1alpha1.ComponentReplicasStatus{
-		Target: globalReplicas,
-	}
-
-	expectedGroups := make(map[string]int32)
-	expectedGroups[""] = globalReplicas
-	for _, group := range groups {
-		status.Target += group.Replicas
-		expectedGroups[group.Name] = group.Replicas
-	}
-
-	for _, deploy := range deployments {
-		status.Running += deploy.Status.ReadyReplicas
-		group := deploy.Labels[consts.LabelRisingWaveGroup]
-		if replicas, ok := expectedGroups[group]; ok {
-			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
-				Target:  replicas,
-				Running: deploy.Status.ReadyReplicas,
-			})
-		} else {
-			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
-				Target:  0,
-				Running: deploy.Status.ReadyReplicas,
-			})
-		}
-	}
+	// Sort the groups in status.
+	sort.Slice(status.Groups, func(i, j int) bool {
+		return status.Groups[i].Name < status.Groups[j].Name
+	})
 
 	return status
 }
@@ -159,11 +140,23 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 		}
 
 		// Report component replicas.
+		nameAndReplicasForComponentGroup := func(g *risingwavev1alpha1.RisingWaveComponentGroup) (string, int32) {
+			return g.Name, g.Replicas
+		}
+		groupAndReadyReplicasForDeployment := func(t *appsv1.Deployment) (string, int32) {
+			return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
+		}
+		nameAndReplicasForComputeGroup := func(g *risingwavev1alpha1.RisingWaveComputeGroup) (string, int32) {
+			return g.Name, g.Replicas
+		}
+		groupAndReadyReplicasForStatefulSet := func(t *appsv1.StatefulSet) (string, int32) {
+			return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
+		}
 		status.ComponentReplicas = risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
-			Meta:      buildGroupStatus(globalSpec.Replicas.Meta, componentsSpec.Meta.Groups, metaDeployments),
-			Frontend:  buildGroupStatus(globalSpec.Replicas.Frontend, componentsSpec.Frontend.Groups, frontendDeployments),
-			Compactor: buildGroupStatus(globalSpec.Replicas.Compactor, componentsSpec.Compactor.Groups, compactorDeployments),
-			Compute:   buildComputeGroupStatus(globalSpec.Replicas.Compute, componentsSpec.Compute.Groups, computeStatefulSets),
+			Meta:      buildGroupStatus(globalSpec.Replicas.Meta, componentsSpec.Meta.Groups, nameAndReplicasForComponentGroup, metaDeployments, groupAndReadyReplicasForDeployment),
+			Frontend:  buildGroupStatus(globalSpec.Replicas.Frontend, componentsSpec.Frontend.Groups, nameAndReplicasForComponentGroup, frontendDeployments, groupAndReadyReplicasForDeployment),
+			Compactor: buildGroupStatus(globalSpec.Replicas.Compactor, componentsSpec.Compactor.Groups, nameAndReplicasForComponentGroup, compactorDeployments, groupAndReadyReplicasForDeployment),
+			Compute:   buildGroupStatus(globalSpec.Replicas.Compute, componentsSpec.Compute.Groups, nameAndReplicasForComputeGroup, computeStatefulSets, groupAndReadyReplicasForStatefulSet),
 		}
 	})
 
@@ -326,7 +319,11 @@ func (mgr *risingWaveControllerManagerImpl) SyncCompactorDeployments(ctx context
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	groupPodTemplates := buildGroupPodTemplateMap(risingwave.Spec.Components.Compactor.Groups, extractNameAndPodTemplateFromComponentGroup)
-	groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+
+	// Enable the default group only if the global replicas > 0.
+	if risingwave.Spec.Global.Replicas.Compactor > 0 {
+		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+	}
 
 	return syncComponentGroupWorkloads(
 		mgr, ctx, logger,
@@ -344,7 +341,11 @@ func (mgr *risingWaveControllerManagerImpl) SyncComputeStatefulSets(ctx context.
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	groupPodTemplates := buildGroupPodTemplateMap(risingwave.Spec.Components.Compute.Groups, extractNameAndPodTemplateFromComputeGroup)
-	groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+
+	// Enable the default group only if the global replicas > 0.
+	if risingwave.Spec.Global.Replicas.Compute > 0 {
+		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+	}
 
 	return syncComponentGroupWorkloads(
 		mgr, ctx, logger,
@@ -362,7 +363,11 @@ func (mgr *risingWaveControllerManagerImpl) SyncFrontendDeployments(ctx context.
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	groupPodTemplates := buildGroupPodTemplateMap(risingwave.Spec.Components.Frontend.Groups, extractNameAndPodTemplateFromComponentGroup)
-	groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+
+	// Enable the default group only if the global replicas > 0.
+	if risingwave.Spec.Global.Replicas.Frontend > 0 {
+		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+	}
 
 	return syncComponentGroupWorkloads(
 		mgr, ctx, logger,
@@ -380,7 +385,11 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaDeployments(ctx context.Cont
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	groupPodTemplates := buildGroupPodTemplateMap(risingwave.Spec.Components.Meta.Groups, extractNameAndPodTemplateFromComponentGroup)
-	groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+
+	// Enable the default group only if the global replicas > 0.
+	if risingwave.Spec.Global.Replicas.Meta > 0 {
+		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+	}
 
 	return syncComponentGroupWorkloads(
 		mgr, ctx, logger,
@@ -428,9 +437,13 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeCompactorDeploymentsReady(
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	groupMap := make(map[string]int)
-	groupMap[""] = 1
 	for _, group := range risingwave.Spec.Components.Compactor.Groups {
 		groupMap[group.Name] = 1
+	}
+
+	// Enable the default group only if global replicas > 0.
+	if risingwave.Spec.Global.Replicas.Compactor > 0 {
+		groupMap[""] = 1
 	}
 
 	return waitComponentGroupWorkloadsReady(ctx, logger,
@@ -447,9 +460,13 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeComputeStatefulSetsReady(c
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	groupMap := make(map[string]int)
-	groupMap[""] = 1
 	for _, group := range risingwave.Spec.Components.Compute.Groups {
 		groupMap[group.Name] = 1
+	}
+
+	// Enable the default group only if global replicas > 0.
+	if risingwave.Spec.Global.Replicas.Compactor > 0 {
+		groupMap[""] = 1
 	}
 
 	return waitComponentGroupWorkloadsReady(ctx, logger,
@@ -466,9 +483,13 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendDeploymentsReady(c
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	groupMap := make(map[string]int)
-	groupMap[""] = 1
 	for _, group := range risingwave.Spec.Components.Frontend.Groups {
 		groupMap[group.Name] = 1
+	}
+
+	// Enable the default group only if global replicas > 0.
+	if risingwave.Spec.Global.Replicas.Compactor > 0 {
+		groupMap[""] = 1
 	}
 
 	return waitComponentGroupWorkloadsReady(ctx, logger,
@@ -485,9 +506,13 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaDeploymentsReady(ctx c
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	groupMap := make(map[string]int)
-	groupMap[""] = 1
 	for _, group := range risingwave.Spec.Components.Meta.Groups {
 		groupMap[group.Name] = 1
+	}
+
+	// Enable the default group only if global replicas > 0.
+	if risingwave.Spec.Global.Replicas.Compactor > 0 {
+		groupMap[""] = 1
 	}
 
 	return waitComponentGroupWorkloadsReady(ctx, logger,
@@ -631,22 +656,6 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaServiceIsAvailable(ctx
 	} else {
 		logger.Info("Meta service hasn't been ready")
 		return ctrlkit.Exit()
-	}
-}
-
-func (mgr *risingWaveControllerManagerImpl) isObjectSyncedAndReady(obj client.Object) (bool, bool) {
-	if isObjectNil(obj) {
-		return false, false
-	}
-	switch obj := obj.(type) {
-	case *corev1.Service:
-		return mgr.isObjectSynced(obj), utils.IsServiceReady(obj)
-	case *appsv1.Deployment:
-		return mgr.isObjectSynced(obj), utils.IsDeploymentRolledOut(obj)
-	case *appsv1.StatefulSet:
-		return mgr.isObjectSynced(obj), utils.IsStatefulSetRolledOut(obj)
-	default:
-		return mgr.isObjectSynced(obj), true
 	}
 }
 

@@ -20,8 +20,8 @@ import (
 	"context"
 	"sync"
 
-	multierr "github.com/hashicorp/go-multierror"
 	"github.com/samber/lo"
+	"go.uber.org/multierr"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit/internal"
@@ -59,9 +59,6 @@ func joinErr(err1, err2 error) error {
 //   * If it sets a requeue after, set the requeue after if the global one
 //     if there's none or it's longer than the local one
 func joinResultAndErr(result ctrl.Result, err error, lresult ctrl.Result, lerr error) (ctrl.Result, error) {
-	if lerr != nil {
-		err = joinErr(err, lerr)
-	}
 	if lresult.Requeue {
 		result.Requeue = true
 	}
@@ -70,7 +67,7 @@ func joinResultAndErr(result ctrl.Result, err error, lresult ctrl.Result, lerr e
 			result.RequeueAfter = lresult.RequeueAfter
 		}
 	}
-	return result, err
+	return result, joinErr(err, lerr)
 }
 
 func runJoinActions(ctx context.Context, actions ...Action) (result ctrl.Result, err error) {
@@ -144,6 +141,7 @@ var (
 var _ internal.Group = &joinGroup{}
 
 type joinGroup struct {
+	name    string
 	actions []Action
 	runner  joinRunner
 }
@@ -157,11 +155,7 @@ func (grp *joinGroup) SetChildren(actions []Action) {
 }
 
 func (grp *joinGroup) Name() string {
-	if grp.runner.IsParallel() {
-		return "ParallelJoin"
-	} else {
-		return "Join"
-	}
+	return grp.name
 }
 
 func (grp *joinGroup) Description() string {
@@ -172,7 +166,7 @@ func (grp *joinGroup) Run(ctx context.Context) (ctrl.Result, error) {
 	return grp.runner.Run(ctx, grp.actions...)
 }
 
-func join(actions []Action, runner joinRunner) Action {
+func join(name string, actions []Action, runner joinRunner) Action {
 	if len(actions) == 0 {
 		return Nop
 	}
@@ -181,24 +175,24 @@ func join(actions []Action, runner joinRunner) Action {
 		return actions[0]
 	}
 
-	return &joinGroup{actions: actions, runner: runner}
+	return &joinGroup{name: name, actions: actions, runner: runner}
 }
 
 // Join organizes the actions in a split-join flow, which doesn't guarantee the execution order.
 func Join(actions ...Action) Action {
-	return join(lo.Shuffle(actions), defaultJoinRunner)
+	return join("Join", lo.Shuffle(actions), defaultJoinRunner)
 }
 
-// JoinOrdered organizes the actions in a split-join flow and guarantees the execution order.
-func JoinOrdered(actions ...Action) Action {
-	return join(actions, defaultJoinRunner)
+// OrderedJoin organizes the actions in a split-join flow and guarantees the execution order.
+func OrderedJoin(actions ...Action) Action {
+	return join("Join", actions, defaultJoinRunner)
 }
 
-// JoinInParallel organizes the actions in a split-join flow and executes them in parallel.
-func JoinInParallel(actions ...Action) Action {
+// ParallelJoin organizes the actions in a split-join flow and executes them in parallel.
+func ParallelJoin(actions ...Action) Action {
 	if len(actions) == 1 {
 		return Parallel(actions[0])
 	}
 
-	return join(actions, parallelJoinRunner)
+	return join("ParallelJoin", actions, parallelJoinRunner)
 }

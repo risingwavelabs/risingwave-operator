@@ -14,40 +14,53 @@
  * limitations under the License.
  */
 
-package ctrlkit
+package internal
 
 import (
 	"context"
 	"testing"
 
-	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func Test_If(t *testing.T) {
-	var action = NewAction("", func(ctx context.Context) (ctrl.Result, error) {
-		return NoRequeue()
-	})
+type action struct {
+	desc string
+}
 
+func (a *action) Description() string {
+	return a.desc
+}
+
+func (a *action) Run(ctx context.Context) (reconcile.Result, error) {
+	return reconcile.Result{}, nil
+}
+
+func Test_DescribeGroup(t *testing.T) {
 	testcases := map[string]struct {
-		condition bool
-		action    Action
-		expect    Action
+		head       string
+		actions    []Action
+		expectDesc string
 	}{
-		"if-false-then-nop": {
-			condition: false,
-			action:    action,
-			expect:    Nop,
+		"single": {
+			head: "G",
+			actions: []Action{
+				&action{desc: "a"},
+			},
+			expectDesc: "G(a)",
 		},
-		"if-true-then-self": {
-			condition: true,
-			action:    action,
-			expect:    action,
+		"multiple": {
+			head: "G",
+			actions: []Action{
+				&action{desc: "a"},
+				&action{desc: "b"},
+			},
+			expectDesc: "G(a, b)",
 		},
 	}
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			if tc.expect != If(tc.condition, tc.action) {
+			if DescribeGroup(tc.head, tc.actions...) != tc.expectDesc {
 				t.Fail()
 			}
 		})

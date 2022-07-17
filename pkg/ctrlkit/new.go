@@ -39,5 +39,9 @@ func (w *action) Run(ctx context.Context) (ctrl.Result, error) {
 
 // NewAction wraps the given description and function into an action.
 func NewAction(description string, f ActionFunc) Action {
+	if f == nil {
+		panic("action func must be provided")
+	}
+
 	return &action{description: description, actionFunc: f}
 }

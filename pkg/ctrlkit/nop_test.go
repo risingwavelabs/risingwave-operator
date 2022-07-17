@@ -16,4 +16,20 @@
 
 package ctrlkit
 
-// TODO provide tools to trace the workflow.
+import (
+	"context"
+	"testing"
+
+	ctrl "sigs.k8s.io/controller-runtime"
+)
+
+func Test_Nop(t *testing.T) {
+	if Nop.Description() != "Nop" {
+		t.Fail()
+	}
+
+	r, err := Nop.Run(context.Background())
+	if r != zero[ctrl.Result]() || err != nil {
+		t.Fail()
+	}
+}

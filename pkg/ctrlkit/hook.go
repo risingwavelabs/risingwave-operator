@@ -26,6 +26,11 @@ import (
 
 // ActionHook provides hooks for actions implementations in controller manager.
 type ActionHook interface {
+	// PreRun is a hook that runs before the action. It's embedded by the ctrlkit-gen tool and should
+	// be provided with an option. One can get the name and the states of the action from this hook.
 	PreRun(ctx context.Context, logger logr.Logger, action string, states map[string]runtime.Object)
+
+	// PostRun is a hook than runs after the action. It's embedded by the ctrlkit-gen tool. One can get
+	// the result of the action from this hook.
 	PostRun(ctx context.Context, logger logr.Logger, action string, result ctrl.Result, err error)
 }

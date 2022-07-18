@@ -465,7 +465,7 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeComputeStatefulSetsReady(c
 	}
 
 	// Enable the default group only if global replicas > 0.
-	if risingwave.Spec.Global.Replicas.Compactor > 0 {
+	if risingwave.Spec.Global.Replicas.Compute > 0 {
 		groupMap[""] = 1
 	}
 
@@ -488,7 +488,7 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendDeploymentsReady(c
 	}
 
 	// Enable the default group only if global replicas > 0.
-	if risingwave.Spec.Global.Replicas.Compactor > 0 {
+	if risingwave.Spec.Global.Replicas.Frontend > 0 {
 		groupMap[""] = 1
 	}
 
@@ -511,7 +511,7 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaDeploymentsReady(ctx c
 	}
 
 	// Enable the default group only if global replicas > 0.
-	if risingwave.Spec.Global.Replicas.Compactor > 0 {
+	if risingwave.Spec.Global.Replicas.Meta > 0 {
 		groupMap[""] = 1
 	}
 

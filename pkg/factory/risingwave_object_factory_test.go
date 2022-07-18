@@ -22,31 +22,24 @@ import (
 	"testing"
 	"time"
 
+	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/samber/lo"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/uuid"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/utils/pointer"
 	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/singularity-data/risingwave-operator/pkg/consts"
+	"github.com/singularity-data/risingwave-operator/pkg/testutils"
 )
-
-var schemeForTest = runtime.NewScheme()
-
-func init() {
-	_ = clientgoscheme.AddToScheme(schemeForTest)
-	_ = risingwavev1alpha1.AddToScheme(schemeForTest)
-}
 
 type assertion interface {
 	Assert(t *testing.T)
@@ -345,7 +338,7 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 				}
 			})
 
-			factory := NewRisingWaveObjectFactory(risingwave, schemeForTest)
+			factory := NewRisingWaveObjectFactory(risingwave, testutils.Schema)
 
 			var svc *corev1.Service
 			switch tc.component {
@@ -401,7 +394,7 @@ func Test_RisingWaveObjectFactory_ConfigMaps(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			risingwave := newTestRisingwave()
 
-			factory := NewRisingWaveObjectFactory(risingwave, schemeForTest)
+			factory := NewRisingWaveObjectFactory(risingwave, testutils.Schema)
 
 			cm := factory.NewConfigConfigMap(tc.configVal)
 
@@ -427,6 +420,26 @@ func Test_RisingWaveObjectFactory_ConfigMaps(t *testing.T) {
 
 func deepEqual[T any](x, y T) bool {
 	return equality.Semantic.DeepEqual(x, y)
+}
+
+func listContains[T comparable](a, b []T) bool {
+	if len(b) > len(a) {
+		return false
+	}
+
+	m := make(map[T]int)
+	for _, x := range a {
+		m[x]++
+	}
+
+	for _, x := range b {
+		c := m[x]
+		if c == 0 {
+			return false
+		}
+		m[x]--
+	}
+	return true
 }
 
 func listContainsByKey[T any, K comparable](a, b []T, key func(*T) K, equals func(x, y T) bool) bool {
@@ -699,7 +712,7 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 
 				group := &tc.group.Name
 
-				factory := NewRisingWaveObjectFactory(risingwave, schemeForTest)
+				factory := NewRisingWaveObjectFactory(risingwave, testutils.Schema)
 
 				var deploy *appsv1.Deployment
 				switch component {
@@ -977,7 +990,7 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 
 			group := &tc.group.Name
 
-			factory := NewRisingWaveObjectFactory(risingwave, schemeForTest)
+			factory := NewRisingWaveObjectFactory(risingwave, testutils.Schema)
 
 			sts := factory.NewComputeStatefulSet(tc.group.Name, tc.podTemplate)
 
@@ -1145,7 +1158,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 				r.Spec.Storages.Object = tc.objectStorage
 			})
 
-			factory := NewRisingWaveObjectFactory(risingwave, schemeForTest)
+			factory := NewRisingWaveObjectFactory(risingwave, testutils.Schema)
 
 			deploy := factory.NewCompactorDeployment("", nil)
 
@@ -1254,7 +1267,7 @@ func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
 				r.Spec.Storages.Meta = tc.metaStorage
 			})
 
-			factory := NewRisingWaveObjectFactory(risingwave, schemeForTest)
+			factory := NewRisingWaveObjectFactory(risingwave, testutils.Schema)
 			deploy := factory.NewMetaDeployment("", nil)
 
 			composeAssertions(
@@ -1267,4 +1280,38 @@ func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
 			).Assert(t)
 		})
 	}
+}
+
+func Test_RisingWaveObjectFactory_ServiceMonitor(t *testing.T) {
+	risingwave := testutils.FakeRisingWave.DeepCopy()
+
+	factory := NewRisingWaveObjectFactory(risingwave, testutils.Schema)
+	serviceMonitor := factory.NewServiceMonitor()
+
+	composeAssertions(
+		newObjectAssert(serviceMonitor, "owned", func(obj *prometheusv1.ServiceMonitor) bool {
+			return controlledBy(risingwave, obj)
+		}),
+		newObjectAssert(serviceMonitor, "has-labels", func(obj *prometheusv1.ServiceMonitor) bool {
+			return hasLabels(obj, map[string]string{
+				consts.LabelRisingWaveName:       risingwave.Name,
+				consts.LabelRisingWaveGeneration: strconv.FormatInt(risingwave.Generation, 10),
+			}, true)
+		}),
+		newObjectAssert(serviceMonitor, "select-risingwave-services", func(obj *prometheusv1.ServiceMonitor) bool {
+			return mapEquals(obj.Spec.Selector.MatchLabels, map[string]string{
+				consts.LabelRisingWaveName: risingwave.Name,
+			})
+		}),
+		newObjectAssert(serviceMonitor, "target-labels", func(obj *prometheusv1.ServiceMonitor) bool {
+			return listContains(obj.Spec.TargetLabels, []string{
+				consts.LabelRisingWaveName,
+				consts.LabelRisingWaveComponent,
+				consts.LabelRisingWaveGroup,
+			})
+		}),
+		newObjectAssert(serviceMonitor, "scrape-port-metrics", func(obj *prometheusv1.ServiceMonitor) bool {
+			return len(obj.Spec.Endpoints) > 0 && obj.Spec.Endpoints[0].Port == consts.PortMetrics
+		}),
+	).Assert(t)
 }

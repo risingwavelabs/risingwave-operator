@@ -27,7 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -35,14 +34,8 @@ import (
 
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit"
+	"github.com/singularity-data/risingwave-operator/pkg/testutils"
 )
-
-var schemeForTest = runtime.NewScheme()
-
-func init() {
-	_ = clientgoscheme.AddToScheme(schemeForTest)
-	_ = risingwavev1alpha1.AddToScheme(schemeForTest)
-}
 
 type resultErr struct {
 	reconcile.Result
@@ -105,7 +98,7 @@ func Test_RisingWaveController_New(t *testing.T) {
 
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
-			WithScheme(schemeForTest).
+			WithScheme(testutils.Schema).
 			WithObjects(risingwave).
 			Build(),
 		ActionHookFactory: func() ctrlkit.ActionHook {

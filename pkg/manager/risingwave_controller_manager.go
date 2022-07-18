@@ -26,6 +26,7 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -261,6 +262,27 @@ func (s *RisingWaveControllerManagerState) GetMetaService(ctx context.Context) (
 	return &metaService, nil
 }
 
+// GetServiceMonitor gets serviceMonitor with name equals to risingwave-${target.Name}.
+func (s *RisingWaveControllerManagerState) GetServiceMonitor(ctx context.Context) (*monitoringv1.ServiceMonitor, error) {
+	var serviceMonitor monitoringv1.ServiceMonitor
+
+	err := s.Get(ctx, types.NamespacedName{
+		Namespace: s.target.Namespace,
+		Name:      "risingwave-" + s.target.Name,
+	}, &serviceMonitor)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to get state 'serviceMonitor': %w", err)
+	}
+	if !ctrlkit.ValidateOwnership(&serviceMonitor, s.target) {
+		return nil, fmt.Errorf("unable to get state 'serviceMonitor': object not owned by target")
+	}
+
+	return &serviceMonitor, nil
+}
+
 // NewRisingWaveControllerManagerState returns a RisingWaveControllerManagerState (target is not copied).
 func NewRisingWaveControllerManagerState(reader client.Reader, target *risingwavev1alpha1.RisingWave) RisingWaveControllerManagerState {
 	return RisingWaveControllerManagerState{
@@ -315,6 +337,9 @@ type RisingWaveControllerManagerImpl interface {
 
 	// CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
 	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaDeployments []appsv1.Deployment, frontendDeployments []appsv1.Deployment, computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
+
+	// SyncServiceMonitor creates or updates the service monitor for RisingWave.
+	SyncServiceMonitor(ctx context.Context, logger logr.Logger, serviceMonitor *monitoringv1.ServiceMonitor) (ctrl.Result, error)
 }
 
 // Pre-defined actions in RisingWaveControllerManager.
@@ -334,6 +359,7 @@ const (
 	RisingWaveAction_WaitBeforeCompactorDeploymentsReady   = "WaitBeforeCompactorDeploymentsReady"
 	RisingWaveAction_SyncConfigConfigMap                   = "SyncConfigConfigMap"
 	RisingWaveAction_CollectRunningStatisticsAndSyncStatus = "CollectRunningStatisticsAndSyncStatus"
+	RisingWaveAction_SyncServiceMonitor                    = "SyncServiceMonitor"
 )
 
 // RisingWaveControllerManager encapsulates the states and actions used by RisingWaveController.
@@ -750,6 +776,29 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 		}
 
 		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
+	})
+}
+
+// SyncServiceMonitor generates the action of "SyncServiceMonitor".
+func (m *RisingWaveControllerManager) SyncServiceMonitor() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_SyncServiceMonitor, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_SyncServiceMonitor)
+
+		// Get states.
+		serviceMonitor, err := m.state.GetServiceMonitor(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncServiceMonitor, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncServiceMonitor, map[string]runtime.Object{
+				"serviceMonitor": serviceMonitor,
+			})
+		}
+
+		return m.impl.SyncServiceMonitor(ctx, logger, serviceMonitor)
 	})
 }
 

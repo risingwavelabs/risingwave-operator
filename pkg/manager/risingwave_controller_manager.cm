@@ -1,5 +1,6 @@
 bind v1 k8s.io/api/core/v1
 bind apps/v1 k8s.io/api/apps/v1
+bind monitoring.coreos.com/v1 github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1
 bind risingwave.singularity-data.com/v1alpha1 github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1
 
 alias Pod v1/Pod
@@ -9,6 +10,7 @@ alias ConfigMap v1/ConfigMap
 alias Deployment apps/v1/Deployment
 alias StatefulSet apps/v1/StatefulSet
 alias RisingWave risingwave.singularity-data.com/v1alpha1/RisingWave
+alias ServiceMonitor monitoring.coreos.com/v1/ServiceMonitor
 
 // RisingWaveControllerManager encapsulates the states and actions used by RisingWaveController.
 decl RisingWaveControllerManager for RisingWave {
@@ -118,14 +120,26 @@ decl RisingWaveControllerManager for RisingWave {
 
         // SyncConfigConfigMap creates or updates the configmap for RisingWave configs.
         SyncConfigConfigMap(configConfigMap)
+
+        // CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
+        CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
     }
 
     // ===================================================
     // States and actions for third-party components.
     // ===================================================
 
+    state {
+        // ServiceMonitor for the entire RisingWave.
+        serviceMonitor ServiceMonitor {
+            name=risingwave-${target.Name}
+            labels/risingwave/name=${target.Name}
+            owned
+        }
+    }
+
     action {
-        // CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
-        CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
+        // SyncServiceMonitor creates or updates the service monitor for RisingWave.
+        SyncServiceMonitor(serviceMonitor)
     }
 }

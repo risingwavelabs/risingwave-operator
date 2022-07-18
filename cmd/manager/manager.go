@@ -91,7 +91,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = risingwavecontroller.NewReconciler(
+	if err = risingwavecontroller.NewRisingWaveController(
 		mgr.GetClient(),
 		mgr.GetScheme(),
 	).SetupWithManager(mgr); err != nil {

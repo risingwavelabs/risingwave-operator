@@ -58,6 +58,7 @@ const (
 	RisingWaveAction_WaitBeforeCompactorDeploymentsReady   = manager.RisingWaveAction_WaitBeforeCompactorDeploymentsReady
 	RisingWaveAction_SyncConfigConfigMap                   = manager.RisingWaveAction_SyncConfigConfigMap
 	RisingWaveAction_CollectRunningStatisticsAndSyncStatus = manager.RisingWaveAction_CollectRunningStatisticsAndSyncStatus
+	RisingWaveAction_SyncServiceMonitor                    = manager.RisingWaveAction_SyncServiceMonitor
 
 	// Actions defined in controller.
 	RisingWaveAction_UpdateRisingWaveStatusViaClient    = "UpdateRisingWaveStatusViaClient"
@@ -73,6 +74,7 @@ const (
 	RisingWaveAction_MarkConditionUpgradingAsFalse      = "MarkConditionUpgradingAsFalse"
 	RisingWaveAction_BarrierObservedGenerationOutdated  = "BarrierObservedGenerationOutdated"
 	RisingWaveAction_SyncObservedGeneration             = "SyncObservedGeneration"
+	RisingWaveAction_BarrierPrometheusCRDsInstalled     = "BarrierPrometheusCRDsInstalled"
 )
 
 // +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwaves,verbs=get;list;watch;create;update;patch;delete
@@ -222,6 +224,19 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		mgr.WaitBeforeMetaDeploymentsReady(),
 		ctrlkit.Timeout(time.Second, mgr.WaitBeforeMetaServiceIsAvailable()),
 	)
+	prometheusCRDsInstalledBarrier := mgr.NewAction(RisingWaveAction_BarrierPrometheusCRDsInstalled, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+		crd, err := utils.GetCustomResourceDefinition(c.Client, ctx, metav1.GroupKind{
+			Group: "monitoring.coreos.com",
+			Kind:  "ServiceMonitor",
+		})
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				return ctrlkit.Exit()
+			}
+			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for service monitor", err)
+		}
+		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1"))
+	})
 	syncOtherComponents := ctrlkit.ParallelJoin(
 		ctrlkit.ParallelJoin(
 			mgr.SyncComputeService(),
@@ -231,10 +246,13 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			mgr.SyncCompactorService(),
 			mgr.SyncCompactorDeployments(),
 		),
-
 		ctrlkit.ParallelJoin(
 			mgr.SyncFrontendService(),
 			mgr.SyncFrontendDeployments(),
+		),
+		ctrlkit.Sequential(
+			prometheusCRDsInstalledBarrier,
+			mgr.SyncServiceMonitor(),
 		),
 	)
 	otherComponentsReadyBarrier := ctrlkit.Join(
@@ -339,7 +357,7 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(c)
 }
 
-func NewReconciler(client client.Client, _ *runtime.Scheme) *RisingWaveController {
+func NewRisingWaveController(client client.Client, _ *runtime.Scheme) *RisingWaveController {
 	return &RisingWaveController{
 		Client: client,
 	}

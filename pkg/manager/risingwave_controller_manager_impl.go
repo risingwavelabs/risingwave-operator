@@ -24,6 +24,7 @@ import (
 	"strconv"
 
 	"github.com/go-logr/logr"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/samber/lo"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -682,6 +683,12 @@ func (mgr *risingWaveControllerManagerImpl) SyncConfigConfigMap(ctx context.Cont
 		}
 	}, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync config configmap", err)
+}
+
+// SyncServiceMonitor implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) SyncServiceMonitor(ctx context.Context, logger logr.Logger, serviceMonitor *monitoringv1.ServiceMonitor) (reconcile.Result, error) {
+	err := syncObject(mgr, ctx, serviceMonitor, mgr.objectFactory.NewServiceMonitor, logger)
+	return ctrlkit.RequeueIfErrorAndWrap("unable to sync service monitor", err)
 }
 
 func NewRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager) RisingWaveControllerManagerImpl {

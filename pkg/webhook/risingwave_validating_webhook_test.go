@@ -386,6 +386,88 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 			},
 			pass: false,
 		},
+		"empty-global-image-fail": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global.Image = ""
+			},
+			pass: false,
+		},
+		"empty-global-image-and-empty-component-images-fail": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global.Image = ""
+				r.Spec.Global.Replicas = risingwavev1alpha1.RisingWaveGlobalReplicas{}
+				r.Spec.Components.Meta.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
+					{
+						Name:     "a",
+						Replicas: 1,
+					},
+				}
+				r.Spec.Components.Frontend.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
+					{
+						Name:     "a",
+						Replicas: 1,
+					},
+				}
+				r.Spec.Components.Compactor.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
+					{
+						Name:     "a",
+						Replicas: 1,
+					},
+				}
+				r.Spec.Components.Compute.Groups = []risingwavev1alpha1.RisingWaveComputeGroup{
+					{
+						Name:     "a",
+						Replicas: 1,
+					},
+				}
+			},
+			pass: false,
+		},
+		"empty-global-image-but-component-images-pass": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global.Image = ""
+				r.Spec.Global.Replicas = risingwavev1alpha1.RisingWaveGlobalReplicas{}
+				r.Spec.Components.Meta.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
+					{
+						Name:     "a",
+						Replicas: 1,
+						RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+							Image: "ghcr.io/singularity-data/risingwave:latest",
+						},
+					},
+				}
+				r.Spec.Components.Frontend.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
+					{
+						Name:     "a",
+						Replicas: 1,
+						RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+							Image: "ghcr.io/singularity-data/risingwave:latest",
+						},
+					},
+				}
+				r.Spec.Components.Compactor.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
+					{
+						Name:     "a",
+						Replicas: 1,
+						RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+							Image: "ghcr.io/singularity-data/risingwave:latest",
+						},
+					},
+				}
+				r.Spec.Components.Compute.Groups = []risingwavev1alpha1.RisingWaveComputeGroup{
+					{
+						Name:     "a",
+						Replicas: 1,
+						RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+							RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+								Image: "ghcr.io/singularity-data/risingwave:latest",
+							},
+						},
+					},
+				}
+			},
+			pass: true,
+		},
 	}
 
 	webhook := NewRisingWaveValidatingWebhook()

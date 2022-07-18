@@ -1,0 +1,63 @@
+apiVersion: risingwave.singularity-data.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-component-only
+spec:
+  storages:
+    meta:
+      memory: true
+    object:
+      memory: true
+  components:
+    meta:
+      groups:
+      - name: default
+        replicas: 1
+        image: ghcr.io/singularity-data/risingwave:latest
+        # image: public.ecr.aws/x5u3w5h6/risingwave-arm:latest
+        resources:
+          limits:
+            cpu: 1
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+    frontend:
+      groups:
+      - name: default
+        replicas: 1
+        image: ghcr.io/singularity-data/risingwave:latest
+        # image: public.ecr.aws/x5u3w5h6/risingwave-arm:latest
+        resources:
+          limits:
+            cpu: 1
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+    compute:
+      groups:
+      - name: default
+        replicas: 1
+        image: ghcr.io/singularity-data/risingwave:latest
+        # image: public.ecr.aws/x5u3w5h6/risingwave-arm:latest
+        resources:
+          limits:
+            cpu: 1
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+    compactor:
+      groups:
+      - name: default
+        replicas: 1
+        image: ghcr.io/singularity-data/risingwave:latest
+        # image: public.ecr.aws/x5u3w5h6/risingwave-arm:latest
+        resources:
+          limits:
+            cpu: 1
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 100Mi

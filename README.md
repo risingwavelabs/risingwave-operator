@@ -223,11 +223,7 @@ helm repo update
 - Install chart
 
 ```shell
-# Create a ConfigMap for the RisingWave dashboard.
-kubectl create configmap grafana-risingwave-dashboard --from-file=risingwave-dashboard.json=monitoring/grafana/risingwave-dashboard.json
-
-# Install the chart with given values.
-helm install prometheus prometheus-community/kube-prometheus-stack -f https://github.com/singularity-data/risingwave-operator/blob/main/monitoring/kube-prometheus-stack.yaml
+helm install prometheus prometheus-community/kube-prometheus-stack -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/monitoring/kube-prometheus-stack.yaml
 ```
 
 To check the running status, check the Pods with the following command:
@@ -258,10 +254,19 @@ The expected output is like this:
 
 ```shell
 NAME                              AGE
-risingwave-risingwave-in-memory   119m
+risingwave-risingwave-etcd-minio   119m
 ```
 
-Now, let try 
+Let's try to forward the web port of Grafana to localhost, with the following command:
+
+```shell
+kubectl port-forward svc/prometheus-grafana 3000:http-web
+```
+
+Now we can access the Grafana inside the Kubernetes via [http://localhost:3000](http://localhost:3000). By default, the username is `admin` and the password is `prom-operator`.
+Let's open the `RisingWave/RisingWave Dashboard` and select the instance you'd like to observe, and here are the panels.
+
+![RisingWave Dashboard](./docs/assets/risingwave-dashboard.png)
 
 ## License
 

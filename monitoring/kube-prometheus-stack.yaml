@@ -8,10 +8,18 @@ prometheus:
 
 grafana:
   dashboardProviders:
-  - name: 'risingwave'
-    orgId: 2
-    folder: 'RisingWave'
+    rw-dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+      - name: risingwave
+        orgId: 1
+        folder: RisingWave
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/risingwave
   dashboards:
     risingwave:
       risingwave-dashboard:
-        url: https://raw.githubusercontent.com/singularity-data/risingwave-operator/feat/prometheus-service-monitor/monitoring/grafana/risingwave-dashboard.json
+        url: https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/monitoring/grafana/risingwave-dashboard.json

@@ -605,6 +605,8 @@ func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj 
 				return fmt.Errorf("unable to build new object: %w", err)
 			}
 			newObj = ensureTheSameObject(obj, newObj)
+			// Set the resource version for update.
+			newObj.SetResourceVersion(obj.GetResourceVersion())
 			logger.Info(fmt.Sprintf("Update the object of %s", gvk.Kind), "object", utils.GetNamespacedName(newObj),
 				"generation", mgr.risingwaveManager.RisingWave().Generation)
 			return mgr.client.Update(ctx, newObj)

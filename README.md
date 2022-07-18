@@ -205,6 +205,64 @@ spec:
 #...
 ```
 
+## Monitoring
+
+### Install the `kube-prometheus-stack`
+
+Before getting started, you need to ensure that the [`helm`](https://helm.sh/) is installed. Please follow the instructions in the [Installing Helm](https://helm.sh/docs/intro/install/) chapter if you don't have one.
+
+We encourage using the [`kube-prometheus-stack`](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack), a helm chart maintained by the community, to install the `Prometheus operator` into the Kubernetes. Follow the instructions below to install:
+
+- Add `prometheus-community` repo
+
+```shell
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+```
+
+- Install chart
+
+```shell
+# Create a ConfigMap for the RisingWave dashboard.
+kubectl create configmap grafana-risingwave-dashboard --from-file=risingwave-dashboard.json=monitoring/grafana/risingwave-dashboard.json
+
+# Install the chart with given values.
+helm install prometheus prometheus-community/kube-prometheus-stack -f https://github.com/singularity-data/risingwave-operator/blob/main/monitoring/kube-prometheus-stack.yaml
+```
+
+To check the running status, check the Pods with the following command:
+
+```shell
+kubectl get pods -l release=prometheus
+```
+
+The expected output is like this:
+
+<!-- spellchecker: disable -->
+```shell
+NAME                                                   READY   STATUS    RESTARTS   AGE
+prometheus-kube-prometheus-operator-5f6c8948fb-llvzm   1/1     Running   0          173m
+prometheus-kube-state-metrics-59dd9ffd47-z4777         1/1     Running   0          173m
+prometheus-prometheus-node-exporter-llgp9              1/1     Running   0          169m
+```
+
+### Start monitoring
+
+The RisingWave operator has integrated with the [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator). If you have installed the Prometheus Operator in the Kubernetes, it will create a `ServiceMonitor` for the `RisingWave` object and keep it synced automatically. You can check the `ServiceMonitor` with the following command:
+
+```shell
+kubectl get servicemonitors -l risingwave/name
+```
+
+The expected output is like this:
+
+```shell
+NAME                              AGE
+risingwave-risingwave-in-memory   119m
+```
+
+Now, let try 
+
 ## License
 
 The RisingWave operator is developed under the Apache License 2.0. Please refer to [LICENSE](LICENSE) for more information.

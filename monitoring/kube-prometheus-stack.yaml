@@ -1,0 +1,17 @@
+prometheus-node-exporter:
+  hostRootFsMount:
+    enabled: false
+
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+
+grafana:
+  dashboardProviders:
+  - name: 'risingwave'
+    orgId: 2
+    folder: 'RisingWave'
+  dashboards:
+    risingwave:
+      risingwave-dashboard:
+        url: https://raw.githubusercontent.com/singularity-data/risingwave-operator/feat/prometheus-service-monitor/monitoring/grafana/risingwave-dashboard.json

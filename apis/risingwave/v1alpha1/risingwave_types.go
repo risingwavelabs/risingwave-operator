@@ -473,7 +473,7 @@ type ComponentGroupReplicasStatus struct {
 	Running int32 `json:"running"`
 
 	// Exists is the existence status of the group.
-	Exists bool `json:"found,omitempty"`
+	Exists bool `json:"exists,omitempty"`
 }
 
 // ComponentReplicasStatus are the running status of Pods of the component.

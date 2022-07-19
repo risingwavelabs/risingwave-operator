@@ -1260,7 +1260,7 @@ spec:
                           description: ComponentGroupReplicasStatus are the running
                             status of Pods in group.
                           properties:
-                            found:
+                            exists:
                               description: Exists is the existence status of the group.
                               type: boolean
                             name:
@@ -1303,7 +1303,7 @@ spec:
                           description: ComponentGroupReplicasStatus are the running
                             status of Pods in group.
                           properties:
-                            found:
+                            exists:
                               description: Exists is the existence status of the group.
                               type: boolean
                             name:
@@ -1346,7 +1346,7 @@ spec:
                           description: ComponentGroupReplicasStatus are the running
                             status of Pods in group.
                           properties:
-                            found:
+                            exists:
                               description: Exists is the existence status of the group.
                               type: boolean
                             name:
@@ -1389,7 +1389,7 @@ spec:
                           description: ComponentGroupReplicasStatus are the running
                             status of Pods in group.
                           properties:
-                            found:
+                            exists:
                               description: Exists is the existence status of the group.
                               type: boolean
                             name:

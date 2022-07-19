@@ -11,11 +11,17 @@
             "name": "makefile",
             "path": ".cspell/makefile.txt",
             "addWords": true
+        },
+        {
+            "name": "documentation",
+            "path": ".cspell/doc.txt",
+            "addWords": true
         }
     ],
     "dictionaries": [
         "makefile",
-        "project-words"
+        "project-words",
+        "documentation"
     ],
     "ignorePaths": [
         "project-words.txt",

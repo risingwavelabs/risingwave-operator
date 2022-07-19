@@ -782,6 +782,10 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 							return equality.Semantic.DeepEqual(obj.Spec.Strategy, *tc.expectUpgradeStrategy)
 						}
 					}),
+					newObjectAssert(deploy, "first-container-must-have-probes", func(obj *appsv1.Deployment) bool {
+						container := &obj.Spec.Template.Spec.Containers[0]
+						return container.LivenessProbe != nil && container.ReadinessProbe != nil
+					}),
 				).Assert(t)
 			})
 		}
@@ -1054,6 +1058,10 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 				}),
 				newObjectAssert(sts, "check-volume-mounts", func(obj *appsv1.StatefulSet) bool {
 					return listContainsByKey(obj.Spec.Template.Spec.Containers[0].VolumeMounts, tc.group.VolumeMounts, func(t *corev1.VolumeMount) string { return t.MountPath }, deepEqual[corev1.VolumeMount])
+				}),
+				newObjectAssert(sts, "first-container-must-have-probes", func(obj *appsv1.StatefulSet) bool {
+					container := &obj.Spec.Template.Spec.Containers[0]
+					return container.LivenessProbe != nil && container.ReadinessProbe != nil
 				}),
 			).Assert(t)
 		})

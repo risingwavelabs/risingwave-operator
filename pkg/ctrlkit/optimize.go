@@ -18,15 +18,75 @@ package ctrlkit
 
 import "github.com/samber/lo"
 
-func unwrapParallel(act Action) Action {
+func unwrapParallelAndShared(act Action) Action {
 	for {
-		switch innerAct := act.(type) {
+		switch realAct := act.(type) {
 		case *parallelAction:
-			act = innerAct.inner
+			act = realAct.inner
+		case *sharedAction:
+			act = realAct.inner
 		default:
 			return act
 		}
 	}
+}
+
+func optimizeSequential(workflow *sequentialGroup) Action {
+	actions := make([]Action, 0)
+	for _, act := range workflow.actions {
+		act = OptimizeWorkflow(act)
+		// Remove parallel when sequential.
+		if parallelAct, ok := act.(*parallelAction); ok {
+			act = parallelAct.Inner()
+		}
+		switch innerAct := act.(type) {
+		case *sequentialGroup:
+			actions = append(actions, innerAct.actions...)
+		default:
+			actions = append(actions, act)
+		}
+	}
+	workflow.actions = lo.Filter(actions, func(act Action, _ int) bool {
+		return act != Nop
+	})
+	if len(workflow.actions) == 0 {
+		return Nop
+	}
+	if len(workflow.actions) == 1 {
+		return workflow.actions[0]
+	}
+	return workflow
+}
+
+func optimizeJoin(workflow *joinGroup) Action {
+	actions := make([]Action, 0)
+	for i, act := range workflow.actions {
+		workflow.actions[i] = OptimizeWorkflow(act)
+		// If they are the same Join type, lift the inner one into the outer one.
+		if innerJoin, ok := act.(*joinGroup); ok {
+			if innerJoin.runner.IsParallel() == workflow.runner.IsParallel() {
+				actions = append(actions, innerJoin.actions...)
+			} else {
+				actions = append(actions, act)
+			}
+		} else {
+			actions = append(actions, act)
+		}
+	}
+	workflow.actions = lo.Filter(actions, func(act Action, _ int) bool {
+		return act != Nop
+	})
+	if len(workflow.actions) == 0 {
+		return Nop
+	}
+	if len(workflow.actions) == 1 {
+		if workflow.runner.IsParallel() {
+			return OptimizeWorkflow(Parallel(workflow.actions[0]))
+		} else {
+			return workflow.actions[0]
+		}
+	}
+	return workflow
 }
 
 // OptimizeWorkflow optimizes the workflow by eliminating unnecessary layers:
@@ -41,62 +101,36 @@ func unwrapParallel(act Action) Action {
 func OptimizeWorkflow(workflow Action) Action {
 	switch workflow := workflow.(type) {
 	case *sequentialGroup:
-		actions := make([]Action, 0)
-		for _, act := range workflow.actions {
-			act = OptimizeWorkflow(act)
-			act = unwrapParallel(act)
-			switch innerAct := act.(type) {
-			case *sequentialGroup:
-				actions = append(actions, innerAct.actions...)
-			default:
-				actions = append(actions, act)
-			}
-		}
-		workflow.actions = lo.Filter(actions, func(act Action, _ int) bool {
-			return act != Nop
-		})
-		if len(workflow.actions) == 0 {
-			return Nop
-		}
-		if len(workflow.actions) == 1 {
-			return workflow.actions[0]
-		}
-		return workflow
+		return optimizeSequential(workflow)
 	case *joinGroup:
-		actions := make([]Action, 0)
-		for i, act := range workflow.actions {
-			workflow.actions[i] = OptimizeWorkflow(act)
-			// If they are the same Join type, lift the inner one into the outer one.
-			if innerJoin, ok := act.(*joinGroup); ok {
-				if innerJoin.runner.IsParallel() == workflow.runner.IsParallel() {
-					actions = append(actions, innerJoin.actions...)
-				} else {
-					actions = append(actions, act)
-				}
-			} else {
-				actions = append(actions, act)
-			}
-		}
-		workflow.actions = lo.Filter(actions, func(act Action, _ int) bool {
-			return act != Nop
-		})
-		if len(workflow.actions) == 0 {
-			return Nop
-		}
-		if len(workflow.actions) == 1 {
-			if workflow.runner.IsParallel() {
-				return OptimizeWorkflow(Parallel(workflow.actions[0]))
-			} else {
-				return workflow.actions[0]
-			}
-		}
-		return workflow
+		return optimizeJoin(workflow)
 	case *parallelAction:
 		workflow.inner = OptimizeWorkflow(workflow.inner)
 		if workflow.inner == Nop {
 			return Nop
 		}
-		workflow.inner = unwrapParallel(workflow.inner)
+
+		// Unwrap all parallels.
+		for {
+			if innerAct, ok := workflow.inner.(*parallelAction); ok {
+				workflow = innerAct
+			} else {
+				break
+			}
+		}
+
+		// If it's a parallel(shared), then return the shared.
+		if innerAct, ok := workflow.inner.(*sharedAction); ok {
+			return innerAct
+		}
+
+		return workflow
+	case *sharedAction:
+		workflow.inner = OptimizeWorkflow(workflow.inner)
+		if workflow.inner == Nop {
+			return Nop
+		}
+		workflow.inner = unwrapParallelAndShared(workflow.inner)
 		return workflow
 	case *retryAction:
 		workflow.inner = OptimizeWorkflow(workflow.inner)

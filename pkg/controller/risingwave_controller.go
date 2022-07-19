@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"golang.org/x/time/rate"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -69,6 +70,7 @@ const (
 	RisingWaveAction_MarkConditionRunningAsTrue         = "MarkConditionRunningAsTrue"
 	RisingWaveAction_RemoveConditionInitializing        = "RemoveConditionInitializing"
 	RisingWaveAction_BarrierConditionRunningIsTrue      = "BarrierConditionRunningIsTrue"
+	RisingWaveAction_BarrierConditionRunningIsFalse     = "BarrierConditionRunningIsFalse"
 	RisingWaveAction_MarkConditionUpgradingAsTrue       = "MarkConditionUpgradingAsTrue"
 	RisingWaveAction_BarrierConditionUpgradingIsTrue    = "BarrierConditionUpgradingIsTrue"
 	RisingWaveAction_MarkConditionUpgradingAsFalse      = "MarkConditionUpgradingAsFalse"
@@ -194,11 +196,14 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		risingwaveManger.RemoveCondition(risingwavev1alpha1.RisingWaveConditionInitializing)
 		return ctrlkit.Continue()
 	})
-	markConditionRunningAsTrueAndRemoveConditionInitializing := ctrlkit.Join(markConditionRunningAsTrue, removeConditionInitializing)
 
 	conditionRunningIsTrueBarrier := mgr.NewAction(RisingWaveAction_BarrierConditionRunningIsTrue, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
 		condition := risingwaveManger.GetCondition(risingwavev1alpha1.RisingWaveConditionRunning)
 		return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
+	})
+	conditionRunningIsFalseBarrier := mgr.NewAction(RisingWaveAction_BarrierConditionRunningIsFalse, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+		condition := risingwaveManger.GetCondition(risingwavev1alpha1.RisingWaveConditionRunning)
+		return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionFalse)
 	})
 	markConditionUpgradingAsTrue := mgr.NewAction(RisingWaveAction_MarkConditionUpgradingAsTrue, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
 		risingwaveManger.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
@@ -237,6 +242,10 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		}
 		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1"))
 	})
+	syncServiceMonitorIfPossible := ctrlkit.Sequential(
+		prometheusCRDsInstalledBarrier,
+		mgr.SyncServiceMonitor(),
+	)
 	syncOtherComponents := ctrlkit.ParallelJoin(
 		ctrlkit.ParallelJoin(
 			mgr.SyncComputeService(),
@@ -249,10 +258,6 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		ctrlkit.ParallelJoin(
 			mgr.SyncFrontendService(),
 			mgr.SyncFrontendDeployments(),
-		),
-		ctrlkit.Sequential(
-			prometheusCRDsInstalledBarrier,
-			mgr.SyncServiceMonitor(),
 		),
 	)
 	otherComponentsReadyBarrier := ctrlkit.Join(
@@ -270,7 +275,19 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		risingwaveManger.SyncObservedGeneration()
 		return ctrlkit.Continue()
 	})
-	syncStorageAndComponentStatus := mgr.CollectRunningStatisticsAndSyncStatus()
+	syncRunningStatus := mgr.CollectRunningStatisticsAndSyncStatus()
+
+	syncAllAndWait := ctrlkit.Sequential(
+		// Set .status.observedGeneration = .metadata.generation
+		syncObservedGeneration,
+
+		// Sync ConfigMap, and then all component groups, and wait before the components are ready.
+		// If possible, also sync the service monitor.
+		syncConfigs,
+		syncAllComponents,
+		allComponentsReadyBarrier,
+	)
+	sharedSyncAllAndWait := ctrlkit.Shared(syncAllAndWait)
 
 	return ctrlkit.ParallelJoin(
 		// => Initializing (Running=false)
@@ -280,61 +297,48 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			markConditionRunningAsFalse,
 		),
 
-		// Initializing => Running
+		// Initializing
 		ctrlkit.Sequential(
 			conditionInitializingIsTrueBarrier,
 
-			ctrlkit.Sequential(
-				// Sync observed generation.
-				syncObservedGeneration,
+			sharedSyncAllAndWait,
 
-				// Sync configs.
-				syncConfigs,
+			removeConditionInitializing,
+		),
 
-				// Sync all components, and wait for the ready barrier.
-				syncAllComponents, allComponentsReadyBarrier,
+		// Running (false)
+		ctrlkit.Sequential(
+			conditionRunningIsFalseBarrier,
 
-				markConditionRunningAsTrueAndRemoveConditionInitializing,
-			),
+			sharedSyncAllAndWait,
+
+			markConditionRunningAsTrue,
 		),
 
 		// Running maintenance, => Upgrading
 		ctrlkit.Sequential(
 			conditionRunningIsTrueBarrier,
 
-			ctrlkit.ParallelJoin(
-				// Branch, upgrade detection.
-				ctrlkit.Sequential(
-					observedGenerationOutdatedBarrier,
+			observedGenerationOutdatedBarrier,
 
-					markConditionUpgradingAsTrue,
-				),
-
-				// Branch, running maintenance.
-				ctrlkit.Sequential(
-				// TODO, nothing to do now.
-				),
-			),
+			markConditionUpgradingAsTrue,
 		),
 
-		// Upgrading
+		// Upgrading or Recovering (Running=false)
 		ctrlkit.Sequential(
 			conditionUpgradingIsTrueBarrier,
 
-			// Sync observed generation.
-			syncObservedGeneration,
-
-			// Sync all components, and wait for the ready barrier.
-			syncAllComponents, allComponentsReadyBarrier,
+			sharedSyncAllAndWait,
 
 			markConditionUpgradingAsFalse,
 		),
 
-		// Always run.
-		ctrlkit.Join(
-			// Sync the storage and component status each time we run.
-			syncStorageAndComponentStatus,
-		),
+		// Sync running status, such as storage status, component replicas and
+		// if it's not running, turn it to Running=false.
+		syncRunningStatus,
+
+		// Always sync the service monitor if possible.
+		syncServiceMonitorIfPossible,
 	)
 }
 
@@ -354,6 +358,7 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.StatefulSet{}).
 		Owns(&corev1.Service{}).
 		Owns(&corev1.ConfigMap{}).
+		Owns(&prometheusv1.ServiceMonitor{}).
 		Complete(c)
 }
 

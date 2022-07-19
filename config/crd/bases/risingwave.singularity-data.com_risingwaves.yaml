@@ -1260,6 +1260,9 @@ spec:
                           description: ComponentGroupReplicasStatus are the running
                             status of Pods in group.
                           properties:
+                            found:
+                              description: Exists is the existence status of the group.
+                              type: boolean
                             name:
                               description: Name is the name of the group.
                               type: string
@@ -1300,6 +1303,9 @@ spec:
                           description: ComponentGroupReplicasStatus are the running
                             status of Pods in group.
                           properties:
+                            found:
+                              description: Exists is the existence status of the group.
+                              type: boolean
                             name:
                               description: Name is the name of the group.
                               type: string
@@ -1340,6 +1346,9 @@ spec:
                           description: ComponentGroupReplicasStatus are the running
                             status of Pods in group.
                           properties:
+                            found:
+                              description: Exists is the existence status of the group.
+                              type: boolean
                             name:
                               description: Name is the name of the group.
                               type: string
@@ -1380,6 +1389,9 @@ spec:
                           description: ComponentGroupReplicasStatus are the running
                             status of Pods in group.
                           properties:
+                            found:
+                              description: Exists is the existence status of the group.
+                              type: boolean
                             name:
                               description: Name is the name of the group.
                               type: string

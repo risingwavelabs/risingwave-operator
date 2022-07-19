@@ -335,11 +335,11 @@ type RisingWaveControllerManagerImpl interface {
 	// SyncConfigConfigMap creates or updates the configmap for RisingWave configs.
 	SyncConfigConfigMap(ctx context.Context, logger logr.Logger, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 
-	// CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
-	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaDeployments []appsv1.Deployment, frontendDeployments []appsv1.Deployment, computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
-
 	// SyncServiceMonitor creates or updates the service monitor for RisingWave.
 	SyncServiceMonitor(ctx context.Context, logger logr.Logger, serviceMonitor *monitoringv1.ServiceMonitor) (ctrl.Result, error)
+
+	// CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
+	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaDeployments []appsv1.Deployment, frontendDeployments []appsv1.Deployment, computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, configConfigMap *corev1.ConfigMap, serviceMonitor *monitoringv1.ServiceMonitor) (ctrl.Result, error)
 }
 
 // Pre-defined actions in RisingWaveControllerManager.
@@ -358,8 +358,8 @@ const (
 	RisingWaveAction_SyncCompactorDeployments              = "SyncCompactorDeployments"
 	RisingWaveAction_WaitBeforeCompactorDeploymentsReady   = "WaitBeforeCompactorDeploymentsReady"
 	RisingWaveAction_SyncConfigConfigMap                   = "SyncConfigConfigMap"
-	RisingWaveAction_CollectRunningStatisticsAndSyncStatus = "CollectRunningStatisticsAndSyncStatus"
 	RisingWaveAction_SyncServiceMonitor                    = "SyncServiceMonitor"
+	RisingWaveAction_CollectRunningStatisticsAndSyncStatus = "CollectRunningStatisticsAndSyncStatus"
 )
 
 // RisingWaveControllerManager encapsulates the states and actions used by RisingWaveController.
@@ -706,6 +706,29 @@ func (m *RisingWaveControllerManager) SyncConfigConfigMap() ctrlkit.Action {
 	})
 }
 
+// SyncServiceMonitor generates the action of "SyncServiceMonitor".
+func (m *RisingWaveControllerManager) SyncServiceMonitor() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_SyncServiceMonitor, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_SyncServiceMonitor)
+
+		// Get states.
+		serviceMonitor, err := m.state.GetServiceMonitor(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncServiceMonitor, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncServiceMonitor, map[string]runtime.Object{
+				"serviceMonitor": serviceMonitor,
+			})
+		}
+
+		return m.impl.SyncServiceMonitor(ctx, logger, serviceMonitor)
+	})
+}
+
 // CollectRunningStatisticsAndSyncStatus generates the action of "CollectRunningStatisticsAndSyncStatus".
 func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ctrlkit.Action {
 	return ctrlkit.NewAction(RisingWaveAction_CollectRunningStatisticsAndSyncStatus, func(ctx context.Context) (result ctrl.Result, err error) {
@@ -757,6 +780,11 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 			return ctrlkit.RequeueIfError(err)
 		}
 
+		serviceMonitor, err := m.state.GetServiceMonitor(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
 		// Invoke action.
 		if m.hook != nil {
 			defer func() {
@@ -772,33 +800,11 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 				"computeStatefulSets":  &appsv1.StatefulSetList{Items: computeStatefulSets},
 				"compactorDeployments": &appsv1.DeploymentList{Items: compactorDeployments},
 				"configConfigMap":      configConfigMap,
+				"serviceMonitor":       serviceMonitor,
 			})
 		}
 
-		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
-	})
-}
-
-// SyncServiceMonitor generates the action of "SyncServiceMonitor".
-func (m *RisingWaveControllerManager) SyncServiceMonitor() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_SyncServiceMonitor, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_SyncServiceMonitor)
-
-		// Get states.
-		serviceMonitor, err := m.state.GetServiceMonitor(ctx)
-		if err != nil {
-			return ctrlkit.RequeueIfError(err)
-		}
-
-		// Invoke action.
-		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncServiceMonitor, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncServiceMonitor, map[string]runtime.Object{
-				"serviceMonitor": serviceMonitor,
-			})
-		}
-
-		return m.impl.SyncServiceMonitor(ctx, logger, serviceMonitor)
+		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap, serviceMonitor)
 	})
 }
 

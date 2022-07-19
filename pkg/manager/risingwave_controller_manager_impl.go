@@ -64,20 +64,36 @@ func buildGroupStatus[T any, TP ptrAsObject[T], G any](globalReplicas int32, gro
 		status.Target += replicas
 	}
 
+	foundGroups := make(map[string]int)
 	for _, obj := range workloads {
 		group, readyReplicas := groupAndReadyReplicas(&obj)
+		foundGroups[group] = 1
 		status.Running += readyReplicas
 		if replicas, ok := expectedGroups[group]; ok {
 			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
 				Name:    group,
 				Target:  replicas,
 				Running: readyReplicas,
+				Exists:  true,
 			})
 		} else {
 			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
 				Name:    group + "(-)",
 				Target:  0,
 				Running: readyReplicas,
+				Exists:  true,
+			})
+		}
+	}
+
+	// Groups expected but not found.
+	for group, replicas := range expectedGroups {
+		if _, ok := foundGroups[group]; !ok {
+			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
+				Name:    group,
+				Target:  replicas,
+				Running: 0,
+				Exists:  false,
 			})
 		}
 	}
@@ -90,76 +106,99 @@ func buildGroupStatus[T any, TP ptrAsObject[T], G any](globalReplicas int32, gro
 	return status
 }
 
+func isGroupMissing(group risingwavev1alpha1.ComponentGroupReplicasStatus) bool {
+	return !group.Exists
+}
+
+func buildMetaStorageType(metaStorage *risingwavev1alpha1.RisingWaveMetaStorage) risingwavev1alpha1.MetaStorageType {
+	switch {
+	case metaStorage.Memory != nil && *metaStorage.Memory:
+		return risingwavev1alpha1.MetaStorageTypeMemory
+	case metaStorage.Etcd != nil:
+		return risingwavev1alpha1.MetaStorageTypeEtcd
+	default:
+		return risingwavev1alpha1.MetaStorageTypeUnknown
+	}
+}
+
+func buildObjectStorageType(objectStorage *risingwavev1alpha1.RisingWaveObjectStorage) risingwavev1alpha1.ObjectStorageType {
+	switch {
+	case objectStorage.Memory != nil && *objectStorage.Memory:
+		return risingwavev1alpha1.ObjectStorageTypeMemory
+	case objectStorage.MinIO != nil:
+		return risingwavev1alpha1.ObjectStorageTypeMinIO
+	case objectStorage.S3 != nil:
+		return risingwavev1alpha1.ObjectStorageTypeS3
+	default:
+		return risingwavev1alpha1.ObjectStorageTypeUnknown
+	}
+}
+
 // CollectRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger,
 	frontendService *corev1.Service, metaService *corev1.Service,
 	computeService *corev1.Service, compactorService *corev1.Service,
 	metaDeployments []appsv1.Deployment, frontendDeployments []appsv1.Deployment,
 	computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment,
-	configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
+	configConfigMap *corev1.ConfigMap, serviceMonitor *monitoringv1.ServiceMonitor) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
 	globalSpec := &risingwave.Spec.Global
 	componentsSpec := &risingwave.Spec.Components
 
+	// If any of these states is missing, turn the condition Running to false.
+	if frontendService == nil || metaService == nil || computeService == nil || compactorService == nil || configConfigMap == nil {
+		mgr.risingwaveManager.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
+			Type:   risingwavev1alpha1.RisingWaveConditionRunning,
+			Status: metav1.ConditionFalse,
+		})
+	}
+
+	// Update the replicas and storage status.
+	nameAndReplicasForComponentGroup := func(g *risingwavev1alpha1.RisingWaveComponentGroup) (string, int32) {
+		return g.Name, g.Replicas
+	}
+	groupAndReadyReplicasForDeployment := func(t *appsv1.Deployment) (string, int32) {
+		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
+	}
+	nameAndReplicasForComputeGroup := func(g *risingwavev1alpha1.RisingWaveComputeGroup) (string, int32) {
+		return g.Name, g.Replicas
+	}
+	groupAndReadyReplicasForStatefulSet := func(t *appsv1.StatefulSet) (string, int32) {
+		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
+	}
+	componentReplicas := risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
+		Meta:      buildGroupStatus(globalSpec.Replicas.Meta, componentsSpec.Meta.Groups, nameAndReplicasForComponentGroup, metaDeployments, groupAndReadyReplicasForDeployment),
+		Frontend:  buildGroupStatus(globalSpec.Replicas.Frontend, componentsSpec.Frontend.Groups, nameAndReplicasForComponentGroup, frontendDeployments, groupAndReadyReplicasForDeployment),
+		Compactor: buildGroupStatus(globalSpec.Replicas.Compactor, componentsSpec.Compactor.Groups, nameAndReplicasForComponentGroup, compactorDeployments, groupAndReadyReplicasForDeployment),
+		Compute:   buildGroupStatus(globalSpec.Replicas.Compute, componentsSpec.Compute.Groups, nameAndReplicasForComputeGroup, computeStatefulSets, groupAndReadyReplicasForStatefulSet),
+	}
 	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
 		// Report meta storage status.
 		metaStorage := &risingwave.Spec.Storages.Meta
-		switch {
-		case metaStorage.Memory != nil && *metaStorage.Memory:
-			status.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorageStatus{
-				Type: risingwavev1alpha1.MetaStorageTypeMemory,
-			}
-		case metaStorage.Etcd != nil:
-			status.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorageStatus{
-				Type: risingwavev1alpha1.MetaStorageTypeEtcd,
-			}
-		default:
-			status.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorageStatus{
-				Type: risingwavev1alpha1.MetaStorageTypeUnknown,
-			}
+		status.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorageStatus{
+			Type: buildMetaStorageType(metaStorage),
 		}
 
 		// Report object storage status.
 		objectStorage := &risingwave.Spec.Storages.Object
-		switch {
-		case objectStorage.Memory != nil && *objectStorage.Memory:
-			status.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorageStatus{
-				Type: risingwavev1alpha1.ObjectStorageTypeMemory,
-			}
-		case objectStorage.MinIO != nil:
-			status.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorageStatus{
-				Type: risingwavev1alpha1.ObjectStorageTypeMinIO,
-			}
-		case objectStorage.S3 != nil:
-			status.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorageStatus{
-				Type: risingwavev1alpha1.ObjectStorageTypeS3,
-			}
-		default:
-			status.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorageStatus{
-				Type: risingwavev1alpha1.ObjectStorageTypeUnknown,
-			}
+		status.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorageStatus{
+			Type: buildObjectStorageType(objectStorage),
 		}
 
 		// Report component replicas.
-		nameAndReplicasForComponentGroup := func(g *risingwavev1alpha1.RisingWaveComponentGroup) (string, int32) {
-			return g.Name, g.Replicas
-		}
-		groupAndReadyReplicasForDeployment := func(t *appsv1.Deployment) (string, int32) {
-			return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
-		}
-		nameAndReplicasForComputeGroup := func(g *risingwavev1alpha1.RisingWaveComputeGroup) (string, int32) {
-			return g.Name, g.Replicas
-		}
-		groupAndReadyReplicasForStatefulSet := func(t *appsv1.StatefulSet) (string, int32) {
-			return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
-		}
-		status.ComponentReplicas = risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
-			Meta:      buildGroupStatus(globalSpec.Replicas.Meta, componentsSpec.Meta.Groups, nameAndReplicasForComponentGroup, metaDeployments, groupAndReadyReplicasForDeployment),
-			Frontend:  buildGroupStatus(globalSpec.Replicas.Frontend, componentsSpec.Frontend.Groups, nameAndReplicasForComponentGroup, frontendDeployments, groupAndReadyReplicasForDeployment),
-			Compactor: buildGroupStatus(globalSpec.Replicas.Compactor, componentsSpec.Compactor.Groups, nameAndReplicasForComponentGroup, compactorDeployments, groupAndReadyReplicasForDeployment),
-			Compute:   buildGroupStatus(globalSpec.Replicas.Compute, componentsSpec.Compute.Groups, nameAndReplicasForComputeGroup, computeStatefulSets, groupAndReadyReplicasForStatefulSet),
-		}
+		status.ComponentReplicas = componentReplicas
 	})
+
+	// If any of the groups is missing, turn the condition Running to false.
+	if lo.ContainsBy(componentReplicas.Meta.Groups, isGroupMissing) ||
+		lo.ContainsBy(componentReplicas.Frontend.Groups, isGroupMissing) ||
+		lo.ContainsBy(componentReplicas.Compute.Groups, isGroupMissing) ||
+		lo.ContainsBy(componentReplicas.Compactor.Groups, isGroupMissing) {
+		mgr.risingwaveManager.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
+			Type:   risingwavev1alpha1.RisingWaveConditionRunning,
+			Status: metav1.ConditionFalse,
+		})
+	}
 
 	return ctrlkit.Continue()
 }

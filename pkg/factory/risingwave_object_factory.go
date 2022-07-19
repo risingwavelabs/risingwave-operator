@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"time"
 
+	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/samber/lo"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -143,7 +144,18 @@ func (f *RisingWaveObjectFactory) componentName(component, group string) string 
 	}
 }
 
-func (f *RisingWaveObjectFactory) objectMeta(component string, sync bool) metav1.ObjectMeta {
+func (f *RisingWaveObjectFactory) objectMeta(name string, sync bool) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Name:      name,
+		Namespace: f.namespace(),
+		Labels: map[string]string{
+			consts.LabelRisingWaveName:       f.risingwave.Name,
+			consts.LabelRisingWaveGeneration: lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
+		},
+	}
+}
+
+func (f *RisingWaveObjectFactory) componentObjectMeta(component string, sync bool) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Name:      f.componentName(component, ""),
 		Namespace: f.namespace(),
@@ -155,7 +167,7 @@ func (f *RisingWaveObjectFactory) objectMeta(component string, sync bool) metav1
 	}
 }
 
-func (f *RisingWaveObjectFactory) groupObjectMeta(component, group string, sync bool) metav1.ObjectMeta {
+func (f *RisingWaveObjectFactory) componentGroupObjectMeta(component, group string, sync bool) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Name:      f.componentName(component, group),
 		Namespace: f.namespace(),
@@ -187,7 +199,7 @@ func (f *RisingWaveObjectFactory) NewMetaService() *corev1.Service {
 	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
 
 	metaService := &corev1.Service{
-		ObjectMeta: f.objectMeta(consts.ComponentMeta, true),
+		ObjectMeta: f.componentObjectMeta(consts.ComponentMeta, true),
 		Spec: corev1.ServiceSpec{
 			Type:     corev1.ServiceTypeClusterIP,
 			Selector: f.podLabelsOrSelectors(consts.ComponentMeta),
@@ -220,7 +232,7 @@ func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 	frontendPorts := &f.risingwave.Spec.Components.Frontend.Ports
 
 	frontendService := &corev1.Service{
-		ObjectMeta: f.objectMeta(consts.ComponentFrontend, true),
+		ObjectMeta: f.componentObjectMeta(consts.ComponentFrontend, true),
 		Spec: corev1.ServiceSpec{
 			Type:     f.risingwave.Spec.Global.ServiceType,
 			Selector: f.podLabelsOrSelectors(consts.ComponentFrontend),
@@ -247,7 +259,7 @@ func (f *RisingWaveObjectFactory) NewComputeService() *corev1.Service {
 	computePorts := &f.risingwave.Spec.Components.Compute.Ports
 
 	computeService := &corev1.Service{
-		ObjectMeta: f.objectMeta(consts.ComponentCompute, true),
+		ObjectMeta: f.componentObjectMeta(consts.ComponentCompute, true),
 		Spec: corev1.ServiceSpec{
 			Type:     corev1.ServiceTypeClusterIP,
 			Selector: f.podLabelsOrSelectors(consts.ComponentCompute),
@@ -275,7 +287,7 @@ func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 	compactorPorts := &f.risingwave.Spec.Components.Compactor.Ports
 
 	compactorService := &corev1.Service{
-		ObjectMeta: f.objectMeta(consts.ComponentCompactor, true),
+		ObjectMeta: f.componentObjectMeta(consts.ComponentCompactor, true),
 		Spec: corev1.ServiceSpec{
 			Type:     corev1.ServiceTypeClusterIP,
 			Selector: f.podLabelsOrSelectors(consts.ComponentCompactor),
@@ -517,7 +529,7 @@ func (f *RisingWaveObjectFactory) volumeMountForConfig() corev1.VolumeMount {
 
 func (f *RisingWaveObjectFactory) NewConfigConfigMap(val string) *corev1.ConfigMap {
 	risingwaveConfigConfigMap := &corev1.ConfigMap{
-		ObjectMeta: f.objectMeta(consts.ComponentConfig, false), // not synced
+		ObjectMeta: f.componentObjectMeta(consts.ComponentConfig, false), // not synced
 		Data: map[string]string{
 			risingWaveConfigMapKey: nonZeroOrDefault(val, risingWaveConfigTemplate),
 		},
@@ -809,7 +821,7 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment(group string, podTemplates m
 	// Build the deployment.
 	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentMeta, group)
 	metaDeployment := &appsv1.Deployment{
-		ObjectMeta: f.groupObjectMeta(consts.ComponentMeta, group, true),
+		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentMeta, group, true),
 		Spec: appsv1.DeploymentSpec{
 			Replicas: pointer.Int32(componentGroup.Replicas),
 			Strategy: buildUpgradeStrategyForDeployment(componentGroup.UpgradeStrategy),
@@ -876,7 +888,7 @@ func (f *RisingWaveObjectFactory) NewFrontendDeployment(group string, podTemplat
 	// Build the deployment.
 	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentFrontend, group)
 	frontendDeployment := &appsv1.Deployment{
-		ObjectMeta: f.groupObjectMeta(consts.ComponentFrontend, group, true),
+		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentFrontend, group, true),
 		Spec: appsv1.DeploymentSpec{
 			Replicas: pointer.Int32(componentGroup.Replicas),
 			Strategy: buildUpgradeStrategyForDeployment(componentGroup.UpgradeStrategy),
@@ -955,7 +967,7 @@ func (f *RisingWaveObjectFactory) NewCompactorDeployment(group string, podTempla
 	// Build the deployment.
 	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentCompactor, group)
 	compactorDeployment := &appsv1.Deployment{
-		ObjectMeta: f.groupObjectMeta(consts.ComponentCompactor, group, true),
+		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentCompactor, group, true),
 		Spec: appsv1.DeploymentSpec{
 			Replicas: pointer.Int32(componentGroup.Replicas),
 			Strategy: buildUpgradeStrategyForDeployment(componentGroup.UpgradeStrategy),
@@ -1055,7 +1067,7 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet(group string, podTemplat
 	// Build the statefulset.
 	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentCompute, group)
 	computeStatefulSet := &appsv1.StatefulSet{
-		ObjectMeta: f.groupObjectMeta(consts.ComponentCompute, group, true),
+		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentCompute, group, true),
 		Spec: appsv1.StatefulSetSpec{
 			Replicas:       pointer.Int32(componentGroup.Replicas),
 			UpdateStrategy: buildUpgradeStrategyForStatefulSet(componentGroup.UpgradeStrategy),
@@ -1073,6 +1085,39 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet(group string, podTemplat
 	}
 
 	return mustSetControllerReference(f.risingwave, computeStatefulSet, f.scheme)
+}
+
+func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonitor {
+	const (
+		interval      = 5 * time.Second
+		scrapeTimeout = 5 * time.Second
+	)
+
+	serviceMonitor := &prometheusv1.ServiceMonitor{
+		ObjectMeta: f.objectMeta("risingwave-"+f.risingwave.Name, true),
+		Spec: prometheusv1.ServiceMonitorSpec{
+			JobLabel: "risingwave/" + f.risingwave.Name,
+			TargetLabels: []string{
+				consts.LabelRisingWaveName,
+				consts.LabelRisingWaveComponent,
+				consts.LabelRisingWaveGroup,
+			},
+			Endpoints: []prometheusv1.Endpoint{
+				{
+					Port:          consts.PortMetrics,
+					Interval:      prometheusv1.Duration(fmt.Sprintf("%.0fs", interval.Seconds())),
+					ScrapeTimeout: prometheusv1.Duration(fmt.Sprintf("%.0fs", scrapeTimeout.Seconds())),
+				},
+			},
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					consts.LabelRisingWaveName: f.risingwave.Name,
+				},
+			},
+		},
+	}
+
+	return mustSetControllerReference(f.risingwave, serviceMonitor, f.scheme)
 }
 
 func NewRisingWaveObjectFactory(risingwave *risingwavev1alpha1.RisingWave, scheme *runtime.Scheme) *RisingWaveObjectFactory {

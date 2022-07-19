@@ -37,3 +37,12 @@ jobs:
       - name: unit-test
         run: |
           make test
+      - uses: codecov/codecov-action@v3
+        name: Upload the codecov
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          files: ./cover.out
+          flags: unittests # optional
+          name: codecov-umbrella # optional
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)

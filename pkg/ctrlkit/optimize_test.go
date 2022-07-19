@@ -23,7 +23,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func Test_UnwrapParallel(t *testing.T) {
+func Test_UnwrapParallelAndShared(t *testing.T) {
 	x := NewAction("X", nothingFunc)
 	testcases := map[string]struct {
 		action Action
@@ -45,11 +45,31 @@ func Test_UnwrapParallel(t *testing.T) {
 			action: Parallel(Timeout(5*time.Second, Parallel(x))),
 			desc:   Timeout(5*time.Second, Parallel(x)).Description(),
 		},
+		"1-shared": {
+			action: Shared(x),
+			desc:   x.Description(),
+		},
+		"2-shared": {
+			action: Shared(Shared(x)),
+			desc:   x.Description(),
+		},
+		"2-shared-and-timeout-between": {
+			action: Shared(Timeout(5*time.Second, Shared(x))),
+			desc:   Timeout(5*time.Second, Shared(x)).Description(),
+		},
+		"shared-after-parallel": {
+			action: Parallel(Shared(x)),
+			desc:   x.Description(),
+		},
+		"parallel-after-shared": {
+			action: Shared(Parallel(x)),
+			desc:   x.Description(),
+		},
 	}
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			if unwrapParallel(tc.action).Description() != tc.desc {
+			if unwrapParallelAndShared(tc.action).Description() != tc.desc {
 				t.Fail()
 			}
 		})
@@ -186,13 +206,37 @@ func Test_OptimizeWorkflow(t *testing.T) {
 				Retry(2, x).Description(),
 			},
 		},
+		"nested-parallel": {
+			beforeOpt: &parallelAction{inner: Parallel(x)},
+			expectDesc: []string{
+				Parallel(x).Description(),
+			},
+		},
+		"nested-shared": {
+			beforeOpt: Shared(Shared(x)),
+			expectDesc: []string{
+				Shared(x).Description(),
+			},
+		},
+		"nested-parallel-shared": {
+			beforeOpt: Parallel(Shared(x)),
+			expectDesc: []string{
+				Shared(x).Description(),
+			},
+		},
+		"shared-nop": {
+			beforeOpt: Shared(Nop),
+			expectDesc: []string{
+				Nop.Description(),
+			},
+		},
 	}
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			desc := OptimizeWorkflow(tc.beforeOpt).Description()
 			if !lo.Contains(tc.expectDesc, desc) {
-				t.Fail()
+				t.Fatalf("got %s", desc)
 			}
 		})
 	}

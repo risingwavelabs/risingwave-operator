@@ -120,9 +120,6 @@ decl RisingWaveControllerManager for RisingWave {
 
         // SyncConfigConfigMap creates or updates the configmap for RisingWave configs.
         SyncConfigConfigMap(configConfigMap)
-
-        // CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
-        CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
     }
 
     // ===================================================
@@ -141,5 +138,14 @@ decl RisingWaveControllerManager for RisingWave {
     action {
         // SyncServiceMonitor creates or updates the service monitor for RisingWave.
         SyncServiceMonitor(serviceMonitor)
+    }
+
+    // ===================================================
+    // The actions that needs all states.
+    // ===================================================
+
+    action {
+        // CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
+        CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap, serviceMonitor)
     }
 }

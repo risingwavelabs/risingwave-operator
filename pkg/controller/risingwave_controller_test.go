@@ -108,6 +108,9 @@ func Test_RisingWaveController_New(t *testing.T) {
 				RisingWaveAction_MarkConditionInitializingAsTrue: newResultErr(ctrlkit.Continue()),
 				RisingWaveAction_MarkConditionRunningAsFalse:     newResultErr(ctrlkit.Continue()),
 
+				// Running(false) => stop
+				RisingWaveAction_BarrierConditionRunningIsFalse: newResultErr(ctrlkit.Exit()),
+
 				// Initializing(true) => stop
 				RisingWaveAction_BarrierConditionInitializingIsTrue: newResultErr(ctrlkit.Exit()),
 
@@ -122,7 +125,7 @@ func Test_RisingWaveController_New(t *testing.T) {
 
 				// Update status
 				RisingWaveAction_UpdateRisingWaveStatusViaClient: newResultErr(ctrlkit.Continue()),
-			}, true)
+			}, false)
 		},
 	}
 

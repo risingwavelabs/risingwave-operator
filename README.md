@@ -61,7 +61,7 @@ kubectl get risingwave
 
 The expected output is like this:
 
-```shell
+```plain
 NAME                    RUNNING   STORAGE(META)   STORAGE(OBJECT)   AGE
 risingwave-in-memory    True      Memory          Memory            30s
 ```
@@ -239,11 +239,54 @@ kubectl get pods -l release=prometheus
 The expected output is like this:
 
 <!-- spellchecker: disable -->
-```shell
+```plain
 NAME                                                   READY   STATUS    RESTARTS   AGE
 prometheus-kube-prometheus-operator-5f6c8948fb-llvzm   1/1     Running   0          173m
 prometheus-kube-state-metrics-59dd9ffd47-z4777         1/1     Running   0          173m
 prometheus-prometheus-node-exporter-llgp9              1/1     Running   0          169m
+```
+
+#### Prometheus RemoteWrite (AWS)
+
+Prometheus has provided a functionality called [`remote-write`](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_write), and AWS provides a [managed Prometheus service](https://aws.amazon.com/prometheus/), so we can write the local metrics to the Prometheus on the cloud.
+
+Before getting started, you need to ensure that you have an account which has the permission to write the managed Prometheus, i.e., with the `AmazonPrometheusRemoteWriteAccess` permission.
+
+Follow the instructions below to set up the remote write:
+
+1. Create a Secret to store the AWS credentials.
+
+```shell 
+kubectl create secret generic aws-prometheus-credentials --from-literal AccessKey=${ACCESS_KEY} --from-literal SecretAccessKey=${SECRET_ACCESS_KEY}
+```
+
+2. Copy the [prometheus-remote-write-aws.yaml](./monitoring/prometheus-remote-write-aws.yaml) file and replace the values of the these variables:
+  - `${KUBERNETES_NAME}`: the name of the Kubernetes, e.g., `local-dev`. You can also add `externalLabels` yourself.
+  - `${AWS_REGION}`: the region of the AWS Prometheus service, e.g., `ap-southeast-1`
+  - `${WORKSPACE_ID}`: the workspace ID, e.g., `ws-12345678-abcd-1234-abcd-123456789012`
+
+3. Install or upgrade the `kube-prometheus-stack`.
+
+```shell
+# Install
+helm install prometheus prometheus-community/kube-prometheus-stack -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/monitoring/kube-prometheus-stack.yaml -f prometheus-remote-write-aws.yaml
+```
+
+```shell
+# Upgrade
+helm upgrade prometheus prometheus-community/kube-prometheus-stack -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/monitoring/kube-prometheus-stack.yaml -f prometheus-remote-write-aws.yaml
+```
+
+Now, you can check the Prometheus logs to see if the remote write works, with the following commands:
+
+```shell
+kubectl logs prometheus-prometheus-kube-prometheus-prometheus-0
+```
+
+The expected output is like this:
+
+```plain
+ts=2022-07-20T09:46:38.437Z caller=dedupe.go:112 component=remote level=info remote_name=edcf97 url=https://aps-workspaces.ap-southeast-1.amazonaws.com/workspaces/ws-12345678-abcd-1234-abcd-123456789012/api/v1/remote_write msg="Remote storage resharding" from=2 to=1
 ```
 
 ### Start monitoring
@@ -256,7 +299,7 @@ kubectl get servicemonitors -l risingwave/name
 
 The expected output is like this:
 
-```shell
+```plain
 NAME                              AGE
 risingwave-risingwave-etcd-minio   119m
 ```

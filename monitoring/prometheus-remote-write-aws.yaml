@@ -1,0 +1,14 @@
+prometheus:
+  prometheusSpec:
+    externalLabels:
+      kubernetes: ${KUBERNETES_NAME}
+    remoteWrite:
+    - url: https://aps-workspaces.${AWS_REGION}.amazonaws.com/workspaces/${WORKSPACE_ID}/api/v1/remote_write
+      sigv4:
+        region: ${AWS_REGION}
+        accessKey:
+          name: aws-prometheus-credentials
+          key: AccessKey
+        secretKey:
+          name: aws-prometheus-credentials
+          key: SecretAccessKey

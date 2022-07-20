@@ -339,7 +339,7 @@ type RisingWaveControllerManagerImpl interface {
 	SyncServiceMonitor(ctx context.Context, logger logr.Logger, serviceMonitor *monitoringv1.ServiceMonitor) (ctrl.Result, error)
 
 	// CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
-	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaDeployments []appsv1.Deployment, frontendDeployments []appsv1.Deployment, computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, configConfigMap *corev1.ConfigMap, serviceMonitor *monitoringv1.ServiceMonitor) (ctrl.Result, error)
+	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaDeployments []appsv1.Deployment, frontendDeployments []appsv1.Deployment, computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 }
 
 // Pre-defined actions in RisingWaveControllerManager.
@@ -780,11 +780,6 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 			return ctrlkit.RequeueIfError(err)
 		}
 
-		serviceMonitor, err := m.state.GetServiceMonitor(ctx)
-		if err != nil {
-			return ctrlkit.RequeueIfError(err)
-		}
-
 		// Invoke action.
 		if m.hook != nil {
 			defer func() {
@@ -800,11 +795,10 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 				"computeStatefulSets":  &appsv1.StatefulSetList{Items: computeStatefulSets},
 				"compactorDeployments": &appsv1.DeploymentList{Items: compactorDeployments},
 				"configConfigMap":      configConfigMap,
-				"serviceMonitor":       serviceMonitor,
 			})
 		}
 
-		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap, serviceMonitor)
+		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
 	})
 }
 

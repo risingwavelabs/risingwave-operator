@@ -33,3 +33,6 @@ vendor/
 # VSCode
 .vscode/
 **/__debug_bin
+
+# Own stack
+.stack

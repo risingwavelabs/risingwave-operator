@@ -140,7 +140,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 	computeService *corev1.Service, compactorService *corev1.Service,
 	metaDeployments []appsv1.Deployment, frontendDeployments []appsv1.Deployment,
 	computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment,
-	configConfigMap *corev1.ConfigMap, serviceMonitor *monitoringv1.ServiceMonitor) (reconcile.Result, error) {
+	configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
 	globalSpec := &risingwave.Spec.Global
 	componentsSpec := &risingwave.Spec.Components

@@ -26,9 +26,8 @@ RUN if [ "$USE_VENDOR" = "true" ] ; then \
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM ubuntu:20.04
+FROM gcr.io/distroless/static-debian11
 WORKDIR /
-RUN apt-get update && apt-get -y install ca-certificates && rm -rf /var/cache/apk/*
 COPY --from=builder /workspace/manager .
 USER 65532:65532
 

@@ -2,7 +2,7 @@ name: e2e test
 
 on:
   pull_request:
-    types: [review_requested, ready_for_review]
+    types: [review_requested, ready_for_review, synchronize, reopened]
     paths:
       - "*/**"
   push:

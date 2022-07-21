@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: risingwave-etcd
+  labels:
+    app: risingwave-etcd
+spec:
+  ports:
+  - port: 2388
+    name: client
+  - port: 2389
+    name: peer
+  selector:
+    app: risingwave-etcd
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: risingwave-etcd
+  name: risingwave-etcd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: risingwave-etcd
+  serviceName: risingwave-etcd
+  template:
+    metadata:
+      labels:
+        app: risingwave-etcd
+    spec:
+      containers:
+      - name: etcd
+        image: quay.io/coreos/etcd:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - /usr/local/bin/etcd
+        args:
+        - "--listen-client-urls"
+        - "http://0.0.0.0:2388"
+        - "--advertise-client-urls"
+        - "http://risingwave-etcd-0:2388"
+        - "--listen-peer-urls"
+        - "http://0.0.0.0:2389"
+        - "--initial-advertise-peer-urls"
+        - "http://risingwave-etcd-0:2389"
+        - "--listen-metrics-urls"
+        - "http://0.0.0.0:2379"
+        - "--name"
+        - "risingwave-etcd"
+        - "--max-txn-ops"
+        - "999999"
+        - "--auto-compaction-mode"
+        - periodic
+        - "--auto-compaction-retention"
+        - 1m
+        - "--snapshot-count"
+        - "10000"
+        env:
+        - name: ALLOW_NONE_AUTHENTICATION
+          value: "1"
+        ports:
+        - containerPort: 2389
+          name: peer
+          protocol: TCP
+        - containerPort: 2388
+          name: client
+          protocol: TCP
+---
+apiVersion: risingwave.singularity-data.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-etcd
+spec:
+  storages:
+    meta:
+      etcd:
+        endpoint: risingwave-etcd:2388
+    object:
+      memory: true
+  global:
+    image: ghcr.io/singularity-data/risingwave:e2e
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+      compactor: 1

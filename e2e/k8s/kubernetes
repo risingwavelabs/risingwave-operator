@@ -1,0 +1,67 @@
+#
+# Copyright 2022 Singularity Data
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+_KUBERNETES_SOURCE_BASEDIR=$(dirname "${BASH_SOURCE[0]}")
+
+function start_the_network_utils_pod() {
+  kubectl apply -f "$_KUBERNETES_SOURCE_BASEDIR"/network-utils/network-utils.yaml > /dev/null
+  kubectl wait --timeout=300s --for=condition=ready pod network-utils > /dev/null
+}
+
+function start_the_psql_console() {
+  kubectl apply -f "$_KUBERNETES_SOURCE_BASEDIR"/psql/psql-console.yaml > /dev/null
+  kubectl wait --timeout=300s --for=condition=ready pod psql-console > /dev/null
+}
+
+function wait_until_service_ready() {
+  namespace=$1
+  service=$2
+  port_name=$3
+
+  cluster_ip=$(kubectl get svc "$service" -n "$namespace" -o jsonpath='{.spec.clusterIP}')
+  if [ -z "$port_name" ]; then
+    port=$(kubectl get svc "$service" -n "$namespace" -o jsonpath='{.spec.ports[0].port}')
+  else
+    port=$(kubectl get svc "$service" -n "$namespace" -o jsonpath="{.spec.ports[?(@.name==\"$port_name\")].port}")
+  fi
+
+  if [ -z "$port" ]; then
+    echo "ERROR: port not found: " "$port_name"
+    return 1
+  fi
+
+  printf "Find the endpoint in cluster for %s/%s: %s:%s\n" "$namespace" "$service" "$cluster_ip" "$port"
+
+  threshold=40
+  current_epoch=0
+  while :; do
+    if kubectl exec network-utils -- nc -zvw3 "$cluster_ip" "$port" >/dev/null 2>&1; then
+      break
+    fi
+    if [ $current_epoch -eq $threshold ]; then
+      echo "ERROR: timeout waiting for service $namespace/$service to be ready"
+      return 1
+    fi
+    current_epoch=$((current_epoch + 1))
+    echo "Waiting for service $namespace/$service to be ready ($current_epoch / $threshold)"
+    sleep 2
+  done
+
+  echo "Service $namespace/$service is ready!"
+}
+
+start_the_network_utils_pod
+start_the_psql_console

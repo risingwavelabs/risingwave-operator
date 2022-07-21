@@ -363,6 +363,9 @@ func (f *RisingWaveObjectFactory) argsForMeta() []string {
 		args = append(args, "--backend", "mem")
 	case metaStorage.Etcd != nil:
 		args = append(args, "--backend", "etcd", "--etcd-endpoints", metaStorage.Etcd.Endpoint)
+		if metaStorage.Etcd.Secret != "" {
+			args = append(args, "--etcd-auth")
+		}
 	default:
 		panic("unsupported meta storage type")
 	}

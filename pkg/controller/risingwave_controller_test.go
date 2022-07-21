@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/go-logr/logr"
@@ -34,6 +35,7 @@ import (
 
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit"
+	"github.com/singularity-data/risingwave-operator/pkg/object"
 	"github.com/singularity-data/risingwave-operator/pkg/testutils"
 )
 
@@ -136,6 +138,126 @@ func Test_RisingWaveController_New(t *testing.T) {
 			Namespace: "default",
 		},
 	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func Test_RisingWaveController_Deleted(t *testing.T) {
+	risingwave := &risingwavev1alpha1.RisingWave{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:              "example",
+			Namespace:         "default",
+			DeletionTimestamp: &metav1.Time{Time: time.Now()},
+		},
+		Spec:   risingwavev1alpha1.RisingWaveSpec{},
+		Status: risingwavev1alpha1.RisingWaveStatus{},
+	}
+
+	controller := &RisingWaveController{
+		Client: fake.NewClientBuilder().
+			WithScheme(testutils.Schema).
+			WithObjects(risingwave).
+			Build(),
+		ActionHookFactory: func() ctrlkit.ActionHook {
+			return newActionAsserts(t, nil, true)
+		},
+	}
+
+	logger := zap.New(zap.UseDevMode(true))
+	_, err := controller.Reconcile(log.IntoContext(context.Background(), logger), reconcile.Request{
+		NamespacedName: types.NamespacedName{
+			Name:      "example",
+			Namespace: "default",
+		},
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func Test_RisingWaveController_Initializing(t *testing.T) {
+	risingwave := testutils.FakeRisingWave
+	risingwave.Status = risingwavev1alpha1.RisingWaveStatus{
+		Conditions: []risingwavev1alpha1.RisingWaveCondition{
+			{
+				Type:   risingwavev1alpha1.RisingWaveConditionInitializing,
+				Status: metav1.ConditionTrue,
+			},
+		},
+	}
+
+	controller := &RisingWaveController{
+		Client: fake.NewClientBuilder().
+			WithScheme(testutils.Schema).
+			WithObjects(risingwave).
+			Build(),
+		ActionHookFactory: func() ctrlkit.ActionHook {
+			return newActionAsserts(t, map[string]resultErr{
+				RisingWaveAction_BarrierConditionInitializingIsTrue:  newResultErr(ctrlkit.Continue()),
+				RisingWaveAction_SyncMetaService:                     newResultErr(ctrlkit.Continue()),
+				RisingWaveAction_SyncComputeService:                  newResultErr(ctrlkit.Continue()),
+				RisingWaveAction_SyncCompactorService:                newResultErr(ctrlkit.Continue()),
+				RisingWaveAction_SyncFrontendService:                 newResultErr(ctrlkit.Continue()),
+				RisingWaveAction_SyncConfigConfigMap:                 newResultErr(ctrlkit.Continue()),
+				RisingWaveAction_SyncMetaDeployments:                 newResultErr(ctrlkit.Continue()),
+				RisingWaveAction_SyncFrontendDeployments:             newResultErr(ctrlkit.Continue()),
+				RisingWaveAction_SyncCompactorDeployments:            newResultErr(ctrlkit.Continue()),
+				RisingWaveAction_SyncComputeStatefulSets:             newResultErr(ctrlkit.Continue()),
+				RisingWaveAction_WaitBeforeMetaDeploymentsReady:      newResultErr(ctrlkit.Exit()),
+				RisingWaveAction_WaitBeforeFrontendDeploymentsReady:  newResultErr(ctrlkit.Exit()),
+				RisingWaveAction_WaitBeforeComputeStatefulSetsReady:  newResultErr(ctrlkit.Exit()),
+				RisingWaveAction_WaitBeforeCompactorDeploymentsReady: newResultErr(ctrlkit.Exit()),
+				RisingWaveAction_SyncObservedGeneration:              newResultErr(ctrlkit.Continue()),
+			}, false)
+		},
+	}
+
+	logger := zap.New(zap.UseDevMode(true))
+	_, err := controller.Reconcile(log.IntoContext(context.Background(), logger), reconcile.Request{
+		NamespacedName: types.NamespacedName{Name: risingwave.Name, Namespace: risingwave.Namespace},
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func Test_RisingWaveController_Recovery(t *testing.T) {
+	risingwave := testutils.FakeRisingWave
+
+	controller := &RisingWaveController{
+		Client: fake.NewClientBuilder().
+			WithScheme(testutils.Schema).
+			WithObjects(risingwave).
+			Build(),
+		ActionHookFactory: func() ctrlkit.ActionHook {
+			return newActionAsserts(t, map[string]resultErr{
+				RisingWaveAction_MarkConditionUpgradingAsTrue: newResultErr(ctrlkit.Continue()),
+			}, false)
+		},
+	}
+
+	logger := zap.New(zap.UseDevMode(true))
+	_, err := controller.Reconcile(log.IntoContext(context.Background(), logger), reconcile.Request{
+		NamespacedName: types.NamespacedName{Name: risingwave.Name, Namespace: risingwave.Namespace},
+	})
+
+	var currentRisingwave risingwavev1alpha1.RisingWave
+	if err := controller.Client.Get(context.Background(), types.NamespacedName{
+		Name:      risingwave.Name,
+		Namespace: risingwave.Namespace,
+	}, &currentRisingwave); err != nil {
+		t.Fatal(err)
+	}
+
+	risingwaveManager := object.NewRisingWaveManager(nil, &currentRisingwave)
+	runningCondition := risingwaveManager.GetCondition(risingwavev1alpha1.RisingWaveConditionRunning)
+	if runningCondition == nil || runningCondition.Status != metav1.ConditionFalse {
+		t.Fatal("Running condition not false")
+	}
 
 	if err != nil {
 		t.Fatal(err)

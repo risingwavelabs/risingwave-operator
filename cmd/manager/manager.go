@@ -91,10 +91,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = risingwavecontroller.NewRisingWaveController(
-		mgr.GetClient(),
-		mgr.GetScheme(),
-	).SetupWithManager(mgr); err != nil {
+	if err = risingwavecontroller.NewRisingWaveController(mgr.GetClient()).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RisingWave")
 		os.Exit(1)
 	}

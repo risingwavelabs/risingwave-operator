@@ -2,7 +2,7 @@ name: Daily build of risingwave-operator image
 
 on:
   pull_request:
-    types: [review_requested, ready_for_review]
+    types: [review_requested, ready_for_review, synchronize, reopened]
     paths:
       - '.github/workflows/docker_build_operator.yml'
       - 'docker/Dockerfile'

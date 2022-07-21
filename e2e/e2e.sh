@@ -34,7 +34,8 @@ fi
 
 # Source the env functions.
 echo "Starting environment $K8S_ENV ..."
-# shellcheckubectl disable=SC1090
+
+# shellcheck disable=SC1090
 source "$BASEDIR"/envs/"$K8S_ENV"/env
 
 # Start the Kubernetes.
@@ -57,10 +58,13 @@ echo "Using a nightly tag $NIGHTLY_IMAGE_TAG for RisingWave images..."
 # Prepare images...
 function lazy_pull_image() {
   repo=$1
-  tag=${2:latest}
+  tag=${2:-latest}
 
-  if [[ "$tag" == "latest" || -z $(docker image ls "$repo:$tag") ]]; then
+  if [ "$tag" = "latest" ] || [ -z "$(docker image ls "$repo":"$tag")" ]; then
+    echo "Pulling image $repo:$tag..."
     docker pull "$repo:$tag"
+  else
+    echo "Image $repo:$tag already exists, skip"
   fi
 }
 
@@ -111,9 +115,9 @@ background() {
 reap() {
   local cmd
   local status=0
-  for pid in ${!JOBS[@]}; do
+  for pid in "${!JOBS[@]}"; do
     cmd=${JOBS[${pid}]}
-    wait ${pid}
+    wait "${pid}"
     JOBS[${pid}]=$?
     if [[ ${JOBS[${pid}]} -ne 0 ]]; then
       status=${JOBS[${pid}]}

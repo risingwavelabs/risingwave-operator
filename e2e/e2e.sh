@@ -43,8 +43,15 @@ echo "Started!"
 
 # Set the trap for cleaning the Kubernetes.
 # trap stop_kubernetes_env EXIT
+OS="$(uname -s)"
+case "${OS}" in
+Linux*) NIGHTLY_IMAGE_TAG="nightly"-$(date -d "2 day ago" '+%Y%m%d') ;;
+Darwin*) NIGHTLY_IMAGE_TAG="nightly"-$(date -v-2d '+%Y%m%d') ;;
+*) echo "ERROR: unsupported platform $OS" && exit 1 ;;
+esac
 
-NIGHTLY_IMAGE_TAG="nightly"-$(date -v-2d +'%Y-%m-%d')
+# FIXME: currently the nightly tags aren't continuous.
+NIGHTLY_IMAGE_TAG=latest
 echo "Using a nightly tag $NIGHTLY_IMAGE_TAG for RisingWave images..."
 
 # Prepare images...
@@ -94,7 +101,8 @@ JOBS=()
 
 ## run command in the background
 background() {
-  eval $1 & JOBS[$!]="$1"
+  eval $1 &
+  JOBS[$!]="$1"
 }
 
 ## check exit status of each job
@@ -105,7 +113,8 @@ reap() {
   local status=0
   for pid in ${!JOBS[@]}; do
     cmd=${JOBS[${pid}]}
-    wait ${pid} ; JOBS[${pid}]=$?
+    wait ${pid}
+    JOBS[${pid}]=$?
     if [[ ${JOBS[${pid}]} -ne 0 ]]; then
       status=${JOBS[${pid}]}
       echo -e "[${pid}] Exited with status: ${status}\n${cmd}"

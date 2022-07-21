@@ -71,7 +71,7 @@ function lazy_pull_image() {
 echo "Pulling images..."
 lazy_pull_image postgres
 lazy_pull_image praqma/network-multitool
-lazy_pull_image ghcr.io/singularity-data/risingwave:"$NIGHTLY_IMAGE_TAG"
+lazy_pull_image ghcr.io/singularity-data/risingwave "$NIGHTLY_IMAGE_TAG"
 docker tag ghcr.io/singularity-data/risingwave:"$NIGHTLY_IMAGE_TAG" ghcr.io/singularity-data/risingwave:e2e
 echo "Pulled!"
 

@@ -1240,7 +1240,7 @@ func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
 				},
 			},
 			args: []string{
-				"--backend", "etcd", "--etcd-endpoints", "etcd:1234",
+				"--backend", "etcd", "--etcd-endpoints", "etcd:1234", "--etcd-auth",
 			},
 			envs: []corev1.EnvVar{
 				{

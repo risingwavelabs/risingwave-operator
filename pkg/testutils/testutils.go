@@ -186,6 +186,167 @@ var FakeRisingWave = &risingwavev1alpha1.RisingWave{
 	},
 }
 
+var FakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
+	TypeMeta: metav1.TypeMeta{
+		Kind:       "RisingWave",
+		APIVersion: "risingwave.singularity-data.com/v1alpha1",
+	},
+	ObjectMeta: metav1.ObjectMeta{
+		Name:       "fake-risingwave",
+		Namespace:  "default",
+		Generation: 2,
+		UID:        uuid.NewUUID(),
+	},
+	Spec: risingwavev1alpha1.RisingWaveSpec{
+		Storages: risingwavev1alpha1.RisingWaveStoragesSpec{
+			Meta: risingwavev1alpha1.RisingWaveMetaStorage{
+				Memory: pointer.Bool(true),
+			},
+			Object: risingwavev1alpha1.RisingWaveObjectStorage{
+				Memory: pointer.Bool(true),
+			},
+		},
+		Global: risingwavev1alpha1.RisingWaveGlobalSpec{
+			ServiceType: corev1.ServiceTypeClusterIP,
+			RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+				Image:           "ghcr.io/singularity-data/risingwave:latest",
+				ImagePullPolicy: corev1.PullIfNotPresent,
+				NodeSelector: map[string]string{
+					"kubernetes.io/os":   "linux",
+					"kubernetes.io/arch": "amd64",
+				},
+				Resources: corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						corev1.ResourceCPU:    resource.MustParse("1"),
+						corev1.ResourceMemory: resource.MustParse("1Gi"),
+					},
+					Requests: corev1.ResourceList{
+						corev1.ResourceCPU:    resource.MustParse("100m"),
+						corev1.ResourceMemory: resource.MustParse("100Mi"),
+					},
+				},
+			},
+		},
+		Components: risingwavev1alpha1.RisingWaveComponentsSpec{
+			Meta: risingwavev1alpha1.RisingWaveComponentMeta{
+				Ports: risingwavev1alpha1.RisingWaveComponentMetaPorts{
+					RisingWaveComponentCommonPorts: risingwavev1alpha1.RisingWaveComponentCommonPorts{
+						ServicePort: consts.DefaultMetaServicePort,
+						MetricsPort: consts.DefaultMetaMetricsPort,
+					},
+					DashboardPort: consts.DefaultMetaDashboardPort,
+				},
+				Groups: []risingwavev1alpha1.RisingWaveComponentGroup{
+					{
+						Name:     "group1",
+						Replicas: 1,
+					},
+				},
+			},
+			Frontend: risingwavev1alpha1.RisingWaveComponentFrontend{
+				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
+					ServicePort: consts.DefaultFrontendServicePort,
+					MetricsPort: consts.DefaultFrontendMetricsPort,
+				},
+				Groups: []risingwavev1alpha1.RisingWaveComponentGroup{
+					{
+						Name:     "group1",
+						Replicas: 1,
+					},
+				},
+			},
+			Compute: risingwavev1alpha1.RisingWaveComponentCompute{
+				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
+					ServicePort: consts.DefaultComputeServicePort,
+					MetricsPort: consts.DefaultComputeMetricsPort,
+				},
+				Groups: []risingwavev1alpha1.RisingWaveComputeGroup{
+					{
+						Name:     "group1",
+						Replicas: 1,
+					},
+				},
+			},
+			Compactor: risingwavev1alpha1.RisingWaveComponentCompactor{
+				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
+					ServicePort: consts.DefaultCompactorServicePort,
+					MetricsPort: consts.DefaultCompactorMetricsPort,
+				},
+				Groups: []risingwavev1alpha1.RisingWaveComponentGroup{
+					{
+						Name:     "group1",
+						Replicas: 1,
+					},
+				},
+			},
+		},
+	},
+	Status: risingwavev1alpha1.RisingWaveStatus{
+		ObservedGeneration: 1,
+		Storages: risingwavev1alpha1.RisingWaveStoragesStatus{
+			Meta: risingwavev1alpha1.RisingWaveMetaStorageStatus{
+				Type: risingwavev1alpha1.MetaStorageTypeMemory,
+			},
+			Object: risingwavev1alpha1.RisingWaveObjectStorageStatus{
+				Type: risingwavev1alpha1.ObjectStorageTypeMemory,
+			},
+		},
+		Conditions: []risingwavev1alpha1.RisingWaveCondition{
+			{
+				Type:               risingwavev1alpha1.RisingWaveConditionRunning,
+				Status:             metav1.ConditionTrue,
+				LastTransitionTime: metav1.Now(),
+			},
+		},
+		ComponentReplicas: risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
+			Meta: risingwavev1alpha1.ComponentReplicasStatus{
+				Target:  1,
+				Running: 1,
+				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
+					{
+						Name:    "group1",
+						Target:  1,
+						Running: 1,
+					},
+				},
+			},
+			Frontend: risingwavev1alpha1.ComponentReplicasStatus{
+				Target:  1,
+				Running: 1,
+				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
+					{
+						Name:    "group1",
+						Target:  1,
+						Running: 1,
+					},
+				},
+			},
+			Compute: risingwavev1alpha1.ComponentReplicasStatus{
+				Target:  1,
+				Running: 1,
+				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
+					{
+						Name:    "group1",
+						Target:  1,
+						Running: 1,
+					},
+				},
+			},
+			Compactor: risingwavev1alpha1.ComponentReplicasStatus{
+				Target:  1,
+				Running: 1,
+				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
+					{
+						Name:    "group1",
+						Target:  1,
+						Running: 1,
+					},
+				},
+			},
+		},
+	},
+}
+
 func DeepEqual[T any](x, y T) bool {
 	return equality.Semantic.DeepEqual(x, y)
 }

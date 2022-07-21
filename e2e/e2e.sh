@@ -89,6 +89,27 @@ source "$BASEDIR"/k8s/kubernetes
 # Install the RisingWave operator.
 echo "Installing the RisingWave operator..."
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.2/cert-manager.yaml
+
+function wait_cert_manager_certificate() {
+  # wait for certificate
+  threshold=40
+  current_epoch=0
+  while :; do
+    certificate=$(kubectl get validatingwebhookconfigurations cert-manager-webhook -o jsonpath='{.webhooks[0].clientConfig.caBundle}')
+    if [ -n "$certificate" ]; then
+      break
+    fi
+    if [ $current_epoch -eq $threshold ]; then
+      echo "ERROR: timeout waiting for cert-manager"
+      exit 1
+    fi
+    sleep 2
+    current_epoch=$((current_epoch + 1))
+    echo "waiting for cert-manager to be ready ($current_epoch / $threshold)..."
+  done
+}
+
+wait_cert_manager_certificate
 wait_until_service_ready cert-manager cert-manager-webhook
 
 kubectl apply -f "$BASEDIR"/../config/risingwave-operator-test.yaml

@@ -48,7 +48,7 @@ function wait_until_service_ready() {
   threshold=40
   current_epoch=0
   while :; do
-    if kubectl exec network-utils -- nc -zvw3 "$cluster_ip" "$port"; then
+    if kubectl exec network-utils -- nc -zvw3 "$cluster_ip" "$port" >/dev/null 2>&1; then
       break
     fi
     if [ $current_epoch -eq $threshold ]; then
@@ -59,6 +59,8 @@ function wait_until_service_ready() {
     echo "Waiting for service $namespace/$service to be ready ($current_epoch / $threshold)"
     sleep 2
   done
+
+  echo "Service $namespace/$service is ready!"
 }
 
 start_the_network_utils_pod

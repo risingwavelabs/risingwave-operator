@@ -588,13 +588,17 @@ func (mgr *risingWaveControllerManagerImpl) isObjectSynced(obj client.Object) bo
 
 func ensureTheSameObject(obj, newObj client.Object) client.Object {
 	// Ensure that they are the same object in Kubernetes.
-	if !isObjectNil(obj) {
+	if !isObjectNil(obj) && !isObjectNil(newObj) {
 		if obj.GetName() != newObj.GetName() || obj.GetNamespace() != newObj.GetNamespace() {
 			panic(fmt.Sprintf("objects not the same: %s/%s vs. %s/%s",
 				obj.GetNamespace(), obj.GetName(),
 				newObj.GetNamespace(), newObj.GetName(),
 			))
 		}
+	} else if obj == nil || newObj == nil {
+		panic("objects not the same: either interface is nil")
+	} else if isObjectNil(newObj) {
+		panic("objects not the same: new object is nil")
 	}
 
 	objType, newObjType := reflect.TypeOf(obj).Elem(), reflect.TypeOf(newObj).Elem()
@@ -732,10 +736,14 @@ func (mgr *risingWaveControllerManagerImpl) SyncServiceMonitor(ctx context.Conte
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync service monitor", err)
 }
 
-func NewRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager) RisingWaveControllerManagerImpl {
+func newRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager) *risingWaveControllerManagerImpl {
 	return &risingWaveControllerManagerImpl{
 		client:            client,
 		risingwaveManager: risingwaveManager,
 		objectFactory:     factory.NewRisingWaveObjectFactory(risingwaveManager.RisingWave(), client.Scheme()),
 	}
+}
+
+func NewRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager) RisingWaveControllerManagerImpl {
+	return newRisingWaveControllerManagerImpl(client, risingwaveManager)
 }

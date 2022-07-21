@@ -615,20 +615,22 @@ func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podT
 	groupTemplate *risingwavev1alpha1.RisingWaveComponentGroupTemplate, restartAt *metav1.Time) corev1.PodTemplateSpec {
 	var podTemplate corev1.PodTemplateSpec
 
-	if groupTemplate.PodTemplate != nil && *groupTemplate.PodTemplate != "" {
-		t := podTemplates[*groupTemplate.PodTemplate]
-		podTemplate = buildPodTemplateSpecFrom(&t.Template)
-	}
-
-	// Set the image pull secrets.
-	podTemplate.Spec.ImagePullSecrets = append(podTemplate.Spec.ImagePullSecrets, lo.Map(groupTemplate.ImagePullSecrets, func(s string, _ int) corev1.LocalObjectReference {
-		return corev1.LocalObjectReference{
-			Name: s,
+	if groupTemplate != nil {
+		if groupTemplate.PodTemplate != nil && *groupTemplate.PodTemplate != "" {
+			t := podTemplates[*groupTemplate.PodTemplate]
+			podTemplate = buildPodTemplateSpecFrom(&t.Template)
 		}
-	})...)
 
-	// Set the node selector.
-	podTemplate.Spec.NodeSelector = groupTemplate.NodeSelector
+		// Set the image pull secrets.
+		podTemplate.Spec.ImagePullSecrets = append(podTemplate.Spec.ImagePullSecrets, lo.Map(groupTemplate.ImagePullSecrets, func(s string, _ int) corev1.LocalObjectReference {
+			return corev1.LocalObjectReference{
+				Name: s,
+			}
+		})...)
+
+		// Set the node selector.
+		podTemplate.Spec.NodeSelector = groupTemplate.NodeSelector
+	}
 
 	// Set config volume.
 	podTemplate.Spec.Volumes = mergeListWhenKeyEquals(podTemplate.Spec.Volumes, f.risingWaveConfigVolume(), func(a, b *corev1.Volume) bool {
@@ -695,8 +697,14 @@ func buildComputeGroup(globalReplicas int32, globalTemplate *risingwavev1alpha1.
 		if componentGroup == nil {
 			return nil
 		}
-		componentGroup.RisingWaveComputeGroupTemplate.RisingWaveComponentGroupTemplate = *mergeComponentGroupTemplates(globalTemplate,
-			&componentGroup.RisingWaveComputeGroupTemplate.RisingWaveComponentGroupTemplate)
+		if componentGroup.RisingWaveComputeGroupTemplate != nil {
+			componentGroup.RisingWaveComputeGroupTemplate.RisingWaveComponentGroupTemplate = *mergeComponentGroupTemplates(globalTemplate,
+				&componentGroup.RisingWaveComputeGroupTemplate.RisingWaveComponentGroupTemplate)
+		} else {
+			componentGroup.RisingWaveComputeGroupTemplate = &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+				RisingWaveComponentGroupTemplate: *globalTemplate.DeepCopy(),
+			}
+		}
 	}
 	return componentGroup
 }

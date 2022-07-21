@@ -90,7 +90,8 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 
 generate-manager: ctrlkit-gen goimports-reviser ## Generate codes of controller managers.
 	@$(CTRLKIT-GEN) -o pkg/manager/ -p "github.com/singularity-data/risingwave-operator/pkg/ctrlkit" -b hack/boilerplate.go.txt pkg/manager/risingwave_controller_manager.cm
-	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_controller_manager.go -local "github.com/singularity-data/risingwave-operator"
+	@mv pkg/manager/risingwave_controller_manager.go pkg/manager/risingwave_controller_manager_generated.go
+	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_controller_manager_generated.go -local "github.com/singularity-data/risingwave-operator"
 
 fmt: ## Run go fmt against code.
 	@go fmt ./...
@@ -105,7 +106,8 @@ lint: golangci-lint
 	$(GOLANGCI-LINT) run --config .golangci.yaml --fix
 
 test: manifests generate fmt vet lint envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
+	@KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out.tmp
+	@cat cover.out.tmp | grep -v "_generated.go" > cover.out && rm -f cover.out.tmp
 
 spell:
 	@if command -v cspell > /dev/null 2>&1 ; then \

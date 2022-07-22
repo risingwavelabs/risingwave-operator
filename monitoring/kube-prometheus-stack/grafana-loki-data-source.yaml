@@ -1,0 +1,7 @@
+grafana:
+  additionalDataSources:
+  - name: loki
+    orgId: 1
+    type: loki
+    url: http://loki-loki-distributed-gateway.default
+    version: 1

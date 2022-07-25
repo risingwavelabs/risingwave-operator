@@ -245,7 +245,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		mgr.SyncServiceMonitor(),
 	)
 	syncOtherComponents := ctrlkit.ParallelJoin(
-		ctrlkit.ParallelJoin(
+		ctrlkit.Sequential(
 			mgr.SyncComputeService(),
 			mgr.SyncComputeStatefulSets(),
 		),

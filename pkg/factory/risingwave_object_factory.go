@@ -392,6 +392,7 @@ func (f *RisingWaveObjectFactory) argsForCompute() []string {
 		"compute-node",
 		"--config-path", "/risingwave/config/risingwave.toml",
 		"--host", fmt.Sprintf("$(POD_IP):%d", computePorts.ServicePort),
+		"--client-address", fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentCompute, ""), computePorts.ServicePort),
 		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", computePorts.MetricsPort),
 		"--metrics-level=1",
 		"--state-store",

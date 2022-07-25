@@ -153,7 +153,7 @@ for testcase in ${E2E_TESTCASES}; do
   background "run_e2e_test $testcase"
 done
 
-if [ $reap -eq 0 ]; then
+if reap; then
   echo "Excellent! All tests are passed!"
 else
   echo "Ooops! Some tests failed!"

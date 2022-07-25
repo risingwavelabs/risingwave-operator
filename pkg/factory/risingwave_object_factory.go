@@ -748,6 +748,16 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 	}, func(env *corev1.EnvVar) bool {
 		return env.Name == "POD_IP"
 	})
+	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
+		Name: "POD_NAME",
+		ValueFrom: &corev1.EnvVarSource{
+			FieldRef: &corev1.ObjectFieldSelector{
+				FieldPath: "metadata.name",
+			},
+		},
+	}, func(env *corev1.EnvVar) bool {
+		return env.Name == "POD_NAME"
+	})
 	container.Resources = template.Resources
 	container.StartupProbe = nil
 	container.LivenessProbe = &corev1.Probe{
@@ -1089,6 +1099,7 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet(group string, podTemplat
 		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentCompute, group, true),
 		Spec: appsv1.StatefulSetSpec{
 			Replicas:       pointer.Int32(componentGroup.Replicas),
+			ServiceName:    f.componentName(consts.ComponentCompute, ""),
 			UpdateStrategy: buildUpgradeStrategyForStatefulSet(componentGroup.UpgradeStrategy),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labelsOrSelectors,

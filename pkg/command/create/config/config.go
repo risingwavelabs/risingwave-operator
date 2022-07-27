@@ -16,26 +16,196 @@
 
 package config
 
-const (
-	Image = "ghcr.io/singularity-data/risingwave"
+import (
+	"strings"
+
+	corev1 "k8s.io/api/core/v1"
+	k8sresource "k8s.io/apimachinery/pkg/api/resource"
 )
 
-// TODO:
+const (
+	AMDImage = "ghcr.io/singularity-data/risingwave"
+	ARMImage = "ghcr.io/singularity-data/risingwave-arm"
+
+	DefaultLimitCPU    = "1"
+	DefaultLimitMemory = "1Gi"
+	DefaultRequestCPU  = "100m"
+	DefaultRequestsCPU = "100Mi"
+)
 
 // Config contain the fields needed that creating a instance
-// TODO: add more fields to create a instance flexibly.
 type Config struct {
-	Arch  string
-	Image string
+	BaseConfig
+
+	MetaConfig      ComponentConfig
+	ComputeConfig   ComponentConfig
+	CompactorConfig ComponentConfig
+	FrontendConfig  ComponentConfig
+}
+
+type ComponentConfig struct {
+	Groups []Group
+}
+
+type Group struct {
+	Name      string
+	Replicas  int32
+	Resources corev1.ResourceRequirements
+}
+
+func (g Group) deepCopy() Group {
+	return Group{
+		Name:      g.Name,
+		Replicas:  g.Replicas,
+		Resources: *g.Resources.DeepCopy(),
+	}
+}
+
+type BaseConfig struct {
+	Arch     string
+	Image    string
+	Replicas int32
+
+	Resources corev1.ResourceRequirements
+}
+
+var defaultResource = corev1.ResourceRequirements{
+	Limits: map[corev1.ResourceName]k8sresource.Quantity{
+		corev1.ResourceCPU:    k8sresource.MustParse(DefaultLimitCPU),
+		corev1.ResourceMemory: k8sresource.MustParse(DefaultLimitMemory),
+	},
+	Requests: map[corev1.ResourceName]k8sresource.Quantity{
+		corev1.ResourceCPU:    k8sresource.MustParse(DefaultRequestCPU),
+		corev1.ResourceMemory: k8sresource.MustParse(DefaultRequestsCPU),
+	}}
+
+var defaultGroup = Group{
+	Name:      "default",
+	Replicas:  1,
+	Resources: *defaultResource.DeepCopy(),
 }
 
 var DefaultConfig = Config{
-	Arch:  "arm64",
-	Image: Image,
+	BaseConfig: BaseConfig{
+		Arch:      "amd64",
+		Image:     AMDImage,
+		Replicas:  1,
+		Resources: *defaultResource.DeepCopy(),
+	},
+	MetaConfig: ComponentConfig{
+		Groups: []Group{
+			defaultGroup.deepCopy(),
+		},
+	},
+	ComputeConfig: ComponentConfig{
+		Groups: []Group{
+			defaultGroup.deepCopy(),
+		},
+	},
+	CompactorConfig: ComponentConfig{
+		Groups: []Group{
+			defaultGroup.deepCopy(),
+		},
+	},
+	FrontendConfig: ComponentConfig{
+		Groups: []Group{
+			defaultGroup.deepCopy(),
+		},
+	},
 }
 
-// ApplyConfigFile
-// TODO: support creating config by file.
-func ApplyConfigFile(path string) (Config, error) {
-	return DefaultConfig, nil
+// ApplyConfigFile will construct a config by config file
+func ApplyConfigFile(path string, arch string) (Config, error) {
+	if len(arch) != 0 {
+		DefaultConfig.Arch = arch
+		DefaultConfig.Image = image(arch)
+	}
+	c, err := parse(path)
+	if err != nil {
+		return DefaultConfig, err
+	}
+	c.Global.Arch = arch
+
+	return constructConfig(c), nil
+}
+
+func constructConfig(c innerConfig) Config {
+	var conf = Config{
+		BaseConfig: BaseConfig{
+			Arch:      c.Global.Arch,
+			Image:     image(c.Global.Arch),
+			Replicas:  int32(c.Global.Replicas),
+			Resources: constructResource(c.Global.Limit, c.Global.Request),
+		},
+		ComputeConfig: ComponentConfig{
+			Groups: constructGroup(c.Compute.Groups),
+		},
+		CompactorConfig: ComponentConfig{
+			Groups: constructGroup(c.Compactor.Groups),
+		},
+		FrontendConfig: ComponentConfig{
+			Groups: constructGroup(c.Frontend.Groups),
+		},
+		MetaConfig: ComponentConfig{
+			Groups: constructGroup(c.Meta.Groups),
+		},
+	}
+	return conf
+}
+
+func constructGroup(groups []group) []Group {
+	var newGroups []Group
+	for _, g := range groups {
+		var r int32
+		if g.Replicas == 0 {
+			r = 1
+		} else {
+			r = int32(g.Replicas)
+		}
+		var newG = Group{
+			Name:      g.Name,
+			Replicas:  r,
+			Resources: constructResource(g.Limit, g.Request),
+		}
+
+		newGroups = append(newGroups, newG)
+	}
+	return newGroups
+}
+
+func constructResource(limit, request resource) corev1.ResourceRequirements {
+	var lCpu = limit.CPU
+	if len(limit.CPU) == 0 {
+		lCpu = DefaultLimitCPU
+	}
+
+	var lMemory = limit.Memory
+	if len(limit.Memory) == 0 {
+		lMemory = DefaultLimitMemory
+	}
+	var rCpu = request.CPU
+	if len(request.CPU) == 0 {
+		rCpu = DefaultRequestCPU
+	}
+	var rMemory = request.Memory
+	if len(request.Memory) == 0 {
+		rMemory = DefaultLimitCPU
+	}
+	return corev1.ResourceRequirements{
+		Limits: map[corev1.ResourceName]k8sresource.Quantity{
+			corev1.ResourceCPU:    k8sresource.MustParse(lCpu),
+			corev1.ResourceMemory: k8sresource.MustParse(lMemory),
+		},
+		Requests: map[corev1.ResourceName]k8sresource.Quantity{
+			corev1.ResourceCPU:    k8sresource.MustParse(rCpu),
+			corev1.ResourceMemory: k8sresource.MustParse(rMemory),
+		},
+	}
+}
+
+func image(arch string) string {
+	if strings.Contains(strings.ToLower(arch), "arm") {
+		return ARMImage
+	}
+	return AMDImage
 }

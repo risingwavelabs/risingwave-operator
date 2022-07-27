@@ -3,6 +3,7 @@ module github.com/singularity-data/risingwave-operator
 go 1.18
 
 require (
+	github.com/BurntSushi/toml v0.3.1
 	github.com/go-logr/logr v1.2.3
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.57.0
 	github.com/samber/lo v1.21.0

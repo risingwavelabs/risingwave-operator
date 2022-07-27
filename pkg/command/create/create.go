@@ -21,14 +21,15 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-
-	"github.com/singularity-data/risingwave-operator/pkg/command/util"
+	"k8s.io/utils/pointer"
 
 	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	cmdcontext "github.com/singularity-data/risingwave-operator/pkg/command/context"
 	"github.com/singularity-data/risingwave-operator/pkg/command/create/config"
+	"github.com/singularity-data/risingwave-operator/pkg/command/util"
 )
 
 const (
@@ -49,6 +50,8 @@ type Options struct {
 	namespace string
 
 	configFile string
+
+	arch string
 
 	config config.Config
 
@@ -79,6 +82,7 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 		Aliases: []string{"new"},
 	}
 
+	cmd.Flags().StringVarP(&o.arch, "arch", "a", o.configFile, "The default arch(will be override if config file also set the arch).")
 	cmd.Flags().StringVarP(&o.configFile, "config", "c", o.configFile, "The config file used when creating the instance.")
 
 	return cmd
@@ -98,7 +102,7 @@ func (o *Options) Complete(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 	if len(o.configFile) == 0 {
 		o.config = config.DefaultConfig
 	} else {
-		c, err := config.ApplyConfigFile(o.configFile)
+		c, err := config.ApplyConfigFile(o.configFile, o.arch)
 		if err != nil {
 			return err
 		}
@@ -127,13 +131,87 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 	return nil
 }
 
-// TODO: will create new risingwave instance when PR(https://github.com/singularity-data/risingwave-operator/pull/105) merged.
+// TODO: to support create different risingwave by config file
+// TODO: to support different storage by config file
 func (o *Options) createInstance() (*v1alpha1.RisingWave, error) {
+	c := o.config
 	rw := &v1alpha1.RisingWave{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: o.namespace,
 			Name:      o.name,
 		},
+		Spec: v1alpha1.RisingWaveSpec{
+			Global: v1alpha1.RisingWaveGlobalSpec{
+				Replicas: v1alpha1.RisingWaveGlobalReplicas{
+					Meta:      c.BaseConfig.Replicas,
+					Frontend:  c.BaseConfig.Replicas,
+					Compute:   c.BaseConfig.Replicas,
+					Compactor: c.BaseConfig.Replicas,
+				},
+				RisingWaveComponentGroupTemplate: v1alpha1.RisingWaveComponentGroupTemplate{
+					Image:     c.BaseConfig.Image,
+					Resources: *c.BaseConfig.Resources.DeepCopy(),
+				},
+			},
+			Storages: v1alpha1.RisingWaveStoragesSpec{
+				Meta: v1alpha1.RisingWaveMetaStorage{
+					Memory: pointer.Bool(true),
+				},
+				Object: v1alpha1.RisingWaveObjectStorage{
+					Memory: pointer.Bool(true),
+				},
+			},
+			Components: v1alpha1.RisingWaveComponentsSpec{
+				Meta: v1alpha1.RisingWaveComponentMeta{
+					Groups: o.createComponentGroups(c.MetaConfig),
+				},
+				Frontend: v1alpha1.RisingWaveComponentFrontend{
+					Groups: o.createComponentGroups(c.FrontendConfig),
+				},
+
+				Compute: v1alpha1.RisingWaveComponentCompute{
+					Groups: o.createComputeGroups(c.ComputeConfig),
+				},
+				Compactor: v1alpha1.RisingWaveComponentCompactor{
+					Groups: o.createComponentGroups(c.CompactorConfig),
+				},
+			},
+		},
 	}
+
 	return rw, nil
+}
+
+func (o *Options) createComponentGroups(c config.ComponentConfig) []v1alpha1.RisingWaveComponentGroup {
+	var groups []v1alpha1.RisingWaveComponentGroup
+	for _, g := range c.Groups {
+		groups = append(groups, v1alpha1.RisingWaveComponentGroup{
+			Name:     g.Name,
+			Replicas: g.Replicas,
+			RisingWaveComponentGroupTemplate: &v1alpha1.RisingWaveComponentGroupTemplate{
+				Image:     o.config.Image,
+				Resources: *g.Resources.DeepCopy(),
+			},
+		})
+	}
+
+	return groups
+}
+
+func (o *Options) createComputeGroups(c config.ComponentConfig) []v1alpha1.RisingWaveComputeGroup {
+	var groups []v1alpha1.RisingWaveComputeGroup
+	for _, g := range c.Groups {
+		groups = append(groups, v1alpha1.RisingWaveComputeGroup{
+			Name:     g.Name,
+			Replicas: g.Replicas,
+			RisingWaveComputeGroupTemplate: &v1alpha1.RisingWaveComputeGroupTemplate{
+				RisingWaveComponentGroupTemplate: v1alpha1.RisingWaveComponentGroupTemplate{
+					Image:     o.config.Image,
+					Resources: *g.Resources.DeepCopy(),
+				},
+			},
+		})
+	}
+
+	return groups
 }

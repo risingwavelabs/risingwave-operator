@@ -226,7 +226,8 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 }
 
 func Test_RisingWaveController_Recovery(t *testing.T) {
-	risingwave := testutils.FakeRisingWave
+	risingwave := testutils.FakeRisingWave.DeepCopy()
+	risingwave.Status.ObservedGeneration = risingwave.Generation
 
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().

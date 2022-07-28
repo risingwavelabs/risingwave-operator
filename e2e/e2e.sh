@@ -60,7 +60,7 @@ function lazy_pull_image() {
   repo=$1
   tag=${2:-latest}
 
-  if [ "$tag" = "latest" ] || [ -z "$(docker image ls "$repo":"$tag")" ]; then
+  if [ "$tag" = "latest" ] || [ -z "$(docker image ls -q "$repo":"$tag")" ]; then
     echo "Pulling image $repo:$tag..."
     docker pull "$repo:$tag"
   else

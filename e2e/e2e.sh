@@ -52,7 +52,7 @@ Darwin*) NIGHTLY_IMAGE_TAG="nightly"-$(date -v-2d '+%Y%m%d') ;;
 esac
 
 # FIXME: currently the nightly tags aren't continuous.
-NIGHTLY_IMAGE_TAG=latest
+NIGHTLY_IMAGE_TAG="nightly-20220727"
 echo "Using a nightly tag $NIGHTLY_IMAGE_TAG for RisingWave images..."
 
 # Prepare images...
@@ -60,7 +60,7 @@ function lazy_pull_image() {
   repo=$1
   tag=${2:-latest}
 
-  if [ "$tag" = "latest" ] || [ -z "$(docker image ls "$repo":"$tag")" ]; then
+  if [ "$tag" = "latest" ] || [ -z "$(docker image ls -q "$repo":"$tag")" ]; then
     echo "Pulling image $repo:$tag..."
     docker pull "$repo:$tag"
   else

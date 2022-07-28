@@ -52,7 +52,7 @@ Darwin*) NIGHTLY_IMAGE_TAG="nightly"-$(date -v-2d '+%Y%m%d') ;;
 esac
 
 # FIXME: currently the nightly tags aren't continuous.
-NIGHTLY_IMAGE_TAG=latest
+NIGHTLY_IMAGE_TAG="nightly-20220727"
 echo "Using a nightly tag $NIGHTLY_IMAGE_TAG for RisingWave images..."
 
 # Prepare images...

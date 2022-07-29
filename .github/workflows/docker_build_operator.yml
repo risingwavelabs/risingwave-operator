@@ -9,8 +9,10 @@ on:
   push:
     branches:
       - main
+    tags:
+    - v0.1.*
 
-  # For manually triggering workflow
+    # For manually triggering workflow
   workflow_dispatch:
 
   # Run for every day 2am UTC+8(Beijing)
@@ -68,9 +70,13 @@ jobs:
           IS_PR: ${{ github.EVENT_NAME == 'pull_request' }}
           IS_NIGHTLY: ${{ (github.EVENT_NAME == 'schedule' || github.EVENT_NAME == 'workflow_dispatch') && github.REF_NAME == 'main'}}
           IS_MAIN: ${{ github.REF_NAME == 'main' }}
+          IS_PUSH_TAG: ${{ github.EVENT_NAME == 'push' && github.ref_type == 'tag' }}
+          SOURCE_REF: ${{ github.REF_NAME }}
           EVENT_NUMBER: ${{ github.event.number }}
         run: |
-          if ${IS_PR}; then
+          if ${IS_PUSH_TAG}; then
+            IMAGE_TAG= ${SOURCE_REF}
+          elif ${IS_PR}; then
             IMAGE_TAG="pr-${EVENT_NUMBER}"
           elif ${IS_NIGHTLY}; then
             IMAGE_TAG="nightly"-$(date +'%Y-%m-%d')

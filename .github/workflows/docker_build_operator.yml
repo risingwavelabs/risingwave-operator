@@ -75,7 +75,7 @@ jobs:
           EVENT_NUMBER: ${{ github.event.number }}
         run: |
           if ${IS_PUSH_TAG}; then
-            IMAGE_TAG= ${SOURCE_REF}
+            IMAGE_TAG="${SOURCE_REF}"
           elif ${IS_PR}; then
             IMAGE_TAG="pr-${EVENT_NUMBER}"
           elif ${IS_NIGHTLY}; then

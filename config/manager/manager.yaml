@@ -29,7 +29,7 @@ spec:
         - /manager
         args:
         - --leader-elect
-        image: ghcr.io/singularity-data/risingwave-operator:latest
+        image: controller
         imagePullPolicy: IfNotPresent
         name: manager
         securityContext:

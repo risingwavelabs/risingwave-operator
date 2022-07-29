@@ -8766,7 +8766,7 @@ spec:
         - --zap-devel=true
         command:
         - /manager
-        image: ghcr.io/singularity-data/risingwave-operator:latest
+        image: ghcr.io/singularity-data/risingwave-operator:v0.1.0
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:

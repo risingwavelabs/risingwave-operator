@@ -19,8 +19,8 @@ package create
 import (
 	"context"
 	"fmt"
-
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -125,8 +125,8 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 	}
 
 	err = ctx.Client().Create(context.Background(), rw)
-	if err != nil {
-		return fmt.Errorf("failed to update instance, %w", err)
+	if err != nil && !errors.IsAlreadyExists(err) {
+		return fmt.Errorf("failed to create instance, %w", err)
 	}
 	return nil
 }

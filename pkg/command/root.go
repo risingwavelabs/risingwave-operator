@@ -27,7 +27,9 @@ import (
 	"github.com/singularity-data/risingwave-operator/pkg/command/delete"
 	"github.com/singularity-data/risingwave-operator/pkg/command/install"
 	"github.com/singularity-data/risingwave-operator/pkg/command/list"
+	"github.com/singularity-data/risingwave-operator/pkg/command/resume"
 	"github.com/singularity-data/risingwave-operator/pkg/command/scale"
+	"github.com/singularity-data/risingwave-operator/pkg/command/stop"
 	"github.com/singularity-data/risingwave-operator/pkg/command/version"
 )
 
@@ -74,6 +76,8 @@ func NewCtlCommand(streams genericclioptions.IOStreams) *cobra.Command {
 			Message: "Deploy Commands:",
 			Commands: []*cobra.Command{
 				scale.NewCommand(ctx, streams),
+				stop.NewCommand(ctx, streams),
+				resume.NewCommand(ctx, streams),
 			},
 		},
 	}

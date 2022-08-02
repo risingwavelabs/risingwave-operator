@@ -35,13 +35,13 @@ const (
 Scale the risingwave instances.
 `
 	Example = `  # Scale compute-node of the risingwave named example-rw to 2.
-  kubectl rw update example-rw -t 2
+  kubectl rw scale example-rw -t 2
 
   # Scale frontend of the risingwave named example-rw to 2 in the foo namespace.
-  kubectl rw update example-rw -n foo -c frontend
+  kubectl rw scale example-rw -n foo -c frontend -t 2
 
   # Scale frontend of the risingwave which named example-rw to 2 and in the foo namespace and in the test group.
-  kubectl rw update example-rw -n foo -c frontend -g test
+  kubectl rw scale example-rw -n foo -c frontend -t 2 -g test
 `
 )
 
@@ -86,7 +86,7 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 	cmd.Flags().StringVarP(&o.component, "component", "c", "compute-node", "The component which you want to scale.")
 	cmd.Flags().IntVarP(&o.target, "target", "t", -1, "The target number.")
 
-	cmd.Flags().StringVarP(&o.group, "group", "g", "", "The group name of the component. If not set, scale the default group")
+	cmd.Flags().StringVarP(&o.group, "group", "g", "default", "The group name of the component. If not set, scale the default group")
 
 	return cmd
 }
@@ -113,16 +113,17 @@ func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 
 func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
 	if o.target < 0 {
-		fmt.Fprint(o.Out, "No specific target or target is negative, will do noting")
+		fmt.Fprint(o.Out, "No specific target or target is negative, will do nothing")
 		return nil
 	}
 
 	rw := &v1alpha1.RisingWave{}
 
 	operatorKey := client.ObjectKey{
-		Namespace: o.name,
-		Name:      o.namespace,
+		Name:      o.name,
+		Namespace: o.namespace,
 	}
+
 	err := ctx.Client().Get(context.Background(), operatorKey, rw)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -138,11 +139,51 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 	if err != nil {
 		return fmt.Errorf("failed to update instance, %w", err)
 	}
+
+	fmt.Fprint(o.Out, "Risingwave instance updated")
 	return nil
 }
 
-// TODO: to support scale when PR(https://github.com/singularity-data/risingwave-operator/pull/105) merged
-
 func (o *Options) updateInstance(instance *v1alpha1.RisingWave) {
+	err := UpdateReplicas(instance, o.component, o.group, int32(o.target))
+	if err != nil {
+		fmt.Fprint(o.Out, "Failed to update instance, %w", err)
+	}
+}
 
+func UpdateReplicas(instance *v1alpha1.RisingWave, component, groupName string, target int32) error {
+	switch groupName {
+	case "compute":
+		for i, group := range instance.Spec.Components.Compute.Groups {
+			if group.Name == groupName {
+				instance.Spec.Components.Compute.Groups[i].Replicas = target
+				break
+			}
+		}
+	case "frontend":
+		for i, group := range instance.Spec.Components.Frontend.Groups {
+			if group.Name == groupName {
+				instance.Spec.Components.Frontend.Groups[i].Replicas = target
+				break
+			}
+		}
+	case "compactor":
+		for i, group := range instance.Spec.Components.Compactor.Groups {
+			if group.Name == groupName {
+				instance.Spec.Components.Compactor.Groups[i].Replicas = target
+				break
+			}
+		}
+	case "meta":
+		for i, group := range instance.Spec.Components.Meta.Groups {
+			if group.Name == groupName {
+				instance.Spec.Components.Meta.Groups[i].Replicas = target
+				break
+			}
+		}
+	default:
+		return fmt.Errorf("no specific component, will do nothing")
+	}
+
+	return nil
 }

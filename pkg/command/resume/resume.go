@@ -117,9 +117,14 @@ func ResumeRisingWave(instance *v1alpha1.RisingWave) error {
 	// deserialize the annotation
 	// TODO: move this to utils
 	replicas := stop.GroupReplicas{}
+
+	if instance.Annotations == nil {
+		return fmt.Errorf("error replica information. are you trying to resume an instance that was not stopped?")
+	}
+
 	err := json.Unmarshal([]byte(instance.Annotations["replicas.old"]), &replicas)
 	if err != nil {
-		return fmt.Errorf("failed to unmarshal replicas, %v", err)
+		return fmt.Errorf("failed to unmarshal replicas, %v; are you trying to resume an instance that was not stopped?", err)
 	}
 
 	for _, replicaInfo := range replicas.Compute {

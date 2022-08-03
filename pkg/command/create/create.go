@@ -137,8 +137,9 @@ func (o *Options) createInstance() (*v1alpha1.RisingWave, error) {
 	c := o.config
 	rw := &v1alpha1.RisingWave{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: o.namespace,
-			Name:      o.name,
+			Namespace:   o.namespace,
+			Name:        o.name,
+			Annotations: make(map[string]string),
 		},
 		Spec: v1alpha1.RisingWaveSpec{
 			Global: v1alpha1.RisingWaveGlobalSpec{

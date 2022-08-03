@@ -85,7 +85,6 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 
 	cmd.Flags().StringVarP(&o.component, "component", "c", "compute-node", "The component which you want to scale.")
 	cmd.Flags().IntVarP(&o.target, "target", "t", -1, "The target number.")
-
 	cmd.Flags().StringVarP(&o.group, "group", "g", "default", "The group name of the component. If not set, scale the default group")
 
 	return cmd
@@ -133,26 +132,21 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 		return err
 	}
 
-	o.updateInstance(rw)
+	err = UpdateReplicas(rw, o.component, o.group, int32(o.target))
+	if err != nil {
+		return err
+	}
 
 	err = ctx.Client().Update(context.Background(), rw)
 	if err != nil {
-		return fmt.Errorf("failed to update instance, %w", err)
+		return fmt.Errorf("failed to update instance, %v", err)
 	}
 
-	fmt.Fprint(o.Out, "Risingwave instance updated")
 	return nil
 }
 
-func (o *Options) updateInstance(instance *v1alpha1.RisingWave) {
-	err := UpdateReplicas(instance, o.component, o.group, int32(o.target))
-	if err != nil {
-		fmt.Fprint(o.Out, "Failed to update instance, %w", err)
-	}
-}
-
 func UpdateReplicas(instance *v1alpha1.RisingWave, component, groupName string, target int32) error {
-	switch groupName {
+	switch component {
 	case "compute":
 		for i, group := range instance.Spec.Components.Compute.Groups {
 			if group.Name == groupName {
@@ -182,7 +176,7 @@ func UpdateReplicas(instance *v1alpha1.RisingWave, component, groupName string, 
 			}
 		}
 	default:
-		return fmt.Errorf("no specific component, will do nothing")
+		return fmt.Errorf("no such component %v, will do nothing", component)
 	}
 
 	return nil

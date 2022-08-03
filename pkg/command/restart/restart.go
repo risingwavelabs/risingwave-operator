@@ -1,9 +1,9 @@
-package resume
+package restart
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -12,19 +12,20 @@ import (
 
 	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	cmdcontext "github.com/singularity-data/risingwave-operator/pkg/command/context"
+	"github.com/singularity-data/risingwave-operator/pkg/command/resume"
 	"github.com/singularity-data/risingwave-operator/pkg/command/stop"
 	"github.com/singularity-data/risingwave-operator/pkg/command/util"
 )
 
 const (
 	LongDesc = `
-Start the risingwave instances.
+Restart the risingwave instances.
 `
-	Example = `  # Resume risingwave named example-rw in default namespace.
-  kubectl rw resume example-rw
+	Example = `  # Restart risingwave named example-rw in default namespace.
+  kubectl rw restart example-rw
 
-  # Resume risingwave named example-rw in foo namespace.
-  kubectl rw resume example-rw -n foo
+  # Restart risingwave named example-rw in foo namespace.
+  kubectl rw restart example-rw -n foo
 `
 )
 
@@ -36,20 +37,21 @@ type Options struct {
 	genericclioptions.IOStreams
 }
 
-// NewOptions returns a resume Options.
+// TODO: create a generic option creater
+// NewOptions returns a restart Options.
 func NewOptions(streams genericclioptions.IOStreams) *Options {
 	return &Options{
 		IOStreams: streams,
 	}
 }
 
-// NewCommand creates the resume command.
+// NewCommand creates the restart command.
 func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) *cobra.Command {
 	o := NewOptions(streams)
 
 	cmd := &cobra.Command{
-		Use:     "resume",
-		Short:   "Resume risingwave instances",
+		Use:     "restart",
+		Short:   "Restart risingwave instances",
 		Long:    LongDesc,
 		Example: Example,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -57,7 +59,6 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 			util.CheckErr(o.Validate(ctx, cmd, args))
 			util.CheckErr(o.Run(ctx, cmd, args))
 		},
-		Aliases: []string{"start"},
 	}
 
 	return cmd
@@ -100,66 +101,32 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 		return err
 	}
 
-	err = ResumeRisingWave(rw)
+	err = stop.StopRisingWave(rw)
 	if err != nil {
 		return err
 	}
 
 	err = ctx.Client().Update(context.Background(), rw)
 	if err != nil {
-		return fmt.Errorf("failed to update instance, %w", err)
+		return fmt.Errorf("failed to stop instance, %w", err)
 	}
 
-	return nil
-}
+	// check that all replicas have scaled down
+	// TODO: use client go to achieve this
+	time.Sleep(time.Minute * 3)
 
-func ResumeRisingWave(instance *v1alpha1.RisingWave) error {
-	// deserialize the annotation
-	// TODO: move this to utils
-	replicas := stop.GroupReplicas{}
-	err := json.Unmarshal([]byte(instance.Annotations["replicas.old"]), &replicas)
+	// update rw
+	_ = ctx.Client().Get(context.Background(), operatorKey, rw)
+
+	err = resume.ResumeRisingWave(rw)
 	if err != nil {
-		return fmt.Errorf("failed to unmarshal replicas, %v", err)
+		return err
 	}
 
-	for _, replicaInfo := range replicas.Compute {
-		for i, group := range instance.Spec.Components.Compute.Groups {
-			if group.Name == replicaInfo.GroupName {
-				instance.Spec.Components.Compute.Groups[i].Replicas = replicaInfo.Replicas
-				break
-			}
-		}
+	err = ctx.Client().Update(context.Background(), rw)
+	if err != nil {
+		return fmt.Errorf("failed to resume instance, %w", err)
 	}
-
-	for _, replicaInfo := range replicas.Compactor {
-		for i, group := range instance.Spec.Components.Compactor.Groups {
-			if group.Name == replicaInfo.GroupName {
-				instance.Spec.Components.Compactor.Groups[i].Replicas = replicaInfo.Replicas
-				break
-			}
-		}
-	}
-
-	for _, replicaInfo := range replicas.Frontend {
-		for i, group := range instance.Spec.Components.Frontend.Groups {
-			if group.Name == replicaInfo.GroupName {
-				instance.Spec.Components.Frontend.Groups[i].Replicas = replicaInfo.Replicas
-				break
-			}
-		}
-	}
-
-	for _, replicaInfo := range replicas.Meta {
-		for i, group := range instance.Spec.Components.Meta.Groups {
-			if group.Name == replicaInfo.GroupName {
-				instance.Spec.Components.Meta.Groups[i].Replicas = replicaInfo.Replicas
-				break
-			}
-		}
-	}
-
-	// delete annotation
-	delete(instance.Annotations, "replicas.old")
 
 	return nil
 }

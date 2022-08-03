@@ -100,7 +100,10 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 		return err
 	}
 
-	o.updateInstance(rw)
+	err = StopRisingWave(rw)
+	if err != nil {
+		return err
+	}
 
 	err = ctx.Client().Update(context.Background(), rw)
 	if err != nil {
@@ -111,6 +114,7 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 	return nil
 }
 
+// TODO: move to common package
 type GroupReplicas struct {
 	Compute   []ReplicaInfo
 	Frontend  []ReplicaInfo
@@ -123,7 +127,7 @@ type ReplicaInfo struct {
 	Replicas  int32
 }
 
-func (o *Options) updateInstance(instance *v1alpha1.RisingWave) {
+func StopRisingWave(instance *v1alpha1.RisingWave) error {
 	replicas := GroupReplicas{}
 
 	// record current replica values in annotation
@@ -167,9 +171,15 @@ func (o *Options) updateInstance(instance *v1alpha1.RisingWave) {
 	// serialise replica struct to annotation
 	annotation, err := json.Marshal(replicas)
 	if err != nil {
-		fmt.Fprint(o.Out, "Failed to serialise replicas", err)
+		return fmt.Errorf("failed to serialise replicas, %v", err)
 	}
 
 	// set annotation
+	// TODO: create map in create command
+	if instance.Annotations == nil {
+		instance.Annotations = make(map[string]string)
+	}
 	instance.Annotations["replicas.old"] = string(annotation)
+
+	return nil
 }

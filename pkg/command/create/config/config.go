@@ -33,7 +33,7 @@ const (
 	DefaultRequestsCPU = "100Mi"
 )
 
-// Config contain the fields needed that creating a instance
+// Config contain the fields needed that creating a instance.
 type Config struct {
 	BaseConfig
 
@@ -114,7 +114,7 @@ var DefaultConfig = Config{
 	},
 }
 
-// ApplyConfigFile will construct a config by config file
+// ApplyConfigFile will construct a config by config file.
 func ApplyConfigFile(path string, arch string) (Config, error) {
 	if len(arch) != 0 {
 		DefaultConfig.Arch = arch

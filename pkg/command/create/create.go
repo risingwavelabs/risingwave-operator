@@ -132,13 +132,14 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 }
 
 // TODO: to support create different risingwave by config file
-// TODO: to support different storage by config file
+// TODO: to support different storage by config file.
 func (o *Options) createInstance() (*v1alpha1.RisingWave, error) {
 	c := o.config
 	rw := &v1alpha1.RisingWave{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: o.namespace,
-			Name:      o.name,
+			Namespace:   o.namespace,
+			Name:        o.name,
+			Annotations: make(map[string]string),
 		},
 		Spec: v1alpha1.RisingWaveSpec{
 			Global: v1alpha1.RisingWaveGlobalSpec{

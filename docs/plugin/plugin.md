@@ -8,7 +8,7 @@
 ## Install Plugin
 
 ```shell
-
+make build-plugin
 ```
 
 ## Management Commands

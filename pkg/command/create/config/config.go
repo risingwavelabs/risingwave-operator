@@ -89,7 +89,6 @@ var DefaultConfig = Config{
 	BaseConfig: BaseConfig{
 		Arch:      "amd64",
 		Image:     AMDImage,
-		Replicas:  1,
 		Resources: *defaultResource.DeepCopy(),
 	},
 	MetaConfig: ComponentConfig{

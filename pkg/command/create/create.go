@@ -100,15 +100,11 @@ func (o *Options) Complete(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 		o.name = args[0]
 	}
 
-	if len(o.configFile) == 0 {
-		o.config = config.DefaultConfig
-	} else {
-		c, err := config.ApplyConfigFile(o.configFile, o.arch)
-		if err != nil {
-			return err
-		}
-		o.config = c
+	c, err := config.ApplyConfigFile(o.configFile, o.arch)
+	if err != nil {
+		return err
 	}
+	o.config = c
 	return nil
 }
 

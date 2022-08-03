@@ -120,6 +120,10 @@ func ApplyConfigFile(path string, arch string) (Config, error) {
 		DefaultConfig.Arch = arch
 		DefaultConfig.Image = image(arch)
 	}
+	if len(path) == 0 {
+		return DefaultConfig, nil
+	}
+
 	c, err := parse(path)
 	if err != nil {
 		return DefaultConfig, err

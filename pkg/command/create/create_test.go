@@ -17,9 +17,11 @@
 package create
 
 import (
-	"github.com/singularity-data/risingwave-operator/pkg/command/create/config"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/singularity-data/risingwave-operator/pkg/command/create/config"
 )
 
 func Test_CreateInstance(t *testing.T) {

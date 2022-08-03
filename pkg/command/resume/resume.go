@@ -119,7 +119,7 @@ func ResumeRisingWave(instance *v1alpha1.RisingWave) error {
 	replicas := stop.GroupReplicas{}
 
 	if instance.Annotations == nil {
-		return fmt.Errorf("error replica information. are you trying to resume an instance that was not stopped?")
+		return fmt.Errorf("error retrieving replica information; are you trying to resume an instance that was not stopped?")
 	}
 
 	err := json.Unmarshal([]byte(instance.Annotations["replicas.old"]), &replicas)

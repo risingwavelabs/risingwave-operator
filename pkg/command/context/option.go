@@ -17,6 +17,7 @@
 package context
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sync"
@@ -24,12 +25,15 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/spf13/cobra"
 
 	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/singularity-data/risingwave-operator/pkg/command/helper"
@@ -56,6 +60,19 @@ type RWContext struct {
 	restConfig *rest.Config
 
 	a *helper.Applier
+}
+
+type Options interface {
+	BasicOptions
+	Complete() error
+	Validate() error
+	Run() error
+}
+
+type BasicOptions struct {
+	Name      string
+	Namespace string
+	genericclioptions.IOStreams
 }
 
 // we need put client init code when get func called, because the flag not parsed when NewContext
@@ -125,4 +142,52 @@ func (o *RWContext) Applier() *helper.Applier {
 		o.lazyInit()
 	}
 	return o.a
+}
+
+func NewBasicOptions(streams genericclioptions.IOStreams) *BasicOptions {
+	return &BasicOptions{
+		IOStreams: streams,
+	}
+}
+
+// completes the fields of the basic option.
+func (o *BasicOptions) Complete(ctx *RWContext, cmd *cobra.Command, args []string) error {
+	if len(ctx.Namespace()) == 0 {
+		o.Namespace = "default"
+	} else {
+		o.Namespace = ctx.Namespace()
+	}
+
+	if len(args) == 0 {
+		return fmt.Errorf("name of risingwave cannot be nil")
+	} else {
+		o.Name = args[0]
+	}
+	return nil
+
+}
+
+// for simple commands, we don't need validation.
+func (o *BasicOptions) Validate(ctx *RWContext, cmd *cobra.Command, args []string) error {
+
+	return nil
+}
+
+func (o *BasicOptions) GetRwInstance(ctx *RWContext) (*v1alpha1.RisingWave, error) {
+	rw := &v1alpha1.RisingWave{}
+
+	operatorKey := client.ObjectKey{
+		Name:      o.Name,
+		Namespace: o.Namespace,
+	}
+
+	err := ctx.Client().Get(context.Background(), operatorKey, rw)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			fmt.Fprint(o.Out, "Risingwave instance not exists")
+		}
+		return nil, err
+	}
+
+	return rw, nil
 }

@@ -54,8 +54,8 @@ func NewStopCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStrea
 	cmd := &cobra.Command{
 		Use:     "stop",
 		Short:   "Stop risingwave instances",
-		Long:    LongDesc,
-		Example: Example,
+		Long:    LongDescStop,
+		Example: ExampleStop,
 		Run: func(cmd *cobra.Command, args []string) {
 			util.CheckErr(o.Complete(ctx, cmd, args))
 			util.CheckErr(o.Validate(ctx, cmd, args))

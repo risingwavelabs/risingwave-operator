@@ -29,10 +29,10 @@ import (
 )
 
 const (
-	LongDesc = `
+	LongDescRestart = `
 Restart the risingwave instances.
 `
-	Example = `  # Restart risingwave named example-rw in default namespace.
+	ExampleRestart = `  # Restart risingwave named example-rw in default namespace.
   kubectl rw restart example-rw
 
   # Restart risingwave named example-rw in foo namespace.
@@ -53,8 +53,8 @@ func NewRestartCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOSt
 	cmd := &cobra.Command{
 		Use:     "restart",
 		Short:   "Restart risingwave instances",
-		Long:    LongDesc,
-		Example: Example,
+		Long:    LongDescRestart,
+		Example: ExampleRestart,
 		Run: func(cmd *cobra.Command, args []string) {
 			util.CheckErr(o.Complete(ctx, cmd, args))
 			util.CheckErr(o.Validate(ctx, cmd, args))

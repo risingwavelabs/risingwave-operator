@@ -1,4 +1,20 @@
-package stop
+/*
+ * Copyright 2022 Singularity Data
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package deploy
 
 import (
 	"context"
@@ -6,21 +22,18 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	cmdcontext "github.com/singularity-data/risingwave-operator/pkg/command/context"
-	"github.com/singularity-data/risingwave-operator/pkg/command/scale"
 	"github.com/singularity-data/risingwave-operator/pkg/command/util"
 )
 
 const (
-	LongDesc = `
+	LongDescStop = `
 Stop the risingwave instances.
 `
-	Example = `  # Stop risingwave named example-rw in default namespace.
+	ExampleStop = `  # Stop risingwave named example-rw in default namespace.
   kubectl rw stop example-rw
 
   # Stop risingwave named example-rw in foo namespace.
@@ -28,24 +41,15 @@ Stop the risingwave instances.
 `
 )
 
-type Options struct {
-	name string
-
-	namespace string
-
-	genericclioptions.IOStreams
-}
-
-// NewOptions returns a stop Options.
-func NewOptions(streams genericclioptions.IOStreams) *Options {
-	return &Options{
-		IOStreams: streams,
-	}
+type StopOptions struct {
+	*cmdcontext.BasicOptions
 }
 
 // NewCommand creates the stop command.
-func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) *cobra.Command {
-	o := NewOptions(streams)
+func NewStopCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) *cobra.Command {
+	o := RestartOptions{
+		BasicOptions: cmdcontext.NewBasicOptions(streams),
+	}
 
 	cmd := &cobra.Command{
 		Use:     "stop",
@@ -57,46 +61,15 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 			util.CheckErr(o.Validate(ctx, cmd, args))
 			util.CheckErr(o.Run(ctx, cmd, args))
 		},
-		Aliases: []string{"stp"},
+		Aliases: []string{"pause"},
 	}
 
 	return cmd
 }
 
-func (o *Options) Complete(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	if len(ctx.Namespace()) == 0 {
-		o.namespace = "default"
-	} else {
-		o.namespace = ctx.Namespace()
-	}
-
-	if len(args) == 0 {
-		return fmt.Errorf("name of risingwave cannot be nil")
-	} else {
-		o.name = args[0]
-	}
-	return nil
-}
-
-func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-
-	return nil
-}
-
-func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	rw := &v1alpha1.RisingWave{}
-
-	operatorKey := client.ObjectKey{
-		Name:      o.name,
-		Namespace: o.namespace,
-	}
-
-	err := ctx.Client().Get(context.Background(), operatorKey, rw)
+func (o *StopOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
+	rw, err := o.GetRwInstance(ctx)
 	if err != nil {
-		if errors.IsNotFound(err) {
-			fmt.Fprint(o.Out, "Risingwave instance not exists")
-			return nil
-		}
 		return err
 	}
 
@@ -114,19 +87,6 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 	return nil
 }
 
-// TODO: move to common package
-type GroupReplicas struct {
-	Compute   []ReplicaInfo
-	Frontend  []ReplicaInfo
-	Compactor []ReplicaInfo
-	Meta      []ReplicaInfo
-}
-
-type ReplicaInfo struct {
-	GroupName string
-	Replicas  int32
-}
-
 func StopRisingWave(instance *v1alpha1.RisingWave) error {
 	replicas := GroupReplicas{}
 
@@ -137,7 +97,7 @@ func StopRisingWave(instance *v1alpha1.RisingWave) error {
 			Replicas:  group.Replicas,
 		}
 		// TODO: use constants for component naming
-		scale.UpdateReplicas(instance, "compute", group.Name, 0)
+		updateReplicas(instance, "compute", group.Name, 0)
 		replicas.Compute = append(replicas.Compute, computeReplica)
 	}
 
@@ -146,7 +106,7 @@ func StopRisingWave(instance *v1alpha1.RisingWave) error {
 			GroupName: group.Name,
 			Replicas:  group.Replicas,
 		}
-		scale.UpdateReplicas(instance, "frontend", group.Name, 0)
+		updateReplicas(instance, "frontend", group.Name, 0)
 		replicas.Frontend = append(replicas.Frontend, frontendReplica)
 	}
 
@@ -155,7 +115,7 @@ func StopRisingWave(instance *v1alpha1.RisingWave) error {
 			GroupName: group.Name,
 			Replicas:  group.Replicas,
 		}
-		scale.UpdateReplicas(instance, "compactor", group.Name, 0)
+		updateReplicas(instance, "compactor", group.Name, 0)
 		replicas.Compactor = append(replicas.Compactor, compactorReplica)
 	}
 
@@ -164,7 +124,7 @@ func StopRisingWave(instance *v1alpha1.RisingWave) error {
 			GroupName: group.Name,
 			Replicas:  group.Replicas,
 		}
-		scale.UpdateReplicas(instance, "meta", group.Name, 0)
+		updateReplicas(instance, "meta", group.Name, 0)
 		replicas.Meta = append(replicas.Meta, metaReplica)
 	}
 

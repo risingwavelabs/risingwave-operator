@@ -746,9 +746,7 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 				FieldPath: "status.podIP",
 			},
 		},
-	}, func(env *corev1.EnvVar) bool {
-		return env.Name == "POD_IP"
-	})
+	}, func(env *corev1.EnvVar) bool { return env.Name == "POD_IP" })
 	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
 		Name: "POD_NAME",
 		ValueFrom: &corev1.EnvVarSource{
@@ -756,9 +754,13 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 				FieldPath: "metadata.name",
 			},
 		},
-	}, func(env *corev1.EnvVar) bool {
-		return env.Name == "POD_NAME"
-	})
+	}, func(env *corev1.EnvVar) bool { return env.Name == "POD_NAME" })
+	if cpuLimit, ok := template.Resources.Limits[corev1.ResourceCPU]; ok {
+		container.Env = mergeListByKey(container.Env, corev1.EnvVar{
+			Name:  "RW_WORKER_THREADS",
+			Value: strconv.FormatInt(cpuLimit.Value(), 10),
+		}, func(env *corev1.EnvVar) bool { return env.Name == "RW_WORKER_THREADS" })
+	}
 	container.Resources = template.Resources
 	container.StartupProbe = nil
 	container.LivenessProbe = &corev1.Probe{

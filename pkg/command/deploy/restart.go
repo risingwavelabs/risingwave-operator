@@ -71,7 +71,7 @@ func (o *RestartOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args
 		return err
 	}
 
-	err = StopRisingWave(rw)
+	err = stopRisingWave(rw)
 	if err != nil {
 		return err
 	}
@@ -82,12 +82,13 @@ func (o *RestartOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args
 	}
 
 	// check that all replicas have scaled down
-	// TODO: use client go to achieve this
-	time.Sleep(time.Minute * 3)
+	err = o.verifyStopped(ctx)
+	if err != nil {
+		return err
+	}
 
 	// update rw
 	rw, _ = o.GetRwInstance(ctx)
-
 	err = resumeRisingWave(rw)
 	if err != nil {
 		return err
@@ -99,4 +100,35 @@ func (o *RestartOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args
 	}
 
 	return nil
+}
+
+func (o *RestartOptions) verifyStopped(ctx *cmdcontext.RWContext) error {
+	timeout := time.After(10 * time.Minute)
+	for {
+		select {
+		case <-timeout:
+			return fmt.Errorf("failed to stop instance, timed out")
+		default:
+			count, err := o.getRunningCount(ctx)
+			if err != nil {
+				return err
+			}
+			if count == 0 {
+				return nil
+			}
+			time.Sleep(5 * time.Second)
+		}
+	}
+}
+
+func (o *RestartOptions) getRunningCount(ctx *cmdcontext.RWContext) (int32, error) {
+	rw, err := o.GetRwInstance(ctx)
+	if err != nil {
+		return -1, err
+	}
+
+	status := rw.Status.ComponentReplicas
+	count := status.Compute.Running + status.Frontend.Running + status.Compactor.Running + status.Meta.Running
+
+	return count, nil
 }

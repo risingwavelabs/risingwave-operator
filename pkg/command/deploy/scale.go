@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package scale
+package deploy
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	cmdcontext "github.com/singularity-data/risingwave-operator/pkg/command/context"
@@ -31,10 +29,10 @@ import (
 )
 
 const (
-	LongDesc = `
+	LongDescScale = `
 Scale the risingwave instances.
 `
-	Example = `  # Scale compute-node of the risingwave named example-rw to 2.
+	ExampleScale = `  # Scale compute-node of the risingwave named example-rw to 2.
   kubectl rw scale example-rw -t 2
 
   # Scale frontend of the risingwave named example-rw to 2 in the foo namespace.
@@ -45,36 +43,27 @@ Scale the risingwave instances.
 `
 )
 
-type Options struct {
-	name string
-
-	namespace string
+type ScaleOptions struct {
+	*cmdcontext.BasicOptions
 
 	target int
 
 	component string
 
 	group string
-
-	genericclioptions.IOStreams
-}
-
-// NewOptions returns a scale Options.
-func NewOptions(streams genericclioptions.IOStreams) *Options {
-	return &Options{
-		IOStreams: streams,
-	}
 }
 
 // NewCommand creates the scale command which can scale the risingwave components.
-func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) *cobra.Command {
-	o := NewOptions(streams)
+func NewScaleCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) *cobra.Command {
+	o := &ScaleOptions{
+		BasicOptions: cmdcontext.NewBasicOptions(streams),
+	}
 
 	cmd := &cobra.Command{
 		Use:     "scale",
 		Short:   "Scale risingwave instances",
-		Long:    LongDesc,
-		Example: Example,
+		Long:    LongDescScale,
+		Example: ExampleScale,
 		Run: func(cmd *cobra.Command, args []string) {
 			util.CheckErr(o.Complete(ctx, cmd, args))
 			util.CheckErr(o.Validate(ctx, cmd, args))
@@ -90,49 +79,18 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 	return cmd
 }
 
-func (o *Options) Complete(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	if len(ctx.Namespace()) == 0 {
-		o.namespace = "default"
-	} else {
-		o.namespace = ctx.Namespace()
-	}
-
-	if len(args) == 0 {
-		return fmt.Errorf("name of risingwave cannot be nil")
-	} else {
-		o.name = args[0]
-	}
-	return nil
-}
-
-func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-
-	return nil
-}
-
-func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
+func (o *ScaleOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
 	if o.target < 0 {
 		fmt.Fprint(o.Out, "No specific target or target is negative, will do nothing")
 		return nil
 	}
 
-	rw := &v1alpha1.RisingWave{}
-
-	operatorKey := client.ObjectKey{
-		Name:      o.name,
-		Namespace: o.namespace,
-	}
-
-	err := ctx.Client().Get(context.Background(), operatorKey, rw)
+	rw, err := o.GetRwInstance(ctx)
 	if err != nil {
-		if errors.IsNotFound(err) {
-			fmt.Fprint(o.Out, "Risingwave instance not exists")
-			return nil
-		}
 		return err
 	}
 
-	err = UpdateReplicas(rw, o.component, o.group, int32(o.target))
+	err = updateReplicas(rw, o.component, o.group, int32(o.target))
 	if err != nil {
 		return err
 	}
@@ -145,7 +103,7 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 	return nil
 }
 
-func UpdateReplicas(instance *v1alpha1.RisingWave, component, groupName string, target int32) error {
+func updateReplicas(instance *v1alpha1.RisingWave, component, groupName string, target int32) error {
 	switch component {
 	case "compute":
 		for i, group := range instance.Spec.Components.Compute.Groups {

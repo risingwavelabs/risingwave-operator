@@ -44,14 +44,14 @@ Accepted values for resources:
   Memory: Plain integer or as a fixed-point number using one of these quantity suffixes: E, P, T, G, M, k. You can 
           also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki. For example, 1G, 1Gi, 1024M or 128974848.
 `
-	Example = `  # Update compute request and limit config of risingwave named example-rw to 200m and 1000m
+	Example = `  # Update compute request and limit config of global component in risingwave named example-rw.
   kubectl rw update example-rw -cr 200m -cl 1000m
 
-  # Update memory request config of risingwave named example-rw in namespace foo to 256Mi
+  # Update memory request of global component in risingwave named example-rw in namespace foo.
   kubectl rw update example-rw -n foo -mr 256Mi
 
-  # Update memory request config of risingwave named example-rw in namespace foo and in group test to 256Mi.
-  kubectl rw update example-rw -n foo -g test -mr 256Mi
+  # Update memory request of meta component in risingwave named example-rw in namespace foo and group test.
+  kubectl rw update example-rw -n foo -c meta -g test -mr 256Mi
 `
 )
 
@@ -91,10 +91,10 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 
 	cmd.Flags().StringVar(&o.computeRequest.requested_qty, "cpurequest", "", "The target cpu request.")
 	cmd.Flags().StringVar(&o.computeLimit.requested_qty, "cpulimit", "", "The target cpu limit.")
-	cmd.Flags().StringVar(&o.memoryRequest.requested_qty, "memoryrequest", "", "The target memory request")
-	cmd.Flags().StringVar(&o.memoryLimit.requested_qty, "memorylimit", "", "The target memory limit")
-	cmd.Flags().StringVarP(&o.group, "group", "g", "default", "The group to be updated. If not set, update the default group")
-	cmd.Flags().StringVarP(&o.component, "component", "c", "", "The component to be updated. If not set, return error")
+	cmd.Flags().StringVar(&o.memoryRequest.requested_qty, "memoryrequest", "", "The target memory request.")
+	cmd.Flags().StringVar(&o.memoryLimit.requested_qty, "memorylimit", "", "The target memory limit.")
+	cmd.Flags().StringVarP(&o.group, "group", "g", util.DEFAULT_GROUP, "The group to be updated. If not set, update the default group.")
+	cmd.Flags().StringVarP(&o.component, "component", "c", util.GLOBAL, "The component to be updated. If not set, update global resources.")
 
 	return cmd
 }
@@ -133,7 +133,7 @@ func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 	}
 
 	if o.group == "" {
-		o.group = "default"
+		o.group = util.DEFAULT_GROUP
 	} else {
 		rw, err := o.GetRwInstance(ctx)
 		if err != nil {
@@ -168,16 +168,53 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 	return nil
 }
 
-type RWGroupInterface interface {
-	RWGroup
+func (o *Options) updateConfig(rw *v1alpha1.RisingWave) error {
+	components := &rw.Spec.Components
+
+	switch o.component {
+	case util.COMPUTE:
+		for _, group := range components.Compute.Groups {
+			if group.Name == o.group {
+				o.updateComponentResources(&group.Resources)
+				break
+			}
+		}
+
+	case util.META:
+		for _, group := range components.Meta.Groups {
+			if group.Name == o.group {
+				o.updateComponentResources(&group.Resources)
+				break
+			}
+		}
+
+	case util.COMPACTOR:
+		for _, group := range components.Compactor.Groups {
+			if group.Name == o.group {
+				o.updateComponentResources(&group.Resources)
+				break
+			}
+		}
+
+	case util.FRONTEND:
+		for _, group := range components.Frontend.Groups {
+			if group.Name == o.group {
+				o.updateComponentResources(&group.Resources)
+				break
+			}
+		}
+
+	case util.GLOBAL:
+		o.updateComponentResources(&rw.Spec.Global.Resources)
+
+	default:
+		return fmt.Errorf("invalid component name %s, will do nothing", o.component)
+	}
+
+	return nil
 }
 
-type RWGroup struct {
-	Name      string
-	Resources corev1.ResourceRequirements
-}
-
-func (o *Options) updateComponentHelper(resourceMap *corev1.ResourceRequirements) {
+func (o *Options) updateComponentResources(resourceMap *corev1.ResourceRequirements) {
 	if o.computeRequest.requested_qty != "" {
 		resourceMap.Requests[corev1.ResourceCPU] = o.computeRequest.converted_qty
 	}
@@ -193,48 +230,4 @@ func (o *Options) updateComponentHelper(resourceMap *corev1.ResourceRequirements
 	if o.memoryLimit.requested_qty != "" {
 		resourceMap.Limits[corev1.ResourceMemory] = o.memoryLimit.converted_qty
 	}
-
-}
-
-func (o *Options) updateConfig(rw *v1alpha1.RisingWave) error {
-	components := &rw.Spec.Components
-
-	switch o.component {
-	case "compute":
-		for _, group := range components.Compute.Groups {
-			if group.Name == o.group {
-				o.updateComponentHelper(&group.Resources)
-				break
-			}
-		}
-
-	case "meta":
-		for _, group := range components.Meta.Groups {
-			if group.Name == o.group {
-				o.updateComponentHelper(&group.Resources)
-				break
-			}
-		}
-
-	case "compactor":
-		for _, group := range components.Compactor.Groups {
-			if group.Name == o.group {
-				o.updateComponentHelper(&group.Resources)
-				break
-			}
-		}
-
-	case "frontend":
-		for _, group := range components.Frontend.Groups {
-			if group.Name == o.group {
-				o.updateComponentHelper(&group.Resources)
-				break
-			}
-		}
-
-	default:
-		return fmt.Errorf("invalid component name %s", o.component)
-	}
-
-	return nil
 }

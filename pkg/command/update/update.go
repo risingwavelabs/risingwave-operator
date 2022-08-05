@@ -100,6 +100,7 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 }
 
 func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
+	// parse the resource requests
 	if o.computeRequest.requested_qty != "" {
 		qty, err := k8sresource.ParseQuantity(o.computeRequest.requested_qty)
 		if err != nil {
@@ -132,6 +133,7 @@ func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 		o.memoryLimit.converted_qty = qty
 	}
 
+	// validate group
 	if o.group == "" {
 		o.group = util.DEFAULT_GROUP
 	} else {
@@ -145,6 +147,7 @@ func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 		}
 	}
 
+	// validate component
 	if o.component == "" {
 		return fmt.Errorf("component name is required")
 	}

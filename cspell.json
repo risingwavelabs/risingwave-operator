@@ -26,7 +26,8 @@
     "ignorePaths": [
         "project-words.txt",
         "config",
-        "legacy"
+        "legacy",
+        "docs/general/api.md"
     ],
     "languageSettings": [
         {

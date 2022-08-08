@@ -211,6 +211,19 @@ GOIMPORTS-REVISER = $(shell pwd)/bin/goimports-reviser
 goimports-reviser: ## Download goimports-reviser locally if necessary.
 	$(call go-get-tool,$(GOIMPORTS-REVISER),github.com/incu6us/goimports-reviser/v2@v2.5.1)
 
+GEN_CRD_API_REFERENCE_DOCS = $(shell pwd)/bin/gen-crd-api-reference-docs
+gen-crd-api-reference-docs: ## Download gen-crd-api-reference-docs locally if necessary
+	$(call go-get-tool,$(GEN_CRD_API_REFERENCE_DOCS),github.com/arkbriar/gen-crd-api-reference-docs@cd878bb3)
+
+TYPES_V1ALPHA1_TARGET := apis/risingwave/v1alpha1/risingwave_types.go
+TYPES_V1ALPHA1_TARGET += apis/risingwave/v1alpha1/risingwave_pod_template_types.go
+
+docs/general/api.md: gen-crd-api-reference-docs $(TYPES_V1ALPHA1_TARGET)
+	$(GEN_CRD_API_REFERENCE_DOCS) -api-dir "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/docs/general/api.md"
+
+.PHONY: generate-docs
+generate-docs: docs/general/api.md
+
 # get-golangci-lint will download golangci-lint binary into ./bin
 define get-golangci-lint
 @[ -f $(GOLANGCI-LINT) ] || { \

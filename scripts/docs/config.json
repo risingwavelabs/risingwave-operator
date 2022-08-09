@@ -1,0 +1,37 @@
+{
+  "hideMemberFields": [
+    "TypeMeta"
+  ],
+  "hideTypePatterns": [
+    "ParseError$",
+    "List$"
+  ],
+  "externalPackages": [
+    {
+      "typeMatchPrefix": "^k8s\\.io/apimachinery/pkg/apis/meta/v1\\.Duration$",
+      "docsURLTemplate": "https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Duration"
+    },
+    {
+      "typeMatchPrefix": "^k8s\\.io/apimachinery/pkg/util/intstr\\.IntOrString$",
+      "docsURLTemplate": "https://pkg.go.dev/k8s.io/apimachinery/pkg/util/intstr#IntOrString"
+    },
+    {
+      "typeMatchPrefix": "^k8s\\.io/(api|apimachinery/pkg/apis)/",
+      "docsURLTemplate": "https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#{{lower .TypeIdentifier}}-{{arrIndex .PackageSegments -1}}-{{arrIndex .PackageSegments -2}}"
+    },
+    {
+      "typeMatchPrefix": "^k8s\\.io/apiextensions-apiserver/pkg/apis/apiextensions/v1\\.JSON$",
+      "docsURLTemplate": "https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1#JSON"
+    },
+    {
+      "typeMatchPrefix": "^github\\.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1",
+      "docsURLTemplate": "./api.md#risingwave.singularity-data.com/v1alpha1.{{ .TypeIdentifier}}"
+    }
+  ],
+  "typeDisplayNamePrefixOverrides": {
+    "k8s.io/api/": "Kubernetes ",
+    "k8s.io/apimachinery/pkg/apis/": "Kubernetes ",
+    "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1": "RisingWave v1alpha1"
+  },
+  "markdownDisabled": false
+}

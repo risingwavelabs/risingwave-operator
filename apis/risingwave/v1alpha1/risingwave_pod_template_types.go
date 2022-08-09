@@ -22,11 +22,11 @@ import (
 )
 
 type RisingWavePodTemplatePartialObjectMeta struct {
-	// Labels are the labels of the object.
+	// Labels of the object.
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
 
-	// Annotations are the annotations of the object.
+	// Annotations of the object.
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
 

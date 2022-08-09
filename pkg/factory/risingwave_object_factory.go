@@ -36,14 +36,6 @@ import (
 	"github.com/singularity-data/risingwave-operator/pkg/consts"
 )
 
-func nonZeroOrDefault[T comparable](v T, defaultVal T) T {
-	var zero T
-	if v == zero {
-		return defaultVal
-	}
-	return v
-}
-
 const (
 	risingWaveConfigVolume   = "risingwave-config"
 	risingWaveConfigMapKey   = "risingwave.toml"
@@ -650,7 +642,7 @@ func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podT
 		podTemplate.Annotations[consts.AnnotationRestartAt] = restartAt.In(time.UTC).Format("2006-01-02T15:04:05Z")
 	}
 
-	// Setup the first container.
+	// Set up the first container.
 	if len(podTemplate.Spec.Containers) == 0 {
 		podTemplate.Spec.Containers = append(podTemplate.Spec.Containers, corev1.Container{})
 	}
@@ -847,8 +839,11 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment(group string, podTemplates m
 	// Build the pod template.
 	podTemplate := f.buildPodTemplate(consts.ComponentMeta, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 
-	// Setup the first container.
+	// Set up the first container.
 	f.setupMetaContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
+
+	// Make sure it's stable among builds.
+	keepPodSpecConsistent(&podTemplate.Spec)
 
 	// Build the deployment.
 	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentMeta, group)
@@ -914,8 +909,11 @@ func (f *RisingWaveObjectFactory) NewFrontendDeployment(group string, podTemplat
 	// Build the pod template.
 	podTemplate := f.buildPodTemplate(consts.ComponentFrontend, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 
-	// Setup the first container.
+	// Set up the first container.
 	f.setupFrontendContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
+
+	// Make sure it's stable among builds.
+	keepPodSpecConsistent(&podTemplate.Spec)
 
 	// Build the deployment.
 	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentFrontend, group)
@@ -993,8 +991,11 @@ func (f *RisingWaveObjectFactory) NewCompactorDeployment(group string, podTempla
 	// Build the pod template.
 	podTemplate := f.buildPodTemplate(consts.ComponentCompactor, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 
-	// Setup the first container.
+	// Set up the first container.
 	f.setupCompactorContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
+
+	// Make sure it's stable among builds.
+	keepPodSpecConsistent(&podTemplate.Spec)
 
 	// Build the deployment.
 	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentCompactor, group)
@@ -1093,8 +1094,11 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet(group string, podTemplat
 	// Build the pod template.
 	podTemplate := f.buildPodTemplate(consts.ComponentCompute, group, podTemplates, &componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 
-	// Setup the first container.
+	// Set up the first container.
 	f.setupComputeContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComputeGroupTemplate)
+
+	// Make sure it's stable among builds.
+	keepPodSpecConsistent(&podTemplate.Spec)
 
 	// Build the statefulset.
 	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentCompute, group)

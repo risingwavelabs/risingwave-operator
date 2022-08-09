@@ -90,14 +90,14 @@ func optimizeJoin(workflow *joinGroup) Action {
 }
 
 // OptimizeWorkflow optimizes the workflow by eliminating unnecessary layers:
-//   * Nop in Sequential or Join will be removed
-//   * Empty Join and Sequential will be omitted
-//   * Parallel in Sequential will be unwrapped
-//   * Sequential and Join with single child will be simplified by removing them
-//   * Sequential(Sequential) will be flattened
-//   * Join(Join) will be flattened
-//   * Parallel(Parallel) will be simplified with only one Parallel
-//   * Timeout(Timeout) will be simplified with the tighter timeout
+//   - Nop in Sequential or Join will be removed
+//   - Empty Join and Sequential will be omitted
+//   - Parallel in Sequential will be unwrapped
+//   - Sequential and Join with single child will be simplified by removing them
+//   - Sequential(Sequential) will be flattened
+//   - Join(Join) will be flattened
+//   - Parallel(Parallel) will be simplified with only one Parallel
+//   - Timeout(Timeout) will be simplified with the tighter timeout
 func OptimizeWorkflow(workflow Action) Action {
 	switch workflow := workflow.(type) {
 	case *sequentialGroup:

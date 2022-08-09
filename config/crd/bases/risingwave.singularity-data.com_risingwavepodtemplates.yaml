@@ -43,12 +43,12 @@ spec:
                   annotations:
                     additionalProperties:
                       type: string
-                    description: Annotations are the annotations of the object.
+                    description: Annotations of the object.
                     type: object
                   labels:
                     additionalProperties:
                       type: string
-                    description: Labels are the labels of the object.
+                    description: Labels of the object.
                     type: object
                 type: object
               spec:

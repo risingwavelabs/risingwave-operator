@@ -28,10 +28,10 @@ import (
 )
 
 // Join the errors with the following rules:
-//   * any + nil = any
-//   * exit + exit = exit
-//   * err + exit = err
-//   * err1 + err2 = [err1, err2]
+//   - any + nil = any
+//   - exit + exit = exit
+//   - err + exit = err
+//   - err1 + err2 = [err1, err2]
 func joinErr(err1, err2 error) error {
 	if err1 == nil {
 		return err2
@@ -54,9 +54,9 @@ func joinErr(err1, err2 error) error {
 }
 
 // joinResultAndErr joins results by the following rules:
-//   * Join the errors with joinErr
-//   * If it requires requeue, set the requeue in the global one
-//   * If it sets a requeue after, set the requeue after if the global one
+//   - Join the errors with joinErr
+//   - If it requires requeue, set the requeue in the global one
+//   - If it sets a requeue after, set the requeue after if the global one
 //     if there's none or it's longer than the local one
 func joinResultAndErr(result ctrl.Result, err error, lresult ctrl.Result, lerr error) (ctrl.Result, error) {
 	if lresult.Requeue {

@@ -46,9 +46,9 @@ type RisingWaveControllerManagerState struct {
 }
 
 // GetCompactorDeployments lists compactorDeployments with the following selectors:
-//   + labels/risingwave/component=compactor
-//   + labels/risingwave/name=${target.Name}
-//   + owned
+//   - labels/risingwave/component=compactor
+//   - labels/risingwave/name=${target.Name}
+//   - owned
 func (s *RisingWaveControllerManagerState) GetCompactorDeployments(ctx context.Context) ([]appsv1.Deployment, error) {
 	var compactorDeploymentsList appsv1.DeploymentList
 
@@ -116,9 +116,9 @@ func (s *RisingWaveControllerManagerState) GetComputeService(ctx context.Context
 }
 
 // GetComputeStatefulSets lists computeStatefulSets with the following selectors:
-//   + labels/risingwave/component=compute
-//   + labels/risingwave/name=${target.Name}
-//   + owned
+//   - labels/risingwave/component=compute
+//   - labels/risingwave/name=${target.Name}
+//   - owned
 func (s *RisingWaveControllerManagerState) GetComputeStatefulSets(ctx context.Context) ([]appsv1.StatefulSet, error) {
 	var computeStatefulSetsList appsv1.StatefulSetList
 
@@ -165,9 +165,9 @@ func (s *RisingWaveControllerManagerState) GetConfigConfigMap(ctx context.Contex
 }
 
 // GetFrontendDeployments lists frontendDeployments with the following selectors:
-//   + labels/risingwave/component=frontend
-//   + labels/risingwave/name=${target.Name}
-//   + owned
+//   - labels/risingwave/component=frontend
+//   - labels/risingwave/name=${target.Name}
+//   - owned
 func (s *RisingWaveControllerManagerState) GetFrontendDeployments(ctx context.Context) ([]appsv1.Deployment, error) {
 	var frontendDeploymentsList appsv1.DeploymentList
 
@@ -214,9 +214,9 @@ func (s *RisingWaveControllerManagerState) GetFrontendService(ctx context.Contex
 }
 
 // GetMetaDeployments lists metaDeployments with the following selectors:
-//   + labels/risingwave/component=meta
-//   + labels/risingwave/name=${target.Name}
-//   + owned
+//   - labels/risingwave/component=meta
+//   - labels/risingwave/name=${target.Name}
+//   - owned
 func (s *RisingWaveControllerManagerState) GetMetaDeployments(ctx context.Context) ([]appsv1.Deployment, error) {
 	var metaDeploymentsList appsv1.DeploymentList
 

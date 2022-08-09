@@ -8,11 +8,7 @@
 
 The RisingWave operator is a deployment and management system of the [RisingWave streaming database](https://github.com/singularity-data/risingwave) that runs on top of Kubernetes. It provides functionalities like provisioning, upgrading, scaling and destroying the `RisingWave` instances inside the Kubernetes cluster. It models the deployment and management progress with the concepts provided in Kubernetes and organizes them in a way called [Operator Pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/). Thus we can just declare what kind of `RisingWave` instances we want and create them as objects in the Kubernetes. The RisingWave operator will always make sure that they are finally there.
 
-The operator also contains several custom resources, as listed below:
-
-- `risingwave.singularity-data.com/v1alpha1`
-  - `RisingWave`
-  - `RisingWavePodTemplate`
+The operator also contains several custom resources. Refer to the [API docs](./docs/general/api.md) for more details.
 
 ## Quick Start
 

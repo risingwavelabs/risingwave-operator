@@ -49,12 +49,12 @@ spec:
                   annotations:
                     additionalProperties:
                       type: string
-                    description: Annotations are the annotations of the object.
+                    description: Annotations of the object.
                     type: object
                   labels:
                     additionalProperties:
                       type: string
-                    description: Labels are the labels of the object.
+                    description: Labels of the object.
                     type: object
                 type: object
               spec:
@@ -6976,66 +6976,60 @@ spec:
             description: RisingWaveSpec is the overall spec.
             properties:
               components:
-                description: Components contains the ports and some controllers (such
-                  as `restartAt`) of each component, as well as an advanced concept
-                  called `group` to override the global template and create groups
-                  of Pods, e.g., deployment in hybrid-arch cluster.
+                description: The spec of ports and some controllers (such as `restartAt`)
+                  of each component, as well as an advanced concept called `group`
+                  to override the global template and create groups of Pods, e.g.,
+                  deployment in hybrid-arch cluster.
                 properties:
                   compactor:
-                    description: Compactor is for the compactor component.
+                    description: Compactor component.
                     properties:
                       groups:
-                        description: Groups are the groups of Pods of the compactor
-                          component.
+                        description: Groups of Pods of compactor component.
                         items:
                           description: RisingWaveComponentGroup is the common deployment
-                            group of each component. Currently we use this group for
-                            meta/frontend/compactor.
+                            group of each component. Currently, we use this group
+                            for meta/frontend/compactor.
                           properties:
                             image:
-                              description: Image is the RisingWave image used.
+                              description: Image for RisingWave component.
                               type: string
                             imagePullPolicy:
                               default: IfNotPresent
-                              description: ImagePullPolicy is the pull policy of RisingWave
-                                image. The default value is the same as the default
-                                of Kubernetes.
+                              description: Pull policy of the RisingWave image. The
+                                default value is the same as the default of Kubernetes.
                               enum:
                               - Always
                               - Never
                               - IfNotPresent
                               type: string
                             imagePullSecrets:
-                              description: ImagePullSecrets are the secrets for pulling
-                                RisingWave images.
+                              description: Secrets for pulling RisingWave images.
                               items:
                                 type: string
                               type: array
                             name:
-                              description: Name is the name of the group.
+                              description: Name of the group.
                               minLength: 1
                               type: string
                             nodeSelector:
                               additionalProperties:
                                 type: string
-                              description: NodeSelector is a map of labels describing
-                                the nodes to be scheduled on.
+                              description: A map of labels describing the nodes to
+                                be scheduled on.
                               type: object
                             podTemplate:
-                              description: PodTemplate is the base template for Pods
-                                of RisingWave. By default there's no such template
-                                and the controller will set all unrelated fields to
-                                the default value.
+                              description: Base template for Pods of RisingWave. By
+                                default, there's no such template and the controller
+                                will set all unrelated fields to the default value.
                               type: string
                             replicas:
-                              description: Replicas is the replicas of Pods in this
-                                group.
+                              description: Replicas of Pods in this group.
                               format: int32
                               minimum: 1
                               type: integer
                             resources:
-                              description: Resources are the running resources of
-                                the RisingWave component.
+                              description: Resources of the RisingWave component.
                               properties:
                                 limits:
                                   additionalProperties:
@@ -7062,17 +7056,15 @@ spec:
                                   type: object
                               type: object
                             upgradeStrategy:
-                              description: 'UpgradeStrategy is the upgrade strategy
-                                for the components. By default it is the same as the
-                                workload''s default strategy that the component is
-                                deployed with. Note: the maxSurge will not take effect
-                                for the compute component.'
+                              description: 'Upgrade strategy for the components. By
+                                default, it is the same as the workload''s default
+                                strategy that the component is deployed with. Note:
+                                the maxSurge will not take effect for the compute
+                                component.'
                               properties:
                                 rollingUpdate:
-                                  description: 'Rolling update config params. Present
+                                  description: Rolling update config params. Present
                                     only if DeploymentStrategyType = RollingUpdate.
-                                    --- TODO: Update this to follow our convention
-                                    for oneOf, whatever we decide it to be.'
                                   properties:
                                     maxUnavailable:
                                       anyOf:
@@ -7104,84 +7096,77 @@ spec:
                         - name
                         x-kubernetes-list-type: map
                       ports:
-                        description: Ports are the ports to be listened by the compactor
-                          Pods.
+                        description: Ports to be listened by compactor Pods.
                         properties:
                           metrics:
-                            description: MetricsPort is the metrics port of the component.
-                              It always serves the metrics in Prometheus format.
+                            description: Metrics port of the component. It always
+                              serves the metrics in Prometheus format.
                             format: int32
                             minimum: 1
                             type: integer
                           service:
-                            description: ServicePort is the service port of the component.
-                              For each component, the 'service' has different meanings.
-                              It's an optional field and if it's left out, a default
-                              port (varies among components) will be used.
+                            description: Service port of the component. For each component,
+                              the 'service' has different meanings. It's an optional
+                              field and if it's left out, a default port (varies among
+                              components) will be used.
                             format: int32
                             minimum: 1
                             type: integer
                         type: object
                       restartAt:
-                        description: RestartAt is the time that the Pods of frontend
-                          that should be restarted. Setting a value on this field
-                          will trigger a recreation of all Pods of this component.
+                        description: The time that the Pods of frontend that should
+                          be restarted. Setting a value on this field will trigger
+                          a recreation of all Pods of this component.
                         format: date-time
                         type: string
                     type: object
                   compute:
-                    description: Compute is for the compute component.
+                    description: Compute component spec.
                     properties:
                       groups:
-                        description: Groups are the groups of Pods of the compute
-                          component.
+                        description: Groups of Pods of compute component.
                         items:
                           description: RisingWaveComputeGroup is the group for component
                             compute.
                           properties:
                             image:
-                              description: Image is the RisingWave image used.
+                              description: Image for RisingWave component.
                               type: string
                             imagePullPolicy:
                               default: IfNotPresent
-                              description: ImagePullPolicy is the pull policy of RisingWave
-                                image. The default value is the same as the default
-                                of Kubernetes.
+                              description: Pull policy of the RisingWave image. The
+                                default value is the same as the default of Kubernetes.
                               enum:
                               - Always
                               - Never
                               - IfNotPresent
                               type: string
                             imagePullSecrets:
-                              description: ImagePullSecrets are the secrets for pulling
-                                RisingWave images.
+                              description: Secrets for pulling RisingWave images.
                               items:
                                 type: string
                               type: array
                             name:
-                              description: Name is the name of the group.
+                              description: Name of the group.
                               type: string
                             nodeSelector:
                               additionalProperties:
                                 type: string
-                              description: NodeSelector is a map of labels describing
-                                the nodes to be scheduled on.
+                              description: A map of labels describing the nodes to
+                                be scheduled on.
                               type: object
                             podTemplate:
-                              description: PodTemplate is the base template for Pods
-                                of RisingWave. By default there's no such template
-                                and the controller will set all unrelated fields to
-                                the default value.
+                              description: Base template for Pods of RisingWave. By
+                                default, there's no such template and the controller
+                                will set all unrelated fields to the default value.
                               type: string
                             replicas:
-                              description: Replicas is the replicas of Pods in this
-                                group.
+                              description: Replicas of Pods in this group.
                               format: int32
                               minimum: 1
                               type: integer
                             resources:
-                              description: Resources are the running resources of
-                                the RisingWave component.
+                              description: Resources of the RisingWave component.
                               properties:
                                 limits:
                                   additionalProperties:
@@ -7208,17 +7193,15 @@ spec:
                                   type: object
                               type: object
                             upgradeStrategy:
-                              description: 'UpgradeStrategy is the upgrade strategy
-                                for the components. By default it is the same as the
-                                workload''s default strategy that the component is
-                                deployed with. Note: the maxSurge will not take effect
-                                for the compute component.'
+                              description: 'Upgrade strategy for the components. By
+                                default, it is the same as the workload''s default
+                                strategy that the component is deployed with. Note:
+                                the maxSurge will not take effect for the compute
+                                component.'
                               properties:
                                 rollingUpdate:
-                                  description: 'Rolling update config params. Present
+                                  description: Rolling update config params. Present
                                     only if DeploymentStrategyType = RollingUpdate.
-                                    --- TODO: Update this to follow our convention
-                                    for oneOf, whatever we decide it to be.'
                                   properties:
                                     maxUnavailable:
                                       anyOf:
@@ -7243,8 +7226,7 @@ spec:
                                   type: string
                               type: object
                             volumeMounts:
-                              description: VolumeMounts are the volumes to be mounted
-                                on the Pods.
+                              description: Volumes to be mounted on the Pods.
                               items:
                                 description: VolumeMount describes a mounting of a
                                   Volume within a container.
@@ -7295,86 +7277,79 @@ spec:
                         - name
                         x-kubernetes-list-type: map
                       ports:
-                        description: Ports are the ports to be listened by the compute
-                          Pods.
+                        description: Ports to be listened by compute Pods.
                         properties:
                           metrics:
-                            description: MetricsPort is the metrics port of the component.
-                              It always serves the metrics in Prometheus format.
+                            description: Metrics port of the component. It always
+                              serves the metrics in Prometheus format.
                             format: int32
                             minimum: 1
                             type: integer
                           service:
-                            description: ServicePort is the service port of the component.
-                              For each component, the 'service' has different meanings.
-                              It's an optional field and if it's left out, a default
-                              port (varies among components) will be used.
+                            description: Service port of the component. For each component,
+                              the 'service' has different meanings. It's an optional
+                              field and if it's left out, a default port (varies among
+                              components) will be used.
                             format: int32
                             minimum: 1
                             type: integer
                         type: object
                       restartAt:
-                        description: RestartAt is the time that the Pods of frontend
-                          that should be restarted. Setting a value on this field
-                          will trigger a recreation of all Pods of this component.
+                        description: The time that the Pods of frontend that should
+                          be restarted. Setting a value on this field will trigger
+                          a recreation of all Pods of this component.
                         format: date-time
                         type: string
                     type: object
                   frontend:
-                    description: Frontend is for the frontend component.
+                    description: Frontend component spec.
                     properties:
                       groups:
-                        description: Groups are the groups of Pods of the frontend
-                          component.
+                        description: Groups of Pods of frontend component.
                         items:
                           description: RisingWaveComponentGroup is the common deployment
-                            group of each component. Currently we use this group for
-                            meta/frontend/compactor.
+                            group of each component. Currently, we use this group
+                            for meta/frontend/compactor.
                           properties:
                             image:
-                              description: Image is the RisingWave image used.
+                              description: Image for RisingWave component.
                               type: string
                             imagePullPolicy:
                               default: IfNotPresent
-                              description: ImagePullPolicy is the pull policy of RisingWave
-                                image. The default value is the same as the default
-                                of Kubernetes.
+                              description: Pull policy of the RisingWave image. The
+                                default value is the same as the default of Kubernetes.
                               enum:
                               - Always
                               - Never
                               - IfNotPresent
                               type: string
                             imagePullSecrets:
-                              description: ImagePullSecrets are the secrets for pulling
-                                RisingWave images.
+                              description: Secrets for pulling RisingWave images.
                               items:
                                 type: string
                               type: array
                             name:
-                              description: Name is the name of the group.
+                              description: Name of the group.
                               minLength: 1
                               type: string
                             nodeSelector:
                               additionalProperties:
                                 type: string
-                              description: NodeSelector is a map of labels describing
-                                the nodes to be scheduled on.
+                              description: A map of labels describing the nodes to
+                                be scheduled on.
                               type: object
                             podTemplate:
-                              description: PodTemplate is the base template for Pods
-                                of RisingWave. By default there's no such template
-                                and the controller will set all unrelated fields to
-                                the default value.
+                              description: Base template for Pods of RisingWave. By
+                                default, there's no such template and the controller
+                                will set all unrelated fields to the default value.
                               type: string
                             replicas:
-                              description: Replicas is the replicas of Pods in this
-                                group.
+                              description: Replicas of Pods in this group.
                               format: int32
                               minimum: 1
                               type: integer
                             resources:
-                              description: Resources are the running resources of
-                                the RisingWave component.
+                              description: Resources of the RisingWave component.
                               properties:
                                 limits:
                                   additionalProperties:
@@ -7401,17 +7376,15 @@ spec:
                                   type: object
                               type: object
                             upgradeStrategy:
-                              description: 'UpgradeStrategy is the upgrade strategy
-                                for the components. By default it is the same as the
-                                workload''s default strategy that the component is
-                                deployed with. Note: the maxSurge will not take effect
-                                for the compute component.'
+                              description: 'Upgrade strategy for the components. By
+                                default, it is the same as the workload''s default
+                                strategy that the component is deployed with. Note:
+                                the maxSurge will not take effect for the compute
+                                component.'
                               properties:
                                 rollingUpdate:
-                                  description: 'Rolling update config params. Present
+                                  description: Rolling update config params. Present
                                     only if DeploymentStrategyType = RollingUpdate.
-                                    --- TODO: Update this to follow our convention
-                                    for oneOf, whatever we decide it to be.'
                                   properties:
                                     maxUnavailable:
                                       anyOf:
@@ -7443,85 +7416,79 @@ spec:
                         - name
                         x-kubernetes-list-type: map
                       ports:
-                        description: Ports are the ports to be listened by the frontend
-                          Pods.
+                        description: Ports to be listened by the frontend Pods.
                         properties:
                           metrics:
-                            description: MetricsPort is the metrics port of the component.
-                              It always serves the metrics in Prometheus format.
+                            description: Metrics port of the component. It always
+                              serves the metrics in Prometheus format.
                             format: int32
                             minimum: 1
                             type: integer
                           service:
-                            description: ServicePort is the service port of the component.
-                              For each component, the 'service' has different meanings.
-                              It's an optional field and if it's left out, a default
-                              port (varies among components) will be used.
+                            description: Service port of the component. For each component,
+                              the 'service' has different meanings. It's an optional
+                              field and if it's left out, a default port (varies among
+                              components) will be used.
                             format: int32
                             minimum: 1
                             type: integer
                         type: object
                       restartAt:
-                        description: RestartAt is the time that the Pods of frontend
-                          that should be restarted. Setting a value on this field
-                          will trigger a recreation of all Pods of this component.
+                        description: The time that the Pods of frontend that should
+                          be restarted. Setting a value on this field will trigger
+                          a recreation of all Pods of this component.
                         format: date-time
                         type: string
                     type: object
                   meta:
-                    description: Meta is for the meta component.
+                    description: Meta component spec.
                     properties:
                       groups:
-                        description: Groups are the groups of Pods of the meta component.
+                        description: Groups of Pods of meta component.
                         items:
                           description: RisingWaveComponentGroup is the common deployment
-                            group of each component. Currently we use this group for
-                            meta/frontend/compactor.
+                            group of each component. Currently, we use this group
+                            for meta/frontend/compactor.
                           properties:
                             image:
-                              description: Image is the RisingWave image used.
+                              description: Image for RisingWave component.
                               type: string
                             imagePullPolicy:
                               default: IfNotPresent
-                              description: ImagePullPolicy is the pull policy of RisingWave
-                                image. The default value is the same as the default
-                                of Kubernetes.
+                              description: Pull policy of the RisingWave image. The
+                                default value is the same as the default of Kubernetes.
                               enum:
                               - Always
                               - Never
                               - IfNotPresent
                               type: string
                             imagePullSecrets:
-                              description: ImagePullSecrets are the secrets for pulling
-                                RisingWave images.
+                              description: Secrets for pulling RisingWave images.
                               items:
                                 type: string
                               type: array
                             name:
-                              description: Name is the name of the group.
+                              description: Name of the group.
                               minLength: 1
                               type: string
                             nodeSelector:
                               additionalProperties:
                                 type: string
-                              description: NodeSelector is a map of labels describing
-                                the nodes to be scheduled on.
+                              description: A map of labels describing the nodes to
+                                be scheduled on.
                               type: object
                             podTemplate:
-                              description: PodTemplate is the base template for Pods
-                                of RisingWave. By default there's no such template
-                                and the controller will set all unrelated fields to
-                                the default value.
+                              description: Base template for Pods of RisingWave. By
+                                default, there's no such template and the controller
+                                will set all unrelated fields to the default value.
                               type: string
                             replicas:
-                              description: Replicas is the replicas of Pods in this
-                                group.
+                              description: Replicas of Pods in this group.
                               format: int32
                               minimum: 1
                               type: integer
                             resources:
-                              description: Resources are the running resources of
-                                the RisingWave component.
+                              description: Resources of the RisingWave component.
                               properties:
                                 limits:
                                   additionalProperties:
@@ -7548,17 +7515,15 @@ spec:
                                   type: object
                               type: object
                             upgradeStrategy:
-                              description: 'UpgradeStrategy is the upgrade strategy
-                                for the components. By default it is the same as the
-                                workload''s default strategy that the component is
-                                deployed with. Note: the maxSurge will not take effect
-                                for the compute component.'
+                              description: 'Upgrade strategy for the components. By
+                                default, it is the same as the workload''s default
+                                strategy that the component is deployed with. Note:
+                                the maxSurge will not take effect for the compute
+                                component.'
                               properties:
                                 rollingUpdate:
-                                  description: 'Rolling update config params. Present
+                                  description: Rolling update config params. Present
                                     only if DeploymentStrategyType = RollingUpdate.
-                                    --- TODO: Update this to follow our convention
-                                    for oneOf, whatever we decide it to be.'
                                   properties:
                                     maxUnavailable:
                                       anyOf:
@@ -7590,46 +7555,45 @@ spec:
                         - name
                         x-kubernetes-list-type: map
                       ports:
-                        description: Ports are the ports to be listened by the meta
-                          Pods.
+                        description: Ports to be listened by the meta Pods.
                         properties:
                           dashboard:
-                            description: DashboardPort is the dashboard port of the
-                              meta, a default value of 8080 will be used if not specified.
+                            description: Dashboard port of the meta, a default value
+                              of 8080 will be used if not specified.
                             format: int32
                             minimum: 1
                             type: integer
                           metrics:
-                            description: MetricsPort is the metrics port of the component.
-                              It always serves the metrics in Prometheus format.
+                            description: Metrics port of the component. It always
+                              serves the metrics in Prometheus format.
                             format: int32
                             minimum: 1
                             type: integer
                           service:
-                            description: ServicePort is the service port of the component.
-                              For each component, the 'service' has different meanings.
-                              It's an optional field and if it's left out, a default
-                              port (varies among components) will be used.
+                            description: Service port of the component. For each component,
+                              the 'service' has different meanings. It's an optional
+                              field and if it's left out, a default port (varies among
+                              components) will be used.
                             format: int32
                             minimum: 1
                             type: integer
                         type: object
                       restartAt:
-                        description: RestartAt is the time that the Pods of frontend
-                          that should be restarted. Setting a value on this field
-                          will trigger a recreation of all Pods of this component.
+                        description: The time that the Pods of frontend that should
+                          be restarted. Setting a value on this field will trigger
+                          a recreation of all Pods of this component.
                         format: date-time
                         type: string
                     type: object
                 type: object
               configuration:
-                description: Configuration contains the config template configuration.
+                description: The spec of configuration template for RisingWave.
                 properties:
                   configmap:
-                    description: ConfigMap is the reference to a key in a config map
-                      that contains the base config for RisingWave. It's an optional
-                      field and can be left out. If not specified, a default config
-                      is going to be used.
+                    description: The reference to a key in a config map that contains
+                      the base config for RisingWave. It's an optional field and can
+                      be left out. If not specified, a default config is going to
+                      be used.
                     properties:
                       key:
                         description: The key to select.
@@ -7648,62 +7612,63 @@ spec:
                     x-kubernetes-map-type: atomic
                 type: object
               global:
-                description: Global contains a shared template for components and
-                  a global scope of replicas.
+                description: The spec of a shared template for components and a global
+                  scope of replicas.
                 properties:
                   image:
-                    description: Image is the RisingWave image used.
+                    description: Image for RisingWave component.
                     type: string
                   imagePullPolicy:
                     default: IfNotPresent
-                    description: ImagePullPolicy is the pull policy of RisingWave
-                      image. The default value is the same as the default of Kubernetes.
+                    description: Pull policy of the RisingWave image. The default
+                      value is the same as the default of Kubernetes.
                     enum:
                     - Always
                     - Never
                     - IfNotPresent
                     type: string
                   imagePullSecrets:
-                    description: ImagePullSecrets are the secrets for pulling RisingWave
-                      images.
+                    description: Secrets for pulling RisingWave images.
                     items:
                       type: string
                     type: array
                   nodeSelector:
                     additionalProperties:
                       type: string
-                    description: NodeSelector is a map of labels describing the nodes
-                      to be scheduled on.
+                    description: A map of labels describing the nodes to be scheduled
+                      on.
                     type: object
                   podTemplate:
-                    description: PodTemplate is the base template for Pods of RisingWave.
-                      By default there's no such template and the controller will
-                      set all unrelated fields to the default value.
+                    description: Base template for Pods of RisingWave. By default,
+                      there's no such template and the controller will set all unrelated
+                      fields to the default value.
                     type: string
                   replicas:
-                    description: Replicas is the replicas of each component, in global
-                      scope.
+                    description: Replicas of each component in default groups.
                     properties:
                       compactor:
-                        description: Compactor is the replicas of compactor component.
+                        description: Replicas of compactor component. Replicas specified
+                          here is in a default group (with empty name '').
                         format: int32
                         type: integer
                       compute:
-                        description: Compute is the replicas of compute component.
+                        description: Replicas of compute component. Replicas specified
+                          here is in a default group (with empty name '').
                         format: int32
                         type: integer
                       frontend:
-                        description: Frontend is the replicas of frontend component.
+                        description: Replicas of frontend component. Replicas specified
+                          here is in a default group (with empty name '').
                         format: int32
                         type: integer
                       meta:
-                        description: Meta is the replicas of meta component.
+                        description: Replicas of meta component. Replicas specified
+                          here is in a default group (with empty name '').
                         format: int32
                         type: integer
                     type: object
                   resources:
-                    description: Resources are the running resources of the RisingWave
-                      component.
+                    description: Resources of the RisingWave component.
                     properties:
                       limits:
                         additionalProperties:
@@ -7730,23 +7695,21 @@ spec:
                     type: object
                   serviceType:
                     default: ClusterIP
-                    description: ServiceType is the service type of the frontend service.
+                    description: Service type of the frontend service.
                     enum:
                     - ClusterIP
                     - NodePort
                     - LoadBalancer
                     type: string
                   upgradeStrategy:
-                    description: 'UpgradeStrategy is the upgrade strategy for the
-                      components. By default it is the same as the workload''s default
-                      strategy that the component is deployed with. Note: the maxSurge
-                      will not take effect for the compute component.'
+                    description: 'Upgrade strategy for the components. By default,
+                      it is the same as the workload''s default strategy that the
+                      component is deployed with. Note: the maxSurge will not take
+                      effect for the compute component.'
                     properties:
                       rollingUpdate:
-                        description: 'Rolling update config params. Present only if
-                          DeploymentStrategyType = RollingUpdate. --- TODO: Update
-                          this to follow our convention for oneOf, whatever we decide
-                          it to be.'
+                        description: Rolling update config params. Present only if
+                          DeploymentStrategyType = RollingUpdate.
                         properties:
                           maxUnavailable:
                             anyOf:
@@ -7771,53 +7734,52 @@ spec:
                     type: object
                 type: object
               security:
-                description: Security contains the TLS configuration.
+                description: The spec of security configurations, such as TLS config.
                 properties:
                   tls:
-                    description: TLS is the TLS config of RisingWave.
+                    description: TLS config of RisingWave.
                     properties:
                       enabled:
                         description: Enabled indicates if TLS is enabled on RisingWave.
                         type: boolean
                       secret:
-                        description: Secret is the secret that contains the TLS config.
-                          If TLS is enabled, the secret must be provided.
+                        description: Secret contains the TLS config. If TLS is enabled,
+                          the secret must be provided.
                         properties:
                           cert:
                             default: tls.crt
-                            description: Cert is the cert of the TLS cert. A default
-                              value of "tls.crt" will be used if not specified.
+                            description: The key of the TLS cert. A default value
+                              of "tls.crt" will be used if not specified.
                             type: string
                           key:
                             default: tls.key
-                            description: Key is the key of the TLS key. A default
-                              value of "tls.key" will be used if not specified.
+                            description: The key of the TLS key. A default value of
+                              "tls.key" will be used if not specified.
                             type: string
                           name:
-                            description: Name is the name of the secret.
+                            description: Name of the secret.
                             type: string
                         type: object
                     type: object
                 type: object
               storages:
-                description: Storages contains the storage for meta, the object storage
-                  for compute and compactor, and the PVC template for compute.
+                description: The spec of meta storage, object storage for compute
+                  and compactor, and PVC templates for compute.
                 properties:
                   meta:
                     description: RisingWaveMetaStorage is the storage for the meta
                       component.
                     properties:
                       etcd:
-                        description: Etcd is the endpoint of the etcd service for
-                          storing the metadata.
+                        description: Endpoint of the etcd service for storing the
+                          metadata.
                         properties:
                           endpoint:
-                            description: Endpoint is the endpoint of etcd. It must
-                              be provided.
+                            description: Endpoint of etcd. It must be provided.
                             type: string
                           secret:
-                            description: 'Secret is the secret contains credentials
-                              of etcd, it must contains the following keys: * username
+                            description: 'Secret contains the credentials of access
+                              the etcd, it must contain the following keys: * username
                               * password But it is an optional field. Empty value
                               indicates etcd is available without authentication.'
                             type: string
@@ -7834,8 +7796,7 @@ spec:
                         type: boolean
                     type: object
                   object:
-                    description: Object is the storage declaration of compute and
-                      compactor.
+                    description: Storage spec for object storage.
                     properties:
                       memory:
                         description: Memory indicates to store the data in memory.
@@ -7843,37 +7804,37 @@ spec:
                           used in production.
                         type: boolean
                       minio:
-                        description: MinIO indicates to use the MinIO storage.
+                        description: MinIO storage spec.
                         properties:
                           bucket:
-                            description: Bucket is the bucket of the MinIO service.
+                            description: Bucket of the MinIO service.
                             type: string
                           endpoint:
-                            description: Endpoint is the endpoint of the MinIO service.
+                            description: Endpoint of the MinIO service.
                             type: string
                           secret:
-                            description: 'Secret is the secret containing the credentials
-                              to access the MinIO service. It must contain the the
-                              following keys: * username * password'
+                            description: 'Secret contains the credentials to access
+                              the MinIO service. It must contain the following keys:
+                              * username * password'
                             type: string
                         type: object
                       s3:
-                        description: S3 indicates to use the S3 storage.
+                        description: S3 storage spec.
                         properties:
                           bucket:
-                            description: Bucket is the bucket of the AWS S3 service.
+                            description: Bucket of the AWS S3 service.
                             type: string
                           secret:
-                            description: 'Secret is the secret containing the credentials
-                              to access the AWS S3 service. It must contain the the
-                              following keys: * AccessKeyID * SecretAccessKey * Region'
+                            description: 'Secret contains the credentials to access
+                              the AWS S3 service. It must contain the following keys:
+                              * AccessKeyID * SecretAccessKey * Region'
                             type: string
                         type: object
                     type: object
                   pvcTemplates:
-                    description: PVCTemplates are the persistent volume claim templates
-                      for the compute component. PVCs declared here can be referenced
-                      in the groups of compute component.
+                    description: The persistent volume claim templates for the compute
+                      component. PVCs declared here can be referenced in the groups
+                      of compute component.
                     items:
                       description: PersistentVolumeClaim is a user's request for and
                         claim to a persistent volume
@@ -8172,30 +8133,29 @@ spec:
             description: RisingWaveStatus is the status of RisingWave.
             properties:
               componentReplicas:
-                description: ComponentReplicas is the replica/running status of components.
+                description: Replica status of components.
                 properties:
                   compactor:
-                    description: Compactor is the running status of compactor.
+                    description: Running status of compactor.
                     properties:
                       groups:
-                        description: Groups are a list of running status of each group.
+                        description: List of running status of each group.
                         items:
                           description: ComponentGroupReplicasStatus are the running
                             status of Pods in group.
                           properties:
                             exists:
-                              description: Exists is the existence status of the group.
+                              description: Existence status of the group.
                               type: boolean
                             name:
-                              description: Name is the name of the group.
+                              description: Name of the group.
                               type: string
                             running:
-                              description: Running is the running replicas in the
-                                group.
+                              description: Running replicas in the group.
                               format: int32
                               type: integer
                             target:
-                              description: Target is the target replicas of the group.
+                              description: Target replicas of the group.
                               format: int32
                               type: integer
                           required:
@@ -8205,12 +8165,11 @@ spec:
                           type: object
                         type: array
                       running:
-                        description: Running is the total running replicas of the
-                          component.
+                        description: Total running replicas of the component.
                         format: int32
                         type: integer
                       target:
-                        description: Target is the total target replicas of the component.
+                        description: Total target replicas of the component.
                         format: int32
                         type: integer
                     required:
@@ -8218,27 +8177,26 @@ spec:
                     - target
                     type: object
                   compute:
-                    description: Compute is the running status of compute.
+                    description: Running status of compute.
                     properties:
                       groups:
-                        description: Groups are a list of running status of each group.
+                        description: List of running status of each group.
                         items:
                           description: ComponentGroupReplicasStatus are the running
                             status of Pods in group.
                           properties:
                             exists:
-                              description: Exists is the existence status of the group.
+                              description: Existence status of the group.
                               type: boolean
                             name:
-                              description: Name is the name of the group.
+                              description: Name of the group.
                               type: string
                             running:
-                              description: Running is the running replicas in the
-                                group.
+                              description: Running replicas in the group.
                               format: int32
                               type: integer
                             target:
-                              description: Target is the target replicas of the group.
+                              description: Target replicas of the group.
                               format: int32
                               type: integer
                           required:
@@ -8248,12 +8206,11 @@ spec:
                           type: object
                         type: array
                       running:
-                        description: Running is the total running replicas of the
-                          component.
+                        description: Total running replicas of the component.
                         format: int32
                         type: integer
                       target:
-                        description: Target is the total target replicas of the component.
+                        description: Total target replicas of the component.
                         format: int32
                         type: integer
                     required:
@@ -8261,27 +8218,26 @@ spec:
                     - target
                     type: object
                   frontend:
-                    description: Frontend is the running status of frontend.
+                    description: Running status of frontend.
                     properties:
                       groups:
-                        description: Groups are a list of running status of each group.
+                        description: List of running status of each group.
                         items:
                           description: ComponentGroupReplicasStatus are the running
                             status of Pods in group.
                           properties:
                             exists:
-                              description: Exists is the existence status of the group.
+                              description: Existence status of the group.
                               type: boolean
                             name:
-                              description: Name is the name of the group.
+                              description: Name of the group.
                               type: string
                             running:
-                              description: Running is the running replicas in the
-                                group.
+                              description: Running replicas in the group.
                               format: int32
                               type: integer
                             target:
-                              description: Target is the target replicas of the group.
+                              description: Target replicas of the group.
                               format: int32
                               type: integer
                           required:
@@ -8291,12 +8247,11 @@ spec:
                           type: object
                         type: array
                       running:
-                        description: Running is the total running replicas of the
-                          component.
+                        description: Total running replicas of the component.
                         format: int32
                         type: integer
                       target:
-                        description: Target is the total target replicas of the component.
+                        description: Total target replicas of the component.
                         format: int32
                         type: integer
                     required:
@@ -8304,27 +8259,26 @@ spec:
                     - target
                     type: object
                   meta:
-                    description: Meta is the running status of meta.
+                    description: Running status of meta.
                     properties:
                       groups:
-                        description: Groups are a list of running status of each group.
+                        description: List of running status of each group.
                         items:
                           description: ComponentGroupReplicasStatus are the running
                             status of Pods in group.
                           properties:
                             exists:
-                              description: Exists is the existence status of the group.
+                              description: Existence status of the group.
                               type: boolean
                             name:
-                              description: Name is the name of the group.
+                              description: Name of the group.
                               type: string
                             running:
-                              description: Running is the running replicas in the
-                                group.
+                              description: Running replicas in the group.
                               format: int32
                               type: integer
                             target:
-                              description: Target is the target replicas of the group.
+                              description: Target replicas of the group.
                               format: int32
                               type: integer
                           required:
@@ -8334,12 +8288,11 @@ spec:
                           type: object
                         type: array
                       running:
-                        description: Running is the total running replicas of the
-                          component.
+                        description: Total running replicas of the component.
                         format: int32
                         type: integer
                       target:
-                        description: Target is the total target replicas of the component.
+                        description: Total target replicas of the component.
                         format: int32
                         type: integer
                     required:
@@ -8353,7 +8306,7 @@ spec:
                 - meta
                 type: object
               conditions:
-                description: Conditions are the conditions of the RisingWave.
+                description: Conditions of the RisingWave.
                 items:
                   description: RisingWaveCondition indicates a condition of RisingWave.
                   properties:
@@ -8385,13 +8338,13 @@ spec:
                 - type
                 x-kubernetes-list-type: map
               observedGeneration:
-                description: ObservedGeneration is the observed generation by controller.
-                  It will be updated when controller observes the changes on the spec
-                  and going to sync the subresources.
+                description: Observed generation by controller. It will be updated
+                  when controller observes the changes on the spec and going to sync
+                  the subresources.
                 format: int64
                 type: integer
               storages:
-                description: Storages are the status of the external storages.
+                description: Status of the external storages.
                 properties:
                   meta:
                     description: RisingWaveMetaStorageStatus is the status of meta

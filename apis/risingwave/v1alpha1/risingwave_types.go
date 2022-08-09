@@ -46,69 +46,65 @@ type RisingWaveUpgradeStrategy struct {
 	// +kubebuilder:validation:Enum=Recreate;RollingUpdate
 	Type RisingWaveUpgradeStrategyType `json:"type,omitempty"`
 
-	// Rolling update config params. Present only if DeploymentStrategyType =
-	// RollingUpdate.
-	//---
-	// TODO: Update this to follow our convention for oneOf, whatever we decide it
-	// to be.
+	// Rolling update config params. Present only if DeploymentStrategyType = RollingUpdate.
 	// +optional
 	RollingUpdate *RisingWaveRollingUpdate `json:"rollingUpdate,omitempty"`
 }
 
 // RisingWaveComponentGroupTemplate is the common deployment template for groups of each component.
-// Currently we use the common template for meta/frontend/compactor.
+// Currently, we use the common template for meta/frontend/compactor.
 type RisingWaveComponentGroupTemplate struct {
-	// Image is the RisingWave image used.
+	// Image for RisingWave component.
 	// +optional
 	Image string `json:"image,omitempty"`
 
-	// ImagePullPolicy is the pull policy of RisingWave image. The default value is the same as the
+	// Pull policy of the RisingWave image. The default value is the same as the
 	// default of Kubernetes.
 	// +optional
 	// +kubebuilder:default=IfNotPresent
 	// +kubebuilder:validation:Enum=Always;Never;IfNotPresent
 	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
 
-	// ImagePullSecrets are the secrets for pulling RisingWave images.
+	// Secrets for pulling RisingWave images.
 	// +optional
 	ImagePullSecrets []string `json:"imagePullSecrets,omitempty"`
 
-	// UpgradeStrategy is the upgrade strategy for the components. By default it is the same as the
+	// Upgrade strategy for the components. By default, it is the same as the
 	// workload's default strategy that the component is deployed with.
 	// Note: the maxSurge will not take effect for the compute component.
 	// +optional
 	// +patchStrategy=retainKeys
 	UpgradeStrategy RisingWaveUpgradeStrategy `json:"upgradeStrategy,omitempty"`
 
-	// Resources are the running resources of the RisingWave component.
+	// Resources of the RisingWave component.
 	// +optional
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 
-	// NodeSelector is a map of labels describing the nodes to be scheduled on.
+	// A map of labels describing the nodes to be scheduled on.
 	// +optional
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
-	// PodTemplate is the base template for Pods of RisingWave. By default there's no such template
+	// Base template for Pods of RisingWave. By default, there's no such template
 	// and the controller will set all unrelated fields to the default value.
 	// +optional
 	PodTemplate *string `json:"podTemplate,omitempty"`
 }
 
-// RisingWaveComponentGroup is the common deployment group of each component. Currently we use
+// RisingWaveComponentGroup is the common deployment group of each component. Currently, we use
 // this group for meta/frontend/compactor.
 type RisingWaveComponentGroup struct {
-	// Name is the name of the group.
+	// Name of the group.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`
 
-	// Replicas is the replicas of Pods in this group.
+	// Replicas of Pods in this group.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum=1
 	Replicas int32 `json:"replicas,omitempty"`
 
-	// Template is the component template describes how it would be deployed. It is an optional
-	// field and the Pods are going to be deployed with the template defined in global. If there're
+	// The component template describes how it would be deployed. It is an optional
+	// field and the Pods are going to be deployed with the template defined in global. If there are
 	// values defined in this template, it will be merged into the global template and then be used
 	// for deployment.
 	// +optional
@@ -116,16 +112,16 @@ type RisingWaveComponentGroup struct {
 }
 
 // RisingWaveComputeGroupTemplate is the group template for component compute, which supports specifying
-// the volume mounts on the compute Pods. The volumes should be either local or defined in the storages.
+// the volume mounts on compute Pods. The volumes should be either local or defined in the storages.
 type RisingWaveComputeGroupTemplate struct {
-	// Template is the component template describes how it would be deployed. It is an optional
+	// The component template describes how it would be deployed. It is an optional
 	// field and the Pods are going to be deployed with the template defined in global. If there're
 	// values defined in this template, it will be merged into the global template and then be used
 	// for deployment.
 	// +optional
 	RisingWaveComponentGroupTemplate `json:",inline"`
 
-	// VolumeMounts are the volumes to be mounted on the Pods.
+	// Volumes to be mounted on the Pods.
 	// +optional
 	// +patchMergeKey=mountPath
 	// +patchStrategy=merge
@@ -134,16 +130,16 @@ type RisingWaveComputeGroupTemplate struct {
 
 // RisingWaveComputeGroup is the group for component compute.
 type RisingWaveComputeGroup struct {
-	// Name is the name of the group.
+	// Name of the group.
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
 
-	// Replicas is the replicas of Pods in this group.
+	// Replicas of Pods in this group.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum=1
 	Replicas int32 `json:"replicas,omitempty"`
 
-	// Template is the component template describes how it would be deployed. It is an optional
+	// The component template describes how it would be deployed. It is an optional
 	// field and the Pods are going to be deployed with the template defined in global. If there're
 	// values defined in this template, it will be merged into the global template and then be used
 	// for deployment.
@@ -153,14 +149,14 @@ type RisingWaveComputeGroup struct {
 
 // RisingWaveComponentCommonPorts are the common ports that components need to listen.
 type RisingWaveComponentCommonPorts struct {
-	// ServicePort is the service port of the component. For each component,
+	// Service port of the component. For each component,
 	// the 'service' has different meanings. It's an optional field and if it's left out, a
 	// default port (varies among components) will be used.
 	// +optional
 	// +kubebuilder:validation:Minimum=1
 	ServicePort int32 `json:"service,omitempty"`
 
-	// MetricsPort is the metrics port of the component. It always serves the metrics in
+	// Metrics port of the component. It always serves the metrics in
 	// Prometheus format.
 	// +optional
 	// +kubebuilder:validation:Minimum=1
@@ -171,7 +167,7 @@ type RisingWaveComponentCommonPorts struct {
 type RisingWaveComponentMetaPorts struct {
 	RisingWaveComponentCommonPorts `json:",inline"`
 
-	// DashboardPort is the dashboard port of the meta, a default value of 8080 will be
+	// Dashboard port of the meta, a default value of 8080 will be
 	// used if not specified.
 	// +optional
 	// +kubebuilder:validation:Minimum=1
@@ -179,16 +175,16 @@ type RisingWaveComponentMetaPorts struct {
 }
 
 type RisingWaveComponentMeta struct {
-	// RestartAt is the time that the Pods of frontend that should be restarted. Setting a value on this
+	// The time that the Pods of frontend that should be restarted. Setting a value on this
 	// field will trigger a recreation of all Pods of this component.
 	// +optional
 	RestartAt *metav1.Time `json:"restartAt,omitempty"`
 
-	// Ports are the ports to be listened by the meta Pods.
+	// Ports to be listened by the meta Pods.
 	// +optional
 	Ports RisingWaveComponentMetaPorts `json:"ports,omitempty"`
 
-	// Groups are the groups of Pods of the meta component.
+	// Groups of Pods of meta component.
 	// +optional
 	// +listType=map
 	// +listMapKey=name
@@ -198,16 +194,16 @@ type RisingWaveComponentMeta struct {
 }
 
 type RisingWaveComponentFrontend struct {
-	// RestartAt is the time that the Pods of frontend that should be restarted. Setting a value on this
+	// The time that the Pods of frontend that should be restarted. Setting a value on this
 	// field will trigger a recreation of all Pods of this component.
 	// +optional
 	RestartAt *metav1.Time `json:"restartAt,omitempty"`
 
-	// Ports are the ports to be listened by the frontend Pods.
+	// Ports to be listened by the frontend Pods.
 	// +optional
 	Ports RisingWaveComponentCommonPorts `json:"ports,omitempty"`
 
-	// Groups are the groups of Pods of the frontend component.
+	// Groups of Pods of frontend component.
 	// +optional
 	// +listType=map
 	// +listMapKey=name
@@ -217,16 +213,16 @@ type RisingWaveComponentFrontend struct {
 }
 
 type RisingWaveComponentCompute struct {
-	// RestartAt is the time that the Pods of frontend that should be restarted. Setting a value on this
+	// The time that the Pods of frontend that should be restarted. Setting a value on this
 	// field will trigger a recreation of all Pods of this component.
 	// +optional
 	RestartAt *metav1.Time `json:"restartAt,omitempty"`
 
-	// Ports are the ports to be listened by the compute Pods.
+	// Ports to be listened by compute Pods.
 	// +optional
 	Ports RisingWaveComponentCommonPorts `json:"ports,omitempty"`
 
-	// Groups are the groups of Pods of the compute component.
+	// Groups of Pods of compute component.
 	// +optional
 	// +listType=map
 	// +listMapKey=name
@@ -236,16 +232,16 @@ type RisingWaveComponentCompute struct {
 }
 
 type RisingWaveComponentCompactor struct {
-	// RestartAt is the time that the Pods of frontend that should be restarted. Setting a value on this
+	// The time that the Pods of frontend that should be restarted. Setting a value on this
 	// field will trigger a recreation of all Pods of this component.
 	// +optional
 	RestartAt *metav1.Time `json:"restartAt,omitempty"`
 
-	// Ports are the ports to be listened by the compactor Pods.
+	// Ports to be listened by compactor Pods.
 	// +optional
 	Ports RisingWaveComponentCommonPorts `json:"ports,omitempty"`
 
-	// Groups are the groups of Pods of the compactor component.
+	// Groups of Pods of compactor component.
 	// +optional
 	// +listType=map
 	// +listMapKey=name
@@ -256,25 +252,25 @@ type RisingWaveComponentCompactor struct {
 
 // RisingWaveComponentsSpec is the spec describes the components of RisingWave.
 type RisingWaveComponentsSpec struct {
-	// Meta is for the meta component.
+	// Meta component spec.
 	Meta RisingWaveComponentMeta `json:"meta,omitempty"`
 
-	// Frontend is for the frontend component.
+	// Frontend component spec.
 	Frontend RisingWaveComponentFrontend `json:"frontend,omitempty"`
 
-	// Compute is for the compute component.
+	// Compute component spec.
 	Compute RisingWaveComponentCompute `json:"compute,omitempty"`
 
-	// Compactor is for the compactor component.
+	// Compactor component.
 	Compactor RisingWaveComponentCompactor `json:"compactor,omitempty"`
 }
 
 // RisingWaveMetaStorageEtcd is the etcd storage for the meta component.
 type RisingWaveMetaStorageEtcd struct {
-	// Endpoint is the endpoint of etcd. It must be provided.
+	// Endpoint of etcd. It must be provided.
 	Endpoint string `json:"endpoint"`
 
-	// Secret is the secret contains credentials of etcd, it must contains the following keys:
+	// Secret contains the credentials of access the etcd, it must contain the following keys:
 	//   * username
 	//   * password
 	// But it is an optional field. Empty value indicates etcd is available without authentication.
@@ -291,70 +287,68 @@ type RisingWaveMetaStorage struct {
 	// +optional
 	Memory *bool `json:"memory,omitempty"`
 
-	// Etcd is the endpoint of the etcd service for storing the metadata.
+	// Endpoint of the etcd service for storing the metadata.
 	// +optional
 	Etcd *RisingWaveMetaStorageEtcd `json:"etcd,omitempty"`
 }
 
-// RisingWaveObjectStorageMinIO is the details of MinIO storage for the compute and compactor components.
+// RisingWaveObjectStorageMinIO is the details of MinIO storage for compute and compactor components.
 type RisingWaveObjectStorageMinIO struct {
-	// Secret is the secret containing the credentials to access the MinIO service. It must contain the
-	// the following keys:
+	// Secret contains the credentials to access the MinIO service. It must contain the following keys:
 	//   * username
 	//   * password
 	// +kubebuilder:validation:Required
 	Secret string `json:"secret,omitempty"`
 
-	// Endpoint is the endpoint of the MinIO service.
+	// Endpoint of the MinIO service.
 	// +kubebuilder:validation:Required
 	Endpoint string `json:"endpoint,omitempty"`
 
-	// Bucket is the bucket of the MinIO service.
+	// Bucket of the MinIO service.
 	// +kubebuilder:validation:Required
 	Bucket string `json:"bucket,omitempty"`
 }
 
-// RisingWaveObjectStorageS3 is the details of AWS S3 storage for the compute and compactor components.
+// RisingWaveObjectStorageS3 is the details of AWS S3 storage for compute and compactor components.
 type RisingWaveObjectStorageS3 struct {
-	// Secret is the secret containing the credentials to access the AWS S3 service. It must contain the
-	// the following keys:
+	// Secret contains the credentials to access the AWS S3 service. It must contain the following keys:
 	//   * AccessKeyID
 	//   * SecretAccessKey
 	//   * Region
 	// +kubebuilder:validation:Required
 	Secret string `json:"secret,omitempty"`
 
-	// Bucket is the bucket of the AWS S3 service.
+	// Bucket of the AWS S3 service.
 	// +kubebuilder:validation:Required
 	Bucket string `json:"bucket,omitempty"`
 }
 
-// RisingWaveObjectStorage is the object storage for the compute and compactor components.
+// RisingWaveObjectStorage is the object storage for compute and compactor components.
 type RisingWaveObjectStorage struct {
 	// Memory indicates to store the data in memory. It's only for test usage and strongly discouraged to
 	// be used in production.
 	// +optional
 	Memory *bool `json:"memory,omitempty"`
 
-	// MinIO indicates to use the MinIO storage.
+	// MinIO storage spec.
 	// +optional
 	MinIO *RisingWaveObjectStorageMinIO `json:"minio,omitempty"`
 
-	// S3 indicates to use the S3 storage.
+	// S3 storage spec.
 	// +optional
 	S3 *RisingWaveObjectStorageS3 `json:"s3,omitempty"`
 }
 
 // RisingWaveStoragesSpec is the storages spec.
 type RisingWaveStoragesSpec struct {
-	// Meta is the storage declaration of meta.
+	// Storage spec for meta.
 
 	Meta RisingWaveMetaStorage `json:"meta,omitempty"`
 
-	// Object is the storage declaration of compute and compactor.
+	// Storage spec for object storage.
 	Object RisingWaveObjectStorage `json:"object,omitempty"`
 
-	// PVCTemplates are the persistent volume claim templates for the compute component. PVCs declared here
+	// The persistent volume claim templates for the compute component. PVCs declared here
 	// can be referenced in the groups of compute component.
 	// +optional
 	PVCTemplates []corev1.PersistentVolumeClaim `json:"pvcTemplates,omitempty"`
@@ -362,7 +356,7 @@ type RisingWaveStoragesSpec struct {
 
 // RisingWaveConfigurationSpec is the configuration spec.
 type RisingWaveConfigurationSpec struct {
-	// ConfigMap is the reference to a key in a config map that contains the base config for RisingWave.
+	// The reference to a key in a config map that contains the base config for RisingWave.
 	// It's an optional field and can be left out. If not specified, a default config is going to be used.
 	// +optional
 	ConfigMap *corev1.ConfigMapKeySelector `json:"configmap,omitempty"`
@@ -370,16 +364,16 @@ type RisingWaveConfigurationSpec struct {
 
 // RisingWaveTLSConfigSecret is the secret reference that contains the key and cert for TLS.
 type RisingWaveTLSConfigSecret struct {
-	// Name is the name of the secret.
+	// Name of the secret.
 	// +optional
 	Name string `json:"name,omitempty"`
 
-	// Key is the key of the TLS key. A default value of "tls.key" will be used if not specified.
+	// The key of the TLS key. A default value of "tls.key" will be used if not specified.
 	// +optional
 	// +kubebuilder:default=tls.key
 	Key string `json:"key,omitempty"`
 
-	// Cert is the cert of the TLS cert. A default value of "tls.crt" will be used if not specified.
+	// The key of the TLS cert. A default value of "tls.crt" will be used if not specified.
 	// +optional
 	// +kubebuilder:default=tls.crt
 	Cert string `json:"cert,omitempty"`
@@ -390,7 +384,7 @@ type RisingWaveTLSConfig struct {
 	// Enabled indicates if TLS is enabled on RisingWave.
 	Enabled bool `json:"enabled,omitempty"`
 
-	// Secret is the secret that contains the TLS config. If TLS is enabled, the secret
+	// Secret contains the TLS config. If TLS is enabled, the secret
 	// must be provided.
 	// +optional.
 	Secret RisingWaveTLSConfigSecret `json:"secret,omitempty"`
@@ -398,7 +392,7 @@ type RisingWaveTLSConfig struct {
 
 // RisingWaveSecuritySpec is the security spec.
 type RisingWaveSecuritySpec struct {
-	// TLS is the TLS config of RisingWave.
+	// TLS config of RisingWave.
 	// +optional
 	// +patchStrategy=retainKeys
 	TLS *RisingWaveTLSConfig `json:"tls,omitempty"`
@@ -406,34 +400,34 @@ type RisingWaveSecuritySpec struct {
 
 // RisingWaveGlobalReplicas are the replicas of each component, declared in global scope.
 type RisingWaveGlobalReplicas struct {
-	// Meta is the replicas of meta component.
+	// Replicas of meta component. Replicas specified here is in a default group (with empty name '').
 	// +optional
 	Meta int32 `json:"meta,omitempty"`
 
-	// Frontend is the replicas of frontend component.
+	// Replicas of frontend component. Replicas specified here is in a default group (with empty name '').
 	// +optional
 	Frontend int32 `json:"frontend,omitempty"`
 
-	// Compute is the replicas of compute component.
+	// Replicas of compute component. Replicas specified here is in a default group (with empty name '').
 	// +optional
 	Compute int32 `json:"compute,omitempty"`
 
-	// Compactor is the replicas of compactor component.
+	// Replicas of compactor component. Replicas specified here is in a default group (with empty name '').
 	// +optional
 	Compactor int32 `json:"compactor,omitempty"`
 }
 
 // RisingWaveGlobalSpec is the global spec.
 type RisingWaveGlobalSpec struct {
-	// Template is the global template for RisingWave that all components share.
+	// Global template for RisingWave that all components share.
 	RisingWaveComponentGroupTemplate `json:",inline"`
 
-	// Replicas is the replicas of each component, in global scope.
+	// Replicas of each component in default groups.
 	// +optional
 	// +patchStrategy=retainKeys
 	Replicas RisingWaveGlobalReplicas `json:"replicas,omitempty"`
 
-	// ServiceType is the service type of the frontend service.
+	// Service type of the frontend service.
 	// +optional
 	// +kubebuilder:default=ClusterIP
 	// +kubebuilder:validation:Enum=ClusterIP;NodePort;LoadBalancer
@@ -442,64 +436,63 @@ type RisingWaveGlobalSpec struct {
 
 // RisingWaveSpec is the overall spec.
 type RisingWaveSpec struct {
-	// Global contains a shared template for components and a global scope of replicas.
+	// The spec of a shared template for components and a global scope of replicas.
 	Global RisingWaveGlobalSpec `json:"global,omitempty"`
 
-	// Storages contains the storage for meta, the object storage for compute and compactor, and
-	// the PVC template for compute.
+	// The spec of meta storage, object storage for compute and compactor, and PVC templates for compute.
 	Storages RisingWaveStoragesSpec `json:"storages,omitempty"`
 
-	// Components contains the ports and some controllers (such as `restartAt`) of each component,
+	// The spec of ports and some controllers (such as `restartAt`) of each component,
 	// as well as an advanced concept called `group` to override the global template and create groups
 	// of Pods, e.g., deployment in hybrid-arch cluster.
 	Components RisingWaveComponentsSpec `json:"components,omitempty"`
 
-	// Security contains the TLS configuration.
+	// The spec of security configurations, such as TLS config.
 	Security RisingWaveSecuritySpec `json:"security,omitempty"`
 
-	// Configuration contains the config template configuration.
+	// The spec of configuration template for RisingWave.
 	Configuration RisingWaveConfigurationSpec `json:"configuration,omitempty"`
 }
 
 // ComponentGroupReplicasStatus are the running status of Pods in group.
 type ComponentGroupReplicasStatus struct {
-	// Name is the name of the group.
+	// Name of the group.
 	Name string `json:"name"`
 
-	// Target is the target replicas of the group.
+	// Target replicas of the group.
 	Target int32 `json:"target"`
 
-	// Running is the running replicas in the group.
+	// Running replicas in the group.
 	Running int32 `json:"running"`
 
-	// Exists is the existence status of the group.
+	// Existence status of the group.
 	Exists bool `json:"exists,omitempty"`
 }
 
 // ComponentReplicasStatus are the running status of Pods of the component.
 type ComponentReplicasStatus struct {
-	// Target is the total target replicas of the component.
+	// Total target replicas of the component.
 	Target int32 `json:"target"`
 
-	// Running is the total running replicas of the component.
+	// Total running replicas of the component.
 	Running int32 `json:"running"`
 
-	// Groups are a list of running status of each group.
+	// List of running status of each group.
 	Groups []ComponentGroupReplicasStatus `json:"groups,omitempty"`
 }
 
 // RisingWaveComponentsReplicasStatus is the running status of components.
 type RisingWaveComponentsReplicasStatus struct {
-	// Meta is the running status of meta.
+	// Running status of meta.
 	Meta ComponentReplicasStatus `json:"meta"`
 
-	// Frontend is the running status of frontend.
+	// Running status of frontend.
 	Frontend ComponentReplicasStatus `json:"frontend"`
 
-	// Compute is the running status of compute.
+	// Running status of compute.
 	Compute ComponentReplicasStatus `json:"compute"`
 
-	// Compactor is the running status of compactor.
+	// Running status of compactor.
 	Compactor ComponentReplicasStatus `json:"compactor"`
 }
 
@@ -576,21 +569,21 @@ type RisingWaveStoragesStatus struct {
 
 // RisingWaveStatus is the status of RisingWave.
 type RisingWaveStatus struct {
-	// ObservedGeneration is the observed generation by controller. It will be updated
+	// Observed generation by controller. It will be updated
 	// when controller observes the changes on the spec and going to sync the subresources.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
-	// ComponentReplicas is the replica/running status of components.
+	// Replica status of components.
 	ComponentReplicas RisingWaveComponentsReplicasStatus `json:"componentReplicas,omitempty"`
 
-	// Conditions are the conditions of the RisingWave.
+	// Conditions of the RisingWave.
 	// +listType=map
 	// +listMapKey=type
 	// +patchMergeKey=type
 	// +patchStrategy=merge,retainKeys
 	Conditions []RisingWaveCondition `json:"conditions,omitempty"`
 
-	// Storages are the status of the external storages.
+	// Status of the external storages.
 	Storages RisingWaveStoragesStatus `json:"storages,omitempty"`
 }
 

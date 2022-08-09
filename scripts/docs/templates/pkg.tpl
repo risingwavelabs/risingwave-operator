@@ -1,7 +1,7 @@
 {{ define "packages" }}
 ---
 title: "API reference"
-description: "Prometheus operator generated API reference docs"
+description: "RisingWave operator generated API reference docs"
 draft: false
 images: []
 menu:

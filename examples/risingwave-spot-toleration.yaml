@@ -7,8 +7,7 @@ template:
     labels:
       risingwave/spot: "1"
   spec:
-    containers:
-    - name: ""
+    containers: []
     tolerations:
     - key: spot
       operator: Exists

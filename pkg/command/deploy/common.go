@@ -16,6 +16,8 @@
 
 package deploy
 
+import "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+
 type GroupReplicas struct {
 	Compute   []ReplicaInfo
 	Frontend  []ReplicaInfo
@@ -26,4 +28,23 @@ type GroupReplicas struct {
 type ReplicaInfo struct {
 	GroupName string
 	Replicas  int32
+}
+
+const (
+	STOP_ANNOTATION = "replicas.old"
+)
+
+// checks if instance has already been stopped.
+// if annotation map is nil, create it
+func doesReplicaAnnotationExist(instance *v1alpha1.RisingWave) bool {
+	if instance.Annotations == nil {
+		instance.Annotations = make(map[string]string)
+		return false
+	}
+
+	if _, ok := instance.Annotations[STOP_ANNOTATION]; ok {
+		return true
+	}
+
+	return false
 }

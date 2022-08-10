@@ -65,6 +65,19 @@ func NewRestartCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOSt
 	return cmd
 }
 
+func (o *RestartOptions) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
+	rw, err := o.GetRwInstance(ctx)
+	if err != nil {
+		return err
+	}
+
+	if !doesReplicaAnnotationExist(rw) {
+		return fmt.Errorf("instance already stopped")
+	}
+
+	return nil
+}
+
 func (o *RestartOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
 	rw, err := o.GetRwInstance(ctx)
 	if err != nil {

@@ -67,6 +67,19 @@ func NewStopCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStrea
 	return cmd
 }
 
+func (o *StopOptions) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
+	rw, err := o.GetRwInstance(ctx)
+	if err != nil {
+		return err
+	}
+
+	if !doesReplicaAnnotationExist(rw) {
+		return fmt.Errorf("instance already stopped")
+	}
+
+	return nil
+}
+
 func (o *StopOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
 	rw, err := o.GetRwInstance(ctx)
 	if err != nil {
@@ -137,7 +150,7 @@ func stopRisingWave(instance *v1alpha1.RisingWave) error {
 	if instance.Annotations == nil {
 		instance.Annotations = make(map[string]string)
 	}
-	instance.Annotations["replicas.old"] = string(annotation)
+	instance.Annotations[STOP_ANNOTATION] = string(annotation)
 
 	return nil
 }

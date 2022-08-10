@@ -31,7 +31,7 @@ function run_e2e_test() {
     kubectl create ns "$testcase"
   fi
   # shellcheck disable=SC2064
-  trap "kubectl delete ns $testcase" EXIT
+  trap "kubectl delete ns $testcase" RETURN
 
   kubectl -n "$testcase" apply -f "$testcase_dir"
   risingwave_name=$(kubectl -n "$testcase" get risingwave -o jsonpath='{.items[0].metadata.name}')

@@ -1,0 +1,46 @@
+apiVersion: risingwave.singularity-data.com/v1alpha1
+kind: RisingWavePodTemplate
+metadata:
+  name: spot-toleration
+template:
+  metadata:
+    labels:
+      risingwave/spot: "1"
+  spec:
+    containers:
+    - name: ""
+    tolerations:
+    - key: spot
+      operator: Exists
+      effect: NoSchedule
+---
+apiVersion: risingwave.singularity-data.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-pod-template
+spec:
+  storages:
+    meta:
+      memory: true
+    object:
+      memory: true
+  global:
+    image: ghcr.io/singularity-data/risingwave:latest
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+  components:
+    compactor:
+      groups:
+      - name: spot
+        replicas: 1
+        podTemplate: spot-toleration

@@ -112,3 +112,5 @@ yamlex
 
 monitoring+
 grafana
+risingwavepodtemplate
+risingwavepodtemplates

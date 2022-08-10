@@ -43,7 +43,8 @@ start_kubernetes_env
 echo "Started!"
 
 # Set the trap for cleaning the Kubernetes.
-# trap stop_kubernetes_env EXIT
+trap stop_kubernetes_env EXIT
+
 OS="$(uname -s)"
 case "${OS}" in
 Linux*) NIGHTLY_IMAGE_TAG="nightly"-$(date -d "2 day ago" '+%Y%m%d') ;;
@@ -89,6 +90,7 @@ source "$BASEDIR"/k8s/kubernetes
 # Install the RisingWave operator.
 echo "Installing the RisingWave operator..."
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.2/cert-manager.yaml
+trap "kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.2/cert-manager.yaml" EXIT
 
 function wait_cert_manager_certificate() {
   # wait for certificate
@@ -113,6 +115,8 @@ wait_cert_manager_certificate
 wait_until_service_ready cert-manager cert-manager-webhook
 
 kubectl apply -f "$BASEDIR"/../config/risingwave-operator-test.yaml
+trap 'kubectl delete -f $BASEDIR/../config/risingwave-operator-test.yaml' EXIT
+
 wait_until_service_ready risingwave-operator-system risingwave-operator-webhook-service
 echo "RisingWave operator installed!"
 

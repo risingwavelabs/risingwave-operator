@@ -78,6 +78,8 @@ const (
 )
 
 // +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwaves,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwavepodtemplates,verbs=get;list;watch
+// +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwavepodtemplates/finalizers,verbs=update
 // +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwaves/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwaves/finalizers,verbs=update
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete

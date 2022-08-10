@@ -28,6 +28,7 @@ import (
 func SetupWebhooksWithManager(mgr ctrl.Manager) error {
 	if err := ctrl.NewWebhookManagedBy(mgr).
 		For(&risingwavev1alpha1.RisingWavePodTemplate{}).
+		WithDefaulter(NewRisingWavePodTemplateMutatingWebhook()).
 		WithValidator(NewRisingWavePodTemplateValidatingWebhook()).
 		Complete(); err != nil {
 		return fmt.Errorf("unable to setup webhooks for risingwave pod template: %w", err)

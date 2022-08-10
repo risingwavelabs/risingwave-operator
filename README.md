@@ -27,7 +27,7 @@ More information on this install cert-manager method [can be found here](https:/
 Then, you can install the `risingwave-operator` with the following command:
 
 ```shell
-kubectl apply -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/config/risingwave-operator.yaml
+kubectl apply -f https://github.com/singularity-data/risingwave-operator/releases/download/v0.1.1/risingwave-operator.yaml
 ```
 
 To check if the installation is successful, you can run the following commands to check if the Pods are running.

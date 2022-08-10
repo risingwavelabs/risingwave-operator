@@ -82,6 +82,20 @@ rules:
 - apiGroups:
   - risingwave.singularity-data.com
   resources:
+  - risingwavepodtemplates
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - risingwave.singularity-data.com
+  resources:
+  - risingwavepodtemplates/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - risingwave.singularity-data.com
+  resources:
   - risingwaves
   verbs:
   - create

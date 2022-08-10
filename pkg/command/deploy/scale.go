@@ -29,10 +29,10 @@ import (
 )
 
 const (
-	LongDescScale = `
+	ScaleLongDesc = `
 Scale the risingwave instances.
 `
-	ExampleScale = `  # Scale compute-node of the risingwave named example-rw to 2.
+	ScaleExample = `  # Scale compute-node of the risingwave named example-rw to 2.
   kubectl rw scale example-rw -t 2
 
   # Scale frontend of the risingwave named example-rw to 2 in the foo namespace.
@@ -62,8 +62,8 @@ func NewScaleCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStre
 	cmd := &cobra.Command{
 		Use:     "scale",
 		Short:   "Scale risingwave instances",
-		Long:    LongDescScale,
-		Example: ExampleScale,
+		Long:    ScaleLongDesc,
+		Example: ScaleExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			util.CheckErr(o.Complete(ctx, cmd, args))
 			util.CheckErr(o.Validate(ctx, cmd, args))
@@ -105,28 +105,28 @@ func (o *ScaleOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 
 func updateReplicas(instance *v1alpha1.RisingWave, component, groupName string, target int32) error {
 	switch component {
-	case "compute":
-		for i, group := range instance.Spec.Components.Compute.Groups {
-			if group.Name == groupName {
-				instance.Spec.Components.Compute.Groups[i].Replicas = target
-				break
-			}
-		}
-	case "frontend":
-		for i, group := range instance.Spec.Components.Frontend.Groups {
-			if group.Name == groupName {
-				instance.Spec.Components.Frontend.Groups[i].Replicas = target
-				break
-			}
-		}
-	case "compactor":
+	case util.COMPACTOR:
 		for i, group := range instance.Spec.Components.Compactor.Groups {
 			if group.Name == groupName {
 				instance.Spec.Components.Compactor.Groups[i].Replicas = target
 				break
 			}
 		}
-	case "meta":
+	case util.COMPUTE:
+		for i, group := range instance.Spec.Components.Compute.Groups {
+			if group.Name == groupName {
+				instance.Spec.Components.Compute.Groups[i].Replicas = target
+				break
+			}
+		}
+	case util.FRONTEND:
+		for i, group := range instance.Spec.Components.Frontend.Groups {
+			if group.Name == groupName {
+				instance.Spec.Components.Frontend.Groups[i].Replicas = target
+				break
+			}
+		}
+	case util.META:
 		for i, group := range instance.Spec.Components.Meta.Groups {
 			if group.Name == groupName {
 				instance.Spec.Components.Meta.Groups[i].Replicas = target

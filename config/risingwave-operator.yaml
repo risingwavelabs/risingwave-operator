@@ -8844,6 +8844,25 @@ webhooks:
     resources:
     - risingwaves
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: risingwave-operator-webhook-service
+      namespace: risingwave-operator-system
+      path: /mutate-risingwave-singularity-data-com-v1alpha1-risingwavepodtemplate
+  failurePolicy: Fail
+  name: mrisingwavepodtemplate.kb.io
+  rules:
+  - apiGroups:
+    - risingwave.singularity-data.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - risingwavepodtemplates
+  sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration

@@ -47,15 +47,15 @@ type StopOptions struct {
 
 // NewCommand creates the stop command.
 func NewStopCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) *cobra.Command {
-	o := RestartOptions{
+	o := StopOptions{
 		BasicOptions: cmdcontext.NewBasicOptions(streams),
 	}
 
 	cmd := &cobra.Command{
 		Use:     "stop",
 		Short:   "Stop risingwave instances",
-		Long:    LongDesc,
-		Example: Example,
+		Long:    LongDescStop,
+		Example: ExampleStop,
 		Run: func(cmd *cobra.Command, args []string) {
 			util.CheckErr(o.Complete(ctx, cmd, args))
 			util.CheckErr(o.Validate(ctx, cmd, args))
@@ -73,7 +73,7 @@ func (o *StopOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []
 		return err
 	}
 
-	err = StopRisingWave(rw)
+	err = stopRisingWave(rw)
 	if err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func (o *StopOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []
 	return nil
 }
 
-func StopRisingWave(instance *v1alpha1.RisingWave) error {
+func stopRisingWave(instance *v1alpha1.RisingWave) error {
 	replicas := GroupReplicas{}
 
 	// record current replica values in annotation

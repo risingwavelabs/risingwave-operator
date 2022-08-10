@@ -31,7 +31,7 @@ type ReplicaInfo struct {
 }
 
 const (
-	STOP_ANNOTATION = "replicas.old"
+	REPLICA_ANNOTATION = "replicas.old"
 )
 
 // checks if instance has already been stopped.
@@ -42,7 +42,7 @@ func doesReplicaAnnotationExist(instance *v1alpha1.RisingWave) bool {
 		return false
 	}
 
-	if _, ok := instance.Annotations[STOP_ANNOTATION]; ok {
+	if _, ok := instance.Annotations[REPLICA_ANNOTATION]; ok {
 		return true
 	}
 

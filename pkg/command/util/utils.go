@@ -16,12 +16,22 @@
 
 package util
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 // TODO: do some check for error
 
 func CheckErr(err error) {
 	if err != nil {
 		fmt.Println(err)
+	}
+}
+
+func ExitOnErr(err error) {
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }

@@ -58,7 +58,7 @@ func NewStopCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStrea
 		Example: StopExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			util.CheckErr(o.Complete(ctx, cmd, args))
-			util.CheckErr(o.Validate(ctx, cmd, args))
+			util.ExitOnErr(o.Validate(ctx, cmd, args))
 			util.CheckErr(o.Run(ctx, cmd, args))
 		},
 		Aliases: []string{"pause"},
@@ -73,7 +73,7 @@ func (o *StopOptions) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, ar
 		return err
 	}
 
-	if !doesReplicaAnnotationExist(rw) {
+	if doesReplicaAnnotationExist(rw) {
 		return fmt.Errorf("instance already stopped")
 	}
 

@@ -61,7 +61,7 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 		Example: Example,
 		Run: func(cmd *cobra.Command, args []string) {
 			util.CheckErr(o.Complete(ctx, cmd, args))
-			util.CheckErr(o.Validate(ctx, cmd, args))
+			util.ExitOnErr(o.Validate(ctx, cmd, args))
 			util.CheckErr(o.Run(ctx, cmd, args))
 		},
 	}

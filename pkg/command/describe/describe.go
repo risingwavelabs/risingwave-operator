@@ -21,6 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+
 	cmdcontext "github.com/singularity-data/risingwave-operator/pkg/command/context"
 	"github.com/singularity-data/risingwave-operator/pkg/command/util"
 )

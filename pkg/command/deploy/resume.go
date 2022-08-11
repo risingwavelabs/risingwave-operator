@@ -30,10 +30,10 @@ import (
 )
 
 const (
-	LongDescResume = `
+	ResumeLongDesc = `
 Start the risingwave instances.
 `
-	ExampleResume = `  # Resume risingwave named example-rw in default namespace.
+	ResumeExample = `  # Resume risingwave named example-rw in default namespace.
   kubectl rw resume example-rw
 
   # Resume risingwave named example-rw in foo namespace.
@@ -54,8 +54,8 @@ func NewResumeCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStr
 	cmd := &cobra.Command{
 		Use:     "resume",
 		Short:   "Resume risingwave instances",
-		Long:    LongDescResume,
-		Example: ExampleResume,
+		Long:    ResumeLongDesc,
+		Example: ResumeExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			util.CheckErr(o.Complete(ctx, cmd, args))
 			util.CheckErr(o.Validate(ctx, cmd, args))
@@ -99,19 +99,19 @@ func resumeRisingWave(instance *v1alpha1.RisingWave) error {
 		return fmt.Errorf("failed to unmarshal replicas, %v; are you trying to resume an instance that was not stopped?", err)
 	}
 
-	for _, replicaInfo := range replicas.Compute {
-		for i, group := range instance.Spec.Components.Compute.Groups {
+	for _, replicaInfo := range replicas.Compactor {
+		for i, group := range instance.Spec.Components.Compactor.Groups {
 			if group.Name == replicaInfo.GroupName {
-				instance.Spec.Components.Compute.Groups[i].Replicas = replicaInfo.Replicas
+				instance.Spec.Components.Compactor.Groups[i].Replicas = replicaInfo.Replicas
 				break
 			}
 		}
 	}
 
-	for _, replicaInfo := range replicas.Compactor {
-		for i, group := range instance.Spec.Components.Compactor.Groups {
+	for _, replicaInfo := range replicas.Compute {
+		for i, group := range instance.Spec.Components.Compute.Groups {
 			if group.Name == replicaInfo.GroupName {
-				instance.Spec.Components.Compactor.Groups[i].Replicas = replicaInfo.Replicas
+				instance.Spec.Components.Compute.Groups[i].Replicas = replicaInfo.Replicas
 				break
 			}
 		}
@@ -136,7 +136,7 @@ func resumeRisingWave(instance *v1alpha1.RisingWave) error {
 	}
 
 	// delete annotation
-	delete(instance.Annotations, "replicas.old")
+	delete(instance.Annotations, REPLICA_ANNOTATION)
 
 	return nil
 }

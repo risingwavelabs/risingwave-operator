@@ -29,10 +29,10 @@ import (
 )
 
 const (
-	LongDescRestart = `
+	RestartLongDesc = `
 Restart the risingwave instances.
 `
-	ExampleRestart = `  # Restart risingwave named example-rw in default namespace.
+	RestartExample = `  # Restart risingwave named example-rw in default namespace.
   kubectl rw restart example-rw
 
   # Restart risingwave named example-rw in foo namespace.
@@ -53,16 +53,29 @@ func NewRestartCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOSt
 	cmd := &cobra.Command{
 		Use:     "restart",
 		Short:   "Restart risingwave instances",
-		Long:    LongDescRestart,
-		Example: ExampleRestart,
+		Long:    RestartLongDesc,
+		Example: RestartExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			util.CheckErr(o.Complete(ctx, cmd, args))
-			util.CheckErr(o.Validate(ctx, cmd, args))
+			util.ExitOnErr(o.Validate(ctx, cmd, args))
 			util.CheckErr(o.Run(ctx, cmd, args))
 		},
 	}
 
 	return cmd
+}
+
+func (o *RestartOptions) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
+	rw, err := o.GetRwInstance(ctx)
+	if err != nil {
+		return err
+	}
+
+	if doesReplicaAnnotationExist(rw) {
+		return fmt.Errorf("instance already stopped")
+	}
+
+	return nil
 }
 
 func (o *RestartOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {

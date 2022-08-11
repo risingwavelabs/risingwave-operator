@@ -30,6 +30,7 @@ import (
 	"github.com/singularity-data/risingwave-operator/pkg/command/install"
 	"github.com/singularity-data/risingwave-operator/pkg/command/list"
 	"github.com/singularity-data/risingwave-operator/pkg/command/update"
+	"github.com/singularity-data/risingwave-operator/pkg/command/upgrade"
 	"github.com/singularity-data/risingwave-operator/pkg/command/version"
 )
 
@@ -62,6 +63,7 @@ func NewCtlCommand(streams genericclioptions.IOStreams) *cobra.Command {
 			Commands: []*cobra.Command{
 				install.NewInstallCommand(ctx, streams),
 				install.NewUninstallCommand(ctx, streams),
+				upgrade.NewCommand(ctx, streams),
 			},
 		},
 		{

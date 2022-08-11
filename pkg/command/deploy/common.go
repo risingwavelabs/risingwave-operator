@@ -35,7 +35,7 @@ const (
 )
 
 // checks if instance has already been stopped.
-// if annotation map is nil, create it
+// if annotation map is nil, create it.
 func doesReplicaAnnotationExist(instance *v1alpha1.RisingWave) bool {
 	if instance.Annotations == nil {
 		instance.Annotations = make(map[string]string)

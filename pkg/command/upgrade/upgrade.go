@@ -18,9 +18,10 @@ package upgrade
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
-	"net/url"
 
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -70,31 +71,22 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 	return cmd
 }
 
-// check if the version is valid.
-// TODO find out how to do this.
 func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	addr := `https://ghcr.io/token'\'?scope'\'="repository:singularity-data/risingwave:pull"`
-	request, err := http.NewRequest("GET", addr, nil)
+	err := o.verifyTag()
 	if err != nil {
 		return err
 	}
 
-	client := &http.Client{}
-	request.URL = &url.URL{
-		Scheme: "http",
-		Host:   "ghcr.io",
-		Opaque: `//ghcr.io/token\?scope\="repository:singularity-data/risingwave:pull"`,
-	}
-
-	resp, err := client.Do(request)
+	// parse current version
+	rw, err := o.GetRwInstance(ctx)
 	if err != nil {
 		return err
 	}
 
-	// print resp
-	fmt.Println(resp)
+	if rw.Spec.Global.Image == fmt.Sprintf("ghcr.io/singularity-data/risingwave:%s", o.version) {
+		return fmt.Errorf("%s is already the current version", o.version)
+	}
 
-	//https: //ghcr.io/v2/singularity-data/risingwave/tags/list -H "Authorization: Bearer $TOKEN"
 	return nil
 }
 
@@ -134,4 +126,44 @@ func (o *Options) updateTag(rw *v1alpha1.RisingWave) {
 	for i := range rw.Spec.Components.Meta.Groups {
 		rw.Spec.Components.Meta.Groups[i].Image = image
 	}
+}
+
+// uses the github api to get the latest version.
+// https://github.com/orgs/community/discussions/26279#discussioncomment-3251171
+func (o *Options) verifyTag() error {
+	// curl https://ghcr.io/token\?scope\="repository:singularity-data/risingwave:pull"
+	token := "djE6c2luZ3VsYXJpdHktZGF0YS9yaXNpbmd3YXZlOjE2NjAyMDg1MTU1NDgyODMwMDU="
+
+	// curl https://ghcr.io/v2/singularity-data/risingwave/tags/list -H "Authorization: Bearer"$token
+	request, err := http.NewRequest("GET", "https://ghcr.io/v2/singularity-data/risingwave/tags/list", nil)
+	if err != nil {
+		return err
+	}
+
+	request.Header.Set("Authorization", "Bearer "+token)
+	client := &http.Client{}
+	resp, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	data := make(map[string]interface{})
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return err
+	}
+
+	for _, tag := range data["tags"].([]interface{}) {
+		if tag == o.version {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("version %s is not valid", o.version)
 }

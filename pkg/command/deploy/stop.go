@@ -30,10 +30,10 @@ import (
 )
 
 const (
-	LongDescStop = `
+	StopLongDesc = `
 Stop the risingwave instances.
 `
-	ExampleStop = `  # Stop risingwave named example-rw in default namespace.
+	StopExample = `  # Stop risingwave named example-rw in default namespace.
   kubectl rw stop example-rw
 
   # Stop risingwave named example-rw in foo namespace.
@@ -54,17 +54,30 @@ func NewStopCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStrea
 	cmd := &cobra.Command{
 		Use:     "stop",
 		Short:   "Stop risingwave instances",
-		Long:    LongDescStop,
-		Example: ExampleStop,
+		Long:    StopLongDesc,
+		Example: StopExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			util.CheckErr(o.Complete(ctx, cmd, args))
-			util.CheckErr(o.Validate(ctx, cmd, args))
+			util.ExitOnErr(o.Validate(ctx, cmd, args))
 			util.CheckErr(o.Run(ctx, cmd, args))
 		},
 		Aliases: []string{"pause"},
 	}
 
 	return cmd
+}
+
+func (o *StopOptions) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
+	rw, err := o.GetRwInstance(ctx)
+	if err != nil {
+		return err
+	}
+
+	if doesReplicaAnnotationExist(rw) {
+		return fmt.Errorf("instance already stopped")
+	}
+
+	return nil
 }
 
 func (o *StopOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
@@ -83,7 +96,6 @@ func (o *StopOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []
 		return fmt.Errorf("failed to update instance, %w", err)
 	}
 
-	fmt.Fprint(o.Out, "Risingwave instance updated")
 	return nil
 }
 
@@ -91,13 +103,21 @@ func stopRisingWave(instance *v1alpha1.RisingWave) error {
 	replicas := GroupReplicas{}
 
 	// record current replica values in annotation
+	for _, group := range instance.Spec.Components.Compactor.Groups {
+		compactorReplica := ReplicaInfo{
+			GroupName: group.Name,
+			Replicas:  group.Replicas,
+		}
+		updateReplicas(instance, util.COMPACTOR, group.Name, 0)
+		replicas.Compactor = append(replicas.Compactor, compactorReplica)
+	}
+
 	for _, group := range instance.Spec.Components.Compute.Groups {
 		computeReplica := ReplicaInfo{
 			GroupName: group.Name,
 			Replicas:  group.Replicas,
 		}
-		// TODO: use constants for component naming
-		updateReplicas(instance, "compute", group.Name, 0)
+		updateReplicas(instance, util.COMPUTE, group.Name, 0)
 		replicas.Compute = append(replicas.Compute, computeReplica)
 	}
 
@@ -106,17 +126,8 @@ func stopRisingWave(instance *v1alpha1.RisingWave) error {
 			GroupName: group.Name,
 			Replicas:  group.Replicas,
 		}
-		updateReplicas(instance, "frontend", group.Name, 0)
+		updateReplicas(instance, util.FRONTEND, group.Name, 0)
 		replicas.Frontend = append(replicas.Frontend, frontendReplica)
-	}
-
-	for _, group := range instance.Spec.Components.Compactor.Groups {
-		compactorReplica := ReplicaInfo{
-			GroupName: group.Name,
-			Replicas:  group.Replicas,
-		}
-		updateReplicas(instance, "compactor", group.Name, 0)
-		replicas.Compactor = append(replicas.Compactor, compactorReplica)
 	}
 
 	for _, group := range instance.Spec.Components.Meta.Groups {
@@ -124,7 +135,7 @@ func stopRisingWave(instance *v1alpha1.RisingWave) error {
 			GroupName: group.Name,
 			Replicas:  group.Replicas,
 		}
-		updateReplicas(instance, "meta", group.Name, 0)
+		updateReplicas(instance, util.META, group.Name, 0)
 		replicas.Meta = append(replicas.Meta, metaReplica)
 	}
 
@@ -139,7 +150,7 @@ func stopRisingWave(instance *v1alpha1.RisingWave) error {
 	if instance.Annotations == nil {
 		instance.Annotations = make(map[string]string)
 	}
-	instance.Annotations["replicas.old"] = string(annotation)
+	instance.Annotations[REPLICA_ANNOTATION] = string(annotation)
 
 	return nil
 }

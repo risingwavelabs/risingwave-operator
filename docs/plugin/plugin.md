@@ -27,7 +27,7 @@ Options:
 ### Operator Deletion
 Command: `kubectl rw uninstall`
 
-Uninstall the RisingWave Operator from the cluster
+Uninstall the RisingWave Operator from the cluster.
 
 ## Basic Commands
 
@@ -35,7 +35,7 @@ Uninstall the RisingWave Operator from the cluster
 
 Command: `kubectl rw create INSTANCE_NAME [options]`
 
-Create a RisingWave instance
+Create a RisingWave instance.
 
 Examples:
 
@@ -59,7 +59,7 @@ Options:
 
 Command: `kubectl rw delete INSTANCE_NAME [options]`
 
-Delete the RisingWave instance
+Delete the RisingWave instance.
 
 Examples:
 
@@ -83,15 +83,15 @@ Command: `kubectl rw list INSTANCE_NAME [options]`
 
 Examples:
 
-- List all clusters and sync to local config
+- List all clusters and sync to local config.
 
 `kubectl rw list`
 
-- Filter by namespace
+- Filter by namespace.
 
 `kubectl rw list --namespace=foo`
 
-- Get risingwave instances by selector
+- Get risingwave instances by selector.
 
 `kubectl rw list -l foo=bar`
 
@@ -131,7 +131,7 @@ Options:
 
 Command: `kubectl rw scale INSTANCE_NAME [options]`
 
-Scale a risingwave Instance
+Scale a risingwave Instance.
 
 Examples:
 

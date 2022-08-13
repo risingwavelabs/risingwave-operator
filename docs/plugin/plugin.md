@@ -39,27 +39,21 @@ Create a RisingWave instance
 
 Examples:
 
-Create a risingwave named example-rw in the test namespace by default configuration.
+- Create a risingwave named example-rw in the test namespace by default configuration.
 
 `kubectl rw create example-rw -n test`
 
-Create a risingwave named example-rw by configuration file.
+- Create a risingwave named example-rw by configuration file.
 
 `kubectl rw create -c rw.config`
 
 Options:
 
-- `-a, --arch=''`
-    
-The default arch(will be override if config file also set the arch).
+- `-a, --arch=''` The default arch(will be override if config file also set the arch).
 
-- `-c, --config=''`
-    
-The config file used when creating the instance.
+- `-c, --config=''` The config file used when creating the instance.
 
-- `-n, --namespace=risingwave`
-
-Namespace of risingwave instance. If not set, select the default namespace.
+- `-n, --namespace=risingwave` Namespace of risingwave instance. If not set, select the default namespace.
 
 ### RisingWave Instance Deletion
 
@@ -69,55 +63,45 @@ Delete the RisingWave instance
 
 Examples:
 
-Delete the risingwave named example-rw in the test namespace.
+- Delete the risingwave named example-rw in the test namespace.
 
 `kubectl rw delete example-rw -n test`
 
-Force delete the risingwave named example-rw in the test namespace.
+- Force delete the risingwave named example-rw in the test namespace.
   
 `kubectl rw delete example-rw -n test -f`
 
 Options:
     
-- `-f, --force=false`
+- `-f, --force=false` Force delete the tenant
 
-Force delete the tenant
-
-- `--namespace=risingwave`
-
-Namespace of risingwave instance. If not set, select the default namespace.
+- `--namespace=risingwave` Namespace of risingwave instance. If not set, select the default namespace.
 
 ### RisingWave Instance List
 
-Command: `kubectl minio tenant info TENANT_NAME [options]`
+Command: `kubectl rw list INSTANCE_NAME [options]`
 
 Examples:
 
-list all clusters and sync to local config
+- List all clusters and sync to local config
 
 `kubectl rw list`
 
-filter by namespace
+- Filter by namespace
 
 `kubectl rw list --namespace=foo`
 
-get risingwave instances by selector
+- Get risingwave instances by selector
 
 `kubectl rw list -l foo=bar`
 
 Options:
 
-- `-A, --all-namespaces=false`
+- `-A, --all-namespaces=false` Whether list instances in all namespaces.
 
-Whether list instances in all namespaces.
+- `-l, --selector=''` Selector (label query) to filter on, not including uninitialized ones, supports '=', '==', and '!='. (e.g. -l key1=value1,key2=value2)
 
-- `-l, --selector=''`
-
-Selector (label query) to filter on, not including uninitialized ones, supports '=', '==', and '!='. (e.g. -l key1=value1,key2=value2)
-
-- `-n, --namespace='default'`
-
-Namespace of risingwave instance. If not set, select the default namespace.
+- `-n, --namespace='default'` Namespace of risingwave instance. If not set, select the default namespace.
 
 ### RisingWave Instance Describe
 
@@ -127,23 +111,19 @@ Describe a risingwave instance.
 
 Examples:
 
-Describe risingwave named example-rw.
+- Describe risingwave named example-rw.
 
 `kubectl rw describe example-rw`
 
-Describe risingwave instance named example-rw in namespace foo.
+- Describe risingwave instance named example-rw in namespace foo.
    
 `kubectl rw describe example-rw -n foo`
 
 Options:
 
-- `-n, --namespace='default'`
+- `-n, --namespace='default'` Namespace of risingwave instance. If not set, select the default namespace.
 
-Namespace of risingwave instance. If not set, select the default namespace.
-
-- `-c, --choice='spec'`
-
-The section of the risingwave instance you would like to describe. Spec, status and all are the only valid values.
+- `-c, --choice='spec'` The section of the risingwave instance you would like to describe. Spec, status and all are the only valid values.
 
 ## Deployment commands
 
@@ -155,35 +135,27 @@ Scale a risingwave Instance
 
 Examples:
 
-Scale compute-node of the risingwave named example-rw to 2.
+- Scale compute-node of the risingwave named example-rw to 2.
   
 `kubectl rw scale example-rw -t 2`
 
-Scale frontend of the risingwave named example-rw to 2 in the foo namespace.
+- Scale frontend of the risingwave named example-rw to 2 in the foo namespace.
 
 `kubectl rw scale example-rw -n foo -c frontend -t 2`
 
-Scale frontend of the risingwave which named example-rw to 2 and in the foo namespace and in the test group.
+- Scale frontend of the risingwave which named example-rw to 2 and in the foo namespace and in the test group.
 
 `kubectl rw scale example-rw -n foo -c frontend -t 2 -g test`
 
 Options:
 
-- `-c, --component='compute-node'`
+- `-c, --component='compute-node'` The component which you want to scale.
 
-The component which you want to scale.
+- `-g, --group='default'` The group name of the component. If not set, scale the default group
 
-- `-g, --group='default'`
-    
-The group name of the component. If not set, scale the default group
+- `-t, --target=-1` The target number.Describe risingwave named example-rw.
 
-- `-t, --target=-1`
-    
-The target number.Describe risingwave named example-rw.
-
-- `-n, --namespace='default'`
-
-Namespace of risingwave instance. If not set, select the default namespace.
+- `-n, --namespace='default'` Namespace of risingwave instance. If not set, select the default namespace.
 
 ### Stop
 
@@ -193,19 +165,17 @@ Stop a risingwave instance.
 
 Examples:
 
-Stop risingwave named example-rw in default namespace.
+- Stop risingwave named example-rw in default namespace.
   
 `kubectl rw stop example-rw`
 
-Stop risingwave named example-rw in foo namespace.
+- Stop risingwave named example-rw in foo namespace.
 
 `kubectl rw stop example-rw -n foo`
 
 Options:
 
-- `-n, --namespace='default'`
-
-Namespace of risingwave instance. If not set, select the default namespace.
+- `-n, --namespace='default'` Namespace of risingwave instance. If not set, select the default namespace.
 
 ### Restart
 
@@ -215,19 +185,17 @@ Restart a risingwave instance.
 
 Examples:
 
-Restart risingwave named example-rw in default namespace.
+- Restart risingwave named example-rw in default namespace.
 
 `kubectl rw restart example-rw`
 
-Restart risingwave named example-rw in foo namespace.
+- Restart risingwave named example-rw in foo namespace.
   
 `kubectl rw restart example-rw -n foo`
 
 Options:
 
-- `-n, --namespace='default'`
-
-Namespace of risingwave instance. If not set, select the default namespace.
+- `-n, --namespace='default'` Namespace of risingwave instance. If not set, select the default namespace.
 
 ### Resume
 
@@ -237,19 +205,17 @@ resume a risingwave instance.
 
 examples:
 
-resume risingwave named example-rw in default namespace.
+- Resume risingwave named example-rw in default namespace.
 
 `kubectl rw resume example-rw`
 
-resume risingwave named example-rw in foo namespace.
+- Resume risingwave named example-rw in foo namespace.
   
 `kubectl rw resume example-rw -n foo`
 
 options:
 
-- `-n, --namespace='default'`
-
-Namespace of risingwave instance. If not set, select the default namespace.
+- `-n, --namespace='default'` Namespace of risingwave instance. If not set, select the default namespace.
 
 ## Configuration commands
 
@@ -269,47 +235,33 @@ Accepted values for resources:
 
 Examples:
 
-Update compute request and limit config of global component in risingwave named example-rw.
+- Update compute request and limit config of global component in risingwave named example-rw.
 
 `kubectl rw update example-rw --cpurequest 200m --cpulimit 1000m`
 
-Update memory request of global component in risingwave named example-rw in namespace foo.
+- Update memory request of global component in risingwave named example-rw in namespace foo.
 
 `kubectl rw update example-rw -n foo --memoryrequest 256Mi`
 
-Update memory request of meta component in risingwave named example-rw in namespace foo and group test.
+- Update memory request of meta component in risingwave named example-rw in namespace foo and group test.
   
 `kubectl rw update example-rw -n foo -c meta -g test --memoryrequest 256Mi`
 
 Options:
 
-- `-c, --component='global'`
-    
-The component to be updated. If not set, update global resources.
+- `-c, --component='global'` The component to be updated. If not set, update global resources.
 
-- `--cpulimit=''`
+- `--cpulimit=''` The target cpu limit.
 
-The target cpu limit.
+- `--cpurequest=''` The target cpu request.
 
-- `--cpurequest=''`
+- `-g, --group='default'` The group to be updated. If not set, update the default group.
 
-The target cpu request.
+- `--memorylimit=''` The target memory limit.
 
-- `-g, --group='default'`
+- `--memoryrequest=''` The target memory request.resume a risingwave instance.
 
-The group to be updated. If not set, update the default group.
-
-- `--memorylimit=''`
-
-The target memory limit.
-
-- `--memoryrequest=''`
-
-The target memory request.resume a risingwave instance.
-
-- `-n, --namespace='default'`
-
-Namespace of risingwave instance. If not set, select the default namespace.
+- `-n, --namespace='default'` Namespace of risingwave instance. If not set, select the default namespace.
 
 ### Upgrade 
 
@@ -319,20 +271,16 @@ Upgrade a risingwave instance to a specified version.
 
 Examples:
 
-Upgrade risingwave named example-rw to the latest version.
+- Upgrade risingwave named example-rw to the latest version.
 
 `kubectl rw upgrade example-rw`
 
-Upgrade risingwave named example-rw in namespace foo to the nightly version.
+- Upgrade risingwave named example-rw in namespace foo to the nightly version.
   
 `kubectl rw upgrade example-rw -n foo -v nightly`
 
 Options:
 
-- `-v, --version='latest'`
+- `-v, --version='latest'` The version to upgrade to. If not specified, the latest version will be used.
 
-The version to upgrade to. If not specified, the latest version will be used.
-
-- `-n, --namespace='default'`
-
-Namespace of risingwave instance. If not set, select the default namespace.
+- `-n, --namespace='default'` Namespace of risingwave instance. If not set, select the default namespace.

@@ -203,7 +203,7 @@ command: `kubectl rw resume instance_name [options]`
 
 resume a risingwave instance.
 
-examples:
+Examples:
 
 - Resume risingwave named example-rw in default namespace.
 

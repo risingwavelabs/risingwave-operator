@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"k8s.io/client-go/tools/record"
 	"testing"
 	"time"
 
@@ -56,9 +57,14 @@ type actionAssertionHook struct {
 	t         *testing.T
 	asserts   map[string]resultErr
 	mustCover bool
+	recorder  record.EventRecorder
+	hooks     map[string]ctrlkit.ActionHook
 }
 
 func (h *actionAssertionHook) PostRun(ctx context.Context, logger logr.Logger, action string, result reconcile.Result, err error) {
+	for _, hook := range h.hooks {
+		hook.PostRun(ctx, logger, action, result, err)
+	}
 	resultErr, ok := h.asserts[action]
 	if !ok {
 		return
@@ -73,6 +79,9 @@ func (h *actionAssertionHook) PostRun(ctx context.Context, logger logr.Logger, a
 }
 
 func (h *actionAssertionHook) PreRun(ctx context.Context, logger logr.Logger, action string, states map[string]runtime.Object) {
+	for _, hook := range h.hooks {
+		hook.PreRun(ctx, logger, action, states)
+	}
 	if _, ok := h.asserts[action]; !ok {
 		if h.mustCover {
 			h.t.Fatalf("unexpected action: %s", action)
@@ -80,11 +89,14 @@ func (h *actionAssertionHook) PreRun(ctx context.Context, logger logr.Logger, ac
 	}
 }
 
-func newActionAsserts(t *testing.T, asserts map[string]resultErr, mustCover bool) ctrlkit.ActionHook {
+func newActionAsserts(t *testing.T, asserts map[string]resultErr, mustCover bool, rw *risingwavev1alpha1.RisingWave) ctrlkit.ActionHook {
+	recorder := record.NewFakeRecorder(0)
 	return &actionAssertionHook{
 		t:         t,
 		asserts:   asserts,
 		mustCover: mustCover,
+		recorder:  recorder,
+		hooks:     map[string]ctrlkit.ActionHook{"event": NewEventHook(recorder, rw)},
 	}
 }
 
@@ -127,7 +139,7 @@ func Test_RisingWaveController_New(t *testing.T) {
 
 				// Update status
 				RisingWaveAction_UpdateRisingWaveStatusViaClient: newResultErr(ctrlkit.Continue()),
-			}, false)
+			}, false, risingwave)
 		},
 	}
 
@@ -161,7 +173,7 @@ func Test_RisingWaveController_Deleted(t *testing.T) {
 			WithObjects(risingwave).
 			Build(),
 		ActionHookFactory: func() ctrlkit.ActionHook {
-			return newActionAsserts(t, nil, true)
+			return newActionAsserts(t, nil, true, risingwave)
 		},
 	}
 
@@ -211,7 +223,7 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 				RisingWaveAction_WaitBeforeComputeStatefulSetsReady:  newResultErr(ctrlkit.Exit()),
 				RisingWaveAction_WaitBeforeCompactorDeploymentsReady: newResultErr(ctrlkit.Exit()),
 				RisingWaveAction_SyncObservedGeneration:              newResultErr(ctrlkit.Continue()),
-			}, false)
+			}, false, risingwave)
 		},
 	}
 
@@ -237,7 +249,7 @@ func Test_RisingWaveController_Recovery(t *testing.T) {
 		ActionHookFactory: func() ctrlkit.ActionHook {
 			return newActionAsserts(t, map[string]resultErr{
 				RisingWaveAction_MarkConditionUpgradingAsTrue: newResultErr(ctrlkit.Continue()),
-			}, false)
+			}, false, risingwave)
 		},
 	}
 

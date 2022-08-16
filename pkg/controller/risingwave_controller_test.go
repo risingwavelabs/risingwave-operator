@@ -41,6 +41,8 @@ import (
 	"github.com/singularity-data/risingwave-operator/pkg/testutils"
 )
 
+const defaultRecorderBufferSize = 10
+
 type resultErr struct {
 	reconcile.Result
 	error
@@ -110,7 +112,7 @@ func Test_RisingWaveController_New(t *testing.T) {
 		Status: risingwavev1alpha1.RisingWaveStatus{},
 	}
 
-	recorder := record.NewFakeRecorder(0)
+	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Schema).
@@ -154,6 +156,12 @@ func Test_RisingWaveController_New(t *testing.T) {
 		},
 	})
 
+	numEvents := len(recorder.Events)
+	numWantedEvents := 1
+	if numEvents != numWantedEvents {
+		t.Errorf("got %d events, wanted %d", numEvents, numWantedEvents)
+	}
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -170,7 +178,7 @@ func Test_RisingWaveController_Deleted(t *testing.T) {
 		Status: risingwavev1alpha1.RisingWaveStatus{},
 	}
 
-	recorder := record.NewFakeRecorder(0)
+	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Schema).
@@ -179,6 +187,7 @@ func Test_RisingWaveController_Deleted(t *testing.T) {
 		ActionHookFactory: func() ctrlkit.ActionHook {
 			return newActionAsserts(t, nil, true, risingwave, recorder)
 		},
+		EventRecorderCallback: func(wave *risingwavev1alpha1.RisingWave) {},
 	}
 
 	logger := zap.New(zap.UseDevMode(true))
@@ -188,6 +197,12 @@ func Test_RisingWaveController_Deleted(t *testing.T) {
 			Namespace: "default",
 		},
 	})
+
+	numEvents := len(recorder.Events)
+	numWantedEvents := 0
+	if numEvents != numWantedEvents {
+		t.Errorf("got %d events, wanted %d", numEvents, numWantedEvents)
+	}
 
 	if err != nil {
 		t.Fatal(err)
@@ -205,7 +220,7 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 		},
 	}
 
-	recorder := record.NewFakeRecorder(0)
+	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Schema).
@@ -230,12 +245,19 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 				RisingWaveAction_SyncObservedGeneration:              newResultErr(ctrlkit.Continue()),
 			}, false, risingwave, recorder)
 		},
+		EventRecorderCallback: func(wave *risingwavev1alpha1.RisingWave) {},
 	}
 
 	logger := zap.New(zap.UseDevMode(true))
 	_, err := controller.Reconcile(log.IntoContext(context.Background(), logger), reconcile.Request{
 		NamespacedName: types.NamespacedName{Name: risingwave.Name, Namespace: risingwave.Namespace},
 	})
+
+	numEvents := len(recorder.Events)
+	numWantedEvents := 1
+	if numEvents != numWantedEvents {
+		t.Errorf("got %d events, wanted %d", numEvents, numWantedEvents)
+	}
 
 	if err != nil {
 		t.Fatal(err)
@@ -246,7 +268,7 @@ func Test_RisingWaveController_Recovery(t *testing.T) {
 	risingwave := testutils.FakeRisingWave.DeepCopy()
 	risingwave.Status.ObservedGeneration = risingwave.Generation
 
-	recorder := record.NewFakeRecorder(0)
+	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Schema).
@@ -257,6 +279,7 @@ func Test_RisingWaveController_Recovery(t *testing.T) {
 				RisingWaveAction_MarkConditionUpgradingAsTrue: newResultErr(ctrlkit.Continue()),
 			}, false, risingwave, recorder)
 		},
+		EventRecorderCallback: func(wave *risingwavev1alpha1.RisingWave) {},
 	}
 
 	logger := zap.New(zap.UseDevMode(true))
@@ -276,6 +299,12 @@ func Test_RisingWaveController_Recovery(t *testing.T) {
 	runningCondition := risingwaveManager.GetCondition(risingwavev1alpha1.RisingWaveConditionRunning)
 	if runningCondition == nil || runningCondition.Status != metav1.ConditionFalse {
 		t.Fatal("Running condition not false")
+	}
+
+	numEvents := len(recorder.Events)
+	numWantedEvents := 1
+	if numEvents != numWantedEvents {
+		t.Errorf("got %d events, wanted %d", numEvents, numWantedEvents)
 	}
 
 	if err != nil {

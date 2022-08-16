@@ -36,10 +36,10 @@ const (
  Describe a risingwave instance.
  `
 	Example = `  # Describe risingwave named example-rw.
-   kubectl rw describe example-rw
+  kubectl rw describe example-rw
  
-   # Describe risingwave instance named example-rw in namespace foo.
-   kubectl rw describe example-rw -n foo
+  # Describe risingwave instance named example-rw in namespace foo.
+  kubectl rw describe example-rw -n foo
  `
 )
 

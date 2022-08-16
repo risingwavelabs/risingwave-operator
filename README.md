@@ -19,7 +19,7 @@ First, you need to install the `cert-manager` in the cluster before installing t
 The default static configuration cert-manager can be installed as follows:
 
 ```shell
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.2/cert-manager.yaml
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
 ```
 
 More information on this install cert-manager method [can be found here](https://cert-manager.io/docs/installation/#default-static-install).

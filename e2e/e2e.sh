@@ -89,8 +89,8 @@ source "$BASEDIR"/k8s/kubernetes
 
 # Install the RisingWave operator.
 echo "Installing the RisingWave operator..."
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.2/cert-manager.yaml
-trap "kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.8.2/cert-manager.yaml" EXIT
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
+trap "kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml" EXIT
 
 function wait_cert_manager_certificate() {
   # wait for certificate

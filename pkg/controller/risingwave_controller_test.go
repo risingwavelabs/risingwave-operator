@@ -20,9 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"k8s.io/client-go/tools/record"
 	"testing"
 	"time"
+
+	"k8s.io/client-go/tools/record"
 
 	"github.com/fatih/color"
 	"github.com/go-logr/logr"
@@ -89,8 +90,7 @@ func (h *actionAssertionHook) PreRun(ctx context.Context, logger logr.Logger, ac
 	}
 }
 
-func newActionAsserts(t *testing.T, asserts map[string]resultErr, mustCover bool, rw *risingwavev1alpha1.RisingWave) ctrlkit.ActionHook {
-	recorder := record.NewFakeRecorder(0)
+func newActionAsserts(t *testing.T, asserts map[string]resultErr, mustCover bool, rw *risingwavev1alpha1.RisingWave, recorder record.EventRecorder) ctrlkit.ActionHook {
 	return &actionAssertionHook{
 		t:         t,
 		asserts:   asserts,
@@ -110,6 +110,7 @@ func Test_RisingWaveController_New(t *testing.T) {
 		Status: risingwavev1alpha1.RisingWaveStatus{},
 	}
 
+	recorder := record.NewFakeRecorder(0)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Schema).
@@ -139,8 +140,10 @@ func Test_RisingWaveController_New(t *testing.T) {
 
 				// Update status
 				RisingWaveAction_UpdateRisingWaveStatusViaClient: newResultErr(ctrlkit.Continue()),
-			}, false, risingwave)
+			}, false, risingwave, recorder)
 		},
+		Recorder:              recorder,
+		EventRecorderCallback: func(wave *risingwavev1alpha1.RisingWave) {},
 	}
 
 	logger := zap.New(zap.UseDevMode(true))
@@ -167,13 +170,14 @@ func Test_RisingWaveController_Deleted(t *testing.T) {
 		Status: risingwavev1alpha1.RisingWaveStatus{},
 	}
 
+	recorder := record.NewFakeRecorder(0)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Schema).
 			WithObjects(risingwave).
 			Build(),
 		ActionHookFactory: func() ctrlkit.ActionHook {
-			return newActionAsserts(t, nil, true, risingwave)
+			return newActionAsserts(t, nil, true, risingwave, recorder)
 		},
 	}
 
@@ -201,6 +205,7 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 		},
 	}
 
+	recorder := record.NewFakeRecorder(0)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Schema).
@@ -223,7 +228,7 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 				RisingWaveAction_WaitBeforeComputeStatefulSetsReady:  newResultErr(ctrlkit.Exit()),
 				RisingWaveAction_WaitBeforeCompactorDeploymentsReady: newResultErr(ctrlkit.Exit()),
 				RisingWaveAction_SyncObservedGeneration:              newResultErr(ctrlkit.Continue()),
-			}, false, risingwave)
+			}, false, risingwave, recorder)
 		},
 	}
 
@@ -241,6 +246,7 @@ func Test_RisingWaveController_Recovery(t *testing.T) {
 	risingwave := testutils.FakeRisingWave.DeepCopy()
 	risingwave.Status.ObservedGeneration = risingwave.Generation
 
+	recorder := record.NewFakeRecorder(0)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Schema).
@@ -249,7 +255,7 @@ func Test_RisingWaveController_Recovery(t *testing.T) {
 		ActionHookFactory: func() ctrlkit.ActionHook {
 			return newActionAsserts(t, map[string]resultErr{
 				RisingWaveAction_MarkConditionUpgradingAsTrue: newResultErr(ctrlkit.Continue()),
-			}, false, risingwave)
+			}, false, risingwave, recorder)
 		},
 	}
 

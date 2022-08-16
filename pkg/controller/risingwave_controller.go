@@ -92,9 +92,10 @@ const (
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=get;list;watch;create;delete
 
 type RisingWaveController struct {
-	Client            client.Client
-	ActionHookFactory func() ctrlkit.ActionHook
-	Recorder          record.EventRecorder
+	Client                client.Client
+	ActionHookFactory     func() ctrlkit.ActionHook
+	Recorder              record.EventRecorder
+	EventRecorderCallback func(wave *risingwavev1alpha1.RisingWave)
 }
 
 func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit.Action) (result reconcile.Result, err error) {
@@ -123,8 +124,7 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 			return ctrlkit.RequeueIfErrorAndWrap("unable to get risingwave", err)
 		}
 	}
-
-	c.ActionHookFactory = func() ctrlkit.ActionHook { return NewEventHook(c.Recorder, &risingwave) }
+	c.EventRecorderCallback(&risingwave)
 
 	logger = logger.WithValues("generation", risingwave.Generation)
 
@@ -369,8 +369,15 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func NewRisingWaveController(client client.Client, recorder record.EventRecorder) *RisingWaveController {
+	rw := &risingwavev1alpha1.RisingWave{}
+	hookFactory := func() ctrlkit.ActionHook { return NewEventHook(recorder, rw) }
+	callback := func(risingWave *risingwavev1alpha1.RisingWave) {
+		rw = risingWave
+	}
 	return &RisingWaveController{
-		Client:   client,
-		Recorder: recorder,
+		Client:                client,
+		Recorder:              recorder,
+		ActionHookFactory:     hookFactory,
+		EventRecorderCallback: callback,
 	}
 }

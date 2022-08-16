@@ -27,11 +27,13 @@ func (h *EventHook) PreRun(ctx context.Context, logger logr.Logger, action strin
 
 func (h *EventHook) PostRun(ctx context.Context, logger logr.Logger, action string, result reconcile.Result, err error) {
 	rwName := h.rw.Name
-	if action == RisingWaveAction_BarrierConditionInitializingIsTrue {
-		h.recorder.Eventf(h.rw, corev1.EventTypeNormal, "Initializing", "Initializing RisingWave instance %s", rwName)
-	} else if action == RisingWaveAction_MarkConditionRunningAsTrue {
-		h.recorder.Eventf(h.rw, corev1.EventTypeNormal, "Running", "RisingWave instance %s is running", rwName)
-	} else if action == RisingWaveAction_MarkConditionUpgradingAsTrue {
-		h.recorder.Eventf(h.rw, corev1.EventTypeNormal, "Upgrading", "Upgrading RisingWave instance %s", rwName)
+	if err == nil {
+		if action == RisingWaveAction_BarrierConditionInitializingIsTrue {
+			h.recorder.Eventf(h.rw, corev1.EventTypeNormal, "Initializing", "Initializing RisingWave instance %s", rwName)
+		} else if action == RisingWaveAction_MarkConditionRunningAsTrue {
+			h.recorder.Eventf(h.rw, corev1.EventTypeNormal, "Running", "RisingWave instance %s is running", rwName)
+		} else if action == RisingWaveAction_MarkConditionUpgradingAsTrue {
+			h.recorder.Eventf(h.rw, corev1.EventTypeNormal, "Upgrading", "Upgrading RisingWave instance %s", rwName)
+		}
 	}
 }

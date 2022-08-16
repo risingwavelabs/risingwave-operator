@@ -157,7 +157,7 @@ func Test_RisingWaveController_New(t *testing.T) {
 	})
 
 	numEvents := len(recorder.Events)
-	numWantedEvents := 1
+	numWantedEvents := 0
 	if numEvents != numWantedEvents {
 		t.Errorf("got %d events, wanted %d", numEvents, numWantedEvents)
 	}

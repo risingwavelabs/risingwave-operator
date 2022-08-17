@@ -1,0 +1,101 @@
+name: CI for Images
+
+on:
+  schedule:             # Run 2am UTC+8(Beijing) everyday
+  - cron: '0 18 */1 * *'
+  workflow_dispatch:    # For manually triggering workflow
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+    tags:
+    - 'v*.*.*'
+
+jobs:
+  start-runner:
+    name: ec2-start
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+    steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-2
+    - name: Start EC2 runner
+      id: start-ec2-runner
+      uses: machulav/ec2-github-runner@v2
+      with:
+        mode: start
+        github-token: ${{ secrets.PAT }}
+        ec2-image-id: ami-05a99cf0eb100c377
+        ec2-instance-type: c5.4xlarge
+        subnet-id: subnet-59743123
+        security-group-id: sg-9ec32bfe
+  build-and-push-images:
+    needs:
+    - start-runner
+    runs-on: ${{ needs.start-runner.outputs.label }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: |
+          ghcr.io/singularity-data/risingwave-operator
+        tags: |
+          type=schedule,prefix=nightly-,pattern=nightly
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+          type=sha
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    - name: Login to Github Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ secrets.GHCR_USERNAME }}
+        password: ${{ secrets.GHCR_TOKEN }}
+    - name: Build and push
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: docker/Dockerfile
+        push: ${{ github.event_name != 'pull_request' }}
+        platforms: linux/amd64,linux/arm64
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+  stop-runner:
+    name: ec2-stop
+    needs:
+    - start-runner
+    - build_docker_images
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-2
+    - name: Stop EC2 runner A
+      uses: machulav/ec2-github-runner@v2
+      with:
+        mode: stop
+        github-token: ${{ secrets.PAT }}
+        label: ${{ needs.start-runner.outputs.label }}
+        ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
+      if: ${{ always() }}

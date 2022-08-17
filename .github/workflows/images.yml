@@ -51,7 +51,7 @@ jobs:
         images: |
           ghcr.io/singularity-data/risingwave-operator
         tags: |
-          type=schedule,prefix=nightly-,pattern=nightly
+          type=schedule,prefix=nightly-,pattern={{date 'YYYYMMDD'}}
           type=ref,event=branch
           type=ref,event=pr
           type=semver,pattern={{version}}

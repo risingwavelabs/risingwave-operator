@@ -81,7 +81,7 @@ jobs:
     name: ec2-stop
     needs:
     - start-runner
-    - build_docker_images
+    - build-and-push-images
     runs-on: ubuntu-latest
     if: ${{ always() }}
     steps:

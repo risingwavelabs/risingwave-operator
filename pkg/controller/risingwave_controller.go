@@ -92,21 +92,22 @@ const (
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=get;list;watch;create;delete
 
 type RisingWaveController struct {
-	Client                client.Client
-	ActionHookFactory     func() ctrlkit.ActionHook
-	Recorder              record.EventRecorder
-	EventRecorderCallback func(wave *risingwavev1alpha1.RisingWave)
+	Client            client.Client
+	Recorder          record.EventRecorder
+	ActionHookFactory func() ctrlkit.ActionHook
 }
 
 func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit.Action) (result reconcile.Result, err error) {
 	return ctrlkit.IgnoreExit(workflow.Run(ctx))
 }
 
-func (c *RisingWaveController) managerOpts() []manager.RisingWaveControllerManagerOption {
+func (c *RisingWaveController) managerOpts(risingwaveMgr *object.RisingWaveManager) []manager.RisingWaveControllerManagerOption {
 	opts := make([]manager.RisingWaveControllerManagerOption, 0)
+	chainedHooks := ctrlkit.ChainActionHooks(NewEventHook(c.Recorder, risingwaveMgr))
 	if c.ActionHookFactory != nil {
-		opts = append(opts, manager.RisingWaveControllerManager_WithActionHook(c.ActionHookFactory()))
+		chainedHooks.Add(c.ActionHookFactory())
 	}
+	opts = append(opts, manager.RisingWaveControllerManager_WithActionHook(chainedHooks))
 	return opts
 }
 
@@ -120,11 +121,10 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 			logger.V(1).Info("Not found, abort")
 			return ctrlkit.NoRequeue()
 		} else {
-			logger.Error(err, "Failed to get RisingWave")
+			logger.Error(err, "Failed to get risingwave")
 			return ctrlkit.RequeueIfErrorAndWrap("unable to get risingwave", err)
 		}
 	}
-	c.EventRecorderCallback(&risingwave)
 
 	logger = logger.WithValues("generation", risingwave.Generation)
 
@@ -140,7 +140,7 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 		manager.NewRisingWaveControllerManagerState(c.Client, risingwave.DeepCopy()),
 		manager.NewRisingWaveControllerManagerImpl(c.Client, risingwaveManager),
 		logger,
-		c.managerOpts()...,
+		c.managerOpts(risingwaveManager)...,
 	)
 
 	// Build a workflow and run.
@@ -369,15 +369,8 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func NewRisingWaveController(client client.Client, recorder record.EventRecorder) *RisingWaveController {
-	rw := &risingwavev1alpha1.RisingWave{}
-	hookFactory := func() ctrlkit.ActionHook { return NewEventHook(recorder, rw) }
-	callback := func(risingWave *risingwavev1alpha1.RisingWave) {
-		rw = risingWave
-	}
 	return &RisingWaveController{
-		Client:                client,
-		Recorder:              recorder,
-		ActionHookFactory:     hookFactory,
-		EventRecorderCallback: callback,
+		Client:   client,
+		Recorder: recorder,
 	}
 }

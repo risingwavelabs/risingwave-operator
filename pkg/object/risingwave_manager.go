@@ -28,22 +28,55 @@ import (
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
-type RisingWaveManager struct {
-	client            client.Client
-	risingwave        *risingwavev1alpha1.RisingWave // Immutable.
-	mutableRisingWave *risingwavev1alpha1.RisingWave // Mutable copy of original.
-
-	mu sync.RWMutex
+// RisingWaveReader is a reader for RisingWave object.
+type RisingWaveReader struct {
+	risingwave *risingwavev1alpha1.RisingWave // Immutable.
 }
 
-// RisingWave returns the risingwave immutable reference.
-func (mgr *RisingWaveManager) RisingWave() *risingwavev1alpha1.RisingWave {
-	return mgr.risingwave
+// NewRisingWaveReader creates a RisingWaveReader.
+func NewRisingWaveReader(risingwave *risingwavev1alpha1.RisingWave) *RisingWaveReader {
+	return &RisingWaveReader{risingwave: risingwave}
+}
+
+// RisingWave returns the RisingWave immutable reference.
+func (r *RisingWaveReader) RisingWave() *risingwavev1alpha1.RisingWave {
+	return r.risingwave
 }
 
 // IsObservedGenerationOutdated tells whether the observed generation is outdated.
-func (mgr *RisingWaveManager) IsObservedGenerationOutdated() bool {
-	return mgr.risingwave.Status.ObservedGeneration < mgr.risingwave.Generation
+func (r *RisingWaveReader) IsObservedGenerationOutdated() bool {
+	return r.risingwave.Status.ObservedGeneration < r.risingwave.Generation
+}
+
+func (r *RisingWaveReader) GetCondition(conditionType risingwavev1alpha1.RisingWaveConditionType) *risingwavev1alpha1.RisingWaveCondition {
+	for _, cond := range r.risingwave.Status.Conditions {
+		if cond.Type == conditionType {
+			return cond.DeepCopy()
+		}
+	}
+	return nil
+}
+
+func (r *RisingWaveReader) DoesConditionExistAndEqual(conditionType risingwavev1alpha1.RisingWaveConditionType, value bool) bool {
+	cond := r.GetCondition(conditionType)
+	return cond != nil && (cond.Status == metav1.ConditionTrue) == value
+}
+
+type RisingWaveManager struct {
+	RisingWaveReader
+
+	client client.Client
+
+	mu                sync.RWMutex
+	mutableRisingWave *risingwavev1alpha1.RisingWave // Mutable copy of original.
+}
+
+// RisingWaveAfterImage returns a copy of the mutable RisingWave.
+func (mgr *RisingWaveManager) RisingWaveAfterImage() *risingwavev1alpha1.RisingWave {
+	mgr.mu.RLock()
+	defer mgr.mu.RUnlock()
+
+	return mgr.mutableRisingWave.DeepCopy()
 }
 
 // SyncObservedGeneration updates the observed generation to the current generation.
@@ -51,16 +84,7 @@ func (mgr *RisingWaveManager) SyncObservedGeneration() {
 	mgr.mu.Lock()
 	defer mgr.mu.Unlock()
 
-	mgr.mutableRisingWave.Status.ObservedGeneration = mgr.risingwave.Generation
-}
-
-func (mgr *RisingWaveManager) GetCondition(conditionType risingwavev1alpha1.RisingWaveConditionType) *risingwavev1alpha1.RisingWaveCondition {
-	for _, cond := range mgr.risingwave.Status.Conditions {
-		if cond.Type == conditionType {
-			return cond.DeepCopy()
-		}
-	}
-	return nil
+	mgr.mutableRisingWave.Status.ObservedGeneration = mgr.mutableRisingWave.Generation
 }
 
 func (mgr *RisingWaveManager) RemoveCondition(conditionType risingwavev1alpha1.RisingWaveConditionType) {
@@ -122,8 +146,10 @@ func (mgr *RisingWaveManager) UpdateRemoteRisingWaveStatus(ctx context.Context) 
 
 func NewRisingWaveManager(client client.Client, risingwave *risingwavev1alpha1.RisingWave) *RisingWaveManager {
 	return &RisingWaveManager{
+		RisingWaveReader: RisingWaveReader{
+			risingwave: risingwave,
+		},
 		client:            client,
-		risingwave:        risingwave,
 		mutableRisingWave: risingwave.DeepCopy(),
 	}
 }

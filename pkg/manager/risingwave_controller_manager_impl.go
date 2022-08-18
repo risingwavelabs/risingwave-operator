@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/go-logr/logr"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -33,6 +34,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/singularity-data/risingwave-operator/pkg/event"
 
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/singularity-data/risingwave-operator/pkg/consts"
@@ -46,6 +49,7 @@ type risingWaveControllerManagerImpl struct {
 	client            client.Client
 	risingwaveManager *object.RisingWaveManager
 	objectFactory     *factory.RisingWaveObjectFactory
+	eventMessageStore *event.MessageStore
 }
 
 func buildGroupStatus[T any, TP ptrAsObject[T], G any](globalReplicas int32, groups []G, nameAndReplicas func(*G) (string, int32), workloads []T, groupAndReadyReplicas func(*T) (string, int32)) risingwavev1alpha1.ComponentReplicasStatus {
@@ -145,14 +149,6 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 	globalSpec := &risingwave.Spec.Global
 	componentsSpec := &risingwave.Spec.Components
 
-	// If any of these states is missing, turn the condition Running to false.
-	if frontendService == nil || metaService == nil || computeService == nil || compactorService == nil || configConfigMap == nil {
-		mgr.risingwaveManager.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
-			Type:   risingwavev1alpha1.RisingWaveConditionRunning,
-			Status: metav1.ConditionFalse,
-		})
-	}
-
 	// Update the replicas and storage status.
 	nameAndReplicasForComponentGroup := func(g *risingwavev1alpha1.RisingWaveComponentGroup) (string, int32) {
 		return g.Name, g.Replicas
@@ -189,15 +185,66 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 		status.ComponentReplicas = componentReplicas
 	})
 
-	// If any of the groups is missing, turn the condition Running to false.
-	if lo.ContainsBy(componentReplicas.Meta.Groups, isGroupMissing) ||
-		lo.ContainsBy(componentReplicas.Frontend.Groups, isGroupMissing) ||
-		lo.ContainsBy(componentReplicas.Compute.Groups, isGroupMissing) ||
-		lo.ContainsBy(componentReplicas.Compactor.Groups, isGroupMissing) {
+	// If any of these states is missing or any of the groups is missing, turn the condition Running to false.
+	recoverConditionAndReasons := []struct {
+		cond      bool
+		component string
+	}{
+		{
+			cond:      frontendService == nil,
+			component: "Service(frontend)",
+		},
+		{
+			cond:      metaService == nil,
+			component: "Service(meta)",
+		},
+		{
+			cond:      computeService == nil,
+			component: "Service(compute)",
+		},
+		{
+			cond:      compactorService == nil,
+			component: "Service(compactor)",
+		},
+		{
+			cond:      configConfigMap == nil,
+			component: "ConfigMap(config)",
+		},
+		{
+			cond:      lo.ContainsBy(componentReplicas.Meta.Groups, isGroupMissing),
+			component: "Deployments(meta)",
+		},
+		{
+			cond:      lo.ContainsBy(componentReplicas.Frontend.Groups, isGroupMissing),
+			component: "Deployments(frontend)",
+		},
+		{
+			cond:      lo.ContainsBy(componentReplicas.Compute.Groups, isGroupMissing),
+			component: "StatefulSets(compute)",
+		},
+		{
+			cond:      lo.ContainsBy(componentReplicas.Compactor.Groups, isGroupMissing),
+			component: "Deployments(compactor)",
+		},
+	}
+
+	brokenOrMissingComponents := lo.FilterMap(recoverConditionAndReasons, func(t struct {
+		cond      bool
+		component string
+	}, _ int) (string, bool) {
+		return t.component, t.cond
+	})
+
+	if len(brokenOrMissingComponents) > 0 {
 		mgr.risingwaveManager.UpdateCondition(risingwavev1alpha1.RisingWaveCondition{
 			Type:   risingwavev1alpha1.RisingWaveConditionRunning,
 			Status: metav1.ConditionFalse,
 		})
+
+		// Set the message for Unhealthy event when it's Running.
+		if mgr.risingwaveManager.DoesConditionExistAndEqual(risingwavev1alpha1.RisingWaveConditionRunning, true) {
+			mgr.eventMessageStore.SetMessage(consts.RisingWaveEventTypeUnhealthy.Name, fmt.Sprintf("Found components broken or missing: %s", strings.Join(brokenOrMissingComponents, ",")))
+		}
 	}
 
 	return ctrlkit.Continue()
@@ -736,14 +783,15 @@ func (mgr *risingWaveControllerManagerImpl) SyncServiceMonitor(ctx context.Conte
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync service monitor", err)
 }
 
-func newRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager) *risingWaveControllerManagerImpl {
+func newRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager, messageStore *event.MessageStore) *risingWaveControllerManagerImpl {
 	return &risingWaveControllerManagerImpl{
 		client:            client,
 		risingwaveManager: risingwaveManager,
 		objectFactory:     factory.NewRisingWaveObjectFactory(risingwaveManager.RisingWave(), client.Scheme()),
+		eventMessageStore: messageStore,
 	}
 }
 
-func NewRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager) RisingWaveControllerManagerImpl {
-	return newRisingWaveControllerManagerImpl(client, risingwaveManager)
+func NewRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager, messageStore *event.MessageStore) RisingWaveControllerManagerImpl {
+	return newRisingWaveControllerManagerImpl(client, risingwaveManager, messageStore)
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package risingwave
+package controller
 
 import (
 	"context"
@@ -33,6 +33,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/singularity-data/risingwave-operator/pkg/event"
 
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit"
@@ -101,9 +103,9 @@ func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit
 	return ctrlkit.IgnoreExit(workflow.Run(ctx))
 }
 
-func (c *RisingWaveController) managerOpts(risingwaveMgr *object.RisingWaveManager) []manager.RisingWaveControllerManagerOption {
+func (c *RisingWaveController) managerOpts(risingwaveMgr *object.RisingWaveManager, messageStore *event.MessageStore) []manager.RisingWaveControllerManagerOption {
 	opts := make([]manager.RisingWaveControllerManagerOption, 0)
-	chainedHooks := ctrlkit.ChainActionHooks(NewEventHook(c.Recorder, risingwaveMgr))
+	chainedHooks := ctrlkit.ChainActionHooks(NewEventHook(c.Recorder, risingwaveMgr, messageStore))
 	if c.ActionHookFactory != nil {
 		chainedHooks.Add(c.ActionHookFactory())
 	}
@@ -135,12 +137,13 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 	}
 
 	risingwaveManager := object.NewRisingWaveManager(c.Client, risingwave.DeepCopy())
+	eventMessageStore := event.NewMessageStore()
 
 	mgr := manager.NewRisingWaveControllerManager(
 		manager.NewRisingWaveControllerManagerState(c.Client, risingwave.DeepCopy()),
-		manager.NewRisingWaveControllerManagerImpl(c.Client, risingwaveManager),
+		manager.NewRisingWaveControllerManagerImpl(c.Client, risingwaveManager, eventMessageStore),
 		logger,
-		c.managerOpts(risingwaveManager)...,
+		c.managerOpts(risingwaveManager, eventMessageStore)...,
 	)
 
 	// Build a workflow and run.

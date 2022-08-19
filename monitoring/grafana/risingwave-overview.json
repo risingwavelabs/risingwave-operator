@@ -63,7 +63,6 @@
                   },
                   "overrides": [ ]
                },
-               "gridPos": { },
                "id": 2,
                "links": [ ],
                "options": {
@@ -82,14 +81,384 @@
                ],
                "targets": [
                   {
-                     "expr": "sum by(pod, risingwave_component, node) (\n    (\n        rate(\n          process_cpu_seconds_total{namespace=\"$namespace\"}[$__rate_interval]\n        )\n      * on(namespace, pod) group_left(node)\n        topk by(namespace, pod) (\n          1,\n          max by(namespace, pod, node) (\n            kube_pod_info{node!=\"\"}\n          )\n        )\n    )\n  * on(namespace, pod) group_left()\n    topk by(namespace, pod) (\n      1,\n      max by(namespace, risingwave_component, pod) (\n        up{risingwave_name=\"$instance\"}\n      )\n    )\n)",
+                     "expr": "avg by (risingwave_component) (\n    (\n        rate(process_cpu_seconds_total{namespace=\"$namespace\"}[$__rate_interval])\n      * on (namespace, pod) group_left (node)\n        topk by (namespace, pod) (1, max by (namespace, pod, node) (kube_pod_info{node!=\"\"}))\n    )\n  * on (namespace, pod) group_left ()\n    topk by (namespace, pod) (\n      1,\n      max by (namespace, risingwave_component, pod) (up{risingwave_name=\"$instance\"})\n    )\n)",
+                     "format": "time_series",
+                     "intervalFactor": 2,
+                     "legendFormat": "{{ risingwave_component }}",
+                     "refId": "A"
+                  }
+               ],
+               "title": "Avg CPU (Component-Level)",
+               "type": "timeseries"
+            },
+            {
+               "fieldConfig": {
+                  "defaults": {
+                     "color": {
+                        "mode": "palette-classic"
+                     },
+                     "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                           "legend": false,
+                           "tooltip": false,
+                           "viz": false
+                        },
+                        "lineInterpolation": "linear",
+                        "lineStyle": {
+                           "fill": "solid"
+                        },
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                           "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                           "group": "A",
+                           "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                           "mode": "off"
+                        }
+                     },
+                     "mappings": [ ],
+                     "thresholds": {
+                        "mode": "absolute",
+                        "steps": [ ]
+                     },
+                     "unit": "decbytes"
+                  },
+                  "overrides": [ ]
+               },
+               "id": 3,
+               "links": [ ],
+               "options": {
+                  "legend": {
+                     "calcs": [ ],
+                     "displayMode": "list",
+                     "placement": "bottom"
+                  },
+                  "tooltip": {
+                     "mode": "single",
+                     "sort": "none"
+                  }
+               },
+               "span": [
+                  6
+               ],
+               "targets": [
+                  {
+                     "expr": "avg by (risingwave_component) (\n    (\n        process_resident_memory_bytes{namespace=\"$namespace\"}\n      * on (namespace, pod) group_left (node)\n        topk by (namespace, pod) (1, max by (namespace, pod, node) (kube_pod_info{node!=\"\"}))\n    )\n  * on (namespace, pod) group_left ()\n    topk by (namespace, pod) (\n      1,\n      max by (namespace, risingwave_component, pod) (up{risingwave_name=~\"$instance\"})\n    )\n)",
+                     "format": "time_series",
+                     "intervalFactor": 2,
+                     "legendFormat": "{{ risingwave_component }}",
+                     "refId": "A"
+                  }
+               ],
+               "title": "Avg Memory (Component-Level)",
+               "type": "timeseries"
+            },
+            {
+               "fieldConfig": {
+                  "defaults": {
+                     "color": {
+                        "mode": "palette-classic"
+                     },
+                     "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                           "legend": false,
+                           "tooltip": false,
+                           "viz": false
+                        },
+                        "lineInterpolation": "linear",
+                        "lineStyle": {
+                           "fill": "solid"
+                        },
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                           "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                           "group": "A",
+                           "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                           "mode": "off"
+                        }
+                     },
+                     "mappings": [ ],
+                     "thresholds": {
+                        "mode": "absolute",
+                        "steps": [ ]
+                     },
+                     "unit": "percentunit"
+                  },
+                  "overrides": [ ]
+               },
+               "id": 4,
+               "links": [ ],
+               "options": {
+                  "legend": {
+                     "calcs": [ ],
+                     "displayMode": "list",
+                     "placement": "bottom"
+                  },
+                  "tooltip": {
+                     "mode": "single",
+                     "sort": "none"
+                  }
+               },
+               "span": [
+                  6
+               ],
+               "targets": [
+                  {
+                     "expr": "max by (risingwave_component) (\n    (\n        rate(process_cpu_seconds_total{namespace=\"$namespace\"}[$__rate_interval])\n      * on (namespace, pod) group_left (node)\n        topk by (namespace, pod) (1, max by (namespace, pod, node) (kube_pod_info{node!=\"\"}))\n    )\n  * on (namespace, pod) group_left ()\n    topk by (namespace, pod) (\n      1,\n      max by (namespace, risingwave_component, pod) (up{risingwave_name=\"$instance\"})\n    )\n)",
+                     "format": "time_series",
+                     "intervalFactor": 2,
+                     "legendFormat": "{{ risingwave_component }}",
+                     "refId": "A"
+                  }
+               ],
+               "title": "Max CPU (Component-Level)",
+               "type": "timeseries"
+            },
+            {
+               "fieldConfig": {
+                  "defaults": {
+                     "color": {
+                        "mode": "palette-classic"
+                     },
+                     "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                           "legend": false,
+                           "tooltip": false,
+                           "viz": false
+                        },
+                        "lineInterpolation": "linear",
+                        "lineStyle": {
+                           "fill": "solid"
+                        },
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                           "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                           "group": "A",
+                           "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                           "mode": "off"
+                        }
+                     },
+                     "mappings": [ ],
+                     "thresholds": {
+                        "mode": "absolute",
+                        "steps": [ ]
+                     },
+                     "unit": "decbytes"
+                  },
+                  "overrides": [ ]
+               },
+               "id": 5,
+               "links": [ ],
+               "options": {
+                  "legend": {
+                     "calcs": [ ],
+                     "displayMode": "list",
+                     "placement": "bottom"
+                  },
+                  "tooltip": {
+                     "mode": "single",
+                     "sort": "none"
+                  }
+               },
+               "span": [
+                  6
+               ],
+               "targets": [
+                  {
+                     "expr": "max by (risingwave_component) (\n    (\n        process_resident_memory_bytes{namespace=\"$namespace\"}\n      * on (namespace, pod) group_left (node)\n        topk by (namespace, pod) (1, max by (namespace, pod, node) (kube_pod_info{node!=\"\"}))\n    )\n  * on (namespace, pod) group_left ()\n    topk by (namespace, pod) (\n      1,\n      max by (namespace, risingwave_component, pod) (up{risingwave_name=~\"$instance\"})\n    )\n)",
+                     "format": "time_series",
+                     "intervalFactor": 2,
+                     "legendFormat": "{{ risingwave_component }}",
+                     "refId": "A"
+                  }
+               ],
+               "title": "Max Memory (Component-Level)",
+               "type": "timeseries"
+            },
+            {
+               "fieldConfig": {
+                  "defaults": {
+                     "color": {
+                        "mode": "palette-classic"
+                     },
+                     "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                           "legend": false,
+                           "tooltip": false,
+                           "viz": false
+                        },
+                        "lineInterpolation": "linear",
+                        "lineStyle": {
+                           "fill": "solid"
+                        },
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                           "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                           "group": "A",
+                           "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                           "mode": "off"
+                        }
+                     },
+                     "mappings": [ ],
+                     "thresholds": {
+                        "mode": "absolute",
+                        "steps": [ ]
+                     },
+                     "unit": "percentunit"
+                  },
+                  "overrides": [ ]
+               },
+               "id": 6,
+               "links": [ ],
+               "options": {
+                  "legend": {
+                     "calcs": [ ],
+                     "displayMode": "list",
+                     "placement": "bottom"
+                  },
+                  "tooltip": {
+                     "mode": "single",
+                     "sort": "none"
+                  }
+               },
+               "span": [
+                  6
+               ],
+               "targets": [
+                  {
+                     "expr": "sum by (pod, risingwave_component, node) (\n    (\n        rate(process_cpu_seconds_total{namespace=\"$namespace\"}[$__rate_interval])\n      * on (namespace, pod) group_left (node)\n        topk by (namespace, pod) (1, max by (namespace, pod, node) (kube_pod_info{node!=\"\"}))\n    )\n  * on (namespace, pod) group_left ()\n    topk by (namespace, pod) (\n      1,\n      max by (namespace, risingwave_component, pod) (up{risingwave_name=\"$instance\"})\n    )\n)",
                      "format": "time_series",
                      "intervalFactor": 2,
                      "legendFormat": "{{ pod }} ({{ risingwave_component }}) @ {{ node }}",
                      "refId": "A"
                   }
                ],
-               "title": "CPU Utilities (Component-Level)",
+               "title": "CPU (Pod-Level)",
+               "type": "timeseries"
+            },
+            {
+               "fieldConfig": {
+                  "defaults": {
+                     "color": {
+                        "mode": "palette-classic"
+                     },
+                     "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                           "legend": false,
+                           "tooltip": false,
+                           "viz": false
+                        },
+                        "lineInterpolation": "linear",
+                        "lineStyle": {
+                           "fill": "solid"
+                        },
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                           "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                           "group": "A",
+                           "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                           "mode": "off"
+                        }
+                     },
+                     "mappings": [ ],
+                     "thresholds": {
+                        "mode": "absolute",
+                        "steps": [ ]
+                     },
+                     "unit": "decbytes"
+                  },
+                  "overrides": [ ]
+               },
+               "id": 7,
+               "links": [ ],
+               "options": {
+                  "legend": {
+                     "calcs": [ ],
+                     "displayMode": "list",
+                     "placement": "bottom"
+                  },
+                  "tooltip": {
+                     "mode": "single",
+                     "sort": "none"
+                  }
+               },
+               "span": [
+                  6
+               ],
+               "targets": [
+                  {
+                     "expr": "avg by (pod, risingwave_component, node) (\n    (\n        process_resident_memory_bytes{namespace=\"$namespace\"}\n      * on (namespace, pod) group_left (node)\n        topk by (namespace, pod) (1, max by (namespace, pod, node) (kube_pod_info{node!=\"\"}))\n    )\n  * on (namespace, pod) group_left ()\n    topk by (namespace, pod) (\n      1,\n      max by (namespace, risingwave_component, pod) (up{risingwave_name=~\"$instance\"})\n    )\n)",
+                     "format": "time_series",
+                     "intervalFactor": 2,
+                     "legendFormat": "{{ pod }} ({{ risingwave_component }}) @ {{ node }}",
+                     "refId": "A"
+                  }
+               ],
+               "title": "Memory (Pod-Level)",
                "type": "timeseries"
             }
          ],

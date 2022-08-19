@@ -1,7 +1,7 @@
 {
   // 12 is the total row span.
   span(width='half'):: {
-    span: [
+    span::: [
       if std.type(width) == 'string' then
         if width == 'full' then 12
         else if width == 'half' then 6

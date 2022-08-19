@@ -166,7 +166,7 @@ local panels = {
 row.new(
   title='Resource Utilities',
   height='300px',
-  collapse=false,
+  collapse=true,
 ).addPanels(
   [
     panels.component_level_avg_cpu_utilities,

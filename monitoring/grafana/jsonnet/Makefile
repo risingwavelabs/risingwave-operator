@@ -5,7 +5,7 @@ JSONNET_SOURCES := $(shell find . -name '*.json' -not -path './vendor/*' -not -p
 JSONNET_SOURCES += $(shell find . -name '*.jsonnet' -not -path './vendor/*' -not -path './target/*')
 JSONNET_SOURCES += $(shell find . -name '*.libsonnet' -not -path './vendor/*' -not -path './target/*')
 
-build: ensure-target-dir vendor $(TARGET_FILE)
+build: ensure-target-dir $(TARGET_FILE)
 
 $(TARGET_FILE): $(JSONNET_SOURCES)
 	jsonnet -J vendor -o $(TARGET_FILE) risingwave-overview.jsonnet

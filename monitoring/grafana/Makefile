@@ -6,7 +6,7 @@ RISINGWAVE_OVERVIEW_DASHBOARD = risingwave-overview.json
 
 generate:
 	cd jsonnet && make
-	cp jsonnet/target/dashboard.json $(RISINGWAVE_OVERVIEW_DASHBOARD)
+	cp jsonnet/target/*.json .
 
 update: generate
 	@echo "updating the Grafana with $(RISINGWAVE_OVERVIEW_DASHBOARD)..."

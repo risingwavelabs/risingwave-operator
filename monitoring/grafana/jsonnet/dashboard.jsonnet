@@ -6,7 +6,7 @@ local template = grafana.template;
 local lib = import 'mixon/lib.libsonnet';
 
 dashboard.new(
-  'RisingWave Dashboard',
+  'RisingWave Overview',
   schemaVersion=16,
   tags=['RisingWave', 'Streaming Database', 'Singularity Data']
 ).addTemplates(

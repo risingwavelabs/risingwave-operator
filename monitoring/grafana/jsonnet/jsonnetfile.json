@@ -4,11 +4,11 @@
     {
       "source": {
         "git": {
-          "remote": "https://github.com/grafana/grafonnet-lib.git",
+          "remote": "https://github.com/rhowe/grafonnet-lib.git",
           "subdir": "grafonnet"
         }
       },
-      "version": "master"
+      "version": "add-timeseries"
     }
   ],
   "legacyImports": true

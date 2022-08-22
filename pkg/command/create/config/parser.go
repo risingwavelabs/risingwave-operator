@@ -25,7 +25,6 @@ type resource struct {
 	Memory string
 }
 type baseConfig struct {
-	Arch     string
 	Replicas int
 	Limit    resource
 	Request  resource

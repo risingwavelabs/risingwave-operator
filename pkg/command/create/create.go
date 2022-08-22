@@ -52,8 +52,6 @@ type Options struct {
 
 	configFile string
 
-	arch string
-
 	config config.Config
 
 	genericclioptions.IOStreams
@@ -83,7 +81,6 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 		Aliases: []string{"new"},
 	}
 
-	cmd.Flags().StringVarP(&o.arch, "arch", "a", o.configFile, "The default arch(will be override if config file also set the arch).")
 	cmd.Flags().StringVarP(&o.configFile, "config", "c", o.configFile, "The config file used when creating the instance.")
 
 	return cmd
@@ -100,7 +97,7 @@ func (o *Options) Complete(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 		o.name = args[0]
 	}
 
-	c, err := config.ApplyConfigFile(o.configFile, o.arch)
+	c, err := config.ApplyConfigFile(o.configFile)
 	if err != nil {
 		return err
 	}

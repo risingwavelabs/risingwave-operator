@@ -30,7 +30,7 @@ func Test_CreateInstance(t *testing.T) {
 		namespace:  "test-ns",
 		configFile: "config/example.toml",
 	}
-	c, err := config.ApplyConfigFile(o.configFile, o.arch)
+	c, err := config.ApplyConfigFile(o.configFile)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -97,9 +97,6 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 	}
 
 	o.updateTag(rw)
-	if err != nil {
-		return err
-	}
 
 	err = ctx.Client().Update(context.Background(), rw)
 	if err != nil {

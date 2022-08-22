@@ -66,10 +66,10 @@ type Options struct {
 	component      string
 }
 
-// request holds the request string and converted resource quantity.
+// Request holds the request string and converted resource quantity.
 type Request struct {
-	requested_qty string
-	converted_qty k8sresource.Quantity
+	requestedQty string
+	convertedQty k8sresource.Quantity
 }
 
 func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) *cobra.Command {
@@ -89,11 +89,11 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 		},
 	}
 
-	cmd.Flags().StringVar(&o.computeRequest.requested_qty, "cpurequest", "", "The target cpu request.")
-	cmd.Flags().StringVar(&o.computeLimit.requested_qty, "cpulimit", "", "The target cpu limit.")
-	cmd.Flags().StringVar(&o.memoryRequest.requested_qty, "memoryrequest", "", "The target memory request.")
-	cmd.Flags().StringVar(&o.memoryLimit.requested_qty, "memorylimit", "", "The target memory limit.")
-	cmd.Flags().StringVarP(&o.group, "group", "g", util.DEFAULT_GROUP, "The group to be updated. If not set, update the default group.")
+	cmd.Flags().StringVar(&o.computeRequest.requestedQty, "cpu-request", "", "The target cpu request.")
+	cmd.Flags().StringVar(&o.computeLimit.requestedQty, "cpu-limit", "", "The target cpu limit.")
+	cmd.Flags().StringVar(&o.memoryRequest.requestedQty, "memory-request", "", "The target memory request.")
+	cmd.Flags().StringVar(&o.memoryLimit.requestedQty, "memory-limit", "", "The target memory limit.")
+	cmd.Flags().StringVarP(&o.group, "group", "g", util.DefaultGroup, "The group to be updated. If not set, update the default group.")
 	cmd.Flags().StringVarP(&o.component, "component", "c", util.GLOBAL, "The component to be updated. If not set, update global resources.")
 
 	return cmd
@@ -101,41 +101,41 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 
 func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
 	// parse the resource requests
-	if o.computeRequest.requested_qty != "" {
-		qty, err := k8sresource.ParseQuantity(o.computeRequest.requested_qty)
+	if o.computeRequest.requestedQty != "" {
+		qty, err := k8sresource.ParseQuantity(o.computeRequest.requestedQty)
 		if err != nil {
 			return err
 		}
-		o.computeRequest.converted_qty = qty
+		o.computeRequest.convertedQty = qty
 	}
 
-	if o.computeLimit.requested_qty != "" {
-		qty, err := k8sresource.ParseQuantity(o.computeLimit.requested_qty)
+	if o.computeLimit.requestedQty != "" {
+		qty, err := k8sresource.ParseQuantity(o.computeLimit.requestedQty)
 		if err != nil {
 			return err
 		}
-		o.computeLimit.converted_qty = qty
+		o.computeLimit.convertedQty = qty
 	}
 
-	if o.memoryRequest.requested_qty != "" {
-		qty, err := k8sresource.ParseQuantity(o.memoryRequest.requested_qty)
+	if o.memoryRequest.requestedQty != "" {
+		qty, err := k8sresource.ParseQuantity(o.memoryRequest.requestedQty)
 		if err != nil {
 			return err
 		}
-		o.memoryRequest.converted_qty = qty
+		o.memoryRequest.convertedQty = qty
 	}
 
-	if o.memoryLimit.requested_qty != "" {
-		qty, err := k8sresource.ParseQuantity(o.memoryLimit.requested_qty)
+	if o.memoryLimit.requestedQty != "" {
+		qty, err := k8sresource.ParseQuantity(o.memoryLimit.requestedQty)
 		if err != nil {
 			return err
 		}
-		o.memoryLimit.converted_qty = qty
+		o.memoryLimit.convertedQty = qty
 	}
 
 	// validate group
 	if o.group == "" {
-		o.group = util.DEFAULT_GROUP
+		o.group = util.DefaultGroup
 	} else {
 		rw, err := o.GetRwInstance(ctx)
 		if err != nil {
@@ -218,19 +218,19 @@ func (o *Options) updateConfig(rw *v1alpha1.RisingWave) error {
 }
 
 func (o *Options) updateComponentResources(resourceMap *corev1.ResourceRequirements) {
-	if o.computeRequest.requested_qty != "" {
-		resourceMap.Requests[corev1.ResourceCPU] = o.computeRequest.converted_qty
+	if o.computeRequest.requestedQty != "" {
+		resourceMap.Requests[corev1.ResourceCPU] = o.computeRequest.convertedQty
 	}
 
-	if o.computeLimit.requested_qty != "" {
-		resourceMap.Limits[corev1.ResourceCPU] = o.computeLimit.converted_qty
+	if o.computeLimit.requestedQty != "" {
+		resourceMap.Limits[corev1.ResourceCPU] = o.computeLimit.convertedQty
 	}
 
-	if o.memoryRequest.requested_qty != "" {
-		resourceMap.Requests[corev1.ResourceMemory] = o.memoryRequest.converted_qty
+	if o.memoryRequest.requestedQty != "" {
+		resourceMap.Requests[corev1.ResourceMemory] = o.memoryRequest.convertedQty
 	}
 
-	if o.memoryLimit.requested_qty != "" {
-		resourceMap.Limits[corev1.ResourceMemory] = o.memoryLimit.converted_qty
+	if o.memoryLimit.requestedQty != "" {
+		resourceMap.Limits[corev1.ResourceMemory] = o.memoryLimit.convertedQty
 	}
 }

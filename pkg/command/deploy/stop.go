@@ -150,7 +150,7 @@ func stopRisingWave(instance *v1alpha1.RisingWave) error {
 	if instance.Annotations == nil {
 		instance.Annotations = make(map[string]string)
 	}
-	instance.Annotations[REPLICA_ANNOTATION] = string(annotation)
+	instance.Annotations[ReplicaAnnotation] = string(annotation)
 
 	return nil
 }

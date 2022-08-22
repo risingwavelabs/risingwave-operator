@@ -17,15 +17,12 @@
 package config
 
 import (
-	"strings"
-
 	corev1 "k8s.io/api/core/v1"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
 )
 
 const (
-	AMDImage = "ghcr.io/singularity-data/risingwave"
-	ARMImage = "ghcr.io/singularity-data/risingwave-arm"
+	Image = "ghcr.io/singularity-data/risingwave"
 
 	DefaultLimitCPU    = "1"
 	DefaultLimitMemory = "1Gi"
@@ -62,7 +59,6 @@ func (g Group) deepCopy() Group {
 }
 
 type BaseConfig struct {
-	Arch     string
 	Image    string
 	Replicas int32
 
@@ -87,8 +83,7 @@ var defaultGroup = Group{
 
 var DefaultConfig = Config{
 	BaseConfig: BaseConfig{
-		Arch:      "amd64",
-		Image:     AMDImage,
+		Image:     Image,
 		Resources: *defaultResource.DeepCopy(),
 	},
 	MetaConfig: ComponentConfig{
@@ -114,11 +109,8 @@ var DefaultConfig = Config{
 }
 
 // ApplyConfigFile will construct a config by config file.
-func ApplyConfigFile(path string, arch string) (Config, error) {
-	if len(arch) != 0 {
-		DefaultConfig.Arch = arch
-		DefaultConfig.Image = image(arch)
-	}
+func ApplyConfigFile(path string) (Config, error) {
+	DefaultConfig.Image = Image
 	if len(path) == 0 {
 		return DefaultConfig, nil
 	}
@@ -127,7 +119,6 @@ func ApplyConfigFile(path string, arch string) (Config, error) {
 	if err != nil {
 		return DefaultConfig, err
 	}
-	c.Global.Arch = arch
 
 	return constructConfig(c), nil
 }
@@ -135,8 +126,7 @@ func ApplyConfigFile(path string, arch string) (Config, error) {
 func constructConfig(c innerConfig) Config {
 	var conf = Config{
 		BaseConfig: BaseConfig{
-			Arch:      c.Global.Arch,
-			Image:     image(c.Global.Arch),
+			Image:     Image,
 			Replicas:  int32(c.Global.Replicas),
 			Resources: constructResource(c.Global.Limit, c.Global.Request),
 		},
@@ -204,11 +194,4 @@ func constructResource(limit, request resource) corev1.ResourceRequirements {
 			corev1.ResourceMemory: k8sresource.MustParse(rMemory),
 		},
 	}
-}
-
-func image(arch string) string {
-	if strings.Contains(strings.ToLower(arch), "arm") {
-		return ARMImage
-	}
-	return AMDImage
 }

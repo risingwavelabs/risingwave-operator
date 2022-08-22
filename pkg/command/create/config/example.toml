@@ -1,5 +1,4 @@
 [global]
-arch="amd"
 replicas=1
     [global.limit]
     cpu="1"

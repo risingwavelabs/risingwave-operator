@@ -23,14 +23,9 @@ import (
 )
 
 func TestApplyConfigFile(t *testing.T) {
-	config, err := ApplyConfigFile("example.toml", "")
+	config, err := ApplyConfigFile("example.toml")
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, config.Image, AMDImage)
-	config, err = ApplyConfigFile("example.toml", "arm")
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, config.Image, ARMImage)
+	assert.Equal(t, config.Image, Image)
 }

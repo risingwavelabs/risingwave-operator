@@ -1,11 +1,11 @@
 |                    |                                                                          |
 | -------            |--------------------------------------------------------------------------|
 | Feature            | kubectl-rw: a kind of kubectl plugin                                     |
-| Status             | In-progress                                                              |
+| Status             | Completed                                                                |
 | Date               | 2022-06-30                                                               |
-| Authors            | Xinyu                                                                    |
+| Authors            | Luke & Xinyu                                                             |
 | RFC PR #           | [#100](https://github.com/singularity-data/risingwave-operator/pull/100) |
-| Implementation PR #|                                                                          |
+| Implementation PR #| [#175](https://github.com/singularity-data/risingwave-operator/pull/175) |
 |                    |                                                                          |
 
 # **Summary**

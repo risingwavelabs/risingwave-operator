@@ -237,15 +237,15 @@ Examples:
 
 - Update compute request and limit config of global component in risingwave named example-rw.
 
-`kubectl rw update example-rw --cpurequest 200m --cpulimit 1000m`
+`kubectl rw update example-rw --cpu-request 200m --cpu-limit 1000m`
 
 - Update memory request of global component in risingwave named example-rw in namespace foo.
 
-`kubectl rw update example-rw -n foo --memoryrequest 256Mi`
+`kubectl rw update example-rw -n foo --memory-request 256Mi`
 
 - Update memory request of meta component in risingwave named example-rw in namespace foo and group test.
   
-`kubectl rw update example-rw -n foo -c meta -g test --memoryrequest 256Mi`
+`kubectl rw update example-rw -n foo -c meta -g test --memory-request 256Mi`
 
 Options:
 

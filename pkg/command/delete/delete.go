@@ -19,6 +19,7 @@ package delete
 import (
 	"context"
 	"fmt"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -109,7 +110,7 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 		},
 	}
 
-	err := ctx.Client().Delete(context.Background(), rw)
+	err := ctx.Client().Delete(context.Background(), rw, client.PropagationPolicy(metav1.DeletePropagationBackground))
 	if err != nil {
 		return fmt.Errorf("failed to update instance, %w", err)
 	}

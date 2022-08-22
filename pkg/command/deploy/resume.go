@@ -136,7 +136,7 @@ func resumeRisingWave(instance *v1alpha1.RisingWave) error {
 	}
 
 	// delete annotation
-	delete(instance.Annotations, REPLICA_ANNOTATION)
+	delete(instance.Annotations, ReplicaAnnotation)
 
 	return nil
 }

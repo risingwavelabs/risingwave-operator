@@ -44,6 +44,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Set up Go 1.18
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+          cache: true
+          check-latest: true
+      - run: |
+          go version
+          make build-plugin
+          mv /bin/kubectl-rw /usr/local/bin/kubectl-rw
+          kubectl rw --version
       - name: e2e-test
         run: |
           sudo su

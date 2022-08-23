@@ -141,8 +141,32 @@ func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 			return err
 		}
 
-		if !util.IsValidGroup(rw, o.group) {
-			return fmt.Errorf("invalid group name %s", o.group)
+		switch o.component {
+		case util.COMPUTE:
+			if !util.IsValidComputeGroup(o.group, rw.Spec.Components.Compute.Groups) {
+				return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
+			}
+
+		case util.META:
+			if !util.IsValidRWGroup(o.group, rw.Spec.Components.Meta.Groups) {
+				return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
+			}
+
+		case util.FRONTEND:
+			if !util.IsValidRWGroup(o.group, rw.Spec.Components.Frontend.Groups) {
+				return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
+			}
+
+		case util.COMPACTOR:
+			if !util.IsValidRWGroup(o.group, rw.Spec.Components.Compactor.Groups) {
+				return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
+			}
+
+		case util.GLOBAL:
+			break
+
+		default:
+			return fmt.Errorf("invalid risingwave component: %s", o.component)
 		}
 	}
 

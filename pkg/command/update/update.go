@@ -21,10 +21,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-
 	corev1 "k8s.io/api/core/v1"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	cmdcontext "github.com/singularity-data/risingwave-operator/pkg/command/context"

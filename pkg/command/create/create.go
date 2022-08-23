@@ -126,7 +126,7 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 }
 
 // TODO: to support create different risingwave by config file
-// TODO: to support different storage by config file.
+// TODO: to support different storage
 func (o *Options) createInstance() (*v1alpha1.RisingWave, error) {
 	c := o.config
 	rw := &v1alpha1.RisingWave{

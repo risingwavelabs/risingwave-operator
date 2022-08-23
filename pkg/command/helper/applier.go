@@ -20,9 +20,8 @@ import (
 	"bytes"
 	"io/ioutil"
 
-	"k8s.io/client-go/rest"
-
 	"k8s.io/cli-runtime/pkg/resource"
+	"k8s.io/client-go/rest"
 )
 
 type Applier struct {

@@ -18,24 +18,18 @@ package util
 
 import "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 
-func IsValidGroup(rw *v1alpha1.RisingWave, group string) bool {
-	for _, g := range rw.Spec.Components.Compute.Groups {
-		if g.Name == group {
+func IsValidComputeGroup(groupName string, groups []v1alpha1.RisingWaveComputeGroup) bool {
+	for _, g := range groups {
+		if g.Name == groupName {
 			return true
 		}
 	}
-	for _, g := range rw.Spec.Components.Meta.Groups {
-		if g.Name == group {
-			return true
-		}
-	}
-	for _, g := range rw.Spec.Components.Compactor.Groups {
-		if g.Name == group {
-			return true
-		}
-	}
-	for _, g := range rw.Spec.Components.Frontend.Groups {
-		if g.Name == group {
+	return false
+}
+
+func IsValidRWGroup(groupName string, groups []v1alpha1.RisingWaveComponentGroup) bool {
+	for _, g := range groups {
+		if g.Name == groupName {
 			return true
 		}
 	}

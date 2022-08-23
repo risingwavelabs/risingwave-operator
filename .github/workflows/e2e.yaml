@@ -45,16 +45,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Set up Go 1.18
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.18
-          cache: true
-          check-latest: true
-      - run: |
-          go version
-          make build-plugin
-          mv /bin/kubectl-rw /usr/local/bin/kubectl-rw
-          kubectl rw --version
+      - name: build-plugin
+        run: |
+          mkdir -p "/tmp/go"
+          mkdir -p "/tmp/gocache"
+          HOME="/" GOMODCACHE="/tmp/gocache" GOPATH="/tmp/go" go build -o bin/kubectl-rw cmd/plugin/main.go
+          mv ./bin/kubectl-rw /usr/local/bin/kubectl-rw
+          kubectl rw version
       - name: e2e-test
         run: |
           sudo su

@@ -25,7 +25,6 @@ import (
 	"github.com/spf13/cobra"
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -182,9 +181,6 @@ func (o *BasicOptions) GetRwInstance(ctx *RWContext) (*v1alpha1.RisingWave, erro
 
 	err := ctx.Client().Get(context.Background(), operatorKey, rw)
 	if err != nil {
-		if errors.IsNotFound(err) {
-			fmt.Fprint(o.Out, "Risingwave instance not exists")
-		}
 		return nil, err
 	}
 

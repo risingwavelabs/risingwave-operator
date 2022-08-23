@@ -62,7 +62,7 @@ func NewVersionCommand(ctx *context.RWContext, streams genericclioptions.IOStrea
 // TODO: add version file
 
 func (o *Options) Run(ctx *context.RWContext, cmd *cobra.Command, args []string) error {
-	fmt.Fprintf(o.Out, "Client Version: %s\n", "0.0.1")
+	fmt.Fprintf(o.Out, "Client Version: %s\n", "v0.1.1")
 
 	return nil
 }

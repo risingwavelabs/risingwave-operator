@@ -19,11 +19,11 @@ package delete
 import (
 	"context"
 	"fmt"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	cmdcontext "github.com/singularity-data/risingwave-operator/pkg/command/context"

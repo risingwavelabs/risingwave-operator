@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package risingwave
+package controller
 
 import (
 	"context"
@@ -242,7 +242,7 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 	})
 
 	numEvents := len(recorder.Events)
-	numWantedEvents := 1
+	numWantedEvents := 0
 	if numEvents != numWantedEvents {
 		t.Errorf("got %d events, wanted %d", numEvents, numWantedEvents)
 	}
@@ -290,7 +290,7 @@ func Test_RisingWaveController_Recovery(t *testing.T) {
 	}
 
 	numEvents := len(recorder.Events)
-	numWantedEvents := 1
+	numWantedEvents := 0
 	if numEvents != numWantedEvents {
 		t.Errorf("got %d events, wanted %d", numEvents, numWantedEvents)
 	}

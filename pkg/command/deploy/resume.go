@@ -94,10 +94,18 @@ func resumeRisingWave(instance *v1alpha1.RisingWave) error {
 		return fmt.Errorf("error retrieving replica information; are you trying to resume an instance that was not stopped?")
 	}
 
-	err := json.Unmarshal([]byte(instance.Annotations["replicas.old"]), &replicas)
+	err := json.Unmarshal([]byte(instance.Annotations[ReplicaAnnotation]), &replicas)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal replicas, %v; are you trying to resume an instance that was not stopped?", err)
 	}
+
+	global := v1alpha1.RisingWaveGlobalReplicas{}
+	err = json.Unmarshal([]byte(instance.Annotations[GlobalReplicaAnnotation]), &global)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal global replicas, %v; are you trying to resume an instance that was not stopped?", err)
+	}
+
+	instance.Spec.Global.Replicas = global
 
 	for _, replicaInfo := range replicas.Compactor {
 		for i, group := range instance.Spec.Components.Compactor.Groups {

@@ -122,6 +122,9 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("failed to create instance, %w", err)
 	}
+
+	s := fmt.Sprintf("Succeed to create risingwave %s in %s namespace.\n", o.name, util.Bold(o.namespace))
+	fmt.Fprint(o.Out, s)
 	return nil
 }
 

@@ -42,5 +42,6 @@ dashboard.new(
   [
     rows.resource_utilities,
     rows.object_store,
+    rows.compactor,
   ]
 )

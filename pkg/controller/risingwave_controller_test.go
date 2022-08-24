@@ -92,6 +92,14 @@ func newActionAsserts(t *testing.T, asserts map[string]resultErr, mustCover bool
 	}
 }
 
+func takeAndLogEventsFromFakeRecord(t *testing.T, recorder *record.FakeRecorder) {
+	t.Logf("events: \n")
+	for i := 0; i < len(recorder.Events); i++ {
+		event := <-recorder.Events
+		t.Logf("  - %s\n", event)
+	}
+}
+
 func Test_RisingWaveController_New(t *testing.T) {
 	risingwave := &risingwavev1alpha1.RisingWave{
 		ObjectMeta: metav1.ObjectMeta{
@@ -148,6 +156,7 @@ func Test_RisingWaveController_New(t *testing.T) {
 	numEvents := len(recorder.Events)
 	numWantedEvents := 1
 	if numEvents != numWantedEvents {
+		takeAndLogEventsFromFakeRecord(t, recorder)
 		t.Errorf("got %d events, wanted %d", numEvents, numWantedEvents)
 	}
 
@@ -189,6 +198,7 @@ func Test_RisingWaveController_Deleted(t *testing.T) {
 	numEvents := len(recorder.Events)
 	numWantedEvents := 0
 	if numEvents != numWantedEvents {
+		takeAndLogEventsFromFakeRecord(t, recorder)
 		t.Errorf("got %d events, wanted %d", numEvents, numWantedEvents)
 	}
 
@@ -198,7 +208,7 @@ func Test_RisingWaveController_Deleted(t *testing.T) {
 }
 
 func Test_RisingWaveController_Initializing(t *testing.T) {
-	risingwave := testutils.FakeRisingWave
+	risingwave := testutils.FakeRisingWave()
 	risingwave.Status = risingwavev1alpha1.RisingWaveStatus{
 		Conditions: []risingwavev1alpha1.RisingWaveCondition{
 			{
@@ -244,6 +254,7 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 	numEvents := len(recorder.Events)
 	numWantedEvents := 0
 	if numEvents != numWantedEvents {
+		takeAndLogEventsFromFakeRecord(t, recorder)
 		t.Errorf("got %d events, wanted %d", numEvents, numWantedEvents)
 	}
 
@@ -253,7 +264,7 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 }
 
 func Test_RisingWaveController_Recovery(t *testing.T) {
-	risingwave := testutils.FakeRisingWave.DeepCopy()
+	risingwave := testutils.FakeRisingWave()
 	risingwave.Status.ObservedGeneration = risingwave.Generation
 
 	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
@@ -286,12 +297,14 @@ func Test_RisingWaveController_Recovery(t *testing.T) {
 	risingwaveManager := object.NewRisingWaveManager(nil, &currentRisingwave)
 	runningCondition := risingwaveManager.GetCondition(risingwavev1alpha1.RisingWaveConditionRunning)
 	if runningCondition == nil || runningCondition.Status != metav1.ConditionFalse {
+		t.Logf("condition: %s", testutils.JsonMustPrettyPrint(runningCondition))
 		t.Fatal("Running condition not false")
 	}
 
 	numEvents := len(recorder.Events)
-	numWantedEvents := 0
+	numWantedEvents := 2
 	if numEvents != numWantedEvents {
+		takeAndLogEventsFromFakeRecord(t, recorder)
 		t.Errorf("got %d events, wanted %d", numEvents, numWantedEvents)
 	}
 

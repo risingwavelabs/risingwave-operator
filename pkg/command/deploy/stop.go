@@ -139,6 +139,12 @@ func stopRisingWave(instance *v1alpha1.RisingWave) error {
 		replicas.Meta = append(replicas.Meta, metaReplica)
 	}
 
+	global, err := json.Marshal(instance.Spec.Global.Replicas)
+	if err != nil {
+		return fmt.Errorf("failed to serialise replicas, %v", err)
+	}
+	stopGlobal(instance)
+
 	// serialise replica struct to annotation
 	annotation, err := json.Marshal(replicas)
 	if err != nil {
@@ -151,6 +157,16 @@ func stopRisingWave(instance *v1alpha1.RisingWave) error {
 		instance.Annotations = make(map[string]string)
 	}
 	instance.Annotations[ReplicaAnnotation] = string(annotation)
+	instance.Annotations[GlobalReplicaAnnotation] = string(global)
 
 	return nil
+}
+
+func stopGlobal(instance *v1alpha1.RisingWave) {
+	instance.Spec.Global.Replicas = v1alpha1.RisingWaveGlobalReplicas{
+		Meta:      0,
+		Compactor: 0,
+		Compute:   0,
+		Frontend:  0,
+	}
 }

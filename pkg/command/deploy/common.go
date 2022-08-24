@@ -31,7 +31,8 @@ type ReplicaInfo struct {
 }
 
 const (
-	ReplicaAnnotation = "replicas.old"
+	ReplicaAnnotation       = "replicas.old"
+	GlobalReplicaAnnotation = "replicas.global"
 )
 
 // checks if instance has already been stopped.

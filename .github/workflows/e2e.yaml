@@ -48,7 +48,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.18
-      - name: build-plugin
+      - name: build-plugin #TODO: will remove after release stable plugin.
         run: |
           mkdir -p "/tmp/go"
           mkdir -p "/tmp/gocache"

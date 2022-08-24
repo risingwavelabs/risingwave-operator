@@ -65,7 +65,7 @@ func NewOptions(streams genericclioptions.IOStreams) *Options {
 }
 
 // NewCommand creates the create command which can create a risingwave instance.
-func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) *cobra.Command {
+func NewCommand(ctx cmdcontext.Context, streams genericclioptions.IOStreams) *cobra.Command {
 	o := NewOptions(streams)
 
 	cmd := &cobra.Command{
@@ -86,7 +86,7 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 	return cmd
 }
 
-func (o *Options) Complete(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
+func (o *Options) Complete(ctx cmdcontext.Context, cmd *cobra.Command, args []string) error {
 	if len(ctx.Namespace()) == 0 {
 		o.namespace = "default"
 	} else {
@@ -105,14 +105,14 @@ func (o *Options) Complete(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 	return nil
 }
 
-func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
+func (o *Options) Validate(ctx cmdcontext.Context, cmd *cobra.Command, args []string) error {
 	if len(o.name) == 0 && len(o.configFile) == 0 {
-		return fmt.Errorf("name should be set when using defalut config")
+		return fmt.Errorf("name should be set when using default config")
 	}
 	return nil
 }
 
-func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
+func (o *Options) Run(ctx cmdcontext.Context, cmd *cobra.Command, args []string) error {
 	rw, err := o.createInstance()
 	if err != nil {
 		return err

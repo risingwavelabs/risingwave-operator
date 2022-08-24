@@ -24,10 +24,10 @@ import (
 const (
 	Image = "ghcr.io/singularity-data/risingwave"
 
-	DefaultLimitCPU    = "1"
-	DefaultLimitMemory = "1Gi"
-	DefaultRequestCPU  = "100m"
-	DefaultRequestsCPU = "100Mi"
+	DefaultLimitCPU      = "1"
+	DefaultLimitMemory   = "1Gi"
+	DefaultRequestCPU    = "100m"
+	DefaultRequestMemory = "100Mi"
 )
 
 // Config contain the fields needed that creating a instance.
@@ -72,7 +72,7 @@ var defaultResource = corev1.ResourceRequirements{
 	},
 	Requests: map[corev1.ResourceName]k8sresource.Quantity{
 		corev1.ResourceCPU:    k8sresource.MustParse(DefaultRequestCPU),
-		corev1.ResourceMemory: k8sresource.MustParse(DefaultRequestsCPU),
+		corev1.ResourceMemory: k8sresource.MustParse(DefaultRequestMemory),
 	}}
 
 var defaultGroup = Group{
@@ -182,7 +182,7 @@ func constructResource(limit, request resource) corev1.ResourceRequirements {
 	}
 	var rMemory = request.Memory
 	if len(request.Memory) == 0 {
-		rMemory = DefaultLimitCPU
+		rMemory = DefaultRequestMemory
 	}
 	return corev1.ResourceRequirements{
 		Limits: map[corev1.ResourceName]k8sresource.Quantity{

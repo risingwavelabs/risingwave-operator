@@ -60,6 +60,8 @@ type RWContext struct {
 	a *helper.Applier
 }
 
+var _ Context = &RWContext{}
+
 type Options interface {
 	BasicOptions
 	Complete() error

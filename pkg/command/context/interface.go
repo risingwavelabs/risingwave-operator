@@ -14,28 +14,24 @@
  * limitations under the License.
  */
 
-package config
+package context
 
 import (
-	"strings"
-	"testing"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/cli-runtime/pkg/resource"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/singularity-data/risingwave-operator/pkg/command/helper"
 )
 
-func TestParse(t *testing.T) {
+type Context interface {
+	Scheme() *runtime.Scheme
 
-	c, e := parse("example.toml")
-	if e != nil {
-		t.Fatal(e)
-	}
-	assert.Equal(t, len(c.Frontend.Groups), 2)
-}
+	Namespace() string
 
-func TestForNoPath(t *testing.T) {
+	Builder() *resource.Builder
 
-	_, e := parse("fake.toml")
-	if e != nil {
-		assert.Equal(t, strings.Contains(e.Error(), "no such file or directory"), true)
-	}
+	Client() client.Client
+
+	Applier() *helper.Applier
 }

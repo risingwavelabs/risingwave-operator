@@ -35,11 +35,7 @@ local panels = {
       )
     ) + span.span('half'),
 
-<<<<<<< HEAD
-    max_compaction_task_duration_overview::
-=======
-  max_compaction_task_duration::
->>>>>>> 86d6f4b (style: format the jsonnet files)
+  max_compaction_task_duration_overview::
     local expr = |||
       histogram_quantile(1, sum by (le) (rate(state_store_compact_task_duration_bucket{namespace="$namespace", risingwave_name="$instance"}[$__rate_interval])))
     |||;
@@ -54,13 +50,9 @@ local panels = {
       )
     ) + span.span('half'),
 
-<<<<<<< HEAD
-    max_compaction_task_duration_detailed::
-=======
-  median_compaction_task_duration::
->>>>>>> 86d6f4b (style: format the jsonnet files)
+  max_compaction_task_duration_detailed::
     local expr = |||
-      histogram_quantile(1, sum by (job, le) (rate(state_store_compact_task_duration_bucket{namespace="$namespace", risingwave_name="$instance"}[$__rate_interval])))
+      histogram_quantile(1, sum by (pod, le) (rate(state_store_compact_task_duration_bucket{namespace="$namespace", risingwave_name="$instance"}[$__rate_interval])))
     |||;
 
     timeseriesPanel.new(
@@ -73,7 +65,7 @@ local panels = {
       )
     ) + span.span('half'),
 
-    median_compaction_task_duration_overview::
+  median_compaction_task_duration_overview::
     local expr = |||
       histogram_quantile(0.5, sum by (le) (rate(state_store_compact_task_duration_bucket{namespace="$namespace", risingwave_name="$instance"}[$__rate_interval])))
     |||;
@@ -88,9 +80,9 @@ local panels = {
       )
     ) + span.span('half'),
 
-    median_compaction_task_duration_detailed::
+  median_compaction_task_duration_detailed::
     local expr = |||
-      histogram_quantile(0.5, sum by (le, pod) (rate(state_store_compact_task_duration_bucket{namespace="$namespace", risingwave_name="$instance"}[$__rate_interval])))
+      histogram_quantile(0.5, sum by (pod, le) (rate(state_store_compact_task_duration_bucket{namespace="$namespace", risingwave_name="$instance"}[$__rate_interval])))
     |||;
 
     timeseriesPanel.new(
@@ -108,7 +100,13 @@ local panels = {
       sum(rate(storage_level_compact_write{namespace="$namespace", risingwave_name="$instance"}[$__rate_interval])) by(pod)
     |||;
     local expr2 = |||
-      sum(rate(storage_level_compact_read_next{namespace="$namespace", risingwave_name="$instance"}[$__rate_interval])) by(pod) + sum(rate(storage_level_compact_read_curr{namespace="$namespace", risingwave_name="$instance"}[$__rate_interval])) by(pod)
+      sum by(pod) (
+        rate(storage_level_compact_read_next{namespace="$namespace", risingwave_name="$instance"}[$__rate_interval])
+      ) 
+      + 
+      sum by(pod) (
+        rate(storage_level_compact_read_curr{namespace="$namespace", risingwave_name="$instance"}[$__rate_interval])
+      )
     |||;
 
     timeseriesPanel.new(

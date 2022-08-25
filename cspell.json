@@ -16,12 +16,18 @@
             "name": "documentation",
             "path": ".cspell/doc.txt",
             "addWords": true
+        },
+        {
+            "name": "monitoring",
+            "path": ".cspell/grafana.txt",
+            "addWords": true
         }
     ],
     "dictionaries": [
         "makefile",
         "project-words",
-        "documentation"
+        "documentation",
+        "monitoring"
     ],
     "ignorePaths": [
         "project-words.txt",

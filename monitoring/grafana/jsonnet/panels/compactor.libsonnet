@@ -7,7 +7,7 @@ local span = import 'mixon/span.libsonnet';
 local strings = import 'lib/strings.libsonnet';
 
 local panels = {
-    compaction_success_failure_counts_overview::
+  compaction_success_failure_counts_overview::
     local expr = |||
       sum(storage_level_compact_frequency{namespace="$namespace", risingwave_name="$instance"}) by (result)
     |||;
@@ -21,7 +21,7 @@ local panels = {
       )
     ) + span.span('half'),
 
-    compaction_success_failure_counts_detailed::
+  compaction_success_failure_counts_detailed::
     local expr = |||
       sum(storage_level_compact_frequency{namespace="$namespace", risingwave_name="$instance"}) by (pod, group, result)
     |||;
@@ -35,7 +35,11 @@ local panels = {
       )
     ) + span.span('half'),
 
+<<<<<<< HEAD
     max_compaction_task_duration_overview::
+=======
+  max_compaction_task_duration::
+>>>>>>> 86d6f4b (style: format the jsonnet files)
     local expr = |||
       histogram_quantile(1, sum by (le) (rate(state_store_compact_task_duration_bucket{namespace="$namespace", risingwave_name="$instance"}[$__rate_interval])))
     |||;
@@ -50,7 +54,11 @@ local panels = {
       )
     ) + span.span('half'),
 
+<<<<<<< HEAD
     max_compaction_task_duration_detailed::
+=======
+  median_compaction_task_duration::
+>>>>>>> 86d6f4b (style: format the jsonnet files)
     local expr = |||
       histogram_quantile(1, sum by (job, le) (rate(state_store_compact_task_duration_bucket{namespace="$namespace", risingwave_name="$instance"}[$__rate_interval])))
     |||;
@@ -95,7 +103,7 @@ local panels = {
       )
     ) + span.span('half'),
 
-    compaction_read_write_rate::
+  compaction_read_write_rate::
     local expr1 = |||
       sum(rate(storage_level_compact_write{namespace="$namespace", risingwave_name="$instance"}[$__rate_interval])) by(pod)
     |||;
@@ -118,7 +126,7 @@ local panels = {
       )
     ) + span.span('half'),
 
-    sorted_string_table_file_size::
+  sorted_string_table_file_size::
     local expr = |||
       sum(storage_level_total_file_size{namespace="$namespace", risingwave_name="$instance"}) by (pod, level_index)
     |||;

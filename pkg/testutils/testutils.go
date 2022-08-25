@@ -43,7 +43,7 @@ func init() {
 }
 
 // Fake RisingWave.
-var FakeRisingWave = &risingwavev1alpha1.RisingWave{
+var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 	TypeMeta: metav1.TypeMeta{
 		Kind:       "RisingWave",
 		APIVersion: "risingwave.singularity-data.com/v1alpha1",
@@ -186,7 +186,11 @@ var FakeRisingWave = &risingwavev1alpha1.RisingWave{
 	},
 }
 
-var FakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
+func FakeRisingWave() *risingwavev1alpha1.RisingWave {
+	return fakeRisingWave.DeepCopy()
+}
+
+var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 	TypeMeta: metav1.TypeMeta{
 		Kind:       "RisingWave",
 		APIVersion: "risingwave.singularity-data.com/v1alpha1",
@@ -345,6 +349,10 @@ var FakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 			},
 		},
 	},
+}
+
+func FakeRisingWaveComponentOnly() *risingwavev1alpha1.RisingWave {
+	return fakeRisingWaveComponentOnly.DeepCopy()
 }
 
 func DeepEqual[T any](x, y T) bool {

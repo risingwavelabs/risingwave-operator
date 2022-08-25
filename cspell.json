@@ -1,39 +1,40 @@
 {
-    "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
-    "version": "0.2",
-    "dictionaryDefinitions": [
-        {
-            "name": "project-words",
-            "path": ".cspell/project-words.txt",
-            "addWords": true
-        },
-        {
-            "name": "makefile",
-            "path": ".cspell/makefile.txt",
-            "addWords": true
-        },
-        {
-            "name": "documentation",
-            "path": ".cspell/doc.txt",
-            "addWords": true
-        }
-    ],
-    "dictionaries": [
-        "makefile",
-        "project-words",
-        "documentation"
-    ],
-    "ignorePaths": [
-        "project-words.txt",
-        "config",
-        "legacy",
-        "docs/general/api.md"
-    ],
-    "languageSettings": [
-        {
-            "languageId": "makefile",
-            "locale": "*",
-            "dictionaries": ["makefile"]
-        }
-    ]
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "version": "0.2",
+  "dictionaryDefinitions": [
+    {
+      "name": "project-words",
+      "path": ".cspell/project-words.txt",
+      "addWords": true
+    },
+    {
+      "name": "makefile",
+      "path": ".cspell/makefile.txt",
+      "addWords": true
+    },
+    {
+      "name": "documentation",
+      "path": ".cspell/doc.txt",
+      "addWords": true
+    },
+    {
+      "name": "monitoring",
+      "path": ".cspell/grafana.txt",
+      "addWords": true
+    }
+  ],
+  "dictionaries": ["makefile", "project-words", "documentation", "monitoring"],
+  "ignorePaths": [
+    "project-words.txt",
+    "config",
+    "legacy",
+    "docs/general/api.md"
+  ],
+  "languageSettings": [
+    {
+      "languageId": "makefile",
+      "locale": "*",
+      "dictionaries": ["makefile"]
+    }
+  ]
 }

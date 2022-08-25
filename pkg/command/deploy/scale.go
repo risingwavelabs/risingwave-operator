@@ -105,28 +105,28 @@ func (o *ScaleOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 
 func updateReplicas(instance *v1alpha1.RisingWave, component, groupName string, target int32) error {
 	switch component {
-	case util.COMPACTOR:
+	case util.Compactor:
 		for i, group := range instance.Spec.Components.Compactor.Groups {
 			if group.Name == groupName {
 				instance.Spec.Components.Compactor.Groups[i].Replicas = target
 				break
 			}
 		}
-	case util.COMPUTE:
+	case util.Compute:
 		for i, group := range instance.Spec.Components.Compute.Groups {
 			if group.Name == groupName {
 				instance.Spec.Components.Compute.Groups[i].Replicas = target
 				break
 			}
 		}
-	case util.FRONTEND:
+	case util.Frontend:
 		for i, group := range instance.Spec.Components.Frontend.Groups {
 			if group.Name == groupName {
 				instance.Spec.Components.Frontend.Groups[i].Replicas = target
 				break
 			}
 		}
-	case util.META:
+	case util.Meta:
 		for i, group := range instance.Spec.Components.Meta.Groups {
 			if group.Name == groupName {
 				instance.Spec.Components.Meta.Groups[i].Replicas = target

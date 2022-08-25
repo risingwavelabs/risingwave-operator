@@ -40,7 +40,6 @@ type RWOption struct {
 
 // NewCtlCommand creates the root `rw` command and its nested children.
 func NewCtlCommand(streams genericclioptions.IOStreams) *cobra.Command {
-
 	// Root command that all the subcommands are added to
 	rootCmd := &cobra.Command{
 		Use:   "kubectl rw",

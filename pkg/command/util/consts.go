@@ -17,10 +17,10 @@
 package util
 
 const (
-	COMPUTE      = "compute"
-	META         = "meta"
-	FRONTEND     = "frontend"
-	COMPACTOR    = "compactor"
-	GLOBAL       = "global"
+	Compute      = "compute"
+	Meta         = "meta"
+	Frontend     = "frontend"
+	Compactor    = "compactor"
+	Global       = "global"
 	DefaultGroup = "default"
 )

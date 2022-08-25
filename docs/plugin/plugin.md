@@ -7,8 +7,12 @@
 
 ## Install Plugin
 
+<!-- TODO(xinyu): will replace it by `krew install rw` or by `download a binary and move it to the /usr/local/bin`-->
+
 ```shell
 make build-plugin
+
+mv ./bin/kubectl-rw /usr/local/bin/kubectl-rw
 ```
 
 ## Management Commands

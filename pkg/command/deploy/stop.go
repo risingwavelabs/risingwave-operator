@@ -108,7 +108,7 @@ func stopRisingWave(instance *v1alpha1.RisingWave) error {
 			GroupName: group.Name,
 			Replicas:  group.Replicas,
 		}
-		updateReplicas(instance, util.COMPACTOR, group.Name, 0)
+		updateReplicas(instance, util.Compactor, group.Name, 0)
 		replicas.Compactor = append(replicas.Compactor, compactorReplica)
 	}
 
@@ -117,7 +117,7 @@ func stopRisingWave(instance *v1alpha1.RisingWave) error {
 			GroupName: group.Name,
 			Replicas:  group.Replicas,
 		}
-		updateReplicas(instance, util.COMPUTE, group.Name, 0)
+		updateReplicas(instance, util.Compute, group.Name, 0)
 		replicas.Compute = append(replicas.Compute, computeReplica)
 	}
 
@@ -126,7 +126,7 @@ func stopRisingWave(instance *v1alpha1.RisingWave) error {
 			GroupName: group.Name,
 			Replicas:  group.Replicas,
 		}
-		updateReplicas(instance, util.FRONTEND, group.Name, 0)
+		updateReplicas(instance, util.Frontend, group.Name, 0)
 		replicas.Frontend = append(replicas.Frontend, frontendReplica)
 	}
 
@@ -135,7 +135,7 @@ func stopRisingWave(instance *v1alpha1.RisingWave) error {
 			GroupName: group.Name,
 			Replicas:  group.Replicas,
 		}
-		updateReplicas(instance, util.META, group.Name, 0)
+		updateReplicas(instance, util.Meta, group.Name, 0)
 		replicas.Meta = append(replicas.Meta, metaReplica)
 	}
 

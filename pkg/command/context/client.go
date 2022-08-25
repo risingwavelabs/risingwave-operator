@@ -23,9 +23,8 @@ import (
 )
 
 type BypassCacheClient struct {
-	apiReader client.Reader
-
 	client.Client
+	apiReader client.Reader
 }
 
 func (b *BypassCacheClient) Get(ctx context.Context, key client.ObjectKey, obj client.Object) error {
@@ -39,7 +38,6 @@ func (b *BypassCacheClient) List(ctx context.Context, list client.ObjectList, op
 func NewBypassClient(c client.Client) *BypassCacheClient {
 	return &BypassCacheClient{
 		apiReader: c,
-
-		Client: c,
+		Client:    c,
 	}
 }

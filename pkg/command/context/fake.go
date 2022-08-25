@@ -24,7 +24,7 @@ import (
 	"github.com/singularity-data/risingwave-operator/pkg/command/helper"
 )
 
-var FakerContext = &FakeContext{
+var Fake = &FakeContext{
 	namespace: "test",
 }
 

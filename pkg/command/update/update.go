@@ -93,7 +93,7 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 	cmd.Flags().StringVar(&o.memoryRequest.requestedQty, "memory-request", "", "The target memory request.")
 	cmd.Flags().StringVar(&o.memoryLimit.requestedQty, "memory-limit", "", "The target memory limit.")
 	cmd.Flags().StringVarP(&o.group, "group", "g", util.DefaultGroup, "The group to be updated. If not set, update the default group.")
-	cmd.Flags().StringVarP(&o.component, "component", "c", util.GLOBAL, "The component to be updated. If not set, update global resources.")
+	cmd.Flags().StringVarP(&o.component, "component", "c", util.Global, "The component to be updated. If not set, update global resources.")
 
 	return cmd
 }
@@ -142,27 +142,27 @@ func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 		}
 
 		switch o.component {
-		case util.COMPUTE:
+		case util.Compute:
 			if !util.IsValidComputeGroup(o.group, rw.Spec.Components.Compute.Groups) {
 				return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
 			}
 
-		case util.META:
+		case util.Meta:
 			if !util.IsValidRWGroup(o.group, rw.Spec.Components.Meta.Groups) {
 				return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
 			}
 
-		case util.FRONTEND:
+		case util.Frontend:
 			if !util.IsValidRWGroup(o.group, rw.Spec.Components.Frontend.Groups) {
 				return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
 			}
 
-		case util.COMPACTOR:
+		case util.Compactor:
 			if !util.IsValidRWGroup(o.group, rw.Spec.Components.Compactor.Groups) {
 				return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
 			}
 
-		case util.GLOBAL:
+		case util.Global:
 			break
 
 		default:
@@ -198,7 +198,7 @@ func (o *Options) updateConfig(rw *v1alpha1.RisingWave) error {
 	components := &rw.Spec.Components
 
 	switch o.component {
-	case util.COMPUTE:
+	case util.Compute:
 		for _, group := range components.Compute.Groups {
 			if group.Name == o.group {
 				o.updateComponentResources(&group.Resources)
@@ -206,7 +206,7 @@ func (o *Options) updateConfig(rw *v1alpha1.RisingWave) error {
 			}
 		}
 
-	case util.META:
+	case util.Meta:
 		for _, group := range components.Meta.Groups {
 			if group.Name == o.group {
 				o.updateComponentResources(&group.Resources)
@@ -214,7 +214,7 @@ func (o *Options) updateConfig(rw *v1alpha1.RisingWave) error {
 			}
 		}
 
-	case util.COMPACTOR:
+	case util.Compactor:
 		for _, group := range components.Compactor.Groups {
 			if group.Name == o.group {
 				o.updateComponentResources(&group.Resources)
@@ -222,7 +222,7 @@ func (o *Options) updateConfig(rw *v1alpha1.RisingWave) error {
 			}
 		}
 
-	case util.FRONTEND:
+	case util.Frontend:
 		for _, group := range components.Frontend.Groups {
 			if group.Name == o.group {
 				o.updateComponentResources(&group.Resources)
@@ -230,7 +230,7 @@ func (o *Options) updateConfig(rw *v1alpha1.RisingWave) error {
 			}
 		}
 
-	case util.GLOBAL:
+	case util.Global:
 		o.updateComponentResources(&rw.Spec.Global.Resources)
 
 	default:

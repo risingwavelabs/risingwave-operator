@@ -34,7 +34,7 @@ import (
 	"github.com/singularity-data/risingwave-operator/pkg/testutils"
 )
 
-var ctx = context.FakerContext
+var ctx = context.Fake
 
 func Test_Complete(t *testing.T) {
 	o := NewOptions(genericclioptions.IOStreams{})

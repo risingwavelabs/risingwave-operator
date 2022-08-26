@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Copyright 2022 Singularity Data
 #
@@ -13,6 +14,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+## associative array for job status
+JOBS=()
+
+## run command in the background
+function background() {
+  eval $1 &
+  JOBS[$!]="$1"
+}
+
+## check exit status of each job
+## preserve exit status in ${JOBS}
+## returns 1 if any job failed
+function reap() {
+  local cmd
+  local status=0
+  for pid in "${!JOBS[@]}"; do
+    cmd=${JOBS[${pid}]}
+    wait "${pid}"
+    JOBS[${pid}]=$?
+    if [[ ${JOBS[${pid}]} -ne 0 ]]; then
+      status=${JOBS[${pid}]}
+      echo -e "[${pid}] Exited with status: ${status}\n${cmd}"
+    fi
+  done
+  return ${status}
+}
 
 _E2E_SOURCE_BASEDIR=$(dirname "${BASH_SOURCE[0]}")
 
@@ -48,3 +76,4 @@ function run_e2e_test() {
 
   echo "[E2E $testcase] Succeeds!"
 }
+

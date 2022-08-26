@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
+
 	apiadmissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 
 	"github.com/spf13/cobra"
@@ -162,6 +164,24 @@ func checkCertManagerReady(ctx *cmdcontext.RWContext) (bool, error) {
 	}
 
 	if len(conf.Webhooks[0].ClientConfig.CABundle) == 0 {
+		return false, nil
+	}
+
+	svc := corev1.Service{}
+	err = ctx.Client().Get(context.Background(),
+		client.ObjectKey{Namespace: "cert-manager", Name: "cert-manager-webhook"}, &svc)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	if len(svc.Spec.Ports) == 0 {
+		return false, nil
+	}
+
+	if svc.Spec.Ports[0].Port == 0 {
 		return false, nil
 	}
 

@@ -15,8 +15,19 @@
 # limitations under the License.
 #
 
+set -e
+
+echo "begin plugin e2e"
+BASEDIR=$(dirname "$0")
+K8S_ENV_LIST=$(ls -C "$BASEDIR"/envs)
 NAME_SPACE="plugin-e2e"
 NAME="example-rw"
+
+source "$BASEDIR"/cluster.sh
+source "$BASEDIR"/util.sh
+source "$BASEDIR"/k8s/kubernetes
+
+prepare_cluster
 
 function create_instance() {
   namespace=$1
@@ -55,6 +66,8 @@ function update_instance() {
 
 function e2e-plugin() {
     ##TODO: add test for plugin install & uninstall
+    echo "Install risingwave operator"
+    kubectl rw install
 
     # test create
     kubectl create namespace $NAME_SPACE
@@ -102,3 +115,6 @@ function e2e-plugin() {
 
     echo "All tests are passed!"
 }
+
+echo "Running plugin e2e test"
+background "e2e-plugin"

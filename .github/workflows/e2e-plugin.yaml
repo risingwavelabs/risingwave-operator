@@ -1,10 +1,12 @@
-name: e2e test
+name: plugin e2e test
 
 on:
   pull_request:
-    types: [review_requested, ready_for_review, synchronize, reopened]
+    types: [opened, synchronize, reopened]
     paths:
-      - "*/**"
+      - "pkg/command/**"
+      - "cmd/plugin/main.go"
+      - "e2e/**"
   push:
     branches:
       - main
@@ -44,15 +46,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Set up Go 1.18
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      - name: build-plugin #TODO: will remove after release stable plugin.
+        run: |
+          mkdir -p "/tmp/go"
+          mkdir -p "/tmp/gocache"
+          HOME="/" GOMODCACHE="/tmp/gocache" GOPATH="/tmp/go" go build -o bin/kubectl-rw cmd/plugin/main.go
+          mv ./bin/kubectl-rw /usr/local/bin/kubectl-rw
+          kubectl rw version
       - name: e2e-test
         run: |
           sudo su
           source /etc/bash.bashrc
-          mkdir -p /home/ubuntu/go/pkg/mod
-          export GOCACHE=/tmp
-          export GOPATH=/usr/local/go
-          make e2e-test
+          make e2e-plugin
         shell: bash -leo pipefail {0}
+
 
   stop-runner:
     name: stop-runner

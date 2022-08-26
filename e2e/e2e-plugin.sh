@@ -15,49 +15,72 @@
 # limitations under the License.
 #
 
+set -e
+
+BASEDIR=$(dirname "$0")
 NAME_SPACE="plugin-e2e"
 NAME="example-rw"
+
+source "$BASEDIR"/cluster.sh
+source "$BASEDIR"/util.sh
+source "$BASEDIR"/k8s/kubernetes
+
+prepare_cluster
+
+function install_operator() {
+  echo "Install risingwave operator"
+  do_command "kubectl rw install"
+}
 
 function create_instance() {
   namespace=$1
   name=$2
   echo "Creating instance $name in $namespace ..."
-  kubectl rw create $name -n $namespace
+  do_command "kubectl rw create $name -n $namespace"
 }
 
 function restart_instance() {
   namespace=$1
   name=$2
   echo "Restarting instance $name in $namespace ..."
-  kubectl rw restart $name -n $namespace
+  do_command "kubectl rw restart $name -n $namespace"
 }
 
 function stop_instance() {
   namespace=$1
   name=$2
   echo "Stopping instance $name in $namespace ..."
-  kubectl rw stop $name -n $namespace
+  do_command "kubectl rw stop $name -n $namespace"
 }
 
 function resume_instance() {
   namespace=$1
   name=$2
   echo "Resuming instance $name in $namespace ..."
-  kubectl rw resume $name -n $namespace
+  do_command "kubectl rw resume $name -n $namespace"
 }
 
 function update_instance() {
   namespace=$1
   name=$2
   echo "Updating instance $name in $namespace ..."
-  kubectl rw update $name -cr 200m -cl 1000m -n $namespace
+  do_command "kubectl rw update $name -cr 200m -cl 1000m -n $namespace"
+}
+
+function do_command() {
+    eval $1
+    if [ $? -ne 0 ]; then
+      echo "command ${1} failed"
+      exit 1
+    fi
 }
 
 function e2e-plugin() {
-    ##TODO: add test for plugin install & uninstall
+    install_operator
 
     # test create
-    kubectl create namespace $NAME_SPACE
+    kubectl delete namespace $NAME_SPACE || true
+    do_command "kubectl create namespace $NAME_SPACE"
     create_instance $NAME_SPACE $NAME
     sleep 1
     wait_until_service_ready $NAME_SPACE ${NAME}-frontend
@@ -102,3 +125,6 @@ function e2e-plugin() {
 
     echo "All tests are passed!"
 }
+
+echo "Running plugin e2e test"
+e2e-plugin

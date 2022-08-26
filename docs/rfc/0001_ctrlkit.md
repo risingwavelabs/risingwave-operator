@@ -1,12 +1,12 @@
-|                    |                                                                      |
-| -------            | -------------------------------------------------------------------- |
-| Feature            | CtrlKit: A human-friendly framework for Kubernetes Operators         |
-| Status             | In-progress                                                          |
-| Date               | 2022-06-14                                                           |
-| Authors            | <!-- cspell:disable-line -->arkbriar                                                             |
+|                    |                                                                    |
+| -------            | ------------------------------------------------------------------ |
+| Feature            | CtrlKit: A human-friendly framework for Kubernetes Operators       |
+| Status             | Completed                                                          |
+| Date               | 2022-06-14                                                         |
+| Authors            | <!-- cspell:disable-line -->arkbriar                                                           |
 | RFC PR #           | [#49](https://github.com/singularity-data/risingwave-operator/pull/49) |
-| Implementation PR #| [#53](https://github.com/singularity-data/risingwave-operator/pull/53), [#61](https://github.com/singularity-data/risingwave-operator/pull/61), [#67](https://github.com/singularity-data/risingwave-operator/pull/67)               |
-|                    |                                                                      |
+| Implementation PR #| [#53](https://github.com/singularity-data/risingwave-operator/pull/53), [#61](https://github.com/singularity-data/risingwave-operator/pull/61), [#67](https://github.com/singularity-data/risingwave-operator/pull/67)             |
+|                    |                                                                    |
 
 # **Table of Contents**
 

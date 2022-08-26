@@ -3,7 +3,7 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * You may obtain applier copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -38,8 +38,7 @@ func (f *FakeContext) SetNamespace(ns string) {
 }
 
 func (f *FakeContext) Scheme() *runtime.Scheme {
-	//TODO implement me
-	panic("implement me")
+	panic("not supported")
 }
 
 func (f *FakeContext) Namespace() string {
@@ -47,8 +46,7 @@ func (f *FakeContext) Namespace() string {
 }
 
 func (f *FakeContext) Builder() *resource.Builder {
-	//TODO implement me
-	panic("implement me")
+	panic("not supported")
 }
 
 func (f *FakeContext) Client() client.Client {
@@ -60,8 +58,7 @@ func (f *FakeContext) SetClient(c client.Client) {
 }
 
 func (f *FakeContext) Applier() *helper.Applier {
-	//TODO implement me
-	panic("implement me")
+	panic("not supported")
 }
 
 var _ Context = &FakeContext{}

@@ -129,7 +129,7 @@ func (o *Options) Run(ctx cmdcontext.Context, cmd *cobra.Command, args []string)
 }
 
 // TODO: to support create different risingwave by config file
-// TODO: to support different storage.
+// TODO: to support different storage. issue: https://github.com/singularity-data/risingwave-operator/issues/182
 func (o *Options) createInstance() (*v1alpha1.RisingWave, error) {
 	c := o.config
 	rw := &v1alpha1.RisingWave{

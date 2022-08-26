@@ -54,7 +54,6 @@ func Test_constructGroup(t *testing.T) {
 }
 
 func Test_constructResource(t *testing.T) {
-
 	var limit = resource{
 		CPU:    "",
 		Memory: "",

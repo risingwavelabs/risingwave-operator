@@ -152,7 +152,6 @@ func stopRisingWave(instance *v1alpha1.RisingWave) error {
 	}
 
 	// set annotation
-	// TODO: create map in create command
 	if instance.Annotations == nil {
 		instance.Annotations = make(map[string]string)
 	}

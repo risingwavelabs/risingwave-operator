@@ -23,8 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParse(t *testing.T) {
-
+func Test_Parse(t *testing.T) {
 	c, e := parse("example.toml")
 	if e != nil {
 		t.Fatal(e)
@@ -32,8 +31,7 @@ func TestParse(t *testing.T) {
 	assert.Equal(t, len(c.Frontend.Groups), 2)
 }
 
-func TestForNoPath(t *testing.T) {
-
+func Test_ForNoPath(t *testing.T) {
 	_, e := parse("fake.toml")
 	if e != nil {
 		assert.Equal(t, strings.Contains(e.Error(), "no such file or directory"), true)

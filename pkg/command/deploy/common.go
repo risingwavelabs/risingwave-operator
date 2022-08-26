@@ -32,19 +32,18 @@ type ReplicaInfo struct {
 
 const (
 	ReplicaAnnotation       = "replicas.old"
-	GlobalReplicaAnnotation = "replicas.global"
+	GlobalReplicaAnnotation = "replicas.global.old"
 )
 
-// checks if instance has already been stopped.
-// if annotation map is nil, create it.
+// Check if instance has already been stopped.
 func doesReplicaAnnotationExist(instance *v1alpha1.RisingWave) bool {
-	if instance.Annotations == nil {
+	if _, ok := instance.Annotations[ReplicaAnnotation]; !ok {
 		return false
 	}
 
-	if _, ok := instance.Annotations[ReplicaAnnotation]; ok {
-		return true
+	if _, ok := instance.Annotations[GlobalReplicaAnnotation]; !ok {
+		return false
 	}
 
-	return false
+	return true
 }

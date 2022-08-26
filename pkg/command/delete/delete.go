@@ -47,7 +47,7 @@ type Options struct {
 
 	namespace string
 
-	// TODO: maybe can support force delete
+	// TODO: maybe can support force delete. Issue: https://github.com/singularity-data/risingwave-operator/issues/183
 	force bool
 
 	genericclioptions.IOStreams
@@ -97,12 +97,10 @@ func (o *Options) Complete(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 }
 
 func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-
 	return nil
 }
 
 func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-
 	rw := &v1alpha1.RisingWave{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: o.namespace,

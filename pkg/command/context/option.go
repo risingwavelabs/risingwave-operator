@@ -3,7 +3,7 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * You may obtain applier copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -45,19 +45,19 @@ func init() {
 	utilruntime.Must(apiextensionsv1.AddToScheme(scheme))
 }
 
-// RWContext wraps the configuration and credential for tidb cluster accessing.
+// RWContext wraps the configuration and credential for risingwave cluster accessing.
 type RWContext struct {
 	*genericclioptions.ConfigFlags
 
 	lock sync.Mutex
 
-	c client.Client
+	k8sClient client.Client
 
-	b *resource.Builder
+	builder *resource.Builder
 
 	restConfig *rest.Config
 
-	a *helper.Applier
+	applier *helper.Applier
 }
 
 var _ Context = &RWContext{}
@@ -89,10 +89,10 @@ func (o *RWContext) Scheme() *runtime.Scheme {
 }
 
 func (o *RWContext) Builder() *resource.Builder {
-	if o.b == nil {
+	if o.builder == nil {
 		o.lazyInit()
 	}
-	return o.b
+	return o.builder
 }
 
 func (o *RWContext) Namespace() string {
@@ -100,10 +100,10 @@ func (o *RWContext) Namespace() string {
 }
 
 func (o *RWContext) Client() client.Client {
-	if o.b == nil {
+	if o.builder == nil {
 		o.lazyInit()
 	}
-	return o.c
+	return o.k8sClient
 }
 
 func (o *RWContext) getKubeClient() (client.Client, error) {
@@ -132,16 +132,16 @@ func (o *RWContext) lazyInit() {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
-	o.c = c
-	o.b = resource.NewBuilder(o)
-	o.a = helper.NewApplier(o.restConfig)
+	o.k8sClient = c
+	o.builder = resource.NewBuilder(o)
+	o.applier = helper.NewApplier(o.restConfig)
 }
 
 func (o *RWContext) Applier() *helper.Applier {
-	if o.a == nil {
+	if o.applier == nil {
 		o.lazyInit()
 	}
-	return o.a
+	return o.applier
 }
 
 func NewBasicOptions(streams genericclioptions.IOStreams) *BasicOptions {
@@ -150,7 +150,7 @@ func NewBasicOptions(streams genericclioptions.IOStreams) *BasicOptions {
 	}
 }
 
-// completes the fields of the basic option.
+// Complete the fields of the basic option.
 func (o *BasicOptions) Complete(ctx *RWContext, cmd *cobra.Command, args []string) error {
 	if len(ctx.Namespace()) == 0 {
 		o.Namespace = "default"
@@ -167,7 +167,7 @@ func (o *BasicOptions) Complete(ctx *RWContext, cmd *cobra.Command, args []strin
 
 }
 
-// for simple commands, we don't need validation.
+// Validate for simple commands, we don't need validation.
 func (o *BasicOptions) Validate(ctx *RWContext, cmd *cobra.Command, args []string) error {
 
 	return nil

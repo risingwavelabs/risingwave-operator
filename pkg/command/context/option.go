@@ -24,6 +24,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	apiadmissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -43,6 +44,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	utilruntime.Must(apiextensionsv1.AddToScheme(scheme))
+	utilruntime.Must(apiadmissionregistrationv1.AddToScheme(scheme))
 }
 
 // RWContext wraps the configuration and credential for risingwave cluster accessing.
@@ -107,7 +109,6 @@ func (o *RWContext) Client() client.Client {
 }
 
 func (o *RWContext) getKubeClient() (client.Client, error) {
-	fmt.Println(*o.KubeConfig)
 	config, err := o.ToRESTConfig()
 	if err != nil {
 		return nil, err

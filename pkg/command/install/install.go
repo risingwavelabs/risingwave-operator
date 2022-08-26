@@ -21,9 +21,10 @@ import (
 	"fmt"
 	"time"
 
+	apiadmissionregistrationv1 "k8s.io/api/admissionregistration/v1"
+
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -147,8 +148,8 @@ func waitCertManager(ctx *cmdcontext.RWContext) error {
 }
 
 func checkCertManagerReady(ctx *cmdcontext.RWContext) (bool, error) {
-	list := &corev1.PodList{}
-	err := ctx.Client().List(context.Background(), list, client.InNamespace(CertNamespace))
+	conf := &apiadmissionregistrationv1.ValidatingWebhookConfiguration{}
+	err := ctx.Client().Get(context.Background(), client.ObjectKey{Name: "cert-manager-webhook"}, conf)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return false, nil
@@ -156,15 +157,12 @@ func checkCertManagerReady(ctx *cmdcontext.RWContext) (bool, error) {
 		return false, err
 	}
 
-	for _, pod := range list.Items {
-		if pod.Status.Phase != corev1.PodRunning {
-			return false, nil
-		}
-		for _, s := range pod.Status.ContainerStatuses {
-			if !s.Ready {
-				return false, nil
-			}
-		}
+	if len(conf.Webhooks) == 0 {
+		return false, nil
+	}
+
+	if len(conf.Webhooks[0].ClientConfig.CABundle) == 0 {
+		return false, nil
 	}
 
 	return true, nil

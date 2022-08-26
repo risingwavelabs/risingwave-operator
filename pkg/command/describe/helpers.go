@@ -73,7 +73,7 @@ func (o *Options) describeSpec(rw *v1alpha1.RisingWave) {
 }
 
 func (o *Options) describeGroupSpec(component v1alpha1.RisingWaveComponentGroupTemplate) {
-	// cpu in millicores and memory in bibytes.
+	// cpu in milli core and memory in bytes.
 	cpuRequest := component.Resources.Requests.Cpu().MilliValue()
 	memRequest := formatMem(component.Resources.Requests.Memory())
 	cpuLimit := component.Resources.Limits.Cpu().MilliValue()
@@ -98,7 +98,7 @@ func (o *Options) describePorts(ports v1alpha1.RisingWaveComponentCommonPorts) {
 	fmt.Fprintf(o.Out, "      Service: %d\n", ports.ServicePort)
 }
 
-// convert into bibytes and add suffix.
+// Convert into bytes and add suffix.
 func formatMem(mem *resource.Quantity) string {
 	suffix := []string{"", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"}
 	value := float64(mem.Value())

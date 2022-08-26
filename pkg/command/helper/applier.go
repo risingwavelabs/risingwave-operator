@@ -18,7 +18,7 @@ package helper
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/rest"
@@ -39,7 +39,7 @@ func NewApplier(config *rest.Config) *Applier {
 }
 
 func (a *Applier) Apply(path string) error {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func (a *Applier) Apply(path string) error {
 }
 
 func (a *Applier) UnApply(path string) error {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}

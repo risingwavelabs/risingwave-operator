@@ -78,7 +78,7 @@ func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 	}
 
 	// parse current version
-	rw, err := o.GetRwInstance(nil, ctx)
+	rw, err := o.GetRwInstance(context.Background(), ctx)
 	if err != nil {
 		return err
 	}

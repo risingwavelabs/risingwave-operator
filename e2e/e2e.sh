@@ -157,6 +157,10 @@ for testcase in ${E2E_TESTCASES}; do
   background "run_e2e_test $testcase"
 done
 
+source "$BASEDIR"/e2e-plugin
+echo "Running plugin e2e test"
+background "e2e-plugin"
+
 if reap; then
   echo "Excellent! All tests are passed!"
 else

@@ -1,0 +1,70 @@
+[global]
+replicas=1
+    [global.limit]
+    cpu="1"
+    memory="1Gi"
+    [global.request]
+    cpu="100m"
+    memory="100Mi"
+[meta]
+    [[meta.groups]]
+    name="meta-group-1"
+    replicas=1
+        [meta.groups.limit]
+        cpu="1"
+        memory="100Mi"
+    [[meta.groups]]
+    name="meta-group-2"
+    replicas=2
+        [meta.groups.limit]
+        cpu="1"
+        memory="100Mi"
+
+[compactor]
+    [[compactor.groups]]
+    name="compactor-group-1"
+    replicas=1
+        [compactor.groups.limit]
+        cpu="1"
+        memory="1Gi"
+        [compactor.groups.request]
+        cpu="100m"
+        memory="100Mi"
+    [[compactor.groups]]
+    replicas=1
+    name="compactor-group-2"
+        [compactor.groups.limit]
+        cpu="1"
+        memory="1Gi"
+        [compactor.groups.request]
+        cpu="100m"
+        memory="100Mi"
+
+[compute]
+    [[compute.groups]]
+    replicas=1
+    name="compute-group-1"
+        [compute.groups.limit]
+        cpu="1"
+        memory="100Mi"
+    [[compute.groups]]
+    replicas=2
+    name="compute-group-2"
+        [compute.groups.limit]
+        cpu="1"
+        memory="100Mi"
+
+[frontend]
+    [[frontend.groups]]
+    replicas=3
+    name="frontend-group-1"
+        [frontend.groups.limit]
+        cpu="1"
+        memory="100Mi"
+    [[frontend.groups]]
+    replicas=1
+    name="frontend-group-2"
+        [frontend.groups.limit]
+        cpu="1"
+        memory="100Mi"
+

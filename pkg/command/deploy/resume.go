@@ -68,7 +68,7 @@ func NewResumeCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStr
 }
 
 func (o *ResumeOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	rw, err := o.GetRwInstance(ctx)
+	rw, err := o.GetRwInstance(context.Background(), ctx)
 	if err != nil {
 		return err
 	}

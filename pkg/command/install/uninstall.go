@@ -67,6 +67,8 @@ func (o *UninstallOptions) Complete(ctx *context.RWContext, cmd *cobra.Command, 
 // Run will run the command as followed:
 // 1. ensure the latest risingwave file exists.
 // 2. delete the resource by the risingwave file.
+// TODO: need record which versions installed.
+// TODO: need to ensure no instances running before uninstall. Issue: https://github.com/singularity-data/risingwave-operator/issues/184
 func (o *UninstallOptions) Run(ctx *context.RWContext, cmd *cobra.Command, args []string) error {
 	yamlFile, err := Download(RisingWaveUrl, TemDir+"/operator")
 	if err != nil {

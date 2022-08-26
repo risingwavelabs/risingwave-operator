@@ -44,7 +44,7 @@ type RestartOptions struct {
 	*cmdcontext.BasicOptions
 }
 
-// NewCommand creates the restart command.
+// NewRestartCommand creates the restart command.
 func NewRestartCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) *cobra.Command {
 	o := RestartOptions{
 		BasicOptions: cmdcontext.NewBasicOptions(streams),
@@ -66,7 +66,7 @@ func NewRestartCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOSt
 }
 
 func (o *RestartOptions) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	rw, err := o.GetRwInstance(ctx)
+	rw, err := o.GetRwInstance(context.Background(), ctx)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (o *RestartOptions) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command,
 }
 
 func (o *RestartOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	rw, err := o.GetRwInstance(ctx)
+	rw, err := o.GetRwInstance(context.Background(), ctx)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (o *RestartOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args
 	}
 
 	// update rw
-	rw, _ = o.GetRwInstance(ctx)
+	rw, _ = o.GetRwInstance(context.Background(), ctx)
 	err = resumeRisingWave(rw)
 	if err != nil {
 		return err
@@ -115,27 +115,28 @@ func (o *RestartOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args
 	return nil
 }
 
-func (o *RestartOptions) verifyStopped(ctx *cmdcontext.RWContext) error {
-	timeout := time.After(10 * time.Minute)
+func (o *RestartOptions) verifyStopped(rwCtx *cmdcontext.RWContext) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
 	for {
+		count, err := o.getRunningCount(ctx, rwCtx)
+		if err != nil {
+			return err
+		}
+		if count == 0 {
+			return nil
+		}
 		select {
-		case <-timeout:
-			return fmt.Errorf("failed to stop instance, timed out")
-		default:
-			count, err := o.getRunningCount(ctx)
-			if err != nil {
-				return err
-			}
-			if count == 0 {
-				return nil
-			}
-			time.Sleep(5 * time.Second)
+		case <-time.After(5 * time.Second):
+			continue
+		case <-ctx.Done():
+			return ctx.Err()
 		}
 	}
 }
 
-func (o *RestartOptions) getRunningCount(ctx *cmdcontext.RWContext) (int32, error) {
-	rw, err := o.GetRwInstance(ctx)
+func (o *RestartOptions) getRunningCount(ctx context.Context, rwCtx *cmdcontext.RWContext) (int32, error) {
+	rw, err := o.GetRwInstance(ctx, rwCtx)
 	if err != nil {
 		return -1, err
 	}

@@ -136,7 +136,7 @@ func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 	if o.group == "" {
 		o.group = util.DefaultGroup
 	} else {
-		rw, err := o.GetRwInstance(ctx)
+		rw, err := o.GetRwInstance(context.Background(), ctx)
 		if err != nil {
 			return err
 		}
@@ -179,7 +179,7 @@ func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 }
 
 func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	rw, err := o.GetRwInstance(ctx)
+	rw, err := o.GetRwInstance(context.Background(), ctx)
 	if err != nil {
 		return err
 	}

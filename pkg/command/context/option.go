@@ -165,16 +165,14 @@ func (o *BasicOptions) Complete(ctx *RWContext, cmd *cobra.Command, args []strin
 		o.Name = args[0]
 	}
 	return nil
-
 }
 
 // Validate for simple commands, we don't need validation.
 func (o *BasicOptions) Validate(ctx *RWContext, cmd *cobra.Command, args []string) error {
-
 	return nil
 }
 
-func (o *BasicOptions) GetRwInstance(ctx *RWContext) (*v1alpha1.RisingWave, error) {
+func (o *BasicOptions) GetRwInstance(ctx context.Context, rwCtx *RWContext) (*v1alpha1.RisingWave, error) {
 	rw := &v1alpha1.RisingWave{}
 
 	operatorKey := client.ObjectKey{
@@ -182,7 +180,7 @@ func (o *BasicOptions) GetRwInstance(ctx *RWContext) (*v1alpha1.RisingWave, erro
 		Namespace: o.Namespace,
 	}
 
-	err := ctx.Client().Get(context.Background(), operatorKey, rw)
+	err := rwCtx.Client().Get(ctx, operatorKey, rw)
 	if err != nil {
 		return nil, err
 	}

@@ -131,8 +131,63 @@ func (o *InstallOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args
 	}
 
 	fmt.Fprintln(o.Out, "RisingWave Operator has been installed")
+	fmt.Fprintln(o.Out, "Wait the operator ready!")
+	err = waitOperator(ctx)
+	if err != nil {
+		return fmt.Errorf("wait risingwave-operator failed, %w", err)
+	}
 
 	return nil
+}
+
+func waitOperator(ctx *cmdcontext.RWContext) error {
+	defer func() {
+		_ = ctx.Client().Delete(context.Background(), &rw)
+	}()
+
+	err := wait.PollImmediate(time.Second, time.Minute*TimeOut, func() (bool, error) {
+		ready, inErr := checkOperatorReady(ctx)
+		if inErr != nil {
+			return false, inErr
+		}
+		return ready, inErr
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func checkOperatorReady(ctx *cmdcontext.RWContext) (bool, error) {
+	// check service port.
+	svc := corev1.Service{}
+	err := ctx.Client().Get(context.Background(),
+		client.ObjectKey{Namespace: "risingwave-operator-system", Name: "risingwave-operator-webhook-service"}, &svc)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	if len(svc.Spec.Ports) == 0 {
+		return false, nil
+	}
+
+	if svc.Spec.Ports[0].Port == 0 {
+		return false, nil
+	}
+
+	// Check create test rw.
+	// The risingwave instance only has a name and namespace.
+	// So will return invalid error.
+	// if Invalid error, means the webhook is ready.
+	err = ctx.Client().Create(context.Background(), &rw)
+	if err != nil && !errors.IsAlreadyExists(err) && !errors.IsInvalid(err) {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func waitCertManager(ctx *cmdcontext.RWContext) error {

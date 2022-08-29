@@ -21,8 +21,6 @@ const (
 	OperatorNamespace = "risingwave-operator-system"
 	OperatorName      = "risingwave-operator-controller-manager"
 
-	CertNamespace = "cert-manager"
-
 	TemDir = "/tmp/kubectl-rw"
 
 	RisingWaveUrl = "https://github.com/singularity-data/risingwave-operator/releases/download/v0.1.1/risingwave-operator.yaml"

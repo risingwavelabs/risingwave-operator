@@ -21,12 +21,15 @@ import (
 	v1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 const (
 	IssuerName      = "crypt-test"
 	CertificateName = "default.test.cert"
 	SecretName      = "example-issuer-account-key"
+	RWName          = "test-for-risingwave"
 )
 
 var nginx = "nginx"
@@ -77,5 +80,13 @@ var cf = v1.Certificate{
 			Name: IssuerName,
 			Kind: "ClusterIssuer",
 		},
+	},
+}
+
+var rw = v1alpha1.RisingWave{
+	ObjectMeta: metav1.ObjectMeta{
+		Namespace:   "default",
+		Name:        RWName,
+		Annotations: make(map[string]string),
 	},
 }

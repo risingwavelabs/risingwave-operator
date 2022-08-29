@@ -141,14 +141,14 @@ func stopRisingWave(instance *v1alpha1.RisingWave) error {
 
 	global, err := json.Marshal(instance.Spec.Global.Replicas)
 	if err != nil {
-		return fmt.Errorf("failed to serialise replicas, %v", err)
+		return fmt.Errorf("failed to serialize replicas, %v", err)
 	}
 	stopGlobal(instance)
 
-	// serialise replica struct to annotation
+	// serialize replica struct to annotation
 	annotation, err := json.Marshal(replicas)
 	if err != nil {
-		return fmt.Errorf("failed to serialise replicas, %v", err)
+		return fmt.Errorf("failed to serialize replicas, %v", err)
 	}
 
 	// set annotation

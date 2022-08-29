@@ -109,7 +109,7 @@ test: manifests generate fmt vet lint envtest ## Run tests.
 	@KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out.tmp
 	@cat cover.out.tmp | grep -v "_generated.go" > cover.out && rm -f cover.out.tmp
 
-spell:
+spellcheck:
 	@if command -v cspell > /dev/null 2>&1 ; then \
 	    cspell lint --relative --no-progress --no-summary --show-suggestions -e 'vendor/*' --gitignore **/*.go **/*.md Makefile; \
 	else \

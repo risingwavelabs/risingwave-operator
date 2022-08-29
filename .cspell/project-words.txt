@@ -143,3 +143,8 @@ k8s+
 uninstallation
 serialise
 restmapper
+
+cmacme
+cmmeta
+certmanager
+certmanagerv

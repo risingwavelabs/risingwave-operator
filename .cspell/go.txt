@@ -1,0 +1,51 @@
+# ENV
+GOPATH
+GOOS
+GOARCH
+GOBIN
+
+# Tools
+goimports
+golangci
+
+# General
++s
+go*
+*ctx
+test*
+*util
+*utils
+testcase
+testcases
+const
+consts
+nosync
+awss
+workqueue
+lerr
+lerrs
+rerr
+lresult
+rresult
+lresults
+struct
+
+# Packages
+intstr
+genericclioptions
+samber
+cmdcontext
+stretchr
+cmacme
+cmmeta
+fatih
+logr
+ctrlkit
+multierr
+
+# Functions / Methods
+deepcopy
+
+# Tags
+protobuf
+printcolumn

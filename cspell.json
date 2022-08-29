@@ -3,8 +3,8 @@
   "version": "0.2",
   "dictionaryDefinitions": [
     {
-      "name": "project-words",
-      "path": ".cspell/project-words.txt",
+      "name": "misc",
+      "path": ".cspell/misc.txt",
       "addWords": true
     },
     {
@@ -13,19 +13,23 @@
       "addWords": true
     },
     {
-      "name": "documentation",
-      "path": ".cspell/doc.txt",
+      "name": "k8s",
+      "path": ".cspell/k8s.txt",
       "addWords": true
     },
     {
-      "name": "monitoring",
-      "path": ".cspell/grafana.txt",
+      "name": "go",
+      "path": ".cspell/go.txt",
       "addWords": true
     }
   ],
-  "dictionaries": ["makefile", "project-words", "documentation", "monitoring"],
+  "dictionaries": [
+    "misc",
+    "k8s",
+    "go",
+    "makefile"
+  ],
   "ignorePaths": [
-    "project-words.txt",
     "config",
     "legacy",
     "docs/general/api.md"
@@ -34,7 +38,9 @@
     {
       "languageId": "makefile",
       "locale": "*",
-      "dictionaries": ["makefile"]
+      "dictionaries": [
+        "makefile"
+      ]
     }
   ]
 }

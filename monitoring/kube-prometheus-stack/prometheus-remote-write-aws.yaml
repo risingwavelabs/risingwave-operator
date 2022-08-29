@@ -1,14 +1,24 @@
 prometheus:
   prometheusSpec:
     externalLabels:
-      kubernetes: ${KUBERNETES_NAME}
+      kubernetes: onebox
     remoteWrite:
-    - url: https://aps-workspaces.${AWS_REGION}.amazonaws.com/workspaces/${WORKSPACE_ID}/api/v1/remote_write
+    - url: https://aps-workspaces.ap-southeast-1.amazonaws.com/workspaces/ws-f3841dad-6a5c-420f-8f62-8f66487f512a/api/v1/remote_write
       sigv4:
-        region: ${AWS_REGION}
+        region: ap-southeast-1
         accessKey:
           name: aws-prometheus-credentials
           key: AccessKey
         secretKey:
           name: aws-prometheus-credentials
           key: SecretAccessKey
+    additionalRemoteWrite:
+    - url: "http://prometheus-remote-write-adapter.risingwave-operator-system.svc.cluster.local:8080/receive"
+      writeRelabelConfigs:
+        - sourceLabels: [namespace]
+          action: drop
+          regex: '(default|risingwave-operator-system|kube-system|cert-manager)'
+        - action: labelkeep
+          regex: '__name__|namespace|container|pod'
+        
+        

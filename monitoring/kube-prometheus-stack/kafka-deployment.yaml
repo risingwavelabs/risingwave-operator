@@ -1,0 +1,54 @@
+image:
+  registry: docker.io
+  repository: confluentinc/cp-kafka
+  tag: ""
+  pullPolicy: IfNotPresent
+imagePullSecrets:  []
+nameOverride: ""
+fullnameOverride: ""
+
+autoCreateTopicsEnable: true
+
+replicaCount: 3
+
+port:
+  kafkaInternal: 9092
+  kafkaExternal: 9094
+
+externalAccess:
+  enabled: true
+  initNodePort: 32400
+
+isDocker: true
+
+data:
+  storageSize: 10Gi
+
+resources: 
+  limits:
+    cpu: 1
+    memory: 1400Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+zookeeper:
+  enabled: false
+  url: "zkp-zookeeper-headless:2181"
+
+uncleanLeaderElectionEnable: true
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 300
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  successThreshold: 1
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  successThreshold: 1

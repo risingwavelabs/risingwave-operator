@@ -21,10 +21,12 @@ import (
 	"fmt"
 	"time"
 
-	apiadmissionregistrationv1 "k8s.io/api/admissionregistration/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/spf13/cobra"
+	apiadmissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	v1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -122,18 +124,74 @@ func (o *InstallOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args
 		}
 	}
 
-	fmt.Fprintln(o.Out, fmt.Sprintf("Install the %s! risingwave-operator", o.version))
+	fmt.Fprintln(o.Out, fmt.Sprintf("Install the %s risingwave-operator!", o.version))
 	err = installOperator(ctx, o.version)
 	if err != nil {
 		return fmt.Errorf("install risingwave failed, %w", err)
 	}
 
 	fmt.Fprintln(o.Out, "RisingWave Operator has been installed")
+	fmt.Fprintln(o.Out, "Wait the operator ready!")
+	err = waitOperator(ctx)
+	if err != nil {
+		return fmt.Errorf("wait risingwave-operator failed, %w", err)
+	}
 
 	return nil
 }
 
+func waitOperator(ctx *cmdcontext.RWContext) error {
+	defer func() {
+		_ = ctx.Client().Delete(context.Background(), &rw)
+	}()
+
+	err := wait.PollImmediate(time.Second, time.Minute*TimeOut, func() (bool, error) {
+		ready, inErr := checkOperatorReady(ctx)
+		if inErr != nil {
+			return false, inErr
+		}
+		return ready, inErr
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func checkOperatorReady(ctx *cmdcontext.RWContext) (bool, error) {
+	// check service port.
+	svc := corev1.Service{}
+	err := ctx.Client().Get(context.Background(),
+		client.ObjectKey{Namespace: "risingwave-operator-system", Name: "risingwave-operator-webhook-service"}, &svc)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	if len(svc.Spec.Ports) == 0 {
+		return false, nil
+	}
+
+	if svc.Spec.Ports[0].Port == 0 {
+		return false, nil
+	}
+
+	// Check create test rw.
+	// The risingwave instance only has a name and namespace.
+	// So will return invalid error.
+	// if Invalid error, means the webhook is ready.
+	err = ctx.Client().Create(context.Background(), &rw)
+	if err != nil && !errors.IsAlreadyExists(err) && !errors.IsInvalid(err) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 func waitCertManager(ctx *cmdcontext.RWContext) error {
+	defer GCTestCert(ctx)
 	err := wait.PollImmediate(time.Second, time.Minute*TimeOut, func() (bool, error) {
 		ready, inErr := checkCertManagerReady(ctx)
 		if inErr != nil {
@@ -148,6 +206,7 @@ func waitCertManager(ctx *cmdcontext.RWContext) error {
 }
 
 func checkCertManagerReady(ctx *cmdcontext.RWContext) (bool, error) {
+	// check CABundle.
 	conf := &apiadmissionregistrationv1.ValidatingWebhookConfiguration{}
 	err := ctx.Client().Get(context.Background(), client.ObjectKey{Name: "cert-manager-webhook"}, conf)
 	if err != nil {
@@ -165,7 +224,49 @@ func checkCertManagerReady(ctx *cmdcontext.RWContext) (bool, error) {
 		return false, nil
 	}
 
+	// check service port.
+	svc := corev1.Service{}
+	err = ctx.Client().Get(context.Background(),
+		client.ObjectKey{Namespace: "cert-manager", Name: "cert-manager-webhook"}, &svc)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	if len(svc.Spec.Ports) == 0 {
+		return false, nil
+	}
+
+	if svc.Spec.Ports[0].Port == 0 {
+		return false, nil
+	}
+
+	// check cert-manager test case.
+	err = ctx.Client().Create(context.Background(), &issuer)
+	if err != nil && !errors.IsAlreadyExists(err) {
+		return false, nil
+	}
+
+	err = ctx.Client().Create(context.Background(), &cf)
+	if err != nil && !errors.IsAlreadyExists(err) {
+		return false, nil
+	}
+
 	return true, nil
+}
+
+func GCTestCert(ctx *cmdcontext.RWContext) {
+	_ = ctx.Client().Delete(context.Background(), &issuer)
+	_ = ctx.Client().Delete(context.Background(), &cf)
+	var secret = corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      SecretName,
+			Namespace: "cert-manager",
+		},
+	}
+	_ = ctx.Client().Delete(context.Background(), &secret)
 }
 
 func hasOperator(ctx *cmdcontext.RWContext) (bool, error) {

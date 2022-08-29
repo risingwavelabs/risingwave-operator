@@ -17,11 +17,13 @@
 _KUBERNETES_SOURCE_BASEDIR=$(dirname "${BASH_SOURCE[0]}")
 
 function start_the_network_utils_pod() {
+  echo "Start the network utils pod!"
   kubectl apply -f "$_KUBERNETES_SOURCE_BASEDIR"/network-utils/network-utils.yaml > /dev/null
   kubectl wait --timeout=300s --for=condition=ready pod network-utils > /dev/null
 }
 
 function start_the_psql_console() {
+  echo "Start the psql pod!"
   kubectl apply -f "$_KUBERNETES_SOURCE_BASEDIR"/psql/psql-console.yaml > /dev/null
   kubectl wait --timeout=300s --for=condition=ready pod psql-console > /dev/null
 }
@@ -62,6 +64,3 @@ function wait_until_service_ready() {
 
   echo "Service $namespace/$service is ready!"
 }
-
-start_the_network_utils_pod
-start_the_psql_console

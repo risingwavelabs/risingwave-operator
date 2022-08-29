@@ -21,12 +21,12 @@ import (
 	"fmt"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
-
-	apiadmissionregistrationv1 "k8s.io/api/admissionregistration/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/spf13/cobra"
+	apiadmissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	v1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -124,7 +124,7 @@ func (o *InstallOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args
 		}
 	}
 
-	fmt.Fprintln(o.Out, fmt.Sprintf("Install the %s! risingwave-operator", o.version))
+	fmt.Fprintln(o.Out, fmt.Sprintf("Install the %s risingwave-operator!", o.version))
 	err = installOperator(ctx, o.version)
 	if err != nil {
 		return fmt.Errorf("install risingwave failed, %w", err)
@@ -136,6 +136,7 @@ func (o *InstallOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args
 }
 
 func waitCertManager(ctx *cmdcontext.RWContext) error {
+	defer GCTestCert(ctx)
 	err := wait.PollImmediate(time.Second, time.Minute*TimeOut, func() (bool, error) {
 		ready, inErr := checkCertManagerReady(ctx)
 		if inErr != nil {
@@ -150,6 +151,7 @@ func waitCertManager(ctx *cmdcontext.RWContext) error {
 }
 
 func checkCertManagerReady(ctx *cmdcontext.RWContext) (bool, error) {
+	// check CABundle.
 	conf := &apiadmissionregistrationv1.ValidatingWebhookConfiguration{}
 	err := ctx.Client().Get(context.Background(), client.ObjectKey{Name: "cert-manager-webhook"}, conf)
 	if err != nil {
@@ -167,6 +169,7 @@ func checkCertManagerReady(ctx *cmdcontext.RWContext) (bool, error) {
 		return false, nil
 	}
 
+	// check service port.
 	svc := corev1.Service{}
 	err = ctx.Client().Get(context.Background(),
 		client.ObjectKey{Namespace: "cert-manager", Name: "cert-manager-webhook"}, &svc)
@@ -185,7 +188,30 @@ func checkCertManagerReady(ctx *cmdcontext.RWContext) (bool, error) {
 		return false, nil
 	}
 
+	// check cert-manager test case.
+	err = ctx.Client().Create(context.Background(), &issuer)
+	if err != nil && !errors.IsAlreadyExists(err) {
+		return false, nil
+	}
+
+	err = ctx.Client().Create(context.Background(), &cf)
+	if err != nil && !errors.IsAlreadyExists(err) {
+		return false, nil
+	}
+
 	return true, nil
+}
+
+func GCTestCert(ctx *cmdcontext.RWContext) {
+	_ = ctx.Client().Delete(context.Background(), &issuer)
+	_ = ctx.Client().Delete(context.Background(), &cf)
+	var secret = corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      SecretName,
+			Namespace: "cert-manager",
+		},
+	}
+	_ = ctx.Client().Delete(context.Background(), &secret)
 }
 
 func hasOperator(ctx *cmdcontext.RWContext) (bool, error) {

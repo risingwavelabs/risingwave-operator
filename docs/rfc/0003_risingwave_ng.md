@@ -1,7 +1,7 @@
 |                    |                                                                      |
-| -------            | -------------------------------------------------------------------- |
+| -------            |----------------------------------------------------------------------|
 | Feature            | A new design of RisingWave of flexibility and ease of use            |
-| Status             | In-progress                                                          |
+| Status             | Completed                                                            |
 | Date               | 2022-07-08                                                           |
 | Authors            | arkbriar                                                             |
 | RFC PR #           | (PR # of this RFC. This helps to track the reviews of this proposal) |

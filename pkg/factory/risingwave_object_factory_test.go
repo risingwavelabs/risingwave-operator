@@ -1291,7 +1291,7 @@ func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
 }
 
 func Test_RisingWaveObjectFactory_ServiceMonitor(t *testing.T) {
-	risingwave := testutils.FakeRisingWave.DeepCopy()
+	risingwave := testutils.FakeRisingWave()
 
 	factory := NewRisingWaveObjectFactory(risingwave, testutils.Schema)
 	serviceMonitor := factory.NewServiceMonitor()

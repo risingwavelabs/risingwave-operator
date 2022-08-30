@@ -35,6 +35,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	"github.com/singularity-data/risingwave-operator/pkg/event"
+
 	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/singularity-data/risingwave-operator/pkg/consts"
 	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit"
@@ -48,7 +50,7 @@ func newRisingWaveControllerManagerImplForTest(risingwave *risingwavev1alpha1.Ri
 		WithScheme(testutils.Schema).
 		Build()
 	risingwaveManager := object.NewRisingWaveManager(fakeClient, risingwave.DeepCopy())
-	return newRisingWaveControllerManagerImpl(fakeClient, risingwaveManager)
+	return newRisingWaveControllerManagerImpl(fakeClient, risingwaveManager, event.NewMessageStore())
 }
 
 func Test_IsObjectNil(t *testing.T) {
@@ -80,6 +82,8 @@ func Test_IsObjectNil(t *testing.T) {
 }
 
 func TestRisingWaveControllerManagerImpl_IsObjectSynced(t *testing.T) {
+	fakeRisingwave := testutils.FakeRisingWave()
+
 	testcases := map[string]struct {
 		obj      client.Object
 		expected bool
@@ -100,7 +104,7 @@ func TestRisingWaveControllerManagerImpl_IsObjectSynced(t *testing.T) {
 			obj: &corev1.Service{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						consts.LabelRisingWaveGeneration: strconv.FormatInt(testutils.FakeRisingWave.Generation-1, 10),
+						consts.LabelRisingWaveGeneration: strconv.FormatInt(fakeRisingwave.Generation-1, 10),
 					},
 				},
 			},
@@ -110,7 +114,7 @@ func TestRisingWaveControllerManagerImpl_IsObjectSynced(t *testing.T) {
 			obj: &corev1.Service{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						consts.LabelRisingWaveGeneration: strconv.FormatInt(testutils.FakeRisingWave.Generation, 10),
+						consts.LabelRisingWaveGeneration: strconv.FormatInt(fakeRisingwave.Generation, 10),
 					},
 				},
 			},
@@ -120,7 +124,7 @@ func TestRisingWaveControllerManagerImpl_IsObjectSynced(t *testing.T) {
 			obj: &corev1.Service{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						consts.LabelRisingWaveGeneration: strconv.FormatInt(testutils.FakeRisingWave.Generation+1, 10),
+						consts.LabelRisingWaveGeneration: strconv.FormatInt(fakeRisingwave.Generation+1, 10),
 					},
 				},
 			},
@@ -138,7 +142,7 @@ func TestRisingWaveControllerManagerImpl_IsObjectSynced(t *testing.T) {
 		},
 	}
 
-	managerImpl := newRisingWaveControllerManagerImplForTest(testutils.FakeRisingWave)
+	managerImpl := newRisingWaveControllerManagerImplForTest(testutils.FakeRisingWave())
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			if tc.expected != managerImpl.isObjectSynced(tc.obj) {
@@ -234,7 +238,7 @@ func testSyncObject[T any, TP ptrAsObject[T]](t *testing.T, testcases map[string
 			initObjs := lo.Filter([]client.Object{tc.obj}, func(obj client.Object, _ int) bool {
 				return !isObjectNil(obj)
 			})
-			managerImpl := newRisingWaveControllerManagerImplForTest(testutils.FakeRisingWave, initObjs...)
+			managerImpl := newRisingWaveControllerManagerImplForTest(testutils.FakeRisingWave(), initObjs...)
 			newObj := tc.factory()
 			if err := managerImpl.syncObject(context.Background(), tc.obj, func() (client.Object, error) {
 				return newObj, nil
@@ -269,10 +273,12 @@ func newObjectFromKey[T any, TP ptrAsObject[T]](key types.NamespacedName, labels
 }
 
 func TestRisingWaveControllerManagerImpl_SyncObject(t *testing.T) {
+	fakeRisingwave := testutils.FakeRisingWave()
+
 	key := types.NamespacedName{Namespace: "", Name: "t"}
 	factory := func() *corev1.Service {
 		return newObjectFromKey[corev1.Service](key, map[string]string{
-			consts.LabelRisingWaveGeneration: strconv.FormatInt(testutils.FakeRisingWave.Generation, 10),
+			consts.LabelRisingWaveGeneration: strconv.FormatInt(fakeRisingwave.Generation, 10),
 		})
 	}
 	testSyncObject(t, map[string]struct {
@@ -295,14 +301,14 @@ func TestRisingWaveControllerManagerImpl_SyncObject(t *testing.T) {
 		"current-synced": {
 			key: key,
 			obj: newObjectFromKey[corev1.Service](key, map[string]string{
-				consts.LabelRisingWaveGeneration: strconv.FormatInt(testutils.FakeRisingWave.Generation+1, 10),
+				consts.LabelRisingWaveGeneration: strconv.FormatInt(fakeRisingwave.Generation+1, 10),
 			}),
 			factory: factory,
 		},
 		"current-not-synced": {
 			key: key,
 			obj: newObjectFromKey[corev1.Service](key, map[string]string{
-				consts.LabelRisingWaveGeneration: strconv.FormatInt(testutils.FakeRisingWave.Generation-1, 10),
+				consts.LabelRisingWaveGeneration: strconv.FormatInt(fakeRisingwave.Generation-1, 10),
 			}),
 			factory: factory,
 		},
@@ -310,6 +316,8 @@ func TestRisingWaveControllerManagerImpl_SyncObject(t *testing.T) {
 }
 
 func testRisingWaveControllerManagerImplSyncSingleObject[T any, TP ptrAsObject[T]](t *testing.T, key types.NamespacedName, sync func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj *T) (ctrl.Result, error), hooks ...func(t *testing.T, obj *T)) {
+	fakeRisingwave := testutils.FakeRisingWave()
+
 	testcases := map[string]struct {
 		origin TP
 	}{
@@ -321,7 +329,7 @@ func testRisingWaveControllerManagerImplSyncSingleObject[T any, TP ptrAsObject[T
 		},
 		"origin-synced": {
 			origin: newObjectFromKey[T, TP](key, map[string]string{
-				consts.LabelRisingWaveGeneration: strconv.FormatInt(testutils.FakeRisingWave.Generation-1, 10),
+				consts.LabelRisingWaveGeneration: strconv.FormatInt(fakeRisingwave.Generation-1, 10),
 			}),
 		},
 	}
@@ -331,7 +339,7 @@ func testRisingWaveControllerManagerImplSyncSingleObject[T any, TP ptrAsObject[T
 			initObjs := lo.Filter([]client.Object{tc.origin}, func(obj client.Object, _ int) bool {
 				return !isObjectNil(obj)
 			})
-			managerImpl := newRisingWaveControllerManagerImplForTest(testutils.FakeRisingWave, initObjs...)
+			managerImpl := newRisingWaveControllerManagerImplForTest(testutils.FakeRisingWave(), initObjs...)
 			r, err := sync(managerImpl, context.Background(), logr.Discard(), (*T)(tc.origin))
 			if ctrlkit.NeedsRequeue(r, err) {
 				t.Fatal("sync failed", r, err)
@@ -354,7 +362,8 @@ func testRisingWaveControllerManagerImplSyncSingleObject[T any, TP ptrAsObject[T
 }
 
 func TestRisingWaveControllerManagerImpl_SyncServiceMonitor(t *testing.T) {
-	key := types.NamespacedName{Namespace: testutils.FakeRisingWave.Namespace, Name: "risingwave-" + testutils.FakeRisingWave.Name}
+	fakeRisingwave := testutils.FakeRisingWave()
+	key := types.NamespacedName{Namespace: fakeRisingwave.Namespace, Name: "risingwave-" + fakeRisingwave.Name}
 	testRisingWaveControllerManagerImplSyncSingleObject(t, key,
 		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj *monitoringv1.ServiceMonitor) (ctrl.Result, error) {
 			return managerImpl.SyncServiceMonitor(ctx, logger, obj)
@@ -363,7 +372,9 @@ func TestRisingWaveControllerManagerImpl_SyncServiceMonitor(t *testing.T) {
 }
 
 func TestRisingWaveControllerManagerImpl_SyncMetaService(t *testing.T) {
-	key := types.NamespacedName{Namespace: testutils.FakeRisingWave.Namespace, Name: testutils.FakeRisingWave.Name + "-meta"}
+	fakeRisingwave := testutils.FakeRisingWave()
+
+	key := types.NamespacedName{Namespace: fakeRisingwave.Namespace, Name: fakeRisingwave.Name + "-meta"}
 	testRisingWaveControllerManagerImplSyncSingleObject(t, key,
 		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj *corev1.Service) (ctrl.Result, error) {
 			return managerImpl.SyncMetaService(ctx, logger, obj)
@@ -372,7 +383,9 @@ func TestRisingWaveControllerManagerImpl_SyncMetaService(t *testing.T) {
 }
 
 func TestRisingWaveControllerManagerImpl_SyncFrontendService(t *testing.T) {
-	key := types.NamespacedName{Namespace: testutils.FakeRisingWave.Namespace, Name: testutils.FakeRisingWave.Name + "-frontend"}
+	fakeRisingwave := testutils.FakeRisingWave()
+
+	key := types.NamespacedName{Namespace: fakeRisingwave.Namespace, Name: fakeRisingwave.Name + "-frontend"}
 	testRisingWaveControllerManagerImplSyncSingleObject(t, key,
 		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj *corev1.Service) (ctrl.Result, error) {
 			return managerImpl.SyncFrontendService(ctx, logger, obj)
@@ -381,7 +394,9 @@ func TestRisingWaveControllerManagerImpl_SyncFrontendService(t *testing.T) {
 }
 
 func TestRisingWaveControllerManagerImpl_SyncComputeService(t *testing.T) {
-	key := types.NamespacedName{Namespace: testutils.FakeRisingWave.Namespace, Name: testutils.FakeRisingWave.Name + "-compute"}
+	fakeRisingwave := testutils.FakeRisingWave()
+
+	key := types.NamespacedName{Namespace: fakeRisingwave.Namespace, Name: fakeRisingwave.Name + "-compute"}
 	testRisingWaveControllerManagerImplSyncSingleObject(t, key,
 		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj *corev1.Service) (ctrl.Result, error) {
 			return managerImpl.SyncComputeService(ctx, logger, obj)
@@ -390,7 +405,9 @@ func TestRisingWaveControllerManagerImpl_SyncComputeService(t *testing.T) {
 }
 
 func TestRisingWaveControllerManagerImpl_SyncCompactorService(t *testing.T) {
-	key := types.NamespacedName{Namespace: testutils.FakeRisingWave.Namespace, Name: testutils.FakeRisingWave.Name + "-compactor"}
+	fakeRisingwave := testutils.FakeRisingWave()
+
+	key := types.NamespacedName{Namespace: fakeRisingwave.Namespace, Name: fakeRisingwave.Name + "-compactor"}
 	testRisingWaveControllerManagerImplSyncSingleObject(t, key,
 		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj *corev1.Service) (ctrl.Result, error) {
 			return managerImpl.SyncCompactorService(ctx, logger, obj)
@@ -399,7 +416,9 @@ func TestRisingWaveControllerManagerImpl_SyncCompactorService(t *testing.T) {
 }
 
 func TestRisingWaveControllerManagerImpl_SyncConfigConfigMap(t *testing.T) {
-	key := types.NamespacedName{Namespace: testutils.FakeRisingWave.Namespace, Name: testutils.FakeRisingWave.Name + "-config"}
+	fakeRisingwave := testutils.FakeRisingWave()
+
+	key := types.NamespacedName{Namespace: fakeRisingwave.Namespace, Name: fakeRisingwave.Name + "-config"}
 	testRisingWaveControllerManagerImplSyncSingleObject(t, key,
 		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj *corev1.ConfigMap) (ctrl.Result, error) {
 			return managerImpl.SyncConfigConfigMap(ctx, logger, obj)
@@ -494,10 +513,13 @@ func testRisingWaveControllerManagerImplSyncObjectGroups[T any, TL any, TP ptrAs
 }
 
 func TestRisingWaveControllerManagerImpl_SyncMetaDeployments(t *testing.T) {
+	fakeRisingwave := testutils.FakeRisingWave()
+	fakeRisingwaveComponentOnly := testutils.FakeRisingWaveComponentOnly()
+
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, testutils.FakeRisingWave, nil, []string{""},
+		t, fakeRisingwave, nil, []string{""},
 		map[string]string{
-			consts.LabelRisingWaveName:      testutils.FakeRisingWave.Name,
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentMeta,
 		},
 		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.Deployment) (ctrl.Result, error) {
@@ -511,9 +533,9 @@ func TestRisingWaveControllerManagerImpl_SyncMetaDeployments(t *testing.T) {
 		},
 	)
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, testutils.FakeRisingWaveComponentOnly, nil, []string{"group1"},
+		t, fakeRisingwaveComponentOnly, nil, []string{"group1"},
 		map[string]string{
-			consts.LabelRisingWaveName:      testutils.FakeRisingWaveComponentOnly.Name,
+			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentMeta,
 		},
 		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.Deployment) (ctrl.Result, error) {
@@ -529,10 +551,13 @@ func TestRisingWaveControllerManagerImpl_SyncMetaDeployments(t *testing.T) {
 }
 
 func TestRisingWaveControllerManagerImpl_SyncFrontendDeployments(t *testing.T) {
+	fakeRisingwave := testutils.FakeRisingWave()
+	fakeRisingwaveComponentOnly := testutils.FakeRisingWaveComponentOnly()
+
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, testutils.FakeRisingWave, nil, []string{""},
+		t, fakeRisingwave, nil, []string{""},
 		map[string]string{
-			consts.LabelRisingWaveName:      testutils.FakeRisingWave.Name,
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentFrontend,
 		},
 		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.Deployment) (ctrl.Result, error) {
@@ -546,9 +571,9 @@ func TestRisingWaveControllerManagerImpl_SyncFrontendDeployments(t *testing.T) {
 		},
 	)
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, testutils.FakeRisingWaveComponentOnly, nil, []string{"group1"},
+		t, fakeRisingwaveComponentOnly, nil, []string{"group1"},
 		map[string]string{
-			consts.LabelRisingWaveName:      testutils.FakeRisingWaveComponentOnly.Name,
+			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentFrontend,
 		},
 		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.Deployment) (ctrl.Result, error) {
@@ -564,10 +589,13 @@ func TestRisingWaveControllerManagerImpl_SyncFrontendDeployments(t *testing.T) {
 }
 
 func TestRisingWaveControllerManagerImpl_SyncCompactorDeployments(t *testing.T) {
+	fakeRisingwave := testutils.FakeRisingWave()
+	fakeRisingwaveComponentOnly := testutils.FakeRisingWaveComponentOnly()
+
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, testutils.FakeRisingWave, nil, []string{""},
+		t, fakeRisingwave, nil, []string{""},
 		map[string]string{
-			consts.LabelRisingWaveName:      testutils.FakeRisingWave.Name,
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentCompactor,
 		},
 		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.Deployment) (ctrl.Result, error) {
@@ -581,9 +609,9 @@ func TestRisingWaveControllerManagerImpl_SyncCompactorDeployments(t *testing.T) 
 		},
 	)
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, testutils.FakeRisingWaveComponentOnly, nil, []string{"group1"},
+		t, fakeRisingwaveComponentOnly, nil, []string{"group1"},
 		map[string]string{
-			consts.LabelRisingWaveName:      testutils.FakeRisingWaveComponentOnly.Name,
+			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentCompactor,
 		},
 		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.Deployment) (ctrl.Result, error) {
@@ -599,10 +627,13 @@ func TestRisingWaveControllerManagerImpl_SyncCompactorDeployments(t *testing.T) 
 }
 
 func TestRisingWaveControllerManagerImpl_SyncComputeStatefulSets(t *testing.T) {
+	fakeRisingwave := testutils.FakeRisingWave()
+	fakeRisingwaveComponentOnly := testutils.FakeRisingWaveComponentOnly()
+
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, testutils.FakeRisingWave, nil, []string{""},
+		t, fakeRisingwave, nil, []string{""},
 		map[string]string{
-			consts.LabelRisingWaveName:      testutils.FakeRisingWave.Name,
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentCompute,
 		},
 		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.StatefulSet) (ctrl.Result, error) {
@@ -616,9 +647,9 @@ func TestRisingWaveControllerManagerImpl_SyncComputeStatefulSets(t *testing.T) {
 		},
 	)
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, testutils.FakeRisingWaveComponentOnly, nil, []string{"group1"},
+		t, fakeRisingwaveComponentOnly, nil, []string{"group1"},
 		map[string]string{
-			consts.LabelRisingWaveName:      testutils.FakeRisingWaveComponentOnly.Name,
+			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentCompute,
 		},
 		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.StatefulSet) (ctrl.Result, error) {

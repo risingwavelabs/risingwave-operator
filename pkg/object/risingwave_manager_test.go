@@ -30,7 +30,7 @@ import (
 )
 
 func Test_NewRisingWaveManager(t *testing.T) {
-	mgr := NewRisingWaveManager(nil, testutils.FakeRisingWave)
+	mgr := NewRisingWaveManager(nil, testutils.FakeRisingWave())
 
 	if mgr.risingwave == mgr.mutableRisingWave {
 		t.Fail()
@@ -42,12 +42,14 @@ func Test_NewRisingWaveManager(t *testing.T) {
 }
 
 func Test_RisingWaveManager_UpdateRemote(t *testing.T) {
+	risingwave := testutils.FakeRisingWave()
+
 	mgr := NewRisingWaveManager(
 		fake.NewClientBuilder().
 			WithScheme(testutils.Schema).
-			WithObjects(testutils.FakeRisingWave).
+			WithObjects(risingwave).
 			Build(),
-		testutils.FakeRisingWave,
+		risingwave,
 	)
 
 	// Should do nothing.
@@ -67,21 +69,22 @@ func Test_RisingWaveManager_UpdateRemote(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var risingwave risingwavev1alpha1.RisingWave
+	var currentRisingWave risingwavev1alpha1.RisingWave
 	if err := mgr.client.Get(context.Background(), types.NamespacedName{
 		Namespace: mgr.risingwave.Namespace,
 		Name:      mgr.risingwave.Name,
-	}, &risingwave); err != nil {
+	}, &currentRisingWave); err != nil {
 		t.Fatal(err)
 	}
 
-	if risingwave.Status.ObservedGeneration != testutils.FakeRisingWave.Generation {
+	if currentRisingWave.Status.ObservedGeneration != risingwave.Generation {
 		t.Fail()
 	}
 }
 
 func Test_RisingWaveManager_UpdateMemoryAndGet(t *testing.T) {
-	mgr := NewRisingWaveManager(nil, testutils.FakeRisingWave)
+	risingwave := testutils.FakeRisingWave()
+	mgr := NewRisingWaveManager(nil, risingwave)
 
 	// IsObservedGenerationOutdated
 	if !mgr.IsObservedGenerationOutdated() {
@@ -90,7 +93,7 @@ func Test_RisingWaveManager_UpdateMemoryAndGet(t *testing.T) {
 
 	// SyncObservedGeneration
 	mgr.SyncObservedGeneration()
-	if mgr.mutableRisingWave.Status.ObservedGeneration != testutils.FakeRisingWave.Generation {
+	if mgr.mutableRisingWave.Status.ObservedGeneration != risingwave.Generation {
 		t.Fail()
 	}
 
@@ -138,7 +141,7 @@ func Test_RisingWaveManager_UpdateMemoryAndGet(t *testing.T) {
 	}
 
 	// RisingWave
-	if !testutils.DeepEqual(mgr.RisingWave(), testutils.FakeRisingWave) {
+	if !testutils.DeepEqual(mgr.RisingWave(), risingwave) {
 		t.Fail()
 	}
 }

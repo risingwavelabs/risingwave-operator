@@ -330,7 +330,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			risingwave := testutils.FakeRisingWave.DeepCopy()
+			risingwave := testutils.FakeRisingWave()
 			if tc.patch != nil {
 				tc.patch(risingwave)
 			}
@@ -474,10 +474,10 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			risingwave := testutils.FakeRisingWave.DeepCopy()
+			risingwave := testutils.FakeRisingWave()
 			tc.patch(risingwave)
 
-			err := webhook.ValidateUpdate(context.Background(), testutils.FakeRisingWave, risingwave)
+			err := webhook.ValidateUpdate(context.Background(), testutils.FakeRisingWave(), risingwave)
 			if tc.pass != (err == nil) {
 				t.Fatal(tc.pass, err)
 			}

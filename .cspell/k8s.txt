@@ -1,0 +1,94 @@
+# Common
+sigs
++s                  # for plural
+kubernetes
+k8s*
+*resource
+subresource*
+kubectl
+kube*
+finalizer*
+admissionregistration
+jsonpath
+minikube
+envtest
+kustomize
+krew
+kubeconfig
+
+# Builtin APIs
+pod*
+po
+service*
+svc
+configmap*
+cm
+secret*
+deployment*
+deploy
+statefulset*
+sts
+persistent+
+*volume*
++mount*
+pv
+pvc
+job
+jobs
+cronjob
+cronjobs
+customresourcedefinition
+customresourcedefinitions
+crd
+crds
+
+# Webhook
+*webhook
+*webhook+
+mutatingwebhookconfiguration
+validatingwebhookconfiguration
+
+# RisingWave APIs
+risingwave
+risingwaves
+rw
+risingwavepodtemplate
+risingwavepodtemplates
+rwpt
+
+# Prometheus APIs
+servicemonitor*
+sm
+
+# CertManager APIs
+certmanager
+
+# API package names
++v
+api+
++machinery*
+core+
+meta+
+prometheus+
+apiextensions+
+risingwave+
+certmanager+
+cm+
+apiadmissionregistration+
+apps+
+monitoring+
+batch+
+
+# Controller runtime
+*util*
++runtime
+api*
+*server
+*extensions
+clientgoscheme
+*scheme
+apierrors
+restmapper
+
+# Controller specific
++controller

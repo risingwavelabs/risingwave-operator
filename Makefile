@@ -109,7 +109,7 @@ test: manifests generate fmt vet lint envtest ## Run tests.
 	@KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out.tmp
 	@cat cover.out.tmp | grep -v "_generated.go" > cover.out && rm -f cover.out.tmp
 
-spell:
+spellcheck:
 	@if command -v cspell > /dev/null 2>&1 ; then \
 	    cspell lint --relative --no-progress --no-summary --show-suggestions -e 'vendor/*' --gitignore **/*.go **/*.md Makefile; \
 	else \
@@ -126,6 +126,9 @@ build: build-manager
 
 build-manager: generate fmt vet lint ## Build manager binary.
 	go build -o bin/manager cmd/manager/manager.go
+
+build-plugin: generate fmt vet lint ## Build manager binary.
+	go build -o bin/kubectl-rw cmd/plugin/main.go
 
 # Helper target for generating new local certs used in development. Use install-local instead
 # if you also use Docker for Desktop as your development environment.
@@ -149,6 +152,9 @@ run-local: manifests generate fmt vet lint install-local
 e2e-test: generate-test-yaml vendor
 	docker build -f docker/Dockerfile --build-arg USE_VENDOR=true -t docker.io/singularity-data/risingwave-operator:dev . --output=type=docker
 	e2e/e2e.sh
+
+e2e-plugin:
+	e2e/e2e-plugin.sh
 
 docker-cross-build: test buildx## Build docker image with the manager.
 	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=false --platform=linux/amd64,linux/arm64 -t ${IMG} . --push

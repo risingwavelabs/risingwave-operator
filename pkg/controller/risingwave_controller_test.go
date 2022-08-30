@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package risingwave
+package controller
 
 import (
 	"context"
@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"k8s.io/client-go/tools/record"
 
 	"github.com/fatih/color"
 	"github.com/go-logr/logr"
@@ -38,6 +40,8 @@ import (
 	"github.com/singularity-data/risingwave-operator/pkg/object"
 	"github.com/singularity-data/risingwave-operator/pkg/testutils"
 )
+
+const defaultRecorderBufferSize = 10
 
 type resultErr struct {
 	reconcile.Result
@@ -88,6 +92,14 @@ func newActionAsserts(t *testing.T, asserts map[string]resultErr, mustCover bool
 	}
 }
 
+func takeAndLogEventsFromFakeRecord(t *testing.T, recorder *record.FakeRecorder) {
+	t.Logf("events: \n")
+	for i := 0; i < len(recorder.Events); i++ {
+		event := <-recorder.Events
+		t.Logf("  - %s\n", event)
+	}
+}
+
 func Test_RisingWaveController_New(t *testing.T) {
 	risingwave := &risingwavev1alpha1.RisingWave{
 		ObjectMeta: metav1.ObjectMeta{
@@ -98,6 +110,7 @@ func Test_RisingWaveController_New(t *testing.T) {
 		Status: risingwavev1alpha1.RisingWaveStatus{},
 	}
 
+	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Schema).
@@ -129,6 +142,7 @@ func Test_RisingWaveController_New(t *testing.T) {
 				RisingWaveAction_UpdateRisingWaveStatusViaClient: newResultErr(ctrlkit.Continue()),
 			}, false)
 		},
+		Recorder: recorder,
 	}
 
 	logger := zap.New(zap.UseDevMode(true))
@@ -138,6 +152,13 @@ func Test_RisingWaveController_New(t *testing.T) {
 			Namespace: "default",
 		},
 	})
+
+	numEvents := len(recorder.Events)
+	numWantedEvents := 1
+	if numEvents != numWantedEvents {
+		takeAndLogEventsFromFakeRecord(t, recorder)
+		t.Errorf("got %d events, wanted %d", numEvents, numWantedEvents)
+	}
 
 	if err != nil {
 		t.Fatal(err)
@@ -155,6 +176,7 @@ func Test_RisingWaveController_Deleted(t *testing.T) {
 		Status: risingwavev1alpha1.RisingWaveStatus{},
 	}
 
+	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Schema).
@@ -173,13 +195,20 @@ func Test_RisingWaveController_Deleted(t *testing.T) {
 		},
 	})
 
+	numEvents := len(recorder.Events)
+	numWantedEvents := 0
+	if numEvents != numWantedEvents {
+		takeAndLogEventsFromFakeRecord(t, recorder)
+		t.Errorf("got %d events, wanted %d", numEvents, numWantedEvents)
+	}
+
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func Test_RisingWaveController_Initializing(t *testing.T) {
-	risingwave := testutils.FakeRisingWave
+	risingwave := testutils.FakeRisingWave()
 	risingwave.Status = risingwavev1alpha1.RisingWaveStatus{
 		Conditions: []risingwavev1alpha1.RisingWaveCondition{
 			{
@@ -189,11 +218,13 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 		},
 	}
 
+	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Schema).
 			WithObjects(risingwave).
 			Build(),
+		Recorder: recorder,
 		ActionHookFactory: func() ctrlkit.ActionHook {
 			return newActionAsserts(t, map[string]resultErr{
 				RisingWaveAction_BarrierConditionInitializingIsTrue:  newResultErr(ctrlkit.Continue()),
@@ -220,20 +251,29 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 		NamespacedName: types.NamespacedName{Name: risingwave.Name, Namespace: risingwave.Namespace},
 	})
 
+	numEvents := len(recorder.Events)
+	numWantedEvents := 0
+	if numEvents != numWantedEvents {
+		takeAndLogEventsFromFakeRecord(t, recorder)
+		t.Errorf("got %d events, wanted %d", numEvents, numWantedEvents)
+	}
+
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func Test_RisingWaveController_Recovery(t *testing.T) {
-	risingwave := testutils.FakeRisingWave.DeepCopy()
+	risingwave := testutils.FakeRisingWave()
 	risingwave.Status.ObservedGeneration = risingwave.Generation
 
+	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Schema).
 			WithObjects(risingwave).
 			Build(),
+		Recorder: recorder,
 		ActionHookFactory: func() ctrlkit.ActionHook {
 			return newActionAsserts(t, map[string]resultErr{
 				RisingWaveAction_MarkConditionUpgradingAsTrue: newResultErr(ctrlkit.Continue()),
@@ -257,7 +297,15 @@ func Test_RisingWaveController_Recovery(t *testing.T) {
 	risingwaveManager := object.NewRisingWaveManager(nil, &currentRisingwave)
 	runningCondition := risingwaveManager.GetCondition(risingwavev1alpha1.RisingWaveConditionRunning)
 	if runningCondition == nil || runningCondition.Status != metav1.ConditionFalse {
+		t.Logf("condition: %s", testutils.JsonMustPrettyPrint(runningCondition))
 		t.Fatal("Running condition not false")
+	}
+
+	numEvents := len(recorder.Events)
+	numWantedEvents := 2
+	if numEvents != numWantedEvents {
+		takeAndLogEventsFromFakeRecord(t, recorder)
+		t.Errorf("got %d events, wanted %d", numEvents, numWantedEvents)
 	}
 
 	if err != nil {

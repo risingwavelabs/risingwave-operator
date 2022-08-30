@@ -66,7 +66,7 @@ func NewRestartCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOSt
 }
 
 func (o *RestartOptions) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	rw, err := o.GetRwInstance(context.Background(), ctx)
+	rw, err := o.GetRWInstance(context.Background(), ctx)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (o *RestartOptions) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command,
 }
 
 func (o *RestartOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	rw, err := o.GetRwInstance(context.Background(), ctx)
+	rw, err := o.GetRWInstance(context.Background(), ctx)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (o *RestartOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args
 	}
 
 	// update rw
-	rw, _ = o.GetRwInstance(context.Background(), ctx)
+	rw, _ = o.GetRWInstance(context.Background(), ctx)
 	err = resumeRisingWave(rw)
 	if err != nil {
 		return err
@@ -136,7 +136,7 @@ func (o *RestartOptions) verifyStopped(rwCtx *cmdcontext.RWContext) error {
 }
 
 func (o *RestartOptions) getRunningCount(ctx context.Context, rwCtx *cmdcontext.RWContext) (int32, error) {
-	rw, err := o.GetRwInstance(ctx, rwCtx)
+	rw, err := o.GetRWInstance(ctx, rwCtx)
 	if err != nil {
 		return -1, err
 	}

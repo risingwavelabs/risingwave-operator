@@ -68,7 +68,7 @@ func NewStopCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStrea
 }
 
 func (o *StopOptions) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	rw, err := o.GetRwInstance(context.Background(), ctx)
+	rw, err := o.GetRWInstance(context.Background(), ctx)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (o *StopOptions) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, ar
 }
 
 func (o *StopOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	rw, err := o.GetRwInstance(context.Background(), ctx)
+	rw, err := o.GetRWInstance(context.Background(), ctx)
 	if err != nil {
 		return err
 	}

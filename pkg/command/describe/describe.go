@@ -75,7 +75,7 @@ func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 }
 
 func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	rw, err := o.GetRwInstance(context2.Background(), ctx)
+	rw, err := o.GetRWInstance(context2.Background(), ctx)
 	if err != nil {
 		return err
 	}

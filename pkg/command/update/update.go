@@ -19,6 +19,9 @@ package update
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -38,7 +41,7 @@ Limits and requests for CPU resources are measured in cpu units while that of me
 
 Accepted values for resources:
 
-  CPU: 	  Plain integer or using millicpu. For example, 1.0 or 100m, these are equivalent.
+  CPU: 	  Plain integer or using milli-cpu. For example, 1.0 or 100m, these are equivalent.
 
   Memory: Plain integer or as a fixed-point number using one of these quantity suffixes: E, P, T, G, M, k. You can 
           also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki. For example, 1G, 1Gi, 1024M or 128974848.
@@ -54,15 +57,17 @@ Accepted values for resources:
 `
 )
 
+var componentSet = sets.NewString(util.Compute, util.Compactor, util.Meta, util.Frontend)
+
 type Options struct {
 	*cmdcontext.BasicOptions
 
-	computeRequest Request
-	computeLimit   Request
-	memoryRequest  Request
-	memoryLimit    Request
-	group          string
-	component      string
+	cpuRequest    Request
+	cpuLimit      Request
+	memoryRequest Request
+	memoryLimit   Request
+	group         string
+	component     string
 }
 
 // Request holds the request string and converted resource quantity.
@@ -88,32 +93,80 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 		},
 	}
 
-	cmd.Flags().StringVar(&o.computeRequest.requestedQty, "cpu-request", "", "The target cpu request.")
-	cmd.Flags().StringVar(&o.computeLimit.requestedQty, "cpu-limit", "", "The target cpu limit.")
+	cmd.Flags().StringVar(&o.cpuRequest.requestedQty, "cpu-request", "", "The target cpu request.")
+	cmd.Flags().StringVar(&o.cpuLimit.requestedQty, "cpu-limit", "", "The target cpu limit.")
 	cmd.Flags().StringVar(&o.memoryRequest.requestedQty, "memory-request", "", "The target memory request.")
 	cmd.Flags().StringVar(&o.memoryLimit.requestedQty, "memory-limit", "", "The target memory limit.")
-	cmd.Flags().StringVarP(&o.group, "group", "g", util.DefaultGroup, "The group to be updated. If not set, update the default group.")
 	cmd.Flags().StringVarP(&o.component, "component", "c", util.Global, "The component to be updated. If not set, update global resources.")
+	cmd.Flags().StringVarP(&o.group, "group", "g", util.DefaultGroup, "The group to be updated. If not set, update the default group.")
 
 	return cmd
 }
 
-func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	// parse the resource requests
-	if o.computeRequest.requestedQty != "" {
-		qty, err := k8sresource.ParseQuantity(o.computeRequest.requestedQty)
-		if err != nil {
-			return err
-		}
-		o.computeRequest.convertedQty = qty
+func (o *Options) Validate(ctx cmdcontext.Context, cmd *cobra.Command, args []string) error {
+	// validate component
+	if o.component != util.Global && !componentSet.Has(strings.ToLower(o.component)) {
+		return fmt.Errorf("component should be in [%s,global]", strings.Join(componentSet.List(), ","))
 	}
 
-	if o.computeLimit.requestedQty != "" {
-		qty, err := k8sresource.ParseQuantity(o.computeLimit.requestedQty)
+	// validate group
+	rw, err := o.GetRWInstance(context.Background(), ctx)
+	if err != nil {
+		return err
+	}
+
+	// if set DefaultGroup, not need check the name.
+	if o.group == util.DefaultGroup {
+		return o.validateResources()
+	}
+
+	switch o.component {
+	case util.Meta:
+		if !util.IsValidRWGroup(o.group, rw.Spec.Components.Meta.Groups) {
+			return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
+		}
+
+	case util.Frontend:
+		if !util.IsValidRWGroup(o.group, rw.Spec.Components.Frontend.Groups) {
+			return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
+		}
+
+	case util.Compactor:
+		if !util.IsValidRWGroup(o.group, rw.Spec.Components.Compactor.Groups) {
+			return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
+		}
+
+	case util.Compute:
+		if !util.IsValidComputeGroup(o.group, rw.Spec.Components.Compute.Groups) {
+			return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
+		}
+
+	case util.Global:
+		break
+
+	default:
+		return fmt.Errorf("invalid risingwave component: %s", o.component)
+	}
+
+	return o.validateResources()
+}
+
+func (o *Options) validateResources() error {
+	// parse the resource requests
+	if o.cpuRequest.requestedQty != "" {
+		qty, err := k8sresource.ParseQuantity(o.cpuRequest.requestedQty)
 		if err != nil {
 			return err
 		}
-		o.computeLimit.convertedQty = qty
+		o.cpuRequest.convertedQty = qty
+	}
+
+	if o.cpuLimit.requestedQty != "" {
+		qty, err := k8sresource.ParseQuantity(o.cpuLimit.requestedQty)
+		if err != nil {
+			return err
+		}
+		o.cpuLimit.convertedQty = qty
 	}
 
 	if o.memoryRequest.requestedQty != "" {
@@ -131,60 +184,21 @@ func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 		}
 		o.memoryLimit.convertedQty = qty
 	}
-
-	// validate group
-	if o.group == "" {
-		o.group = util.DefaultGroup
-	} else {
-		rw, err := o.GetRwInstance(context.Background(), ctx)
-		if err != nil {
-			return err
-		}
-
-		switch o.component {
-		case util.Compute:
-			if !util.IsValidComputeGroup(o.group, rw.Spec.Components.Compute.Groups) {
-				return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
-			}
-
-		case util.Meta:
-			if !util.IsValidRWGroup(o.group, rw.Spec.Components.Meta.Groups) {
-				return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
-			}
-
-		case util.Frontend:
-			if !util.IsValidRWGroup(o.group, rw.Spec.Components.Frontend.Groups) {
-				return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
-			}
-
-		case util.Compactor:
-			if !util.IsValidRWGroup(o.group, rw.Spec.Components.Compactor.Groups) {
-				return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
-			}
-
-		case util.Global:
-			break
-
-		default:
-			return fmt.Errorf("invalid risingwave component: %s", o.component)
-		}
-	}
-
-	// validate component
-	if o.component == "" {
-		return fmt.Errorf("component name is required")
-	}
-
 	return nil
 }
-
-func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	rw, err := o.GetRwInstance(context.Background(), ctx)
+func (o *Options) Run(ctx cmdcontext.Context, cmd *cobra.Command, args []string) error {
+	rw, err := o.GetRWInstance(context.Background(), ctx)
 	if err != nil {
 		return err
 	}
 
-	o.updateConfig(rw)
+	// convert the global config into the components.
+	rw = util.ConvertRisingwave(rw)
+
+	err = o.updateConfig(rw)
+	if err != nil {
+		return err
+	}
 
 	err = ctx.Client().Update(context.Background(), rw)
 	if err != nil {
@@ -196,6 +210,12 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 
 func (o *Options) updateConfig(rw *v1alpha1.RisingWave) error {
 	components := &rw.Spec.Components
+
+	// only change the global resources
+	if o.component == util.Global {
+		o.updateInnerGlobalResources(rw)
+		return nil
+	}
 
 	switch o.component {
 	case util.Compute:
@@ -230,9 +250,6 @@ func (o *Options) updateConfig(rw *v1alpha1.RisingWave) error {
 			}
 		}
 
-	case util.Global:
-		o.updateComponentResources(&rw.Spec.Global.Resources)
-
 	default:
 		return fmt.Errorf("invalid component name %s, will do nothing", o.component)
 	}
@@ -240,13 +257,48 @@ func (o *Options) updateConfig(rw *v1alpha1.RisingWave) error {
 	return nil
 }
 
-func (o *Options) updateComponentResources(resourceMap *corev1.ResourceRequirements) {
-	if o.computeRequest.requestedQty != "" {
-		resourceMap.Requests[corev1.ResourceCPU] = o.computeRequest.convertedQty
+func (o *Options) updateInnerGlobalResources(rw *v1alpha1.RisingWave) {
+	for _, group := range rw.Spec.Components.Compute.Groups {
+		if group.Name == util.DefaultGroup {
+			o.updateComponentResources(&group.Resources)
+			break
+		}
 	}
 
-	if o.computeLimit.requestedQty != "" {
-		resourceMap.Limits[corev1.ResourceCPU] = o.computeLimit.convertedQty
+	var componentGroups = [][]v1alpha1.RisingWaveComponentGroup{
+		rw.Spec.Components.Meta.Groups,
+		rw.Spec.Components.Frontend.Groups,
+		rw.Spec.Components.Compactor.Groups,
+	}
+
+	var addResource = func(groups []v1alpha1.RisingWaveComponentGroup) {
+		for i := range groups {
+			if groups[i].Name == util.DefaultGroup {
+				o.updateComponentResources(&groups[i].Resources)
+				break
+			}
+		}
+	}
+
+	for _, groups := range componentGroups {
+		addResource(groups)
+	}
+}
+
+func (o *Options) updateComponentResources(resourceMap *corev1.ResourceRequirements) {
+	if resourceMap.Requests == nil {
+		resourceMap.Requests = make(corev1.ResourceList)
+	}
+	if resourceMap.Limits == nil {
+		resourceMap.Limits = make(corev1.ResourceList)
+	}
+
+	if o.cpuRequest.requestedQty != "" {
+		resourceMap.Requests[corev1.ResourceCPU] = o.cpuRequest.convertedQty
+	}
+
+	if o.cpuLimit.requestedQty != "" {
+		resourceMap.Limits[corev1.ResourceCPU] = o.cpuLimit.convertedQty
 	}
 
 	if o.memoryRequest.requestedQty != "" {

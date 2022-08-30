@@ -85,7 +85,7 @@ func (o *ScaleOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 		return nil
 	}
 
-	rw, err := o.GetRwInstance(context.Background(), ctx)
+	rw, err := o.GetRWInstance(context.Background(), ctx)
 	if err != nil {
 		return err
 	}

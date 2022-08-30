@@ -42,7 +42,7 @@ spec:
           path: /var/lib/etcd
           type: Directory
 ---
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
   name: test-risingwave-amd64

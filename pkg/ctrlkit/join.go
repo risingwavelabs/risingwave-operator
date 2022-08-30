@@ -24,7 +24,7 @@ import (
 	"go.uber.org/multierr"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit/internal"
+	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit/internal"
 )
 
 // Join the errors with the following rules:

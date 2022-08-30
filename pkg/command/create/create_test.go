@@ -28,10 +28,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/command/context"
-	"github.com/singularity-data/risingwave-operator/pkg/command/create/config"
-	"github.com/singularity-data/risingwave-operator/pkg/testutils"
+	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/context"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/create/config"
+	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
 
 var ctx = context.Fake

@@ -24,7 +24,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/component-base/logs"
 
-	"github.com/singularity-data/risingwave-operator/pkg/command"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command"
 )
 
 func main() {

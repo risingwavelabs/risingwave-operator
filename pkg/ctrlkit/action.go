@@ -17,7 +17,7 @@
 package ctrlkit
 
 import (
-	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit/internal"
+	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit/internal"
 )
 
 // Action is the basic unit to form a workflow. It represents some reaction

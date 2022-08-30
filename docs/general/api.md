@@ -13,16 +13,16 @@ toc: true
 <p>Packages:</p>
 <ul>
 <li>
-<a href="#risingwave.singularity-data.com%2fv1alpha1">risingwave.singularity-data.com/v1alpha1</a>
+<a href="#risingwave.risingwavelabs.com%2fv1alpha1">risingwave.risingwavelabs.com/v1alpha1</a>
 </li>
 </ul>
-<h2 id="risingwave.singularity-data.com/v1alpha1">risingwave.singularity-data.com/v1alpha1</h2>
+<h2 id="risingwave.risingwavelabs.com/v1alpha1">risingwave.risingwavelabs.com/v1alpha1</h2>
 Resource Types:
 <ul></ul>
-<h3 id="risingwave.singularity-data.com/v1alpha1.ComponentGroupReplicasStatus">ComponentGroupReplicasStatus
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.ComponentGroupReplicasStatus">ComponentGroupReplicasStatus
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.ComponentReplicasStatus">ComponentReplicasStatus</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.ComponentReplicasStatus">ComponentReplicasStatus</a>)
 </p>
 <div>
 <p>ComponentGroupReplicasStatus are the running status of Pods in group.</p>
@@ -81,10 +81,10 @@ bool
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.ComponentReplicasStatus">ComponentReplicasStatus
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.ComponentReplicasStatus">ComponentReplicasStatus
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentsReplicasStatus">RisingWaveComponentsReplicasStatus</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsReplicasStatus">RisingWaveComponentsReplicasStatus</a>)
 </p>
 <div>
 <p>ComponentReplicasStatus are the running status of Pods of the component.</p>
@@ -123,7 +123,7 @@ int32
 <td>
 <code>groups</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.ComponentGroupReplicasStatus">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.ComponentGroupReplicasStatus">
 []ComponentGroupReplicasStatus
 </a>
 </em>
@@ -134,10 +134,10 @@ int32
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.MetaStorageType">MetaStorageType
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.MetaStorageType">MetaStorageType
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveMetaStorageStatus">RisingWaveMetaStorageStatus</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorageStatus">RisingWaveMetaStorageStatus</a>)
 </p>
 <div>
 <p>MetaStorageType is the type name of meta storage.</p>
@@ -157,10 +157,10 @@ int32
 <td></td>
 </tr></tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.ObjectStorageType">ObjectStorageType
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.ObjectStorageType">ObjectStorageType
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveObjectStorageStatus">RisingWaveObjectStorageStatus</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageStatus">RisingWaveObjectStorageStatus</a>)
 </p>
 <div>
 <p>ObjectStorageType is the type name of object storage.</p>
@@ -182,7 +182,7 @@ int32
 <td></td>
 </tr></tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWave">RisingWave
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWave">RisingWave
 </h3>
 <div>
 </div>
@@ -212,7 +212,7 @@ Refer to the Kubernetes API documentation for the fields of the
 <td>
 <code>spec</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveSpec">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">
 RisingWaveSpec
 </a>
 </em>
@@ -225,7 +225,7 @@ RisingWaveSpec
 <td>
 <code>global</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveGlobalSpec">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">
 RisingWaveGlobalSpec
 </a>
 </em>
@@ -238,7 +238,7 @@ RisingWaveGlobalSpec
 <td>
 <code>storages</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveStoragesSpec">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">
 RisingWaveStoragesSpec
 </a>
 </em>
@@ -251,7 +251,7 @@ RisingWaveStoragesSpec
 <td>
 <code>components</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentsSpec">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">
 RisingWaveComponentsSpec
 </a>
 </em>
@@ -266,7 +266,7 @@ of Pods, e.g., deployment in hybrid-arch cluster.</p>
 <td>
 <code>security</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveSecuritySpec">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecuritySpec">
 RisingWaveSecuritySpec
 </a>
 </em>
@@ -279,7 +279,7 @@ RisingWaveSecuritySpec
 <td>
 <code>configuration</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveConfigurationSpec">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveConfigurationSpec">
 RisingWaveConfigurationSpec
 </a>
 </em>
@@ -295,7 +295,7 @@ RisingWaveConfigurationSpec
 <td>
 <code>status</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveStatus">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">
 RisingWaveStatus
 </a>
 </em>
@@ -305,10 +305,10 @@ RisingWaveStatus
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveComponentCommonPorts">RisingWaveComponentCommonPorts
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">RisingWaveComponentCommonPorts
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor</a>, <a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentCompute">RisingWaveComponentCompute</a>, <a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend</a>, <a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentMetaPorts">RisingWaveComponentMetaPorts</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompute">RisingWaveComponentCompute</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMetaPorts">RisingWaveComponentMetaPorts</a>)
 </p>
 <div>
 <p>RisingWaveComponentCommonPorts are the common ports that components need to listen.</p>
@@ -350,10 +350,10 @@ Prometheus format.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
 </p>
 <div>
 </div>
@@ -384,7 +384,7 @@ field will trigger a recreation of all Pods of this component.</p>
 <td>
 <code>ports</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentCommonPorts">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">
 RisingWaveComponentCommonPorts
 </a>
 </em>
@@ -398,7 +398,7 @@ RisingWaveComponentCommonPorts
 <td>
 <code>groups</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentGroup">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">
 []RisingWaveComponentGroup
 </a>
 </em>
@@ -410,10 +410,10 @@ RisingWaveComponentCommonPorts
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveComponentCompute">RisingWaveComponentCompute
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompute">RisingWaveComponentCompute
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
 </p>
 <div>
 </div>
@@ -444,7 +444,7 @@ field will trigger a recreation of all Pods of this component.</p>
 <td>
 <code>ports</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentCommonPorts">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">
 RisingWaveComponentCommonPorts
 </a>
 </em>
@@ -458,7 +458,7 @@ RisingWaveComponentCommonPorts
 <td>
 <code>groups</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComputeGroup">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComputeGroup">
 []RisingWaveComputeGroup
 </a>
 </em>
@@ -470,10 +470,10 @@ RisingWaveComponentCommonPorts
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
 </p>
 <div>
 </div>
@@ -504,7 +504,7 @@ field will trigger a recreation of all Pods of this component.</p>
 <td>
 <code>ports</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentCommonPorts">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">
 RisingWaveComponentCommonPorts
 </a>
 </em>
@@ -518,7 +518,7 @@ RisingWaveComponentCommonPorts
 <td>
 <code>groups</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentGroup">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">
 []RisingWaveComponentGroup
 </a>
 </em>
@@ -530,10 +530,10 @@ RisingWaveComponentCommonPorts
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveComponentGroup">RisingWaveComponentGroup
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">RisingWaveComponentGroup
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor</a>, <a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend</a>, <a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta</a>)
 </p>
 <div>
 <p>RisingWaveComponentGroup is the common deployment group of each component. Currently, we use
@@ -571,10 +571,10 @@ int32
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentGroup">RisingWaveComponentGroup</a>, <a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComputeGroupTemplate">RisingWaveComputeGroupTemplate</a>, <a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">RisingWaveComponentGroup</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComputeGroupTemplate">RisingWaveComputeGroupTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>)
 </p>
 <div>
 <p>RisingWaveComponentGroupTemplate is the common deployment template for groups of each component.
@@ -631,7 +631,7 @@ default of Kubernetes.</p>
 <td>
 <code>upgradeStrategy</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveUpgradeStrategy">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategy">
 RisingWaveUpgradeStrategy
 </a>
 </em>
@@ -684,10 +684,10 @@ and the controller will set all unrelated fields to the default value.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
 </p>
 <div>
 </div>
@@ -718,7 +718,7 @@ field will trigger a recreation of all Pods of this component.</p>
 <td>
 <code>ports</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentMetaPorts">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMetaPorts">
 RisingWaveComponentMetaPorts
 </a>
 </em>
@@ -732,7 +732,7 @@ RisingWaveComponentMetaPorts
 <td>
 <code>groups</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentGroup">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">
 []RisingWaveComponentGroup
 </a>
 </em>
@@ -744,10 +744,10 @@ RisingWaveComponentMetaPorts
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveComponentMetaPorts">RisingWaveComponentMetaPorts
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMetaPorts">RisingWaveComponentMetaPorts
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta</a>)
 </p>
 <div>
 <p>RisingWaveComponentMetaPorts are the ports of component meta.</p>
@@ -802,10 +802,10 @@ used if not specified.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveComponentsReplicasStatus">RisingWaveComponentsReplicasStatus
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsReplicasStatus">RisingWaveComponentsReplicasStatus
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>)
 </p>
 <div>
 <p>RisingWaveComponentsReplicasStatus is the running status of components.</p>
@@ -822,7 +822,7 @@ used if not specified.</p>
 <td>
 <code>meta</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.ComponentReplicasStatus">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.ComponentReplicasStatus">
 ComponentReplicasStatus
 </a>
 </em>
@@ -835,7 +835,7 @@ ComponentReplicasStatus
 <td>
 <code>frontend</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.ComponentReplicasStatus">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.ComponentReplicasStatus">
 ComponentReplicasStatus
 </a>
 </em>
@@ -848,7 +848,7 @@ ComponentReplicasStatus
 <td>
 <code>compute</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.ComponentReplicasStatus">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.ComponentReplicasStatus">
 ComponentReplicasStatus
 </a>
 </em>
@@ -861,7 +861,7 @@ ComponentReplicasStatus
 <td>
 <code>compactor</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.ComponentReplicasStatus">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.ComponentReplicasStatus">
 ComponentReplicasStatus
 </a>
 </em>
@@ -872,10 +872,10 @@ ComponentReplicasStatus
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
 </p>
 <div>
 <p>RisingWaveComponentsSpec is the spec describes the components of RisingWave.</p>
@@ -892,7 +892,7 @@ ComponentReplicasStatus
 <td>
 <code>meta</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentMeta">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">
 RisingWaveComponentMeta
 </a>
 </em>
@@ -905,7 +905,7 @@ RisingWaveComponentMeta
 <td>
 <code>frontend</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentFrontend">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentFrontend">
 RisingWaveComponentFrontend
 </a>
 </em>
@@ -918,7 +918,7 @@ RisingWaveComponentFrontend
 <td>
 <code>compute</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentCompute">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompute">
 RisingWaveComponentCompute
 </a>
 </em>
@@ -931,7 +931,7 @@ RisingWaveComponentCompute
 <td>
 <code>compactor</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentCompactor">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">
 RisingWaveComponentCompactor
 </a>
 </em>
@@ -942,10 +942,10 @@ RisingWaveComponentCompactor
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveComputeGroup">RisingWaveComputeGroup
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComputeGroup">RisingWaveComputeGroup
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentCompute">RisingWaveComponentCompute</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompute">RisingWaveComponentCompute</a>)
 </p>
 <div>
 <p>RisingWaveComputeGroup is the group for component compute.</p>
@@ -982,10 +982,10 @@ int32
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveComputeGroupTemplate">RisingWaveComputeGroupTemplate
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComputeGroupTemplate">RisingWaveComputeGroupTemplate
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComputeGroup">RisingWaveComputeGroup</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComputeGroup">RisingWaveComputeGroup</a>)
 </p>
 <div>
 <p>RisingWaveComputeGroupTemplate is the group template for component compute, which supports specifying
@@ -1042,7 +1042,7 @@ default of Kubernetes.</p>
 <td>
 <code>upgradeStrategy</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveUpgradeStrategy">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategy">
 RisingWaveUpgradeStrategy
 </a>
 </em>
@@ -1109,10 +1109,10 @@ and the controller will set all unrelated fields to the default value.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveCondition">RisingWaveCondition
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveCondition">RisingWaveCondition
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>)
 </p>
 <div>
 <p>RisingWaveCondition indicates a condition of RisingWave.</p>
@@ -1129,7 +1129,7 @@ and the controller will set all unrelated fields to the default value.</p>
 <td>
 <code>type</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveConditionType">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveConditionType">
 RisingWaveConditionType
 </a>
 </em>
@@ -1191,10 +1191,10 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveConditionType">RisingWaveConditionType
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveConditionType">RisingWaveConditionType
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveCondition">RisingWaveCondition</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveCondition">RisingWaveCondition</a>)
 </p>
 <div>
 <p>RisingWaveConditionType is the condition type of RisingWave.</p>
@@ -1218,10 +1218,10 @@ string
 <td></td>
 </tr></tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveConfigurationSpec">RisingWaveConfigurationSpec
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveConfigurationSpec">RisingWaveConfigurationSpec
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
 </p>
 <div>
 <p>RisingWaveConfigurationSpec is the configuration spec.</p>
@@ -1251,10 +1251,10 @@ It&rsquo;s an optional field and can be left out. If not specified, a default co
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveGlobalReplicas">RisingWaveGlobalReplicas
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalReplicas">RisingWaveGlobalReplicas
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>)
 </p>
 <div>
 <p>RisingWaveGlobalReplicas are the replicas of each component, declared in global scope.</p>
@@ -1317,10 +1317,10 @@ int32
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
 </p>
 <div>
 <p>RisingWaveGlobalSpec is the global spec.</p>
@@ -1376,7 +1376,7 @@ default of Kubernetes.</p>
 <td>
 <code>upgradeStrategy</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveUpgradeStrategy">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategy">
 RisingWaveUpgradeStrategy
 </a>
 </em>
@@ -1431,7 +1431,7 @@ and the controller will set all unrelated fields to the default value.</p>
 <td>
 <code>replicas</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveGlobalReplicas">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalReplicas">
 RisingWaveGlobalReplicas
 </a>
 </em>
@@ -1457,10 +1457,10 @@ Kubernetes core/v1.ServiceType
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveMetaStorage">RisingWaveMetaStorage
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorage">RisingWaveMetaStorage
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec</a>)
 </p>
 <div>
 <p>RisingWaveMetaStorage is the storage for the meta component.</p>
@@ -1492,7 +1492,7 @@ exit of the process will cause a permanent loss of the data.</p>
 <td>
 <code>etcd</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveMetaStorageEtcd">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorageEtcd">
 RisingWaveMetaStorageEtcd
 </a>
 </em>
@@ -1504,10 +1504,10 @@ RisingWaveMetaStorageEtcd
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveMetaStorageEtcd">RisingWaveMetaStorageEtcd
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorageEtcd">RisingWaveMetaStorageEtcd
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveMetaStorage">RisingWaveMetaStorage</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorage">RisingWaveMetaStorage</a>)
 </p>
 <div>
 <p>RisingWaveMetaStorageEtcd is the etcd storage for the meta component.</p>
@@ -1548,10 +1548,10 @@ But it is an optional field. Empty value indicates etcd is available without aut
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveMetaStorageStatus">RisingWaveMetaStorageStatus
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorageStatus">RisingWaveMetaStorageStatus
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveStoragesStatus">RisingWaveStoragesStatus</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesStatus">RisingWaveStoragesStatus</a>)
 </p>
 <div>
 <p>RisingWaveMetaStorageStatus is the status of meta storage.</p>
@@ -1568,7 +1568,7 @@ But it is an optional field. Empty value indicates etcd is available without aut
 <td>
 <code>type</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.MetaStorageType">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.MetaStorageType">
 MetaStorageType
 </a>
 </em>
@@ -1578,10 +1578,10 @@ MetaStorageType
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec</a>)
 </p>
 <div>
 <p>RisingWaveObjectStorage is the object storage for compute and compactor components.</p>
@@ -1611,7 +1611,7 @@ be used in production.</p>
 <td>
 <code>minio</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveObjectStorageMinIO">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageMinIO">
 RisingWaveObjectStorageMinIO
 </a>
 </em>
@@ -1625,7 +1625,7 @@ RisingWaveObjectStorageMinIO
 <td>
 <code>s3</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveObjectStorageS3">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageS3">
 RisingWaveObjectStorageS3
 </a>
 </em>
@@ -1637,10 +1637,10 @@ RisingWaveObjectStorageS3
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveObjectStorageMinIO">RisingWaveObjectStorageMinIO
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageMinIO">RisingWaveObjectStorageMinIO
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage</a>)
 </p>
 <div>
 <p>RisingWaveObjectStorageMinIO is the details of MinIO storage for compute and compactor components.</p>
@@ -1690,10 +1690,10 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveObjectStorageS3">RisingWaveObjectStorageS3
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageS3">RisingWaveObjectStorageS3
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage</a>)
 </p>
 <div>
 <p>RisingWaveObjectStorageS3 is the details of AWS S3 storage for compute and compactor components.</p>
@@ -1733,10 +1733,10 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveObjectStorageStatus">RisingWaveObjectStorageStatus
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageStatus">RisingWaveObjectStorageStatus
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveStoragesStatus">RisingWaveStoragesStatus</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesStatus">RisingWaveStoragesStatus</a>)
 </p>
 <div>
 <p>RisingWaveObjectStorageStatus is the status of object storage.</p>
@@ -1753,7 +1753,7 @@ string
 <td>
 <code>type</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.ObjectStorageType">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.ObjectStorageType">
 ObjectStorageType
 </a>
 </em>
@@ -1763,7 +1763,7 @@ ObjectStorageType
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWavePodTemplate">RisingWavePodTemplate
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplate">RisingWavePodTemplate
 </h3>
 <div>
 </div>
@@ -1793,7 +1793,7 @@ Refer to the Kubernetes API documentation for the fields of the
 <td>
 <code>template</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWavePodTemplateSpec">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplateSpec">
 RisingWavePodTemplateSpec
 </a>
 </em>
@@ -1803,10 +1803,10 @@ RisingWavePodTemplateSpec
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">RisingWavePodTemplatePartialObjectMeta
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">RisingWavePodTemplatePartialObjectMeta
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWavePodTemplateSpec">RisingWavePodTemplateSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplateSpec">RisingWavePodTemplateSpec</a>)
 </p>
 <div>
 </div>
@@ -1843,10 +1843,10 @@ map[string]string
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWavePodTemplateSpec">RisingWavePodTemplateSpec
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplateSpec">RisingWavePodTemplateSpec
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWavePodTemplate">RisingWavePodTemplate</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplate">RisingWavePodTemplate</a>)
 </p>
 <div>
 </div>
@@ -1862,7 +1862,7 @@ map[string]string
 <td>
 <code>metadata</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
 RisingWavePodTemplatePartialObjectMeta
 </a>
 </em>
@@ -2469,10 +2469,10 @@ This is a beta field and requires the IdentifyPodOS feature</p>
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveRollingUpdate">RisingWaveRollingUpdate
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveRollingUpdate">RisingWaveRollingUpdate
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveUpgradeStrategy">RisingWaveUpgradeStrategy</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategy">RisingWaveUpgradeStrategy</a>)
 </p>
 <div>
 </div>
@@ -2503,10 +2503,10 @@ Defaults to 25%.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveSecuritySpec">RisingWaveSecuritySpec
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecuritySpec">RisingWaveSecuritySpec
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
 </p>
 <div>
 <p>RisingWaveSecuritySpec is the security spec.</p>
@@ -2523,7 +2523,7 @@ Defaults to 25%.</p>
 <td>
 <code>tls</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveTLSConfig">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfig">
 RisingWaveTLSConfig
 </a>
 </em>
@@ -2535,10 +2535,10 @@ RisingWaveTLSConfig
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveSpec">RisingWaveSpec
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWave">RisingWave</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWave">RisingWave</a>)
 </p>
 <div>
 <p>RisingWaveSpec is the overall spec.</p>
@@ -2555,7 +2555,7 @@ RisingWaveTLSConfig
 <td>
 <code>global</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveGlobalSpec">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">
 RisingWaveGlobalSpec
 </a>
 </em>
@@ -2568,7 +2568,7 @@ RisingWaveGlobalSpec
 <td>
 <code>storages</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveStoragesSpec">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">
 RisingWaveStoragesSpec
 </a>
 </em>
@@ -2581,7 +2581,7 @@ RisingWaveStoragesSpec
 <td>
 <code>components</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentsSpec">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">
 RisingWaveComponentsSpec
 </a>
 </em>
@@ -2596,7 +2596,7 @@ of Pods, e.g., deployment in hybrid-arch cluster.</p>
 <td>
 <code>security</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveSecuritySpec">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecuritySpec">
 RisingWaveSecuritySpec
 </a>
 </em>
@@ -2609,7 +2609,7 @@ RisingWaveSecuritySpec
 <td>
 <code>configuration</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveConfigurationSpec">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveConfigurationSpec">
 RisingWaveConfigurationSpec
 </a>
 </em>
@@ -2620,10 +2620,10 @@ RisingWaveConfigurationSpec
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveStatus">RisingWaveStatus
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWave">RisingWave</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWave">RisingWave</a>)
 </p>
 <div>
 <p>RisingWaveStatus is the status of RisingWave.</p>
@@ -2652,7 +2652,7 @@ when controller observes the changes on the spec and going to sync the subresour
 <td>
 <code>componentReplicas</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentsReplicasStatus">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsReplicasStatus">
 RisingWaveComponentsReplicasStatus
 </a>
 </em>
@@ -2665,7 +2665,7 @@ RisingWaveComponentsReplicasStatus
 <td>
 <code>conditions</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveCondition">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveCondition">
 []RisingWaveCondition
 </a>
 </em>
@@ -2678,7 +2678,7 @@ RisingWaveComponentsReplicasStatus
 <td>
 <code>storages</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveStoragesStatus">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesStatus">
 RisingWaveStoragesStatus
 </a>
 </em>
@@ -2689,10 +2689,10 @@ RisingWaveStoragesStatus
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
 </p>
 <div>
 <p>RisingWaveStoragesSpec is the storages spec.</p>
@@ -2709,7 +2709,7 @@ RisingWaveStoragesStatus
 <td>
 <code>meta</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveMetaStorage">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorage">
 RisingWaveMetaStorage
 </a>
 </em>
@@ -2721,7 +2721,7 @@ RisingWaveMetaStorage
 <td>
 <code>object</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveObjectStorage">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">
 RisingWaveObjectStorage
 </a>
 </em>
@@ -2747,10 +2747,10 @@ can be referenced in the groups of compute component.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveStoragesStatus">RisingWaveStoragesStatus
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesStatus">RisingWaveStoragesStatus
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>)
 </p>
 <div>
 <p>RisingWaveStoragesStatus is the status of external storages.</p>
@@ -2767,7 +2767,7 @@ can be referenced in the groups of compute component.</p>
 <td>
 <code>meta</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveMetaStorageStatus">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorageStatus">
 RisingWaveMetaStorageStatus
 </a>
 </em>
@@ -2779,7 +2779,7 @@ RisingWaveMetaStorageStatus
 <td>
 <code>object</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveObjectStorageStatus">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageStatus">
 RisingWaveObjectStorageStatus
 </a>
 </em>
@@ -2789,10 +2789,10 @@ RisingWaveObjectStorageStatus
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveTLSConfig">RisingWaveTLSConfig
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfig">RisingWaveTLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveSecuritySpec">RisingWaveSecuritySpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecuritySpec">RisingWaveSecuritySpec</a>)
 </p>
 <div>
 <p>RisingWaveTLSConfig is the TLS config of RisingWave.</p>
@@ -2820,7 +2820,7 @@ bool
 <td>
 <code>secret</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveTLSConfigSecret">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfigSecret">
 RisingWaveTLSConfigSecret
 </a>
 </em>
@@ -2832,10 +2832,10 @@ must be provided.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveTLSConfigSecret">RisingWaveTLSConfigSecret
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfigSecret">RisingWaveTLSConfigSecret
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveTLSConfig">RisingWaveTLSConfig</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfig">RisingWaveTLSConfig</a>)
 </p>
 <div>
 <p>RisingWaveTLSConfigSecret is the secret reference that contains the key and cert for TLS.</p>
@@ -2886,10 +2886,10 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveUpgradeStrategy">RisingWaveUpgradeStrategy
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategy">RisingWaveUpgradeStrategy
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate</a>)
 </p>
 <div>
 </div>
@@ -2905,7 +2905,7 @@ string
 <td>
 <code>type</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveUpgradeStrategyType">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategyType">
 RisingWaveUpgradeStrategyType
 </a>
 </em>
@@ -2919,7 +2919,7 @@ RisingWaveUpgradeStrategyType
 <td>
 <code>rollingUpdate</code><br/>
 <em>
-<a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveRollingUpdate">
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveRollingUpdate">
 RisingWaveRollingUpdate
 </a>
 </em>
@@ -2931,10 +2931,10 @@ RisingWaveRollingUpdate
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.singularity-data.com/v1alpha1.RisingWaveUpgradeStrategyType">RisingWaveUpgradeStrategyType
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategyType">RisingWaveUpgradeStrategyType
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.singularity-data.com/v1alpha1.RisingWaveUpgradeStrategy">RisingWaveUpgradeStrategy</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategy">RisingWaveUpgradeStrategy</a>)
 </p>
 <div>
 </div>

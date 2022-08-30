@@ -22,7 +22,7 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit/internal"
+	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit/internal"
 )
 
 var _ internal.Decorator = &retryAction{}

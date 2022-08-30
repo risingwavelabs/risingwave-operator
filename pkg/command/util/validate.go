@@ -16,7 +16,7 @@
 
 package util
 
-import "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+import "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 
 func IsValidComputeGroup(groupName string, groups []v1alpha1.RisingWaveComputeGroup) bool {
 	for _, g := range groups {

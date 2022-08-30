@@ -27,10 +27,10 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/utils/pointer"
 
-	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	cmdcontext "github.com/singularity-data/risingwave-operator/pkg/command/context"
-	"github.com/singularity-data/risingwave-operator/pkg/command/create/config"
-	"github.com/singularity-data/risingwave-operator/pkg/command/util"
+	"github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	cmdcontext "github.com/risingwavelabs/risingwave-operator/pkg/command/context"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/create/config"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/util"
 )
 
 const (
@@ -129,7 +129,7 @@ func (o *Options) Run(ctx cmdcontext.Context, cmd *cobra.Command, args []string)
 }
 
 // TODO: to support create different risingwave by config file
-// TODO: to support different storage. issue: https://github.com/singularity-data/risingwave-operator/issues/182
+// TODO: to support different storage. issue: https://github.com/risingwavelabs/risingwave-operator/issues/182
 func (o *Options) createInstance() (*v1alpha1.RisingWave, error) {
 	c := o.config
 	rw := &v1alpha1.RisingWave{

@@ -21,7 +21,7 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit/internal"
+	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit/internal"
 )
 
 var _ internal.Group = &sequentialGroup{}

@@ -1,4 +1,4 @@
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWavePodTemplate
 metadata:
   name: spot-toleration
@@ -14,7 +14,7 @@ template:
       operator: Exists
       effect: NoSchedule
 ---
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
   name: risingwave-pod-template
@@ -25,7 +25,7 @@ spec:
     object:
       memory: true
   global:
-    image: ghcr.io/singularity-data/risingwave:latest
+    image: ghcr.io/risingwavelabs/risingwave:latest
     imagePullPolicy: IfNotPresent
     resources:
       limits:

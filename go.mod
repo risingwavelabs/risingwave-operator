@@ -1,4 +1,4 @@
-module github.com/singularity-data/risingwave-operator
+module github.com/risingwavelabs/risingwave-operator
 
 go 1.18
 

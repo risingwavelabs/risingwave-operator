@@ -49,7 +49,7 @@ linters-settings:
   goimports:
     # Put imports beginning with prefix after 3rd-party packages.
     # It's a comma-separated list of prefixes.
-    local-prefixes: github.com/singularity-data/risingwave-operator
+    local-prefixes: github.com/risingwavelabs/risingwave-operator
 
   govet:
     # Settings per analyzer.

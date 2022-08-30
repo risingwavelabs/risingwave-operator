@@ -68,7 +68,7 @@ spec:
             name: client
             protocol: TCP
 ---
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
   name: risingwave-etcd-s3
@@ -82,7 +82,7 @@ spec:
         secret: s3-credentials
         bucket: hummock001
   global:
-    image: ghcr.io/singularity-data/risingwave:latest
+    image: ghcr.io/risingwavelabs/risingwave:latest
     # image: public.ecr.aws/x5u3w5h6/risingwave-arm:latest
     imagePullPolicy: IfNotPresent
     resources:

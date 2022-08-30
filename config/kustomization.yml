@@ -17,6 +17,6 @@ patches:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 images:
-- name: ghcr.io/singularity-data/risingwave-operator
-  newName: docker.io/singularity-data/risingwave-operator
+- name: ghcr.io/risingwavelabs/risingwave-operator
+  newName: docker.io/risingwavelabs/risingwave-operator
   newTag: dev

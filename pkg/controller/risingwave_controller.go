@@ -34,13 +34,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"github.com/singularity-data/risingwave-operator/pkg/event"
+	"github.com/risingwavelabs/risingwave-operator/pkg/event"
 
-	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit"
-	"github.com/singularity-data/risingwave-operator/pkg/manager"
-	"github.com/singularity-data/risingwave-operator/pkg/object"
-	"github.com/singularity-data/risingwave-operator/pkg/utils"
+	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
+	"github.com/risingwavelabs/risingwave-operator/pkg/manager"
+	"github.com/risingwavelabs/risingwave-operator/pkg/object"
+	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
 const (
@@ -80,11 +80,11 @@ const (
 	RisingWaveAction_BarrierPrometheusCRDsInstalled     = "BarrierPrometheusCRDsInstalled"
 )
 
-// +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwaves,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwavepodtemplates,verbs=get;list;watch
-// +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwavepodtemplates/finalizers,verbs=update
-// +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwaves/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=risingwave.singularity-data.com,resources=risingwaves/finalizers,verbs=update
+// +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwavepodtemplates,verbs=get;list;watch
+// +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwavepodtemplates/finalizers,verbs=update
+// +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves/finalizers,verbs=update
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;delete;

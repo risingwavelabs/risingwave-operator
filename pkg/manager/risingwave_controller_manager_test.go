@@ -35,13 +35,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/singularity-data/risingwave-operator/pkg/event"
+	"github.com/risingwavelabs/risingwave-operator/pkg/event"
 
-	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/consts"
-	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit"
-	"github.com/singularity-data/risingwave-operator/pkg/object"
-	"github.com/singularity-data/risingwave-operator/pkg/testutils"
+	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
+	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
+	"github.com/risingwavelabs/risingwave-operator/pkg/object"
+	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
 
 func newRisingWaveControllerManagerImplForTest(risingwave *risingwavev1alpha1.RisingWave, objects ...client.Object) *risingWaveControllerManagerImpl {

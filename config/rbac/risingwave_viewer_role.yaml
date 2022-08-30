@@ -5,7 +5,7 @@ metadata:
   name: risingwave-viewer-role
 rules:
 - apiGroups:
-  - risingwave.singularity-data.com
+  - risingwave.risingwavelabs.com
   resources:
   - risingwaves
   verbs:
@@ -13,7 +13,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - risingwave.singularity-data.com
+  - risingwave.risingwavelabs.com
   resources:
   - risingwaves/status
   verbs:

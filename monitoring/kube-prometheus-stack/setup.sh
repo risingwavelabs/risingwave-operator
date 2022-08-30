@@ -133,7 +133,7 @@ if [ "$(kubectl get pods --namespace "${MONITORING_TENANT_NAME}")" != "" ]; then
     fi
 fi
 echo "creating monitoring tenant..."
-rwc -t create -tenant "${MONITORING_TENANT_NAME}"
+rwc t create -tenant "${MONITORING_TENANT_NAME}"
 kubectl wait --for=condition=Ready pods --namespace "${MONITORING_TENANT_NAME}" --timeout=5m
 psql "$(rwc t get-endpoint -tenant "${MONITORING_TENANT_NAME}")"
 if [ $? -ne 0 ]; then

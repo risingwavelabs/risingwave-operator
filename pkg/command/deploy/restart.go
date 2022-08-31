@@ -25,7 +25,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	cmdcontext "github.com/risingwavelabs/risingwave-operator/pkg/command/context"
-	"github.com/risingwavelabs/risingwave-operator/pkg/command/util"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/util/errors"
 )
 
 const (
@@ -56,9 +56,9 @@ func NewRestartCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOSt
 		Long:    RestartLongDesc,
 		Example: RestartExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(o.Complete(ctx, cmd, args))
-			util.ExitOnErr(o.Validate(ctx, cmd, args))
-			util.CheckErr(o.Run(ctx, cmd, args))
+			errors.CheckErr(o.Complete(ctx, cmd, args))
+			errors.ExitOnErr(o.Validate(ctx, cmd, args))
+			errors.CheckErr(o.Run(ctx, cmd, args))
 		},
 	}
 

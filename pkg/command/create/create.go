@@ -21,8 +21,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/api/errors"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/utils/pointer"
@@ -30,7 +30,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	cmdcontext "github.com/risingwavelabs/risingwave-operator/pkg/command/context"
 	"github.com/risingwavelabs/risingwave-operator/pkg/command/create/config"
-	"github.com/risingwavelabs/risingwave-operator/pkg/command/util"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/util/errors"
 )
 
 const (
@@ -74,9 +74,9 @@ func NewCommand(ctx cmdcontext.Context, streams genericclioptions.IOStreams) *co
 		Long:    LongDesc,
 		Example: Example,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(o.Complete(ctx, cmd, args))
-			util.CheckErr(o.Validate(ctx, cmd, args))
-			util.CheckErr(o.Run(ctx, cmd, args))
+			errors.CheckErr(o.Complete(ctx, cmd, args))
+			errors.CheckErr(o.Validate(ctx, cmd, args))
+			errors.CheckErr(o.Run(ctx, cmd, args))
 		},
 		Aliases: []string{"new"},
 	}
@@ -119,7 +119,7 @@ func (o *Options) Run(ctx cmdcontext.Context, cmd *cobra.Command, args []string)
 	}
 
 	err = ctx.Client().Create(context.Background(), rw)
-	if err != nil && !errors.IsAlreadyExists(err) {
+	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("failed to create instance, %w", err)
 	}
 

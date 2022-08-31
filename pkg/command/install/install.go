@@ -22,11 +22,12 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+
 	apiadmissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -34,7 +35,7 @@ import (
 
 	cmdcontext "github.com/risingwavelabs/risingwave-operator/pkg/command/context"
 	"github.com/risingwavelabs/risingwave-operator/pkg/command/install/version"
-	"github.com/risingwavelabs/risingwave-operator/pkg/command/util"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/util/errors"
 )
 
 const (
@@ -71,8 +72,8 @@ func NewInstallCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOSt
 		Long:    "Install the risingwave operator in the cluster",
 		Example: installExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(o.Complete(ctx, cmd, args))
-			util.CheckErr(o.Run(ctx, cmd, args))
+			errors.CheckErr(o.Complete(ctx, cmd, args))
+			errors.CheckErr(o.Run(ctx, cmd, args))
 		},
 	}
 
@@ -168,7 +169,7 @@ func checkOperatorReady(ctx *cmdcontext.RWContext) (bool, error) {
 	err := ctx.Client().Get(context.Background(),
 		client.ObjectKey{Namespace: "risingwave-operator-system", Name: "risingwave-operator-webhook-service"}, &svc)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return false, nil
 		}
 		return false, err
@@ -187,7 +188,7 @@ func checkOperatorReady(ctx *cmdcontext.RWContext) (bool, error) {
 	// So will return invalid error.
 	// if Invalid error, means the webhook is ready.
 	err = ctx.Client().Create(context.Background(), &rw)
-	if err != nil && !errors.IsAlreadyExists(err) && !errors.IsInvalid(err) {
+	if err != nil && !apierrors.IsAlreadyExists(err) && !apierrors.IsInvalid(err) {
 		return false, nil
 	}
 
@@ -214,7 +215,7 @@ func checkCertManagerReady(ctx *cmdcontext.RWContext) (bool, error) {
 	conf := &apiadmissionregistrationv1.ValidatingWebhookConfiguration{}
 	err := ctx.Client().Get(context.Background(), client.ObjectKey{Name: "cert-manager-webhook"}, conf)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return false, nil
 		}
 		return false, err
@@ -233,7 +234,7 @@ func checkCertManagerReady(ctx *cmdcontext.RWContext) (bool, error) {
 	err = ctx.Client().Get(context.Background(),
 		client.ObjectKey{Namespace: "cert-manager", Name: "cert-manager-webhook"}, &svc)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return false, nil
 		}
 		return false, err
@@ -249,12 +250,12 @@ func checkCertManagerReady(ctx *cmdcontext.RWContext) (bool, error) {
 
 	// check cert-manager test case.
 	err = ctx.Client().Create(context.Background(), &issuer)
-	if err != nil && !errors.IsAlreadyExists(err) {
+	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return false, nil
 	}
 
 	err = ctx.Client().Create(context.Background(), &cf)
-	if err != nil && !errors.IsAlreadyExists(err) {
+	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return false, nil
 	}
 
@@ -282,7 +283,7 @@ func hasOperator(ctx *cmdcontext.RWContext) (bool, error) {
 	}
 	err := ctx.Client().Get(context.Background(), operatorKey, deploy)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return false, nil
 		}
 		return false, err
@@ -294,7 +295,7 @@ func hasCertManagerCR(ctx *cmdcontext.RWContext) (bool, error) {
 	list := &apiextensionsv1.CustomResourceDefinitionList{}
 
 	err := ctx.Client().List(context.Background(), list)
-	if err != nil && !errors.IsNotFound(err) {
+	if err != nil && !apierrors.IsNotFound(err) {
 		return false, err
 	}
 

@@ -62,6 +62,42 @@ func TestOptions_Validate(t *testing.T) {
 		ss := fmt.Sprintf("invalid risingwave group: %s for component: %s", o.group, o.component)
 		assert.Equal(t, err.Error(), ss)
 	}
+
+	o = Options{
+		BasicOptions: &context.BasicOptions{},
+		component:    util.Meta,
+		group:        util.DefaultGroup,
+		cpuRequest:   Request{requestedQty: "a123"},
+	}
+	err = o.Validate(ctx, nil, []string{})
+	assert.Equal(t, err == nil, false)
+
+	o = Options{
+		BasicOptions: &context.BasicOptions{},
+		component:    util.Meta,
+		group:        util.DefaultGroup,
+		cpuLimit:     Request{requestedQty: "a123"},
+	}
+	err = o.Validate(ctx, nil, []string{})
+	assert.Equal(t, err == nil, false)
+
+	o = Options{
+		BasicOptions:  &context.BasicOptions{},
+		component:     util.Meta,
+		group:         util.DefaultGroup,
+		memoryRequest: Request{requestedQty: "a123"},
+	}
+	err = o.Validate(ctx, nil, []string{})
+	assert.Equal(t, err == nil, false)
+
+	o = Options{
+		BasicOptions: &context.BasicOptions{},
+		component:    util.Meta,
+		group:        util.DefaultGroup,
+		memoryLimit:  Request{requestedQty: "a123"},
+	}
+	err = o.Validate(ctx, nil, []string{})
+	assert.Equal(t, err == nil, false)
 }
 
 func TestOptions_Run(t *testing.T) {

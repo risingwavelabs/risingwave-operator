@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package util
+package errors
 
 import (
 	"fmt"

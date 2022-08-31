@@ -31,6 +31,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	cmdcontext "github.com/risingwavelabs/risingwave-operator/pkg/command/context"
 	"github.com/risingwavelabs/risingwave-operator/pkg/command/util"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/util/errors"
 )
 
 const (
@@ -87,9 +88,9 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 		Long:    LongDesc,
 		Example: Example,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(o.Complete(ctx, cmd, args))
-			util.ExitOnErr(o.Validate(ctx, cmd, args))
-			util.CheckErr(o.Run(ctx, cmd, args))
+			errors.CheckErr(o.Complete(ctx, cmd, args))
+			errors.ExitOnErr(o.Validate(ctx, cmd, args))
+			errors.CheckErr(o.Run(ctx, cmd, args))
 		},
 	}
 
@@ -140,12 +141,6 @@ func (o *Options) Validate(ctx cmdcontext.Context, cmd *cobra.Command, args []st
 		if !util.IsValidComputeGroup(o.group, rw.Spec.Components.Compute.Groups) {
 			return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
 		}
-
-	case util.Global:
-		break
-
-	default:
-		return fmt.Errorf("invalid risingwave component: %s", o.component)
 	}
 
 	return o.validateResources()
@@ -195,10 +190,7 @@ func (o *Options) Run(ctx cmdcontext.Context, cmd *cobra.Command, args []string)
 	// convert the global config into the components.
 	rw = util.ConvertRisingwave(rw)
 
-	err = o.updateConfig(rw)
-	if err != nil {
-		return err
-	}
+	o.updateConfig(rw)
 
 	err = ctx.Client().Update(context.Background(), rw)
 	if err != nil {
@@ -208,13 +200,13 @@ func (o *Options) Run(ctx cmdcontext.Context, cmd *cobra.Command, args []string)
 	return nil
 }
 
-func (o *Options) updateConfig(rw *v1alpha1.RisingWave) error {
+func (o *Options) updateConfig(rw *v1alpha1.RisingWave) {
 	components := &rw.Spec.Components
 
 	// only change the global resources
 	if o.component == util.Global {
 		o.updateInnerGlobalResources(rw)
-		return nil
+		return
 	}
 
 	switch o.component {
@@ -249,12 +241,9 @@ func (o *Options) updateConfig(rw *v1alpha1.RisingWave) error {
 				break
 			}
 		}
-
-	default:
-		return fmt.Errorf("invalid component name %s, will do nothing", o.component)
 	}
 
-	return nil
+	return
 }
 
 func (o *Options) updateInnerGlobalResources(rw *v1alpha1.RisingWave) {

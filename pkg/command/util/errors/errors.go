@@ -14,30 +14,24 @@
  * limitations under the License.
  */
 
-package util
+package errors
 
 import (
 	"fmt"
-
-	"github.com/fatih/color"
+	"os"
 )
 
-var (
-	IsTerminal = func() bool {
-		return !color.NoColor
+// TODO: do some check for error
+
+func CheckErr(err error) {
+	if err != nil {
+		fmt.Println(err)
 	}
+}
 
-	Bold = func() func(a ...interface{}) string {
-		if IsTerminal() {
-			return color.New(color.Bold).SprintFunc()
-		}
-		return fmt.Sprint
-	}()
-
-	Red = func() func(format string, a ...interface{}) string {
-		if IsTerminal() {
-			return color.New(color.FgRed).SprintfFunc()
-		}
-		return fmt.Sprintf
-	}()
-)
+func ExitOnErr(err error) {
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}

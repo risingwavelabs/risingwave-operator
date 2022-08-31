@@ -28,7 +28,7 @@ import (
 
 	"github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	cmdcontext "github.com/risingwavelabs/risingwave-operator/pkg/command/context"
-	"github.com/risingwavelabs/risingwave-operator/pkg/command/util"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/util/errors"
 )
 
 type Options struct {
@@ -60,9 +60,9 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 		Long:    LongDesc,
 		Example: Example,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(o.Complete(ctx, cmd, args))
-			util.ExitOnErr(o.Validate(ctx, cmd, args))
-			util.CheckErr(o.Run(ctx, cmd, args))
+			errors.CheckErr(o.Complete(ctx, cmd, args))
+			errors.ExitOnErr(o.Validate(ctx, cmd, args))
+			errors.CheckErr(o.Run(ctx, cmd, args))
 		},
 	}
 
@@ -78,7 +78,7 @@ func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 	}
 
 	// parse current version
-	rw, err := o.GetRwInstance(context.Background(), ctx)
+	rw, err := o.GetRWInstance(context.Background(), ctx)
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 }
 
 func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	rw, err := o.GetRwInstance(context.Background(), ctx)
+	rw, err := o.GetRWInstance(context.Background(), ctx)
 	if err != nil {
 		return err
 	}

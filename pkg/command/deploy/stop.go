@@ -27,6 +27,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	cmdcontext "github.com/risingwavelabs/risingwave-operator/pkg/command/context"
 	"github.com/risingwavelabs/risingwave-operator/pkg/command/util"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/util/errors"
 )
 
 const (
@@ -57,9 +58,9 @@ func NewStopCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStrea
 		Long:    StopLongDesc,
 		Example: StopExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(o.Complete(ctx, cmd, args))
-			util.ExitOnErr(o.Validate(ctx, cmd, args))
-			util.CheckErr(o.Run(ctx, cmd, args))
+			errors.CheckErr(o.Complete(ctx, cmd, args))
+			errors.ExitOnErr(o.Validate(ctx, cmd, args))
+			errors.CheckErr(o.Run(ctx, cmd, args))
 		},
 		Aliases: []string{"pause"},
 	}
@@ -68,7 +69,7 @@ func NewStopCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStrea
 }
 
 func (o *StopOptions) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	rw, err := o.GetRwInstance(context.Background(), ctx)
+	rw, err := o.GetRWInstance(context.Background(), ctx)
 	if err != nil {
 		return err
 	}
@@ -81,7 +82,7 @@ func (o *StopOptions) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, ar
 }
 
 func (o *StopOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	rw, err := o.GetRwInstance(context.Background(), ctx)
+	rw, err := o.GetRWInstance(context.Background(), ctx)
 	if err != nil {
 		return err
 	}

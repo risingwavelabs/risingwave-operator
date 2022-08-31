@@ -24,7 +24,7 @@ import (
 
 	"github.com/risingwavelabs/risingwave-operator/pkg/command/context"
 	"github.com/risingwavelabs/risingwave-operator/pkg/command/install/version"
-	"github.com/risingwavelabs/risingwave-operator/pkg/command/util"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/util/errors"
 )
 
 const (
@@ -55,8 +55,8 @@ func NewUninstallCommand(ctx *context.RWContext, streams genericclioptions.IOStr
 		Long:    "Uninstall the risingwave operator from the cluster",
 		Example: UninstallExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(o.Complete(ctx, cmd, args))
-			util.CheckErr(o.Run(ctx, cmd, args))
+			errors.CheckErr(o.Complete(ctx, cmd, args))
+			errors.CheckErr(o.Run(ctx, cmd, args))
 		},
 	}
 

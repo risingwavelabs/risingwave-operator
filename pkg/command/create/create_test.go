@@ -21,17 +21,15 @@ import (
 	"os"
 	"testing"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/stretchr/testify/assert"
+
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-
-	"github.com/stretchr/testify/assert"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/command/context"
 	"github.com/risingwavelabs/risingwave-operator/pkg/command/create/config"
-	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/util"
 )
 
 var ctx = context.Fake
@@ -89,7 +87,7 @@ func TestOptions_Run(t *testing.T) {
 	}
 	rw, _ := o.createInstance()
 
-	ctx.SetClient(newFakeClient())
+	ctx.SetClient(util.NewFakeClient())
 	err = o.Run(ctx, nil, []string{})
 	if err != nil {
 		t.Fatal(err)
@@ -102,20 +100,4 @@ func TestOptions_Run(t *testing.T) {
 	assert.Equal(t, risingwave.Namespace, rw.Namespace)
 	assert.Equal(t, risingwave.Spec.Global.Resources, rw.Spec.Global.Resources)
 	assert.Equal(t, len(risingwave.Spec.Components.Meta.Groups), 2)
-}
-
-func newFakeClient() client.Client {
-	risingwave := &risingwavev1alpha1.RisingWave{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "example",
-			Namespace: "default",
-		},
-		Spec:   risingwavev1alpha1.RisingWaveSpec{},
-		Status: risingwavev1alpha1.RisingWaveStatus{},
-	}
-	c := fake.NewClientBuilder().
-		WithScheme(testutils.Schema).
-		WithObjects(risingwave).
-		Build()
-	return c
 }

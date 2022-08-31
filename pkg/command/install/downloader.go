@@ -17,6 +17,7 @@
 package install
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -74,6 +75,9 @@ func Download(fullURLFile, storagePath string) (string, error) {
 	resp, err := client.Get(fullURLFile)
 	if err != nil {
 		return "", err
+	}
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("download file failed, status code %d", resp.StatusCode)
 	}
 	defer resp.Body.Close()
 

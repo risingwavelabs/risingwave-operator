@@ -21,19 +21,19 @@ import (
 	"fmt"
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/spf13/cobra"
 	apiadmissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cmdcontext "github.com/risingwavelabs/risingwave-operator/pkg/command/context"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/install/version"
 	"github.com/risingwavelabs/risingwave-operator/pkg/command/util"
 )
 
@@ -76,14 +76,18 @@ func NewInstallCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOSt
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.version, "version", "v", o.version, "the version of risingwave operator to install.")
+	cmd.Flags().StringVarP(&o.version, "version", "v", version.DefaultVersion, "the version of risingwave operator to install.")
 
 	return cmd
 }
 
 func (o *InstallOptions) Complete(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []string) error {
-	if len(o.version) == 0 {
-		o.version = "latest"
+	v, err := version.ValidateVersion(o.version)
+	if !v {
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("invalid version %s", o.version)
 	}
 
 	return nil
@@ -322,7 +326,8 @@ func installCertManager(ctx *cmdcontext.RWContext) error {
 // apply into the cluster
 // TODO(xinyu): add the version for risingwave.yaml.
 func installOperator(ctx *cmdcontext.RWContext, version string) error {
-	yamlFile, err := Download(RisingWaveUrl, TemDir+"/operator")
+	url := fmt.Sprintf(RisingWaveUrlTemplate, version)
+	yamlFile, err := Download(url, TemDir+"/operator")
 	if err != nil {
 		return err
 	}

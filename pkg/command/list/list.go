@@ -145,7 +145,7 @@ func (o *Options) Run(ctx *context.RWContext, cmd *cobra.Command, args []string)
 	}
 
 	if len(rwList) == 0 {
-		s := fmt.Sprintf("No resources found in %s namespace.\n", util.Bold(o.namespace))
+		s := fmt.Sprintf("No resources found in %s namespace.\n", o.namespace)
 		fmt.Fprint(o.Out, s)
 		return nil
 	}

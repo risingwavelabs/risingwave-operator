@@ -19,6 +19,8 @@ package update
 import (
 	goctx "context"
 	"fmt"
+	"reflect"
+	"strings"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -82,6 +84,7 @@ func TestOptions_Run(t *testing.T) {
 
 	createTestInstance(o, t)
 
+	// test global
 	o.component = util.Global
 	o.group = util.DefaultGroup
 	err := o.Validate(ctx, nil, []string{})
@@ -95,8 +98,8 @@ func TestOptions_Run(t *testing.T) {
 	}
 
 	var fakeRW = util.FakeRW()
-	var rw = v1alpha1.RisingWave{}
-	err = ctx.Client().Get(goctx.Background(), client.ObjectKey{Namespace: fakeRW.Namespace, Name: fakeRW.Name}, &rw)
+	var rw = &v1alpha1.RisingWave{}
+	err = ctx.Client().Get(goctx.Background(), client.ObjectKey{Namespace: fakeRW.Namespace, Name: fakeRW.Name}, rw)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,12 +123,14 @@ func TestOptions_Run(t *testing.T) {
 		}
 	}
 	assert.Equal(t, cg.Resources.Requests[corev1.ResourceCPU], resource.MustParse("200m"))
-	ctx.Client().Delete(goctx.Background(), &rw)
+	ctx.Client().Delete(goctx.Background(), rw)
 
-	// test update meta resource
-	o.component = util.Meta
-	o.group = fakeRW.Spec.Components.Meta.Groups[0].Name
-	createTestInstance(o, t)
+	// test compute
+	o.component = util.Compute
+	o.group = rw.Spec.Components.Compute.Groups[0].Name
+
+	rw = createTestInstance(o, t)
+	oldLen := len(rw.Spec.Components.Compute.Groups)
 	err = o.Validate(ctx, nil, []string{})
 	if err != nil {
 		t.Fatal(err)
@@ -136,39 +141,108 @@ func TestOptions_Run(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = ctx.Client().Get(goctx.Background(), client.ObjectKey{Namespace: fakeRW.Namespace, Name: fakeRW.Name}, &rw)
+	err = ctx.Client().Get(goctx.Background(), client.ObjectKey{Namespace: rw.Namespace, Name: rw.Name}, rw)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, len(rw.Spec.Components.Meta.Groups), 2)
+	newGroups := rw.Spec.Components.Compute.Groups
 
-	var metaG v1alpha1.RisingWaveComponentGroup
-	for _, g := range rw.Spec.Components.Meta.Groups {
+	assert.Equal(t, len(newGroups), oldLen+1)
+
+	for _, g := range newGroups {
 		if g.Name == o.group {
-			metaG = g
+			cg = g
 			break
 		}
 	}
-	assert.Equal(t, metaG.Resources.Limits[corev1.ResourceMemory], resource.MustParse("256Mi"))
-	assert.Equal(t, metaG.Resources.Requests[corev1.ResourceCPU], resource.MustParse("200m"))
+	assert.Equal(t, cg.Resources.Limits[corev1.ResourceMemory], resource.MustParse("256Mi"))
+	assert.Equal(t, cg.Resources.Requests[corev1.ResourceCPU], resource.MustParse("200m"))
+	ctx.Client().Delete(goctx.Background(), rw)
 
-	// test update continuously
-	o.cpuLimit.requestedQty = "3333m"
-	_ = o.Validate(ctx, nil, []string{})
-	_ = o.Run(ctx, nil, []string{})
-	_ = ctx.Client().Get(goctx.Background(), client.ObjectKey{Namespace: fakeRW.Namespace, Name: fakeRW.Name}, &rw)
-
-	for _, g := range rw.Spec.Components.Meta.Groups {
-		if g.Name == o.group {
-			metaG = g
-			break
-		}
+	// test other component
+	testCases := []struct {
+		component string
+		groups    []v1alpha1.RisingWaveComponentGroup
+	}{
+		{
+			util.Meta,
+			fakeRW.Spec.Components.Meta.Groups,
+		}, {
+			util.Compactor,
+			fakeRW.Spec.Components.Compactor.Groups,
+		}, {
+			util.Frontend,
+			fakeRW.Spec.Components.Frontend.Groups,
+		},
 	}
-	assert.Equal(t, metaG.Resources.Limits[corev1.ResourceCPU], resource.MustParse("3333m"))
+
+	var doTest = func(component string, oldGroup []v1alpha1.RisingWaveComponentGroup) {
+		defer ctx.Client().Delete(goctx.Background(), rw)
+
+		o.component = component
+		o.group = oldGroup[0].Name
+		rw := createTestInstance(o, t)
+		err = o.Validate(ctx, nil, []string{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = o.Run(ctx, nil, []string{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = ctx.Client().Get(goctx.Background(), client.ObjectKey{Namespace: rw.Namespace, Name: rw.Name}, rw)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		newGroups := reflectGroup(component, rw)
+
+		assert.Equal(t, len(newGroups), len(oldGroup)+1)
+
+		var cg v1alpha1.RisingWaveComponentGroup
+		for _, g := range newGroups {
+			if g.Name == o.group {
+				cg = g
+				break
+			}
+		}
+		assert.Equal(t, cg.Resources.Limits[corev1.ResourceMemory], resource.MustParse("256Mi"))
+		assert.Equal(t, cg.Resources.Requests[corev1.ResourceCPU], resource.MustParse("200m"))
+
+		// test update continuously
+		o.cpuLimit.requestedQty = "3333m"
+		_ = o.Validate(ctx, nil, []string{})
+		_ = o.Run(ctx, nil, []string{})
+		_ = ctx.Client().Get(goctx.Background(), client.ObjectKey{Namespace: fakeRW.Namespace, Name: fakeRW.Name}, rw)
+
+		for _, g := range reflectGroup(component, rw) {
+			if g.Name == o.group {
+				cg = g
+				break
+			}
+		}
+		assert.Equal(t, cg.Resources.Limits[corev1.ResourceCPU], resource.MustParse("3333m"))
+	}
+
+	for _, c := range testCases {
+		doTest(c.component, c.groups)
+	}
 }
 
-func createTestInstance(o Options, t *testing.T) {
+func reflectGroup(component string, rw *v1alpha1.RisingWave) []v1alpha1.RisingWaveComponentGroup {
+	c := rw.Spec.Components
+	v := reflect.ValueOf(c)
+	nameValue := v.FieldByName(titleSize(component))
+	g := nameValue.FieldByName("Groups")
+	return g.Interface().([]v1alpha1.RisingWaveComponentGroup)
+}
+
+func titleSize(s string) string { return strings.ToTitle(s[:1]) + strings.ToLower(s[1:]) }
+
+func createTestInstance(o Options, t *testing.T) *v1alpha1.RisingWave {
 	rw := util.FakeRW()
 	var ns = rw.Namespace
 	var name = rw.Name
@@ -186,4 +260,5 @@ func createTestInstance(o Options, t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	return rw
 }

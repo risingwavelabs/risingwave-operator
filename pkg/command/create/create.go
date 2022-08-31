@@ -123,7 +123,7 @@ func (o *Options) Run(ctx cmdcontext.Context, cmd *cobra.Command, args []string)
 		return fmt.Errorf("failed to create instance, %w", err)
 	}
 
-	s := fmt.Sprintf("Succeed to create risingwave %s in %s namespace.\n", o.name, util.Bold(o.namespace))
+	s := fmt.Sprintf("Succeed to create risingwave %s in %s namespace.\n", o.name, o.namespace)
 	fmt.Fprint(o.Out, s)
 	return nil
 }

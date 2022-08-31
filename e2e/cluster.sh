@@ -69,22 +69,22 @@ function prepare_cluster() {
   echo "Pulling images..."
   lazy_pull_image postgres
   lazy_pull_image praqma/network-multitool
-  lazy_pull_image ghcr.io/singularity-data/risingwave "$NIGHTLY_IMAGE_TAG"
-  docker tag ghcr.io/singularity-data/risingwave:"$NIGHTLY_IMAGE_TAG" ghcr.io/singularity-data/risingwave:e2e
+  lazy_pull_image ghcr.io/risingwavelabs/risingwave "$NIGHTLY_IMAGE_TAG"
+  docker tag ghcr.io/risingwavelabs/risingwave:"$NIGHTLY_IMAGE_TAG" ghcr.io/risingwavelabs/risingwave:e2e
   echo "Pulled!"
 
   # Load images...
   echo "Loading images..."
   kubernetes_load_image postgres
   kubernetes_load_image praqma/network-multitool
-  kubernetes_load_image ghcr.io/singularity-data/risingwave:e2e
+  kubernetes_load_image ghcr.io/risingwavelabs/risingwave:e2e
   echo "Loaded!"
 
   prepare_auxiliary_pods
 }
 
 function prepare_operator_image() {
-  kubernetes_load_image docker.io/singularity-data/risingwave-operator:dev
+  kubernetes_load_image docker.io/risingwavelabs/risingwave-operator:dev
 }
 
 function prepare_auxiliary_pods() {

@@ -11,9 +11,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
-  name: risingwavepodtemplates.risingwave.singularity-data.com
+  name: risingwavepodtemplates.risingwave.risingwavelabs.com
 spec:
-  group: risingwave.singularity-data.com
+  group: risingwave.risingwavelabs.com
   names:
     categories:
     - all
@@ -6918,7 +6918,7 @@ metadata:
   annotations:
     cert-manager.io/inject-ca-from: risingwave-operator-system/risingwave-operator-serving-cert
     controller-gen.kubebuilder.io/version: v0.9.2
-  name: risingwaves.risingwave.singularity-data.com
+  name: risingwaves.risingwave.risingwavelabs.com
 spec:
   conversion:
     strategy: Webhook
@@ -6930,7 +6930,7 @@ spec:
           path: /convert
       conversionReviewVersions:
       - v1
-  group: risingwave.singularity-data.com
+  group: risingwave.risingwavelabs.com
   names:
     categories:
     - all
@@ -8503,7 +8503,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - risingwave.singularity-data.com
+  - risingwave.risingwavelabs.com
   resources:
   - risingwavepodtemplates
   verbs:
@@ -8511,13 +8511,13 @@ rules:
   - list
   - watch
 - apiGroups:
-  - risingwave.singularity-data.com
+  - risingwave.risingwavelabs.com
   resources:
   - risingwavepodtemplates/finalizers
   verbs:
   - update
 - apiGroups:
-  - risingwave.singularity-data.com
+  - risingwave.risingwavelabs.com
   resources:
   - risingwaves
   verbs:
@@ -8529,13 +8529,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - risingwave.singularity-data.com
+  - risingwave.risingwavelabs.com
   resources:
   - risingwaves/finalizers
   verbs:
   - update
 - apiGroups:
-  - risingwave.singularity-data.com
+  - risingwave.risingwavelabs.com
   resources:
   - risingwaves/status
   verbs:
@@ -8621,9 +8621,9 @@ data:
           repository: public.ecr.aws/x5u3w5h6/risingwave-arm
           tag: latest
         amd64:
-          repository: ghcr.io/singularity-data/risingwave
+          repository: ghcr.io/risingwavelabs/risingwave
           tag: latest
-      repository: ghcr.io/singularity-data/risingwave
+      repository: ghcr.io/risingwavelabs/risingwave
       tag: latest
       pullPolicy: Always
       requests:
@@ -8650,10 +8650,10 @@ data:
     minIO:
       image:
         arm64:
-          repository: ghcr.io/singularity-data/risingwave-minio
+          repository: ghcr.io/risingwavelabs/risingwave-minio
           tag: latest
         amd64:
-          repository: ghcr.io/singularity-data/risingwave-minio
+          repository: ghcr.io/risingwavelabs/risingwave-minio
           tag: latest
 kind: ConfigMap
 metadata:
@@ -8673,7 +8673,7 @@ data:
       port: 9443
     leaderElection:
       leaderElect: true
-      resourceName: 02bd7444.singularity-data.com
+      resourceName: 02bd7444.risingwavelabs.com
 kind: ConfigMap
 metadata:
   name: risingwave-operator-manager-config
@@ -8733,7 +8733,7 @@ spec:
         - --zap-devel=true
         command:
         - /manager
-        image: ghcr.io/singularity-data/risingwave-operator:latest
+        image: ghcr.io/risingwavelabs/risingwave-operator:latest
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
@@ -8831,12 +8831,12 @@ webhooks:
     service:
       name: risingwave-operator-webhook-service
       namespace: risingwave-operator-system
-      path: /mutate-risingwave-singularity-data-com-v1alpha1-risingwave
+      path: /mutate-risingwave-risingwavelabs-com-v1alpha1-risingwave
   failurePolicy: Fail
   name: mrisingwave.kb.io
   rules:
   - apiGroups:
-    - risingwave.singularity-data.com
+    - risingwave.risingwavelabs.com
     apiVersions:
     - v1alpha1
     operations:
@@ -8850,12 +8850,12 @@ webhooks:
     service:
       name: risingwave-operator-webhook-service
       namespace: risingwave-operator-system
-      path: /mutate-risingwave-singularity-data-com-v1alpha1-risingwavepodtemplate
+      path: /mutate-risingwave-risingwavelabs-com-v1alpha1-risingwavepodtemplate
   failurePolicy: Fail
   name: mrisingwavepodtemplate.kb.io
   rules:
   - apiGroups:
-    - risingwave.singularity-data.com
+    - risingwave.risingwavelabs.com
     apiVersions:
     - v1alpha1
     operations:
@@ -8877,12 +8877,12 @@ webhooks:
     service:
       name: risingwave-operator-webhook-service
       namespace: risingwave-operator-system
-      path: /validate-risingwave-singularity-data-com-v1alpha1-risingwave
+      path: /validate-risingwave-risingwavelabs-com-v1alpha1-risingwave
   failurePolicy: Fail
   name: vrisingwave.kb.io
   rules:
   - apiGroups:
-    - risingwave.singularity-data.com
+    - risingwave.risingwavelabs.com
     apiVersions:
     - v1alpha1
     operations:
@@ -8898,12 +8898,12 @@ webhooks:
     service:
       name: risingwave-operator-webhook-service
       namespace: risingwave-operator-system
-      path: /validate-risingwave-singularity-data-com-v1alpha1-risingwavepodtemplate
+      path: /validate-risingwave-risingwavelabs-com-v1alpha1-risingwavepodtemplate
   failurePolicy: Fail
   name: vrisingwavepodtemplate.kb.io
   rules:
   - apiGroups:
-    - risingwave.singularity-data.com
+    - risingwave.risingwavelabs.com
     apiVersions:
     - v1alpha1
     operations:

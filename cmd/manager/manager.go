@@ -30,9 +30,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	risingwavecontroller "github.com/singularity-data/risingwave-operator/pkg/controller"
-	"github.com/singularity-data/risingwave-operator/pkg/webhook"
+	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	risingwavecontroller "github.com/risingwavelabs/risingwave-operator/pkg/controller"
+	"github.com/risingwavelabs/risingwave-operator/pkg/webhook"
 )
 
 var (
@@ -45,7 +45,7 @@ func init() {
 	utilruntime.Must(risingwavev1alpha1.AddToScheme(scheme))
 	utilruntime.Must(apiextensionsv1.AddToScheme(scheme))
 	utilruntime.Must(prometheusv1.AddToScheme(scheme))
-	//+kubebuilder:scaffold:scheme
+	// +kubebuilder:scaffold:scheme
 }
 
 var (
@@ -79,7 +79,7 @@ func main() {
 		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "02bd7444.singularity-data.com",
+		LeaderElectionID:       "02bd7444.risingwavelabs.com",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -96,7 +96,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	//+kubebuilder:scaffold:builder
+	// +kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")

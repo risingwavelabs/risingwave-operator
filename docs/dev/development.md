@@ -2,7 +2,7 @@
 
 This document is a guide to start developing the RisingWave operator.
 
-Please submit an [issue](https://github.com/singularity-data/risingwave-operator/issues) on Github if you
+Please submit an [issue](https://github.com/risingwavelabs/risingwave-operator/issues) on Github if you
 
 * Notice a requirement that this doc does not capture
 * Find a different doc that specifies requirements (the doc should instead link here)
@@ -46,7 +46,7 @@ We use `CSpell` now to check the spelling of our project. Please follow the inst
 
 #### pre-commit
 
-We recommend using the [pre-commit](https://pre-commit.com/) to identify simple issues before submission to code review. We've already written [a pre-defined config](https://github.com/singularity-data/risingwave-operator/blob/main/.pre-commit-config.yaml). Please follow the instructions detailed in the [pre-commit website](https://pre-commit.com/) to install the tool and pre-commit hooks.
+We recommend using the [pre-commit](https://pre-commit.com/) to identify simple issues before submission to code review. We've already written [a pre-defined config](https://github.com/risingwavelabs/risingwave-operator/blob/main/.pre-commit-config.yaml). Please follow the instructions detailed in the [pre-commit website](https://pre-commit.com/) to install the tool and pre-commit hooks.
 
 #### psql
 
@@ -100,7 +100,7 @@ The binary would be generated in the `bin` directory.
 To build a Docker/OCI-compatible image of the RisingWave operator, run the following command:
 
 ```bash
-# Build a image and tag with "ghcr.io/singularity-data/risingwave-operator:latest"
+# Build a image and tag with "ghcr.io/risingwavelabs/risingwave-operator:latest"
 make docker-build
 
 # Build a image and tag with "risingwave/risingwave-operator:latest"
@@ -194,7 +194,7 @@ base64 ${TMPDIR}/k8s-webhook-server/serving-certs/tls.crt
 ```yaml
 webhooks:
 - clientConfig:
-    url: "https://192.168.0.1:9443/validate-risingwave-singularity-data-com-v1alpha1-risingwave"
+    url: "https://192.168.0.1:9443/validate-risingwave-risingwavelabs-com-v1alpha1-risingwave"
 ```
 
 Now you're all set! Let's start debugging the RisingWave operator!
@@ -235,7 +235,7 @@ Expected output:
 
 ```bash
 NAME                                          CREATED AT
-risingwaves.risingwave.singularity-data.com   2022-06-21T06:17:20Z
+risingwaves.risingwave.risingwavelabs.com   2022-06-21T06:17:20Z
 ```
 
 ```bash
@@ -254,7 +254,7 @@ validatingwebhookconfiguration.admissionregistration.k8s.io/risingwave-operator-
 
 #### Run the operator locally
 
-You can find an example of the expected output in this [PR](https://github.com/singularity-data/risingwave-operator/pull/87).
+You can find an example of the expected output in this [PR](https://github.com/risingwavelabs/risingwave-operator/pull/87).
 
 ```bash
 make run-local

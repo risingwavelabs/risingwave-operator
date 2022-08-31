@@ -26,9 +26,9 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
-	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	cmdcontext "github.com/singularity-data/risingwave-operator/pkg/command/context"
-	"github.com/singularity-data/risingwave-operator/pkg/command/util"
+	"github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	cmdcontext "github.com/risingwavelabs/risingwave-operator/pkg/command/context"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/util"
 )
 
 type Options struct {
@@ -83,7 +83,7 @@ func (o *Options) Validate(ctx *cmdcontext.RWContext, cmd *cobra.Command, args [
 		return err
 	}
 
-	if rw.Spec.Global.Image == fmt.Sprintf("ghcr.io/singularity-data/risingwave:%s", o.version) {
+	if rw.Spec.Global.Image == fmt.Sprintf("ghcr.io/risingwavelabs/risingwave:%s", o.version) {
 		return fmt.Errorf("%s is already the current version", o.version)
 	}
 
@@ -108,7 +108,7 @@ func (o *Options) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args []stri
 
 // compare it to the current version.
 func (o *Options) updateTag(rw *v1alpha1.RisingWave) {
-	image := fmt.Sprintf("ghcr.io/singularity-data/risingwave:%s", o.version)
+	image := fmt.Sprintf("ghcr.io/risingwavelabs/risingwave:%s", o.version)
 
 	rw.Spec.Global.Image = image
 	for i := range rw.Spec.Components.Compactor.Groups {
@@ -128,11 +128,11 @@ func (o *Options) updateTag(rw *v1alpha1.RisingWave) {
 // uses the github api to get the latest version.
 // https://github.com/orgs/community/discussions/26279#discussioncomment-3251171
 func (o *Options) verifyTag() error {
-	// curl https://ghcr.io/token\?scope\="repository:singularity-data/risingwave:pull"
+	// curl https://ghcr.io/token\?scope\="repository:risingwavelabs/risingwave:pull"
 	token := "djE6c2luZ3VsYXJpdHktZGF0YS9yaXNpbmd3YXZlOjE2NjAyMDg1MTU1NDgyODMwMDU="
 
-	// curl https://ghcr.io/v2/singularity-data/risingwave/tags/list -H "Authorization: Bearer"$token
-	request, err := http.NewRequest("GET", "https://ghcr.io/v2/singularity-data/risingwave/tags/list", nil)
+	// curl https://ghcr.io/v2/risingwavelabs/risingwave/tags/list -H "Authorization: Bearer"$token
+	request, err := http.NewRequest("GET", "https://ghcr.io/v2/risingwavelabs/risingwave/tags/list", nil)
 	if err != nil {
 		return err
 	}

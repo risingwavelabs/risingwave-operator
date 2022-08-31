@@ -16,7 +16,7 @@
 
 package deploy
 
-import "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+import "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 
 type GroupReplicas struct {
 	Compute   []ReplicaInfo

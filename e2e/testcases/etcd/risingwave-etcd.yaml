@@ -68,7 +68,7 @@ spec:
           name: client
           protocol: TCP
 ---
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
   name: risingwave-etcd
@@ -80,7 +80,7 @@ spec:
     object:
       memory: true
   global:
-    image: ghcr.io/singularity-data/risingwave:e2e
+    image: ghcr.io/risingwavelabs/risingwave:e2e
     imagePullPolicy: IfNotPresent
     resources:
       limits:

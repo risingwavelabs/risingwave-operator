@@ -36,7 +36,9 @@ zookeeper:
   enabled: false
   url: "zkp-zookeeper-headless:2181"
 
-uncleanLeaderElectionEnable: true
+logRetentionBytes: 262144000
+logRetentionHours: 24
+logSegmentBytes: 262144000
 
 livenessProbe:
   enabled: true

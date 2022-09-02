@@ -112,6 +112,7 @@ select registered in yes no; do
             break;;
         no) 
             rwc register -account ${rwc_username} -password ${rwc_password}
+            rwc login -account ${rwc_username} -password ${rwc_password}
             break;;
         *)
             echo "Invalid option: $REPLY";;

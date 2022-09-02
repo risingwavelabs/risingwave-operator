@@ -18,6 +18,12 @@ prometheus:
         - sourceLabels: [namespace]
           action: drop
           regex: '(default|risingwave-operator-system|kube-system|cert-manager)'
+        - sourceLabels: [pod]
+          action: keep
+          regex: 'm/risingwave/'
+        - sourceLabels: [pod]
+          action: drop
+          regex: 'm/monitoring/'
         - action: labelkeep
           regex: '__name__|namespace|container|pod'
         

@@ -14,26 +14,36 @@
  * limitations under the License.
  */
 
-package rendor
+package util
 
 import (
-	"strings"
+	"context"
 	"testing"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/stretchr/testify/assert"
+
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestTemplate(t *testing.T) {
-	var path = "test/test-template.yaml"
-	opt := map[string]interface{}{
-		"Name":      "test",
-		"Namespace": "test-ns",
+func Test_NewFakeClient(t *testing.T) {
+	c := NewFakeClient()
+	ns := corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+			Annotations: map[string]string{
+				"test-k": "test-v",
+			},
+		},
 	}
-	b, err := Template(path, opt)
-	if err != nil {
-		t.Fatal(err)
-	}
-	objStr := string(b)
-	assert.Equal(t, strings.Contains(objStr, "name: test"), true)
-	assert.Equal(t, strings.Contains(objStr, "namespace: test-ns"), true)
+	err := c.Create(context.Background(), &ns)
+	assert.Equal(t, err, nil)
+
+	var newNS corev1.Namespace
+	err = c.Get(context.Background(), client.ObjectKey{Name: "test"}, &newNS)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, ns.Name, newNS.Name)
+	assert.Equal(t, len(newNS.Annotations), 1)
 }

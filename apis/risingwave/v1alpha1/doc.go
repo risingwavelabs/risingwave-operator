@@ -16,6 +16,6 @@
 
 // Package v1alpha1 contains API Schema definitions for the risingwave v1alpha1 API group
 // +kubebuilder:object:generate=true
-// +groupName=risingwave.singularity-data.com
+// +groupName=risingwave.risingwavelabs.com
 
 package v1alpha1

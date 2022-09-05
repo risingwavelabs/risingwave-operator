@@ -22,16 +22,16 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/kubectl/pkg/util/templates"
 
-	"github.com/singularity-data/risingwave-operator/pkg/command/context"
-	"github.com/singularity-data/risingwave-operator/pkg/command/create"
-	"github.com/singularity-data/risingwave-operator/pkg/command/delete"
-	"github.com/singularity-data/risingwave-operator/pkg/command/deploy"
-	"github.com/singularity-data/risingwave-operator/pkg/command/describe"
-	"github.com/singularity-data/risingwave-operator/pkg/command/install"
-	"github.com/singularity-data/risingwave-operator/pkg/command/list"
-	"github.com/singularity-data/risingwave-operator/pkg/command/update"
-	"github.com/singularity-data/risingwave-operator/pkg/command/upgrade"
-	"github.com/singularity-data/risingwave-operator/pkg/command/version"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/context"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/create"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/delete"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/deploy"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/describe"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/install"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/list"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/update"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/upgrade"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/version"
 )
 
 type RWOption struct {

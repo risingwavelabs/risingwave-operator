@@ -4,8 +4,8 @@
 | Status             | Completed                                                                |
 | Date               | 2022-06-30                                                               |
 | Authors            | Luke & Xinyu                                                             |
-| RFC PR #           | [#100](https://github.com/singularity-data/risingwave-operator/pull/100) |
-| Implementation PR #| [#175](https://github.com/singularity-data/risingwave-operator/pull/175) |
+| RFC PR #           | [#100](https://github.com/risingwavelabs/risingwave-operator/pull/100) |
+| Implementation PR #| [#175](https://github.com/risingwavelabs/risingwave-operator/pull/175) |
 |                    |                                                                          |
 
 # **Summary**
@@ -57,4 +57,4 @@ The plugin will use `client-go` to communicate with kube-apiserver follows these
 2. Otherwise, ${HOME}/.kube/config is used
 
 # **Future Possibilities**
-In the future, the plugin maybe be integrated into [risedev](https://github.com/singularity-data/risingwave/blob/main/risedev)
+In the future, the plugin maybe be integrated into [risedev](https://github.com/risingwavelabs/risingwave/blob/main/risedev)

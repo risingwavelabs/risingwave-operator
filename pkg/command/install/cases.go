@@ -22,7 +22,7 @@ import (
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 const (

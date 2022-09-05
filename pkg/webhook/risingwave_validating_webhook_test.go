@@ -24,8 +24,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 
-	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/testutils"
+	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
 
 func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
@@ -432,7 +432,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 						Name:     "a",
 						Replicas: 1,
 						RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-							Image: "ghcr.io/singularity-data/risingwave:latest",
+							Image: "ghcr.io/risingwavelabs/risingwave:latest",
 						},
 					},
 				}
@@ -441,7 +441,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 						Name:     "a",
 						Replicas: 1,
 						RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-							Image: "ghcr.io/singularity-data/risingwave:latest",
+							Image: "ghcr.io/risingwavelabs/risingwave:latest",
 						},
 					},
 				}
@@ -450,7 +450,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 						Name:     "a",
 						Replicas: 1,
 						RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-							Image: "ghcr.io/singularity-data/risingwave:latest",
+							Image: "ghcr.io/risingwavelabs/risingwave:latest",
 						},
 					},
 				}
@@ -460,7 +460,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 						Replicas: 1,
 						RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
 							RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-								Image: "ghcr.io/singularity-data/risingwave:latest",
+								Image: "ghcr.io/risingwavelabs/risingwave:latest",
 							},
 						},
 					},

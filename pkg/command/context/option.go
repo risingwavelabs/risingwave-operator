@@ -35,8 +35,8 @@ import (
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/command/helper"
+	"github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/helper"
 )
 
 var scheme = runtime.NewScheme()
@@ -154,7 +154,7 @@ func NewBasicOptions(streams genericclioptions.IOStreams) *BasicOptions {
 }
 
 // Complete the fields of the basic option.
-func (o *BasicOptions) Complete(ctx *RWContext, cmd *cobra.Command, args []string) error {
+func (o *BasicOptions) Complete(ctx Context, cmd *cobra.Command, args []string) error {
 	if len(ctx.Namespace()) == 0 {
 		o.Namespace = "default"
 	} else {
@@ -170,11 +170,11 @@ func (o *BasicOptions) Complete(ctx *RWContext, cmd *cobra.Command, args []strin
 }
 
 // Validate for simple commands, we don't need validation.
-func (o *BasicOptions) Validate(ctx *RWContext, cmd *cobra.Command, args []string) error {
+func (o *BasicOptions) Validate(ctx Context, cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (o *BasicOptions) GetRwInstance(ctx context.Context, rwCtx *RWContext) (*v1alpha1.RisingWave, error) {
+func (o *BasicOptions) GetRWInstance(ctx context.Context, rwCtx Context) (*v1alpha1.RisingWave, error) {
 	rw := &v1alpha1.RisingWave{}
 
 	operatorKey := client.ObjectKey{

@@ -11,12 +11,12 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-risingwave-singularity-data-com-v1alpha1-risingwave
+      path: /mutate-risingwave-risingwavelabs-com-v1alpha1-risingwave
   failurePolicy: Fail
   name: mrisingwave.kb.io
   rules:
   - apiGroups:
-    - risingwave.singularity-data.com
+    - risingwave.risingwavelabs.com
     apiVersions:
     - v1alpha1
     operations:
@@ -30,12 +30,12 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-risingwave-singularity-data-com-v1alpha1-risingwavepodtemplate
+      path: /mutate-risingwave-risingwavelabs-com-v1alpha1-risingwavepodtemplate
   failurePolicy: Fail
   name: mrisingwavepodtemplate.kb.io
   rules:
   - apiGroups:
-    - risingwave.singularity-data.com
+    - risingwave.risingwavelabs.com
     apiVersions:
     - v1alpha1
     operations:
@@ -56,12 +56,12 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-risingwave-singularity-data-com-v1alpha1-risingwave
+      path: /validate-risingwave-risingwavelabs-com-v1alpha1-risingwave
   failurePolicy: Fail
   name: vrisingwave.kb.io
   rules:
   - apiGroups:
-    - risingwave.singularity-data.com
+    - risingwave.risingwavelabs.com
     apiVersions:
     - v1alpha1
     operations:
@@ -77,12 +77,12 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-risingwave-singularity-data-com-v1alpha1-risingwavepodtemplate
+      path: /validate-risingwave-risingwavelabs-com-v1alpha1-risingwavepodtemplate
   failurePolicy: Fail
   name: vrisingwavepodtemplate.kb.io
   rules:
   - apiGroups:
-    - risingwave.singularity-data.com
+    - risingwave.risingwavelabs.com
     apiVersions:
     - v1alpha1
     operations:

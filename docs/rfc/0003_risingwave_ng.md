@@ -35,7 +35,7 @@ The RFC mainly adds a new CRD and rewrites the RisingWave CRD. It introduces the
 ## RisingWavePodTemplate
 
 ```yaml
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWavePodTemplate
 metadata:
   name: template-a
@@ -70,13 +70,13 @@ Here're examples to demonstrate the new CRD:
 + 1/1/1/1, 1C1G
 
 ```yaml
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
   name: test-risingwave
 spec:
   global:
-    image: ghcr.io/singularity-data/risingwave:latest
+    image: ghcr.io/risingwavelabs/risingwave:latest
     replicas:
       meta: 1
       frontend: 1
@@ -96,7 +96,7 @@ spec:
 + 1/1/1/1, 2 spot compactors on a node group labeled with "spot", 1C1G
 
 ```yaml
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
   name: test-risingwave
@@ -114,7 +114,7 @@ spec:
 + Setting the Pods to be privileged
 
 ```yaml
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWavePodTemplate
 metadata:
   name: privileged-pods
@@ -124,7 +124,7 @@ spec:
     - securityContext:
         privileged: true
 ---
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
   name: test-risingwave
@@ -136,13 +136,13 @@ spec:
 + Mixed arch instance (compactors, explicitly)
 
 ```yaml
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
   name: test-risingwave
 spec:
   global:
-    image: ghcr.io/singularity-data/risingwave:latest
+    image: ghcr.io/risingwavelabs/risingwave:latest
     replicas:
       meta: 1
       frontend: 1
@@ -158,7 +158,7 @@ spec:
       groups:
       - name: group-amd64
         replicas: 1
-        image: ghcr.io/singularity-data/risingwave:latest
+        image: ghcr.io/risingwavelabs/risingwave:latest
         nodeSelector:
           kubernetes.io/arch: amd64
       - name: group-arm64
@@ -171,7 +171,7 @@ spec:
 + Restart the frontend Pods (update)
 
 ```yaml
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
   name: test-risingwave

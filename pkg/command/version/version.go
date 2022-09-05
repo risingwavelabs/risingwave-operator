@@ -22,8 +22,8 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
-	"github.com/singularity-data/risingwave-operator/pkg/command/context"
-	"github.com/singularity-data/risingwave-operator/pkg/command/util"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/context"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/util/errors"
 )
 
 const (
@@ -51,7 +51,7 @@ func NewVersionCommand(ctx *context.RWContext, streams genericclioptions.IOStrea
 		Long:    listLongDesc,
 		Example: listExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(o.Run(ctx, cmd, args))
+			errors.CheckErr(o.Run(ctx, cmd, args))
 		},
 		Aliases: []string{"ls"},
 	}

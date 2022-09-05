@@ -49,14 +49,14 @@ jobs:
       uses: docker/metadata-action@v4
       with:
         images: |
-          ghcr.io/singularity-data/risingwave-operator
+          ghcr.io/risingwavelabs/risingwave-operator
         tags: |
           type=schedule,prefix=nightly-,pattern={{date 'YYYYMMDD'}}
           type=ref,event=branch
           type=ref,event=pr
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=semver,pattern={{major}}
+          type=semver,pattern=v{{version}}
+          type=semver,pattern=v{{major}}.{{minor}}
+          type=semver,pattern=v{{major}}
           type=sha
           type=raw,value=latest,enable={{is_default_branch}}
     - name: Set up QEMU

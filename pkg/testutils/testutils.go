@@ -28,8 +28,8 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/utils/pointer"
 
-	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/consts"
+	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
 
 // Schema for test only.
@@ -46,7 +46,7 @@ func init() {
 var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 	TypeMeta: metav1.TypeMeta{
 		Kind:       "RisingWave",
-		APIVersion: "risingwave.singularity-data.com/v1alpha1",
+		APIVersion: "risingwave.risingwavelabs.com/v1alpha1",
 	},
 	ObjectMeta: metav1.ObjectMeta{
 		Name:       "fake-risingwave",
@@ -72,7 +72,7 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 			},
 			ServiceType: corev1.ServiceTypeClusterIP,
 			RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-				Image:           "ghcr.io/singularity-data/risingwave:latest",
+				Image:           "ghcr.io/risingwavelabs/risingwave:latest",
 				ImagePullPolicy: corev1.PullIfNotPresent,
 				NodeSelector: map[string]string{
 					"kubernetes.io/os":   "linux",
@@ -193,7 +193,7 @@ func FakeRisingWave() *risingwavev1alpha1.RisingWave {
 var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 	TypeMeta: metav1.TypeMeta{
 		Kind:       "RisingWave",
-		APIVersion: "risingwave.singularity-data.com/v1alpha1",
+		APIVersion: "risingwave.risingwavelabs.com/v1alpha1",
 	},
 	ObjectMeta: metav1.ObjectMeta{
 		Name:       "fake-risingwave",
@@ -213,7 +213,7 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 		Global: risingwavev1alpha1.RisingWaveGlobalSpec{
 			ServiceType: corev1.ServiceTypeClusterIP,
 			RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-				Image:           "ghcr.io/singularity-data/risingwave:latest",
+				Image:           "ghcr.io/risingwavelabs/risingwave:latest",
 				ImagePullPolicy: corev1.PullIfNotPresent,
 				NodeSelector: map[string]string{
 					"kubernetes.io/os":   "linux",

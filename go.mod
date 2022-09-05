@@ -1,4 +1,4 @@
-module github.com/singularity-data/risingwave-operator
+module github.com/risingwavelabs/risingwave-operator
 
 go 1.18
 
@@ -8,6 +8,7 @@ require (
 	github.com/go-logr/logr v1.2.3
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.57.0
 	github.com/samber/lo v1.21.0
+	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8
 	k8s.io/api v0.24.2
 	k8s.io/apiextensions-apiserver v0.24.2

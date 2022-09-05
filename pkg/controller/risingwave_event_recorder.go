@@ -22,11 +22,11 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"github.com/singularity-data/risingwave-operator/pkg/consts"
-	"github.com/singularity-data/risingwave-operator/pkg/event"
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
+	"github.com/risingwavelabs/risingwave-operator/pkg/event"
 
-	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/object"
+	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/object"
 )
 
 // RisingWaveEventRecorder is an action hook for recording events.

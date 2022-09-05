@@ -17,11 +17,14 @@
 package install
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
-	"github.com/singularity-data/risingwave-operator/pkg/command/context"
-	"github.com/singularity-data/risingwave-operator/pkg/command/util"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/context"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/install/version"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/util/errors"
 )
 
 const (
@@ -52,8 +55,8 @@ func NewUninstallCommand(ctx *context.RWContext, streams genericclioptions.IOStr
 		Long:    "Uninstall the risingwave operator from the cluster",
 		Example: UninstallExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(o.Complete(ctx, cmd, args))
-			util.CheckErr(o.Run(ctx, cmd, args))
+			errors.CheckErr(o.Complete(ctx, cmd, args))
+			errors.CheckErr(o.Run(ctx, cmd, args))
 		},
 	}
 
@@ -68,9 +71,9 @@ func (o *UninstallOptions) Complete(ctx *context.RWContext, cmd *cobra.Command, 
 // 1. ensure the latest risingwave file exists.
 // 2. delete the resource by the risingwave file.
 // TODO: need record which versions installed.
-// TODO: need to ensure no instances running before uninstall. Issue: https://github.com/singularity-data/risingwave-operator/issues/184
+// TODO: need to ensure no instances running before uninstall. Issue: https://github.com/risingwavelabs/risingwave-operator/issues/184
 func (o *UninstallOptions) Run(ctx *context.RWContext, cmd *cobra.Command, args []string) error {
-	yamlFile, err := Download(RisingWaveUrl, TemDir+"/operator")
+	yamlFile, err := Download(fmt.Sprintf(RisingWaveUrlTemplate, version.MinimumVersion), TemDir+"/operator")
 	if err != nil {
 		return err
 	}

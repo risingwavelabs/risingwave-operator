@@ -8,4 +8,4 @@ webhook:
   port: 9443
 leaderElection:
   leaderElect: true
-  resourceName: 02bd7444.singularity-data.com
+  resourceName: 02bd7444.risingwavelabs.com

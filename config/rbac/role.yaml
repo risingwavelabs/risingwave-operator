@@ -80,7 +80,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - risingwave.singularity-data.com
+  - risingwave.risingwavelabs.com
   resources:
   - risingwavepodtemplates
   verbs:
@@ -88,13 +88,13 @@ rules:
   - list
   - watch
 - apiGroups:
-  - risingwave.singularity-data.com
+  - risingwave.risingwavelabs.com
   resources:
   - risingwavepodtemplates/finalizers
   verbs:
   - update
 - apiGroups:
-  - risingwave.singularity-data.com
+  - risingwave.risingwavelabs.com
   resources:
   - risingwaves
   verbs:
@@ -106,13 +106,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - risingwave.singularity-data.com
+  - risingwave.risingwavelabs.com
   resources:
   - risingwaves/finalizers
   verbs:
   - update
 - apiGroups:
-  - risingwave.singularity-data.com
+  - risingwave.risingwavelabs.com
   resources:
   - risingwaves/status
   verbs:

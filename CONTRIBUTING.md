@@ -2,7 +2,7 @@
 
 Thanks for your interest in contributing to this project! We welcome and appreciate contributions.
 
-If you have questions, please [create a Github issue](https://github.com/singularity-data/risingwave-operator/issues/new) or ask in the RisingWave Community channel on Slack. Please use the [invitation link](https://join.slack.com/t/risingwave-community/shared_invite/zt-120rft0mr-d8uGk3d~NZiZAQWPnElOfw) to join the channel.
+If you have questions, please [create a Github issue](https://github.com/risingwavelabs/risingwave-operator/issues/new) or ask in the RisingWave Community channel on Slack. Please use the [invitation link](https://join.slack.com/t/risingwave-community/shared_invite/zt-120rft0mr-d8uGk3d~NZiZAQWPnElOfw) to join the channel.
 
 ## Setting Up Development Environment
 
@@ -31,7 +31,7 @@ For example, a PR title could be:
 - `refactor: modify executor protobuf package path`
 - `feat(execution): enable comparison between nullable data arrays`, where `(execution)` means that this PR mainly focuses on the execution component.
 
-You may also check out previous PRs in the [PR list](https://github.com/singularity-data/risingwave-operator/pulls).
+You may also check out previous PRs in the [PR list](https://github.com/risingwavelabs/risingwave-operator/pulls).
 
 ### Pull Request Description
 

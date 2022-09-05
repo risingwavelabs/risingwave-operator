@@ -1,7 +1,7 @@
 bind v1 k8s.io/api/core/v1
 bind apps/v1 k8s.io/api/apps/v1
 bind monitoring.coreos.com/v1 github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1
-bind risingwave.singularity-data.com/v1alpha1 github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1
+bind risingwave.risingwavelabs.com/v1alpha1 github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1
 
 alias Pod v1/Pod
 alias Service v1/Service
@@ -9,7 +9,7 @@ alias Secret v1/Secret
 alias ConfigMap v1/ConfigMap
 alias Deployment apps/v1/Deployment
 alias StatefulSet apps/v1/StatefulSet
-alias RisingWave risingwave.singularity-data.com/v1alpha1/RisingWave
+alias RisingWave risingwave.risingwavelabs.com/v1alpha1/RisingWave
 alias ServiceMonitor monitoring.coreos.com/v1/ServiceMonitor
 
 // RisingWaveControllerManager encapsulates the states and actions used by RisingWaveController.

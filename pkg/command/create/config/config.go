@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	Image = "ghcr.io/singularity-data/risingwave"
+	Image = "ghcr.io/risingwavelabs/risingwave"
 
 	DefaultLimitCPU      = "1"
 	DefaultLimitMemory   = "1Gi"

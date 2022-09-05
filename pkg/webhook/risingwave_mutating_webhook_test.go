@@ -20,9 +20,9 @@ import (
 	"context"
 	"testing"
 
-	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/consts"
-	"github.com/singularity-data/risingwave-operator/pkg/testutils"
+	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
+	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
 
 func Test_RisingWaveMutatingWebhook_Default(t *testing.T) {

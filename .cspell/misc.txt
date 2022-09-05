@@ -35,3 +35,4 @@ galaxykube
 risedev
 retryable
 yamlex
+risingwavelabs

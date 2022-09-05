@@ -1,7 +1,0 @@
-apiVersion: risingwave.singularity-data.com/v1alpha1
-kind: RisingWave
-metadata:
-  name: test-risingwave
-  namespace: test
-spec:
-  arch: arm64

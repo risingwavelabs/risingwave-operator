@@ -22,5 +22,5 @@ const (
 	Frontend     = "frontend"
 	Compactor    = "compactor"
 	Global       = "global"
-	DefaultGroup = "default"
+	DefaultGroup = "inner_global"
 )

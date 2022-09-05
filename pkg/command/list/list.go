@@ -23,9 +23,9 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
-	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/command/context"
-	"github.com/singularity-data/risingwave-operator/pkg/command/util"
+	"github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/context"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/util/errors"
 )
 
 const (
@@ -54,9 +54,9 @@ type Options struct {
 	selector string
 
 	// TODO: we can print the rw by some print flags, just like "-w, -o yaml"
-	//printFlags *genericclioptions.PrintFlags
+	// printFlags *genericclioptions.PrintFlags
 
-	//printer printers.ResourcePrinter
+	// printer printers.ResourcePrinter
 
 	genericclioptions.IOStreams
 }
@@ -79,15 +79,15 @@ func NewCommand(ctx *context.RWContext, streams genericclioptions.IOStreams) *co
 		Long:    listLongDesc,
 		Example: listExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(o.Complete(ctx, cmd, args))
-			util.CheckErr(o.Validate(ctx, cmd, args))
-			util.CheckErr(o.Run(ctx, cmd, args))
+			errors.CheckErr(o.Complete(ctx, cmd, args))
+			errors.CheckErr(o.Validate(ctx, cmd, args))
+			errors.CheckErr(o.Run(ctx, cmd, args))
 		},
 		Aliases: []string{"ps"},
 	}
 
-	//o.printFlags = genericclioptions.NewPrintFlags("list").WithTypeSetter(scheme)
-	//o.printFlags.AddFlags(cmd)
+	// o.printFlags = genericclioptions.NewPrintFlags("list").WithTypeSetter(scheme)
+	// o.printFlags.AddFlags(cmd)
 
 	cmd.Flags().StringVarP(&o.selector, "selector", "l", o.selector, "Selector (label query) to filter on, not including uninitialized ones, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2).")
 	cmd.Flags().BoolVarP(&o.allNamespaces, "all-namespaces", "A", false, "Whether list instances in all namespaces.")
@@ -99,11 +99,11 @@ func (o *Options) Complete(ctx *context.RWContext, cmd *cobra.Command, args []st
 	namespace := ctx.Namespace()
 	o.namespace = namespace
 
-	//printer, err := o.printFlags.ToPrinter()
-	//if err != nil {
+	// printer, err := o.printFlags.ToPrinter()
+	// if err != nil {
 	//	return err
-	//}
-	//o.printer = printer
+	// }
+	// o.printer = printer
 
 	return nil
 }
@@ -145,7 +145,7 @@ func (o *Options) Run(ctx *context.RWContext, cmd *cobra.Command, args []string)
 	}
 
 	if len(rwList) == 0 {
-		s := fmt.Sprintf("No resources found in %s namespace.\n", util.Bold(o.namespace))
+		s := fmt.Sprintf("No resources found in %s namespace.\n", o.namespace)
 		fmt.Fprint(o.Out, s)
 		return nil
 	}

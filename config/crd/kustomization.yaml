@@ -2,8 +2,8 @@
 # since it depends on manager name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/risingwave.singularity-data.com_risingwaves.yaml
-- bases/risingwave.singularity-data.com_risingwavepodtemplates.yaml
+- bases/risingwave.risingwavelabs.com_risingwaves.yaml
+- bases/risingwave.risingwavelabs.com_risingwavepodtemplates.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 
-package hook
+package errors
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
+	"fmt"
+	"os"
 )
 
-func TestLifeCycleOption(t *testing.T) {
-	var v = 1
-	var opt = LifeCycleOption{
-		PostReadyFunc: func() error {
-			v = 2
-			return nil
-		},
-	}
+// TODO: do some check for error
 
-	opt.PostReadyFunc()
-	assert.Equal(t, v, 2)
-	if opt.PreUpdateFunc != nil {
-		t.Fatal("test failed")
+func CheckErr(err error) {
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func ExitOnErr(err error) {
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }

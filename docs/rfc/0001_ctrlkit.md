@@ -4,8 +4,8 @@
 | Status             | Completed                                                          |
 | Date               | 2022-06-14                                                         |
 | Authors            | <!-- cspell:disable-line -->arkbriar                                                           |
-| RFC PR #           | [#49](https://github.com/singularity-data/risingwave-operator/pull/49) |
-| Implementation PR #| [#53](https://github.com/singularity-data/risingwave-operator/pull/53), [#61](https://github.com/singularity-data/risingwave-operator/pull/61), [#67](https://github.com/singularity-data/risingwave-operator/pull/67)             |
+| RFC PR #           | [#49](https://github.com/risingwavelabs/risingwave-operator/pull/49) |
+| Implementation PR #| [#53](https://github.com/risingwavelabs/risingwave-operator/pull/53), [#61](https://github.com/risingwavelabs/risingwave-operator/pull/61), [#67](https://github.com/risingwavelabs/risingwave-operator/pull/67)             |
 |                    |                                                                    |
 
 # **Table of Contents**

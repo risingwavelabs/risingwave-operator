@@ -21,7 +21,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/singularity-data/risingwave-operator/pkg/utils"
+	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
 func nonZeroOrDefault[T comparable](v T, defaultVal T) T {

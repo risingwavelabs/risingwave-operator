@@ -25,9 +25,9 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	cmdcontext "github.com/singularity-data/risingwave-operator/pkg/command/context"
-	"github.com/singularity-data/risingwave-operator/pkg/command/util"
+	"github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	cmdcontext "github.com/risingwavelabs/risingwave-operator/pkg/command/context"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/util/errors"
 )
 
 const (
@@ -47,7 +47,7 @@ type Options struct {
 
 	namespace string
 
-	// TODO: maybe can support force delete. Issue: https://github.com/singularity-data/risingwave-operator/issues/183
+	// TODO: maybe can support force delete. Issue: https://github.com/risingwavelabs/risingwave-operator/issues/183
 	force bool
 
 	genericclioptions.IOStreams
@@ -70,9 +70,9 @@ func NewCommand(ctx *cmdcontext.RWContext, streams genericclioptions.IOStreams) 
 		Long:    LongDesc,
 		Example: Example,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(o.Complete(ctx, cmd, args))
-			util.CheckErr(o.Validate(ctx, cmd, args))
-			util.CheckErr(o.Run(ctx, cmd, args))
+			errors.CheckErr(o.Complete(ctx, cmd, args))
+			errors.CheckErr(o.Validate(ctx, cmd, args))
+			errors.CheckErr(o.Run(ctx, cmd, args))
 		},
 		Aliases: []string{"delete"},
 	}

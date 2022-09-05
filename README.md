@@ -1,12 +1,12 @@
 # RisingWave Operator
 
 [![Slack](https://badgen.net/badge/Slack/Join%20RisingWave/0abd59?icon=slack)](https://join.slack.com/t/risingwave-community/shared_invite/zt-120rft0mr-d8uGk3d~NZiZAQWPnElOfw)
-![Build](https://github.com/singularity-data/risingwave-operator/actions/workflows/e2e.yaml/badge.svg?branch=main)
-[![codecov](https://codecov.io/gh/singularity-data/risingwave-operator/branch/main/graph/badge.svg?token=D08wi9hnt4)](https://codecov.io/gh/singularity-data/risingwave-operator)
+![Build](https://github.com/risingwavelabs/risingwave-operator/actions/workflows/e2e.yaml/badge.svg?branch=main)
+[![codecov](https://codecov.io/gh/risingwavelabs/risingwave-operator/branch/main/graph/badge.svg?token=D08wi9hnt4)](https://codecov.io/gh/risingwavelabs/risingwave-operator)
 
 ## Introduction
 
-The RisingWave operator is a deployment and management system of the [RisingWave streaming database](https://github.com/singularity-data/risingwave) that runs on top of Kubernetes. It provides functionalities like provisioning, upgrading, scaling and destroying the `RisingWave` instances inside the Kubernetes cluster. It models the deployment and management progress with the concepts provided in Kubernetes and organizes them in a way called [Operator Pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/). Thus we can just declare what kind of `RisingWave` instances we want and create them as objects in the Kubernetes. The RisingWave operator will always make sure that they are finally there.
+The RisingWave operator is a deployment and management system of the [RisingWave streaming database](https://github.com/risingwavelabs/risingwave) that runs on top of Kubernetes. It provides functionalities like provisioning, upgrading, scaling and destroying the `RisingWave` instances inside the Kubernetes cluster. It models the deployment and management progress with the concepts provided in Kubernetes and organizes them in a way called [Operator Pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/). Thus we can just declare what kind of `RisingWave` instances we want and create them as objects in the Kubernetes. The RisingWave operator will always make sure that they are finally there.
 
 The operator also contains several custom resources. Refer to the [API docs](./docs/general/api.md) for more details.
 
@@ -27,7 +27,7 @@ More information on this install cert-manager method [can be found here](https:/
 Then, you can install the `risingwave-operator` with the following command:
 
 ```shell
-kubectl apply -f https://github.com/singularity-data/risingwave-operator/releases/download/v0.1.1/risingwave-operator.yaml
+kubectl apply -f https://github.com/risingwavelabs/risingwave-operator/releases/download/v0.2.0/risingwave-operator.yaml
 ```
 
 To check if the installation is successful, you can run the following commands to check if the Pods are running.
@@ -43,10 +43,10 @@ Now you can deploy a RisingWave instance with in-memory storage with the followi
 
 ```shell
 # It runs on the Linux/amd64 platform. If you want to run on Linux/arm64, you need to run the command below.
-kubectl apply -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/examples/risingwave-in-memory.yaml
+kubectl apply -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/examples/risingwave-in-memory.yaml
 
 # Linux/arm64
-curl https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/examples/risingwave-in-memory.yaml | sed -e 's/ghcr.io\/singularity-data\/risingwave/public.ecr.aws\/x5u3w5h6\/risingwave-arm/g' | kubectl apply -f -
+curl https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/examples/risingwave-in-memory.yaml | sed -e 's/ghcr.io\/risingwavelabs\/risingwave/public.ecr.aws\/x5u3w5h6\/risingwave-arm/g' | kubectl apply -f -
 ```
 
 Check the running status of RisingWave with the following command:
@@ -224,7 +224,7 @@ helm repo update
 
 ```shell
 helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
-  -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/monitoring/kube-prometheus-stack/kube-prometheus-stack.yaml
+  -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/monitoring/kube-prometheus-stack/kube-prometheus-stack.yaml
 ```
 
 To check the running status, check the Pods with the following command:
@@ -266,7 +266,7 @@ kubectl create secret generic aws-prometheus-credentials --from-literal AccessKe
 
 ```shell
 helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
-  -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/monitoring/kube-prometheus-stack/kube-prometheus-stack.yaml \
+  -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/monitoring/kube-prometheus-stack/kube-prometheus-stack.yaml \
   -f prometheus-remote-write-aws.yaml
 ```
 
@@ -332,15 +332,15 @@ helm upgrade --install loki grafana/loki-distributed
 
 ```shell
 helm upgrade --install promtail grafana/promtail \
-  -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/monitoring/promtail/loki-promtail-clients.yaml
+  -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/monitoring/promtail/loki-promtail-clients.yaml
 ```
 
 4. Upgrade or install the `kube-prometheus-stack` chart
 
 ```shell
 helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
-  -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/monitoring/kube-prometheus-stack/kube-prometheus-stack.yaml \
-  -f https://raw.githubusercontent.com/singularity-data/risingwave-operator/main/monitoring/kube-prometheus-stack/grafana-loki-data-source.yaml
+  -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/monitoring/kube-prometheus-stack/kube-prometheus-stack.yaml \
+  -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/monitoring/kube-prometheus-stack/grafana-loki-data-source.yaml
 ```
 
 Now, we are ready to view the logs in Grafana. Just forward the traffics to the localhost, and open the [http://localhost:3000](http://localhost:3000) like mentioned in the 

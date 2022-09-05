@@ -1,4 +1,4 @@
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWavePodTemplate
 metadata:
   name: template-a
@@ -46,15 +46,15 @@ spec:
     restartPolicy: Always
     runtimeClassName: 
     containers:
-    - image: ghcr.io/singularity-data/risingwave:latest
+    - image: ghcr.io/risingwavelabs/risingwave:latest
 ---
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
   name: risingwave-ng
 spec:
   global:
-    image: ghcr.io/singularity-data/risingwave:latest
+    image: ghcr.io/risingwavelabs/risingwave:latest
     imagePullPolicy: 
     imagePullSecrets:
     podTemplate: template-a

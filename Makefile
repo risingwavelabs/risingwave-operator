@@ -31,14 +31,14 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 # This variable is used to construct full image tags for bundle and catalog images.
 #
 # For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
-# singularity-data.com/risingwave-operator-bundle:$VERSION and singularity-data.com/risingwave-operator-catalog:$VERSION.
-IMAGE_TAG_BASE ?= singularity-data.com/risingwave-operator
+# risingwavelabs.com/risingwave-operator-bundle:$VERSION and risingwavelabs.com/risingwave-operator-catalog:$VERSION.
+IMAGE_TAG_BASE ?= risingwavelabs.com/risingwave-operator
 
 # BUNDLE_IMG defines the image:tag used for the bundle.
 # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)
 BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 
-REGISTRY ?= ghcr.io/singularity-data/risingwave-operator
+REGISTRY ?= ghcr.io/risingwavelabs/risingwave-operator
 TAG ?= latest
 # Image URL to use all building/pushing image targets
 IMG ?= $(REGISTRY):$(TAG)
@@ -89,9 +89,9 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 	@$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./apis/..."
 
 generate-manager: ctrlkit-gen goimports-reviser ## Generate codes of controller managers.
-	@$(CTRLKIT-GEN) -o pkg/manager/ -p "github.com/singularity-data/risingwave-operator/pkg/ctrlkit" -b hack/boilerplate.go.txt pkg/manager/risingwave_controller_manager.cm
+	@$(CTRLKIT-GEN) -o pkg/manager/ -p "github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit" -b hack/boilerplate.go.txt pkg/manager/risingwave_controller_manager.cm
 	@mv pkg/manager/risingwave_controller_manager.go pkg/manager/risingwave_controller_manager_generated.go
-	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_controller_manager_generated.go -local "github.com/singularity-data/risingwave-operator"
+	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_controller_manager_generated.go -local "github.com/risingwavelabs/risingwave-operator"
 
 fmt: ## Run go fmt against code.
 	@go fmt ./...
@@ -150,7 +150,7 @@ run-local: manifests generate fmt vet lint install-local
 	go run cmd/manager/manager.go -zap-time-encoding rfc3339
 
 e2e-test: generate-test-yaml vendor
-	docker build -f docker/Dockerfile --build-arg USE_VENDOR=true -t docker.io/singularity-data/risingwave-operator:dev . --output=type=docker
+	docker build -f docker/Dockerfile --build-arg USE_VENDOR=true -t docker.io/risingwavelabs/risingwave-operator:dev . --output=type=docker
 	e2e/e2e.sh
 
 e2e-plugin:
@@ -225,7 +225,7 @@ TYPES_V1ALPHA1_TARGET := apis/risingwave/v1alpha1/risingwave_types.go
 TYPES_V1ALPHA1_TARGET += apis/risingwave/v1alpha1/risingwave_pod_template_types.go
 
 docs/general/api.md: gen-crd-api-reference-docs $(TYPES_V1ALPHA1_TARGET)
-	$(GEN_CRD_API_REFERENCE_DOCS) -api-dir "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/docs/general/api.md"
+	$(GEN_CRD_API_REFERENCE_DOCS) -api-dir "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/docs/general/api.md"
 
 .PHONY: generate-docs
 generate-docs: docs/general/api.md
@@ -254,7 +254,7 @@ bundle: manifests kustomize ## Generate bundle manifests and metadata, then vali
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
-	operator-sdk bundle validate ./bundlehttps://github.com/singularity-data/risingwave-operator.git
+	operator-sdk bundle validate ./bundlehttps://github.com/risingwavelabs/risingwave-operator.git
 
 .PHONY: bundle-build
 bundle-build: ## Build the bundle image.

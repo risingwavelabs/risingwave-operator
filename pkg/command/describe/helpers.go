@@ -21,7 +21,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	"github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 func (o *Options) describeMetadata(rw *v1alpha1.RisingWave) {

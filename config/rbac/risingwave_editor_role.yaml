@@ -5,7 +5,7 @@ metadata:
   name: risingwave-editor-role
 rules:
 - apiGroups:
-  - risingwave.singularity-data.com
+  - risingwave.risingwavelabs.com
   resources:
   - risingwaves
   verbs:
@@ -17,7 +17,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - risingwave.singularity-data.com
+  - risingwave.risingwavelabs.com
   resources:
   - risingwaves/status
   verbs:

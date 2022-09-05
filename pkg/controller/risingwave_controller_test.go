@@ -35,10 +35,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	risingwavev1alpha1 "github.com/singularity-data/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/singularity-data/risingwave-operator/pkg/ctrlkit"
-	"github.com/singularity-data/risingwave-operator/pkg/object"
-	"github.com/singularity-data/risingwave-operator/pkg/testutils"
+	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
+	"github.com/risingwavelabs/risingwave-operator/pkg/object"
+	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
 
 const defaultRecorderBufferSize = 10

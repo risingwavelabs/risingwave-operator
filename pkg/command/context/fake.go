@@ -21,7 +21,7 @@ import (
 	"k8s.io/cli-runtime/pkg/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/singularity-data/risingwave-operator/pkg/command/helper"
+	"github.com/risingwavelabs/risingwave-operator/pkg/command/helper"
 )
 
 var Fake = &FakeContext{

@@ -16,14 +16,11 @@ prometheus:
     - url: "http://prometheus-remote-write-adapter.risingwave-operator-system.svc.cluster.local:8080/receive"
       writeRelabelConfigs:
         - sourceLabels: [namespace]
-          action: drop
-          regex: '(default|risingwave-operator-system|kube-system|cert-manager)'
-        - sourceLabels: [pod]
           action: keep
-          regex: 'm/risingwave/'
-        - sourceLabels: [pod]
+          regex: '(.*)rwc(.*)'
+        - sourceLabels: [namespace]
           action: drop
-          regex: 'm/monitoring/'
+          regex: '(.*)monitoring(.*)'
         - action: labelkeep
           regex: '__name__|namespace|container|pod'
         

@@ -21,6 +21,8 @@ spec:
         env:
           - name: KAFKA_BROKER_LIST
             value: kstack-kafka-headless.risingwave-operator-system:9092
+          - name: KAFKA_TOPIC
+            value: metrics
         ports:
         - containerPort: 8080
 ---

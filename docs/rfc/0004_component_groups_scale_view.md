@@ -28,18 +28,15 @@ a subresource like the status but exposes three fixed fields:
 - `.status.selector` which refers to the Pod selector (but in a serialized manner)
 
 However, the current design of the `RisingWave` resource can not provide such a subresource because it is consisted of
-four
-independent components, and each of the component can have one or more groups. Therefore, the `kubectl scale` can not
-work directly
-on the `RisingWave` resource and so do other tools depend on that. And it is the main reason for proposing this new CR.
-I named it 'RisingWaveComponentScaleView'.
+four independent components, and each of the component can have one or more groups. Therefore, the `kubectl scale` can
+not work directly on the `RisingWave` resource and so do other tools depend on that. And it is the main reason for
+proposing this new CR. I named it 'RisingWaveComponentScaleView'.
 
 > What use cases does it support?
 
 With the `RisingWaveComponentScaleView`, the users can set up a view (similar to the view in databases) of some groups
-of one RisingWave component,
-in a `RisingWave` object, to expose the scale subresource. Then the magic happens and everything that depends on the
-scale subresource shall work.
+of one RisingWave component, in a `RisingWave` object, to expose the scale subresource. Then the magic happens and
+everything that depends on the scale subresource shall work.
 
 Take the auto-scaler as an example, we can set up the HPA or KEDA for frontend Pods with
 a `RisingWaveComponentScaleView` that targets the frontend groups.
@@ -64,7 +61,7 @@ a `RisingWaveComponentScaleView` that targets the frontend groups.
 
 > This is the technical portion of the RFC. Explain the design in sufficient detail.
 
-**`RisingWaveComponentScaleView` CRD**
+## `RisingWaveComponentScaleView` CRD
 
 ```yaml
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
@@ -95,7 +92,7 @@ spec:
       min: 1              # >= 0, optional, default is 0
       max: 2              # >= minimum, optional, default is 1000 (indicates infinite because 1000 Pods are many enough to be considered as infinite).
   - group: 'spot'
-    priority: 1
+    priority: 0
     replicas: 3
 status:
   targetRef: # It has value only if the scale view has grabbed the lock on the target object.
@@ -103,7 +100,19 @@ status:
   replicas: 10             # Current replicas of target groups. Maintained by the controller.
 ```
 
-**`RisingWave` CRD and Webhooks**
+### Priority and Replica Constraints
+
+When updating the scale subresource, it's updating the `.spec.replicas` field above. The mutating webhook will then work
+to distribute the replicas of `.spec.replicas` to the replicas under the `scalePolicy`, following the rules below:
+
+- The replicas in each group must be confined within the constraints.
+- The groups with higher priorities always consume replicas first until it reaches the max boundary. E.g.,
+  when `.spec.replicas` is 4, the 'enduring' group (with priority 1, larger than the 'spot' group's) will have 2 (which
+  is the max) replicas, and then the left is assigned to the 'spot' group.
+- The groups with the same priorities tend to have similar replicas, within the constraints. Which is to say, the target
+  is to minimize the variance.
+
+## `RisingWave` CRD and Webhooks
 
 ```yaml
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
@@ -133,15 +142,15 @@ Validating webhook:
 
 This is a compatible change and should not affect the RisingWave's workflow.
 
-**`RisingWaveComponentScaleView` Webhooks**
+## `RisingWaveComponentScaleView` Webhooks
 
 ![RisingWaveComponentScaleView Webhooks](./images/scale_view_webhooks.png)
 
-**`RisingWaveComponentScaleView` Controller**
+## `RisingWaveComponentScaleView` Controller
 
 ![RisingWaveComponentScaleView Controller](./images/scale_view_controller_workflow.png)
 
-**Use Cases**
+## Use Cases
 
 Case 1. Multi-AZ frontend and balanced scale
 
@@ -261,10 +270,21 @@ To ensure the end users can not touch these maintained fields accidentally.
 Q2: How can we ensure the consistency between spec and status subresource? They are intended to be updated individually.
 
 Whether separating the status subresource or not doesn't affect the optimistic concurrency policy used to resolve
-conflicts when updating.
-In one word, the update on metadata and spec and on status share the same lock. We can assume that either update is an
-atomic update on the whole
-object. So the webhook always observes a consistent object.
+conflicts when updating. In one word, the update on metadata and spec and on status share the same lock. We can assume
+that either update is an atomic update on the whole object. So the webhook always observes a consistent object.
+
+Q3: Why is there a lock on the RisingWave? What's the purpose?
+
+It is meant to disable the two-way synchronization between the `RisingWaveComponentScaleView` and `RisingWave` objects.
+Considering that we don't have such lock mechanism, the end users can update the replicas on `RisingWave` while the
+replicas of that group is monitored by the `RisingWaveComponentScaleView`. Then there will be two ways of sync:
+
+- `RisingWaveComponentScaleView` -> `RisingWave`
+- `RisingWave` -> `RisingWaveComponentScaleView`
+
+Currently, I have no idea how to tell which way we should choose to sync. Even though we have figured out how, the
+result will be rather confusing when there are two simultaneous updating. Therefore, using a lock on field to let the
+users know where to update it is more reasonable.
 
 > What other designs have been considered and what is the rationale for not choosing them?
 

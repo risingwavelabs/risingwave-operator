@@ -125,6 +125,7 @@ status:
   - name: hello-frontend-scale-view # Name of the RisingWaveScaleView object.
     uid:                            # UID of the object.
     component: frontend             # Component.
+    generation: 10                  # Generation of the RisingWaveScaleView object. It indicates the locked version.
     groupReplicas: # Group and their desired replicas. Once a group is owned by some scale view, then another scale view
     # would not be able to grab the lock again. It's achieved with the atomic update.
     # If a group and its desired replicas is listed below, then any changes to the target group's replicas will be rejected

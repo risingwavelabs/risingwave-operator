@@ -30,7 +30,7 @@ KAFKA_BROKER_URI="kstack-kafka-headless.risingwave-operator-system:9092"
 KAFKA_UI_NAME="kafka-ui"
 KAFKA_TOPIC_NAME="metrics"
 KAFKA_UI_PORT=8081
-MONITORING_TENANT_NAME="monitoring-test"
+MONITORING_TENANT_NAME="monitoring-operator"
 TENANT_SOURCE_NAME="prom_metrics"
 KAFKA_CONSUMER_GROUP="metrics_group"
 
@@ -134,7 +134,9 @@ if [ ! -z "${namespace}" ]; then
         echo "Could not delete all tenants in namespace ${namespace}"
         exit 1 
     fi
+    sleep 20 # wait for rwc workflow to delete tenant
 fi
+
 
 echo "creating monitoring tenant..."
 rwc tenant create -name "${MONITORING_TENANT_NAME}"
@@ -144,11 +146,11 @@ if [ $? -ne 0 ]; then
     exit 1 
 fi
 
-sleep 30 # wait for rwc to setup namespaces
+sleep 20 # wait for rwc to setup namespaces
 
 kubectl wait --for=condition=ready pods --namespace ${namespace} --all --timeout=5m 
 
-sleep 5 # wait for the tenants to be created
+sleep 20 # wait for psql shell to be ready
 
 psql "$(rwc tenant endpoint -name "${MONITORING_TENANT_NAME}")" -- c <<EOF
     CREATE SOURCE ${TENANT_SOURCE_NAME} (

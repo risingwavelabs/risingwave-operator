@@ -57,8 +57,8 @@ rw
 risingwavepodtemplate
 risingwavepodtemplates
 rwpt
-risingwavecomponentscaleview
-risingwavecomponentscaleviews
+risingwavescaleview
+risingwavescaleviews
 rwsv
 
 # Prometheus APIs

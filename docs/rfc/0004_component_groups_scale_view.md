@@ -1,12 +1,12 @@
-|                    |                                |
-| -------            |--------------------------------|
-| Feature            | Scale View of Component Groups |
-| Status             | In-progress                    |
-| Date               | 2022-09-05                     |
-| Authors            | arkbriar                       |
-| RFC PR #           |                                |
-| Implementation PR #|                                |
-|                    |                                |
+|                    |                                                         |
+| -------            |---------------------------------------------------------|
+| Feature            | Expose the scale subresource with `RisingWaveScaleView` |
+| Status             | In-progress                                             |
+| Date               | 2022-09-05                                              |
+| Authors            | arkbriar                                                |
+| RFC PR #           |                                                         |
+| Implementation PR #|                                                         |
+|                    |                                                         |
 
 # **Summary**
 
@@ -30,20 +30,20 @@ a subresource like the status but exposes three fixed fields:
 However, the current design of the `RisingWave` resource can not provide such a subresource because it is consisted of
 four independent components, and each of the component can have one or more groups. Therefore, the `kubectl scale` can
 not work directly on the `RisingWave` resource and so do other tools depend on that. And it is the main reason for
-proposing this new CR. I named it 'RisingWaveComponentScaleView'.
+proposing this new CR. I named it 'RisingWaveScaleView'.
 
 > What use cases does it support?
 
-With the `RisingWaveComponentScaleView`, the users can set up a view (similar to the view in databases) of some groups
+With the `RisingWaveScaleView`, the users can set up a view (similar to the view in databases) of some groups
 of one RisingWave component, in a `RisingWave` object, to expose the scale subresource. Then the magic happens and
 everything that depends on the scale subresource shall work.
 
 Take the auto-scaler as an example, we can set up the HPA or KEDA for frontend Pods with
-a `RisingWaveComponentScaleView` that targets the frontend groups.
+a `RisingWaveScaleView` that targets the frontend groups.
 
 > What is the expected outcome?
 
-1. A CR `RisingWaveComponentScaleView` and its controller, with the following features:
+1. A CR `RisingWaveScaleView` and its controller, with the following features:
     - Users can target any of the four components in it, but aren't able to change it after.
     - Users can target one or more valid groups in it, but aren't able to change it after.
     - Users can set the priorities of groups for scaling out and in separately.
@@ -55,17 +55,17 @@ a `RisingWaveComponentScaleView` that targets the frontend groups.
 
 2. An improvement on `RisingWave` resource and validating webhook to support lock of groups:
     - Lock fields in the status, which is structured and easy to lookup.
-    - Enhanced validating webhook to reject any changes from besides the controller of `RisingWaveComponentScaleView`.
+    - Enhanced validating webhook to reject any changes from besides the controller of `RisingWaveScaleView`.
 
 # **Explanation**
 
 > This is the technical portion of the RFC. Explain the design in sufficient detail.
 
-## `RisingWaveComponentScaleView` CRD
+## `RisingWaveScaleView` CRD
 
 ```yaml
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
-kind: RisingWaveComponentScaleView
+kind: RisingWaveScaleView
 metadata:
   name: hello-frontend-scale-view
 spec:
@@ -121,8 +121,8 @@ metadata:
   name: hello
 # ....
 status:
-  scaleViews: # An array of scale view summaries. Maintained by the RisingWaveComponentScaleView controller.
-  - name: hello-frontend-scale-view # Name of the RisingWaveComponentScaleView object.
+  scaleViews: # An array of scale view summaries. Maintained by the RisingWaveScaleView controller.
+  - name: hello-frontend-scale-view # Name of the RisingWaveScaleView object.
     uid:                            # UID of the object.
     component: frontend             # Component.
     groupReplicas: # Group and their desired replicas. Once a group is owned by some scale view, then another scale view
@@ -142,13 +142,13 @@ Validating webhook:
 
 This is a compatible change and should not affect the RisingWave's workflow.
 
-## `RisingWaveComponentScaleView` Webhooks
+## `RisingWaveScaleView` Webhooks
 
-![RisingWaveComponentScaleView Webhooks](./images/scale_view_webhooks.png)
+![RisingWaveScaleView Webhooks](./images/scale_view_webhooks.png)
 
-## `RisingWaveComponentScaleView` Controller
+## `RisingWaveScaleView` Controller
 
-![RisingWaveComponentScaleView Controller](./images/scale_view_controller_workflow.png)
+![RisingWaveScaleView Controller](./images/scale_view_controller_workflow.png)
 
 ## Use Cases
 
@@ -170,7 +170,7 @@ spec:
   # ....
 ---
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
-kind: RisingWaveComponentScaleView
+kind: RisingWaveScaleView
 metadata:
   name: multi-az-frontend-sv
 spec:
@@ -187,7 +187,7 @@ alternately.
 
 ```shell
 # Results in 2 replicas in az-1 and 2 replicas in az-2
-kubectl scale --replicas=4 risingwavecomponentscaleview/multi-az-frontend-sv
+kubectl scale --replicas=4 risingwavescaleview/multi-az-frontend-sv
 ```
 
 Case 2. Compactor auto scales onto spot instances
@@ -224,7 +224,7 @@ spec:
   # ....
 ---
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
-kind: RisingWaveComponentScaleView
+kind: RisingWaveScaleView
 metadata:
   name: spot-c-compactor-sv
 spec:
@@ -241,13 +241,13 @@ spec:
 
 ```shell
 # Results in 1 replicas in normal and 0 replicas in spot
-kubectl scale --replicas=1 risingwavecomponentscaleview/spot-c-compactor-sv
+kubectl scale --replicas=1 risingwavescaleview/spot-c-compactor-sv
 
 # Results in 2 replicas in normal and 0 replicas in spot
-kubectl scale --replicas=2 risingwavecomponentscaleview/spot-c-compactor-sv
+kubectl scale --replicas=2 risingwavescaleview/spot-c-compactor-sv
 
 # Results in 2 replicas in normal and 2 replicas in spot
-kubectl scale --replicas=4 risingwavecomponentscaleview/spot-c-compactor-sv
+kubectl scale --replicas=4 risingwavescaleview/spot-c-compactor-sv
 ```
 
 # **Drawbacks**
@@ -275,12 +275,12 @@ that either update is an atomic update on the whole object. So the webhook alway
 
 Q3: Why is there a lock on the RisingWave? What's the purpose?
 
-It is meant to disable the two-way synchronization between the `RisingWaveComponentScaleView` and `RisingWave` objects.
+It is meant to disable the two-way synchronization between the `RisingWaveScaleView` and `RisingWave` objects.
 Considering that we don't have such lock mechanism, the end users can update the replicas on `RisingWave` while the
-replicas of that group is monitored by the `RisingWaveComponentScaleView`. Then there will be two ways of sync:
+replicas of that group is monitored by the `RisingWaveScaleView`. Then there will be two ways of sync:
 
-- `RisingWaveComponentScaleView` -> `RisingWave`
-- `RisingWave` -> `RisingWaveComponentScaleView`
+- `RisingWaveScaleView` -> `RisingWave`
+- `RisingWave` -> `RisingWaveScaleView`
 
 Currently, I have no idea how to tell which way we should choose to sync. Even though we have figured out how, the
 result will be rather confusing when there are two simultaneous updating. Therefore, using a lock on field to let the

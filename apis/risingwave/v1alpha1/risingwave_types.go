@@ -100,7 +100,7 @@ type RisingWaveComponentGroup struct {
 
 	// Replicas of Pods in this group.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Minimum=0
 	Replicas int32 `json:"replicas,omitempty"`
 
 	// The component template describes how it would be deployed. It is an optional
@@ -136,7 +136,7 @@ type RisingWaveComputeGroup struct {
 
 	// Replicas of Pods in this group.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Minimum=0
 	Replicas int32 `json:"replicas,omitempty"`
 
 	// The component template describes how it would be deployed. It is an optional
@@ -402,18 +402,22 @@ type RisingWaveSecuritySpec struct {
 type RisingWaveGlobalReplicas struct {
 	// Replicas of meta component. Replicas specified here is in a default group (with empty name '').
 	// +optional
+	// +kubebuilder:validation:Minimum=0
 	Meta int32 `json:"meta,omitempty"`
 
 	// Replicas of frontend component. Replicas specified here is in a default group (with empty name '').
 	// +optional
+	// +kubebuilder:validation:Minimum=0
 	Frontend int32 `json:"frontend,omitempty"`
 
 	// Replicas of compute component. Replicas specified here is in a default group (with empty name '').
 	// +optional
+	// +kubebuilder:validation:Minimum=0
 	Compute int32 `json:"compute,omitempty"`
 
 	// Replicas of compactor component. Replicas specified here is in a default group (with empty name '').
 	// +optional
+	// +kubebuilder:validation:Minimum=0
 	Compactor int32 `json:"compactor,omitempty"`
 }
 

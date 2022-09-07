@@ -10,7 +10,7 @@
 
 # **Summary**
 
-The RFC aims to provide a new CR to support the scale subresource over groups of some user-specified component of
+The RFC aims to provide a new CR to support the [scale subresource](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#scale-subresource) over groups of some user-specified component of
 the RisingWave resource. With that, the users can benefit from the scale subresource and apply any tools that have such
 requirement. For example, the horizontal auto-scaling service (HPA/[KEDA](https://github.com/kedacore/keda)) will work
 after this is implemented.

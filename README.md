@@ -42,11 +42,7 @@ kubectl -n risingwave-operator-system get pods
 Now you can deploy a RisingWave instance with in-memory storage with the following command (be careful about the node arch):
 
 ```shell
-# It runs on the Linux/amd64 platform. If you want to run on Linux/arm64, you need to run the command below.
 kubectl apply -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/examples/risingwave-in-memory.yaml
-
-# Linux/arm64
-curl https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/examples/risingwave-in-memory.yaml | sed -e 's/ghcr.io\/risingwavelabs\/risingwave/public.ecr.aws\/x5u3w5h6\/risingwave-arm/g' | kubectl apply -f -
 ```
 
 Check the running status of RisingWave with the following command:

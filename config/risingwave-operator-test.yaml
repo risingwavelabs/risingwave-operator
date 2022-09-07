@@ -7026,7 +7026,7 @@ spec:
                             replicas:
                               description: Replicas of Pods in this group.
                               format: int32
-                              minimum: 1
+                              minimum: 0
                               type: integer
                             resources:
                               description: Resources of the RisingWave component.
@@ -7163,7 +7163,7 @@ spec:
                             replicas:
                               description: Replicas of Pods in this group.
                               format: int32
-                              minimum: 1
+                              minimum: 0
                               type: integer
                             resources:
                               description: Resources of the RisingWave component.
@@ -7346,7 +7346,7 @@ spec:
                             replicas:
                               description: Replicas of Pods in this group.
                               format: int32
-                              minimum: 1
+                              minimum: 0
                               type: integer
                             resources:
                               description: Resources of the RisingWave component.
@@ -7485,7 +7485,7 @@ spec:
                             replicas:
                               description: Replicas of Pods in this group.
                               format: int32
-                              minimum: 1
+                              minimum: 0
                               type: integer
                             resources:
                               description: Resources of the RisingWave component.
@@ -7650,21 +7650,25 @@ spec:
                         description: Replicas of compactor component. Replicas specified
                           here is in a default group (with empty name '').
                         format: int32
+                        minimum: 0
                         type: integer
                       compute:
                         description: Replicas of compute component. Replicas specified
                           here is in a default group (with empty name '').
                         format: int32
+                        minimum: 0
                         type: integer
                       frontend:
                         description: Replicas of frontend component. Replicas specified
                           here is in a default group (with empty name '').
                         format: int32
+                        minimum: 0
                         type: integer
                       meta:
                         description: Replicas of meta component. Replicas specified
                           here is in a default group (with empty name '').
                         format: int32
+                        minimum: 0
                         type: integer
                     type: object
                   resources:
@@ -8613,48 +8617,7 @@ subjects:
 ---
 apiVersion: v1
 data:
-  config.yaml: |-
-    arch: arm64
-    default:
-      image:
-        arm64:
-          repository: public.ecr.aws/x5u3w5h6/risingwave-arm
-          tag: latest
-        amd64:
-          repository: ghcr.io/risingwavelabs/risingwave
-          tag: latest
-      repository: ghcr.io/risingwavelabs/risingwave
-      tag: latest
-      pullPolicy: Always
-      requests:
-        cpu: 100m
-        memory: 100Mi
-      limits:
-        cpu: 1000m
-        memory: 2000Mi
-      replicas: 1
-    metaNode:
-      requests:
-        cpu: 200m
-        memory: 1000Mi
-      limits:
-        cpu: 1000m
-        memory: 2000Mi
-    computeNode:
-      requests:
-        cpu: 200m
-        memory: 2000Mi
-      limits:
-        cpu: 1000m
-        memory: 2000Mi
-    minIO:
-      image:
-        arm64:
-          repository: ghcr.io/risingwavelabs/risingwave-minio
-          tag: latest
-        amd64:
-          repository: ghcr.io/risingwavelabs/risingwave-minio
-          tag: latest
+  config.yaml: ""
 kind: ConfigMap
 metadata:
   name: risingwave-operator-controller-manager-config

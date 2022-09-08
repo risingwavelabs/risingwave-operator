@@ -281,7 +281,6 @@ Debugging in VSCode requires a launch configuration, you can use the following c
             "program": "${workspaceFolder}/cmd/manager/manager.go",
             "args": [
                 "-zap-time-encoding", "rfc3339",
-                "-config-file"
             ],
             "env": {
                 "NO_PROXY": "kubernetes.docker.internal,127.0.0.1,localhost"

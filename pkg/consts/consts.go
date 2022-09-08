@@ -32,7 +32,8 @@ const (
 // =================================================
 
 const (
-	AnnotationRestartAt = "risingwave/restart-at"
+	AnnotationRestartAt      = "risingwave/restart-at"
+	AnnotationPauseReconcile = "risingwave.risingwavelabs.com/pause-reconcile"
 )
 
 // =================================================

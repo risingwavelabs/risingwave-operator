@@ -303,7 +303,7 @@ Now start debugging by clicking the menu **[Run > Start Debugging]** or pressing
 
 Follow the instructions of [GoLand Debugging](https://www.jetbrains.com/help/go/debugging-code.html) to launch a debugging process like in VSCode.
 
-# Deploy your local operator into your local cluster
+# Deploy your custom operator into your local cluster
 
 Sometimes it may be necessary to observe your changes to the operator in the context of your local cluster. You can do so by following these steps: 
 

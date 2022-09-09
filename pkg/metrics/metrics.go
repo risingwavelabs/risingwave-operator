@@ -18,9 +18,15 @@ var (
 			Help: "Number of reconciles",
 		},
 	)
+	RequeueCount = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "requeue_total",
+			Help: "Number of requeue. Incremented if any kind of requeue is needed",
+		},
+	)
 )
 
 func init() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(Goobers, Reconciles)
+	metrics.Registry.MustRegister(Goobers, Reconciles, RequeueCount)
 }

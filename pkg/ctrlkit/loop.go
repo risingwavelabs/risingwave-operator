@@ -21,6 +21,8 @@ import (
 	"time"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+
+	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 )
 
 // NeedsRequeue reports if the result and error indicates a requeue.
@@ -40,11 +42,13 @@ func RequeueAfter(after time.Duration) (ctrl.Result, error) {
 
 // RequeueIfError returns an empty result with the err.
 func RequeueIfError(err error) (ctrl.Result, error) {
+	m.RequeueCount.Inc()
 	return ctrl.Result{}, err
 }
 
 // RequeueIfErrorAndWrap returns an empty result with a wrapped err.
 func RequeueIfErrorAndWrap(explain string, err error) (ctrl.Result, error) {
+	m.RequeueCount.Inc()
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("%s: %w", explain, err)
 	} else {

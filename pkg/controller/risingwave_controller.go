@@ -161,6 +161,7 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 		case apierrors.IsConflict(err):
 			logger.Info("Conflict detected while updating status, retry...")
 			// Requeue after 10ms to give the cache time to sync.
+			m.RequeueCount.Inc()
 			return ctrlkit.RequeueAfter(10 * time.Millisecond)
 		default:
 			return ctrlkit.RequeueIfErrorAndWrap("unable to update status", err)

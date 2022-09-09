@@ -24,9 +24,15 @@ var (
 			Help: "Number of requeue. Incremented if any kind of requeue is needed",
 		},
 	)
+	DidMutate = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "mutated_something",
+			Help: "Incremented if mutating webhooks mutates at least one attribute",
+		},
+	)
 )
 
 func init() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(Goobers, Reconciles, RequeueCount)
+	metrics.Registry.MustRegister(Goobers, Reconciles, RequeueCount, DidMutate)
 }

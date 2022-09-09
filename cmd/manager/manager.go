@@ -20,8 +20,6 @@ import (
 	"flag"
 	"os"
 
-	"github.com/prometheus/client_golang/prometheus"
-
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -31,10 +29,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	risingwavecontroller "github.com/risingwavelabs/risingwave-operator/pkg/controller"
+	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/webhook"
 )
 
@@ -59,19 +57,8 @@ var (
 	enableLeaderElection bool
 )
 
-var (
-	goobers = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "goobers_total",
-			Help: "Number of goobers processed",
-		},
-	)
-)
-
 func main() {
-	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(goobers)
-	goobers.Inc()
+	m.Goobers.Inc()
 
 	flag.StringVar(&configPath, "config-file", "/config/config.yaml", "The file path of the configuration file.")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")

@@ -12,9 +12,15 @@ var (
 			Help: "Number of goobers processed",
 		},
 	)
+	Reconciles = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "reconciles_total",
+			Help: "Number of reconciles",
+		},
+	)
 )
 
 func init() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(Goobers)
+	metrics.Registry.MustRegister(Goobers, Reconciles)
 }

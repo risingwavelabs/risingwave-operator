@@ -39,6 +39,7 @@ import (
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
 	"github.com/risingwavelabs/risingwave-operator/pkg/manager"
+	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/object"
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
@@ -114,6 +115,8 @@ func (c *RisingWaveController) managerOpts(risingwaveMgr *object.RisingWaveManag
 }
 
 func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+	m.Reconciles.Inc()
+
 	logger := log.FromContext(ctx)
 
 	// Get the risingwave object.

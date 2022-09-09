@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 )
 
 type RisingWaveValidatingWebhook struct {
@@ -208,11 +209,17 @@ func (h *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 
 // ValidateCreate implements admission.CustomValidator.
 func (h *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
-	return h.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWave))
+	m.ValidatingWebhookCalls.Inc()
+	err := h.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWave))
+	if err != nil {
+		m.ValidatingWebhookErr.Inc()
+	}
+	return err
 }
 
 // ValidateDelete implements admission.CustomValidator.
 func (h *RisingWaveValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
+	m.ValidatingWebhookCalls.Inc()
 	return nil
 }
 
@@ -249,12 +256,19 @@ func (h *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 
 // ValidateUpdate implements admission.CustomValidator.
 func (h *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error {
+	m.ValidatingWebhookCalls.Inc()
+
 	// Validate the new object first.
 	if err := h.ValidateCreate(ctx, newObj); err != nil {
+		m.ValidatingWebhookErr.Inc()
 		return err
 	}
 
-	return h.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWave), newObj.(*risingwavev1alpha1.RisingWave))
+	err := h.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWave), newObj.(*risingwavev1alpha1.RisingWave))
+	if err != nil {
+		m.ValidatingWebhookErr.Inc()
+	}
+	return err
 }
 
 func NewRisingWaveValidatingWebhook() webhook.CustomValidator {

@@ -26,13 +26,25 @@ var (
 	)
 	DidMutate = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: "mutated_something",
+			Name: "webhook_mutated_request_total",
 			Help: "Incremented if mutating webhooks mutates at least one attribute",
+		},
+	)
+	ValidatingWebhookCalls = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "webhook_validated_called_total",
+			Help: "Incremented if the validating webhook is called on Create/Delete/Update",
+		},
+	)
+	ValidatingWebhookErr = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "webhook_validated_err_total",
+			Help: "Incremented if the validating webhook ran into error Create/Delete/Update",
 		},
 	)
 )
 
 func init() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(Goobers, Reconciles, RequeueCount, DidMutate)
+	metrics.Registry.MustRegister(Goobers, Reconciles, RequeueCount, DidMutate, ValidatingWebhookCalls, ValidatingWebhookErr)
 }

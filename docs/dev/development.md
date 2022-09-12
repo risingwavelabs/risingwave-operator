@@ -281,7 +281,6 @@ Debugging in VSCode requires a launch configuration, you can use the following c
             "program": "${workspaceFolder}/cmd/manager/manager.go",
             "args": [
                 "-zap-time-encoding", "rfc3339",
-                "-config-file"
             ],
             "env": {
                 "NO_PROXY": "kubernetes.docker.internal,127.0.0.1,localhost"
@@ -303,3 +302,31 @@ Now start debugging by clicking the menu **[Run > Start Debugging]** or pressing
 #### Start debugging in other IDEs
 
 Follow the instructions of [GoLand Debugging](https://www.jetbrains.com/help/go/debugging-code.html) to launch a debugging process like in VSCode.
+
+# Deploy your custom operator into your local cluster
+
+Sometimes it may be necessary to observe your changes to the operator in the context of your local cluster. You can do so by following these steps: 
+
+```bash 
+make docker-build # creates a local image with your changes
+kubectl delete deployment risingwave-operator-controller-manager -n risingwave-operator-system # delete the old operator 
+```
+
+Go into `config/risingwave-operator-test.yaml`. 
+Change the `image` to your local image (e.g. `ghcr.io/risingwavelabs/risingwave-operator:latest`).
+Change the `imagePullPolicy` to `Always`. 
+Apply your local operator via. 
+
+```bash 
+kubectl apply config/risingwave-operator-test.yaml 
+```
+
+Be advised: It may be necessary to load your local images into your cluster if you are using `kind`. 
+You can do so by using the command `kind load docker-image`
+
+
+
+
+
+
+

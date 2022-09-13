@@ -28,7 +28,7 @@ If you don't have a Go development environment, please follow the instructions i
 
 Confirm that your `GOPATH` and `GOBIN` environment variables are correctly set as detailed in [How to Write Go Code](https://go.dev/doc/code) before proceeding.
 
-Currently, building the RisingWave operator requires Go 1.18 or later.
+Currently, building the RisingWave operator requires Go 1.19 or later.
 
 #### Docker
 

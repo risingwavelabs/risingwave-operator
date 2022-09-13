@@ -105,12 +105,12 @@ linters-settings:
       - unusedwrite
 
   staticcheck:
-    go: "1.18"
+    go: "1.19"
     # https://staticcheck.io/docs/options#checks
     checks: [ "all" ]
 
   stylecheck:
-    go: "1.18"
+    go: "1.19"
     # https://staticcheck.io/docs/options#checks
     checks: [ "all", "-ST1000", "-ST1003", "-ST1016", "-ST1020", "-ST1021", "-ST1022" ]
     # https://staticcheck.io/docs/options#dot_import_whitelist

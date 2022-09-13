@@ -78,6 +78,8 @@ rules:
   - delete
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - risingwave.risingwavelabs.com

@@ -27,18 +27,15 @@ type RisingWaveScaleViewValidatingWebhook struct {
 }
 
 func (w *RisingWaveScaleViewValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
-	// TODO implement me
-	panic("implement me")
+	return nil
 }
 
 func (w *RisingWaveScaleViewValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) error {
-	// TODO implement me
-	panic("implement me")
+	return nil
 }
 
 func (w *RisingWaveScaleViewValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
-	// TODO implement me
-	panic("implement me")
+	return nil
 }
 
 func NewRisingWaveScaleViewValidatingWebhook() webhook.CustomValidator {

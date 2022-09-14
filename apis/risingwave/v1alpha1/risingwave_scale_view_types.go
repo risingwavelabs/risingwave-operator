@@ -43,7 +43,7 @@ type RisingWaveScaleViewSpec struct {
 	Replicas      int32                                `json:"replicas,omitempty"`
 	Strict        *bool                                `json:"strict,omitempty"`
 	LabelSelector string                               `json:"labelSelector,omitempty"`
-	scalePolicy   []RisingWaveScaleViewSpecScalePolicy `json:"scalePolicy,omitempty"`
+	ScalePolicy   []RisingWaveScaleViewSpecScalePolicy `json:"scalePolicy,omitempty"`
 }
 
 type RisingWaveScaleViewStatusTargetRef struct {

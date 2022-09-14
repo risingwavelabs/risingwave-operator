@@ -5,7 +5,7 @@
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
 VERSION ?= 0.1.1
 
-# Get go version number. e.g. 1.18
+# Get go version number. e.g. 1.19
 GO_VERSION := $(shell echo `go version | sed 's|.*\(1\.[0-9][0-9]\).*$$|\1|'`)
 
 # CHANNELS define the bundle channels used in the bundle.

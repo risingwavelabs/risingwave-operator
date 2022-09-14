@@ -1,4 +1,3 @@
-#
 # Copyright 2022 Singularity Data
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,8 +61,6 @@ function prepare_cluster() {
   *) echo "ERROR: unsupported platform $OS" && exit 1 ;;
   esac
 
-  # FIXME: currently the nightly tags aren't continuous.
-  NIGHTLY_IMAGE_TAG="nightly-20220727"
   echo "Using a nightly tag $NIGHTLY_IMAGE_TAG for RisingWave images..."
 
   echo "Pulling images..."

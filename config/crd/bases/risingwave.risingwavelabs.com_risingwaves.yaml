@@ -103,7 +103,7 @@ spec:
                             replicas:
                               description: Replicas of Pods in this group.
                               format: int32
-                              minimum: 1
+                              minimum: 0
                               type: integer
                             resources:
                               description: Resources of the RisingWave component.
@@ -240,7 +240,7 @@ spec:
                             replicas:
                               description: Replicas of Pods in this group.
                               format: int32
-                              minimum: 1
+                              minimum: 0
                               type: integer
                             resources:
                               description: Resources of the RisingWave component.
@@ -423,7 +423,7 @@ spec:
                             replicas:
                               description: Replicas of Pods in this group.
                               format: int32
-                              minimum: 1
+                              minimum: 0
                               type: integer
                             resources:
                               description: Resources of the RisingWave component.
@@ -562,7 +562,7 @@ spec:
                             replicas:
                               description: Replicas of Pods in this group.
                               format: int32
-                              minimum: 1
+                              minimum: 0
                               type: integer
                             resources:
                               description: Resources of the RisingWave component.
@@ -727,21 +727,25 @@ spec:
                         description: Replicas of compactor component. Replicas specified
                           here is in a default group (with empty name '').
                         format: int32
+                        minimum: 0
                         type: integer
                       compute:
                         description: Replicas of compute component. Replicas specified
                           here is in a default group (with empty name '').
                         format: int32
+                        minimum: 0
                         type: integer
                       frontend:
                         description: Replicas of frontend component. Replicas specified
                           here is in a default group (with empty name '').
                         format: int32
+                        minimum: 0
                         type: integer
                       meta:
                         description: Replicas of meta component. Replicas specified
                           here is in a default group (with empty name '').
                         format: int32
+                        minimum: 0
                         type: integer
                     type: object
                   resources:

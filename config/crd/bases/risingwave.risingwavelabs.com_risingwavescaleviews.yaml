@@ -37,8 +37,58 @@ spec:
           metadata:
             type: object
           spec:
+            properties:
+              labelSelector:
+                type: string
+              replicas:
+                format: int32
+                type: integer
+              scalePolicy:
+                items:
+                  properties:
+                    constraints:
+                      properties:
+                        max:
+                          format: int32
+                          type: integer
+                        min:
+                          format: int32
+                          type: integer
+                      type: object
+                    group:
+                      type: string
+                    priority:
+                      format: int32
+                      type: integer
+                    replicas:
+                      format: int32
+                      type: integer
+                  type: object
+                type: array
+              strict:
+                type: boolean
+              targetRef:
+                properties:
+                  component:
+                    type: string
+                  name:
+                    type: string
+                type: object
             type: object
           status:
+            properties:
+              replicas:
+                format: int64
+                type: integer
+              targetRef:
+                properties:
+                  uid:
+                    description: UID is a type that holds unique ID values, including
+                      UUIDs.  Because we don't ONLY use UUIDs, this is an alias to
+                      string.  Being a type captures intent and helps make sure that
+                      UIDs and names do not get conflated.
+                    type: string
+                type: object
             type: object
         type: object
     served: true

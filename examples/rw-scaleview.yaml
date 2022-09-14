@@ -1,0 +1,34 @@
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWaveScaleView
+metadata:
+  name: hello-frontend-scale-view
+spec:
+  targetRef:
+    name: hello             # Name of the RisingWave object, in the same namespace.
+    component: frontend     # One of meta, frontend, compute, and compactor.
+  replicas: 10              # Target replicas. It will be synced from the RisingWave object when the controller grabs the lock.
+  # Strict verification mode on replicas:
+  #   1. If enabled, the validating webhook will reject any invalid changes on .spec.replicas (e.g., exceeding the min/max range)
+  #   2. If disabled, the mutating webhook will adjust the .spec.replicas to be enclosed by the range.
+  # Serialized label selector. Would be set by the webhook.
+  strict: false
+  labelSelector: "risingwave/name=hello,risingwave/component=frontend,risingwave/group in (enduring,spot)"
+  scalePolicy: # An array of groups and the policies for scale, 
+  # optional and empty means the default group with the default policy.
+  # The order here indicates the priorities.
+
+  - group: 'enduring'       # Target group name
+    # 0-10, optional. The groups will be sorted by the priority and the current replicas. 
+    # The higher it is, the more replicas of the target group will be considered kept, i.e. scale out first, scale in last.
+    priority: 1
+    replicas: 2             # Controlled field, maintained by the mutating webhook. Current desired replicas.
+    constraints:
+      min: 1              # >= 0, optional, default is 0
+      max: 2              # >= minimum, optional, default is 1000 (indicates infinite because 1000 Pods are many enough to be considered as infinite).
+  - group: 'spot'
+    priority: 0
+    replicas: 3
+status:
+  targetRef: # It has value only if the scale view has grabbed the lock on the target object.
+    uid:                    # UID of the target object.           
+  replicas: 10             # Current replicas of target groups. Maintained by the controller.

@@ -18,16 +18,36 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
-type RisingWaveScaleViewStatusSpecTargetRef struct {
+type RisingWaveScaleViewSpecTargetRef struct {
+	Name      string `json:"name,omitempty"`
+	Component string `json:"component,omitempty"`
+}
+
+type RisingWaveScaleViewSpecScalePolicyConstraints struct {
+	Min int32 `json:"min,omitempty"`
+	Max int32 `json:"max,omitempty"`
+}
+
+type RisingWaveScaleViewSpecScalePolicy struct {
+	Group       string                                        `json:"group,omitempty"`
+	Priority    int32                                         `json:"priority,omitempty"`
+	Replicas    int32                                         `json:"replicas,omitempty"`
+	Constraints RisingWaveScaleViewSpecScalePolicyConstraints `json:"constraints,omitempty"`
 }
 
 type RisingWaveScaleViewSpec struct {
-	TargetRef RisingWaveScaleViewStatusSpecTargetRef `json:"targetRef,omitempty"`
+	TargetRef     RisingWaveScaleViewSpecTargetRef     `json:"targetRef,omitempty"`
+	Replicas      int32                                `json:"replicas,omitempty"`
+	Strict        *bool                                `json:"strict,omitempty"`
+	LabelSelector string                               `json:"labelSelector,omitempty"`
+	scalePolicy   []RisingWaveScaleViewSpecScalePolicy `json:"scalePolicy,omitempty"`
 }
 
 type RisingWaveScaleViewStatusTargetRef struct {
+	UID types.UID `json:"uid,omitempty"`
 }
 
 type RisingWaveScaleViewStatus struct {

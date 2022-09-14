@@ -42,5 +42,13 @@ func SetupWebhooksWithManager(mgr ctrl.Manager) error {
 		return fmt.Errorf("unable to setup webhooks for risingwave: %w", err)
 	}
 
+	if err := ctrl.NewWebhookManagedBy(mgr).
+		For(&risingwavev1alpha1.RisingWaveScaleView{}).
+		WithDefaulter(NewRisingWaveMutatingWebhook()).
+		WithValidator(NewRisingWaveValidatingWebhook()).
+		Complete(); err != nil {
+		return fmt.Errorf("unable to setup webhooks for risingwave scale view: %w", err)
+	}
+
 	return nil
 }

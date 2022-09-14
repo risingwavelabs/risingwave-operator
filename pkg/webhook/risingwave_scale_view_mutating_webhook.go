@@ -33,8 +33,8 @@ import (
 type RisingWaveScaleViewMutatingWebhook struct {
 }
 
-func (w *RisingWaveScaleViewMutatingWebhook) validateTheConstraints(obj *risingwavev1alpha1.RisingWaveScaleView) error {
-	min, max := int32(0), int32(0)
+func GetScaleViewMinMaxConstraints(obj *risingwavev1alpha1.RisingWaveScaleView) (min, max int32) {
+	min, max = int32(0), int32(0)
 	for _, scalePolicy := range obj.Spec.ScalePolicy {
 		min += scalePolicy.Constraints.Min
 		if scalePolicy.Constraints.Max == 0 {
@@ -43,6 +43,12 @@ func (w *RisingWaveScaleViewMutatingWebhook) validateTheConstraints(obj *risingw
 			max += scalePolicy.Constraints.Max
 		}
 	}
+
+	return min, max
+}
+
+func (w *RisingWaveScaleViewMutatingWebhook) validateTheConstraints(obj *risingwavev1alpha1.RisingWaveScaleView) error {
+	min, max := GetScaleViewMinMaxConstraints(obj)
 
 	if obj.Spec.Replicas < min || obj.Spec.Replicas > max {
 		return errors.New("replicas out of range")

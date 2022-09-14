@@ -19,19 +19,68 @@ package webhook
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/api/equality"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+
+	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 type RisingWaveScaleViewValidatingWebhook struct {
 }
 
+func (w *RisingWaveScaleViewValidatingWebhook) validateCreate(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
+	gvk := obj.GroupVersionKind()
+	fieldErrs := field.ErrorList{}
+
+	min, max := GetScaleViewMinMaxConstraints(obj)
+
+	if obj.Spec.Replicas < min || obj.Spec.Replicas > max {
+		fieldErrs = append(fieldErrs, field.Invalid(
+			field.NewPath("spec", "replicas"),
+			obj.Spec.Replicas,
+			"replicas out of range",
+		))
+	}
+
+	if len(fieldErrs) > 0 {
+		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, fieldErrs)
+	}
+
+	return nil
+}
+
 func (w *RisingWaveScaleViewValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
+	return w.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWaveScaleView))
+}
+
+func (w *RisingWaveScaleViewValidatingWebhook) validateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWaveScaleView) error {
+	gvk := oldObj.GroupVersionKind()
+	fieldErrs := field.ErrorList{}
+
+	if !equality.Semantic.DeepEqual(oldObj.Spec.TargetRef, newObj.Spec.TargetRef) {
+		fieldErrs = append(fieldErrs, field.Forbidden(
+			field.NewPath("spec", "targetRef"),
+			"targetRefs should not be different",
+		))
+	}
+
+	if len(fieldErrs) > 0 {
+		return apierrors.NewInvalid(gvk.GroupKind(), oldObj.Name, fieldErrs)
+	}
+
 	return nil
 }
 
 func (w *RisingWaveScaleViewValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) error {
-	return nil
+	// Validate the new object first.
+	if err := w.ValidateCreate(ctx, newObj); err != nil {
+		return err
+	}
+
+	return w.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWaveScaleView), newObj.(*risingwavev1alpha1.RisingWaveScaleView))
 }
 
 func (w *RisingWaveScaleViewValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {

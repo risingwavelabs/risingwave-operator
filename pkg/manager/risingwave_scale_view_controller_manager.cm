@@ -1,0 +1,29 @@
+bind risingwave.risingwavelabs.com/v1alpha1 github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1
+
+alias RisingWave risingwave.risingwavelabs.com/v1alpha1/RisingWave
+alias RisingWaveScaleView risingwave.risingwavelabs.com/v1alpha1/RisingWaveScaleView
+
+// RisingWaveScaleViewControllerManager encapsulates the states and actions used by RisingWaveScaleViewController.
+decl RisingWaveScaleViewControllerManager for RisingWaveScaleView {
+    // ===================================================
+    // States and actions for RisingWaveScaleView components.
+    // ===================================================
+
+    state {
+        // Target RisingWave object.
+        targetObj RisingWave {
+            name=${target.Spec.TargetRef.Name}
+        }
+    }
+
+    action {
+        // Grab the lock for the current RisingWaveScaleView.
+        GrabScaleViewLock(targetObj)
+
+        // Sync the replicas of targeting groups to RisingWave's spec.
+        SyncGroupReplicasToRisingWave(targetObj)
+
+        // Sync the replicas from RisingWave's spec.
+        SyncGroupReplicasStatusFromRisingWave(targetObj)
+    }
+}

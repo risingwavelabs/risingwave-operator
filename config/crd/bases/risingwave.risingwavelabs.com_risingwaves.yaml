@@ -1424,6 +1424,42 @@ spec:
                   the subresources.
                 format: int64
                 type: integer
+              scaleViews:
+                description: Scale view locks.
+                items:
+                  description: RisingWaveScaleViewLock is a lock for RisingWaveScaleViews.
+                  properties:
+                    component:
+                      description: Component of the lock.
+                      type: string
+                    generation:
+                      description: Generation of the lock.
+                      format: int64
+                      type: integer
+                    groupLocks:
+                      description: Group locks.
+                      items:
+                        properties:
+                          name:
+                            description: Group name.
+                            type: string
+                          replicas:
+                            description: Locked replica value.
+                            format: int32
+                            type: integer
+                        type: object
+                      type: array
+                      x-kubernetes-list-map-keys:
+                      - map
+                      x-kubernetes-list-type: map
+                    name:
+                      description: Name of the owned RisingWaveScaleView object.
+                      type: string
+                    uid:
+                      description: UID of the owned RisingWaveScaleView object.
+                      type: string
+                  type: object
+                type: array
               storages:
                 description: Status of the external storages.
                 properties:

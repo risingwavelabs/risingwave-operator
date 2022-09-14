@@ -23,12 +23,14 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 type RisingWaveScaleViewValidatingWebhook struct {
+	client client.Client
 }
 
 func (w *RisingWaveScaleViewValidatingWebhook) validateCreate(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
@@ -67,6 +69,13 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateUpdate(ctx context.Contex
 		))
 	}
 
+	if !newObj.Status.Locked && newObj.Spec.Replicas != 0 {
+		fieldErrs = append(fieldErrs, field.Forbidden(
+			field.NewPath("spec", "replicas"),
+			"update is forbidden before lock's grabbed",
+		))
+	}
+
 	if len(fieldErrs) > 0 {
 		return apierrors.NewInvalid(gvk.GroupKind(), oldObj.Name, fieldErrs)
 	}
@@ -87,6 +96,8 @@ func (w *RisingWaveScaleViewValidatingWebhook) ValidateDelete(ctx context.Contex
 	return nil
 }
 
-func NewRisingWaveScaleViewValidatingWebhook() webhook.CustomValidator {
-	return &RisingWaveScaleViewValidatingWebhook{}
+func NewRisingWaveScaleViewValidatingWebhook(client client.Client) webhook.CustomValidator {
+	return &RisingWaveScaleViewValidatingWebhook{
+		client: client,
+	}
 }

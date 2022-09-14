@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -571,6 +572,34 @@ type RisingWaveStoragesStatus struct {
 	Object RisingWaveObjectStorageStatus `json:"object"`
 }
 
+type RisingWaveScaleViewLockGroupLock struct {
+	// Group name.
+	Name string `json:"name,omitempty"`
+
+	// Locked replica value.
+	Replicas int32 `json:"replicas,omitempty"`
+}
+
+// RisingWaveScaleViewLock is a lock for RisingWaveScaleViews.
+type RisingWaveScaleViewLock struct {
+	// Name of the owned RisingWaveScaleView object.
+	Name string `json:"name,omitempty"`
+
+	// UID of the owned RisingWaveScaleView object.
+	UID types.UID `json:"uid,omitempty"`
+
+	// Component of the lock.
+	Component string `json:"component,omitempty"`
+
+	// Generation of the lock.
+	Generation int64 `json:"generation,omitempty"`
+
+	// Group locks.
+	// +listType=map
+	// +listMapKey=name
+	GroupLocks []RisingWaveScaleViewLockGroupLock `json:"groupLocks,omitempty"`
+}
+
 // RisingWaveStatus is the status of RisingWave.
 type RisingWaveStatus struct {
 	// Observed generation by controller. It will be updated
@@ -589,6 +618,11 @@ type RisingWaveStatus struct {
 
 	// Status of the external storages.
 	Storages RisingWaveStoragesStatus `json:"storages,omitempty"`
+
+	// Scale view locks.
+	// +listType=map
+	// +listMapKey=name
+	ScaleViews []RisingWaveScaleViewLock `json:"scaleViews,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -598,6 +632,7 @@ type RisingWaveStatus struct {
 // +kubebuilder:printcolumn:name="STORAGE(META)",type=string,JSONPath=`.status.storages.meta.type`
 // +kubebuilder:printcolumn:name="STORAGE(OBJECT)",type=string,JSONPath=`.status.storages.object.type`
 // +kubebuilder:printcolumn:name="AGE",type=date,JSONPath=`.metadata.creationTimestamp`
+
 type RisingWave struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -1,0 +1,23 @@
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  namespace: sv-example
+spec:
+  global:
+    image: ghcr.io/risingwavelabs/risingwave:latest
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+      compactor: 1
+---
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWaveScaleView
+metadata:
+  name: sv-example-frontend
+spec:
+  targetRef:
+    name: sv-example
+    component: frontend
+  scalePolicy:
+  - group: ''

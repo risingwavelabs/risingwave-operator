@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"math"
 	"strings"
 
 	"github.com/samber/lo"
@@ -37,11 +38,14 @@ func GetScaleViewMinMaxConstraints(obj *risingwavev1alpha1.RisingWaveScaleView) 
 	min, max = int32(0), int32(0)
 	for _, scalePolicy := range obj.Spec.ScalePolicy {
 		min += scalePolicy.Constraints.Min
+	}
+
+	for _, scalePolicy := range obj.Spec.ScalePolicy {
 		if scalePolicy.Constraints.Max == 0 {
-			max = 100000
-		} else {
-			max += scalePolicy.Constraints.Max
+			max = math.MaxInt32
+			break
 		}
+		max += scalePolicy.Constraints.Max
 	}
 
 	return min, max
@@ -99,6 +103,13 @@ func (w *RisingWaveScaleViewMutatingWebhook) setDefault(ctx context.Context, obj
 
 	// Set the label selector.
 	w.setLabelSelector(obj)
+
+	// Set the default group policy.
+	if len(obj.Spec.ScalePolicy) == 0 {
+		obj.Spec.ScalePolicy = []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
+			{Group: ""},
+		}
+	}
 
 	// Split the total replicas.
 	if err := w.splitReplicas(obj); err != nil {

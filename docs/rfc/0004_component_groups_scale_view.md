@@ -81,7 +81,6 @@ spec:
   labelSelector: "risingwave/name=hello,risingwave/component=frontend,risingwave/group in (enduring,spot)"
   scalePolicy: # An array of groups and the policies for scale, 
   # optional and empty means the default group with the default policy.
-  # The order here indicates the priorities.
 
   - group: 'enduring'       # Target group name
     # 0-10, optional. The groups will be sorted by the priority and the current replicas. 

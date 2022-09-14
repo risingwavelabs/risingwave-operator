@@ -42,7 +42,7 @@ kubectl -n risingwave-operator-system get pods
 Now you can deploy a RisingWave instance with in-memory storage with the following command (be careful about the node arch):
 
 ```shell
-kubectl apply -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/examples/risingwave-in-memory.yaml
+kubectl apply -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/examples/risingwave/risingwave-in-memory.yaml
 ```
 
 Check the running status of RisingWave with the following command:
@@ -158,11 +158,11 @@ spec:
 #...
 ```
 
-Check the [examples/risingwave-etcd-minio.yaml](./examples/risingwave-etcd-minio.yaml) for how to provision a simple RisingWave with an `etcd` instance as the metadata storage.
+Check the [examples/risingwave/risingwave-etcd-minio.yaml](examples/risingwave/risingwave-etcd-minio.yaml) for how to provision a simple RisingWave with an `etcd` instance as the metadata storage.
 
 ### MinIO
 
-We support using MinIO as the object storage. Check the [examples/risingwave-etcd-minio.yaml](./examples/risingwave-etcd-minio.yaml) for details. The YAML structure is like the following:
+We support using MinIO as the object storage. Check the [examples/risingwave/risingwave-etcd-minio.yaml](examples/risingwave/risingwave-etcd-minio.yaml) for details. The YAML structure is like the following:
 
 ```yamlex
 #...
@@ -178,7 +178,7 @@ spec:
 
 ### S3
 
-We support using AWS S3 as the object storage. Follow the steps below and check the [examples/risingwave-etcd-s3.yaml](./examples/risingwave-etcd-s3.yaml) for details:
+We support using AWS S3 as the object storage. Follow the steps below and check the [examples/risingwave/risingwave-etcd-s3.yaml](examples/risingwave/risingwave-etcd-s3.yaml) for details:
 
 First, you need to create a `Secret` with the name `s3-credentials`:
 

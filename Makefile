@@ -93,6 +93,10 @@ generate-manager: ctrlkit-gen goimports-reviser ## Generate codes of controller 
 	@mv pkg/manager/risingwave_controller_manager.go pkg/manager/risingwave_controller_manager_generated.go
 	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_controller_manager_generated.go -local "github.com/risingwavelabs/risingwave-operator"
 
+	@$(CTRLKIT-GEN) -o pkg/manager/ -p "github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit" -b hack/boilerplate.go.txt pkg/manager/risingwave_scale_view_controller_manager.cm
+	@mv pkg/manager/risingwave_scale_view_controller_manager.go pkg/manager/risingwave_scale_view_controller_manager_generated.go
+	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_scale_view_controller_manager_generated.go -local "github.com/risingwavelabs/risingwave-operator"
+
 fmt: ## Run go fmt against code.
 	@go fmt ./...
 

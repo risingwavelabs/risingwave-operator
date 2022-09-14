@@ -18,6 +18,11 @@ kubeconfig
 keda
 tolerations
 
+# Scale subresource
+specpath
+statuspath
+selectorpath
+
 # Builtin APIs
 pod*
 po

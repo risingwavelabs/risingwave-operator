@@ -20,10 +20,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type RisingWaveScaleViewStatusSpecTargetRef struct {
+}
+
 type RisingWaveScaleViewSpec struct {
+	TargetRef RisingWaveScaleViewStatusSpecTargetRef `json:"targetRef,omitempty"`
+}
+
+type RisingWaveScaleViewStatusTargetRef struct {
 }
 
 type RisingWaveScaleViewStatus struct {
+	TargetRef RisingWaveScaleViewStatusTargetRef `json:"targetRef,omitempty"`
+	Replicas  int64                              `json:"replicas,omitempty"`
 }
 
 // +kubebuilder:object:root=true

@@ -62,6 +62,8 @@ rw
 risingwavepodtemplate
 risingwavepodtemplates
 rwpt
+scaleview
+scaleviews
 risingwavescaleview
 risingwavescaleviews
 rwsv

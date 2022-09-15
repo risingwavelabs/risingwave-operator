@@ -24,14 +24,20 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/scaleview"
 )
 
 type RisingWaveScaleViewMutatingWebhook struct {
+	client client.Client
 }
 
 func GetScaleViewMinMaxConstraints(obj *risingwavev1alpha1.RisingWaveScaleView) (min, max int32) {
@@ -82,7 +88,7 @@ func (w *RisingWaveScaleViewMutatingWebhook) setLabelSelector(obj *risingwavev1a
 	obj.Spec.LabelSelector = labelBuilder.String()
 }
 
-func (w *RisingWaveScaleViewMutatingWebhook) splitReplicas(obj *risingwavev1alpha1.RisingWaveScaleView) error {
+func (w *RisingWaveScaleViewMutatingWebhook) updateGroupReplicas(obj *risingwavev1alpha1.RisingWaveScaleView) error {
 	if err := w.validateTheConstraints(obj); err != nil {
 		if !ptrValueNotZero(obj.Spec.Strict) {
 			return nil
@@ -95,24 +101,77 @@ func (w *RisingWaveScaleViewMutatingWebhook) splitReplicas(obj *risingwavev1alph
 	return nil
 }
 
+func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
+	var targetObj risingwavev1alpha1.RisingWave
+	if err := w.client.Get(ctx, types.NamespacedName{
+		Namespace: obj.Namespace,
+		Name:      obj.Spec.TargetRef.Name,
+	}, &targetObj); err != nil {
+		if apierrors.IsNotFound(err) {
+			gvk := obj.GroupVersionKind()
+			return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, field.ErrorList{
+				field.Invalid(field.NewPath("spec", "targetRef"), obj.Spec.TargetRef, "target risingwave not found"),
+			})
+		}
+	}
+
+	obj.Spec.TargetRef.UID = targetObj.UID
+
+	fieldErrs := field.ErrorList{}
+	replicas := int32(0)
+	mgr := scaleview.NewComponentGroupReplicasManager(&targetObj, obj.Spec.TargetRef.Component)
+	for i := range obj.Spec.ScalePolicy {
+		scalePolicy := &obj.Spec.ScalePolicy[i]
+		if r, ok := mgr.ReadReplicas(scalePolicy.Group); ok {
+			scalePolicy.Replicas = r
+			replicas += r
+		} else {
+			fieldErrs = append(fieldErrs, field.Invalid(
+				field.NewPath("spec", "scalePolicy").Index(i),
+				*scalePolicy,
+				"target group not found"),
+			)
+		}
+	}
+	obj.Spec.Replicas = replicas
+
+	if len(fieldErrs) > 0 {
+		gvk := obj.GroupVersionKind()
+		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, field.ErrorList{
+			field.Invalid(field.NewPath("spec", "targetRef"), obj.Spec.TargetRef, "target risingwave not found"),
+		})
+	}
+
+	return nil
+}
+
+// Set default values.
+// - Enforce strict mode if not specified.
+// - Set the target group to "" if the .spec.scalePolicy is empty
+// - Update the .spec.labelSelector
+// - Read or update the .spec.replicas and group replicas under .spec.scalePolicy
+//   - if it's a new created scale policy (with empty .spec.targetRef.uid), get the target RisingWave and read and copy the replicas.
+//   - otherwise, update the group replicas according to the current .spec.replicas
 func (w *RisingWaveScaleViewMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
-	// Enforce the strict mode if not specified.
 	if obj.Spec.Strict == nil {
 		obj.Spec.Strict = pointer.Bool(true)
 	}
 
-	// Set the label selector.
-	w.setLabelSelector(obj)
-
-	// Set the default group policy.
 	if len(obj.Spec.ScalePolicy) == 0 {
 		obj.Spec.ScalePolicy = []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 			{Group: ""},
 		}
 	}
 
-	// Split the total replicas.
-	if err := w.splitReplicas(obj); err != nil {
+	w.setLabelSelector(obj)
+
+	var err error
+	if obj.Spec.TargetRef.UID == "" {
+		err = w.readGroupReplicasFromRisingWave(ctx, obj)
+	} else {
+		err = w.updateGroupReplicas(obj)
+	}
+	if err != nil {
 		return err
 	}
 
@@ -123,6 +182,8 @@ func (w *RisingWaveScaleViewMutatingWebhook) Default(ctx context.Context, obj ru
 	return w.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWaveScaleView))
 }
 
-func NewRisingWaveScaleViewMutatingWebhook() webhook.CustomDefaulter {
-	return &RisingWaveScaleViewMutatingWebhook{}
+func NewRisingWaveScaleViewMutatingWebhook(client client.Client) webhook.CustomDefaulter {
+	return &RisingWaveScaleViewMutatingWebhook{
+		client: client,
+	}
 }

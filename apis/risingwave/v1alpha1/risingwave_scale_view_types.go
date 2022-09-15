@@ -21,14 +21,17 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// RisingWaveScaleViewSpecTargetRef is the reference of the target RisingWave.
-type RisingWaveScaleViewSpecTargetRef struct {
+// RisingWaveScaleViewTargetRef is the reference of the target RisingWave.
+type RisingWaveScaleViewTargetRef struct {
 	// Name of the RisingWave object.
 	Name string `json:"name,omitempty"`
 
 	// Component name. Must be one of meta, frontend, compute, and compactor.
 	// +kubebuilder:validation:Enum=meta;frontend;compute;compactor
 	Component string `json:"component,omitempty"`
+
+	// UID of the target RisingWave object. Should be set by the mutating webhook.
+	UID types.UID `json:"uid,omitempty"`
 }
 
 // RisingWaveScaleViewSpecScalePolicyConstraints is the constraints of replicas in scale policy.
@@ -43,7 +46,7 @@ type RisingWaveScaleViewSpecScalePolicyConstraints struct {
 // RisingWaveScaleViewSpecScalePolicy is the scale policy of a group.
 type RisingWaveScaleViewSpecScalePolicy struct {
 	// Group name.
-	Group string `json:"group,omitempty"`
+	Group string `json:"group"`
 
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=10
@@ -64,7 +67,7 @@ type RisingWaveScaleViewSpecScalePolicy struct {
 // RisingWaveScaleViewSpec is the spec of RisingWaveScaleView.
 type RisingWaveScaleViewSpec struct {
 	// Reference of the target RisingWave.
-	TargetRef RisingWaveScaleViewSpecTargetRef `json:"targetRef,omitempty"`
+	TargetRef RisingWaveScaleViewTargetRef `json:"targetRef,omitempty"`
 
 	// Desired replicas.
 	Replicas int32 `json:"replicas,omitempty"`
@@ -80,14 +83,8 @@ type RisingWaveScaleViewSpec struct {
 
 	// An array of groups and the policies for scale, optional and empty means the default group with the default policy.
 	// +listType=map
-	// +listMapKey=name
+	// +listMapKey=group
 	ScalePolicy []RisingWaveScaleViewSpecScalePolicy `json:"scalePolicy,omitempty"`
-}
-
-// RisingWaveScaleViewStatusTargetRef is the target reference in status.
-type RisingWaveScaleViewStatusTargetRef struct {
-	// UID of the target RisingWave object.
-	UID types.UID `json:"uid,omitempty"`
 }
 
 // RisingWaveScaleViewStatus is the status of RisingWaveScaleView.
@@ -97,9 +94,6 @@ type RisingWaveScaleViewStatus struct {
 
 	// Lock status.
 	Locked bool `json:"locked,omitempty"`
-
-	// Reference of target RisingWave object.
-	TargetRef *RisingWaveScaleViewStatusTargetRef `json:"targetRef,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -107,7 +101,7 @@ type RisingWaveScaleViewStatus struct {
 // +kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.status.selector
 // +kubebuilder:printcolumn:name="READY",type=string,JSONPath=`.status.replicas`
 // +kubebuilder:printcolumn:name="REPLICAS",type=string,JSONPath=`.spec.replicas`
-// +kubebuilder:printcolumn:name="LOCKED",type=bool,JSONPath=`.status.locked`
+// +kubebuilder:printcolumn:name="LOCKED",type=boolean,JSONPath=`.status.locked`
 // +kubebuilder:resource:shortName=rwsv,categories=all;streaming
 
 type RisingWaveScaleView struct {

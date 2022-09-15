@@ -1,8 +1,13 @@
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
-  namespace: sv-example
+  name: sv-example
 spec:
+  storages:
+    meta:
+      memory: true
+    object:
+      memory: true
   global:
     image: ghcr.io/risingwavelabs/risingwave:latest
     replicas:

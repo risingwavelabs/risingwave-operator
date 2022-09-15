@@ -29,7 +29,7 @@ spec:
       type: string
     - jsonPath: .status.locked
       name: LOCKED
-      type: bool
+      type: boolean
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -93,8 +93,13 @@ spec:
                       format: int32
                       minimum: 0
                       type: integer
+                  required:
+                  - group
                   type: object
                 type: array
+                x-kubernetes-list-map-keys:
+                - group
+                x-kubernetes-list-type: map
               strict:
                 description: 'Strict verification mode on replicas: 1. If enabled,
                   the validating webhook will reject any invalid changes on .spec.replicas
@@ -117,6 +122,10 @@ spec:
                   name:
                     description: Name of the RisingWave object.
                     type: string
+                  uid:
+                    description: UID of the target RisingWave object. Should be set
+                      by the mutating webhook.
+                    type: string
                 type: object
             type: object
           status:
@@ -129,13 +138,6 @@ spec:
                 description: Running replicas.
                 format: int64
                 type: integer
-              targetRef:
-                description: Reference of target RisingWave object.
-                properties:
-                  uid:
-                    description: UID of the target RisingWave object.
-                    type: string
-                type: object
             type: object
         type: object
     served: true

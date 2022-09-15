@@ -574,7 +574,7 @@ type RisingWaveStoragesStatus struct {
 
 type RisingWaveScaleViewLockGroupLock struct {
 	// Group name.
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// Locked replica value.
 	Replicas int32 `json:"replicas,omitempty"`
@@ -583,16 +583,16 @@ type RisingWaveScaleViewLockGroupLock struct {
 // RisingWaveScaleViewLock is a lock for RisingWaveScaleViews.
 type RisingWaveScaleViewLock struct {
 	// Name of the owned RisingWaveScaleView object.
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// UID of the owned RisingWaveScaleView object.
-	UID types.UID `json:"uid,omitempty"`
+	UID types.UID `json:"uid"`
 
 	// Component of the lock.
-	Component string `json:"component,omitempty"`
+	Component string `json:"component"`
 
 	// Generation of the lock.
-	Generation int64 `json:"generation,omitempty"`
+	Generation int64 `json:"generation"`
 
 	// Group locks.
 	// +listType=map

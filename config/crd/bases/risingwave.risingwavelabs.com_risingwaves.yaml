@@ -1447,10 +1447,12 @@ spec:
                             description: Locked replica value.
                             format: int32
                             type: integer
+                        required:
+                        - name
                         type: object
                       type: array
                       x-kubernetes-list-map-keys:
-                      - map
+                      - name
                       x-kubernetes-list-type: map
                     name:
                       description: Name of the owned RisingWaveScaleView object.
@@ -1458,8 +1460,16 @@ spec:
                     uid:
                       description: UID of the owned RisingWaveScaleView object.
                       type: string
+                  required:
+                  - component
+                  - generation
+                  - name
+                  - uid
                   type: object
                 type: array
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
               storages:
                 description: Status of the external storages.
                 properties:

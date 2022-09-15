@@ -17,6 +17,7 @@ krew
 kubeconfig
 keda
 tolerations
+controllerutil
 
 # Scale subresource
 specpath

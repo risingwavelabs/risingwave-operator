@@ -30,9 +30,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	"github.com/risingwavelabs/risingwave-operator/pkg/scaleview"
 )
 
@@ -97,6 +99,7 @@ func (w *RisingWaveScaleViewMutatingWebhook) updateGroupReplicas(obj *risingwave
 	}
 
 	// TODO: actually split the replicas
+	obj.Spec.ScalePolicy[0].Replicas = obj.Spec.Replicas
 
 	return nil
 }
@@ -123,6 +126,13 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 	for i := range obj.Spec.ScalePolicy {
 		scalePolicy := &obj.Spec.ScalePolicy[i]
 		if r, ok := mgr.ReadReplicas(scalePolicy.Group); ok {
+			if r < scalePolicy.Constraints.Min || (scalePolicy.Constraints.Max > 0 && r > scalePolicy.Constraints.Max) {
+				fieldErrs = append(fieldErrs, field.Invalid(
+					field.NewPath("spec", "scalePolicy").Index(i).Key("replicas"),
+					r,
+					"replicas of RisingWave out of range"),
+				)
+			}
 			scalePolicy.Replicas = r
 			replicas += r
 		} else {
@@ -140,6 +150,11 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, field.ErrorList{
 			field.Invalid(field.NewPath("spec", "targetRef"), obj.Spec.TargetRef, "target risingwave not found"),
 		})
+	}
+
+	// Set the finalizer if everything's ok.
+	if !controllerutil.ContainsFinalizer(obj, consts.FinalizerScaleView) {
+		controllerutil.AddFinalizer(obj, consts.FinalizerScaleView)
 	}
 
 	return nil

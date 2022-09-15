@@ -26,64 +26,72 @@ type ComponentGroupReplicasManager struct {
 	component  string
 }
 
-func findGroup[T any](groups []T, target string, name func(*T) string) *T {
-	for _, group := range groups {
+func findGroup[T any](groups []T, target string, name func(*T) string) (*T, int) {
+	for i, group := range groups {
 		if name(&group) == target {
-			return &group
+			return &group, i
 		}
 	}
-	return nil
+	return nil, 0
 }
 
-func (r *ComponentGroupReplicasManager) getReplicasPtr(group string) *int32 {
+func (r *ComponentGroupReplicasManager) getReplicasPtr(group string) (*int32, int) {
 	switch r.component {
 	case consts.ComponentMeta:
 		if group == "" {
-			return &r.risingwave.Spec.Global.Replicas.Meta
+			return &r.risingwave.Spec.Global.Replicas.Meta, 0
 		} else {
-			g := findGroup(r.risingwave.Spec.Components.Meta.Groups, group, func(g *risingwavev1alpha1.RisingWaveComponentGroup) string { return g.Name })
+			g, i := findGroup(r.risingwave.Spec.Components.Meta.Groups, group, func(g *risingwavev1alpha1.RisingWaveComponentGroup) string { return g.Name })
 			if g == nil {
-				return nil
+				return nil, 0
 			}
-			return &g.Replicas
+			return &g.Replicas, i
 		}
 	case consts.ComponentFrontend:
 		if group == "" {
-			return &r.risingwave.Spec.Global.Replicas.Frontend
+			return &r.risingwave.Spec.Global.Replicas.Frontend, 0
 		} else {
-			g := findGroup(r.risingwave.Spec.Components.Frontend.Groups, group, func(g *risingwavev1alpha1.RisingWaveComponentGroup) string { return g.Name })
+			g, i := findGroup(r.risingwave.Spec.Components.Frontend.Groups, group, func(g *risingwavev1alpha1.RisingWaveComponentGroup) string { return g.Name })
 			if g == nil {
-				return nil
+				return nil, 0
 			}
-			return &g.Replicas
+			return &g.Replicas, i
 		}
 	case consts.ComponentCompactor:
 		if group == "" {
-			return &r.risingwave.Spec.Global.Replicas.Compactor
+			return &r.risingwave.Spec.Global.Replicas.Compactor, 0
 		} else {
-			g := findGroup(r.risingwave.Spec.Components.Compactor.Groups, group, func(g *risingwavev1alpha1.RisingWaveComponentGroup) string { return g.Name })
+			g, i := findGroup(r.risingwave.Spec.Components.Compactor.Groups, group, func(g *risingwavev1alpha1.RisingWaveComponentGroup) string { return g.Name })
 			if g == nil {
-				return nil
+				return nil, 0
 			}
-			return &g.Replicas
+			return &g.Replicas, i
 		}
 	case consts.ComponentCompute:
 		if group == "" {
-			return &r.risingwave.Spec.Global.Replicas.Compute
+			return &r.risingwave.Spec.Global.Replicas.Compute, 0
 		} else {
-			g := findGroup(r.risingwave.Spec.Components.Compute.Groups, group, func(g *risingwavev1alpha1.RisingWaveComputeGroup) string { return g.Name })
+			g, i := findGroup(r.risingwave.Spec.Components.Compute.Groups, group, func(g *risingwavev1alpha1.RisingWaveComputeGroup) string { return g.Name })
 			if g == nil {
-				return nil
+				return nil, 0
 			}
-			return &g.Replicas
+			return &g.Replicas, i
 		}
 	default:
 		panic("never reach here")
 	}
 }
 
+func (r *ComponentGroupReplicasManager) GetGroupIndex(group string) (int, bool) {
+	replicasPtr, i := r.getReplicasPtr(group)
+	if replicasPtr == nil {
+		return 0, false
+	}
+	return i, true
+}
+
 func (r *ComponentGroupReplicasManager) ReadReplicas(group string) (int32, bool) {
-	replicasPtr := r.getReplicasPtr(group)
+	replicasPtr, _ := r.getReplicasPtr(group)
 	if replicasPtr == nil {
 		return 0, false
 	}
@@ -91,7 +99,7 @@ func (r *ComponentGroupReplicasManager) ReadReplicas(group string) (int32, bool)
 }
 
 func (r *ComponentGroupReplicasManager) WriteReplicas(group string, replicas int32) bool {
-	replicasPtr := r.getReplicasPtr(group)
+	replicasPtr, _ := r.getReplicasPtr(group)
 	if replicasPtr != nil {
 		*replicasPtr = replicas
 	}

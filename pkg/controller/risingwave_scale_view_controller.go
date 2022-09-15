@@ -59,7 +59,6 @@ func (c *RisingWaveScaleViewController) SetupWithManager(mgr ctrl.Manager) error
 			),
 		}).
 		For(&risingwavev1alpha1.RisingWaveScaleView{}).
-		Owns(&risingwavev1alpha1.RisingWave{}).
 		Complete(c)
 }
 

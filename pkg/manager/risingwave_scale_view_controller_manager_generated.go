@@ -70,8 +70,8 @@ func NewRisingWaveScaleViewControllerManagerState(reader client.Reader, target *
 
 // RisingWaveScaleViewControllerManagerImpl declares the implementation interface for RisingWaveScaleViewControllerManager.
 type RisingWaveScaleViewControllerManagerImpl interface {
-	// Grab the lock for the current RisingWaveScaleView.
-	GrabScaleViewLock(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error)
+	// Grab or update the lock for the current RisingWaveScaleView.
+	GrabOrUpdateScaleViewLock(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error)
 
 	// Sync the replicas of targeting groups to RisingWave's spec.
 	SyncGroupReplicasToRisingWave(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error)
@@ -81,14 +81,18 @@ type RisingWaveScaleViewControllerManagerImpl interface {
 
 	// Handle the finalizer.
 	HandleScaleViewFinalizer(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error)
+
+	// Update the status.
+	UpdateScaleViewStatus(ctx context.Context, logger logr.Logger) (ctrl.Result, error)
 }
 
 // Pre-defined actions in RisingWaveScaleViewControllerManager.
 const (
-	RisingWaveScaleViewAction_GrabScaleViewLock                     = "GrabScaleViewLock"
+	RisingWaveScaleViewAction_GrabOrUpdateScaleViewLock             = "GrabOrUpdateScaleViewLock"
 	RisingWaveScaleViewAction_SyncGroupReplicasToRisingWave         = "SyncGroupReplicasToRisingWave"
 	RisingWaveScaleViewAction_SyncGroupReplicasStatusFromRisingWave = "SyncGroupReplicasStatusFromRisingWave"
 	RisingWaveScaleViewAction_HandleScaleViewFinalizer              = "HandleScaleViewFinalizer"
+	RisingWaveScaleViewAction_UpdateScaleViewStatus                 = "UpdateScaleViewStatus"
 )
 
 // RisingWaveScaleViewControllerManager encapsulates the states and actions used by RisingWaveScaleViewController.
@@ -113,10 +117,10 @@ func (m *RisingWaveScaleViewControllerManager) NewAction(description string, f f
 	})
 }
 
-// GrabScaleViewLock generates the action of "GrabScaleViewLock".
-func (m *RisingWaveScaleViewControllerManager) GrabScaleViewLock() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveScaleViewAction_GrabScaleViewLock, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveScaleViewAction_GrabScaleViewLock)
+// GrabOrUpdateScaleViewLock generates the action of "GrabOrUpdateScaleViewLock".
+func (m *RisingWaveScaleViewControllerManager) GrabOrUpdateScaleViewLock() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveScaleViewAction_GrabOrUpdateScaleViewLock, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveScaleViewAction_GrabOrUpdateScaleViewLock)
 
 		// Get states.
 		targetObj, err := m.state.GetTargetObj(ctx)
@@ -126,13 +130,13 @@ func (m *RisingWaveScaleViewControllerManager) GrabScaleViewLock() ctrlkit.Actio
 
 		// Invoke action.
 		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveScaleViewAction_GrabScaleViewLock, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveScaleViewAction_GrabScaleViewLock, map[string]runtime.Object{
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveScaleViewAction_GrabOrUpdateScaleViewLock, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveScaleViewAction_GrabOrUpdateScaleViewLock, map[string]runtime.Object{
 				"targetObj": targetObj,
 			})
 		}
 
-		return m.impl.GrabScaleViewLock(ctx, logger, targetObj)
+		return m.impl.GrabOrUpdateScaleViewLock(ctx, logger, targetObj)
 	})
 }
 
@@ -206,6 +210,21 @@ func (m *RisingWaveScaleViewControllerManager) HandleScaleViewFinalizer() ctrlki
 		}
 
 		return m.impl.HandleScaleViewFinalizer(ctx, logger, targetObj)
+	})
+}
+
+// UpdateScaleViewStatus generates the action of "UpdateScaleViewStatus".
+func (m *RisingWaveScaleViewControllerManager) UpdateScaleViewStatus() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveScaleViewAction_UpdateScaleViewStatus, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveScaleViewAction_UpdateScaleViewStatus)
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveScaleViewAction_UpdateScaleViewStatus, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveScaleViewAction_UpdateScaleViewStatus, nil)
+		}
+
+		return m.impl.UpdateScaleViewStatus(ctx, logger)
 	})
 }
 

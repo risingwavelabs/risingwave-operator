@@ -20,20 +20,27 @@ import (
 	"context"
 	"time"
 
+	"github.com/samber/lo"
 	"golang.org/x/time/rate"
-	"k8s.io/client-go/tools/record"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
+	"github.com/risingwavelabs/risingwave-operator/pkg/manager"
+	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
 type RisingWaveScaleViewController struct {
-	Client   client.Client
-	Recorder record.EventRecorder
+	Client client.Client
 }
 
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves,verbs=get;list;watch;create;update;patch;delete
@@ -43,8 +50,47 @@ type RisingWaveScaleViewController struct {
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 func (c *RisingWaveScaleViewController) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	// TODO implement me
-	panic("implement me")
+	logger := log.FromContext(ctx)
+
+	var scaleView risingwavev1alpha1.RisingWaveScaleView
+	err := c.Client.Get(ctx, request.NamespacedName, &scaleView)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			logger.V(1).Info("Not found, abort")
+			return ctrlkit.NoRequeue()
+		} else {
+			logger.Error(err, "Failed to get risingwavescaleview")
+			return ctrlkit.RequeueIfErrorAndWrap("unable to get risingwavescaleview", err)
+		}
+	}
+
+	logger = logger.WithValues("generation", scaleView.Generation)
+
+	// Build manager and workflow.
+	mgr := manager.NewRisingWaveScaleViewControllerManager(
+		manager.NewRisingWaveScaleViewControllerManagerState(c.Client, scaleView.DeepCopy()),
+		manager.NewRisingWaveScaleViewControllerManagerImpl(c.Client, scaleView.DeepCopy()),
+		logger,
+	)
+
+	isScaleViewDeleted := utils.IsDeleted(&scaleView)
+
+	return ctrlkit.IgnoreExit(ctrlkit.OptimizeWorkflow(
+		ctrlkit.IfElse(isScaleViewDeleted,
+			mgr.HandleScaleViewFinalizer(),
+
+			ctrlkit.OrderedJoin(
+				ctrlkit.Sequential(
+					ctrlkit.RetryInterval(2, 5*time.Millisecond, mgr.GrabOrUpdateScaleViewLock()),
+					ctrlkit.Join(
+						mgr.SyncGroupReplicasToRisingWave(),
+						mgr.SyncGroupReplicasStatusFromRisingWave(),
+					),
+				),
+				mgr.UpdateScaleViewStatus(),
+			),
+		),
+	).Run(ctx))
 }
 
 func (c *RisingWaveScaleViewController) SetupWithManager(mgr ctrl.Manager) error {
@@ -59,12 +105,23 @@ func (c *RisingWaveScaleViewController) SetupWithManager(mgr ctrl.Manager) error
 			),
 		}).
 		For(&risingwavev1alpha1.RisingWaveScaleView{}).
+		Watches(
+			&source.Kind{Type: &risingwavev1alpha1.RisingWave{}},
+			handler.EnqueueRequestsFromMapFunc(func(object client.Object) []reconcile.Request {
+				obj := object.(*risingwavev1alpha1.RisingWave)
+				return lo.Map(obj.Status.ScaleViews, func(t risingwavev1alpha1.RisingWaveScaleViewLock, _ int) reconcile.Request {
+					return reconcile.Request{NamespacedName: types.NamespacedName{
+						Namespace: obj.Namespace,
+						Name:      t.Name,
+					}}
+				})
+			}),
+		).
 		Complete(c)
 }
 
-func NewRisingWaveScaleViewController(client client.Client, recorder record.EventRecorder) *RisingWaveScaleViewController {
+func NewRisingWaveScaleViewController(client client.Client) *RisingWaveScaleViewController {
 	return &RisingWaveScaleViewController{
-		Client:   client,
-		Recorder: recorder,
+		Client: client,
 	}
 }

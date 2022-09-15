@@ -19,8 +19,6 @@ package webhook
 import (
 	"bytes"
 	"context"
-	"errors"
-	"math"
 	"strings"
 
 	"github.com/samber/lo"
@@ -28,7 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -40,33 +37,6 @@ import (
 
 type RisingWaveScaleViewMutatingWebhook struct {
 	client client.Client
-}
-
-func GetScaleViewMinMaxConstraints(obj *risingwavev1alpha1.RisingWaveScaleView) (min, max int32) {
-	min, max = int32(0), int32(0)
-	for _, scalePolicy := range obj.Spec.ScalePolicy {
-		min += scalePolicy.Constraints.Min
-	}
-
-	for _, scalePolicy := range obj.Spec.ScalePolicy {
-		if scalePolicy.Constraints.Max == 0 {
-			max = math.MaxInt32
-			break
-		}
-		max += scalePolicy.Constraints.Max
-	}
-
-	return min, max
-}
-
-func (w *RisingWaveScaleViewMutatingWebhook) validateTheConstraints(obj *risingwavev1alpha1.RisingWaveScaleView) error {
-	min, max := GetScaleViewMinMaxConstraints(obj)
-
-	if obj.Spec.Replicas < min || obj.Spec.Replicas > max {
-		return errors.New("replicas out of range")
-	}
-
-	return nil
 }
 
 func (w *RisingWaveScaleViewMutatingWebhook) setLabelSelector(obj *risingwavev1alpha1.RisingWaveScaleView) {
@@ -88,20 +58,6 @@ func (w *RisingWaveScaleViewMutatingWebhook) setLabelSelector(obj *risingwavev1a
 	labelBuilder.WriteRune(')')
 
 	obj.Spec.LabelSelector = labelBuilder.String()
-}
-
-func (w *RisingWaveScaleViewMutatingWebhook) updateGroupReplicas(obj *risingwavev1alpha1.RisingWaveScaleView) error {
-	if err := w.validateTheConstraints(obj); err != nil {
-		if !ptrValueNotZero(obj.Spec.Strict) {
-			return nil
-		}
-		return err
-	}
-
-	// TODO: actually split the replicas
-	obj.Spec.ScalePolicy[0].Replicas = obj.Spec.Replicas
-
-	return nil
 }
 
 func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
@@ -126,14 +82,13 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 	for i := range obj.Spec.ScalePolicy {
 		scalePolicy := &obj.Spec.ScalePolicy[i]
 		if r, ok := mgr.ReadReplicas(scalePolicy.Group); ok {
-			if r < scalePolicy.Constraints.Min || (scalePolicy.Constraints.Max > 0 && r > scalePolicy.Constraints.Max) {
+			if scalePolicy.Constraints.Max > 0 && r > scalePolicy.Constraints.Max {
 				fieldErrs = append(fieldErrs, field.Invalid(
 					field.NewPath("spec", "scalePolicy").Index(i).Key("replicas"),
 					r,
 					"replicas of RisingWave out of range"),
 				)
 			}
-			scalePolicy.Replicas = r
 			replicas += r
 		} else {
 			fieldErrs = append(fieldErrs, field.Invalid(
@@ -161,17 +116,11 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 }
 
 // Set default values.
-// - Enforce strict mode if not specified.
-// - Set the target group to "" if the .spec.scalePolicy is empty
-// - Update the .spec.labelSelector
-// - Read or update the .spec.replicas and group replicas under .spec.scalePolicy
-//   - if it's a new created scale policy (with empty .spec.targetRef.uid), get the target RisingWave and read and copy the replicas.
-//   - otherwise, update the group replicas according to the current .spec.replicas
+//   - Set the target group to "" if the .spec.scalePolicy is empty
+//   - Update the .spec.labelSelector
+//   - Read the .spec.replicas and group replicas under .spec.scalePolicy if it's a new created scale policy (with empty .spec.targetRef.uid),
+//     get the target RisingWave and read and copy the replicas.
 func (w *RisingWaveScaleViewMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
-	if obj.Spec.Strict == nil {
-		obj.Spec.Strict = pointer.Bool(true)
-	}
-
 	if len(obj.Spec.ScalePolicy) == 0 {
 		obj.Spec.ScalePolicy = []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 			{Group: ""},
@@ -180,14 +129,11 @@ func (w *RisingWaveScaleViewMutatingWebhook) setDefault(ctx context.Context, obj
 
 	w.setLabelSelector(obj)
 
-	var err error
 	if obj.Spec.TargetRef.UID == "" {
-		err = w.readGroupReplicasFromRisingWave(ctx, obj)
-	} else {
-		err = w.updateGroupReplicas(obj)
-	}
-	if err != nil {
-		return err
+		err := w.readGroupReplicasFromRisingWave(ctx, obj)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -36,10 +36,8 @@ type RisingWaveScaleViewTargetRef struct {
 
 // RisingWaveScaleViewSpecScalePolicyConstraints is the constraints of replicas in scale policy.
 type RisingWaveScaleViewSpecScalePolicyConstraints struct {
-	// Minimum value of the replicas.
-	Min int32 `json:"min,omitempty"`
-
 	// Maximum value of the replicas.
+	// +kubebuilder:validation:Maximum=1000
 	Max int32 `json:"max,omitempty"`
 }
 
@@ -56,10 +54,6 @@ type RisingWaveScaleViewSpecScalePolicy struct {
 	// +optional
 	Priority int32 `json:"priority,omitempty"`
 
-	// Controlled field, maintained by the mutating webhook. Current desired replicas.
-	// +kubebuilder:validation:Minimum=0
-	Replicas int32 `json:"replicas,omitempty"`
-
 	// Constraints on the replicas.
 	Constraints RisingWaveScaleViewSpecScalePolicyConstraints `json:"constraints,omitempty"`
 }
@@ -71,12 +65,6 @@ type RisingWaveScaleViewSpec struct {
 
 	// Desired replicas.
 	Replicas int32 `json:"replicas,omitempty"`
-
-	// Strict verification mode on replicas:
-	//   1. If enabled, the validating webhook will reject any invalid changes on .spec.replicas (e.g., exceeding the min/max range)
-	//   2. If disabled, the mutating webhook will adjust the .spec.replicas to be enclosed by the range.
-	// Enabled by default.
-	Strict *bool `json:"strict,omitempty"`
 
 	// Serialized label selector. Would be set by the webhook.
 	LabelSelector string `json:"labelSelector,omitempty"`
@@ -90,7 +78,7 @@ type RisingWaveScaleViewSpec struct {
 // RisingWaveScaleViewStatus is the status of RisingWaveScaleView.
 type RisingWaveScaleViewStatus struct {
 	// Running replicas.
-	Replicas int32 `json:"replicas,omitempty"`
+	Replicas *int32 `json:"replicas,omitempty"`
 
 	// Lock status.
 	Locked bool `json:"locked,omitempty"`
@@ -99,8 +87,10 @@ type RisingWaveScaleViewStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.status.selector
-// +kubebuilder:printcolumn:name="READY",type=string,JSONPath=`.status.replicas`
-// +kubebuilder:printcolumn:name="REPLICAS",type=string,JSONPath=`.spec.replicas`
+// +kubebuilder:printcolumn:name="TARGET",type=string,JSONPath=`.spec.targetRef.name`
+// +kubebuilder:printcolumn:name="COMPONENT",type=string,JSONPath=`.spec.targetRef.component`
+// +kubebuilder:printcolumn:name="READY",type=integer,JSONPath=`.status.replicas`
+// +kubebuilder:printcolumn:name="REPLICAS",type=integer,JSONPath=`.spec.replicas`
 // +kubebuilder:printcolumn:name="LOCKED",type=boolean,JSONPath=`.status.locked`
 // +kubebuilder:resource:shortName=rwsv,categories=all;streaming
 

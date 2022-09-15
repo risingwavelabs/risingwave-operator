@@ -17,8 +17,8 @@ decl RisingWaveScaleViewControllerManager for RisingWaveScaleView {
     }
 
     action {
-        // Grab the lock for the current RisingWaveScaleView.
-        GrabScaleViewLock(targetObj)
+        // Grab or update the lock for the current RisingWaveScaleView.
+        GrabOrUpdateScaleViewLock(targetObj)
 
         // Sync the replicas of targeting groups to RisingWave's spec.
         SyncGroupReplicasToRisingWave(targetObj)
@@ -28,5 +28,8 @@ decl RisingWaveScaleViewControllerManager for RisingWaveScaleView {
 
         // Handle the finalizer.
         HandleScaleViewFinalizer(targetObj)
+
+        // Update the status.
+        UpdateScaleViewStatus()
     }
 }

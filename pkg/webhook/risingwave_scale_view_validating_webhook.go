@@ -18,11 +18,15 @@ package webhook
 
 import (
 	"context"
+	"math"
+	"sort"
 
+	"github.com/samber/lo"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
@@ -33,22 +37,29 @@ type RisingWaveScaleViewValidatingWebhook struct {
 	client client.Client
 }
 
-func (w *RisingWaveScaleViewValidatingWebhook) validateCreate(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
-	gvk := obj.GroupVersionKind()
-	fieldErrs := field.ErrorList{}
-
-	min, max := GetScaleViewMinMaxConstraints(obj)
-
-	if obj.Spec.Replicas < min || obj.Spec.Replicas > max {
-		fieldErrs = append(fieldErrs, field.Invalid(
-			field.NewPath("spec", "replicas"),
-			obj.Spec.Replicas,
-			"replicas out of range",
-		))
+func getScaleViewMaxConstraints(obj *risingwavev1alpha1.RisingWaveScaleView) int32 {
+	max := int32(0)
+	for _, scalePolicy := range obj.Spec.ScalePolicy {
+		if scalePolicy.Constraints.Max == 0 {
+			max = math.MaxInt32
+			break
+		}
+		max += scalePolicy.Constraints.Max
 	}
 
-	if len(fieldErrs) > 0 {
-		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, fieldErrs)
+	return max
+}
+
+func (w *RisingWaveScaleViewValidatingWebhook) validateCreate(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
+	if getScaleViewMaxConstraints(obj) != math.MaxInt32 {
+		gvk := obj.GroupVersionKind()
+		return apierrors.NewInvalid(
+			gvk.GroupKind(),
+			obj.Name,
+			field.ErrorList{
+				field.Invalid(field.NewPath("spec", "scalePolicy"), obj.Spec.ScalePolicy, "at least one unlimited replicas"),
+			},
+		)
 	}
 
 	return nil
@@ -69,7 +80,18 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateUpdate(ctx context.Contex
 		))
 	}
 
-	if !newObj.Status.Locked && newObj.Spec.Replicas != 0 {
+	oldGroupList := lo.Map(oldObj.Spec.ScalePolicy, func(t risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy, _ int) string { return t.Group })
+	newGroupList := lo.Map(newObj.Spec.ScalePolicy, func(t risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy, _ int) string { return t.Group })
+	sort.Strings(oldGroupList)
+	sort.Strings(newGroupList)
+	if !slices.Equal(oldGroupList, newGroupList) {
+		fieldErrs = append(fieldErrs, field.Forbidden(
+			field.NewPath("spec", "scalePolicy"),
+			"groups should no be changed",
+		))
+	}
+
+	if !newObj.Status.Locked && newObj.Spec.Replicas != oldObj.Spec.Replicas {
 		fieldErrs = append(fieldErrs, field.Forbidden(
 			field.NewPath("spec", "replicas"),
 			"update is forbidden before lock's grabbed",

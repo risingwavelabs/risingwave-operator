@@ -21,12 +21,18 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - jsonPath: .spec.targetRef.name
+      name: TARGET
+      type: string
+    - jsonPath: .spec.targetRef.component
+      name: COMPONENT
+      type: string
     - jsonPath: .status.replicas
       name: READY
-      type: string
+      type: integer
     - jsonPath: .spec.replicas
       name: REPLICAS
-      type: string
+      type: integer
     - jsonPath: .status.locked
       name: LOCKED
       type: boolean
@@ -69,10 +75,7 @@ spec:
                         max:
                           description: Maximum value of the replicas.
                           format: int32
-                          type: integer
-                        min:
-                          description: Minimum value of the replicas.
-                          format: int32
+                          maximum: 1000
                           type: integer
                       type: object
                     group:
@@ -87,12 +90,6 @@ spec:
                       maximum: 10
                       minimum: 0
                       type: integer
-                    replicas:
-                      description: Controlled field, maintained by the mutating webhook.
-                        Current desired replicas.
-                      format: int32
-                      minimum: 0
-                      type: integer
                   required:
                   - group
                   type: object
@@ -100,13 +97,6 @@ spec:
                 x-kubernetes-list-map-keys:
                 - group
                 x-kubernetes-list-type: map
-              strict:
-                description: 'Strict verification mode on replicas: 1. If enabled,
-                  the validating webhook will reject any invalid changes on .spec.replicas
-                  (e.g., exceeding the min/max range) 2. If disabled, the mutating
-                  webhook will adjust the .spec.replicas to be enclosed by the range.
-                  Enabled by default.'
-                type: boolean
               targetRef:
                 description: Reference of the target RisingWave.
                 properties:
@@ -136,7 +126,7 @@ spec:
                 type: boolean
               replicas:
                 description: Running replicas.
-                format: int64
+                format: int32
                 type: integer
             type: object
         type: object

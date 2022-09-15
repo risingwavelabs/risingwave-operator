@@ -18,48 +18,109 @@ package manager
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/samber/lo"
+	"k8s.io/apimachinery/pkg/api/equality"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
+	"github.com/risingwavelabs/risingwave-operator/pkg/object"
 	"github.com/risingwavelabs/risingwave-operator/pkg/scaleview"
 )
 
 type risingWaveScaleViewControllerManagerImpl struct {
-	client       client.Client
-	scaleViewObj *risingwavev1alpha1.RisingWaveScaleView
+	client              client.Client
+	scaleView           *risingwavev1alpha1.RisingWaveScaleView
+	scaleViewStatusCopy *risingwavev1alpha1.RisingWaveScaleViewStatus
+}
+
+func (mgr *risingWaveScaleViewControllerManagerImpl) isStatusChanged() bool {
+	return !equality.Semantic.DeepEqual(&mgr.scaleView.Status, mgr.scaleViewStatusCopy)
+}
+
+func (mgr *risingWaveScaleViewControllerManagerImpl) isTargetObjMatched(targetObj *risingwavev1alpha1.RisingWave) bool {
+	return targetObj != nil && targetObj.UID == mgr.scaleView.Spec.TargetRef.UID
+}
+
+func (mgr *risingWaveScaleViewControllerManagerImpl) UpdateScaleViewStatus(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
+	if mgr.isStatusChanged() {
+		err := mgr.client.Status().Update(ctx, mgr.scaleView)
+		return ctrlkit.RequeueIfErrorAndWrap("unable to update status of risingwavescaleview", err)
+	}
+	return ctrlkit.Continue()
 }
 
 func (mgr *risingWaveScaleViewControllerManagerImpl) HandleScaleViewFinalizer(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
-	// TODO implement me
-	panic("implement me")
-}
+	if !controllerutil.RemoveFinalizer(mgr.scaleView, consts.FinalizerScaleView) {
+		return ctrlkit.Continue()
+	}
 
-func (mgr *risingWaveScaleViewControllerManagerImpl) GrabScaleViewLock(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasToRisingWave(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
-	scaleViewManager := scaleview.NewComponentGroupReplicasManager(targetObj, mgr.scaleViewObj.Spec.TargetRef.Component)
-
-	hasUpdates := false
-	for _, group := range mgr.scaleViewObj.Spec.ScalePolicy {
-		updated := scaleViewManager.WriteReplicas(group.Group, group.Replicas)
-		if updated {
-			hasUpdates = true
+	if mgr.isTargetObjMatched(targetObj) {
+		lockMgr := object.NewScaleViewLockManager(targetObj)
+		if lockMgr.ReleaseLockFor(mgr.scaleView) {
+			if err := mgr.client.Status().Update(ctx, targetObj); err != nil {
+				return ctrlkit.RequeueIfErrorAndWrap("unable to update the status of RisingWave", err)
+			}
 		}
 	}
 
-	if hasUpdates {
+	err := mgr.client.Update(ctx, mgr.scaleView)
+	return ctrlkit.RequeueIfErrorAndWrap("unable to remove the finalizer", err)
+}
+
+func (mgr *risingWaveScaleViewControllerManagerImpl) GrabOrUpdateScaleViewLock(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
+	if !mgr.isTargetObjMatched(targetObj) {
+		return ctrlkit.Continue()
+	}
+
+	lockMgr := object.NewScaleViewLockManager(targetObj)
+
+	updated, err := lockMgr.GrabOrUpdateScaleViewLockFor(mgr.scaleView)
+	if err != nil {
+		return ctrlkit.RequeueIfErrorAndWrap("unable to grab or update lock", err)
+	}
+
+	if updated {
+		if err := mgr.client.Status().Update(ctx, targetObj); err != nil {
+			return ctrlkit.RequeueIfErrorAndWrap("unable to update the status of RisingWave", err)
+		}
+		mgr.scaleView.Status.Locked = true
+		return ctrlkit.RequeueImmediately()
+	} else {
+		return ctrlkit.Continue()
+	}
+}
+
+func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasToRisingWave(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
+	if !mgr.isTargetObjMatched(targetObj) {
+		return ctrlkit.Continue()
+	}
+
+	lockObj := object.NewScaleViewLockManager(targetObj).GetScaleViewLock(mgr.scaleView)
+	if lockObj == nil || lockObj.Generation != mgr.scaleView.Generation {
+		logger.Info("Lock is outdated, retry...")
+		return ctrlkit.RequeueAfter(5 * time.Millisecond)
+	}
+
+	scaleViewManager := scaleview.NewComponentGroupReplicasManager(targetObj, mgr.scaleView.Spec.TargetRef.Component)
+
+	changed := false
+	for _, group := range lockObj.GroupLocks {
+		updated := scaleViewManager.WriteReplicas(group.Name, group.Replicas)
+		changed = changed || updated
+	}
+
+	if changed {
 		err := mgr.client.Update(ctx, targetObj)
 		if err != nil {
-			return ctrlkit.RequeueIfError(err)
+			return ctrlkit.RequeueIfErrorAndWrap("unable to update the replicas of RisingWave", err)
 		}
 	}
 
@@ -87,20 +148,26 @@ func readRunningReplicas(obj *risingwavev1alpha1.RisingWave, component, group st
 }
 
 func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasStatusFromRisingWave(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
-	replicas := int32(0)
-	for _, scalePolicy := range mgr.scaleViewObj.Spec.ScalePolicy {
-		group := scalePolicy.Group
-		runningReplicas := readRunningReplicas(targetObj, mgr.scaleViewObj.Spec.TargetRef.Component, group)
-		replicas += runningReplicas
+	if !mgr.isTargetObjMatched(targetObj) {
+		mgr.scaleView.Status.Replicas = pointer.Int32(0)
+		mgr.scaleView.Status.Locked = false
+		return ctrlkit.Continue()
+	} else {
+		replicas := int32(0)
+		for _, scalePolicy := range mgr.scaleView.Spec.ScalePolicy {
+			group := scalePolicy.Group
+			runningReplicas := readRunningReplicas(targetObj, mgr.scaleView.Spec.TargetRef.Component, group)
+			replicas += runningReplicas
+		}
+		mgr.scaleView.Status.Replicas = pointer.Int32(replicas)
+		return ctrlkit.Continue()
 	}
-	mgr.scaleViewObj.Status.Replicas = replicas
-
-	return ctrlkit.Continue()
 }
 
-func NewRisingWaveScaleViewControllerManagerImpl(client client.Client, scaleViewObj *risingwavev1alpha1.RisingWaveScaleView) RisingWaveScaleViewControllerManagerImpl {
+func NewRisingWaveScaleViewControllerManagerImpl(client client.Client, scaleView *risingwavev1alpha1.RisingWaveScaleView) RisingWaveScaleViewControllerManagerImpl {
 	return &risingWaveScaleViewControllerManagerImpl{
-		client:       client,
-		scaleViewObj: scaleViewObj,
+		client:              client,
+		scaleView:           scaleView,
+		scaleViewStatusCopy: scaleView.Status.DeepCopy(),
 	}
 }

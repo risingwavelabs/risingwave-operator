@@ -25,5 +25,8 @@ decl RisingWaveScaleViewControllerManager for RisingWaveScaleView {
 
         // Sync the replicas from RisingWave's spec.
         SyncGroupReplicasStatusFromRisingWave(targetObj)
+
+        // Handle the finalizer.
+        HandleScaleViewFinalizer(targetObj)
     }
 }

@@ -78,6 +78,9 @@ type RisingWaveScaleViewControllerManagerImpl interface {
 
 	// Sync the replicas from RisingWave's spec.
 	SyncGroupReplicasStatusFromRisingWave(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error)
+
+	// Handle the finalizer.
+	HandleScaleViewFinalizer(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error)
 }
 
 // Pre-defined actions in RisingWaveScaleViewControllerManager.
@@ -85,6 +88,7 @@ const (
 	RisingWaveScaleViewAction_GrabScaleViewLock                     = "GrabScaleViewLock"
 	RisingWaveScaleViewAction_SyncGroupReplicasToRisingWave         = "SyncGroupReplicasToRisingWave"
 	RisingWaveScaleViewAction_SyncGroupReplicasStatusFromRisingWave = "SyncGroupReplicasStatusFromRisingWave"
+	RisingWaveScaleViewAction_HandleScaleViewFinalizer              = "HandleScaleViewFinalizer"
 )
 
 // RisingWaveScaleViewControllerManager encapsulates the states and actions used by RisingWaveScaleViewController.
@@ -179,6 +183,29 @@ func (m *RisingWaveScaleViewControllerManager) SyncGroupReplicasStatusFromRising
 		}
 
 		return m.impl.SyncGroupReplicasStatusFromRisingWave(ctx, logger, targetObj)
+	})
+}
+
+// HandleScaleViewFinalizer generates the action of "HandleScaleViewFinalizer".
+func (m *RisingWaveScaleViewControllerManager) HandleScaleViewFinalizer() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveScaleViewAction_HandleScaleViewFinalizer, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveScaleViewAction_HandleScaleViewFinalizer)
+
+		// Get states.
+		targetObj, err := m.state.GetTargetObj(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveScaleViewAction_HandleScaleViewFinalizer, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveScaleViewAction_HandleScaleViewFinalizer, map[string]runtime.Object{
+				"targetObj": targetObj,
+			})
+		}
+
+		return m.impl.HandleScaleViewFinalizer(ctx, logger, targetObj)
 	})
 }
 

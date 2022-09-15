@@ -30,6 +30,11 @@ type risingWaveScaleViewControllerManagerImpl struct {
 	client client.Client
 }
 
+func (mgr *risingWaveScaleViewControllerManagerImpl) HandleScaleViewFinalizer(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
 func (mgr *risingWaveScaleViewControllerManagerImpl) GrabScaleViewLock(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
 	// TODO implement me
 	panic("implement me")

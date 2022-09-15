@@ -100,7 +100,11 @@ func (r *ComponentGroupReplicasManager) ReadReplicas(group string) (int32, bool)
 
 func (r *ComponentGroupReplicasManager) WriteReplicas(group string, replicas int32) bool {
 	replicasPtr, _ := r.getReplicasPtr(group)
+
 	if replicasPtr != nil {
+		if *replicasPtr == replicas {
+			return false
+		}
 		*replicasPtr = replicas
 	}
 	return replicasPtr != nil

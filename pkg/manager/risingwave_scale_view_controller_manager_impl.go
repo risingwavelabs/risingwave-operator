@@ -20,14 +20,16 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
+	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
+	"github.com/risingwavelabs/risingwave-operator/pkg/scaleview"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 type risingWaveScaleViewControllerManagerImpl struct {
-	client client.Client
+	client       client.Client
+	scaleViewObj *risingwavev1alpha1.RisingWaveScaleView
 }
 
 func (mgr *risingWaveScaleViewControllerManagerImpl) HandleScaleViewFinalizer(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
@@ -41,17 +43,33 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) GrabScaleViewLock(ctx conte
 }
 
 func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasToRisingWave(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
-	// TODO implement me
-	panic("implement me")
+	scaleViewManager := scaleview.NewComponentGroupReplicasManager(targetObj, mgr.scaleViewObj.Spec.TargetRef.Component)
+
+	hasUpdates := false
+	for _, group := range mgr.scaleViewObj.Spec.ScalePolicy {
+		updated := scaleViewManager.WriteReplicas(group.Group, group.Replicas)
+		if updated {
+			hasUpdates = true
+		}
+	}
+
+	if hasUpdates {
+		err := mgr.client.Update(ctx, targetObj)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+	}
+
+	return ctrlkit.Continue()
 }
 
 func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasStatusFromRisingWave(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
-	// TODO implement me
-	panic("implement me")
+	
 }
 
-func NewRisingWaveScaleViewControllerManagerImpl(client client.Client) RisingWaveScaleViewControllerManagerImpl {
+func NewRisingWaveScaleViewControllerManagerImpl(client client.Client, scaleViewObj *risingwavev1alpha1.RisingWaveScaleView) RisingWaveScaleViewControllerManagerImpl {
 	return &risingWaveScaleViewControllerManagerImpl{
-		client: client,
+		client:       client,
+		scaleViewObj: scaleViewObj,
 	}
 }

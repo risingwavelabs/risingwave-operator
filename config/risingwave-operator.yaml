@@ -8498,18 +8498,14 @@ spec:
                   description: RisingWaveScaleViewSpecScalePolicy is the scale policy
                     of a group.
                   properties:
-                    constraints:
-                      description: Constraints on the replicas.
-                      properties:
-                        max:
-                          description: Maximum value of the replicas.
-                          format: int32
-                          maximum: 1000
-                          type: integer
-                      type: object
                     group:
                       description: Group name.
                       type: string
+                    maxReplicas:
+                      description: MaxReplicas is the limit of the replicas.
+                      format: int32
+                      maximum: 5000
+                      type: integer
                     priority:
                       description: 0-10, optional. The groups will be sorted by the
                         priority and the current replicas. The higher it is, the more

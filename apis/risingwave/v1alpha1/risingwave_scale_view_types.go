@@ -54,8 +54,9 @@ type RisingWaveScaleViewSpecScalePolicy struct {
 	// +optional
 	Priority int32 `json:"priority,omitempty"`
 
-	// Constraints on the replicas.
-	Constraints RisingWaveScaleViewSpecScalePolicyConstraints `json:"constraints,omitempty"`
+	// MaxReplicas is the limit of the replicas.
+	// +kubebuilder:validation:Maximum=5000
+	MaxReplicas *int32 `json:"maxReplicas,omitempty"`
 }
 
 // RisingWaveScaleViewSpec is the spec of RisingWaveScaleView.

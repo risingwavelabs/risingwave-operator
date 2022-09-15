@@ -20,6 +20,8 @@ import (
 	"reflect"
 	"testing"
 
+	"k8s.io/utils/pointer"
+
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
@@ -72,10 +74,8 @@ func TestSplitReplicasIntoGroups(t *testing.T) {
 							Group: "a",
 						},
 						{
-							Group: "b",
-							Constraints: risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicyConstraints{
-								Max: 2,
-							},
+							Group:       "b",
+							MaxReplicas: pointer.Int32(2),
 						},
 					},
 				},
@@ -91,18 +91,14 @@ func TestSplitReplicasIntoGroups(t *testing.T) {
 					Replicas: 9,
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
-							Group:    "a",
-							Priority: 10,
-							Constraints: risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicyConstraints{
-								Max: 3,
-							},
+							Group:       "a",
+							Priority:    10,
+							MaxReplicas: pointer.Int32(3),
 						},
 						{
-							Group:    "b",
-							Priority: 5,
-							Constraints: risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicyConstraints{
-								Max: 2,
-							},
+							Group:       "b",
+							Priority:    5,
+							MaxReplicas: pointer.Int32(2),
 						},
 						{
 							Group:    "c",
@@ -127,11 +123,9 @@ func TestSplitReplicasIntoGroups(t *testing.T) {
 							Priority: 10,
 						},
 						{
-							Group:    "b",
-							Priority: 5,
-							Constraints: risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicyConstraints{
-								Max: 2,
-							},
+							Group:       "b",
+							Priority:    5,
+							MaxReplicas: pointer.Int32(2),
 						},
 						{
 							Group:    "c",
@@ -152,18 +146,14 @@ func TestSplitReplicasIntoGroups(t *testing.T) {
 					Replicas: 4,
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
-							Group:    "a",
-							Priority: 10,
-							Constraints: risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicyConstraints{
-								Max: 3,
-							},
+							Group:       "a",
+							Priority:    10,
+							MaxReplicas: pointer.Int32(3),
 						},
 						{
-							Group:    "b",
-							Priority: 5,
-							Constraints: risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicyConstraints{
-								Max: 2,
-							},
+							Group:       "b",
+							Priority:    5,
+							MaxReplicas: pointer.Int32(2),
 						},
 						{
 							Group:    "c",
@@ -184,18 +174,14 @@ func TestSplitReplicasIntoGroups(t *testing.T) {
 					Replicas: 4,
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
-							Group:    "a",
-							Priority: 5,
-							Constraints: risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicyConstraints{
-								Max: 3,
-							},
+							Group:       "a",
+							Priority:    5,
+							MaxReplicas: pointer.Int32(3),
 						},
 						{
-							Group:    "b",
-							Priority: 5,
-							Constraints: risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicyConstraints{
-								Max: 2,
-							},
+							Group:       "b",
+							Priority:    5,
+							MaxReplicas: pointer.Int32(2),
 						},
 						{
 							Group:    "c",

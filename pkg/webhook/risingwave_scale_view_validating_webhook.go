@@ -44,11 +44,11 @@ type RisingWaveScaleViewValidatingWebhook struct {
 func getScaleViewMaxConstraints(obj *risingwavev1alpha1.RisingWaveScaleView) int32 {
 	max := int32(0)
 	for _, scalePolicy := range obj.Spec.ScalePolicy {
-		if scalePolicy.Constraints.Max == 0 {
+		if scalePolicy.MaxReplicas == nil {
 			max = math.MaxInt32
 			break
 		}
-		max += scalePolicy.Constraints.Max
+		max += *scalePolicy.MaxReplicas
 	}
 
 	return max
@@ -80,6 +80,10 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateCreate(ctx context.Contex
 	}, &risingwave)
 	if err != nil {
 		return fmt.Errorf("unable to get the risingwave: %w", err)
+	}
+
+	if obj.Spec.TargetRef.UID != risingwave.UID {
+		return fmt.Errorf("risingwave not match, expect uid: %s, but is: %s", obj.Spec.TargetRef.UID, risingwave.UID)
 	}
 
 	// Try grab the lock to see if there are conflicts.
@@ -118,13 +122,6 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateUpdate(ctx context.Contex
 		fieldErrs = append(fieldErrs, field.Forbidden(
 			field.NewPath("spec", "scalePolicy"),
 			"groups should no be changed",
-		))
-	}
-
-	if !newObj.Status.Locked && newObj.Spec.Replicas != oldObj.Spec.Replicas {
-		fieldErrs = append(fieldErrs, field.Forbidden(
-			field.NewPath("spec", "replicas"),
-			"update is forbidden before lock's grabbed",
 		))
 	}
 

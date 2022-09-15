@@ -22,6 +22,7 @@ import (
 	"sort"
 
 	"github.com/samber/lo"
+	"k8s.io/utils/pointer"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
@@ -49,12 +50,12 @@ func (svl *ScaleViewLockManager) IsScaleViewLocked(sv *risingwavev1alpha1.Rising
 	return svl.GetScaleViewLock(sv) != nil
 }
 
-func formatScalePolicy(p risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy) risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy {
-	cp := p
-	if cp.Constraints.Max == 0 {
-		cp.Constraints.Max = math.MaxInt32
+func canonizeScalePolicy(p risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy) risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy {
+	r := p
+	if r.MaxReplicas == nil {
+		r.MaxReplicas = pointer.Int32(math.MaxInt32)
 	}
-	return cp
+	return r
 }
 
 func (svl *ScaleViewLockManager) split(total, n int) int {
@@ -72,18 +73,18 @@ func (svl *ScaleViewLockManager) splitReplicasIntoGroups(sv *risingwavev1alpha1.
 	for _, p := range sv.Spec.ScalePolicy {
 		if _, ok := groupsGroupByPriority[p.Priority]; !ok {
 			groupsGroupByPriority[p.Priority] = []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
-				formatScalePolicy(p),
+				canonizeScalePolicy(p),
 			}
 		} else {
-			groupsGroupByPriority[p.Priority] = append(groupsGroupByPriority[p.Priority], formatScalePolicy(p))
+			groupsGroupByPriority[p.Priority] = append(groupsGroupByPriority[p.Priority], canonizeScalePolicy(p))
 		}
 	}
 
 	for k := range groupsGroupByPriority {
 		groups := groupsGroupByPriority[k]
 		sort.Slice(groups, func(i, j int) bool {
-			if groups[i].Constraints.Max != groups[j].Constraints.Max {
-				return groups[i].Constraints.Max < groups[j].Constraints.Max
+			if *groups[i].MaxReplicas != *groups[j].MaxReplicas {
+				return *groups[i].MaxReplicas < *groups[j].MaxReplicas
 			}
 			return groups[i].Group < groups[j].Group
 		})
@@ -106,7 +107,7 @@ func (svl *ScaleViewLockManager) splitReplicasIntoGroups(sv *risingwavev1alpha1.
 			base := 0
 			for i := 0; i < len(groups); i++ {
 				g := groups[i]
-				max := int(g.Constraints.Max)
+				max := int(*g.MaxReplicas)
 				if max == math.MaxInt32 {
 					taken := svl.split(totalLeft, len(groups)-i)
 					replicas[g.Group] = int32(taken + base)

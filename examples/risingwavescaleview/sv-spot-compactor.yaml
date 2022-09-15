@@ -33,6 +33,5 @@ spec:
   scalePolicy:
   - group: normal
     priority: 1
-    constraints:
-      max: 2
+    maxReplicas: 2
   - group: spot

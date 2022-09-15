@@ -36,6 +36,12 @@ type RisingWaveScaleViewController struct {
 	Recorder record.EventRecorder
 }
 
+// +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwavescaleviews,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwavescaleviews/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
+
 func (c *RisingWaveScaleViewController) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	// TODO implement me
 	panic("implement me")

@@ -90,7 +90,7 @@ type RisingWaveScaleViewSpec struct {
 // RisingWaveScaleViewStatus is the status of RisingWaveScaleView.
 type RisingWaveScaleViewStatus struct {
 	// Running replicas.
-	Replicas int64 `json:"replicas,omitempty"`
+	Replicas int32 `json:"replicas,omitempty"`
 
 	// Lock status.
 	Locked bool `json:"locked,omitempty"`

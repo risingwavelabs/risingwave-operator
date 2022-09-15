@@ -32,6 +32,7 @@ spec:
     component: compactor
   scalePolicy:
   - group: normal
+    priority: 1
     constraints:
       max: 2
   - group: spot

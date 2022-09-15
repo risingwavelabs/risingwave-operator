@@ -234,7 +234,7 @@ func pathForGroupReplicas(obj *risingwavev1alpha1.RisingWave, component, group s
 		return field.NewPath("spec", "global", "replicas", component)
 	} else {
 		index, _ := scaleview.NewComponentGroupReplicasManager(obj, component).GetGroupIndex(group)
-		return field.NewPath("spec", "components", component, "groups").Index(index).Key("replicas")
+		return field.NewPath("spec", "components", component, "groups").Index(index).Child("replicas")
 	}
 }
 
@@ -277,7 +277,9 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 					"group is locked (delete)",
 				))
 			} else {
-				if cur == old {
+				if cur == lock.Replicas {
+					updateCnt++
+				} else if cur == old {
 					unchangedCnt++
 				} else {
 					updateCnt++

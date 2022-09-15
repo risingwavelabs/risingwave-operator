@@ -116,6 +116,9 @@ spec:
                     description: UID of the target RisingWave object. Should be set
                       by the mutating webhook.
                     type: string
+                required:
+                - component
+                - name
                 type: object
             type: object
           status:

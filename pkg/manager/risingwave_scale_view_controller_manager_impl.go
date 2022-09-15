@@ -109,11 +109,11 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasToRisingWa
 		return ctrlkit.RequeueAfter(5 * time.Millisecond)
 	}
 
-	scaleViewManager := scaleview.NewComponentGroupReplicasManager(targetObj, mgr.scaleView.Spec.TargetRef.Component)
+	replicasAccess := scaleview.NewReplicasAccess(targetObj, mgr.scaleView.Spec.TargetRef.Component)
 
 	changed := false
 	for _, group := range lockObj.GroupLocks {
-		updated := scaleViewManager.WriteReplicas(group.Name, group.Replicas)
+		updated := replicasAccess.WriteReplicas(group.Name, group.Replicas)
 		changed = changed || updated
 	}
 

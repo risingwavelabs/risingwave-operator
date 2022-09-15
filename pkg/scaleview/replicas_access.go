@@ -21,7 +21,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
 
-type ComponentGroupReplicasManager struct {
+type ReplicasAccess struct {
 	risingwave *risingwavev1alpha1.RisingWave
 	component  string
 }
@@ -35,7 +35,7 @@ func findGroup[T any](groups []T, target string, name func(*T) string) (*T, int)
 	return nil, 0
 }
 
-func (r *ComponentGroupReplicasManager) getReplicasPtr(group string) (*int32, int) {
+func (r *ReplicasAccess) getReplicasPtr(group string) (*int32, int) {
 	switch r.component {
 	case consts.ComponentMeta:
 		if group == "" {
@@ -82,7 +82,7 @@ func (r *ComponentGroupReplicasManager) getReplicasPtr(group string) (*int32, in
 	}
 }
 
-func (r *ComponentGroupReplicasManager) GetGroupIndex(group string) (int, bool) {
+func (r *ReplicasAccess) GetGroupIndex(group string) (int, bool) {
 	replicasPtr, i := r.getReplicasPtr(group)
 	if replicasPtr == nil {
 		return 0, false
@@ -90,7 +90,7 @@ func (r *ComponentGroupReplicasManager) GetGroupIndex(group string) (int, bool) 
 	return i, true
 }
 
-func (r *ComponentGroupReplicasManager) ReadReplicas(group string) (int32, bool) {
+func (r *ReplicasAccess) ReadReplicas(group string) (int32, bool) {
 	replicasPtr, _ := r.getReplicasPtr(group)
 	if replicasPtr == nil {
 		return 0, false
@@ -98,7 +98,7 @@ func (r *ComponentGroupReplicasManager) ReadReplicas(group string) (int32, bool)
 	return *replicasPtr, true
 }
 
-func (r *ComponentGroupReplicasManager) WriteReplicas(group string, replicas int32) bool {
+func (r *ReplicasAccess) WriteReplicas(group string, replicas int32) bool {
 	replicasPtr, _ := r.getReplicasPtr(group)
 
 	if replicasPtr != nil {
@@ -110,8 +110,8 @@ func (r *ComponentGroupReplicasManager) WriteReplicas(group string, replicas int
 	return replicasPtr != nil
 }
 
-func NewComponentGroupReplicasManager(risingwave *risingwavev1alpha1.RisingWave, component string) *ComponentGroupReplicasManager {
-	return &ComponentGroupReplicasManager{
+func NewReplicasAccess(risingwave *risingwavev1alpha1.RisingWave, component string) *ReplicasAccess {
+	return &ReplicasAccess{
 		risingwave: risingwave,
 		component:  component,
 	}

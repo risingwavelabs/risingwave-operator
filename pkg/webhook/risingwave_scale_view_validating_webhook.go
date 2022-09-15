@@ -18,6 +18,7 @@ package webhook
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"sort"
 
@@ -25,12 +26,15 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/object"
 )
 
 type RisingWaveScaleViewValidatingWebhook struct {
@@ -50,7 +54,7 @@ func getScaleViewMaxConstraints(obj *risingwavev1alpha1.RisingWaveScaleView) int
 	return max
 }
 
-func (w *RisingWaveScaleViewValidatingWebhook) validateCreate(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
+func (w *RisingWaveScaleViewValidatingWebhook) validateObject(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
 	if getScaleViewMaxConstraints(obj) != math.MaxInt32 {
 		gvk := obj.GroupVersionKind()
 		return apierrors.NewInvalid(
@@ -59,6 +63,32 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateCreate(ctx context.Contex
 			field.ErrorList{
 				field.Invalid(field.NewPath("spec", "scalePolicy"), obj.Spec.ScalePolicy, "at least one unlimited replicas"),
 			},
+		)
+	}
+	return nil
+}
+
+func (w *RisingWaveScaleViewValidatingWebhook) validateCreate(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
+	if err := w.validateObject(ctx, obj); err != nil {
+		return err
+	}
+
+	var risingwave risingwavev1alpha1.RisingWave
+	err := w.client.Get(ctx, types.NamespacedName{
+		Namespace: obj.Namespace,
+		Name:      obj.Spec.TargetRef.Name,
+	}, &risingwave)
+	if err != nil {
+		return fmt.Errorf("unable to get the risingwave: %w", err)
+	}
+
+	// Try grab the lock to see if there are conflicts.
+	if err := object.NewScaleViewLockManager(&risingwave).GrabScaleViewLockFor(obj); err != nil {
+		gvk := obj.GroupVersionKind()
+		return apierrors.NewConflict(
+			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
+			obj.Name,
+			fmt.Errorf("conflict detected: %w", err),
 		)
 	}
 
@@ -107,7 +137,7 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateUpdate(ctx context.Contex
 
 func (w *RisingWaveScaleViewValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) error {
 	// Validate the new object first.
-	if err := w.ValidateCreate(ctx, newObj); err != nil {
+	if err := w.validateObject(ctx, newObj.(*risingwavev1alpha1.RisingWaveScaleView)); err != nil {
 		return err
 	}
 

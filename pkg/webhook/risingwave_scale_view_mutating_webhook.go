@@ -78,10 +78,10 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 
 	fieldErrs := field.ErrorList{}
 	replicas := int32(0)
-	mgr := scaleview.NewComponentGroupReplicasManager(&targetObj, obj.Spec.TargetRef.Component)
+	replicasAccess := scaleview.NewReplicasAccess(&targetObj, obj.Spec.TargetRef.Component)
 	for i := range obj.Spec.ScalePolicy {
 		scalePolicy := &obj.Spec.ScalePolicy[i]
-		if r, ok := mgr.ReadReplicas(scalePolicy.Group); ok {
+		if r, ok := replicasAccess.ReadReplicas(scalePolicy.Group); ok {
 			if scalePolicy.Constraints.Max > 0 && r > scalePolicy.Constraints.Max {
 				fieldErrs = append(fieldErrs, field.Invalid(
 					field.NewPath("spec", "scalePolicy").Index(i).Key("replicas"),

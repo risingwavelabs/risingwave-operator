@@ -141,13 +141,17 @@ func (svl *ScaleViewLockManager) splitReplicasIntoGroups(sv *risingwavev1alpha1.
 	return replicas
 }
 
-func (svl *ScaleViewLockManager) grabScaleViewLockFor(sv *risingwavev1alpha1.RisingWaveScaleView) error {
+func (svl *ScaleViewLockManager) GrabScaleViewLockFor(sv *risingwavev1alpha1.RisingWaveScaleView) error {
 	groupReplicas := svl.splitReplicasIntoGroups(sv)
 
 	for _, s := range svl.risingwave.Status.ScaleViews {
 		if s.Name == sv.Name && s.UID != sv.UID {
 			return errors.New("scale view found but uid mismatch")
 		}
+		if s.Name == sv.Name && s.UID == sv.UID {
+			return errors.New("already grabbed")
+		}
+
 		if s.Component == sv.Spec.TargetRef.Component {
 			lockedGroups := lo.Map(s.GroupLocks, func(t risingwavev1alpha1.RisingWaveScaleViewLockGroupLock, _ int) string { return t.Name })
 			for _, sp := range sv.Spec.ScalePolicy {
@@ -177,7 +181,7 @@ func (svl *ScaleViewLockManager) grabScaleViewLockFor(sv *risingwavev1alpha1.Ris
 func (svl *ScaleViewLockManager) GrabOrUpdateScaleViewLockFor(sv *risingwavev1alpha1.RisingWaveScaleView) (bool, error) {
 	lock := svl.GetScaleViewLock(sv)
 	if lock == nil {
-		err := svl.grabScaleViewLockFor(sv)
+		err := svl.GrabScaleViewLockFor(sv)
 		if err != nil {
 			return false, err
 		}

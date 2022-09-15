@@ -8347,6 +8347,52 @@ spec:
                   the subresources.
                 format: int64
                 type: integer
+              scaleViews:
+                description: Scale view locks.
+                items:
+                  description: RisingWaveScaleViewLock is a lock for RisingWaveScaleViews.
+                  properties:
+                    component:
+                      description: Component of the lock.
+                      type: string
+                    generation:
+                      description: Generation of the lock.
+                      format: int64
+                      type: integer
+                    groupLocks:
+                      description: Group locks.
+                      items:
+                        properties:
+                          name:
+                            description: Group name.
+                            type: string
+                          replicas:
+                            description: Locked replica value.
+                            format: int32
+                            type: integer
+                        required:
+                        - name
+                        type: object
+                      type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
+                    name:
+                      description: Name of the owned RisingWaveScaleView object.
+                      type: string
+                    uid:
+                      description: UID of the owned RisingWaveScaleView object.
+                      type: string
+                  required:
+                  - component
+                  - generation
+                  - name
+                  - uid
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
               storages:
                 description: Status of the external storages.
                 properties:
@@ -8403,7 +8449,23 @@ spec:
     singular: risingwavescaleview
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.targetRef.name
+      name: TARGET
+      type: string
+    - jsonPath: .spec.targetRef.component
+      name: COMPONENT
+      type: string
+    - jsonPath: .status.replicas
+      name: READY
+      type: integer
+    - jsonPath: .spec.replicas
+      name: REPLICAS
+      type: integer
+    - jsonPath: .status.locked
+      name: LOCKED
+      type: boolean
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         properties:
@@ -8420,13 +8482,93 @@ spec:
           metadata:
             type: object
           spec:
+            description: RisingWaveScaleViewSpec is the spec of RisingWaveScaleView.
+            properties:
+              labelSelector:
+                description: Serialized label selector. Would be set by the webhook.
+                type: string
+              replicas:
+                description: Desired replicas.
+                format: int32
+                type: integer
+              scalePolicy:
+                description: An array of groups and the policies for scale, optional
+                  and empty means the default group with the default policy.
+                items:
+                  description: RisingWaveScaleViewSpecScalePolicy is the scale policy
+                    of a group.
+                  properties:
+                    constraints:
+                      description: Constraints on the replicas.
+                      properties:
+                        max:
+                          description: Maximum value of the replicas.
+                          format: int32
+                          maximum: 1000
+                          type: integer
+                      type: object
+                    group:
+                      description: Group name.
+                      type: string
+                    priority:
+                      description: 0-10, optional. The groups will be sorted by the
+                        priority and the current replicas. The higher it is, the more
+                        replicas of the target group will be considered kept, i.e.
+                        scale out first, scale in last.
+                      format: int32
+                      maximum: 10
+                      minimum: 0
+                      type: integer
+                  required:
+                  - group
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - group
+                x-kubernetes-list-type: map
+              targetRef:
+                description: Reference of the target RisingWave.
+                properties:
+                  component:
+                    description: Component name. Must be one of meta, frontend, compute,
+                      and compactor.
+                    enum:
+                    - meta
+                    - frontend
+                    - compute
+                    - compactor
+                    type: string
+                  name:
+                    description: Name of the RisingWave object.
+                    type: string
+                  uid:
+                    description: UID of the target RisingWave object. Should be set
+                      by the mutating webhook.
+                    type: string
+                required:
+                - component
+                - name
+                type: object
             type: object
           status:
+            description: RisingWaveScaleViewStatus is the status of RisingWaveScaleView.
+            properties:
+              locked:
+                description: Lock status.
+                type: boolean
+              replicas:
+                description: Running replicas.
+                format: int32
+                type: integer
             type: object
         type: object
     served: true
     storage: true
     subresources:
+      scale:
+        labelSelectorPath: .status.selector
+        specReplicasPath: .spec.replicas
+        statusReplicasPath: .status.replicas
       status: {}
 ---
 apiVersion: v1
@@ -8598,6 +8740,26 @@ rules:
   - risingwave.risingwavelabs.com
   resources:
   - risingwaves/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - risingwave.risingwavelabs.com
+  resources:
+  - risingwavescaleviews
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - risingwave.risingwavelabs.com
+  resources:
+  - risingwavescaleviews/status
   verbs:
   - get
   - patch
@@ -8882,6 +9044,25 @@ webhooks:
     resources:
     - risingwavepodtemplates
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: risingwave-operator-webhook-service
+      namespace: risingwave-operator-system
+      path: /mutate-risingwave-risingwavelabs-com-v1alpha1-risingwavescaleview
+  failurePolicy: Fail
+  name: mrisingwavescaleview.kb.io
+  rules:
+  - apiGroups:
+    - risingwave.risingwavelabs.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - risingwavescaleviews
+  sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
@@ -8931,4 +9112,25 @@ webhooks:
     - DELETE
     resources:
     - risingwavepodtemplates
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: risingwave-operator-webhook-service
+      namespace: risingwave-operator-system
+      path: /validate-risingwave-risingwavelabs-com-v1alpha1-risingwavescaleview
+  failurePolicy: Fail
+  name: vrisingwavescaleview.kb.io
+  rules:
+  - apiGroups:
+    - risingwave.risingwavelabs.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    - DELETE
+    resources:
+    - risingwavescaleview
   sideEffects: None

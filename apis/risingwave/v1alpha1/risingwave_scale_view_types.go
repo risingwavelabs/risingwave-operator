@@ -24,11 +24,11 @@ import (
 // RisingWaveScaleViewTargetRef is the reference of the target RisingWave.
 type RisingWaveScaleViewTargetRef struct {
 	// Name of the RisingWave object.
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// Component name. Must be one of meta, frontend, compute, and compactor.
 	// +kubebuilder:validation:Enum=meta;frontend;compute;compactor
-	Component string `json:"component,omitempty"`
+	Component string `json:"component"`
 
 	// UID of the target RisingWave object. Should be set by the mutating webhook.
 	UID types.UID `json:"uid,omitempty"`

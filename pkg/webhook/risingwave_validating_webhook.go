@@ -233,7 +233,7 @@ func pathForGroupReplicas(obj *risingwavev1alpha1.RisingWave, component, group s
 	if group == "" {
 		return field.NewPath("spec", "global", "replicas", component)
 	} else {
-		index, _ := scaleview.NewComponentGroupReplicasManager(obj, component).GetGroupIndex(group)
+		index, _ := scaleview.NewReplicasAccess(obj, component).GetGroupIndex(group)
 		return field.NewPath("spec", "components", component, "groups").Index(index).Child("replicas")
 	}
 }
@@ -261,22 +261,23 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 	// Validate the locks from scale views.
 	fieldErrs := field.ErrorList{}
 	for _, scaleView := range newObj.Status.ScaleViews {
-		oldMgr, newMgr := scaleview.NewComponentGroupReplicasManager(oldObj, scaleView.Component),
-			scaleview.NewComponentGroupReplicasManager(newObj, scaleView.Component)
+		oldAcc, newAcc := scaleview.NewReplicasAccess(oldObj, scaleView.Component),
+			scaleview.NewReplicasAccess(newObj, scaleView.Component)
 
 		unchangedCnt, updateCnt := 0, 0
 		for _, lock := range scaleView.GroupLocks {
-			old, ok := oldMgr.ReadReplicas(lock.Name)
+			old, ok := oldAcc.ReadReplicas(lock.Name)
 			if !ok {
 				panic("unexpected")
 			}
 
-			if cur, ok := newMgr.ReadReplicas(lock.Name); !ok {
+			if cur, ok := newAcc.ReadReplicas(lock.Name); !ok {
 				fieldErrs = append(fieldErrs, field.Forbidden(
 					pathForGroupReplicas(oldObj, scaleView.Component, lock.Name),
 					"group is locked (delete)",
 				))
 			} else {
+				// Either
 				if cur == lock.Replicas {
 					updateCnt++
 				} else if cur == old {

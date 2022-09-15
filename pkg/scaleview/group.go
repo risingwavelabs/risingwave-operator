@@ -29,7 +29,7 @@ type ComponentGroupReplicasManager struct {
 func findGroup[T any](groups []T, target string, name func(*T) string) (*T, int) {
 	for i, group := range groups {
 		if name(&group) == target {
-			return &group, i
+			return &groups[i], i
 		}
 	}
 	return nil, 0

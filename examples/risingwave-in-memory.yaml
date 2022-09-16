@@ -10,7 +10,6 @@ spec:
       memory: true
   global:
     image: ghcr.io/risingwavelabs/risingwave:latest
-    # image: public.ecr.aws/x5u3w5h6/risingwave-arm:latest
     imagePullPolicy: IfNotPresent
     resources:
       limits:

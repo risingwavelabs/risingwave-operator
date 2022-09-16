@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	"github.com/risingwavelabs/risingwave-operator/pkg/event"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
@@ -130,6 +131,12 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 	}
 
 	logger = logger.WithValues("generation", risingwave.Generation)
+
+	// Pause and skip the reconciliation if the annotation is found.
+	if _, ok := risingwave.Annotations[consts.AnnotationPauseReconcile]; ok {
+		logger.Info("Found annotation " + consts.AnnotationPauseReconcile + ", pause reconciliation...")
+		return ctrlkit.NoRequeue()
+	}
 
 	// Abort if deleted.
 	if utils.IsDeleted(&risingwave) {

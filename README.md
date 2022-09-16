@@ -257,7 +257,7 @@ Follow the instructions below to set up the remote write:
 kubectl create secret generic aws-prometheus-credentials --from-literal AccessKey=${ACCESS_KEY} --from-literal SecretAccessKey=${SECRET_ACCESS_KEY}
 ```
 
-2. Copy the [prometheus-remote-write-aws.yaml](./monitoring/prometheus-remote-write-aws.yaml) file and replace the values of the these variables:
+2. Copy the [prometheus-remote-write-aws.yaml](./monitoring/kube-prometheus-stack/prometheus-remote-write-aws.yaml) file and replace the values of the these variables:
   - `${KUBERNETES_NAME}`: the name of the Kubernetes, e.g., `local-dev`. You can also add `externalLabels` yourself.
   - `${AWS_REGION}`: the region of the AWS Prometheus service, e.g., `ap-southeast-1`
   - `${WORKSPACE_ID}`: the workspace ID, e.g., `ws-12345678-abcd-1234-abcd-123456789012`

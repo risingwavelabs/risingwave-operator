@@ -42,11 +42,7 @@ kubectl -n risingwave-operator-system get pods
 Now you can deploy a RisingWave instance with in-memory storage with the following command (be careful about the node arch):
 
 ```shell
-# It runs on the Linux/amd64 platform. If you want to run on Linux/arm64, you need to run the command below.
 kubectl apply -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/examples/risingwave-in-memory.yaml
-
-# Linux/arm64
-curl https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/examples/risingwave-in-memory.yaml | sed -e 's/ghcr.io\/risingwavelabs\/risingwave/public.ecr.aws\/x5u3w5h6\/risingwave-arm/g' | kubectl apply -f -
 ```
 
 Check the running status of RisingWave with the following command:
@@ -257,7 +253,7 @@ Follow the instructions below to set up the remote write:
 kubectl create secret generic aws-prometheus-credentials --from-literal AccessKey=${ACCESS_KEY} --from-literal SecretAccessKey=${SECRET_ACCESS_KEY}
 ```
 
-2. Copy the [prometheus-remote-write-aws.yaml](./monitoring/prometheus-remote-write-aws.yaml) file and replace the values of the these variables:
+2. Copy the [prometheus-remote-write-aws.yaml](./monitoring/kube-prometheus-stack/prometheus-remote-write-aws.yaml) file and replace the values of the these variables:
   - `${KUBERNETES_NAME}`: the name of the Kubernetes, e.g., `local-dev`. You can also add `externalLabels` yourself.
   - `${AWS_REGION}`: the region of the AWS Prometheus service, e.g., `ap-southeast-1`
   - `${WORKSPACE_ID}`: the workspace ID, e.g., `ws-12345678-abcd-1234-abcd-123456789012`

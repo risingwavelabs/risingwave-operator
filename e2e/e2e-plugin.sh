@@ -21,9 +21,9 @@ BASEDIR=$(dirname "$0")
 NAME_SPACE="plugin-e2e"
 NAME="example-rw"
 
-source "$BASEDIR"/cluster.sh
-source "$BASEDIR"/util.sh
 source "$BASEDIR"/k8s/kubernetes
+source "$BASEDIR"/env-utils
+source "$BASEDIR"/job/lib
 
 prepare_cluster
 

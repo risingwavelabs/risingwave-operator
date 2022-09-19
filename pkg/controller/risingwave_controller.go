@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	"github.com/risingwavelabs/risingwave-operator/pkg/event"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
@@ -92,7 +93,8 @@ const (
 // +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=get;list;watch
-// +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=get;list;watch;create;delete
+// +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=get;list;watch;create;delete;update;patch
+// +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 type RisingWaveController struct {
 	Client            client.Client
@@ -132,6 +134,12 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 	}
 
 	logger = logger.WithValues("generation", risingwave.Generation)
+
+	// Pause and skip the reconciliation if the annotation is found.
+	if _, ok := risingwave.Annotations[consts.AnnotationPauseReconcile]; ok {
+		logger.Info("Found annotation " + consts.AnnotationPauseReconcile + ", pause reconciliation...")
+		return ctrlkit.NoRequeue()
+	}
 
 	// Abort if deleted.
 	if utils.IsDeleted(&risingwave) {

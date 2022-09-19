@@ -1,6 +1,6 @@
 module github.com/risingwavelabs/risingwave-operator
 
-go 1.18
+go 1.19
 
 require (
 	github.com/BurntSushi/toml v1.0.0

@@ -20,9 +20,9 @@ set -e
 BASEDIR=$(dirname "$0")
 E2E_TESTCASES=$(ls -C "$BASEDIR"/testcases)
 
-source "$BASEDIR"/cluster.sh
-source "$BASEDIR"/util.sh
 source "$BASEDIR"/k8s/kubernetes
+source "$BASEDIR"/env-utils
+source "$BASEDIR"/job/lib
 
 prepare_cluster
 prepare_operator_image
@@ -66,6 +66,41 @@ install_operator
 
 # Start e2e testing...
 echo "Running E2E tests..."
+
+_E2E_SOURCE_BASEDIR=$(dirname "${BASH_SOURCE[0]}")
+
+function run_e2e_test() {
+  testcase="e2e-$1"
+  testcase_dir=$_E2E_SOURCE_BASEDIR/testcases/$1
+
+  if [ ! -d "$testcase_dir" ]; then
+    echo "ERROR: testcase $testcase not found"
+    return 1
+  fi
+
+  echo "[E2E $testcase] Creating the RisingWave..."
+
+  if ! kubectl get ns "$testcase" >/dev/null 2>&1; then
+    kubectl create ns "$testcase"
+  fi
+  # shellcheck disable=SC2064
+  trap "kubectl delete ns $testcase" RETURN
+
+  kubectl -n "$testcase" apply -f "$testcase_dir"
+  risingwave_name=$(kubectl -n "$testcase" get risingwave -o jsonpath='{.items[0].metadata.name}')
+
+  echo "[E2E $testcase] Waiting the RisingWave $risingwave_name to be ready..."
+  kubectl -n "$testcase" wait --timeout=300s --for=condition=Running risingwave "$risingwave_name"
+  wait_until_service_ready "$testcase" "$risingwave_name-frontend"
+
+  echo "[E2E $testcase] RisingWave ready! Run simple queries..."
+  if ! kubectl exec -t psql-console -- psql -h "$risingwave_name-frontend.$testcase" -p 4567 -d dev -U root <"$_E2E_SOURCE_BASEDIR"/check.sql; then
+    echo "[E2E $testcase] ERROR: failed to execute simple queries"
+    return 1
+  fi
+
+  echo "[E2E $testcase] Succeeds!"
+}
 
 echo "Testcases: ${E2E_TESTCASES}"
 for testcase in ${E2E_TESTCASES}; do

@@ -14,7 +14,6 @@ spec:
       - name: default
         replicas: 1
         image: ghcr.io/risingwavelabs/risingwave:latest
-        # image: public.ecr.aws/x5u3w5h6/risingwave-arm:latest
         resources:
           limits:
             cpu: 1
@@ -27,7 +26,6 @@ spec:
       - name: default
         replicas: 1
         image: ghcr.io/risingwavelabs/risingwave:latest
-        # image: public.ecr.aws/x5u3w5h6/risingwave-arm:latest
         resources:
           limits:
             cpu: 1
@@ -40,7 +38,6 @@ spec:
       - name: default
         replicas: 1
         image: ghcr.io/risingwavelabs/risingwave:latest
-        # image: public.ecr.aws/x5u3w5h6/risingwave-arm:latest
         resources:
           limits:
             cpu: 1
@@ -53,7 +50,6 @@ spec:
       - name: default
         replicas: 1
         image: ghcr.io/risingwavelabs/risingwave:latest
-        # image: public.ecr.aws/x5u3w5h6/risingwave-arm:latest
         resources:
           limits:
             cpu: 1

@@ -50,9 +50,15 @@ var (
 			Help: "Incremented if the validating webhook ran into error Create/Delete/Update",
 		},
 	)
+	TestMetrics = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "a_test_metric",
+			Help: "test metric only",
+		},
+	)
 )
 
-func init() {
+func InitMetrics() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(Reconciles, RequeueCount, DidMutate, ValidatingWebhookCalls, ValidatingWebhookErr)
+	metrics.Registry.MustRegister(TestMetrics, Reconciles, RequeueCount, DidMutate, ValidatingWebhookCalls, ValidatingWebhookErr)
 }

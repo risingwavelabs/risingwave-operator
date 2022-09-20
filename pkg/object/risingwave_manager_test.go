@@ -46,7 +46,7 @@ func Test_RisingWaveManager_UpdateRemote(t *testing.T) {
 
 	mgr := NewRisingWaveManager(
 		fake.NewClientBuilder().
-			WithScheme(testutils.Schema).
+			WithScheme(testutils.Scheme).
 			WithObjects(risingwave).
 			Build(),
 		risingwave,

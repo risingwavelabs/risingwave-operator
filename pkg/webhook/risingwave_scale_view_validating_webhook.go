@@ -55,16 +55,33 @@ func getScaleViewMaxConstraints(obj *risingwavev1alpha1.RisingWaveScaleView) int
 }
 
 func (w *RisingWaveScaleViewValidatingWebhook) validateObject(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
+	fieldErrs := field.ErrorList{}
+
+	targetRefPath := field.NewPath("spec", "targetRef")
+	if obj.Spec.TargetRef.Name == "" {
+		fieldErrs = append(fieldErrs, field.Required(targetRefPath.Child("name"), "target name must be provided"))
+	}
+	if obj.Spec.TargetRef.UID == "" {
+		fieldErrs = append(fieldErrs, field.Required(targetRefPath.Child("uid"), "uid should be set by mutating webhook"))
+	}
+
+	scalePolicyPath := field.NewPath("spec", "scalePolicy")
+	if len(obj.Spec.ScalePolicy) == 0 {
+		fieldErrs = append(fieldErrs, field.Required(scalePolicyPath, "must not be empty"))
+	}
 	if getScaleViewMaxConstraints(obj) != math.MaxInt32 {
+		fieldErrs = append(fieldErrs, field.Invalid(scalePolicyPath, obj.Spec.ScalePolicy, "at least one unlimited replicas"))
+	}
+
+	if len(fieldErrs) > 0 {
 		gvk := obj.GroupVersionKind()
 		return apierrors.NewInvalid(
 			gvk.GroupKind(),
 			obj.Name,
-			field.ErrorList{
-				field.Invalid(field.NewPath("spec", "scalePolicy"), obj.Spec.ScalePolicy, "at least one unlimited replicas"),
-			},
+			fieldErrs,
 		)
 	}
+
 	return nil
 }
 
@@ -111,6 +128,13 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateUpdate(ctx context.Contex
 		fieldErrs = append(fieldErrs, field.Forbidden(
 			field.NewPath("spec", "targetRef"),
 			"targetRefs should not be different",
+		))
+	}
+
+	if oldObj.Spec.LabelSelector != newObj.Spec.LabelSelector {
+		fieldErrs = append(fieldErrs, field.Forbidden(
+			field.NewPath("spec", "labelSelector"),
+			"labelSelector should not be changed",
 		))
 	}
 

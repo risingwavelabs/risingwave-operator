@@ -21,7 +21,9 @@ import (
 	"errors"
 	"strconv"
 	"testing"
+	"time"
 
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -50,6 +52,10 @@ func newExitCountAction(cnt *int) Action {
 func Test_Retry_Description(t *testing.T) {
 	x := NewAction("A", nothingFunc)
 	if Retry(3, x).Description() != "Retry(A, limit=3)" {
+		t.Fail()
+	}
+
+	if RetryInterval(3, 10*time.Millisecond, x).Description() != "Retry(A, limit=3, interval=10ms)" {
 		t.Fail()
 	}
 }
@@ -128,6 +134,49 @@ func Test_Retry(t *testing.T) {
 				t.Fail()
 			}
 			if tc.expectedCnt != cnt {
+				t.Fail()
+			}
+		})
+	}
+}
+
+func Test_RetryInterval(t *testing.T) {
+	testcases := map[string]struct {
+		action      Action
+		limit       int
+		interval    time.Duration
+		timeout     time.Duration
+		expectedErr string
+	}{
+		"fail": {
+			action:      newFailUntilAction(3, pointer.Int(0)),
+			limit:       4,
+			interval:    10 * time.Millisecond,
+			expectedErr: "",
+		},
+		"timeout": {
+			action:      newFailUntilAction(3, pointer.Int(0)),
+			limit:       10,
+			interval:    10 * time.Second,
+			timeout:     10 * time.Millisecond,
+			expectedErr: context.DeadlineExceeded.Error(),
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			act := RetryInterval(tc.limit, tc.interval, tc.action)
+			ctx := context.Background()
+			if tc.timeout > 0 {
+				tCtx, cancel := context.WithTimeout(ctx, tc.timeout)
+				defer cancel()
+				ctx = tCtx
+			}
+			_, err := act.Run(ctx)
+			if err != nil && err.Error() != tc.expectedErr {
+				t.Fail()
+			}
+			if err == nil && tc.expectedErr != "" {
 				t.Fail()
 			}
 		})

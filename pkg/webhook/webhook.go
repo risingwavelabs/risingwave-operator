@@ -24,7 +24,7 @@ import (
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
-// Setup webhooks with manager.
+// SetupWebhooksWithManager set up the webhooks.
 func SetupWebhooksWithManager(mgr ctrl.Manager) error {
 	if err := ctrl.NewWebhookManagedBy(mgr).
 		For(&risingwavev1alpha1.RisingWavePodTemplate{}).

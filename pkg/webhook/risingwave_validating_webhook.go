@@ -266,10 +266,8 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 
 		unchangedCnt, updateCnt := 0, 0
 		for _, lock := range scaleView.GroupLocks {
-			old, ok := oldHelper.ReadReplicas(lock.Name)
-			if !ok {
-				panic("unexpected")
-			}
+			// Ignore the existence of the old group and allow adding locked (but not exist) groups.
+			old, _ := oldHelper.ReadReplicas(lock.Name)
 
 			if cur, ok := newHelper.ReadReplicas(lock.Name); !ok {
 				fieldErrs = append(fieldErrs, field.Forbidden(

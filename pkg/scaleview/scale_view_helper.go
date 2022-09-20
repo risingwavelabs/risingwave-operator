@@ -17,11 +17,13 @@
 package scaleview
 
 import (
+	"github.com/samber/lo"
+
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
 
-type ReplicasAccess struct {
+type RisingWaveScaleViewHelper struct {
 	risingwave *risingwavev1alpha1.RisingWave
 	component  string
 }
@@ -35,7 +37,7 @@ func findGroup[T any](groups []T, target string, name func(*T) string) (*T, int)
 	return nil, 0
 }
 
-func (r *ReplicasAccess) getReplicasPtr(group string) (*int32, int) {
+func (r *RisingWaveScaleViewHelper) getReplicasPtr(group string) (*int32, int) {
 	switch r.component {
 	case consts.ComponentMeta:
 		if group == "" {
@@ -82,7 +84,22 @@ func (r *ReplicasAccess) getReplicasPtr(group string) (*int32, int) {
 	}
 }
 
-func (r *ReplicasAccess) GetGroupIndex(group string) (int, bool) {
+func (r *RisingWaveScaleViewHelper) ListComponentGroups() []string {
+	switch r.component {
+	case consts.ComponentMeta:
+		return lo.Map(r.risingwave.Spec.Components.Meta.Groups, func(g risingwavev1alpha1.RisingWaveComponentGroup, _ int) string { return g.Name })
+	case consts.ComponentFrontend:
+		return lo.Map(r.risingwave.Spec.Components.Frontend.Groups, func(g risingwavev1alpha1.RisingWaveComponentGroup, _ int) string { return g.Name })
+	case consts.ComponentCompute:
+		return lo.Map(r.risingwave.Spec.Components.Compute.Groups, func(g risingwavev1alpha1.RisingWaveComputeGroup, _ int) string { return g.Name })
+	case consts.ComponentCompactor:
+		return lo.Map(r.risingwave.Spec.Components.Compactor.Groups, func(g risingwavev1alpha1.RisingWaveComponentGroup, _ int) string { return g.Name })
+	default:
+		panic("never reach here")
+	}
+}
+
+func (r *RisingWaveScaleViewHelper) GetGroupIndex(group string) (int, bool) {
 	replicasPtr, i := r.getReplicasPtr(group)
 	if replicasPtr == nil {
 		return 0, false
@@ -90,7 +107,7 @@ func (r *ReplicasAccess) GetGroupIndex(group string) (int, bool) {
 	return i, true
 }
 
-func (r *ReplicasAccess) ReadReplicas(group string) (int32, bool) {
+func (r *RisingWaveScaleViewHelper) ReadReplicas(group string) (int32, bool) {
 	replicasPtr, _ := r.getReplicasPtr(group)
 	if replicasPtr == nil {
 		return 0, false
@@ -98,7 +115,7 @@ func (r *ReplicasAccess) ReadReplicas(group string) (int32, bool) {
 	return *replicasPtr, true
 }
 
-func (r *ReplicasAccess) WriteReplicas(group string, replicas int32) bool {
+func (r *RisingWaveScaleViewHelper) WriteReplicas(group string, replicas int32) bool {
 	replicasPtr, _ := r.getReplicasPtr(group)
 
 	if replicasPtr != nil {
@@ -110,8 +127,8 @@ func (r *ReplicasAccess) WriteReplicas(group string, replicas int32) bool {
 	return replicasPtr != nil
 }
 
-func NewReplicasAccess(risingwave *risingwavev1alpha1.RisingWave, component string) *ReplicasAccess {
-	return &ReplicasAccess{
+func NewRisingWaveScaleViewHelper(risingwave *risingwavev1alpha1.RisingWave, component string) *RisingWaveScaleViewHelper {
+	return &RisingWaveScaleViewHelper{
 		risingwave: risingwave,
 		component:  component,
 	}

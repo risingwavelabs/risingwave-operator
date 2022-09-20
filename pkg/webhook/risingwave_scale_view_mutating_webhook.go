@@ -75,13 +75,24 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 	}
 
 	obj.Spec.TargetRef.UID = targetObj.UID
+	helper := scaleview.NewRisingWaveScaleViewHelper(&targetObj, obj.Spec.TargetRef.Component)
 
+	// Set the default groups.
+	if len(obj.Spec.ScalePolicy) == 0 {
+		if r, _ := helper.ReadReplicas(""); r != 0 {
+			obj.Spec.ScalePolicy = append(obj.Spec.ScalePolicy, risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{Group: ""})
+		}
+		for _, group := range helper.ListComponentGroups() {
+			obj.Spec.ScalePolicy = append(obj.Spec.ScalePolicy, risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{Group: group})
+		}
+	}
+
+	// Read the replicas.
 	fieldErrs := field.ErrorList{}
 	replicas := int32(0)
-	replicasAccess := scaleview.NewReplicasAccess(&targetObj, obj.Spec.TargetRef.Component)
 	for i := range obj.Spec.ScalePolicy {
 		scalePolicy := &obj.Spec.ScalePolicy[i]
-		if r, ok := replicasAccess.ReadReplicas(scalePolicy.Group); ok {
+		if r, ok := helper.ReadReplicas(scalePolicy.Group); ok {
 			if scalePolicy.MaxReplicas != nil && r > *scalePolicy.MaxReplicas {
 				fieldErrs = append(fieldErrs, field.Invalid(
 					field.NewPath("spec", "scalePolicy").Index(i).Key("replicas"),
@@ -116,25 +127,19 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 }
 
 // Set default values.
-//   - Set the target group to "" if the .spec.scalePolicy is empty
-//   - Update the .spec.labelSelector
 //   - Read the .spec.replicas and group replicas under .spec.scalePolicy if it's a new created scale policy (with empty .spec.targetRef.uid),
 //     get the target RisingWave and read and copy the replicas.
+//   - Set the target groups as the whole groups currently declared.
+//   - Update the .spec.labelSelector
 func (w *RisingWaveScaleViewMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
-	if len(obj.Spec.ScalePolicy) == 0 {
-		obj.Spec.ScalePolicy = []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
-			{Group: ""},
-		}
-	}
-
-	w.setLabelSelector(obj)
-
 	if obj.Spec.TargetRef.UID == "" {
 		err := w.readGroupReplicasFromRisingWave(ctx, obj)
 		if err != nil {
 			return err
 		}
 	}
+
+	w.setLabelSelector(obj)
 
 	return nil
 }

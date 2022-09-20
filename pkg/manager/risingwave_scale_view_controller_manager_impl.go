@@ -65,10 +65,13 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) HandleScaleViewFinalizer(ct
 	if mgr.isTargetObjMatched(targetObj) {
 		lockMgr := object.NewScaleViewLockManager(targetObj)
 		if lockMgr.ReleaseLockFor(mgr.scaleView) {
+			logger.Info("Lock released in memory! Try updating the remote...")
 			if err := mgr.client.Status().Update(ctx, targetObj); err != nil {
 				return ctrlkit.RequeueIfErrorAndWrap("unable to update the status of RisingWave", err)
 			}
 		}
+	} else if targetObj != nil {
+		logger.Info("Object's uid doesn't match", "expect", mgr.scaleView.Spec.TargetRef.UID, "actual", targetObj.UID)
 	}
 
 	err := mgr.client.Update(ctx, mgr.scaleView)
@@ -77,6 +80,10 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) HandleScaleViewFinalizer(ct
 
 func (mgr *risingWaveScaleViewControllerManagerImpl) GrabOrUpdateScaleViewLock(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
 	if !mgr.isTargetObjMatched(targetObj) {
+		if targetObj != nil {
+			logger.Info("Object's uid doesn't match", "expect", mgr.scaleView.Spec.TargetRef.UID, "actual", targetObj.UID)
+		}
+
 		return ctrlkit.Continue()
 	}
 
@@ -88,6 +95,7 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) GrabOrUpdateScaleViewLock(c
 	}
 
 	if updated {
+		logger.Info("Lock grabbed(updated) in memory! Try updating the remote...")
 		if err := mgr.client.Status().Update(ctx, targetObj); err != nil {
 			return ctrlkit.RequeueIfErrorAndWrap("unable to update the status of RisingWave", err)
 		}
@@ -100,6 +108,10 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) GrabOrUpdateScaleViewLock(c
 
 func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasToRisingWave(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
 	if !mgr.isTargetObjMatched(targetObj) {
+		if targetObj != nil {
+			logger.Info("Object's uid doesn't match", "expect", mgr.scaleView.Spec.TargetRef.UID, "actual", targetObj.UID)
+		}
+
 		return ctrlkit.Continue()
 	}
 
@@ -118,6 +130,8 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasToRisingWa
 	}
 
 	if changed {
+		logger.Info("Syncing the replicas changes...")
+
 		err := mgr.client.Update(ctx, targetObj)
 		if err != nil {
 			return ctrlkit.RequeueIfErrorAndWrap("unable to update the replicas of RisingWave", err)

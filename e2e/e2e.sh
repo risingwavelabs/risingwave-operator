@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-set -e
+set -ex
 
 BASEDIR=$(dirname "$0")
 E2E_TESTCASES=$(ls -C "$BASEDIR"/testcases)
@@ -25,44 +25,10 @@ source "$BASEDIR"/env-utils
 source "$BASEDIR"/job/lib
 
 prepare_cluster
+overtrap stop_cluster EXIT
 prepare_operator_image
-
-function install_operator() {
-    # Install the RisingWave operator.
-    echo "Installing the RisingWave operator..."
-    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
-    trap "kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml" EXIT
-
-    function wait_cert_manager_certificate() {
-      # wait for certificate
-      threshold=40
-      current_epoch=0
-      while :; do
-        certificate=$(kubectl get validatingwebhookconfigurations cert-manager-webhook -o jsonpath='{.webhooks[0].clientConfig.caBundle}')
-        if [ -n "$certificate" ]; then
-          break
-        fi
-        if [ $current_epoch -eq $threshold ]; then
-          echo "ERROR: timeout waiting for cert-manager"
-          exit 1
-        fi
-        sleep 2
-        current_epoch=$((current_epoch + 1))
-        echo "waiting for cert-manager to be ready ($current_epoch / $threshold)..."
-      done
-    }
-
-    wait_cert_manager_certificate
-    wait_until_service_ready cert-manager cert-manager-webhook
-
-    kubectl apply -f "$BASEDIR"/../config/risingwave-operator-test.yaml
-    trap 'kubectl delete -f $BASEDIR/../config/risingwave-operator-test.yaml' EXIT
-
-    wait_until_service_ready risingwave-operator-system risingwave-operator-webhook-service
-    echo "RisingWave operator installed!"
-}
-
-install_operator
+install_locally_built_operator
+overtrap uninstall_locally_built_risingwave_operator EXIT
 
 # Start e2e testing...
 echo "Running E2E tests..."
@@ -84,7 +50,7 @@ function run_e2e_test() {
     kubectl create ns "$testcase"
   fi
   # shellcheck disable=SC2064
-  trap "kubectl delete ns $testcase" RETURN
+  overtrap "kubectl delete ns $testcase" RETURN
 
   kubectl -n "$testcase" apply -f "$testcase_dir"
   risingwave_name=$(kubectl -n "$testcase" get risingwave -o jsonpath='{.items[0].metadata.name}')

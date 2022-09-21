@@ -19,6 +19,7 @@ package factory
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -70,6 +71,8 @@ local_object_store = "tempdisk"`
 type RisingWaveObjectFactory struct {
 	scheme     *runtime.Scheme
 	risingwave *risingwavev1alpha1.RisingWave
+
+	inheritedLabels map[string]string
 }
 
 func mustSetControllerReference[T client.Object](owner client.Object, controlled T, scheme *runtime.Scheme) T {
@@ -137,7 +140,7 @@ func (f *RisingWaveObjectFactory) componentName(component, group string) string 
 }
 
 func (f *RisingWaveObjectFactory) objectMeta(name string, sync bool) metav1.ObjectMeta {
-	return metav1.ObjectMeta{
+	objectMeta := metav1.ObjectMeta{
 		Name:      name,
 		Namespace: f.namespace(),
 		Labels: map[string]string{
@@ -145,10 +148,14 @@ func (f *RisingWaveObjectFactory) objectMeta(name string, sync bool) metav1.Obje
 			consts.LabelRisingWaveGeneration: lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
 		},
 	}
+
+	objectMeta.Labels = mergeMap(objectMeta.Labels, f.getInheritedLabels())
+
+	return objectMeta
 }
 
 func (f *RisingWaveObjectFactory) componentObjectMeta(component string, sync bool) metav1.ObjectMeta {
-	return metav1.ObjectMeta{
+	objectMeta := metav1.ObjectMeta{
 		Name:      f.componentName(component, ""),
 		Namespace: f.namespace(),
 		Labels: map[string]string{
@@ -157,10 +164,14 @@ func (f *RisingWaveObjectFactory) componentObjectMeta(component string, sync boo
 			consts.LabelRisingWaveGeneration: lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
 		},
 	}
+
+	objectMeta.Labels = mergeMap(objectMeta.Labels, f.getInheritedLabels())
+
+	return objectMeta
 }
 
 func (f *RisingWaveObjectFactory) componentGroupObjectMeta(component, group string, sync bool) metav1.ObjectMeta {
-	return metav1.ObjectMeta{
+	objectMeta := metav1.ObjectMeta{
 		Name:      f.componentName(component, group),
 		Namespace: f.namespace(),
 		Labels: map[string]string{
@@ -170,6 +181,10 @@ func (f *RisingWaveObjectFactory) componentGroupObjectMeta(component, group stri
 			consts.LabelRisingWaveGroup:      group,
 		},
 	}
+
+	objectMeta.Labels = mergeMap(objectMeta.Labels, f.getInheritedLabels())
+
+	return objectMeta
 }
 
 func (f *RisingWaveObjectFactory) podLabelsOrSelectors(component string) map[string]string {
@@ -607,6 +622,53 @@ func buildPodTemplateSpecFrom(t *risingwavev1alpha1.RisingWavePodTemplateSpec) c
 	}
 }
 
+func captureInheritedLabels(risingwave *risingwavev1alpha1.RisingWave) map[string]string {
+	inheritLabelPrefix, exist := risingwave.Annotations[consts.AnnotationInheritLabelPrefix]
+	if !exist {
+		return nil
+	}
+
+	// Parse the label prefixes (separated by comma) from the annotation value.
+	prefixes := strings.Split(inheritLabelPrefix, ",")
+	for i, prefix := range prefixes {
+		prefixes[i] = strings.TrimSpace(prefix)
+	}
+	prefixes = lo.Filter(prefixes, func(s string, _ int) bool {
+		return len(s) > 0 && s != "risingwave"
+	})
+
+	if len(prefixes) == 0 {
+		return nil
+	}
+
+	// Match labels with naive algorithm here.
+	matchLabelKey := func(s string) bool {
+		for _, p := range prefixes {
+			if strings.HasPrefix(s, p+"/") {
+				return true
+			}
+		}
+		return false
+	}
+
+	inheritedLabels := make(map[string]string)
+	for k, v := range risingwave.Labels {
+		if matchLabelKey(k) {
+			inheritedLabels[k] = v
+		}
+	}
+
+	if len(inheritedLabels) == 0 {
+		return nil
+	}
+
+	return inheritedLabels
+}
+
+func (f *RisingWaveObjectFactory) getInheritedLabels() map[string]string {
+	return f.inheritedLabels
+}
+
 func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate,
 	groupTemplate *risingwavev1alpha1.RisingWaveComponentGroupTemplate, restartAt *metav1.Time) corev1.PodTemplateSpec {
 	var podTemplate corev1.PodTemplateSpec
@@ -635,6 +697,10 @@ func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podT
 
 	// Set labels and annotations.
 	podTemplate.Labels = mergeMap(podTemplate.Labels, f.podLabelsOrSelectorsForGroup(component, group))
+
+	// Inherit labels from RisingWave, according to the hint.
+	podTemplate.Labels = mergeMap(podTemplate.Labels, f.getInheritedLabels())
+
 	if restartAt != nil {
 		if podTemplate.Annotations == nil {
 			podTemplate.Annotations = make(map[string]string)
@@ -1159,7 +1225,8 @@ func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonit
 
 func NewRisingWaveObjectFactory(risingwave *risingwavev1alpha1.RisingWave, scheme *runtime.Scheme) *RisingWaveObjectFactory {
 	return &RisingWaveObjectFactory{
-		risingwave: risingwave,
-		scheme:     scheme,
+		risingwave:      risingwave,
+		scheme:          scheme,
+		inheritedLabels: captureInheritedLabels(risingwave),
 	}
 }

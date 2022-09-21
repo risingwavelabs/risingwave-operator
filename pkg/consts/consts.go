@@ -32,8 +32,9 @@ const (
 // =================================================
 
 const (
-	AnnotationRestartAt      = "risingwave/restart-at"
-	AnnotationPauseReconcile = "risingwave.risingwavelabs.com/pause-reconcile"
+	AnnotationRestartAt          = "risingwave/restart-at"
+	AnnotationPauseReconcile     = "risingwave.risingwavelabs.com/pause-reconcile"
+	AnnotationInheritLabelPrefix = "risingwave.risingwavelabs.com/inherit-label-prefix"
 )
 
 // =================================================

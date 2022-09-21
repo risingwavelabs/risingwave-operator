@@ -163,6 +163,8 @@ build-e2e-image:
 e2e-test: generate-test-yaml vendor build-e2e-image
 	e2e/e2e.sh
 	e2e/e2e-scaleview.sh
+
+e2e-plugin:
 	e2e/e2e-plugin.sh
 
 docker-cross-build: test buildx## Build docker image with the manager.

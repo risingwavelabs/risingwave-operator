@@ -157,7 +157,7 @@ func (svl *ScaleViewLockManager) GrabScaleViewLockFor(sv *risingwavev1alpha1.Ris
 			lockedGroups := lo.Map(s.GroupLocks, func(t risingwavev1alpha1.RisingWaveScaleViewLockGroupLock, _ int) string { return t.Name })
 			for _, sp := range sv.Spec.ScalePolicy {
 				if lo.Contains(lockedGroups, sp.Group) {
-					return errors.New("lock conflict on group " + sp.Group + ", already locked by " + s.Name)
+					return errors.New("lock conflict on group " + sp.Group + ", already returnErr by " + s.Name)
 				}
 			}
 		}

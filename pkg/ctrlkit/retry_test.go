@@ -93,6 +93,51 @@ func Test_Retry_LimitShouldGreaterThanZero(t *testing.T) {
 	}
 }
 
+func Test_RetryInterval_ShouldPanic(t *testing.T) {
+	testcases := map[string]struct {
+		shouldPanic bool
+		limit       int
+		interval    time.Duration
+	}{
+		"minus-one-panics": {
+			shouldPanic: true,
+			limit:       -1,
+		},
+		"zero-panics": {
+			shouldPanic: true,
+			limit:       0,
+		},
+		"negative-duration-panics": {
+			shouldPanic: true,
+			limit:       1,
+			interval:    -1 * time.Second,
+		},
+		"zero-duration-panics": {
+			shouldPanic: true,
+			limit:       1,
+			interval:    0,
+		},
+		"positive-duration-not-panics": {
+			shouldPanic: false,
+			limit:       1,
+			interval:    time.Second,
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			defer func() {
+				r := recover()
+				if (!tc.shouldPanic && r != nil) || (tc.shouldPanic && r == nil) {
+					t.Fail()
+				}
+			}()
+
+			RetryInterval(tc.limit, tc.interval, Nop)
+		})
+	}
+}
+
 func Test_Retry(t *testing.T) {
 	cnt := 0
 

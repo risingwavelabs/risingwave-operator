@@ -1376,16 +1376,16 @@ func Test_RisingWaveObjectFactory_InheritLabels(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			factory := &RisingWaveObjectFactory{risingwave: &risingwavev1alpha1.RisingWave{
+			factory := NewRisingWaveObjectFactory(&risingwavev1alpha1.RisingWave{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: tc.labels,
 					Annotations: map[string]string{
 						consts.AnnotationInheritLabelPrefix: tc.inheritPrefixValue,
 					},
 				},
-			}}
+			}, nil)
 
-			assert.Equal(t, tc.inheritedLabels, factory.inheritedLabels(), "inherited labels not match")
+			assert.Equal(t, tc.inheritedLabels, factory.getInheritedLabels(), "inherited labels not match")
 		})
 	}
 }

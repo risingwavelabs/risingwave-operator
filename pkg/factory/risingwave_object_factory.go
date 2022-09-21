@@ -71,6 +71,8 @@ local_object_store = "tempdisk"`
 type RisingWaveObjectFactory struct {
 	scheme     *runtime.Scheme
 	risingwave *risingwavev1alpha1.RisingWave
+
+	inheritedLabels map[string]string
 }
 
 func mustSetControllerReference[T client.Object](owner client.Object, controlled T, scheme *runtime.Scheme) T {
@@ -138,7 +140,7 @@ func (f *RisingWaveObjectFactory) componentName(component, group string) string 
 }
 
 func (f *RisingWaveObjectFactory) objectMeta(name string, sync bool) metav1.ObjectMeta {
-	return metav1.ObjectMeta{
+	objectMeta := metav1.ObjectMeta{
 		Name:      name,
 		Namespace: f.namespace(),
 		Labels: map[string]string{
@@ -146,10 +148,14 @@ func (f *RisingWaveObjectFactory) objectMeta(name string, sync bool) metav1.Obje
 			consts.LabelRisingWaveGeneration: lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
 		},
 	}
+
+	objectMeta.Labels = mergeMap(objectMeta.Labels, f.getInheritedLabels())
+
+	return objectMeta
 }
 
 func (f *RisingWaveObjectFactory) componentObjectMeta(component string, sync bool) metav1.ObjectMeta {
-	return metav1.ObjectMeta{
+	objectMeta := metav1.ObjectMeta{
 		Name:      f.componentName(component, ""),
 		Namespace: f.namespace(),
 		Labels: map[string]string{
@@ -158,10 +164,14 @@ func (f *RisingWaveObjectFactory) componentObjectMeta(component string, sync boo
 			consts.LabelRisingWaveGeneration: lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
 		},
 	}
+
+	objectMeta.Labels = mergeMap(objectMeta.Labels, f.getInheritedLabels())
+
+	return objectMeta
 }
 
 func (f *RisingWaveObjectFactory) componentGroupObjectMeta(component, group string, sync bool) metav1.ObjectMeta {
-	return metav1.ObjectMeta{
+	objectMeta := metav1.ObjectMeta{
 		Name:      f.componentName(component, group),
 		Namespace: f.namespace(),
 		Labels: map[string]string{
@@ -171,6 +181,10 @@ func (f *RisingWaveObjectFactory) componentGroupObjectMeta(component, group stri
 			consts.LabelRisingWaveGroup:      group,
 		},
 	}
+
+	objectMeta.Labels = mergeMap(objectMeta.Labels, f.getInheritedLabels())
+
+	return objectMeta
 }
 
 func (f *RisingWaveObjectFactory) podLabelsOrSelectors(component string) map[string]string {
@@ -608,8 +622,8 @@ func buildPodTemplateSpecFrom(t *risingwavev1alpha1.RisingWavePodTemplateSpec) c
 	}
 }
 
-func (f *RisingWaveObjectFactory) inheritedLabels() map[string]string {
-	inheritLabelPrefix, exist := f.risingwave.Annotations[consts.AnnotationInheritLabelPrefix]
+func captureInheritedLabels(risingwave *risingwavev1alpha1.RisingWave) map[string]string {
+	inheritLabelPrefix, exist := risingwave.Annotations[consts.AnnotationInheritLabelPrefix]
 	if !exist {
 		return nil
 	}
@@ -638,7 +652,7 @@ func (f *RisingWaveObjectFactory) inheritedLabels() map[string]string {
 	}
 
 	inheritedLabels := make(map[string]string)
-	for k, v := range f.risingwave.Labels {
+	for k, v := range risingwave.Labels {
 		if matchLabelKey(k) {
 			inheritedLabels[k] = v
 		}
@@ -649,6 +663,10 @@ func (f *RisingWaveObjectFactory) inheritedLabels() map[string]string {
 	}
 
 	return inheritedLabels
+}
+
+func (f *RisingWaveObjectFactory) getInheritedLabels() map[string]string {
+	return f.inheritedLabels
 }
 
 func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate,
@@ -681,7 +699,7 @@ func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podT
 	podTemplate.Labels = mergeMap(podTemplate.Labels, f.podLabelsOrSelectorsForGroup(component, group))
 
 	// Inherit labels from RisingWave, according to the hint.
-	podTemplate.Labels = mergeMap(podTemplate.Labels, f.inheritedLabels())
+	podTemplate.Labels = mergeMap(podTemplate.Labels, f.getInheritedLabels())
 
 	if restartAt != nil {
 		if podTemplate.Annotations == nil {
@@ -1207,7 +1225,8 @@ func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonit
 
 func NewRisingWaveObjectFactory(risingwave *risingwavev1alpha1.RisingWave, scheme *runtime.Scheme) *RisingWaveObjectFactory {
 	return &RisingWaveObjectFactory{
-		risingwave: risingwave,
-		scheme:     scheme,
+		risingwave:      risingwave,
+		scheme:          scheme,
+		inheritedLabels: captureInheritedLabels(risingwave),
 	}
 }

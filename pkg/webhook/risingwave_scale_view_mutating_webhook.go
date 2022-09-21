@@ -137,6 +137,11 @@ func (w *RisingWaveScaleViewMutatingWebhook) setDefault(ctx context.Context, obj
 		if err != nil {
 			return err
 		}
+	} else {
+		gvk := obj.GroupVersionKind()
+		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, field.ErrorList{
+			field.Invalid(field.NewPath("spec", "targetRef", "uid"), obj.Spec.TargetRef.UID, "uid must be empty and set by webhook"),
+		})
 	}
 
 	w.setLabelSelector(obj)

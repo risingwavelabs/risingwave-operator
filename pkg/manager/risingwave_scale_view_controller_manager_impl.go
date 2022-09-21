@@ -115,6 +115,8 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasToRisingWa
 		return ctrlkit.Continue()
 	}
 
+	targetObjOriginal := targetObj.DeepCopy()
+
 	lockObj := object.NewScaleViewLockManager(targetObj).GetScaleViewLock(mgr.scaleView)
 	if lockObj == nil || lockObj.Generation != mgr.scaleView.Generation {
 		logger.Info("Lock is outdated, retry...")
@@ -132,7 +134,7 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasToRisingWa
 	if changed {
 		logger.Info("Syncing the replicas changes...")
 
-		err := mgr.client.Update(ctx, targetObj)
+		err := mgr.client.Patch(ctx, targetObj, client.MergeFrom(targetObjOriginal))
 		if err != nil {
 			return ctrlkit.RequeueIfErrorAndWrap("unable to update the replicas of RisingWave", err)
 		}

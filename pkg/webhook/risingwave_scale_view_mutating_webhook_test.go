@@ -86,6 +86,16 @@ func Test_RisingWaveScaleViewMutatingWebhook_Default(t *testing.T) {
 			},
 			returnErr: true,
 		},
+		"uid-not-empty": {
+			initObjs: []client.Object{
+				testutils.FakeRisingWave(),
+			},
+			origin: testutils.NewFakeRisingWaveScaleViewFor(testutils.FakeRisingWave(), consts.ComponentFrontend),
+			mutate: func(view *risingwavev1alpha1.RisingWaveScaleView) {
+				view.Spec.TargetRef.UID = "123"
+			},
+			returnErr: true,
+		},
 	}
 
 	for name, tc := range testcases {

@@ -24,6 +24,7 @@ import (
 
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/samber/lo"
+	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -1322,4 +1323,69 @@ func Test_RisingWaveObjectFactory_ServiceMonitor(t *testing.T) {
 			return len(obj.Spec.Endpoints) > 0 && obj.Spec.Endpoints[0].Port == consts.PortMetrics
 		}),
 	).Assert(t)
+}
+
+func Test_RisingWaveObjectFactory_InheritLabels(t *testing.T) {
+	testcases := map[string]struct {
+		labels             map[string]string
+		inheritPrefixValue string
+		inheritedLabels    map[string]string
+	}{
+		"no-inherit": {
+			labels: map[string]string{
+				"a":                               "b",
+				"risingwave.risingwavelabs.com/a": "b",
+			},
+			inheritPrefixValue: "",
+			inheritedLabels:    nil,
+		},
+		"inherit-with-one-prefix": {
+			labels: map[string]string{
+				"a":                               "b",
+				"risingwave.risingwavelabs.com/a": "b",
+			},
+			inheritPrefixValue: "risingwave.risingwavelabs.com",
+			inheritedLabels: map[string]string{
+				"risingwave.risingwavelabs.com/a": "b",
+			},
+		},
+		"inherit-with-two-prefixes": {
+			labels: map[string]string{
+				"a":                               "b",
+				"risingwave.risingwavelabs.com/a": "b",
+				"risingwave.cloud/c":              "d",
+			},
+			inheritPrefixValue: "risingwave.risingwavelabs.com,risingwave.cloud",
+			inheritedLabels: map[string]string{
+				"risingwave.risingwavelabs.com/a": "b",
+				"risingwave.cloud/c":              "d",
+			},
+		},
+		"won't-inherit-builtin-prefix": {
+			labels: map[string]string{
+				"a":                               "b",
+				"risingwave/c":                    "d",
+				"risingwave.risingwavelabs.com/a": "b",
+			},
+			inheritPrefixValue: "risingwave.risingwavelabs.com,risingwave",
+			inheritedLabels: map[string]string{
+				"risingwave.risingwavelabs.com/a": "b",
+			},
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			factory := &RisingWaveObjectFactory{risingwave: &risingwavev1alpha1.RisingWave{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: tc.labels,
+					Annotations: map[string]string{
+						consts.AnnotationInheritLabelPrefix: tc.inheritPrefixValue,
+					},
+				},
+			}}
+
+			assert.Equal(t, tc.inheritedLabels, factory.inheritedLabels(), "inherited labels not match")
+		})
+	}
 }

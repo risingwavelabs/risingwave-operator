@@ -19,6 +19,7 @@ package factory
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -607,6 +608,49 @@ func buildPodTemplateSpecFrom(t *risingwavev1alpha1.RisingWavePodTemplateSpec) c
 	}
 }
 
+func (f *RisingWaveObjectFactory) inheritedLabels() map[string]string {
+	inheritLabelPrefix, exist := f.risingwave.Annotations[consts.AnnotationInheritLabelPrefix]
+	if !exist {
+		return nil
+	}
+
+	// Parse the label prefixes (separated by comma) from the annotation value.
+	prefixes := strings.Split(inheritLabelPrefix, ",")
+	for i, prefix := range prefixes {
+		prefixes[i] = strings.TrimSpace(prefix)
+	}
+	prefixes = lo.Filter(prefixes, func(s string, _ int) bool {
+		return len(s) > 0 && s != "risingwave"
+	})
+
+	if len(prefixes) == 0 {
+		return nil
+	}
+
+	// Match labels with naive algorithm here.
+	matchLabelKey := func(s string) bool {
+		for _, p := range prefixes {
+			if strings.HasPrefix(s, p+"/") {
+				return true
+			}
+		}
+		return false
+	}
+
+	inheritedLabels := make(map[string]string)
+	for k, v := range f.risingwave.Labels {
+		if matchLabelKey(k) {
+			inheritedLabels[k] = v
+		}
+	}
+
+	if len(inheritedLabels) == 0 {
+		return nil
+	}
+
+	return inheritedLabels
+}
+
 func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate,
 	groupTemplate *risingwavev1alpha1.RisingWaveComponentGroupTemplate, restartAt *metav1.Time) corev1.PodTemplateSpec {
 	var podTemplate corev1.PodTemplateSpec
@@ -635,6 +679,10 @@ func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podT
 
 	// Set labels and annotations.
 	podTemplate.Labels = mergeMap(podTemplate.Labels, f.podLabelsOrSelectorsForGroup(component, group))
+
+	// Inherit labels from RisingWave, according to the hint.
+	podTemplate.Labels = mergeMap(podTemplate.Labels, f.inheritedLabels())
+
 	if restartAt != nil {
 		if podTemplate.Annotations == nil {
 			podTemplate.Annotations = make(map[string]string)

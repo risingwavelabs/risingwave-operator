@@ -1,5 +1,7 @@
+ARG USE_VENDOR=false
+
 # Build the manager binary
-FROM golang:1.19 as builder
+FROM golang:1.19 as base
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
@@ -8,8 +10,6 @@ COPY go.sum go.sum
 ## cache deps before building and copying source so that we don't need to re-download as much
 ## and so that source changes don't invalidate our downloaded layer
 #RUN go mod download
-ARG TARGETARCH
-ARG USE_VENDOR
 
 # Copy the go source
 COPY cmd/ cmd/
@@ -17,18 +17,22 @@ COPY apis/ apis/
 COPY pkg/ pkg/
 COPY vendor* vendor/
 
-# Build
-RUN if [ "$USE_VENDOR" = "true" ] ; then \
-    CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -mod=vendor -a -o manager cmd/manager/manager.go ;  \
-    else  \
-    CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -a -o manager cmd/manager/manager.go ;  \
-    fi
+FROM base as vendor-true
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -mod=vendor -a -o manager cmd/manager/manager.go
+
+FROM base as vendor-false
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -a -o manager cmd/manager/manager.go
+
+FROM vendor-${USE_VENDOR} as vendor
+RUN echo "vendor is ${USE_VENDOR}"
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
 FROM gcr.io/distroless/static-debian11
 WORKDIR /
-COPY --from=builder /workspace/manager .
+COPY --from=vendor /workspace/manager .
 USER 65532:65532
 
 ENTRYPOINT ["/manager"]

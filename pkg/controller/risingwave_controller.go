@@ -117,7 +117,6 @@ func (c *RisingWaveController) managerOpts(risingwaveMgr *object.RisingWaveManag
 }
 
 func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	m.TestMetrics.Inc()
 	m.ControllerReconcileCount.Inc()
 
 	logger := log.FromContext(ctx)

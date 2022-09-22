@@ -38,27 +38,39 @@ var (
 			Help: "Incremented if mutating webhooks mutates at least one attribute",
 		},
 	)
-	ValidatingWebhookCalls = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "webhook_validated_called_total",
-			Help: "Incremented if the validating webhook is called on Create/Delete/Update",
-		},
-	)
-	ValidatingWebhookErr = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "webhook_validated_err_total",
-			Help: "Incremented if the validating webhook ran into error Create/Delete/Update",
-		},
-	)
-	TestMetrics = prometheus.NewCounter(
+	TestMetrics = prometheus.NewCounter( // TODO: remove metric?
 		prometheus.CounterOpts{
 			Name: "a_test_metric",
 			Help: "test metric only",
+		},
+	)
+	WebhookRequestCount = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "webhook_request_count",
+			Help: "Total number of validating and mutating webhook calls",
+		},
+	)
+	WebhookRequestPassCount = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "webhook_request_pass_count",
+			Help: "Total number of accepted validating and mutating webhook calls",
+		},
+	)
+	WebhookRequestRejectCount = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "webhook_request_reject_count",
+			Help: "Total number of rejected validating and mutating webhook calls",
+		},
+	)
+	WebhookRequestPanicCount = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "webhook_request_panic_count",
+			Help: "Total number of panics during validating and mutating webhook calls",
 		},
 	)
 )
 
 func InitMetrics() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(TestMetrics, Reconciles, RequeueCount, DidMutate, ValidatingWebhookCalls, ValidatingWebhookErr)
+	metrics.Registry.MustRegister(WebhookRequestPanicCount, WebhookRequestRejectCount, WebhookRequestPassCount, WebhookRequestCount, TestMetrics, Reconciles, RequeueCount, DidMutate)
 }

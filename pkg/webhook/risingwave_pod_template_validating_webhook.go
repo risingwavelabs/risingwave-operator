@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 )
 
 type RisingWavePodTemplateValidatingWebhook struct {
@@ -58,6 +59,8 @@ func (h *RisingWavePodTemplateValidatingWebhook) validateUpdate(ctx context.Cont
 
 // ValidateUpdate implements admission.CustomValidator.
 func (h *RisingWavePodTemplateValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error {
+	m.WebhookRequestCount.Inc()
+	m.WebhookRequestPassCount.Inc()
 	return h.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWavePodTemplate), newObj.(*risingwavev1alpha1.RisingWavePodTemplate))
 }
 

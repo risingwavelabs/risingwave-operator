@@ -208,18 +208,21 @@ func (h *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 }
 
 // ValidateCreate implements admission.CustomValidator.
-func (h *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
-	m.ValidatingWebhookCalls.Inc()
-	err := h.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWave))
-	if err != nil {
-		m.ValidatingWebhookErr.Inc()
-	}
-	return err
+func (h *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
+	defer func() {
+		if err == nil {
+			m.WebhookRequestPassCount.Inc()
+		} else {
+			m.WebhookRequestRejectCount.Inc()
+		}
+	}()
+	return h.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWave))
 }
 
 // ValidateDelete implements admission.CustomValidator.
 func (h *RisingWaveValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
-	m.ValidatingWebhookCalls.Inc()
+	m.WebhookRequestCount.Inc()
+	m.WebhookRequestPassCount.Inc()
 	return nil
 }
 
@@ -255,20 +258,23 @@ func (h *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 }
 
 // ValidateUpdate implements admission.CustomValidator.
-func (h *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error {
-	m.ValidatingWebhookCalls.Inc()
+func (h *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
+	defer func() {
+		if err == nil {
+			m.WebhookRequestPassCount.Inc()
+		} else {
+			m.WebhookRequestRejectCount.Inc()
+		}
+	}()
+
+	m.WebhookRequestCount.Inc()
 
 	// Validate the new object first.
 	if err := h.ValidateCreate(ctx, newObj); err != nil {
-		m.ValidatingWebhookErr.Inc()
 		return err
 	}
 
-	err := h.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWave), newObj.(*risingwavev1alpha1.RisingWave))
-	if err != nil {
-		m.ValidatingWebhookErr.Inc()
-	}
-	return err
+	return h.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWave), newObj.(*risingwavev1alpha1.RisingWave))
 }
 
 func NewRisingWaveValidatingWebhook() webhook.CustomValidator {

@@ -1,0 +1,102 @@
+# compare k -n risingwave-operator-system get servicemonitor default -o yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    # app: kube-prometheus-stack-prometheus
+    app.kubernetes.io/instance: prometheus
+    release: prometheus
+  name: prometheus-service-monitor-rw-operator
+  namespace: risingwave-operator-system # compare prometheus-kube-prometheus-kube-controller-manager
+spec:
+  jobLabel: jobLabel # JobLabel selects the label from the associated Kubernetes service which  will be used as the `job` label for all metrics. For example: If in `ServiceMonitor.spec.jobLabel: foo` and in `Service.metadata.labels.foo: bar`, then the `job="bar"` label is added to all metrics. If the value of this field is empty or if the label doesn't exist for the given Service the `job` label of the metrics defaults to the name of the Kubernetes Service.
+  endpoints:
+  - interval: 10s
+    path: /metrics
+    port: http
+    scheme: http
+    scrapeTimeout: 5s 
+  namespaceSelector:
+    matchNames:
+    - risingwave-operator-system # risingwave-operator-system # default # ?
+  selector:
+    matchLabels: # matchNames, not matchLabels
+      release: prometheus # has to match the service 
+      # control-plane: controller-manager
+---
+# below service successfully forwards metrics of our operator 
+# validate via k -n risingwave-operator-system port-forward svc/prometheus-rw-operator-metrics 2345:8080
+# also see risingwave-operator-controller-manager-metrics-manager
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+  labels: # using labels of k get svc prometheus-kube-prometheus-operator
+    app: kube-prometheus-stack-operator
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    app.kubernetes.io/version: 40.1.0 
+    release: prometheus
+  name: prometheus-rw-operator-metrics
+  namespace: risingwave-operator-system
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    control-plane: controller-manager # this is the label of the operator
+  type: ClusterIP
+
+
+# also add these labels to prometheus prometheus-kube-prometheus-prometheus?
+# serviceMonitorSelector:
+#   matchLabels:
+#     release: prometheus
+# 
+
+# Check Prometheus config on `/config` in the Prometheus UI
+# Shows that the ServiceMonitor is loaded (job_name: serviceMonitor/default/prometheus-service-monitor-rw-operator/0)
+
+# debugging: https://support.coreos.com/hc/en-us/articles/360000155514-Prometheus-ServiceMonitor-troubleshooting
+# tutorial: https://managedkube.com/prometheus/operator/servicemonitor/troubleshooting/2019/11/07/prometheus-operator-servicemonitor-troubleshooting.html
+
+# does the service work? Try to forward it
+# kubectl port-forward svc/prometheus-grafana 3000:http-web
+
+# this works for kube-system and default currently
+# kube-system does not have service monitor 
+# Do I also have to deploy a service?
+
+# working query. Did this work before?
+# container_fs_reads_bytes_total{namespace="risingwave-operator-system"}
+# yes, also worked before 
+
+# this is not forwarding the metrics?
+# what are the other services? risingwave-operator-controller-manager-metrics-manager
+---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     control-plane: controller-manager
+#   name: risingwave-operator-controller-manager-metrics-manager
+#   namespace: risingwave-operator-system
+# spec:
+#   ports:
+#   - name: https
+#     port: 8443
+#     protocol: TCP
+#     targetPort: https
+#   selector:
+#     control-plane: controller-manager
+# 
+
+

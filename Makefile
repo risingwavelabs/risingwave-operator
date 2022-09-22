@@ -146,6 +146,9 @@ build-local-certs:
 install-local: kustomize manifests
 	$(KUSTOMIZE) build config/local | kubectl apply -f - >/dev/null
 
+uninstall-local: kustomize manifests
+	$(KUSTOMIZE) build config/local | kubectl delete -f - >/dev/null
+
 copy-local-certs:
 	mkdir -p ${TMPDIR}/k8s-webhook-server/serving-certs
 	cp -R config/local/certs/* ${TMPDIR}/k8s-webhook-server/serving-certs
@@ -162,7 +165,6 @@ build-e2e-image:
 
 e2e-test: generate-test-yaml vendor build-e2e-image
 	e2e/e2e.sh
-	e2e/e2e-scaleview.sh
 
 e2e-plugin:
 	e2e/e2e-plugin.sh

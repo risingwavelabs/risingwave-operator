@@ -50,7 +50,7 @@ function run_e2e_test() {
     kubectl create ns "$testcase"
   fi
   # shellcheck disable=SC2064
-  overtrap "kubectl delete ns $testcase" RETURN
+  trap "kubectl delete ns $testcase" RETURN
 
   kubectl -n "$testcase" apply -f "$testcase_dir"
   risingwave_name=$(kubectl -n "$testcase" get risingwave -o jsonpath='{.items[0].metadata.name}')
@@ -68,10 +68,45 @@ function run_e2e_test() {
   echo "[E2E $testcase] Succeeds!"
 }
 
+function run_e2e_scale_view() {
+  E2E_NAMESPACE="e2e-scaleview"
+
+  kubectl create ns $E2E_NAMESPACE
+  # shellcheck disable=SC2064
+  trap "kubectl delete ns $E2E_NAMESPACE" RETURN
+
+  kubectl -n "$E2E_NAMESPACE" apply -f "$BASEDIR"/scaleview
+
+  # Wait until the RisingWave is ready
+  risingwave_name=$(kubectl -n "$E2E_NAMESPACE" get risingwave -o jsonpath='{.items[0].metadata.name}')
+  echo "[E2E-SCALEVIEW] Waiting the RisingWave $risingwave_name to be ready..."
+  kubectl -n "$E2E_NAMESPACE" wait --timeout=300s --for=condition=Running risingwave "$risingwave_name"
+  wait_until_service_ready "$E2E_NAMESPACE" "$risingwave_name-frontend"
+
+  # Wait until the RisingWaveScaleViews are locked, and then try scale.
+  scale_view_names=$(kubectl -n "$E2E_NAMESPACE" get risingwavescaleview -o jsonpath='{.items[*].metadata.name}')
+
+  for scale_view_name in $scale_view_names; do
+    kubectl -n "$E2E_NAMESPACE" wait --timeout=10s --for=jsonpath='.status.locked'=true risingwavescaleview "$scale_view_name"
+
+    kubectl -n "$E2E_NAMESPACE" scale risingwavescaleview/"$scale_view_name" --replicas=0
+
+    kubectl -n "$E2E_NAMESPACE" wait --timeout=60s --for=jsonpath='.status.replicas'=0 risingwavescaleview "$scale_view_name"
+
+    kubectl -n "$E2E_NAMESPACE" scale risingwavescaleview/"$scale_view_name" --replicas=3
+
+    kubectl -n "$E2E_NAMESPACE" wait --timeout=300s --for=jsonpath='.status.replicas'=0 risingwavescaleview "$scale_view_name"
+  done
+}
+
+# Run E2E testcases of RisingWave
 echo "Testcases: ${E2E_TESTCASES}"
 for testcase in ${E2E_TESTCASES}; do
   background "run_e2e_test $testcase"
 done
+
+# Run E2E testcases of RisingWaveScaleView
+background run_e2e_scale_view
 
 if reap; then
   echo "Excellent! All tests are passed!"

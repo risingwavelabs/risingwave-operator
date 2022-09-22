@@ -38,7 +38,7 @@ import (
 )
 
 type RisingWaveScaleViewValidatingWebhook struct {
-	client client.Client
+	client client.Reader
 }
 
 func getScaleViewMaxConstraints(obj *risingwavev1alpha1.RisingWaveScaleView) int32 {
@@ -169,7 +169,7 @@ func (w *RisingWaveScaleViewValidatingWebhook) ValidateDelete(ctx context.Contex
 	return nil
 }
 
-func NewRisingWaveScaleViewValidatingWebhook(client client.Client) webhook.CustomValidator {
+func NewRisingWaveScaleViewValidatingWebhook(client client.Reader) webhook.CustomValidator {
 	return &RisingWaveScaleViewValidatingWebhook{
 		client: client,
 	}

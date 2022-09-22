@@ -36,7 +36,7 @@ import (
 )
 
 type RisingWaveScaleViewMutatingWebhook struct {
-	client client.Client
+	client client.Reader
 }
 
 func (w *RisingWaveScaleViewMutatingWebhook) setLabelSelector(obj *risingwavev1alpha1.RisingWaveScaleView) {
@@ -153,7 +153,7 @@ func (w *RisingWaveScaleViewMutatingWebhook) Default(ctx context.Context, obj ru
 	return w.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWaveScaleView))
 }
 
-func NewRisingWaveScaleViewMutatingWebhook(client client.Client) webhook.CustomDefaulter {
+func NewRisingWaveScaleViewMutatingWebhook(client client.Reader) webhook.CustomDefaulter {
 	return &RisingWaveScaleViewMutatingWebhook{
 		client: client,
 	}

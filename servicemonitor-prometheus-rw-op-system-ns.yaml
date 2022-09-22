@@ -14,7 +14,7 @@ spec:
   - interval: 10s
     path: /metrics
     port: http
-    scheme: http
+    scheme: https
     scrapeTimeout: 5s 
   namespaceSelector:
     matchNames:
@@ -50,7 +50,7 @@ spec:
   - name: http
     port: 8080
     protocol: TCP
-    targetPort: 8080
+    targetPort: 8443
   selector:
     control-plane: controller-manager # this is the label of the operator
   type: ClusterIP

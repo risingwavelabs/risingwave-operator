@@ -20,18 +20,6 @@ import (
 )
 
 var (
-	Reconciles = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "reconciles_total",
-			Help: "Number of reconciles",
-		},
-	)
-	RequeueCount = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "requeue_total",
-			Help: "Number of requeue. Incremented if any kind of requeue is needed",
-		},
-	)
 	DidMutate = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "webhook_mutated_request_total",
@@ -68,9 +56,45 @@ var (
 			Help: "Total number of panics during validating and mutating webhook calls",
 		},
 	)
+	ControllerReconcileCount = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "controller_reconcile_count",
+			Help: "Total number of reconciles",
+		},
+	)
+	ControllerReconcileRequeueCount = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "controller_reconcile_requeue_count",
+			Help: "Total number of requeue",
+		},
+	)
+	ControllerReconcileRequeueErrorCount = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "controller_reconcile_error_count",
+			Help: "Total number of requeue errors",
+		},
+	)
+	ControllerReconcileRequeueAfter = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "controller_reconcile_requeue_after",
+			Help: "Duration of requeue in ms",
+		},
+	)
+	ControllerReconcileDuration = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "controller_reconcile_duration",
+			Help: "Duration of requeue in ms",
+		},
+	)
+	ControllerReconcilePanicCount = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "controller_reconcile_panic_count",
+			Help: "Total number of reconcile panics",
+		},
+	)
 )
 
 func InitMetrics() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(WebhookRequestPanicCount, WebhookRequestRejectCount, WebhookRequestPassCount, WebhookRequestCount, TestMetrics, Reconciles, RequeueCount, DidMutate)
+	metrics.Registry.MustRegister(WebhookRequestPanicCount, WebhookRequestRejectCount, WebhookRequestPassCount, WebhookRequestCount, TestMetrics, ControllerReconcileCount, ControllerReconcileRequeueCount, ControllerReconcileRequeueErrorCount, ControllerReconcileRequeueAfter, ControllerReconcileDuration)
 }

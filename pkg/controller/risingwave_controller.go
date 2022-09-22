@@ -118,7 +118,7 @@ func (c *RisingWaveController) managerOpts(risingwaveMgr *object.RisingWaveManag
 
 func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	m.TestMetrics.Inc()
-	m.Reconciles.Inc()
+	m.ControllerReconcileCount.Inc()
 
 	logger := log.FromContext(ctx)
 
@@ -170,7 +170,6 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 		case apierrors.IsConflict(err):
 			logger.Info("Conflict detected while updating status, retry...")
 			// Requeue after 10ms to give the cache time to sync.
-			m.RequeueCount.Inc()
 			return ctrlkit.RequeueAfter(10 * time.Millisecond)
 		default:
 			return ctrlkit.RequeueIfErrorAndWrap("unable to update status", err)
@@ -258,6 +257,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			if apierrors.IsNotFound(err) {
 				return ctrlkit.Exit()
 			}
+			m.ControllerReconcileCount.Inc()
 			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for service monitor", err)
 		}
 		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1"))

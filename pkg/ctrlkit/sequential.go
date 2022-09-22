@@ -22,7 +22,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit/internal"
-	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 )
 
 var _ internal.Group = &sequentialGroup{}
@@ -53,7 +52,6 @@ func (grp *sequentialGroup) Run(ctx context.Context) (ctrl.Result, error) {
 	for _, act := range grp.actions {
 		result, err := act.Run(ctx)
 		if NeedsRequeue(result, err) {
-			m.RequeueCount.Inc()
 			return result, err
 		}
 	}

@@ -32,26 +32,29 @@ func NeedsRequeue(result ctrl.Result, err error) bool {
 
 // RequeueImmediately returns a result with requeue set to true and a nil.
 func RequeueImmediately() (ctrl.Result, error) {
+	m.ControllerReconcileRequeueCount.Inc()
 	return ctrl.Result{Requeue: true}, nil
 }
 
 // RequeueAfter returns a result with requeue after set to the given duration and a nil.
 func RequeueAfter(after time.Duration) (ctrl.Result, error) {
+	m.ControllerReconcileRequeueAfter.Inc()
 	return ctrl.Result{RequeueAfter: after}, nil
 }
 
 // RequeueIfError returns an empty result with the err.
 func RequeueIfError(err error) (ctrl.Result, error) {
-	m.RequeueCount.Inc()
+	m.ControllerReconcileRequeueErrorCount.Inc()
 	return ctrl.Result{}, err
 }
 
 // RequeueIfErrorAndWrap returns an empty result with a wrapped err.
 func RequeueIfErrorAndWrap(explain string, err error) (ctrl.Result, error) {
-	m.RequeueCount.Inc()
 	if err != nil {
+		m.ControllerReconcileRequeueErrorCount.Inc()
 		return ctrl.Result{}, fmt.Errorf("%s: %w", explain, err)
 	} else {
+		m.ControllerReconcileRequeueCount.Inc()
 		return ctrl.Result{}, nil
 	}
 }

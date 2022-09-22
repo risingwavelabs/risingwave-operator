@@ -84,6 +84,7 @@ func (r *RisingWaveScaleViewHelper) getReplicasPtr(group string) (*int32, int) {
 	}
 }
 
+// ListComponentGroups lists the groups under `.spec.components`. The default group "" is not included.
 func (r *RisingWaveScaleViewHelper) ListComponentGroups() []string {
 	switch r.component {
 	case consts.ComponentMeta:
@@ -99,6 +100,7 @@ func (r *RisingWaveScaleViewHelper) ListComponentGroups() []string {
 	}
 }
 
+// GetGroupIndex gets the index of the given group in the list under `.spec.components.{component}.groups`.
 func (r *RisingWaveScaleViewHelper) GetGroupIndex(group string) (int, bool) {
 	replicasPtr, i := r.getReplicasPtr(group)
 	if replicasPtr == nil {
@@ -107,6 +109,7 @@ func (r *RisingWaveScaleViewHelper) GetGroupIndex(group string) (int, bool) {
 	return i, true
 }
 
+// ReadReplicas reads the replicas of the given group. It returns 0 and false if the group is not found.
 func (r *RisingWaveScaleViewHelper) ReadReplicas(group string) (int32, bool) {
 	replicasPtr, _ := r.getReplicasPtr(group)
 	if replicasPtr == nil {
@@ -115,6 +118,7 @@ func (r *RisingWaveScaleViewHelper) ReadReplicas(group string) (int32, bool) {
 	return *replicasPtr, true
 }
 
+// WriteReplicas writes the replicas to the given group. It returns true if the group is found and the value is changed.
 func (r *RisingWaveScaleViewHelper) WriteReplicas(group string, replicas int32) bool {
 	replicasPtr, _ := r.getReplicasPtr(group)
 

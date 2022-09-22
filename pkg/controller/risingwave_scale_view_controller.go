@@ -75,17 +75,24 @@ func (c *RisingWaveScaleViewController) Reconcile(ctx context.Context, request r
 
 	isScaleViewDeleted := utils.IsDeleted(&scaleView)
 
+	// - If the object is already marked as deleted, then the controller must handle the finalizer
+	// - If not, it tries to
+	//   - Sync replicas in status (RisingWave -> RisingWaveScaleView)
+	//   - Sync replicas in spec (RisingWaveScaleView -> RisingWave)
+	//     1. Grab or update the lock (which is recorded under the RisingWave object's status field).
+	//     2. Try sync the replicas from the object to corresponding groups of RisingWave object.
 	return ctrlkit.IgnoreExit(ctrlkit.OptimizeWorkflow(
 		ctrlkit.IfElse(isScaleViewDeleted,
 			mgr.HandleScaleViewFinalizer(),
 
+			// Use OrderedJoin to defer the execution of UpdateScaleViewStatus.
 			ctrlkit.OrderedJoin(
-				ctrlkit.Sequential(
-					ctrlkit.RetryInterval(2, 5*time.Millisecond, mgr.GrabOrUpdateScaleViewLock()),
-					ctrlkit.Join(
+				ctrlkit.Join(
+					ctrlkit.Sequential(
+						ctrlkit.RetryInterval(2, 5*time.Millisecond, mgr.GrabOrUpdateScaleViewLock()),
 						mgr.SyncGroupReplicasToRisingWave(),
-						mgr.SyncGroupReplicasStatusFromRisingWave(),
 					),
+					mgr.SyncGroupReplicasStatusFromRisingWave(),
 				),
 				mgr.UpdateScaleViewStatus(),
 			),
@@ -107,6 +114,8 @@ func (c *RisingWaveScaleViewController) SetupWithManager(mgr ctrl.Manager) error
 		For(&risingwavev1alpha1.RisingWaveScaleView{}).
 		Watches(
 			&source.Kind{Type: &risingwavev1alpha1.RisingWave{}},
+			// Enqueue requests for the RisingWaveScaleViews recorded in the status of RisingWave object when
+			// there is change happened on the RisingWave object.
 			handler.EnqueueRequestsFromMapFunc(func(object client.Object) []reconcile.Request {
 				obj := object.(*risingwavev1alpha1.RisingWave)
 				return lo.Map(obj.Status.ScaleViews, func(t risingwavev1alpha1.RisingWaveScaleViewLock, _ int) reconcile.Request {

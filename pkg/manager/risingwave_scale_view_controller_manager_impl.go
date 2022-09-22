@@ -89,11 +89,14 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) GrabOrUpdateScaleViewLock(c
 
 	lockMgr := object.NewScaleViewLockManager(targetObj)
 
+	// Update the lock in memory.
 	updated, err := lockMgr.GrabOrUpdateScaleViewLockFor(mgr.scaleView)
 	if err != nil {
 		return ctrlkit.RequeueIfErrorAndWrap("unable to grab or update lock", err)
 	}
 
+	// If updated, try updating the remote. Here the update is an atomic operation which means it either succeeds updating
+	// the current captured object or fails with a conflict error.
 	if updated {
 		logger.Info("Lock grabbed(updated) in memory! Try updating the remote...")
 		if err := mgr.client.Status().Update(ctx, targetObj); err != nil {

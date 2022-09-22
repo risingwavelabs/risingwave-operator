@@ -126,24 +126,22 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 	return nil
 }
 
-// Set default values.
-//   - Read the .spec.replicas and group replicas under .spec.scalePolicy if it's a new created scale policy (with empty .spec.targetRef.uid),
-//     get the target RisingWave and read and copy the replicas.
-//   - Set the target groups as the whole groups currently declared.
-//   - Update the .spec.labelSelector
 func (w *RisingWaveScaleViewMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
-	if obj.Spec.TargetRef.UID == "" {
-		err := w.readGroupReplicasFromRisingWave(ctx, obj)
-		if err != nil {
-			return err
-		}
-	} else {
+	// If user manually specified the UID, the webhook rejects the creation.
+	if obj.Spec.TargetRef.UID != "" {
 		gvk := obj.GroupVersionKind()
 		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, field.ErrorList{
 			field.Invalid(field.NewPath("spec", "targetRef", "uid"), obj.Spec.TargetRef.UID, "uid must be empty and set by webhook"),
 		})
 	}
 
+	// Get the targeting RisingWave and set default values.
+	err := w.readGroupReplicasFromRisingWave(ctx, obj)
+	if err != nil {
+		return err
+	}
+
+	// Set the label selector.
 	w.setLabelSelector(obj)
 
 	return nil

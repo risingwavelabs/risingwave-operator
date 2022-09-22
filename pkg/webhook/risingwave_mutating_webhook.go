@@ -63,7 +63,7 @@ func (h *RisingWaveMutatingWebhook) setDefault(ctx context.Context, obj *risingw
 
 // Default implements admission.CustomDefaulter.
 func (h *RisingWaveMutatingWebhook) Default(ctx context.Context, obj runtime.Object) error {
-	m.WebhookRequestCount.Inc()
+	m.IncMutatingWebhookCounter()
 	m.WebhookRequestPassCount.Inc()
 	return h.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWave))
 }

@@ -221,7 +221,7 @@ func (h *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj ru
 
 // ValidateDelete implements admission.CustomValidator.
 func (h *RisingWaveValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
-	m.WebhookRequestCount.Inc()
+	m.IncValidatingWebhookCounter()
 	m.WebhookRequestPassCount.Inc()
 	return nil
 }
@@ -267,7 +267,7 @@ func (h *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj
 		}
 	}()
 
-	m.WebhookRequestCount.Inc()
+	m.IncValidatingWebhookCounter()
 
 	// Validate the new object first.
 	if err := h.ValidateCreate(ctx, newObj); err != nil {

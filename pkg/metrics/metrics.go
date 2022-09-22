@@ -32,11 +32,14 @@ var (
 			Help: "test metric only",
 		},
 	)
-	WebhookRequestCount = prometheus.NewCounter(
+	// WebhookRequestCount counts the total number of webhook calls
+	// Please specify if counter refers to a "mutating" or a "validating webhook" using the kind attribute.
+	webhookRequestCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "webhook_request_count",
 			Help: "Total number of validating and mutating webhook calls",
 		},
+		[]string{"kind"},
 	)
 	WebhookRequestPassCount = prometheus.NewCounter(
 		prometheus.CounterOpts{
@@ -91,6 +94,17 @@ var (
 	)
 )
 
+// implement wrappers to avoid typos during call to WithLabelValues
+
+func IncMutatingWebhookCounter() {
+	m := webhookRequestCount.WithLabelValues("mutate")
+	m.Inc()
+}
+func IncValidatingWebhookCounter() {
+	m := webhookRequestCount.WithLabelValues("validate")
+	m.Inc()
+}
+
 func InitMetrics() {
 	// Register custom metrics with the global prometheus registry
 	metrics.Registry.MustRegister(ControllerReconcileCount)
@@ -98,7 +112,7 @@ func InitMetrics() {
 	metrics.Registry.MustRegister(ControllerReconcileRequeueCount)
 	metrics.Registry.MustRegister(ControllerReconcileRequeueErrorCount)
 	metrics.Registry.MustRegister(TestMetrics)
-	metrics.Registry.MustRegister(WebhookRequestCount)
+	metrics.Registry.MustRegister(webhookRequestCount)
 	metrics.Registry.MustRegister(WebhookRequestPanicCount)
 	metrics.Registry.MustRegister(WebhookRequestPassCount)
 	metrics.Registry.MustRegister(WebhookRequestRejectCount)

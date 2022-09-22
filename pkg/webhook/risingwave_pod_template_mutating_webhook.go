@@ -34,7 +34,7 @@ func (w *RisingWavePodTemplateMutatingWebhook) setDefault(ctx context.Context, o
 }
 
 func (w *RisingWavePodTemplateMutatingWebhook) Default(ctx context.Context, obj runtime.Object) error {
-	m.WebhookRequestCount.Inc()
+	m.IncMutatingWebhookCounter()
 	m.WebhookRequestPassCount.Inc()
 	return w.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWavePodTemplate))
 }

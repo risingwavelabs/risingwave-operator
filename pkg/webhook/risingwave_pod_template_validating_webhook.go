@@ -59,7 +59,7 @@ func (h *RisingWavePodTemplateValidatingWebhook) validateUpdate(ctx context.Cont
 
 // ValidateUpdate implements admission.CustomValidator.
 func (h *RisingWavePodTemplateValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error {
-	m.WebhookRequestCount.Inc()
+	m.IncValidatingWebhookCounter()
 	m.WebhookRequestPassCount.Inc()
 	return h.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWavePodTemplate), newObj.(*risingwavev1alpha1.RisingWavePodTemplate))
 }

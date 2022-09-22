@@ -38,7 +38,8 @@ func RequeueImmediately() (ctrl.Result, error) {
 
 // RequeueAfter returns a result with requeue after set to the given duration and a nil.
 func RequeueAfter(after time.Duration) (ctrl.Result, error) {
-	m.ControllerReconcileRequeueAfter.Inc()
+	m.ControllerReconcileRequeueAfter.Set(float64(after.Milliseconds()))
+	m.ControllerReconcileCount.Inc()
 	return ctrl.Result{RequeueAfter: after}, nil
 }
 

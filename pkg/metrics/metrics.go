@@ -74,18 +74,15 @@ var (
 			Help: "Total number of requeue errors",
 		},
 	)
-	ControllerReconcileRequeueAfter = prometheus.NewCounter(
-		prometheus.CounterOpts{
+	ControllerReconcileRequeueAfter = prometheus.NewGauge(
+		prometheus.GaugeOpts{
 			Name: "controller_reconcile_requeue_after",
-			Help: "Duration of requeue in ms",
+			Help: "Delay of last delayed requeue in ms",
 		},
 	)
-	ControllerReconcileDuration = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "controller_reconcile_duration",
-			Help: "Duration of requeue in ms",
-		},
-	)
+
+	// How is controller_reconcile_duration different then ControllerReconcileRequeueAfter?
+
 	ControllerReconcilePanicCount = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "controller_reconcile_panic_count",
@@ -96,5 +93,13 @@ var (
 
 func InitMetrics() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(WebhookRequestPanicCount, WebhookRequestRejectCount, WebhookRequestPassCount, WebhookRequestCount, TestMetrics, ControllerReconcileCount, ControllerReconcileRequeueCount, ControllerReconcileRequeueErrorCount, ControllerReconcileRequeueAfter, ControllerReconcileDuration)
+	metrics.Registry.MustRegister(ControllerReconcileCount)
+	metrics.Registry.MustRegister(ControllerReconcileRequeueAfter)
+	metrics.Registry.MustRegister(ControllerReconcileRequeueCount)
+	metrics.Registry.MustRegister(ControllerReconcileRequeueErrorCount)
+	metrics.Registry.MustRegister(TestMetrics)
+	metrics.Registry.MustRegister(WebhookRequestCount)
+	metrics.Registry.MustRegister(WebhookRequestPanicCount)
+	metrics.Registry.MustRegister(WebhookRequestPassCount)
+	metrics.Registry.MustRegister(WebhookRequestRejectCount)
 }

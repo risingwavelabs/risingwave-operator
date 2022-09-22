@@ -62,10 +62,28 @@ function run_e2e_test() {
   echo "[E2E $testcase] RisingWave ready! Run simple queries..."
   if ! kubectl exec -t psql-console -- psql -h "$risingwave_name-frontend.$testcase" -p 4567 -d dev -U root <"$_E2E_SOURCE_BASEDIR"/check.sql; then
     echo "[E2E $testcase] ERROR: failed to execute simple queries"
+    # Print resources under the testcase namespace.
+    kubectl -n "$testcase" get all
     return 1
   fi
 
   echo "[E2E $testcase] Succeeds!"
+}
+
+function run_test_on_scale_view() {
+  namespace=$1
+  scale_view_name=$2
+
+  # Wait until the RisingWaveScaleView is ready.
+  kubectl -n "$namespace" wait --timeout=10s --for=jsonpath='.status.locked'=true risingwavescaleview "$scale_view_name" || return 1
+
+  # Scale the replicas to 0 and wait for the status to be 0.
+  kubectl -n "$namespace" scale risingwavescaleview/"$scale_view_name" --replicas=0 || return 1
+  kubectl -n "$namespace" wait --timeout=60s --for=jsonpath='.status.replicas'=0 risingwavescaleview "$scale_view_name" || return 1
+
+  # Scale the replicas to 3 and wait for the status to be 1.
+  kubectl -n "$namespace" scale risingwavescaleview/"$scale_view_name" --replicas=3 || return 1
+  kubectl -n "$namespace" wait --timeout=300s --for=jsonpath='.status.replicas'=0 risingwavescaleview "$scale_view_name" || return 1
 }
 
 function run_e2e_scale_view() {
@@ -87,15 +105,12 @@ function run_e2e_scale_view() {
   scale_view_names=$(kubectl -n "$E2E_NAMESPACE" get risingwavescaleview -o jsonpath='{.items[*].metadata.name}')
 
   for scale_view_name in $scale_view_names; do
-    kubectl -n "$E2E_NAMESPACE" wait --timeout=10s --for=jsonpath='.status.locked'=true risingwavescaleview "$scale_view_name"
-
-    kubectl -n "$E2E_NAMESPACE" scale risingwavescaleview/"$scale_view_name" --replicas=0
-
-    kubectl -n "$E2E_NAMESPACE" wait --timeout=60s --for=jsonpath='.status.replicas'=0 risingwavescaleview "$scale_view_name"
-
-    kubectl -n "$E2E_NAMESPACE" scale risingwavescaleview/"$scale_view_name" --replicas=3
-
-    kubectl -n "$E2E_NAMESPACE" wait --timeout=300s --for=jsonpath='.status.replicas'=0 risingwavescaleview "$scale_view_name"
+    if ! run_test_on_scale_view $E2E_NAMESPACE "$scale_view_name"; then
+      echo "[E2E-SCALEVIEW] ERROR: failed to run test on RisingWaveScaleView $scale_view_name"
+      # Print resources under the testcase namespace.
+      kubectl -n "$testcase" get all
+      return 1
+    fi
   done
 }
 

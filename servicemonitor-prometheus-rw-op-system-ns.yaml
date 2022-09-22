@@ -15,7 +15,11 @@ spec:
     path: /metrics
     port: http
     scheme: https
-    scrapeTimeout: 5s 
+    scrapeTimeout: 5s
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    tlsConfig:
+      caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      insecureSkipVerify: true
   namespaceSelector:
     matchNames:
     - risingwave-operator-system # risingwave-operator-system # default # ?

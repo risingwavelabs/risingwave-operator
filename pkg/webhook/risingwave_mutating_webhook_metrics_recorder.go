@@ -17,11 +17,11 @@ type WebhookMetricsRecorder struct {
 	webhook mutatingWebhook
 }
 
-func (r *WebhookMetricsRecorder) recordAfter(err error) error {
+func (r *WebhookMetricsRecorder) recordAfter(err error, obj runtime.Object) error {
 	if err != nil {
 		m.WebhookRequestRejectCount.Inc()
 	} else {
-		m.WebhookRequestPassCount.Inc()
+		m.IncWebhookRequestPassCount(false, obj)
 	}
 	return err
 }
@@ -32,7 +32,7 @@ func (r *WebhookMetricsRecorder) recordBefore(obj runtime.Object) {
 
 func (r *WebhookMetricsRecorder) Default(ctx context.Context, obj runtime.Object) (err error) {
 	r.recordBefore(obj)
-	defer r.recordAfter(err)
+	defer r.recordAfter(err, obj)
 
 	return r.webhook.Default(ctx, obj)
 }

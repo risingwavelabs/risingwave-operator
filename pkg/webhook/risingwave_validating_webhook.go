@@ -211,7 +211,7 @@ func (h *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 func (h *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
 	defer func() {
 		if err == nil {
-			m.WebhookRequestPassCount.Inc()
+			// m.webhookRequestPassCount.Inc() // TODO
 		} else {
 			m.WebhookRequestRejectCount.Inc()
 		}
@@ -221,7 +221,7 @@ func (h *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj ru
 
 // ValidateDelete implements admission.CustomValidator.
 func (h *RisingWaveValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
-	m.WebhookRequestPassCount.Inc()
+	//	m.webhookRequestPassCount.Inc() // TODO
 	return nil
 }
 
@@ -260,7 +260,8 @@ func (h *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 func (h *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
 	defer func() {
 		if err == nil {
-			m.WebhookRequestPassCount.Inc()
+			// TODO: use metrics wrapper here
+			// m.webhookRequestPassCount.Inc()
 		} else {
 			m.WebhookRequestRejectCount.Inc()
 		}

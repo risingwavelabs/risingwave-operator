@@ -58,11 +58,12 @@ var (
 		},
 		[]string{"type", "group", "version", "kind", "namespace", "name"},
 	)
-	WebhookRequestPassCount = prometheus.NewCounter(
+	webhookRequestPassCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "webhook_request_pass_count",
 			Help: "Total number of accepted validating and mutating webhook calls",
 		},
+		[]string{"type", "group", "version", "kind", "namespace", "name"},
 	)
 	WebhookRequestRejectCount = prometheus.NewCounter(
 		prometheus.CounterOpts{
@@ -111,11 +112,7 @@ var (
 	)
 )
 
-// IncWebhookRequestCount increments the WebhookRequestCount
-// isValidating: If true then increments validating webhook, else mutating webhook
-// TODO:
-// verb: The verb (action) on the object which triggers the webhook, the value should be one of "create", "update", and "delete".
-func IncWebhookRequestCount(isValidating bool, obj runtime.Object) {
+func incWebhooksWithLabelValues(metric prometheus.CounterVec, isValidating bool, obj runtime.Object) {
 	type_ := mutatingWebhook
 	if isValidating {
 		type_ = validatingWebhook
@@ -124,10 +121,22 @@ func IncWebhookRequestCount(isValidating bool, obj runtime.Object) {
 	rw, ok := obj.(*risingwavev1alpha1.RisingWave)
 	if !ok {
 		rw2, _ := obj.(*risingwavev1alpha1.RisingWavePodTemplate)
-		webhookRequestCount.WithLabelValues(type_, gvk.Group, gvk.Version, gvk.Kind, rw2.Namespace, rw2.Name).Inc()
+		metric.WithLabelValues(type_, gvk.Group, gvk.Version, gvk.Kind, rw2.Namespace, rw2.Name).Inc()
 		return
 	}
-	webhookRequestCount.WithLabelValues(type_, gvk.Group, gvk.Version, gvk.Kind, rw.Name, rw.Namespace).Inc()
+	metric.WithLabelValues(type_, gvk.Group, gvk.Version, gvk.Kind, rw.Name, rw.Namespace).Inc()
+}
+
+// IncWebhookRequestCount increments the WebhookRequestCount
+// isValidating: If true then increments validating webhook, else mutating webhook
+// TODO:
+// verb: The verb (action) on the object which triggers the webhook, the value should be one of "create", "update", and "delete".
+func IncWebhookRequestCount(isValidating bool, obj runtime.Object) {
+	incWebhooksWithLabelValues(*webhookRequestCount, true, obj)
+}
+
+func IncWebhookRequestPassCount(isValidating bool, obj runtime.Object) {
+	incWebhooksWithLabelValues(*webhookRequestPassCount, isValidating, obj)
 }
 
 func InitMetrics() {
@@ -139,6 +148,6 @@ func InitMetrics() {
 	metrics.Registry.MustRegister(TestMetrics)
 	metrics.Registry.MustRegister(webhookRequestCount)
 	metrics.Registry.MustRegister(WebhookRequestPanicCount)
-	metrics.Registry.MustRegister(WebhookRequestPassCount)
+	metrics.Registry.MustRegister(webhookRequestPassCount)
 	metrics.Registry.MustRegister(WebhookRequestRejectCount)
 }

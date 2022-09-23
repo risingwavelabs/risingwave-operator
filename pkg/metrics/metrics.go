@@ -31,10 +31,10 @@ const (
 // TODO: Make other metrics NewCounterVec, too.
 
 var (
-	TestMetrics = prometheus.NewCounter( // TODO: remove metric?
+	ReceivingMetricsFromOperator = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Name: "a_test_metric",
-			Help: "test metric only",
+			Name: "receiving_metrics_from_operator",
+			Help: "Value is 1, if you are able to receive custom metrics from the operator",
 		},
 	)
 
@@ -141,7 +141,7 @@ func InitMetrics() {
 	metrics.Registry.MustRegister(ControllerReconcileRequeueAfter)
 	metrics.Registry.MustRegister(ControllerReconcileRequeueCount)
 	metrics.Registry.MustRegister(ControllerReconcileRequeueErrorCount)
-	metrics.Registry.MustRegister(TestMetrics)
+	metrics.Registry.MustRegister(ReceivingMetricsFromOperator)
 	metrics.Registry.MustRegister(webhookRequestCount)
 	metrics.Registry.MustRegister(WebhookRequestPanicCount)
 	metrics.Registry.MustRegister(webhookRequestPassCount)

@@ -16,7 +16,16 @@ package manager
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
+
+	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+)
+
+// use constants to avoid string literals when using the counters.
+const (
+	mutatingWebhook   = "mutate"
+	validatingWebhook = "validate"
 )
 
 var (
@@ -32,14 +41,22 @@ var (
 			Help: "test metric only",
 		},
 	)
-	// WebhookRequestCount counts the total number of webhook calls
-	// Please specify if counter refers to a "mutating" or a "validating webhook" using the kind attribute.
+
+	// Vector has the following attributes:
+	// type: The value should be mutating or validating
+	// group: The target resource group of the webhook, e.g., risingwave.risingwavelabs.com
+	// version: The target API version, e.g., v1alpha1
+	// kind: The target API kind, e.g., risingwave, risingwavepodtemplate
+	// namespace: The namespace of the object, e.g., default
+	// name: The name of the object
+	// TODO: implement verb
+	// verb: The verb (action) on the object which triggers the webhook, the value should be one of "create", "update", and "delete".
 	webhookRequestCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "webhook_request_count",
 			Help: "Total number of validating and mutating webhook calls",
 		},
-		[]string{"kind"},
+		[]string{"type", "group", "version", "kind", "namespace", "name"},
 	)
 	WebhookRequestPassCount = prometheus.NewCounter(
 		prometheus.CounterOpts{
@@ -94,15 +111,23 @@ var (
 	)
 )
 
-// implement wrappers to avoid typos during call to WithLabelValues
-
-func IncMutatingWebhookCounter() {
-	m := webhookRequestCount.WithLabelValues("mutate")
-	m.Inc()
-}
-func IncValidatingWebhookCounter() {
-	m := webhookRequestCount.WithLabelValues("validate")
-	m.Inc()
+// IncWebhookRequestCount increments the WebhookRequestCount
+// isValidating: If true then increments validating webhook, else mutating webhook
+// TODO:
+// verb: The verb (action) on the object which triggers the webhook, the value should be one of "create", "update", and "delete".
+func IncWebhookRequestCount(isValidating bool, obj runtime.Object) {
+	type_ := mutatingWebhook
+	if isValidating {
+		type_ = validatingWebhook
+	}
+	gvk := obj.GetObjectKind().GroupVersionKind()
+	rw, ok := obj.(*risingwavev1alpha1.RisingWave)
+	if !ok {
+		rw2, _ := obj.(*risingwavev1alpha1.RisingWavePodTemplate)
+		webhookRequestCount.WithLabelValues(type_, gvk.Group, gvk.Version, gvk.Kind, rw2.Namespace, rw2.Name).Inc()
+		return
+	}
+	webhookRequestCount.WithLabelValues(type_, gvk.Group, gvk.Version, gvk.Kind, rw.Name, rw.Namespace).Inc()
 }
 
 func InitMetrics() {

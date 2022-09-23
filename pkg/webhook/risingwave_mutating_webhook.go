@@ -27,8 +27,7 @@ import (
 	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 )
 
-type RisingWaveMutatingWebhook struct {
-}
+type RisingWaveMutatingWebhook struct{}
 
 func setDefaultIfZero[T comparable](dst *T, defaultVal T, didMutate *bool) {
 	var zero T
@@ -63,11 +62,9 @@ func (h *RisingWaveMutatingWebhook) setDefault(ctx context.Context, obj *risingw
 
 // Default implements admission.CustomDefaulter.
 func (h *RisingWaveMutatingWebhook) Default(ctx context.Context, obj runtime.Object) error {
-	m.IncMutatingWebhookCounter()
-	m.WebhookRequestPassCount.Inc()
 	return h.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWave))
 }
 
 func NewRisingWaveMutatingWebhook() webhook.CustomDefaulter {
-	return &RisingWaveMutatingWebhook{}
+	return &WebhookMetricsRecorder{&RisingWaveMutatingWebhook{}}
 }

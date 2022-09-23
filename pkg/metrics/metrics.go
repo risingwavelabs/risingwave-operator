@@ -119,12 +119,12 @@ func incWebhooksWithLabelValues(metric prometheus.CounterVec, isValidating bool,
 	}
 	gvk := obj.GetObjectKind().GroupVersionKind()
 	rw, ok := obj.(*risingwavev1alpha1.RisingWave)
-	if !ok {
-		rw2, _ := obj.(*risingwavev1alpha1.RisingWavePodTemplate)
-		metric.WithLabelValues(type_, gvk.Group, gvk.Version, gvk.Kind, rw2.Namespace, rw2.Name).Inc()
+	if ok {
+		metric.WithLabelValues(type_, gvk.Group, gvk.Version, gvk.Kind, rw.Name, rw.Namespace).Inc()
 		return
 	}
-	metric.WithLabelValues(type_, gvk.Group, gvk.Version, gvk.Kind, rw.Name, rw.Namespace).Inc()
+	rw2, _ := obj.(*risingwavev1alpha1.RisingWavePodTemplate)
+	metric.WithLabelValues(type_, gvk.Group, gvk.Version, gvk.Kind, rw2.Namespace, rw2.Name).Inc()
 }
 
 // IncWebhookRequestCount increments the WebhookRequestCount

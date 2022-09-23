@@ -28,13 +28,9 @@ const (
 	validatingWebhook = "validate"
 )
 
+// TODO: Make other metrics NewCounterVec, too.
+
 var (
-	DidMutate = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "webhook_mutated_request_total",
-			Help: "Incremented if mutating webhooks mutates at least one attribute",
-		},
-	)
 	TestMetrics = prometheus.NewCounter( // TODO: remove metric?
 		prometheus.CounterOpts{
 			Name: "a_test_metric",

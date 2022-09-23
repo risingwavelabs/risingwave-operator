@@ -24,38 +24,31 @@ import (
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
-	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 )
 
 type RisingWaveMutatingWebhook struct{}
 
-func setDefaultIfZero[T comparable](dst *T, defaultVal T, didMutate *bool) {
+func setDefaultIfZero[T comparable](dst *T, defaultVal T) {
 	var zero T
 	if *dst == zero {
 		*dst = defaultVal
-		*didMutate = true
 	}
 }
 
 func (h *RisingWaveMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWave) error {
-	didMutate := false
 
-	setDefaultIfZero(&obj.Spec.Components.Meta.Ports.ServicePort, consts.DefaultMetaServicePort, &didMutate)
-	setDefaultIfZero(&obj.Spec.Components.Meta.Ports.MetricsPort, consts.DefaultMetaMetricsPort, &didMutate)
-	setDefaultIfZero(&obj.Spec.Components.Meta.Ports.DashboardPort, consts.DefaultMetaDashboardPort, &didMutate)
+	setDefaultIfZero(&obj.Spec.Components.Meta.Ports.ServicePort, consts.DefaultMetaServicePort)
+	setDefaultIfZero(&obj.Spec.Components.Meta.Ports.MetricsPort, consts.DefaultMetaMetricsPort)
+	setDefaultIfZero(&obj.Spec.Components.Meta.Ports.DashboardPort, consts.DefaultMetaDashboardPort)
 
-	setDefaultIfZero(&obj.Spec.Components.Frontend.Ports.ServicePort, consts.DefaultFrontendServicePort, &didMutate)
-	setDefaultIfZero(&obj.Spec.Components.Frontend.Ports.MetricsPort, consts.DefaultFrontendMetricsPort, &didMutate)
+	setDefaultIfZero(&obj.Spec.Components.Frontend.Ports.ServicePort, consts.DefaultFrontendServicePort)
+	setDefaultIfZero(&obj.Spec.Components.Frontend.Ports.MetricsPort, consts.DefaultFrontendMetricsPort)
 
-	setDefaultIfZero(&obj.Spec.Components.Compute.Ports.ServicePort, consts.DefaultComputeServicePort, &didMutate)
-	setDefaultIfZero(&obj.Spec.Components.Compute.Ports.MetricsPort, consts.DefaultComputeMetricsPort, &didMutate)
+	setDefaultIfZero(&obj.Spec.Components.Compute.Ports.ServicePort, consts.DefaultComputeServicePort)
+	setDefaultIfZero(&obj.Spec.Components.Compute.Ports.MetricsPort, consts.DefaultComputeMetricsPort)
 
-	setDefaultIfZero(&obj.Spec.Components.Compactor.Ports.ServicePort, consts.DefaultCompactorServicePort, &didMutate)
-	setDefaultIfZero(&obj.Spec.Components.Compactor.Ports.MetricsPort, consts.DefaultCompactorMetricsPort, &didMutate)
-
-	if didMutate {
-		m.DidMutate.Inc()
-	}
+	setDefaultIfZero(&obj.Spec.Components.Compactor.Ports.ServicePort, consts.DefaultCompactorServicePort)
+	setDefaultIfZero(&obj.Spec.Components.Compactor.Ports.MetricsPort, consts.DefaultCompactorMetricsPort)
 
 	return nil
 }

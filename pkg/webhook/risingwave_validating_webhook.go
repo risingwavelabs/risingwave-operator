@@ -276,5 +276,5 @@ func (h *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj
 }
 
 func NewRisingWaveValidatingWebhook() webhook.CustomValidator {
-	return &RisingWaveValidatingWebhook{}
+	return &ValWebhookMetricsRecorder{&RisingWaveValidatingWebhook{}}
 }

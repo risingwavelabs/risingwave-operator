@@ -12,12 +12,16 @@ type mutatingWebhook interface {
 	Default(context.Context, runtime.Object) error
 }
 
-// WebhookMetricsRecorder wrapping a mutating webhook to simplify metric calculation.
-type WebhookMetricsRecorder struct {
+// MutWebhookMetricsRecorder wrapping a mutating webhook to simplify metric calculation.
+type MutWebhookMetricsRecorder struct {
 	webhook mutatingWebhook
 }
 
-func (r *WebhookMetricsRecorder) recordAfter(err error, obj runtime.Object) error {
+func (r *MutWebhookMetricsRecorder) recordAfter(err error, obj runtime.Object) error {
+	if rec := recover(); rec != nil {
+		m.WebhookRequestPanicCount.Inc()
+	}
+	// TODO: Do we want to record the request reject/pass count if we panic?
 	if err != nil {
 		m.WebhookRequestRejectCount.Inc()
 	} else {
@@ -26,11 +30,12 @@ func (r *WebhookMetricsRecorder) recordAfter(err error, obj runtime.Object) erro
 	return err
 }
 
-func (r *WebhookMetricsRecorder) recordBefore(obj runtime.Object) {
+func (r *MutWebhookMetricsRecorder) recordBefore(obj runtime.Object) {
 	m.IncWebhookRequestCount(true, obj)
 }
 
-func (r *WebhookMetricsRecorder) Default(ctx context.Context, obj runtime.Object) (err error) {
+func (r *MutWebhookMetricsRecorder) Default(ctx context.Context, obj runtime.Object) (err error) {
+	// TODO: Check if call panicked
 	r.recordBefore(obj)
 	defer r.recordAfter(err, obj)
 
@@ -38,7 +43,7 @@ func (r *WebhookMetricsRecorder) Default(ctx context.Context, obj runtime.Object
 }
 
 // CustomDefault required to implement webhook.CustomDefaulter.
-func (r *WebhookMetricsRecorder) CustomDefaulter(ctx context.Context, obj runtime.Object) (err error) {
+func (r *MutWebhookMetricsRecorder) CustomDefaulter(ctx context.Context, obj runtime.Object) (err error) {
 	return r.Default(ctx, obj)
 }
 

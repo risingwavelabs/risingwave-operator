@@ -64,5 +64,5 @@ func (h *RisingWavePodTemplateValidatingWebhook) ValidateUpdate(ctx context.Cont
 }
 
 func NewRisingWavePodTemplateValidatingWebhook() webhook.CustomValidator {
-	return &RisingWavePodTemplateValidatingWebhook{}
+	return &ValWebhookMetricsRecorder{&RisingWavePodTemplateValidatingWebhook{}}
 }

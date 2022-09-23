@@ -66,5 +66,5 @@ func (h *RisingWaveMutatingWebhook) Default(ctx context.Context, obj runtime.Obj
 }
 
 func NewRisingWaveMutatingWebhook() webhook.CustomDefaulter {
-	return &WebhookMetricsRecorder{&RisingWaveMutatingWebhook{}}
+	return &MutWebhookMetricsRecorder{&RisingWaveMutatingWebhook{}}
 }

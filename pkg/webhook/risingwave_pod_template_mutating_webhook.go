@@ -37,5 +37,5 @@ func (w *RisingWavePodTemplateMutatingWebhook) Default(ctx context.Context, obj 
 }
 
 func NewRisingWavePodTemplateMutatingWebhook() webhook.CustomDefaulter {
-	return &WebhookMetricsRecorder{&RisingWavePodTemplateMutatingWebhook{}}
+	return &MutWebhookMetricsRecorder{&RisingWavePodTemplateMutatingWebhook{}}
 }

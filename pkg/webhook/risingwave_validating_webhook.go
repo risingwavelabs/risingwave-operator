@@ -29,7 +29,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
-	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 )
 
 type RisingWaveValidatingWebhook struct {
@@ -209,19 +208,11 @@ func (h *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 
 // ValidateCreate implements admission.CustomValidator.
 func (h *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
-	defer func() {
-		if err == nil {
-			// m.webhookRequestPassCount.Inc() // TODO
-		} else {
-			m.WebhookRequestRejectCount.Inc()
-		}
-	}()
 	return h.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWave))
 }
 
 // ValidateDelete implements admission.CustomValidator.
 func (h *RisingWaveValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
-	//	m.webhookRequestPassCount.Inc() // TODO
 	return nil
 }
 
@@ -258,15 +249,6 @@ func (h *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 
 // ValidateUpdate implements admission.CustomValidator.
 func (h *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
-	defer func() {
-		if err == nil {
-			// TODO: use metrics wrapper here
-			// m.webhookRequestPassCount.Inc()
-		} else {
-			m.WebhookRequestRejectCount.Inc()
-		}
-	}()
-
 	// Validate the new object first.
 	if err := h.ValidateCreate(ctx, newObj); err != nil {
 		return err

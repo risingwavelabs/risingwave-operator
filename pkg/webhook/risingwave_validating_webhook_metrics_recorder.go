@@ -21,11 +21,11 @@ type ValWebhookMetricsRecorder struct {
 
 func (v *ValWebhookMetricsRecorder) recordAfter(err error, obj runtime.Object) error {
 	if rec := recover(); rec != nil {
-		m.WebhookRequestPanicCount.Inc()
+		m.IncWebhookRequestPanicCount(true, obj)
 	}
 	// TODO: Do we want to record the request reject/pass count if we panic?
 	if err != nil {
-		m.WebhookRequestRejectCount.Inc()
+		m.IncWebhookRequestRejectCount(true, obj)
 	} else {
 		m.IncWebhookRequestPassCount(true, obj)
 	}

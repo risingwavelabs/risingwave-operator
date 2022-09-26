@@ -28,6 +28,8 @@ const (
 	validatingWebhook = "validate"
 )
 
+// TODO: Where should we move the metric implementation to
+// TODO: Do I need additional tests for this?
 // TODO: Make other metrics NewCounterVec, too.
 
 var (
@@ -38,7 +40,7 @@ var (
 		},
 	)
 
-	// Vector has the following attributes:
+	// Webhook vectors have the following attributes:
 	// type: The value should be mutating or validating
 	// group: The target resource group of the webhook, e.g., risingwave.risingwavelabs.com
 	// version: The target API version, e.g., v1alpha1
@@ -61,18 +63,22 @@ var (
 		},
 		[]string{"type", "group", "version", "kind", "namespace", "name"},
 	)
-	WebhookRequestRejectCount = prometheus.NewCounter(
+	webhookRequestRejectCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "webhook_request_reject_count",
 			Help: "Total number of rejected validating and mutating webhook calls",
 		},
+		[]string{"type", "group", "version", "kind", "namespace", "name"},
 	)
-	WebhookRequestPanicCount = prometheus.NewCounter(
+	webhookRequestPanicCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "webhook_request_panic_count",
 			Help: "Total number of panics during validating and mutating webhook calls",
 		},
+		[]string{"type", "group", "version", "kind", "namespace", "name"},
 	)
+
+	// Controller vectors have...
 	ControllerReconcileCount = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "controller_reconcile_count",
@@ -135,6 +141,14 @@ func IncWebhookRequestPassCount(isValidating bool, obj runtime.Object) {
 	incWebhooksWithLabelValues(*webhookRequestPassCount, isValidating, obj)
 }
 
+func IncWebhookRequestRejectCount(isValidating bool, obj runtime.Object) {
+	incWebhooksWithLabelValues(*webhookRequestRejectCount, isValidating, obj)
+}
+
+func IncWebhookRequestPanicCount(isValidating bool, obj runtime.Object) {
+	incWebhooksWithLabelValues(*webhookRequestPanicCount, isValidating, obj)
+}
+
 func InitMetrics() {
 	// Register custom metrics with the global prometheus registry
 	metrics.Registry.MustRegister(ControllerReconcileCount)
@@ -143,7 +157,7 @@ func InitMetrics() {
 	metrics.Registry.MustRegister(ControllerReconcileRequeueErrorCount)
 	metrics.Registry.MustRegister(ReceivingMetricsFromOperator)
 	metrics.Registry.MustRegister(webhookRequestCount)
-	metrics.Registry.MustRegister(WebhookRequestPanicCount)
+	metrics.Registry.MustRegister(webhookRequestPanicCount)
 	metrics.Registry.MustRegister(webhookRequestPassCount)
-	metrics.Registry.MustRegister(WebhookRequestRejectCount)
+	metrics.Registry.MustRegister(webhookRequestRejectCount)
 }

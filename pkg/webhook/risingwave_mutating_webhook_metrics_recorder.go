@@ -2,7 +2,9 @@ package webhook
 
 import (
 	"context"
+	"fmt"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
@@ -20,8 +22,9 @@ type MutWebhookMetricsRecorder struct {
 func (r *MutWebhookMetricsRecorder) recordAfter(err error, obj runtime.Object) error {
 	if rec := recover(); rec != nil {
 		m.IncWebhookRequestPanicCount(false, obj)
+		m.IncWebhookRequestRejectCount(false, obj)
+		return apierrors.NewInternalError(fmt.Errorf("panic in mutating webhook: %v", rec))
 	}
-	// TODO: Do we want to record the request reject/pass count if we panic?
 	if err != nil {
 		m.IncWebhookRequestRejectCount(false, obj)
 	} else {

@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -116,13 +117,51 @@ func (c *RisingWaveController) managerOpts(risingwaveMgr *object.RisingWaveManag
 	return opts
 }
 
-func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	m.ControllerReconcileCount.Inc()
+func (c *RisingWaveController) beforeReconcile(request reconcile.Request, risingwave risingwavev1alpha1.RisingWave) {
+	m.IncControllerReconcileCount(request, risingwave)
+}
 
-	logger := log.FromContext(ctx)
+func (c *RisingWaveController) afterReconcile(
+	res reconcile.Result,
+	err error,
+	request reconcile.Request,
+	risingwave risingwavev1alpha1.RisingWave,
+	ctx context.Context) reconcile.Result {
+
+	if rec := recover(); rec != nil {
+		m.IncControllerReconcilePanicCount(request, risingwave)
+		log.FromContext(ctx).Error(fmt.Errorf("%v", rec), fmt.Sprintf("Panic in reconciliation run\n"))
+		// TODO: Should we change the reconciliation result?
+		return res
+	}
+	if err != nil {
+		m.IncControllerReconcileRequeueErrorCount(request, risingwave)
+	} else if res.RequeueAfter > 0 {
+		m.IncControllerReconcileRequeueAfter(res.RequeueAfter.Milliseconds(), request, risingwave)
+	} else if res.Requeue {
+		m.IncControllerReconcileRequeueCount(request, risingwave)
+	}
+	return res
+}
+
+// Reconcile reconciles a request and also adds metrics information to prometheus.
+func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (res reconcile.Result, err error) {
 
 	// Get the risingwave object.
 	var risingwave risingwavev1alpha1.RisingWave
+
+	// handle metrics
+	c.beforeReconcile(request, risingwave)
+	defer c.afterReconcile(res, err, request, risingwave, ctx)
+
+	// actual reconciliation
+	return c.reconcile(ctx, request, risingwave)
+}
+
+// reconcile implements the actual reconcile logic.
+func (c *RisingWaveController) reconcile(ctx context.Context, request reconcile.Request, risingwave risingwavev1alpha1.RisingWave) (reconcile.Result, error) {
+	logger := log.FromContext(ctx)
+
 	if err := c.Client.Get(ctx, request.NamespacedName, &risingwave); err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.V(1).Info("Not found, abort")
@@ -256,7 +295,6 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			if apierrors.IsNotFound(err) {
 				return ctrlkit.Exit()
 			}
-			m.ControllerReconcileCount.Inc()
 			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for service monitor", err)
 		}
 		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1"))

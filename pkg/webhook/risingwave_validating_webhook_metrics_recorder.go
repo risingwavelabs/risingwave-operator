@@ -2,7 +2,9 @@ package webhook
 
 import (
 	"context"
+	"fmt"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
@@ -22,8 +24,9 @@ type ValWebhookMetricsRecorder struct {
 func (v *ValWebhookMetricsRecorder) recordAfter(err error, obj runtime.Object) error {
 	if rec := recover(); rec != nil {
 		m.IncWebhookRequestPanicCount(true, obj)
+		m.IncWebhookRequestRejectCount(true, obj)
+		return apierrors.NewInternalError(fmt.Errorf("panic in validating webhook: %v", rec))
 	}
-	// TODO: Do we want to record the request reject/pass count if we panic?
 	if err != nil {
 		m.IncWebhookRequestRejectCount(true, obj)
 	} else {

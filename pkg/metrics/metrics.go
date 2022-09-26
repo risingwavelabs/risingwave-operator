@@ -29,17 +29,13 @@ const (
 	validatingWebhook = "validate"
 )
 
-// TODO: Where should we move the metric implementation to
-// Can stay in metrics/metrics.go
-
 // TODO: Do I need additional tests for this?
 // TODO: Do some basic unit tests
 // e.g manually trigger a panic and see if if panic got incremented
 // hijack the result and see if requeue on err is called and so on. Err counter increased?
 
-// TODO: Make other metrics NewCounterVec, too.
-
 var (
+	// Metric is used to test if metric collection works.
 	ReceivingMetricsFromOperator = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "receiving_metrics_from_operator",

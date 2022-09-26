@@ -19,35 +19,33 @@ type MutWebhookMetricsRecorder struct {
 	webhook mutatingWebhook
 }
 
-func (r *MutWebhookMetricsRecorder) recordAfter(err error, obj runtime.Object) error {
+func (r *MutWebhookMetricsRecorder) recordAfter(err *error, obj runtime.Object) error {
 	if rec := recover(); rec != nil {
 		m.IncWebhookRequestPanicCount(false, obj)
 		m.IncWebhookRequestRejectCount(false, obj)
 		return apierrors.NewInternalError(fmt.Errorf("panic in mutating webhook: %v", rec))
 	}
-	if err != nil {
+	if *err != nil {
 		m.IncWebhookRequestRejectCount(false, obj)
 	} else {
 		m.IncWebhookRequestPassCount(false, obj)
 	}
-	return err
+	return *err
 }
 
 func (r *MutWebhookMetricsRecorder) recordBefore(obj runtime.Object) {
-	m.IncWebhookRequestCount(true, obj)
+	m.IncWebhookRequestCount(false, obj)
 }
 
-func (r *MutWebhookMetricsRecorder) Default(ctx context.Context, obj runtime.Object) (err error) {
-	// TODO: Check if call panicked
+func (r *MutWebhookMetricsRecorder) Default(ctx context.Context, obj runtime.Object) error {
+	var err error
+	defer r.recordAfter(&err, obj)
 	r.recordBefore(obj)
-	defer r.recordAfter(err, obj)
-
-	return r.webhook.Default(ctx, obj)
+	err = r.webhook.Default(ctx, obj)
+	return err
 }
 
 // CustomDefault required to implement webhook.CustomDefaulter.
 func (r *MutWebhookMetricsRecorder) CustomDefaulter(ctx context.Context, obj runtime.Object) (err error) {
 	return r.Default(ctx, obj)
 }
-
-// TODO: Validating webhooks

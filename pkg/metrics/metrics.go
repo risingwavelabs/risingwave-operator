@@ -16,6 +16,7 @@ package manager
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	io_prometheus_client "github.com/prometheus/client_model/go"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -125,7 +126,7 @@ var (
 	)
 )
 
-// rwReqData hold specified fields of the RisingWave request.
+// rwReqData hold some fields of the RisingWave request.
 type rwReqData struct {
 	Namespace string
 	Name      string
@@ -152,10 +153,27 @@ func incWebhooksWithLabelValues(metric prometheus.CounterVec, isValidating bool,
 	metric.WithLabelValues(type_, gvk.Group, gvk.Version, gvk.Kind, reqData.Namespace, reqData.Name).Inc()
 }
 
+// getWebhooksWithLabelValues returns the numeric current counter of a metric.
+func getWebhooksWithLabelValues(metric prometheus.CounterVec, isValidating bool, obj runtime.Object) int {
+	type_ := mutatingWebhook
+	if isValidating {
+		type_ = validatingWebhook
+	}
+	gvk := obj.GetObjectKind().GroupVersionKind()
+	reqData := getRWData(obj)
+	counter, _ := metric.GetMetricWith(prometheus.Labels{
+		"type": type_, "group": gvk.Group, "version": gvk.Version,
+		"kind": gvk.Version, "namespace": reqData.Namespace, "name": reqData.Name,
+	})
+	var m io_prometheus_client.Metric
+	counter.Write(&m)
+	return int(*m.Counter.Value)
+}
+
 // IncWebhookRequestCount increments the WebhookRequestCount
 // isValidating: If true then increments validating webhook, else mutating webhook.
 func IncWebhookRequestCount(isValidating bool, obj runtime.Object) {
-	incWebhooksWithLabelValues(*webhookRequestCount, true, obj)
+	incWebhooksWithLabelValues(*webhookRequestCount, isValidating, obj)
 }
 
 func IncWebhookRequestPassCount(isValidating bool, obj runtime.Object) {
@@ -168,6 +186,24 @@ func IncWebhookRequestRejectCount(isValidating bool, obj runtime.Object) {
 
 func IncWebhookRequestPanicCount(isValidating bool, obj runtime.Object) {
 	incWebhooksWithLabelValues(*webhookRequestPanicCount, isValidating, obj)
+}
+
+// getters are defined below.
+
+func GetWebhookRequestPanicCountWith(isValidating bool, obj runtime.Object) int {
+	return getWebhooksWithLabelValues(*webhookRequestPanicCount, isValidating, obj)
+}
+
+func GetWebhookRequestRejectCount(isValidating bool, obj runtime.Object) int {
+	return getWebhooksWithLabelValues(*webhookRequestRejectCount, isValidating, obj)
+}
+
+func GetWebhookRequestCount(isValidating bool, obj runtime.Object) int {
+	return getWebhooksWithLabelValues(*webhookRequestCount, isValidating, obj)
+}
+
+func GetWebhookRequestPassCount(isValidating bool, obj runtime.Object) int {
+	return getWebhooksWithLabelValues(*webhookRequestPassCount, isValidating, obj)
 }
 
 // incControllersWithLabelValues increments the controller metric counter 'metric' by one.
@@ -196,6 +232,22 @@ func IncControllerReconcileRequeueAfter(time_ms int64, req reconcile.Request, rw
 
 func IncControllerReconcileRequeueErrorCount(req reconcile.Request, rw risingwavev1alpha1.RisingWave) {
 	incControllersWithLabelValues(*controllerReconcileRequeueErrorCount, req, rw)
+}
+
+// ResetMetrics resets all metrics. Use for testing only.
+func ResetMetrics() {
+	var m io_prometheus_client.Metric
+	m.Reset()
+	ReceivingMetricsFromOperator.Write(&m)
+	controllerReconcileCount.Reset()
+	controllerReconcilePanicCount.Reset()
+	controllerReconcileRequeueAfter.Reset()
+	controllerReconcileRequeueCount.Reset()
+	controllerReconcileRequeueErrorCount.Reset()
+	webhookRequestCount.Reset()
+	webhookRequestPanicCount.Reset()
+	webhookRequestPassCount.Reset()
+	webhookRequestRejectCount.Reset()
 }
 
 func InitMetrics() {

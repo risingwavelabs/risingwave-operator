@@ -18,13 +18,11 @@ package object
 
 import (
 	"errors"
-	"math"
-	"sort"
 
 	"github.com/samber/lo"
-	"k8s.io/utils/pointer"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/object/scaleview"
 )
 
 type ScaleViewLockManager struct {
@@ -50,96 +48,8 @@ func (svl *ScaleViewLockManager) IsScaleViewLocked(sv *risingwavev1alpha1.Rising
 	return svl.GetScaleViewLock(sv) != nil
 }
 
-func canonizeScalePolicy(p risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy) risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy {
-	r := p
-	if r.MaxReplicas == nil {
-		r.MaxReplicas = pointer.Int32(math.MaxInt32)
-	}
-	return r
-}
-
-func (svl *ScaleViewLockManager) split(total, n int) int {
-	if total%n == 0 {
-		return total / n
-	} else {
-		return total/n + 1
-	}
-}
-
 func (svl *ScaleViewLockManager) splitReplicasIntoGroups(sv *risingwavev1alpha1.RisingWaveScaleView) map[string]int32 {
-	// Must be a stable algorithm.
-
-	groupsGroupByPriority := make(map[int32][]risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy)
-	for _, p := range sv.Spec.ScalePolicy {
-		if _, ok := groupsGroupByPriority[p.Priority]; !ok {
-			groupsGroupByPriority[p.Priority] = []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
-				canonizeScalePolicy(p),
-			}
-		} else {
-			groupsGroupByPriority[p.Priority] = append(groupsGroupByPriority[p.Priority], canonizeScalePolicy(p))
-		}
-	}
-
-	for k := range groupsGroupByPriority {
-		groups := groupsGroupByPriority[k]
-		sort.Slice(groups, func(i, j int) bool {
-			if *groups[i].MaxReplicas != *groups[j].MaxReplicas {
-				return *groups[i].MaxReplicas < *groups[j].MaxReplicas
-			}
-			return groups[i].Group < groups[j].Group
-		})
-	}
-
-	totalLeft := int(sv.Spec.Replicas)
-	replicas := make(map[string]int32)
-
-	for priority := int32(10); priority >= 0; priority-- {
-		groups, ok := groupsGroupByPriority[priority]
-		if !ok {
-			continue
-		}
-		if totalLeft <= 0 {
-			for i := 0; i < len(groups); i++ {
-				g := groups[i]
-				replicas[g.Group] = int32(0)
-			}
-		} else {
-			base := 0
-			for i := 0; i < len(groups); i++ {
-				g := groups[i]
-				max := int(*g.MaxReplicas)
-				if max == math.MaxInt32 {
-					taken := svl.split(totalLeft, len(groups)-i)
-					replicas[g.Group] = int32(taken + base)
-					totalLeft -= taken
-				} else {
-					if totalLeft >= (max-base)*(len(groups)-i) {
-						replicas[g.Group] = int32(max)
-						totalLeft -= (max - base) * (len(groups) - i)
-						base = max
-					} else {
-						for j := i; j < len(groups); j++ {
-							g := groups[j]
-							taken := svl.split(totalLeft, len(groups)-j)
-							replicas[g.Group] = int32(taken + base)
-							totalLeft -= taken
-						}
-						break
-					}
-				}
-			}
-		}
-	}
-
-	sum := int32(0)
-	for _, r := range replicas {
-		sum += r
-	}
-	if sum != sv.Spec.Replicas {
-		panic("algorithm has bug")
-	}
-
-	return replicas
+	return scaleview.SplitReplicas(sv)
 }
 
 func (svl *ScaleViewLockManager) GrabScaleViewLockFor(sv *risingwavev1alpha1.RisingWaveScaleView) error {

@@ -121,14 +121,11 @@ func (r *RisingWaveScaleViewHelper) ReadReplicas(group string) (int32, bool) {
 // WriteReplicas writes the replicas to the given group. It returns true if the group is found and the value is changed.
 func (r *RisingWaveScaleViewHelper) WriteReplicas(group string, replicas int32) bool {
 	replicasPtr, _ := r.getReplicasPtr(group)
-
-	if replicasPtr != nil {
-		if *replicasPtr == replicas {
-			return false
-		}
-		*replicasPtr = replicas
+	if replicasPtr == nil || *replicasPtr == replicas {
+		return false
 	}
-	return replicasPtr != nil
+	*replicasPtr = replicas
+	return true
 }
 
 func NewRisingWaveScaleViewHelper(risingwave *risingwavev1alpha1.RisingWave, component string) *RisingWaveScaleViewHelper {

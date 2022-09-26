@@ -39,6 +39,11 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
+const (
+	RisingWaveScaleViewSyncLockRetryLimit    = 2
+	RisingWaveScaleViewSyncLockRetryInterval = 5 * time.Millisecond
+)
+
 type RisingWaveScaleViewController struct {
 	Client client.Client
 }
@@ -89,7 +94,7 @@ func (c *RisingWaveScaleViewController) Reconcile(ctx context.Context, request r
 			ctrlkit.OrderedJoin(
 				ctrlkit.Join(
 					ctrlkit.Sequential(
-						ctrlkit.RetryInterval(2, 5*time.Millisecond, mgr.GrabOrUpdateScaleViewLock()),
+						ctrlkit.RetryInterval(RisingWaveScaleViewSyncLockRetryLimit, RisingWaveScaleViewSyncLockRetryInterval, mgr.GrabOrUpdateScaleViewLock()),
 						mgr.SyncGroupReplicasToRisingWave(),
 					),
 					mgr.SyncGroupReplicasStatusFromRisingWave(),

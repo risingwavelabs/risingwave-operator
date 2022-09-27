@@ -172,6 +172,8 @@ func getWebhooksWithLabelValues(metric prometheus.CounterVec, isValidating bool,
 	return int(*m.Counter.Value)
 }
 
+// Increment webhook metric
+
 func IncWebhookRequestCount(isValidating bool, obj runtime.Object) {
 	incWebhooksWithLabelValues(*webhookRequestCount, isValidating, obj)
 }
@@ -188,7 +190,7 @@ func IncWebhookRequestPanicCount(isValidating bool, obj runtime.Object) {
 	incWebhooksWithLabelValues(*webhookRequestPanicCount, isValidating, obj)
 }
 
-// getters are defined below.
+// Get webhook metric count
 
 func GetWebhookRequestPanicCountWith(isValidating bool, obj runtime.Object) int {
 	return getWebhooksWithLabelValues(*webhookRequestPanicCount, isValidating, obj)
@@ -205,6 +207,8 @@ func GetWebhookRequestCount(isValidating bool, obj runtime.Object) int {
 func GetWebhookRequestPassCount(isValidating bool, obj runtime.Object) int {
 	return getWebhooksWithLabelValues(*webhookRequestPassCount, isValidating, obj)
 }
+
+// Increment/update controller metric
 
 // incControllersWithLabelValues increments the controller metric counter 'metric' by one.
 func incControllersWithLabelValues(metric prometheus.CounterVec, req reconcile.Request, rw risingwavev1alpha1.RisingWave) {

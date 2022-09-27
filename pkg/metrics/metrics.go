@@ -261,8 +261,8 @@ func ResetMetrics() {
 	webhookRequestRejectCount.Reset()
 }
 
+// InitMetrics registers custom metrics with the global prometheus registry.
 func InitMetrics() {
-	// Register custom metrics with the global prometheus registry
 	metrics.Registry.MustRegister(controllerReconcileCount)
 	metrics.Registry.MustRegister(controllerReconcilePanicCount)
 	metrics.Registry.MustRegister(controllerReconcileRequeueAfter)

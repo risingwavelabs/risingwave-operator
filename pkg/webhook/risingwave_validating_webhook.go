@@ -32,11 +32,11 @@ import (
 )
 
 type RisingWaveValidatingWebhook struct {
-	Name string
+	name string
 }
 
 func (w *RisingWaveValidatingWebhook) GetName() string {
-	return w.Name
+	return w.name
 }
 
 func isImageValid(image string) bool {

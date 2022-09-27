@@ -30,11 +30,6 @@ const (
 	validatingWebhook = "validate"
 )
 
-// TODO: Do I need additional tests for this?
-// TODO: Do some basic unit tests
-// e.g manually trigger a panic and see if if panic got incremented
-// hijack the result and see if requeue on err is called and so on. Err counter increased?
-
 var (
 	// Metric is used to test if metric collection works.
 	ReceivingMetricsFromOperator = prometheus.NewCounter(

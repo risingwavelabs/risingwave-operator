@@ -138,8 +138,8 @@ type rwReqData struct {
 	Name      string
 }
 
-// getRWData returns the relevant data about the RisingWave request.
-func getRWData(obj runtime.Object) rwReqData {
+// getRwReqData returns the relevant data about the RisingWave request.
+func getRwReqData(obj runtime.Object) rwReqData {
 	rw, ok := obj.(*risingwavev1alpha1.RisingWave)
 	if ok {
 		return rwReqData{rw.Namespace, rw.Name}
@@ -155,7 +155,7 @@ func incWebhooksWithLabelValues(metric prometheus.CounterVec, isValidating bool,
 		type_ = validatingWebhook
 	}
 	gvk := obj.GetObjectKind().GroupVersionKind()
-	reqData := getRWData(obj)
+	reqData := getRwReqData(obj)
 	metric.WithLabelValues(type_, gvk.Group, gvk.Version, gvk.Kind, reqData.Namespace, reqData.Name).Inc()
 }
 
@@ -166,7 +166,7 @@ func getWebhooksWithLabelValues(metric prometheus.CounterVec, isValidating bool,
 		type_ = validatingWebhook
 	}
 	gvk := obj.GetObjectKind().GroupVersionKind()
-	reqData := getRWData(obj)
+	reqData := getRwReqData(obj)
 	counter, _ := metric.GetMetricWith(prometheus.Labels{
 		"type": type_, "group": gvk.Group, "version": gvk.Version,
 		"kind": gvk.Version, "namespace": reqData.Namespace, "name": reqData.Name,
@@ -242,7 +242,7 @@ func IncControllerReconcileRequeueErrorCount(req reconcile.Request, rw risingwav
 
 func UpdateControllerReconcileDuration(time_ms int64, obj runtime.Object, webhookName string) {
 	gvk := obj.GetObjectKind().GroupVersionKind()
-	data := getRWData(obj)
+	data := getRwReqData(obj)
 	controllerReconcileDuration.WithLabelValues(webhookName, gvk.Group, gvk.Version,
 		gvk.Kind, data.Namespace, data.Name).Observe(float64(time_ms))
 }

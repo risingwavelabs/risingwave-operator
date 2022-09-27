@@ -87,6 +87,7 @@ var (
 	// kind: The target API kind, e.g., risingwave, risingwavepodtemplate
 	// namespace: The namespace of the object, e.g., default
 	// name: The name of the object
+	// TODO: verb: The verb (action) on the object which triggers the webhook, the value should be one of "create", "update", and "delete".
 	controllerReconcileCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "controller_reconcile_count",

@@ -37,12 +37,10 @@ func (r *MutWebhookMetricsRecorder) recordBefore(obj runtime.Object) {
 	m.IncWebhookRequestCount(false, obj)
 }
 
-func (r *MutWebhookMetricsRecorder) Default(ctx context.Context, obj runtime.Object) error {
-	var err error
+func (r *MutWebhookMetricsRecorder) Default(ctx context.Context, obj runtime.Object) (err error) {
 	defer r.recordAfter(&err, obj)
 	r.recordBefore(obj)
-	err = r.webhook.Default(ctx, obj)
-	return err
+	return r.webhook.Default(ctx, obj)
 }
 
 // CustomDefault required to implement webhook.CustomDefaulter.

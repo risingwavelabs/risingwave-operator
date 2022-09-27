@@ -21,18 +21,18 @@ type ValWebhookMetricsRecorder struct {
 	webhook validatingWebhook
 }
 
-func (v *ValWebhookMetricsRecorder) recordAfter(err error, obj runtime.Object) error {
+func (v *ValWebhookMetricsRecorder) recordAfter(err *error, obj runtime.Object) error {
 	if rec := recover(); rec != nil {
 		m.IncWebhookRequestPanicCount(true, obj)
 		m.IncWebhookRequestRejectCount(true, obj)
 		return apierrors.NewInternalError(fmt.Errorf("panic in validating webhook: %v", rec))
 	}
-	if err != nil {
+	if *err != nil {
 		m.IncWebhookRequestRejectCount(true, obj)
 	} else {
 		m.IncWebhookRequestPassCount(true, obj)
 	}
-	return err
+	return *err
 }
 
 func (v *ValWebhookMetricsRecorder) recordBefore(obj runtime.Object) {
@@ -41,21 +41,18 @@ func (v *ValWebhookMetricsRecorder) recordBefore(obj runtime.Object) {
 
 func (v *ValWebhookMetricsRecorder) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
 	v.recordBefore(obj)
-	err = v.webhook.ValidateCreate(ctx, obj)
-	defer v.recordAfter(err, obj)
-	return err
+	defer v.recordAfter(&err, obj)
+	return v.webhook.ValidateCreate(ctx, obj)
 }
 
 func (v *ValWebhookMetricsRecorder) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
 	v.recordBefore(newObj)
-	err = v.webhook.ValidateUpdate(ctx, oldObj, newObj)
-	defer v.recordAfter(err, newObj)
-	return err
+	defer v.recordAfter(&err, newObj)
+	return v.webhook.ValidateUpdate(ctx, oldObj, newObj)
 }
 
 func (v *ValWebhookMetricsRecorder) ValidateDelete(ctx context.Context, obj runtime.Object) (err error) {
 	v.recordBefore(obj)
-	err = v.webhook.ValidateDelete(ctx, obj)
-	defer v.recordAfter(err, obj)
-	return err
+	defer v.recordAfter(&err, obj)
+	return v.webhook.ValidateDelete(ctx, obj)
 }

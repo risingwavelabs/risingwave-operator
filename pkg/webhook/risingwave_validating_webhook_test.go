@@ -18,13 +18,18 @@ package webhook
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 
+	"github.com/stretchr/testify/assert"
+
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
 
@@ -485,41 +490,125 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 	}
 }
 
-/*
+type panicValWebhook struct{}
+
+func (h *panicValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
+	panic("validateCreate panic")
+}
+
+func (h *panicValWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
+	panic("validateDelete update")
+}
+
+func (p *panicValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
+	panic("validateUpdate panic")
+}
 
 func Test_MetricsValidatingWebhookPanic(t *testing.T) {
+	m.ResetMetrics()
 	risingwave := &risingwavev1alpha1.RisingWave{}
+	panicWebhook := &ValWebhookMetricsRecorder{&panicValWebhook{}}
 
-	panicWebhook := &ValWebhookMetricsRecorder{&PanicDefaulter{}}
-	panicWebhook.Default(context.Background(), risingwave)
-
+	panicWebhook.ValidateCreate(context.Background(), risingwave)
 	assert.Equal(t, 1, m.GetWebhookRequestPanicCountWith(true, risingwave), "Panic metric")
 	assert.Equal(t, 1, m.GetWebhookRequestRejectCount(true, risingwave), "Reject metric")
 	assert.Equal(t, 1, m.GetWebhookRequestCount(true, risingwave), "Count metric")
 	assert.Equal(t, 0, m.GetWebhookRequestPassCount(true, risingwave), "Pass metric")
+	m.ResetMetrics()
+
+	panicWebhook.ValidateDelete(context.Background(), risingwave)
+	assert.Equal(t, 1, m.GetWebhookRequestPanicCountWith(true, risingwave), "Panic metric")
+	assert.Equal(t, 1, m.GetWebhookRequestRejectCount(true, risingwave), "Reject metric")
+	assert.Equal(t, 1, m.GetWebhookRequestCount(true, risingwave), "Count metric")
+	assert.Equal(t, 0, m.GetWebhookRequestPassCount(true, risingwave), "Pass metric")
+	m.ResetMetrics()
+
+	panicWebhook.ValidateUpdate(context.Background(), risingwave, risingwave)
+	assert.Equal(t, 1, m.GetWebhookRequestPanicCountWith(true, risingwave), "Panic metric")
+	assert.Equal(t, 1, m.GetWebhookRequestRejectCount(true, risingwave), "Reject metric")
+	assert.Equal(t, 1, m.GetWebhookRequestCount(true, risingwave), "Count metric")
+	assert.Equal(t, 0, m.GetWebhookRequestPassCount(true, risingwave), "Pass metric")
+	m.ResetMetrics()
+}
+
+type successfulValWebhook struct{}
+
+func (h *successfulValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
+	return nil
+}
+
+func (h *successfulValWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
+	return nil
+}
+
+func (p *successfulValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
+	return nil
 }
 
 func Test_MetricsValidatingWebhookSuccess(t *testing.T) {
+	m.ResetMetrics()
 	risingwave := &risingwavev1alpha1.RisingWave{}
+	successWebhook := &ValWebhookMetricsRecorder{&successfulValWebhook{}}
 
-	successWebhook := &ValWebhookMetricsRecorder{&SuccessfulDefaulter{}}
-	successWebhook.Default(context.Background(), risingwave)
-
+	successWebhook.ValidateCreate(context.Background(), risingwave)
 	assert.Equal(t, 0, m.GetWebhookRequestPanicCountWith(true, risingwave), "Panic metric")
 	assert.Equal(t, 0, m.GetWebhookRequestRejectCount(true, risingwave), "Reject metric")
 	assert.Equal(t, 1, m.GetWebhookRequestCount(true, risingwave), "Count metric")
 	assert.Equal(t, 1, m.GetWebhookRequestPassCount(true, risingwave), "Request metric")
+	m.ResetMetrics()
+
+	successWebhook.ValidateDelete(context.Background(), risingwave)
+	assert.Equal(t, 0, m.GetWebhookRequestPanicCountWith(true, risingwave), "Panic metric")
+	assert.Equal(t, 0, m.GetWebhookRequestRejectCount(true, risingwave), "Reject metric")
+	assert.Equal(t, 1, m.GetWebhookRequestCount(true, risingwave), "Count metric")
+	assert.Equal(t, 1, m.GetWebhookRequestPassCount(true, risingwave), "Request metric")
+	m.ResetMetrics()
+
+	successWebhook.ValidateUpdate(context.Background(), risingwave, risingwave)
+	assert.Equal(t, 0, m.GetWebhookRequestPanicCountWith(true, risingwave), "Panic metric")
+	assert.Equal(t, 0, m.GetWebhookRequestRejectCount(true, risingwave), "Reject metric")
+	assert.Equal(t, 1, m.GetWebhookRequestCount(true, risingwave), "Count metric")
+	assert.Equal(t, 1, m.GetWebhookRequestPassCount(true, risingwave), "Request metric")
+	m.ResetMetrics()
+}
+
+type errorValWebhook struct{}
+
+func (h *errorValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
+	return fmt.Errorf("validateCreate err")
+}
+
+func (h *errorValWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
+	return fmt.Errorf("validateDelete err")
+}
+
+func (p *errorValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
+	return fmt.Errorf("validateUpdate err")
 }
 
 func Test_MetricsValidatingWebhookError(t *testing.T) {
+	m.ResetMetrics()
 	risingwave := &risingwavev1alpha1.RisingWave{}
+	errorWebhook := &ValWebhookMetricsRecorder{&errorValWebhook{}}
 
-	errorWebhook := &ValWebhookMetricsRecorder{&ErrorDefaulter{}}
-	errorWebhook.Default(context.Background(), risingwave)
-
+	errorWebhook.ValidateCreate(context.Background(), risingwave)
 	assert.Equal(t, 0, m.GetWebhookRequestPanicCountWith(true, risingwave), "Panic metric")
 	assert.Equal(t, 1, m.GetWebhookRequestRejectCount(true, risingwave), "Reject metric")
 	assert.Equal(t, 1, m.GetWebhookRequestCount(true, risingwave), "Request metric")
 	assert.Equal(t, 0, m.GetWebhookRequestPassCount(true, risingwave), "Pass metric")
+	m.ResetMetrics()
+
+	errorWebhook.ValidateDelete(context.Background(), risingwave)
+	assert.Equal(t, 0, m.GetWebhookRequestPanicCountWith(true, risingwave), "Panic metric")
+	assert.Equal(t, 1, m.GetWebhookRequestRejectCount(true, risingwave), "Reject metric")
+	assert.Equal(t, 1, m.GetWebhookRequestCount(true, risingwave), "Request metric")
+	assert.Equal(t, 0, m.GetWebhookRequestPassCount(true, risingwave), "Pass metric")
+	m.ResetMetrics()
+
+	errorWebhook.ValidateUpdate(context.Background(), risingwave, risingwave)
+	assert.Equal(t, 0, m.GetWebhookRequestPanicCountWith(true, risingwave), "Panic metric")
+	assert.Equal(t, 1, m.GetWebhookRequestRejectCount(true, risingwave), "Reject metric")
+	assert.Equal(t, 1, m.GetWebhookRequestCount(true, risingwave), "Request metric")
+	assert.Equal(t, 0, m.GetWebhookRequestPassCount(true, risingwave), "Pass metric")
+	m.ResetMetrics()
 }
-*/

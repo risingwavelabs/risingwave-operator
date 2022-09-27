@@ -72,12 +72,9 @@ func Test_RisingWaveMutatingWebhook_Default(t *testing.T) {
 	}
 }
 
-// Test both for mutating and validating webhook
-// TODO: Test validating webhook in other test file
+type panicMutWebhook struct{}
 
-type PanicDefaulter struct{}
-
-func (pd *PanicDefaulter) Default(ctx context.Context, obj runtime.Object) error {
+func (pd *panicMutWebhook) Default(ctx context.Context, obj runtime.Object) error {
 	panic("simulating a panic")
 }
 
@@ -85,7 +82,7 @@ func Test_MetricsMutatingWebhookPanic(t *testing.T) {
 	m.ResetMetrics()
 	risingwave := &risingwavev1alpha1.RisingWave{}
 
-	panicWebhook := &MutWebhookMetricsRecorder{&PanicDefaulter{}}
+	panicWebhook := &MutWebhookMetricsRecorder{&panicMutWebhook{}}
 	panicWebhook.Default(context.Background(), risingwave)
 
 	assert.Equal(t, 1, m.GetWebhookRequestPanicCountWith(false, risingwave), "Panic metric")
@@ -94,15 +91,15 @@ func Test_MetricsMutatingWebhookPanic(t *testing.T) {
 	assert.Equal(t, 0, m.GetWebhookRequestPassCount(false, risingwave), "Pass metric")
 }
 
-type SuccessfulDefaulter struct{}
+type successfulMutWebhook struct{}
 
-func (sd *SuccessfulDefaulter) Default(ctx context.Context, obj runtime.Object) error { return nil }
+func (sd *successfulMutWebhook) Default(ctx context.Context, obj runtime.Object) error { return nil }
 
 func Test_MetricsMutatingWebhookSuccess(t *testing.T) {
 	m.ResetMetrics()
 	risingwave := &risingwavev1alpha1.RisingWave{}
 
-	successWebhook := &MutWebhookMetricsRecorder{&SuccessfulDefaulter{}}
+	successWebhook := &MutWebhookMetricsRecorder{&successfulMutWebhook{}}
 	successWebhook.Default(context.Background(), risingwave)
 
 	assert.Equal(t, 0, m.GetWebhookRequestPanicCountWith(false, risingwave), "Panic metric")
@@ -111,9 +108,9 @@ func Test_MetricsMutatingWebhookSuccess(t *testing.T) {
 	assert.Equal(t, 1, m.GetWebhookRequestPassCount(false, risingwave), "Request metric")
 }
 
-type ErrorDefaulter struct{}
+type errorMutWebhook struct{}
 
-func (sd *ErrorDefaulter) Default(ctx context.Context, obj runtime.Object) error {
+func (sd *errorMutWebhook) Default(ctx context.Context, obj runtime.Object) error {
 	return fmt.Errorf("test error")
 }
 
@@ -121,7 +118,7 @@ func Test_MetricsMutatingWebhookError(t *testing.T) {
 	m.ResetMetrics()
 	risingwave := &risingwavev1alpha1.RisingWave{}
 
-	errorWebhook := &MutWebhookMetricsRecorder{&ErrorDefaulter{}}
+	errorWebhook := &MutWebhookMetricsRecorder{&errorMutWebhook{}}
 	errorWebhook.Default(context.Background(), risingwave)
 
 	assert.Equal(t, 0, m.GetWebhookRequestPanicCountWith(false, risingwave), "Panic metric")

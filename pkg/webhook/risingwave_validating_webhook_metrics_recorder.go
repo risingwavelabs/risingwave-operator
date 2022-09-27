@@ -56,21 +56,21 @@ func (v *ValWebhookMetricsRecorder) recordBefore(obj runtime.Object) {
 
 func (v *ValWebhookMetricsRecorder) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
 	reconcileStartTS := time.Now()
-	v.recordBefore(obj)
 	defer v.recordAfter(&err, obj, reconcileStartTS)
+	v.recordBefore(obj)
 	return v.webhook.ValidateCreate(ctx, obj)
 }
 
 func (v *ValWebhookMetricsRecorder) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
 	reconcileStartTS := time.Now()
-	v.recordBefore(newObj)
 	defer v.recordAfter(&err, newObj, reconcileStartTS)
+	v.recordBefore(newObj)
 	return v.webhook.ValidateUpdate(ctx, oldObj, newObj)
 }
 
 func (v *ValWebhookMetricsRecorder) ValidateDelete(ctx context.Context, obj runtime.Object) (err error) {
 	reconcileStartTS := time.Now()
-	v.recordBefore(obj)
 	defer v.recordAfter(&err, obj, reconcileStartTS)
+	v.recordBefore(obj)
 	return v.webhook.ValidateDelete(ctx, obj)
 }

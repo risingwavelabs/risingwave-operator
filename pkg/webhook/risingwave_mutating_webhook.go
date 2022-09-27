@@ -26,7 +26,13 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
 
-type RisingWaveMutatingWebhook struct{}
+type RisingWaveMutatingWebhook struct {
+	name string
+}
+
+func (w *RisingWaveMutatingWebhook) GetName() string {
+	return w.name
+}
 
 func setDefaultIfZero[T comparable](dst *T, defaultVal T) {
 	var zero T
@@ -35,7 +41,7 @@ func setDefaultIfZero[T comparable](dst *T, defaultVal T) {
 	}
 }
 
-func (h *RisingWaveMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWave) error {
+func (w *RisingWaveMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWave) error {
 
 	setDefaultIfZero(&obj.Spec.Components.Meta.Ports.ServicePort, consts.DefaultMetaServicePort)
 	setDefaultIfZero(&obj.Spec.Components.Meta.Ports.MetricsPort, consts.DefaultMetaMetricsPort)
@@ -54,10 +60,12 @@ func (h *RisingWaveMutatingWebhook) setDefault(ctx context.Context, obj *risingw
 }
 
 // Default implements admission.CustomDefaulter.
-func (h *RisingWaveMutatingWebhook) Default(ctx context.Context, obj runtime.Object) error {
-	return h.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWave))
+func (w *RisingWaveMutatingWebhook) Default(ctx context.Context, obj runtime.Object) error {
+	return w.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWave))
 }
 
 func NewRisingWaveMutatingWebhook() webhook.CustomDefaulter {
-	return &MutWebhookMetricsRecorder{&RisingWaveMutatingWebhook{}}
+	return &MutWebhookMetricsRecorder{&RisingWaveMutatingWebhook{
+		"RisingWaveMutatingWebhook",
+	}}
 }

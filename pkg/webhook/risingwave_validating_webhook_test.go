@@ -492,11 +492,13 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 
 type panicValWebhook struct{}
 
-func (h *panicValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
+func (p *panicValWebhook) GetName() string { return "" }
+
+func (p *panicValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
 	panic("validateCreate panic")
 }
 
-func (h *panicValWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
+func (p *panicValWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
 	panic("validateDelete update")
 }
 
@@ -533,15 +535,17 @@ func Test_MetricsValidatingWebhookPanic(t *testing.T) {
 
 type successfulValWebhook struct{}
 
-func (h *successfulValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
+func (s *successfulValWebhook) GetName() string { return "" }
+
+func (s *successfulValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
 	return nil
 }
 
-func (h *successfulValWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
+func (s *successfulValWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
 	return nil
 }
 
-func (p *successfulValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
+func (s *successfulValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
 	return nil
 }
 
@@ -574,15 +578,17 @@ func Test_MetricsValidatingWebhookSuccess(t *testing.T) {
 
 type errorValWebhook struct{}
 
-func (h *errorValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
+func (e *errorValWebhook) GetName() string { return "" }
+
+func (e *errorValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
 	return fmt.Errorf("validateCreate err")
 }
 
-func (h *errorValWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
+func (e *errorValWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
 	return fmt.Errorf("validateDelete err")
 }
 
-func (p *errorValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
+func (e *errorValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
 	return fmt.Errorf("validateUpdate err")
 }
 

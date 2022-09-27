@@ -32,6 +32,11 @@ import (
 )
 
 type RisingWaveValidatingWebhook struct {
+	Name string
+}
+
+func (w *RisingWaveValidatingWebhook) GetName() string {
+	return w.Name
 }
 
 func isImageValid(image string) bool {
@@ -258,5 +263,7 @@ func (h *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj
 }
 
 func NewRisingWaveValidatingWebhook() webhook.CustomValidator {
-	return &ValWebhookMetricsRecorder{&RisingWaveValidatingWebhook{}}
+	return &ValWebhookMetricsRecorder{&RisingWaveValidatingWebhook{
+		"RisingWaveValidatingWebhook",
+	}}
 }

@@ -30,6 +30,11 @@ import (
 )
 
 type RisingWavePodTemplateValidatingWebhook struct {
+	name string
+}
+
+func (w *RisingWavePodTemplateValidatingWebhook) GetName() string {
+	return w.name
 }
 
 // ValidateCreate implements admission.CustomValidator.
@@ -64,5 +69,5 @@ func (h *RisingWavePodTemplateValidatingWebhook) ValidateUpdate(ctx context.Cont
 }
 
 func NewRisingWavePodTemplateValidatingWebhook() webhook.CustomValidator {
-	return &ValWebhookMetricsRecorder{&RisingWavePodTemplateValidatingWebhook{}}
+	return &ValWebhookMetricsRecorder{&RisingWavePodTemplateValidatingWebhook{"RisingWavePodTemplateValidatingWebhook"}}
 }

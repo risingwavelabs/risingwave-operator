@@ -3,6 +3,7 @@ package webhook
 import (
 	"context"
 	"fmt"
+	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -12,6 +13,7 @@ import (
 
 type mutatingWebhook interface {
 	Default(context.Context, runtime.Object) error
+	GetName() string
 }
 
 // MutWebhookMetricsRecorder wrapping a mutating webhook to simplify metric calculation.
@@ -19,7 +21,7 @@ type MutWebhookMetricsRecorder struct {
 	webhook mutatingWebhook
 }
 
-func (r *MutWebhookMetricsRecorder) recordAfter(err *error, obj runtime.Object) error {
+func (r *MutWebhookMetricsRecorder) recordAfter(err *error, obj runtime.Object, reconcileStartTS time.Time) error {
 	if rec := recover(); rec != nil {
 		m.IncWebhookRequestPanicCount(false, obj)
 		m.IncWebhookRequestRejectCount(false, obj)
@@ -30,6 +32,7 @@ func (r *MutWebhookMetricsRecorder) recordAfter(err *error, obj runtime.Object) 
 	} else {
 		m.IncWebhookRequestPassCount(false, obj)
 	}
+	m.UpdateControllerReconcileDuration(time.Since(reconcileStartTS).Milliseconds(), obj, r.webhook.GetName())
 	return *err
 }
 
@@ -38,7 +41,8 @@ func (r *MutWebhookMetricsRecorder) recordBefore(obj runtime.Object) {
 }
 
 func (r *MutWebhookMetricsRecorder) Default(ctx context.Context, obj runtime.Object) (err error) {
-	defer r.recordAfter(&err, obj)
+	reconcileStartTS := time.Now()
+	defer r.recordAfter(&err, obj, reconcileStartTS)
 	r.recordBefore(obj)
 	return r.webhook.Default(ctx, obj)
 }

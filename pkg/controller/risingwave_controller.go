@@ -137,7 +137,7 @@ func (c *RisingWaveController) afterReconcile(
 	if err != nil {
 		m.IncControllerReconcileRequeueErrorCount(request, risingwave)
 	} else if res.RequeueAfter > 0 {
-		m.IncControllerReconcileRequeueAfter(res.RequeueAfter.Milliseconds(), request, risingwave)
+		m.UpdateControllerReconcileRequeueAfter(res.RequeueAfter.Milliseconds(), request, risingwave)
 	} else if res.Requeue {
 		m.IncControllerReconcileRequeueCount(request, risingwave)
 	}

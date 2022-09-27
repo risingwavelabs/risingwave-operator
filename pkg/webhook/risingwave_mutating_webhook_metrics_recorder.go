@@ -27,7 +27,6 @@ import (
 
 type mutatingWebhook interface {
 	Default(context.Context, runtime.Object) error
-	GetName() string
 }
 
 // MutWebhookMetricsRecorder wrapping a mutating webhook to simplify metric calculation.
@@ -46,7 +45,6 @@ func (r *MutWebhookMetricsRecorder) recordAfter(err *error, obj runtime.Object, 
 	} else {
 		m.IncWebhookRequestPassCount(false, obj)
 	}
-	m.UpdateControllerReconcileDuration(time.Since(reconcileStartTS).Milliseconds(), obj, r.webhook.GetName())
 	return *err
 }
 

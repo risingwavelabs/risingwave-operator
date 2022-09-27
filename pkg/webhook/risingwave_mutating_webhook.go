@@ -26,13 +26,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
 
-type RisingWaveMutatingWebhook struct {
-	name string
-}
-
-func (w *RisingWaveMutatingWebhook) GetName() string {
-	return w.name
-}
+type RisingWaveMutatingWebhook struct{}
 
 func setDefaultIfZero[T comparable](dst *T, defaultVal T) {
 	var zero T
@@ -65,7 +59,5 @@ func (w *RisingWaveMutatingWebhook) Default(ctx context.Context, obj runtime.Obj
 }
 
 func NewRisingWaveMutatingWebhook() webhook.CustomDefaulter {
-	return &MutWebhookMetricsRecorder{&RisingWaveMutatingWebhook{
-		"RisingWaveMutatingWebhook",
-	}}
+	return &MutWebhookMetricsRecorder{&RisingWaveMutatingWebhook{}}
 }

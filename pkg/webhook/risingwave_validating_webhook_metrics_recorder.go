@@ -15,7 +15,6 @@ type validatingWebhook interface {
 	ValidateCreate(ctx context.Context, obj runtime.Object) error
 	ValidateDelete(ctx context.Context, obj runtime.Object) error
 	ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error
-	GetName() string
 }
 
 // ValWebhookMetricsRecorder wrapping a mutating webhook to simplify metric calculation.
@@ -34,7 +33,6 @@ func (v *ValWebhookMetricsRecorder) recordAfter(err *error, obj runtime.Object, 
 	} else {
 		m.IncWebhookRequestPassCount(true, obj)
 	}
-	m.UpdateControllerReconcileDuration(time.Since(reconcileStartTS).Milliseconds(), obj, v.webhook.GetName())
 	return *err
 }
 

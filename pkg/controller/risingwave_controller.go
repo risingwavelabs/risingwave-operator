@@ -101,6 +101,7 @@ type RisingWaveController struct {
 	Client            client.Client
 	Recorder          record.EventRecorder
 	ActionHookFactory func() ctrlkit.ActionHook
+	name              string
 }
 
 func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit.Action) (result reconcile.Result, err error) {
@@ -126,7 +127,8 @@ func (c *RisingWaveController) afterReconcile(
 	err error,
 	request reconcile.Request,
 	risingwave risingwavev1alpha1.RisingWave,
-	ctx context.Context) reconcile.Result {
+	ctx context.Context,
+	reconcileStartTS time.Time) reconcile.Result {
 
 	if rec := recover(); rec != nil {
 		m.IncControllerReconcilePanicCount(request, risingwave)
@@ -141,18 +143,20 @@ func (c *RisingWaveController) afterReconcile(
 	} else if res.Requeue {
 		m.IncControllerReconcileRequeueCount(request, risingwave)
 	}
+	m.UpdateControllerReconcileDuration(time.Since(reconcileStartTS).Milliseconds(), risingwave, c.name)
 	return res
 }
 
 // Reconcile reconciles a request and also adds metrics information to prometheus.
 func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (res reconcile.Result, err error) {
+	reconcileStartTS := time.Now()
 
 	// Get the risingwave object.
 	var risingwave risingwavev1alpha1.RisingWave
 
 	// handle metrics
 	c.beforeReconcile(request, risingwave)
-	defer c.afterReconcile(res, err, request, risingwave, ctx)
+	defer c.afterReconcile(res, err, request, risingwave, ctx, reconcileStartTS)
 
 	// actual reconciliation
 	return c.reconcile(ctx, request, risingwave)
@@ -425,5 +429,6 @@ func NewRisingWaveController(client client.Client, recorder record.EventRecorder
 	return &RisingWaveController{
 		Client:   client,
 		Recorder: recorder,
+		name:     "NewRisingWaveController",
 	}
 }

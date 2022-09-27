@@ -29,13 +29,7 @@ import (
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
-type RisingWavePodTemplateValidatingWebhook struct {
-	name string
-}
-
-func (w *RisingWavePodTemplateValidatingWebhook) GetName() string {
-	return w.name
-}
+type RisingWavePodTemplateValidatingWebhook struct{}
 
 // ValidateCreate implements admission.CustomValidator.
 func (h *RisingWavePodTemplateValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
@@ -69,5 +63,5 @@ func (h *RisingWavePodTemplateValidatingWebhook) ValidateUpdate(ctx context.Cont
 }
 
 func NewRisingWavePodTemplateValidatingWebhook() webhook.CustomValidator {
-	return &ValWebhookMetricsRecorder{&RisingWavePodTemplateValidatingWebhook{"RisingWavePodTemplateValidatingWebhook"}}
+	return &ValWebhookMetricsRecorder{&RisingWavePodTemplateValidatingWebhook{}}
 }

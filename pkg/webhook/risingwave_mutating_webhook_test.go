@@ -74,8 +74,6 @@ func Test_RisingWaveMutatingWebhook_Default(t *testing.T) {
 
 type panicMutWebhook struct{}
 
-func (p *panicMutWebhook) GetName() string { return "" }
-
 func (p *panicMutWebhook) Default(ctx context.Context, obj runtime.Object) error {
 	panic("simulating a panic")
 }
@@ -95,8 +93,6 @@ func Test_MetricsMutatingWebhookPanic(t *testing.T) {
 
 type successfulMutWebhook struct{}
 
-func (s *successfulMutWebhook) GetName() string { return "" }
-
 func (s *successfulMutWebhook) Default(ctx context.Context, obj runtime.Object) error { return nil }
 
 func Test_MetricsMutatingWebhookSuccess(t *testing.T) {
@@ -113,8 +109,6 @@ func Test_MetricsMutatingWebhookSuccess(t *testing.T) {
 }
 
 type errorMutWebhook struct{}
-
-func (s *errorMutWebhook) GetName() string { return "" }
 
 func (sd *errorMutWebhook) Default(ctx context.Context, obj runtime.Object) error {
 	return fmt.Errorf("test error")

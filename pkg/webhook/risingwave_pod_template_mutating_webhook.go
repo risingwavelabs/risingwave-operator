@@ -26,11 +26,6 @@ import (
 )
 
 type RisingWavePodTemplateMutatingWebhook struct {
-	name string
-}
-
-func (w *RisingWavePodTemplateMutatingWebhook) GetName() string {
-	return "RisingWavePodTemplateMutatingWebhook"
 }
 
 func (w *RisingWavePodTemplateMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWavePodTemplate) error {
@@ -42,5 +37,5 @@ func (w *RisingWavePodTemplateMutatingWebhook) Default(ctx context.Context, obj 
 }
 
 func NewRisingWavePodTemplateMutatingWebhook() webhook.CustomDefaulter {
-	return &MutWebhookMetricsRecorder{&RisingWavePodTemplateMutatingWebhook{"RisingWavePodTemplateMutatingWebhook"}}
+	return &MutWebhookMetricsRecorder{&RisingWavePodTemplateMutatingWebhook{}}
 }

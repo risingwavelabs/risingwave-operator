@@ -31,13 +31,7 @@ import (
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
-type RisingWaveValidatingWebhook struct {
-	name string
-}
-
-func (w *RisingWaveValidatingWebhook) GetName() string {
-	return w.name
-}
+type RisingWaveValidatingWebhook struct{}
 
 func isImageValid(image string) bool {
 	return reference.ReferenceRegexp.MatchString(image)
@@ -263,7 +257,5 @@ func (h *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj
 }
 
 func NewRisingWaveValidatingWebhook() webhook.CustomValidator {
-	return &ValWebhookMetricsRecorder{&RisingWaveValidatingWebhook{
-		"RisingWaveValidatingWebhook",
-	}}
+	return &ValWebhookMetricsRecorder{&RisingWaveValidatingWebhook{}}
 }

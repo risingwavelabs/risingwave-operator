@@ -492,8 +492,6 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 
 type panicValWebhook struct{}
 
-func (p *panicValWebhook) GetName() string { return "" }
-
 func (p *panicValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
 	panic("validateCreate panic")
 }
@@ -535,8 +533,6 @@ func Test_MetricsValidatingWebhookPanic(t *testing.T) {
 
 type successfulValWebhook struct{}
 
-func (s *successfulValWebhook) GetName() string { return "" }
-
 func (s *successfulValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
 	return nil
 }
@@ -577,8 +573,6 @@ func Test_MetricsValidatingWebhookSuccess(t *testing.T) {
 }
 
 type errorValWebhook struct{}
-
-func (e *errorValWebhook) GetName() string { return "" }
 
 func (e *errorValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
 	return fmt.Errorf("validateCreate err")

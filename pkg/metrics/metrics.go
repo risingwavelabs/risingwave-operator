@@ -176,8 +176,6 @@ func getWebhooksWithLabelValues(metric prometheus.CounterVec, isValidating bool,
 	return int(*m.Counter.Value)
 }
 
-// IncWebhookRequestCount increments the WebhookRequestCount
-// isValidating: If true then increments validating webhook, else mutating webhook.
 func IncWebhookRequestCount(isValidating bool, obj runtime.Object) {
 	incWebhooksWithLabelValues(*webhookRequestCount, isValidating, obj)
 }

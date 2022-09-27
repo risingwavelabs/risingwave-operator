@@ -31,7 +31,7 @@ type validatingWebhook interface {
 	ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error
 }
 
-// ValWebhookMetricsRecorder wrapping a mutating webhook to simplify metric calculation.
+// ValWebhookMetricsRecorder wraps a validating webhook to simplify metric calculation.
 type ValWebhookMetricsRecorder struct {
 	webhook validatingWebhook
 }

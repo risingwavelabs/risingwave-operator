@@ -29,7 +29,7 @@ type mutatingWebhook interface {
 	Default(context.Context, runtime.Object) error
 }
 
-// MutWebhookMetricsRecorder wrapping a mutating webhook to simplify metric calculation.
+// MutWebhookMetricsRecorder wraps a mutating webhook to simplify metric calculation.
 type MutWebhookMetricsRecorder struct {
 	webhook mutatingWebhook
 }

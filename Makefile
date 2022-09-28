@@ -150,7 +150,7 @@ run-local: manifests generate fmt vet lint install-local
 	go run cmd/manager/manager.go -zap-time-encoding rfc3339
 
 e2e-test: generate-test-yaml vendor
-	docker build -f docker/Dockerfile --build-arg USE_VENDOR=true -t docker.io/risingwavelabs/risingwave-operator:dev . --output=type=docker
+	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=true -t docker.io/risingwavelabs/risingwave-operator:dev . --load
 	e2e/e2e.sh
 
 e2e-plugin:
@@ -163,10 +163,10 @@ docker-cross-build-vendor: test buildx vendor
 	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=true --platform=linux/amd64,linux/arm64 -t ${IMG} . --push
 
 docker-build: test ## Build docker image with the manager.
-	docker build -f docker/Dockerfile --build-arg USE_VENDOR=false -t ${IMG} . --output=type=docker
+	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=false -t ${IMG} . --load
 
 docker-build-vendor: vendor test
-	docker build -f docker/Dockerfile --build-arg USE_VENDOR=true -t ${IMG} . --output=type=docker
+	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=true -t ${IMG} . --load
 
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}

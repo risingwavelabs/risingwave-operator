@@ -1,8 +1,6 @@
 package utils
 
-// TODO: move WebhookType out of metrics package
-
-// Defines an immutable type for a webhook. Use NewWebhookType to instantiate this.
+// Defines an immutable type for a webhook. Use NewWebhookType to instantiate.
 type WebhookType struct {
 	isValidating_ bool
 }

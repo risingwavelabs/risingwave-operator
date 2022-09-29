@@ -21,6 +21,7 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
 
@@ -28,9 +29,7 @@ import (
 )
 
 type validatingWebhook interface {
-	ValidateCreate(ctx context.Context, obj runtime.Object) error
-	ValidateDelete(ctx context.Context, obj runtime.Object) error
-	ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error
+	webhook.CustomValidator
 	getType() utils.WebhookType
 }
 

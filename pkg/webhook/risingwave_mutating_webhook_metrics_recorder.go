@@ -21,13 +21,14 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
 type mutatingWebhook interface {
-	Default(context.Context, runtime.Object) error
+	webhook.CustomDefaulter
 	getType() utils.WebhookType
 }
 

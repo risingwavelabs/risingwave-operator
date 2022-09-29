@@ -206,7 +206,7 @@ func (h *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 }
 
 // ValidateCreate implements admission.CustomValidator.
-func (h *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
+func (h *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
 	return h.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWave))
 }
 
@@ -247,7 +247,7 @@ func (h *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 }
 
 // ValidateUpdate implements admission.CustomValidator.
-func (h *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
+func (h *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error {
 	// Validate the new object first.
 	if err := h.ValidateCreate(ctx, newObj); err != nil {
 		return err

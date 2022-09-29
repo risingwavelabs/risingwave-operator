@@ -124,14 +124,32 @@ var (
 	)
 )
 
+// defaultNamespaceName applies defaults in case the attributes of nn are undefined.
+func defaultNamespaceName(nn *types.NamespacedName) types.NamespacedName {
+	default_ := "undefined"
+	if nn == nil {
+		return types.NamespacedName{Name: default_, Namespace: default_}
+	}
+	if len(nn.Name) == 0 {
+		nn.Name = default_
+	}
+	if len(nn.Namespace) == 0 {
+		nn.Namespace = default_
+	}
+	return *nn
+}
+
 // getNamespacedName returns the relevant data about the RisingWave request.
 func getNamespacedName(obj runtime.Object) types.NamespacedName {
 	rw, ok := obj.(*risingwavev1alpha1.RisingWave)
-	if ok {
-		return types.NamespacedName{Namespace: rw.Namespace, Name: rw.Name}
+	if ok && rw != nil {
+		return defaultNamespaceName(&types.NamespacedName{Namespace: rw.Namespace, Name: rw.Name})
 	}
 	rw2, _ := obj.(*risingwavev1alpha1.RisingWavePodTemplate)
-	return types.NamespacedName{Namespace: rw2.Namespace, Name: rw2.Name}
+	if rw2 != nil {
+		return defaultNamespaceName(&types.NamespacedName{Namespace: rw2.Namespace, Name: rw2.Name})
+	}
+	return defaultNamespaceName(nil)
 }
 
 // incWebhooksWithLabelValues increments the webhooks metric counter 'metric' by one.

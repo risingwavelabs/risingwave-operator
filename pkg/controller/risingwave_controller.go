@@ -27,6 +27,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -118,31 +119,31 @@ func (c *RisingWaveController) managerOpts(risingwaveMgr *object.RisingWaveManag
 	return opts
 }
 
-func (c *RisingWaveController) beforeReconcile(request reconcile.Request, risingwave risingwavev1alpha1.RisingWave) {
-	m.IncControllerReconcileCount(request, risingwave)
+func (c *RisingWaveController) beforeReconcile(request reconcile.Request, gvk schema.GroupVersionKind) {
+	m.IncControllerReconcileCount(request, gvk)
 }
 
 func (c *RisingWaveController) afterReconcile(
 	res reconcile.Result,
 	err error,
 	request reconcile.Request,
-	risingwave risingwavev1alpha1.RisingWave,
+	gvk schema.GroupVersionKind,
 	ctx context.Context,
 	reconcileStartTS time.Time) reconcile.Result {
 
 	if rec := recover(); rec != nil {
-		m.IncControllerReconcilePanicCount(request, risingwave)
+		m.IncControllerReconcilePanicCount(request, gvk)
 		log.FromContext(ctx).Error(fmt.Errorf("%v", rec), fmt.Sprintf("Panic in reconciliation run\n"))
 		return reconcile.Result{Requeue: true, RequeueAfter: 10 * time.Microsecond}
 	}
 	if err != nil {
-		m.IncControllerReconcileRequeueErrorCount(request, risingwave)
+		m.IncControllerReconcileRequeueErrorCount(request, gvk)
 	} else if res.RequeueAfter > 0 {
-		m.UpdateControllerReconcileRequeueAfter(res.RequeueAfter.Milliseconds(), request, risingwave)
+		m.UpdateControllerReconcileRequeueAfter(res.RequeueAfter.Milliseconds(), request, gvk)
 	} else if res.Requeue {
-		m.IncControllerReconcileRequeueCount(request, risingwave)
+		m.IncControllerReconcileRequeueCount(request, gvk)
 	}
-	m.UpdateControllerReconcileDuration(time.Since(reconcileStartTS).Milliseconds(), risingwave, c.name)
+	m.UpdateControllerReconcileDuration(time.Since(reconcileStartTS).Milliseconds(), gvk, c.name, request)
 	return res
 }
 
@@ -151,19 +152,20 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 	reconcileStartTS := time.Now()
 
 	// Get the risingwave object.
-	var risingwave risingwavev1alpha1.RisingWave
+	gvk := client.Object.GetObjectKind(&risingwavev1alpha1.RisingWave{}).GroupVersionKind()
 
 	// handle metrics
-	c.beforeReconcile(request, risingwave)
-	defer c.afterReconcile(res, err, request, risingwave, ctx, reconcileStartTS)
+	c.beforeReconcile(request, gvk)
+	defer c.afterReconcile(res, err, request, gvk, ctx, reconcileStartTS)
 
 	// actual reconciliation
-	return c.reconcile(ctx, request, risingwave)
+	return c.reconcile(ctx, request)
 }
 
 // reconcile implements the actual reconcile logic.
-func (c *RisingWaveController) reconcile(ctx context.Context, request reconcile.Request, risingwave risingwavev1alpha1.RisingWave) (reconcile.Result, error) {
+func (c *RisingWaveController) reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	logger := log.FromContext(ctx)
+	var risingwave risingwavev1alpha1.RisingWave
 
 	if err := c.Client.Get(ctx, request.NamespacedName, &risingwave); err != nil {
 		if apierrors.IsNotFound(err) {

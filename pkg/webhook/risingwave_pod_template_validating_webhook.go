@@ -38,7 +38,7 @@ func (pt *RisingWavePodTemplateValidatingWebhook) ValidateCreate(ctx context.Con
 	return nil
 }
 
-func (pt *RisingWavePodTemplateValidatingWebhook) GetType() metrics.WebhookType {
+func (pt *RisingWavePodTemplateValidatingWebhook) getType() metrics.WebhookType {
 	return metrics.NewWebhookTypes(true)
 }
 

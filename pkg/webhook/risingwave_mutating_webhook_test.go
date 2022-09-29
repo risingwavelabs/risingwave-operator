@@ -78,7 +78,7 @@ func (p *panicMutWebhook) Default(ctx context.Context, obj runtime.Object) error
 	panic("simulating a panic")
 }
 
-func (p *panicMutWebhook) GetType() metrics.WebhookType {
+func (p *panicMutWebhook) getType() metrics.WebhookType {
 	return metrics.NewWebhookTypes(false)
 }
 
@@ -99,7 +99,7 @@ type successfulMutWebhook struct{}
 
 func (s *successfulMutWebhook) Default(ctx context.Context, obj runtime.Object) error { return nil }
 
-func (s *successfulMutWebhook) GetType() metrics.WebhookType {
+func (s *successfulMutWebhook) getType() metrics.WebhookType {
 	return metrics.NewWebhookTypes(false)
 }
 
@@ -122,7 +122,7 @@ func (e *errorMutWebhook) Default(ctx context.Context, obj runtime.Object) error
 	return fmt.Errorf("test error")
 }
 
-func (e *errorMutWebhook) GetType() metrics.WebhookType {
+func (e *errorMutWebhook) getType() metrics.WebhookType {
 	return metrics.NewWebhookTypes(false)
 }
 

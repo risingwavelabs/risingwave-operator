@@ -37,7 +37,7 @@ func setDefaultIfZero[T comparable](dst *T, defaultVal T) {
 	}
 }
 
-func (m *RisingWaveMutatingWebhook) GetType() metrics.WebhookType {
+func (m *RisingWaveMutatingWebhook) getType() metrics.WebhookType {
 	return metrics.NewWebhookTypes(false)
 }
 

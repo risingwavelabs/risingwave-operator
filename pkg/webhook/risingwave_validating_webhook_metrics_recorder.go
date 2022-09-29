@@ -29,7 +29,7 @@ type validatingWebhook interface {
 	ValidateCreate(ctx context.Context, obj runtime.Object) error
 	ValidateDelete(ctx context.Context, obj runtime.Object) error
 	ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error
-	GetType() metrics.WebhookType // TODO: make this lowercase to be only used via recorder?
+	getType() metrics.WebhookType
 }
 
 // ValWebhookMetricsRecorder wraps a validating webhook to simplify metric calculation.
@@ -38,7 +38,7 @@ type ValWebhookMetricsRecorder struct {
 }
 
 func (v *ValWebhookMetricsRecorder) GetType() metrics.WebhookType {
-	return v.webhook.GetType()
+	return v.webhook.getType()
 }
 
 func (v *ValWebhookMetricsRecorder) recordAfter(err *error, obj runtime.Object, reconcileStartTS time.Time) error {

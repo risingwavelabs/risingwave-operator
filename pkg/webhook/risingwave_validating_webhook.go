@@ -38,7 +38,7 @@ func isImageValid(image string) bool {
 	return reference.ReferenceRegexp.MatchString(image)
 }
 
-func (v *RisingWaveValidatingWebhook) GetType() metrics.WebhookType {
+func (v *RisingWaveValidatingWebhook) getType() metrics.WebhookType {
 	return metrics.NewWebhookTypes(false)
 }
 

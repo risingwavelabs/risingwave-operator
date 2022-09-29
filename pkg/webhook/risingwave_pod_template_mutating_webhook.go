@@ -29,7 +29,7 @@ import (
 
 type RisingWavePodTemplateMutatingWebhook struct{}
 
-func (pm *RisingWavePodTemplateMutatingWebhook) GetType() metrics.WebhookType {
+func (pm *RisingWavePodTemplateMutatingWebhook) getType() metrics.WebhookType {
 	return metrics.NewWebhookTypes(false)
 }
 

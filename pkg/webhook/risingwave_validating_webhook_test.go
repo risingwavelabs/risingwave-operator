@@ -504,7 +504,7 @@ func (p *panicValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Obj
 	panic("validateUpdate panic")
 }
 
-func (p *panicValWebhook) GetType() metrics.WebhookType {
+func (p *panicValWebhook) getType() metrics.WebhookType {
 	return metrics.NewWebhookTypes(true)
 }
 
@@ -549,7 +549,7 @@ func (s *successfulValWebhook) ValidateUpdate(ctx context.Context, oldObj runtim
 	return nil
 }
 
-func (s *successfulValWebhook) GetType() metrics.WebhookType {
+func (s *successfulValWebhook) getType() metrics.WebhookType {
 	return metrics.NewWebhookTypes(true)
 }
 
@@ -594,7 +594,7 @@ func (e *errorValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Obj
 	return fmt.Errorf("validateUpdate err")
 }
 
-func (e *errorValWebhook) GetType() metrics.WebhookType {
+func (e *errorValWebhook) getType() metrics.WebhookType {
 	return metrics.NewWebhookTypes(true)
 }
 

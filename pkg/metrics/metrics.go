@@ -19,6 +19,7 @@ import (
 	io_prometheus_client "github.com/prometheus/client_model/go"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -129,21 +130,17 @@ var (
 	)
 )
 
-// rwReqData hold some fields of the RisingWave request.
-type rwReqData struct {
-	Namespace string
-	Name      string
-}
-
-// getRwReqData returns the relevant data about the RisingWave request.
-func getRwReqData(obj runtime.Object) rwReqData {
+// getNamespacedName returns the relevant data about the RisingWave request.
+func getNamespacedName(obj runtime.Object) types.NamespacedName {
 	rw, ok := obj.(*risingwavev1alpha1.RisingWave)
 	if ok {
-		return rwReqData{rw.Namespace, rw.Name}
+		return types.NamespacedName{Namespace: rw.Namespace, Name: rw.Name}
 	}
 	rw2, _ := obj.(*risingwavev1alpha1.RisingWavePodTemplate)
-	return rwReqData{rw2.Namespace, rw2.Name}
+	return types.NamespacedName{Namespace: rw2.Namespace, Name: rw2.Name}
 }
+
+// TODO: Create a webhook type: Mutating or validating
 
 // incWebhooksWithLabelValues increments the webhooks metric counter 'metric' by one.
 func incWebhooksWithLabelValues(metric prometheus.CounterVec, isValidating bool, obj runtime.Object) {
@@ -152,7 +149,7 @@ func incWebhooksWithLabelValues(metric prometheus.CounterVec, isValidating bool,
 		type_ = validatingWebhook
 	}
 	gvk := obj.GetObjectKind().GroupVersionKind()
-	reqData := getRwReqData(obj)
+	reqData := getNamespacedName(obj)
 	metric.WithLabelValues(type_, gvk.Group, gvk.Version, gvk.Kind, reqData.Namespace, reqData.Name).Inc()
 }
 
@@ -163,7 +160,7 @@ func getWebhooksWithLabelValues(metric prometheus.CounterVec, isValidating bool,
 		type_ = validatingWebhook
 	}
 	gvk := obj.GetObjectKind().GroupVersionKind()
-	reqData := getRwReqData(obj)
+	reqData := getNamespacedName(obj)
 	counter, _ := metric.GetMetricWith(prometheus.Labels{
 		"type": type_, "group": gvk.Group, "version": gvk.Version,
 		"kind": gvk.Version, "namespace": reqData.Namespace, "name": reqData.Name,

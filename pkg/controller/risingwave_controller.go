@@ -124,8 +124,8 @@ func (c *RisingWaveController) beforeReconcile(request reconcile.Request, gvk sc
 }
 
 func (c *RisingWaveController) afterReconcile(
-	res reconcile.Result,
-	err error,
+	res *reconcile.Result,
+	err *error,
 	request reconcile.Request,
 	gvk schema.GroupVersionKind,
 	ctx context.Context,
@@ -144,7 +144,7 @@ func (c *RisingWaveController) afterReconcile(
 		m.IncControllerReconcileRequeueCount(request, gvk)
 	}
 	m.UpdateControllerReconcileDuration(time.Since(reconcileStartTS).Milliseconds(), gvk, c.name, request)
-	return res
+	return *res
 }
 
 // Reconcile reconciles a request and also adds metrics information to prometheus.
@@ -156,7 +156,7 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 
 	// handle metrics
 	c.beforeReconcile(request, gvk)
-	defer c.afterReconcile(res, err, request, gvk, ctx, reconcileStartTS)
+	defer c.afterReconcile(&res, &err, request, gvk, ctx, reconcileStartTS)
 
 	// actual reconciliation
 	return c.reconcile(ctx, request)

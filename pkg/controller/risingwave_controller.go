@@ -28,6 +28,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -119,8 +120,8 @@ func (c *RisingWaveController) managerOpts(risingwaveMgr *object.RisingWaveManag
 	return opts
 }
 
-func (c *RisingWaveController) beforeReconcile(request reconcile.Request, gvk schema.GroupVersionKind) {
-	metrics.IncControllerReconcileCount(request, gvk)
+func (c *RisingWaveController) beforeReconcile(nn types.NamespacedName, gvk schema.GroupVersionKind) {
+	metrics.IncControllerReconcileCount(nn, gvk)
 }
 
 func (c *RisingWaveController) afterReconcile(
@@ -131,19 +132,21 @@ func (c *RisingWaveController) afterReconcile(
 	ctx context.Context,
 	reconcileStartTS time.Time) reconcile.Result {
 
+	nn := request.NamespacedName
+
 	if rec := recover(); rec != nil {
-		metrics.IncControllerReconcilePanicCount(request, gvk)
+		metrics.IncControllerReconcilePanicCount(nn, gvk)
 		log.FromContext(ctx).Error(fmt.Errorf("%v", rec), fmt.Sprintf("Panic in reconciliation run\n"))
 		return reconcile.Result{Requeue: true, RequeueAfter: 10 * time.Microsecond}
 	}
 	if err != nil {
-		metrics.IncControllerReconcileRequeueErrorCount(request, gvk)
+		metrics.IncControllerReconcileRequeueErrorCount(nn, gvk)
 	} else if res.RequeueAfter > 0 {
-		metrics.UpdateControllerReconcileRequeueAfter(res.RequeueAfter.Milliseconds(), request, gvk)
+		metrics.UpdateControllerReconcileRequeueAfter(res.RequeueAfter.Milliseconds(), nn, gvk)
 	} else if res.Requeue {
-		metrics.IncControllerReconcileRequeueCount(request, gvk)
+		metrics.IncControllerReconcileRequeueCount(nn, gvk)
 	}
-	metrics.UpdateControllerReconcileDuration(time.Since(reconcileStartTS).Milliseconds(), gvk, c.name, request)
+	metrics.UpdateControllerReconcileDuration(time.Since(reconcileStartTS).Milliseconds(), gvk, c.name, nn)
 	return *res
 }
 
@@ -155,7 +158,7 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 	gvk := client.Object.GetObjectKind(&risingwavev1alpha1.RisingWave{}).GroupVersionKind()
 
 	// handle metrics
-	c.beforeReconcile(request, gvk)
+	c.beforeReconcile(request.NamespacedName, gvk)
 	defer c.afterReconcile(&res, &err, request, gvk, ctx, reconcileStartTS)
 
 	// actual reconciliation

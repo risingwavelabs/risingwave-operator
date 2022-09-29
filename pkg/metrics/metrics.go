@@ -21,7 +21,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
@@ -194,34 +193,34 @@ func GetWebhookRequestPassCount(wt utils.WebhookType, obj runtime.Object) int {
 // Increment/update controller metric
 
 // incControllersWithLabelValues increments the controller metric counter 'metric' by one.
-func incControllersWithLabelValues(metric prometheus.CounterVec, req reconcile.Request, gvk schema.GroupVersionKind) {
-	metric.WithLabelValues(gvk.Group, gvk.Version, gvk.Kind, req.Namespace, req.Name).Inc()
+func incControllersWithLabelValues(metric prometheus.CounterVec, nn types.NamespacedName, gvk schema.GroupVersionKind) {
+	metric.WithLabelValues(gvk.Group, gvk.Version, gvk.Kind, nn.Namespace, nn.Name).Inc()
 }
 
-func IncControllerReconcileCount(req reconcile.Request, gvk schema.GroupVersionKind) {
-	incControllersWithLabelValues(*controllerReconcileCount, req, gvk)
+func IncControllerReconcileCount(nn types.NamespacedName, gvk schema.GroupVersionKind) {
+	incControllersWithLabelValues(*controllerReconcileCount, nn, gvk)
 }
 
-func IncControllerReconcilePanicCount(req reconcile.Request, gvk schema.GroupVersionKind) {
-	incControllersWithLabelValues(*controllerReconcilePanicCount, req, gvk)
+func IncControllerReconcilePanicCount(nn types.NamespacedName, gvk schema.GroupVersionKind) {
+	incControllersWithLabelValues(*controllerReconcilePanicCount, nn, gvk)
 }
 
-func IncControllerReconcileRequeueCount(req reconcile.Request, gvk schema.GroupVersionKind) {
-	incControllersWithLabelValues(*controllerReconcileRequeueCount, req, gvk)
+func IncControllerReconcileRequeueCount(nn types.NamespacedName, gvk schema.GroupVersionKind) {
+	incControllersWithLabelValues(*controllerReconcileRequeueCount, nn, gvk)
 }
 
-func UpdateControllerReconcileRequeueAfter(time_ms int64, req reconcile.Request, gvk schema.GroupVersionKind) {
+func UpdateControllerReconcileRequeueAfter(time_ms int64, nn types.NamespacedName, gvk schema.GroupVersionKind) {
 	controllerReconcileRequeueAfter.WithLabelValues(gvk.Group, gvk.Version,
-		gvk.Kind, req.Namespace, req.Name).Observe(float64(time_ms))
+		gvk.Kind, nn.Namespace, nn.Name).Observe(float64(time_ms))
 }
 
-func IncControllerReconcileRequeueErrorCount(req reconcile.Request, gvk schema.GroupVersionKind) {
-	incControllersWithLabelValues(*controllerReconcileRequeueErrorCount, req, gvk)
+func IncControllerReconcileRequeueErrorCount(nn types.NamespacedName, gvk schema.GroupVersionKind) {
+	incControllersWithLabelValues(*controllerReconcileRequeueErrorCount, nn, gvk)
 }
 
-func UpdateControllerReconcileDuration(time_ms int64, gvk schema.GroupVersionKind, webhookName string, request reconcile.Request) {
+func UpdateControllerReconcileDuration(time_ms int64, gvk schema.GroupVersionKind, webhookName string, nn types.NamespacedName) {
 	controllerReconcileDuration.WithLabelValues(webhookName, gvk.Group, gvk.Version,
-		gvk.Kind, request.Namespace, request.Name).Observe(float64(time_ms))
+		gvk.Kind, nn.Namespace, nn.Name).Observe(float64(time_ms))
 }
 
 // ResetMetrics resets all metrics. Use for testing only.

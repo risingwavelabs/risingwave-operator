@@ -120,8 +120,8 @@ func (c *RisingWaveController) managerOpts(risingwaveMgr *object.RisingWaveManag
 	return opts
 }
 
-func (c *RisingWaveController) beforeReconcile(nn types.NamespacedName, gvk schema.GroupVersionKind) {
-	metrics.IncControllerReconcileCount(nn, gvk)
+func (c *RisingWaveController) beforeReconcile(target types.NamespacedName, gvk schema.GroupVersionKind) {
+	metrics.IncControllerReconcileCount(target, gvk)
 }
 
 func (c *RisingWaveController) afterReconcile(

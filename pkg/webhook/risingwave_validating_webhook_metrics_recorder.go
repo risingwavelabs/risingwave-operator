@@ -22,6 +22,8 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 
+	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
+
 	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 )
 
@@ -29,7 +31,7 @@ type validatingWebhook interface {
 	ValidateCreate(ctx context.Context, obj runtime.Object) error
 	ValidateDelete(ctx context.Context, obj runtime.Object) error
 	ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error
-	getType() metrics.WebhookType
+	getType() utils.WebhookType
 }
 
 // ValWebhookMetricsRecorder wraps a validating webhook to simplify metric calculation.
@@ -37,7 +39,7 @@ type ValWebhookMetricsRecorder struct {
 	webhook validatingWebhook
 }
 
-func (v *ValWebhookMetricsRecorder) GetType() metrics.WebhookType {
+func (v *ValWebhookMetricsRecorder) GetType() utils.WebhookType {
 	return v.webhook.getType()
 }
 

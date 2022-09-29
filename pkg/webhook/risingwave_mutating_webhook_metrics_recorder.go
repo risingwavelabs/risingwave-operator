@@ -23,11 +23,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
+	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
 type mutatingWebhook interface {
 	Default(context.Context, runtime.Object) error
-	getType() metrics.WebhookType
+	getType() utils.WebhookType
 }
 
 // MutWebhookMetricsRecorder wraps a mutating webhook to simplify metric calculation.
@@ -35,7 +36,7 @@ type MutWebhookMetricsRecorder struct {
 	webhook mutatingWebhook
 }
 
-func (r *MutWebhookMetricsRecorder) GetType() metrics.WebhookType {
+func (r *MutWebhookMetricsRecorder) GetType() utils.WebhookType {
 	return r.webhook.getType()
 }
 

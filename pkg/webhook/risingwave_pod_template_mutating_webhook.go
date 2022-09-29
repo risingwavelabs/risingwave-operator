@@ -22,15 +22,15 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
+	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 type RisingWavePodTemplateMutatingWebhook struct{}
 
-func (pm *RisingWavePodTemplateMutatingWebhook) getType() metrics.WebhookType {
-	return metrics.NewWebhookTypes(false)
+func (pm *RisingWavePodTemplateMutatingWebhook) getType() utils.WebhookType {
+	return utils.NewWebhookTypes(false)
 }
 
 func (pm *RisingWavePodTemplateMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWavePodTemplate) error {

@@ -28,6 +28,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
+	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
 func Test_RisingWaveMutatingWebhook_Default(t *testing.T) {
@@ -78,8 +79,8 @@ func (p *panicMutWebhook) Default(ctx context.Context, obj runtime.Object) error
 	panic("simulating a panic")
 }
 
-func (p *panicMutWebhook) getType() metrics.WebhookType {
-	return metrics.NewWebhookTypes(false)
+func (p *panicMutWebhook) getType() utils.WebhookType {
+	return utils.NewWebhookTypes(false)
 }
 
 func Test_MetricsMutatingWebhookPanic(t *testing.T) {
@@ -99,8 +100,8 @@ type successfulMutWebhook struct{}
 
 func (s *successfulMutWebhook) Default(ctx context.Context, obj runtime.Object) error { return nil }
 
-func (s *successfulMutWebhook) getType() metrics.WebhookType {
-	return metrics.NewWebhookTypes(false)
+func (s *successfulMutWebhook) getType() utils.WebhookType {
+	return utils.NewWebhookTypes(false)
 }
 
 func Test_MetricsMutatingWebhookSuccess(t *testing.T) {
@@ -122,8 +123,8 @@ func (e *errorMutWebhook) Default(ctx context.Context, obj runtime.Object) error
 	return fmt.Errorf("test error")
 }
 
-func (e *errorMutWebhook) getType() metrics.WebhookType {
-	return metrics.NewWebhookTypes(false)
+func (e *errorMutWebhook) getType() utils.WebhookType {
+	return utils.NewWebhookTypes(false)
 }
 
 func Test_MetricsMutatingWebhookError(t *testing.T) {

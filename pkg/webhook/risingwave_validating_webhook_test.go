@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"testing"
 
+	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -504,8 +506,8 @@ func (p *panicValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Obj
 	panic("validateUpdate panic")
 }
 
-func (p *panicValWebhook) getType() metrics.WebhookType {
-	return metrics.NewWebhookTypes(true)
+func (p *panicValWebhook) getType() utils.WebhookType {
+	return utils.NewWebhookTypes(true)
 }
 
 func Test_MetricsValidatingWebhookPanic(t *testing.T) {
@@ -549,8 +551,8 @@ func (s *successfulValWebhook) ValidateUpdate(ctx context.Context, oldObj runtim
 	return nil
 }
 
-func (s *successfulValWebhook) getType() metrics.WebhookType {
-	return metrics.NewWebhookTypes(true)
+func (s *successfulValWebhook) getType() utils.WebhookType {
+	return utils.NewWebhookTypes(true)
 }
 
 func Test_MetricsValidatingWebhookSuccess(t *testing.T) {
@@ -594,8 +596,8 @@ func (e *errorValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Obj
 	return fmt.Errorf("validateUpdate err")
 }
 
-func (e *errorValWebhook) getType() metrics.WebhookType {
-	return metrics.NewWebhookTypes(true)
+func (e *errorValWebhook) getType() utils.WebhookType {
+	return utils.NewWebhookTypes(true)
 }
 
 func Test_MetricsValidatingWebhookError(t *testing.T) {

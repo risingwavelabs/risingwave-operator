@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
-	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
+	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
 type RisingWaveValidatingWebhook struct{}
@@ -38,8 +38,8 @@ func isImageValid(image string) bool {
 	return reference.ReferenceRegexp.MatchString(image)
 }
 
-func (v *RisingWaveValidatingWebhook) getType() metrics.WebhookType {
-	return metrics.NewWebhookTypes(false)
+func (v *RisingWaveValidatingWebhook) getType() utils.WebhookType {
+	return utils.NewWebhookTypes(false)
 }
 
 func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, groupTemplate *risingwavev1alpha1.RisingWaveComponentGroupTemplate) field.ErrorList {

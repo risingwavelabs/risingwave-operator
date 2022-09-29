@@ -19,10 +19,10 @@ package webhook
 import (
 	"context"
 
+	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
-
-	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
@@ -37,8 +37,8 @@ func setDefaultIfZero[T comparable](dst *T, defaultVal T) {
 	}
 }
 
-func (m *RisingWaveMutatingWebhook) getType() metrics.WebhookType {
-	return metrics.NewWebhookTypes(false)
+func (m *RisingWaveMutatingWebhook) getType() utils.WebhookType {
+	return utils.NewWebhookTypes(false)
 }
 
 func (m *RisingWaveMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWave) error {

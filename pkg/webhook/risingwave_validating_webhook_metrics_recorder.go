@@ -29,6 +29,7 @@ type validatingWebhook interface {
 	ValidateCreate(ctx context.Context, obj runtime.Object) error
 	ValidateDelete(ctx context.Context, obj runtime.Object) error
 	ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error
+	GetType() metrics.WebhookType // TODO: make this lowercase to be only used via recorder?
 }
 
 // ValWebhookMetricsRecorder wraps a validating webhook to simplify metric calculation.
@@ -36,22 +37,26 @@ type ValWebhookMetricsRecorder struct {
 	webhook validatingWebhook
 }
 
+func (v *ValWebhookMetricsRecorder) GetType() metrics.WebhookType {
+	return v.webhook.GetType()
+}
+
 func (v *ValWebhookMetricsRecorder) recordAfter(err *error, obj runtime.Object, reconcileStartTS time.Time) error {
 	if rec := recover(); rec != nil {
-		metrics.IncWebhookRequestPanicCount(true, obj)
-		metrics.IncWebhookRequestRejectCount(true, obj)
+		metrics.IncWebhookRequestPanicCount(v.GetType(), obj)
+		metrics.IncWebhookRequestRejectCount(v.GetType(), obj)
 		return apierrors.NewInternalError(fmt.Errorf("panic in validating webhook: %v", rec))
 	}
 	if *err != nil {
-		metrics.IncWebhookRequestRejectCount(true, obj)
+		metrics.IncWebhookRequestRejectCount(v.GetType(), obj)
 	} else {
-		metrics.IncWebhookRequestPassCount(true, obj)
+		metrics.IncWebhookRequestPassCount(v.GetType(), obj)
 	}
 	return *err
 }
 
 func (v *ValWebhookMetricsRecorder) recordBefore(obj runtime.Object) {
-	metrics.IncWebhookRequestCount(true, obj)
+	metrics.IncWebhookRequestCount(v.GetType(), obj)
 }
 
 func (v *ValWebhookMetricsRecorder) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {

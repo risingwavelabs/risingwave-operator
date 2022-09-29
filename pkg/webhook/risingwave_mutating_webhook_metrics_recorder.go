@@ -27,6 +27,7 @@ import (
 
 type mutatingWebhook interface {
 	Default(context.Context, runtime.Object) error
+	GetType() metrics.WebhookType // TODO: make this lower case and only depend on the recorder?
 }
 
 // MutWebhookMetricsRecorder wraps a mutating webhook to simplify metric calculation.
@@ -34,22 +35,26 @@ type MutWebhookMetricsRecorder struct {
 	webhook mutatingWebhook
 }
 
+func (r *MutWebhookMetricsRecorder) GetType() metrics.WebhookType {
+	return r.webhook.GetType()
+}
+
 func (r *MutWebhookMetricsRecorder) recordAfter(err *error, obj runtime.Object, reconcileStartTS time.Time) error {
 	if rec := recover(); rec != nil {
-		metrics.IncWebhookRequestPanicCount(false, obj)
-		metrics.IncWebhookRequestRejectCount(false, obj)
+		metrics.IncWebhookRequestPanicCount(r.webhook.GetType(), obj)
+		metrics.IncWebhookRequestRejectCount(r.webhook.GetType(), obj)
 		return apierrors.NewInternalError(fmt.Errorf("panic in mutating webhook: %v", rec))
 	}
 	if *err != nil {
-		metrics.IncWebhookRequestRejectCount(false, obj)
+		metrics.IncWebhookRequestRejectCount(r.webhook.GetType(), obj)
 	} else {
-		metrics.IncWebhookRequestPassCount(false, obj)
+		metrics.IncWebhookRequestPassCount(r.webhook.GetType(), obj)
 	}
 	return *err
 }
 
 func (r *MutWebhookMetricsRecorder) recordBefore(obj runtime.Object) {
-	metrics.IncWebhookRequestCount(false, obj)
+	metrics.IncWebhookRequestCount(r.webhook.GetType(), obj)
 }
 
 func (r *MutWebhookMetricsRecorder) Default(ctx context.Context, obj runtime.Object) (err error) {

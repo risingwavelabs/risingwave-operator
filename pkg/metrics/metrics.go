@@ -26,12 +26,6 @@ import (
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
-// use constants to avoid string literals when using the counters.
-const (
-	mutatingWebhook   = "mutate"
-	validatingWebhook = "validate"
-)
-
 var (
 	// Metric is used to test if metric collection works.
 	ReceivingMetricsFromOperator = prometheus.NewCounter(
@@ -140,29 +134,56 @@ func getNamespacedName(obj runtime.Object) types.NamespacedName {
 	return types.NamespacedName{Namespace: rw2.Namespace, Name: rw2.Name}
 }
 
-// TODO: Create a webhook type: Mutating or validating
+// TODO: move WebhookType out of metrics package
+
+// Defines an immutable type for a webhook. Use NewWebhookType to instantiate this.
+type WebhookType struct {
+	isValidating_ bool
+}
+
+// NewWebhookTypes returns an immutable webhookType.
+func NewWebhookTypes(isValidating bool) WebhookType {
+	return WebhookType{isValidating_: isValidating}
+}
+
+func (wt *WebhookType) IsValidating() bool {
+	return wt.isValidating_
+}
+
+func (wt *WebhookType) IsMutating() bool {
+	return !wt.IsValidating()
+}
+
+// use constants to avoid string literals when using the counters.
+const (
+	mutatingWebhook   = "mutating" // TODO: Do we need these constants? If yes, move them to the same package as the webhook types
+	validatingWebhook = "validating"
+)
+
+func (wt *WebhookType) String() string {
+	if wt.IsValidating() {
+		return validatingWebhook
+	}
+	return mutatingWebhook
+}
+
+func (wt *WebhookType) Equal(other *WebhookType) bool {
+	return wt.IsValidating() == other.IsValidating()
+}
 
 // incWebhooksWithLabelValues increments the webhooks metric counter 'metric' by one.
-func incWebhooksWithLabelValues(metric prometheus.CounterVec, isValidating bool, obj runtime.Object) {
-	type_ := mutatingWebhook
-	if isValidating {
-		type_ = validatingWebhook
-	}
+func incWebhooksWithLabelValues(metric prometheus.CounterVec, wt WebhookType, obj runtime.Object) {
 	gvk := obj.GetObjectKind().GroupVersionKind()
 	reqData := getNamespacedName(obj)
-	metric.WithLabelValues(type_, gvk.Group, gvk.Version, gvk.Kind, reqData.Namespace, reqData.Name).Inc()
+	metric.WithLabelValues(wt.String(), gvk.Group, gvk.Version, gvk.Kind, reqData.Namespace, reqData.Name).Inc()
 }
 
 // getWebhooksWithLabelValues returns the numeric current counter of a metric.
-func getWebhooksWithLabelValues(metric prometheus.CounterVec, isValidating bool, obj runtime.Object) int {
-	type_ := mutatingWebhook
-	if isValidating {
-		type_ = validatingWebhook
-	}
+func getWebhooksWithLabelValues(metric prometheus.CounterVec, wt WebhookType, obj runtime.Object) int {
 	gvk := obj.GetObjectKind().GroupVersionKind()
 	reqData := getNamespacedName(obj)
 	counter, _ := metric.GetMetricWith(prometheus.Labels{
-		"type": type_, "group": gvk.Group, "version": gvk.Version,
+		"type": wt.String(), "group": gvk.Group, "version": gvk.Version,
 		"kind": gvk.Version, "namespace": reqData.Namespace, "name": reqData.Name,
 	})
 	var m io_prometheus_client.Metric
@@ -172,38 +193,38 @@ func getWebhooksWithLabelValues(metric prometheus.CounterVec, isValidating bool,
 
 // Increment webhook metric
 
-func IncWebhookRequestCount(isValidating bool, obj runtime.Object) {
-	incWebhooksWithLabelValues(*webhookRequestCount, isValidating, obj)
+func IncWebhookRequestCount(wt WebhookType, obj runtime.Object) {
+	incWebhooksWithLabelValues(*webhookRequestCount, wt, obj)
 }
 
-func IncWebhookRequestPassCount(isValidating bool, obj runtime.Object) {
-	incWebhooksWithLabelValues(*webhookRequestPassCount, isValidating, obj)
+func IncWebhookRequestPassCount(wt WebhookType, obj runtime.Object) {
+	incWebhooksWithLabelValues(*webhookRequestPassCount, wt, obj)
 }
 
-func IncWebhookRequestRejectCount(isValidating bool, obj runtime.Object) {
-	incWebhooksWithLabelValues(*webhookRequestRejectCount, isValidating, obj)
+func IncWebhookRequestRejectCount(wt WebhookType, obj runtime.Object) {
+	incWebhooksWithLabelValues(*webhookRequestRejectCount, wt, obj)
 }
 
-func IncWebhookRequestPanicCount(isValidating bool, obj runtime.Object) {
-	incWebhooksWithLabelValues(*webhookRequestPanicCount, isValidating, obj)
+func IncWebhookRequestPanicCount(wt WebhookType, obj runtime.Object) {
+	incWebhooksWithLabelValues(*webhookRequestPanicCount, wt, obj)
 }
 
 // Get webhook metric count
 
-func GetWebhookRequestPanicCountWith(isValidating bool, obj runtime.Object) int {
-	return getWebhooksWithLabelValues(*webhookRequestPanicCount, isValidating, obj)
+func GetWebhookRequestPanicCountWith(wt WebhookType, obj runtime.Object) int {
+	return getWebhooksWithLabelValues(*webhookRequestPanicCount, wt, obj)
 }
 
-func GetWebhookRequestRejectCount(isValidating bool, obj runtime.Object) int {
-	return getWebhooksWithLabelValues(*webhookRequestRejectCount, isValidating, obj)
+func GetWebhookRequestRejectCount(wt WebhookType, obj runtime.Object) int {
+	return getWebhooksWithLabelValues(*webhookRequestRejectCount, wt, obj)
 }
 
-func GetWebhookRequestCount(isValidating bool, obj runtime.Object) int {
-	return getWebhooksWithLabelValues(*webhookRequestCount, isValidating, obj)
+func GetWebhookRequestCount(wt WebhookType, obj runtime.Object) int {
+	return getWebhooksWithLabelValues(*webhookRequestCount, wt, obj)
 }
 
-func GetWebhookRequestPassCount(isValidating bool, obj runtime.Object) int {
-	return getWebhooksWithLabelValues(*webhookRequestPassCount, isValidating, obj)
+func GetWebhookRequestPassCount(wt WebhookType, obj runtime.Object) int {
+	return getWebhooksWithLabelValues(*webhookRequestPassCount, wt, obj)
 }
 
 // Increment/update controller metric

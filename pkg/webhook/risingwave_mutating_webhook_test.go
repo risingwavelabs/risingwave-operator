@@ -78,6 +78,10 @@ func (p *panicMutWebhook) Default(ctx context.Context, obj runtime.Object) error
 	panic("simulating a panic")
 }
 
+func (p *panicMutWebhook) GetType() metrics.WebhookType {
+	return metrics.NewWebhookTypes(false)
+}
+
 func Test_MetricsMutatingWebhookPanic(t *testing.T) {
 	metrics.ResetMetrics()
 	risingwave := &risingwavev1alpha1.RisingWave{}
@@ -85,15 +89,19 @@ func Test_MetricsMutatingWebhookPanic(t *testing.T) {
 	panicWebhook := &MutWebhookMetricsRecorder{&panicMutWebhook{}}
 	panicWebhook.Default(context.Background(), risingwave)
 
-	assert.Equal(t, 1, metrics.GetWebhookRequestPanicCountWith(false, risingwave), "Panic metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestRejectCount(false, risingwave), "Reject metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestCount(false, risingwave), "Count metric")
-	assert.Equal(t, 0, metrics.GetWebhookRequestPassCount(false, risingwave), "Pass metric")
+	assert.Equal(t, 1, metrics.GetWebhookRequestPanicCountWith(panicWebhook.GetType(), risingwave), "Panic metric")
+	assert.Equal(t, 1, metrics.GetWebhookRequestRejectCount(panicWebhook.GetType(), risingwave), "Reject metric")
+	assert.Equal(t, 1, metrics.GetWebhookRequestCount(panicWebhook.GetType(), risingwave), "Count metric")
+	assert.Equal(t, 0, metrics.GetWebhookRequestPassCount(panicWebhook.GetType(), risingwave), "Pass metric")
 }
 
 type successfulMutWebhook struct{}
 
 func (s *successfulMutWebhook) Default(ctx context.Context, obj runtime.Object) error { return nil }
+
+func (s *successfulMutWebhook) GetType() metrics.WebhookType {
+	return metrics.NewWebhookTypes(false)
+}
 
 func Test_MetricsMutatingWebhookSuccess(t *testing.T) {
 	metrics.ResetMetrics()
@@ -102,16 +110,20 @@ func Test_MetricsMutatingWebhookSuccess(t *testing.T) {
 	successWebhook := &MutWebhookMetricsRecorder{&successfulMutWebhook{}}
 	successWebhook.Default(context.Background(), risingwave)
 
-	assert.Equal(t, 0, metrics.GetWebhookRequestPanicCountWith(false, risingwave), "Panic metric")
-	assert.Equal(t, 0, metrics.GetWebhookRequestRejectCount(false, risingwave), "Reject metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestCount(false, risingwave), "Count metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestPassCount(false, risingwave), "Request metric")
+	assert.Equal(t, 0, metrics.GetWebhookRequestPanicCountWith(successWebhook.GetType(), risingwave), "Panic metric")
+	assert.Equal(t, 0, metrics.GetWebhookRequestRejectCount(successWebhook.GetType(), risingwave), "Reject metric")
+	assert.Equal(t, 1, metrics.GetWebhookRequestCount(successWebhook.GetType(), risingwave), "Count metric")
+	assert.Equal(t, 1, metrics.GetWebhookRequestPassCount(successWebhook.GetType(), risingwave), "Request metric")
 }
 
 type errorMutWebhook struct{}
 
-func (sd *errorMutWebhook) Default(ctx context.Context, obj runtime.Object) error {
+func (e *errorMutWebhook) Default(ctx context.Context, obj runtime.Object) error {
 	return fmt.Errorf("test error")
+}
+
+func (e *errorMutWebhook) GetType() metrics.WebhookType {
+	return metrics.NewWebhookTypes(false)
 }
 
 func Test_MetricsMutatingWebhookError(t *testing.T) {
@@ -121,8 +133,8 @@ func Test_MetricsMutatingWebhookError(t *testing.T) {
 	errorWebhook := &MutWebhookMetricsRecorder{&errorMutWebhook{}}
 	errorWebhook.Default(context.Background(), risingwave)
 
-	assert.Equal(t, 0, metrics.GetWebhookRequestPanicCountWith(false, risingwave), "Panic metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestRejectCount(false, risingwave), "Reject metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestCount(false, risingwave), "Request metric")
-	assert.Equal(t, 0, metrics.GetWebhookRequestPassCount(false, risingwave), "Pass metric")
+	assert.Equal(t, 0, metrics.GetWebhookRequestPanicCountWith(errorWebhook.GetType(), risingwave), "Panic metric")
+	assert.Equal(t, 1, metrics.GetWebhookRequestRejectCount(errorWebhook.GetType(), risingwave), "Reject metric")
+	assert.Equal(t, 1, metrics.GetWebhookRequestCount(errorWebhook.GetType(), risingwave), "Request metric")
+	assert.Equal(t, 0, metrics.GetWebhookRequestPassCount(errorWebhook.GetType(), risingwave), "Pass metric")
 }

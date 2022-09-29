@@ -154,17 +154,11 @@ func (wt *WebhookType) IsMutating() bool {
 	return !wt.IsValidating()
 }
 
-// use constants to avoid string literals when using the counters.
-const (
-	mutatingWebhook   = "mutating" // TODO: Do we need these constants? If yes, move them to the same package as the webhook types
-	validatingWebhook = "validating"
-)
-
 func (wt *WebhookType) String() string {
 	if wt.IsValidating() {
-		return validatingWebhook
+		return "validating"
 	}
-	return mutatingWebhook
+	return "mutating"
 }
 
 func (wt *WebhookType) Equal(other *WebhookType) bool {

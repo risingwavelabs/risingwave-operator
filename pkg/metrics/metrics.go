@@ -244,9 +244,7 @@ func UpdateControllerReconcileDuration(time_ms int64, gvk schema.GroupVersionKin
 
 // ResetMetrics resets all metrics. Use for testing only.
 func ResetMetrics() {
-	var m io_prometheus_client.Metric
-	m.Reset()
-	ReceivingMetricsFromOperator.Write(&m)
+	ReceivingMetricsFromOperator.Write(&io_prometheus_client.Metric{})
 	controllerReconcileCount.Reset()
 	controllerReconcilePanicCount.Reset()
 	controllerReconcileRequeueAfter.Reset()

@@ -22,7 +22,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
+	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 )
 
 type validatingWebhook interface {
@@ -38,20 +38,20 @@ type ValWebhookMetricsRecorder struct {
 
 func (v *ValWebhookMetricsRecorder) recordAfter(err *error, obj runtime.Object, reconcileStartTS time.Time) error {
 	if rec := recover(); rec != nil {
-		m.IncWebhookRequestPanicCount(true, obj)
-		m.IncWebhookRequestRejectCount(true, obj)
+		metrics.IncWebhookRequestPanicCount(true, obj)
+		metrics.IncWebhookRequestRejectCount(true, obj)
 		return apierrors.NewInternalError(fmt.Errorf("panic in validating webhook: %v", rec))
 	}
 	if *err != nil {
-		m.IncWebhookRequestRejectCount(true, obj)
+		metrics.IncWebhookRequestRejectCount(true, obj)
 	} else {
-		m.IncWebhookRequestPassCount(true, obj)
+		metrics.IncWebhookRequestPassCount(true, obj)
 	}
 	return *err
 }
 
 func (v *ValWebhookMetricsRecorder) recordBefore(obj runtime.Object) {
-	m.IncWebhookRequestCount(true, obj)
+	metrics.IncWebhookRequestCount(true, obj)
 }
 
 func (v *ValWebhookMetricsRecorder) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {

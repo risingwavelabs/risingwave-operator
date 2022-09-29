@@ -22,7 +22,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
+	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 )
 
 type mutatingWebhook interface {
@@ -36,20 +36,20 @@ type MutWebhookMetricsRecorder struct {
 
 func (r *MutWebhookMetricsRecorder) recordAfter(err *error, obj runtime.Object, reconcileStartTS time.Time) error {
 	if rec := recover(); rec != nil {
-		m.IncWebhookRequestPanicCount(false, obj)
-		m.IncWebhookRequestRejectCount(false, obj)
+		metrics.IncWebhookRequestPanicCount(false, obj)
+		metrics.IncWebhookRequestRejectCount(false, obj)
 		return apierrors.NewInternalError(fmt.Errorf("panic in mutating webhook: %v", rec))
 	}
 	if *err != nil {
-		m.IncWebhookRequestRejectCount(false, obj)
+		metrics.IncWebhookRequestRejectCount(false, obj)
 	} else {
-		m.IncWebhookRequestPassCount(false, obj)
+		metrics.IncWebhookRequestPassCount(false, obj)
 	}
 	return *err
 }
 
 func (r *MutWebhookMetricsRecorder) recordBefore(obj runtime.Object) {
-	m.IncWebhookRequestCount(false, obj)
+	metrics.IncWebhookRequestCount(false, obj)
 }
 
 func (r *MutWebhookMetricsRecorder) Default(ctx context.Context, obj runtime.Object) (err error) {

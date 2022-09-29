@@ -42,7 +42,7 @@ import (
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
 	"github.com/risingwavelabs/risingwave-operator/pkg/manager"
-	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
+	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/object"
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
@@ -120,7 +120,7 @@ func (c *RisingWaveController) managerOpts(risingwaveMgr *object.RisingWaveManag
 }
 
 func (c *RisingWaveController) beforeReconcile(request reconcile.Request, gvk schema.GroupVersionKind) {
-	m.IncControllerReconcileCount(request, gvk)
+	metrics.IncControllerReconcileCount(request, gvk)
 }
 
 func (c *RisingWaveController) afterReconcile(
@@ -132,18 +132,18 @@ func (c *RisingWaveController) afterReconcile(
 	reconcileStartTS time.Time) reconcile.Result {
 
 	if rec := recover(); rec != nil {
-		m.IncControllerReconcilePanicCount(request, gvk)
+		metrics.IncControllerReconcilePanicCount(request, gvk)
 		log.FromContext(ctx).Error(fmt.Errorf("%v", rec), fmt.Sprintf("Panic in reconciliation run\n"))
 		return reconcile.Result{Requeue: true, RequeueAfter: 10 * time.Microsecond}
 	}
 	if err != nil {
-		m.IncControllerReconcileRequeueErrorCount(request, gvk)
+		metrics.IncControllerReconcileRequeueErrorCount(request, gvk)
 	} else if res.RequeueAfter > 0 {
-		m.UpdateControllerReconcileRequeueAfter(res.RequeueAfter.Milliseconds(), request, gvk)
+		metrics.UpdateControllerReconcileRequeueAfter(res.RequeueAfter.Milliseconds(), request, gvk)
 	} else if res.Requeue {
-		m.IncControllerReconcileRequeueCount(request, gvk)
+		metrics.IncControllerReconcileRequeueCount(request, gvk)
 	}
-	m.UpdateControllerReconcileDuration(time.Since(reconcileStartTS).Milliseconds(), gvk, c.name, request)
+	metrics.UpdateControllerReconcileDuration(time.Since(reconcileStartTS).Milliseconds(), gvk, c.name, request)
 	return *res
 }
 

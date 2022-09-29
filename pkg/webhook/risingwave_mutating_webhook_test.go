@@ -26,7 +26,7 @@ import (
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
-	m "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
+	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
 
@@ -79,16 +79,16 @@ func (p *panicMutWebhook) Default(ctx context.Context, obj runtime.Object) error
 }
 
 func Test_MetricsMutatingWebhookPanic(t *testing.T) {
-	m.ResetMetrics()
+	metrics.ResetMetrics()
 	risingwave := &risingwavev1alpha1.RisingWave{}
 
 	panicWebhook := &MutWebhookMetricsRecorder{&panicMutWebhook{}}
 	panicWebhook.Default(context.Background(), risingwave)
 
-	assert.Equal(t, 1, m.GetWebhookRequestPanicCountWith(false, risingwave), "Panic metric")
-	assert.Equal(t, 1, m.GetWebhookRequestRejectCount(false, risingwave), "Reject metric")
-	assert.Equal(t, 1, m.GetWebhookRequestCount(false, risingwave), "Count metric")
-	assert.Equal(t, 0, m.GetWebhookRequestPassCount(false, risingwave), "Pass metric")
+	assert.Equal(t, 1, metrics.GetWebhookRequestPanicCountWith(false, risingwave), "Panic metric")
+	assert.Equal(t, 1, metrics.GetWebhookRequestRejectCount(false, risingwave), "Reject metric")
+	assert.Equal(t, 1, metrics.GetWebhookRequestCount(false, risingwave), "Count metric")
+	assert.Equal(t, 0, metrics.GetWebhookRequestPassCount(false, risingwave), "Pass metric")
 }
 
 type successfulMutWebhook struct{}
@@ -96,16 +96,16 @@ type successfulMutWebhook struct{}
 func (s *successfulMutWebhook) Default(ctx context.Context, obj runtime.Object) error { return nil }
 
 func Test_MetricsMutatingWebhookSuccess(t *testing.T) {
-	m.ResetMetrics()
+	metrics.ResetMetrics()
 	risingwave := &risingwavev1alpha1.RisingWave{}
 
 	successWebhook := &MutWebhookMetricsRecorder{&successfulMutWebhook{}}
 	successWebhook.Default(context.Background(), risingwave)
 
-	assert.Equal(t, 0, m.GetWebhookRequestPanicCountWith(false, risingwave), "Panic metric")
-	assert.Equal(t, 0, m.GetWebhookRequestRejectCount(false, risingwave), "Reject metric")
-	assert.Equal(t, 1, m.GetWebhookRequestCount(false, risingwave), "Count metric")
-	assert.Equal(t, 1, m.GetWebhookRequestPassCount(false, risingwave), "Request metric")
+	assert.Equal(t, 0, metrics.GetWebhookRequestPanicCountWith(false, risingwave), "Panic metric")
+	assert.Equal(t, 0, metrics.GetWebhookRequestRejectCount(false, risingwave), "Reject metric")
+	assert.Equal(t, 1, metrics.GetWebhookRequestCount(false, risingwave), "Count metric")
+	assert.Equal(t, 1, metrics.GetWebhookRequestPassCount(false, risingwave), "Request metric")
 }
 
 type errorMutWebhook struct{}
@@ -115,14 +115,14 @@ func (sd *errorMutWebhook) Default(ctx context.Context, obj runtime.Object) erro
 }
 
 func Test_MetricsMutatingWebhookError(t *testing.T) {
-	m.ResetMetrics()
+	metrics.ResetMetrics()
 	risingwave := &risingwavev1alpha1.RisingWave{}
 
 	errorWebhook := &MutWebhookMetricsRecorder{&errorMutWebhook{}}
 	errorWebhook.Default(context.Background(), risingwave)
 
-	assert.Equal(t, 0, m.GetWebhookRequestPanicCountWith(false, risingwave), "Panic metric")
-	assert.Equal(t, 1, m.GetWebhookRequestRejectCount(false, risingwave), "Reject metric")
-	assert.Equal(t, 1, m.GetWebhookRequestCount(false, risingwave), "Request metric")
-	assert.Equal(t, 0, m.GetWebhookRequestPassCount(false, risingwave), "Pass metric")
+	assert.Equal(t, 0, metrics.GetWebhookRequestPanicCountWith(false, risingwave), "Panic metric")
+	assert.Equal(t, 1, metrics.GetWebhookRequestRejectCount(false, risingwave), "Reject metric")
+	assert.Equal(t, 1, metrics.GetWebhookRequestCount(false, risingwave), "Request metric")
+	assert.Equal(t, 0, metrics.GetWebhookRequestPassCount(false, risingwave), "Pass metric")
 }

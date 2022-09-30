@@ -130,13 +130,14 @@ func (c *RisingWaveController) afterReconcile(
 	request reconcile.Request,
 	gvk schema.GroupVersionKind,
 	ctx context.Context,
-	reconcileStartTS time.Time) reconcile.Result {
-	nn := request.NamespacedName
+	reconcileStartTS time.Time) {
 
+	nn := request.NamespacedName
 	if rec := recover(); rec != nil {
 		metrics.IncControllerReconcilePanicCount(nn, gvk)
 		log.FromContext(ctx).Error(fmt.Errorf("%v", rec), fmt.Sprintf("Panic in reconciliation run\n"))
-		return reconcile.Result{Requeue: true, RequeueAfter: 10 * time.Microsecond}
+		*res = reconcile.Result{Requeue: true, RequeueAfter: 10 * time.Microsecond}
+		return
 	}
 	if err != nil {
 		metrics.IncControllerReconcileRequeueErrorCount(nn, gvk)
@@ -146,7 +147,6 @@ func (c *RisingWaveController) afterReconcile(
 		metrics.IncControllerReconcileRequeueCount(nn, gvk)
 	}
 	metrics.UpdateControllerReconcileDuration(time.Since(reconcileStartTS).Milliseconds(), gvk, c.name, nn)
-	return *res
 }
 
 // Reconcile reconciles a request and also adds metrics information to prometheus.

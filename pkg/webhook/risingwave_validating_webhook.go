@@ -29,16 +29,20 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
-type RisingWaveValidatingWebhook struct {
-}
+type RisingWaveValidatingWebhook struct{}
 
 func isImageValid(image string) bool {
 	return reference.ReferenceRegexp.MatchString(image)
 }
 
-func (h *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, groupTemplate *risingwavev1alpha1.RisingWaveComponentGroupTemplate) field.ErrorList {
+func (v *RisingWaveValidatingWebhook) getType() utils.WebhookType {
+	return utils.NewWebhookTypes(false)
+}
+
+func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, groupTemplate *risingwavev1alpha1.RisingWaveComponentGroupTemplate) field.ErrorList {
 	fieldErrs := field.ErrorList{}
 
 	if groupTemplate == nil {
@@ -60,8 +64,8 @@ func (h *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 	return fieldErrs
 }
 
-func (h *RisingWaveValidatingWebhook) validateGlobal(path *field.Path, global *risingwavev1alpha1.RisingWaveGlobalSpec) field.ErrorList {
-	fieldErrs := h.validateGroupTemplate(path, &global.RisingWaveComponentGroupTemplate)
+func (v *RisingWaveValidatingWebhook) validateGlobal(path *field.Path, global *risingwavev1alpha1.RisingWaveGlobalSpec) field.ErrorList {
+	fieldErrs := v.validateGroupTemplate(path, &global.RisingWaveComponentGroupTemplate)
 
 	if global.Replicas.Meta > 0 || global.Replicas.Frontend > 0 ||
 		global.Replicas.Compute > 0 || global.Replicas.Compactor > 0 {
@@ -78,7 +82,7 @@ func ptrValueNotZero[T comparable](ptr *T) bool {
 	return ptr != nil && *ptr != zero
 }
 
-func (h *RisingWaveValidatingWebhook) validateStorages(path *field.Path, storages *risingwavev1alpha1.RisingWaveStoragesSpec) field.ErrorList {
+func (v *RisingWaveValidatingWebhook) validateStorages(path *field.Path, storages *risingwavev1alpha1.RisingWaveStoragesSpec) field.ErrorList {
 	fieldErrs := field.ErrorList{}
 
 	isMetaMemory, isMetaEtcd := ptrValueNotZero(storages.Meta.Memory), ptrValueNotZero(storages.Meta.Etcd)
@@ -103,11 +107,11 @@ func (h *RisingWaveValidatingWebhook) validateStorages(path *field.Path, storage
 	return fieldErrs
 }
 
-func (h *RisingWaveValidatingWebhook) validateSecurity(path *field.Path, security *risingwavev1alpha1.RisingWaveSecuritySpec) field.ErrorList {
+func (v *RisingWaveValidatingWebhook) validateSecurity(path *field.Path, security *risingwavev1alpha1.RisingWaveSecuritySpec) field.ErrorList {
 	return nil
 }
 
-func (h *RisingWaveValidatingWebhook) validateConfiguration(path *field.Path, configuration *risingwavev1alpha1.RisingWaveConfigurationSpec) field.ErrorList {
+func (v *RisingWaveValidatingWebhook) validateConfiguration(path *field.Path, configuration *risingwavev1alpha1.RisingWaveConfigurationSpec) field.ErrorList {
 	if configuration.ConfigMap != nil {
 		if configuration.ConfigMap.Name == "" {
 			return field.ErrorList{
@@ -122,12 +126,12 @@ func (h *RisingWaveValidatingWebhook) validateConfiguration(path *field.Path, co
 	return nil
 }
 
-func (h *RisingWaveValidatingWebhook) validateComponents(path *field.Path, components *risingwavev1alpha1.RisingWaveComponentsSpec, storages *risingwavev1alpha1.RisingWaveStoragesSpec, globalImageProvided bool) field.ErrorList {
+func (v *RisingWaveValidatingWebhook) validateComponents(path *field.Path, components *risingwavev1alpha1.RisingWaveComponentsSpec, storages *risingwavev1alpha1.RisingWaveStoragesSpec, globalImageProvided bool) field.ErrorList {
 	fieldErrs := field.ErrorList{}
 
 	metaGroupsPath := path.Child("meta", "groups")
 	for i, group := range components.Meta.Groups {
-		fieldErrs = append(fieldErrs, h.validateGroupTemplate(metaGroupsPath.Index(i), group.RisingWaveComponentGroupTemplate)...)
+		fieldErrs = append(fieldErrs, v.validateGroupTemplate(metaGroupsPath.Index(i), group.RisingWaveComponentGroupTemplate)...)
 		if !globalImageProvided && (group.RisingWaveComponentGroupTemplate == nil || group.Image == "") {
 			fieldErrs = append(fieldErrs, field.Required(metaGroupsPath.Index(i).Child("image"), "must be specified when there's no global image"))
 		}
@@ -135,7 +139,7 @@ func (h *RisingWaveValidatingWebhook) validateComponents(path *field.Path, compo
 
 	frontendGroupsPath := path.Child("frontend", "groups")
 	for i, group := range components.Frontend.Groups {
-		fieldErrs = append(fieldErrs, h.validateGroupTemplate(frontendGroupsPath.Index(i), group.RisingWaveComponentGroupTemplate)...)
+		fieldErrs = append(fieldErrs, v.validateGroupTemplate(frontendGroupsPath.Index(i), group.RisingWaveComponentGroupTemplate)...)
 		if !globalImageProvided && (group.RisingWaveComponentGroupTemplate == nil || group.Image == "") {
 			fieldErrs = append(fieldErrs, field.Required(frontendGroupsPath.Index(i).Child("image"), "must be specified when there's no global image"))
 		}
@@ -143,7 +147,7 @@ func (h *RisingWaveValidatingWebhook) validateComponents(path *field.Path, compo
 
 	compactorGroupsPath := path.Child("compactor", "groups")
 	for i, group := range components.Compactor.Groups {
-		fieldErrs = append(fieldErrs, h.validateGroupTemplate(compactorGroupsPath.Index(i), group.RisingWaveComponentGroupTemplate)...)
+		fieldErrs = append(fieldErrs, v.validateGroupTemplate(compactorGroupsPath.Index(i), group.RisingWaveComponentGroupTemplate)...)
 		if !globalImageProvided && (group.RisingWaveComponentGroupTemplate == nil || group.Image == "") {
 			fieldErrs = append(fieldErrs, field.Required(compactorGroupsPath.Index(i).Child("image"), "must be specified when there's no global image"))
 		}
@@ -161,7 +165,7 @@ func (h *RisingWaveValidatingWebhook) validateComponents(path *field.Path, compo
 		}
 
 		if group.RisingWaveComputeGroupTemplate != nil {
-			fieldErrs = append(fieldErrs, h.validateGroupTemplate(computeGroupsPath.Index(i), &group.RisingWaveComponentGroupTemplate)...)
+			fieldErrs = append(fieldErrs, v.validateGroupTemplate(computeGroupsPath.Index(i), &group.RisingWaveComponentGroupTemplate)...)
 
 			for vi, volumeMount := range group.VolumeMounts {
 				if _, pvcExists := pvClaims[volumeMount.Name]; !pvcExists {
@@ -178,27 +182,27 @@ func (h *RisingWaveValidatingWebhook) validateComponents(path *field.Path, compo
 	return fieldErrs
 }
 
-func (h *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *risingwavev1alpha1.RisingWave) error {
+func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *risingwavev1alpha1.RisingWave) error {
 	gvk := obj.GroupVersionKind()
 
 	fieldErrs := field.ErrorList{}
 
 	// Validate the global spec.
 	//   * If global replicas of any component is larger than 1, then the image in global must not be empty.
-	fieldErrs = append(fieldErrs, h.validateGlobal(field.NewPath("spec", "global"), &obj.Spec.Global)...)
+	fieldErrs = append(fieldErrs, v.validateGlobal(field.NewPath("spec", "global"), &obj.Spec.Global)...)
 
 	// Validate the storages spec.
-	fieldErrs = append(fieldErrs, h.validateStorages(field.NewPath("spec", "storages"), &obj.Spec.Storages)...)
+	fieldErrs = append(fieldErrs, v.validateStorages(field.NewPath("spec", "storages"), &obj.Spec.Storages)...)
 
 	// Validate the security spec.
-	fieldErrs = append(fieldErrs, h.validateSecurity(field.NewPath("spec", "security"), &obj.Spec.Security)...)
+	fieldErrs = append(fieldErrs, v.validateSecurity(field.NewPath("spec", "security"), &obj.Spec.Security)...)
 
 	// Validate the configuration spec.
-	fieldErrs = append(fieldErrs, h.validateConfiguration(field.NewPath("spec", "configuration"), &obj.Spec.Configuration)...)
+	fieldErrs = append(fieldErrs, v.validateConfiguration(field.NewPath("spec", "configuration"), &obj.Spec.Configuration)...)
 
 	// Validate the components spec.
 	//   * If the global image is empty, then the image of all groups must not be empty.
-	fieldErrs = append(fieldErrs, h.validateComponents(field.NewPath("spec", "components"), &obj.Spec.Components, &obj.Spec.Storages, obj.Spec.Global.Image != "")...)
+	fieldErrs = append(fieldErrs, v.validateComponents(field.NewPath("spec", "components"), &obj.Spec.Components, &obj.Spec.Storages, obj.Spec.Global.Image != "")...)
 
 	if len(fieldErrs) > 0 {
 		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, fieldErrs)
@@ -207,28 +211,28 @@ func (h *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 }
 
 // ValidateCreate implements admission.CustomValidator.
-func (h *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
-	return h.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWave))
+func (v *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
+	return v.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWave))
 }
 
 // ValidateDelete implements admission.CustomValidator.
-func (h *RisingWaveValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
+func (v *RisingWaveValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
 	return nil
 }
 
-func (h *RisingWaveValidatingWebhook) isMetaStoragesTheSame(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
+func (v *RisingWaveValidatingWebhook) isMetaStoragesTheSame(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
 	return equality.Semantic.DeepEqual(oldObj.Spec.Storages.Meta, newObj.Spec.Storages.Meta)
 }
 
-func (h *RisingWaveValidatingWebhook) isObjectStoragesTheSame(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
+func (v *RisingWaveValidatingWebhook) isObjectStoragesTheSame(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
 	return equality.Semantic.DeepEqual(oldObj.Spec.Storages.Object, newObj.Spec.Storages.Object)
 }
 
-func (h *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWave) error {
+func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWave) error {
 	gvk := oldObj.GroupVersionKind()
 
 	// The storages must not be changed, especially meta and object.
-	if !h.isMetaStoragesTheSame(oldObj, newObj) {
+	if !v.isMetaStoragesTheSame(oldObj, newObj) {
 		return apierrors.NewForbidden(
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			oldObj.Name,
@@ -236,7 +240,7 @@ func (h *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 		)
 	}
 
-	if !h.isObjectStoragesTheSame(oldObj, newObj) {
+	if !v.isObjectStoragesTheSame(oldObj, newObj) {
 		return apierrors.NewForbidden(
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			oldObj.Name,
@@ -248,15 +252,15 @@ func (h *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 }
 
 // ValidateUpdate implements admission.CustomValidator.
-func (h *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error {
+func (v *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error {
 	// Validate the new object first.
-	if err := h.ValidateCreate(ctx, newObj); err != nil {
+	if err := v.ValidateCreate(ctx, newObj); err != nil {
 		return err
 	}
 
-	return h.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWave), newObj.(*risingwavev1alpha1.RisingWave))
+	return v.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWave), newObj.(*risingwavev1alpha1.RisingWave))
 }
 
 func NewRisingWaveValidatingWebhook() webhook.CustomValidator {
-	return &RisingWaveValidatingWebhook{}
+	return &ValWebhookMetricsRecorder{&RisingWaveValidatingWebhook{}}
 }

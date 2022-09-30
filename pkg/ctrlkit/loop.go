@@ -47,9 +47,8 @@ func RequeueIfError(err error) (ctrl.Result, error) {
 func RequeueIfErrorAndWrap(explain string, err error) (ctrl.Result, error) {
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("%s: %w", explain, err)
-	} else {
-		return ctrl.Result{}, nil
 	}
+	return ctrl.Result{}, nil
 }
 
 // NoRequeue returns an empty result and a nil.

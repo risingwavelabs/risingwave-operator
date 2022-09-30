@@ -22,20 +22,25 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
+	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
+
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
-type RisingWavePodTemplateMutatingWebhook struct {
+type RisingWavePodTemplateMutatingWebhook struct{}
+
+func (pm *RisingWavePodTemplateMutatingWebhook) getType() utils.WebhookType {
+	return utils.NewWebhookTypes(false)
 }
 
-func (w *RisingWavePodTemplateMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWavePodTemplate) error {
+func (pm *RisingWavePodTemplateMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWavePodTemplate) error {
 	return nil
 }
 
-func (w *RisingWavePodTemplateMutatingWebhook) Default(ctx context.Context, obj runtime.Object) error {
-	return w.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWavePodTemplate))
+func (pm *RisingWavePodTemplateMutatingWebhook) Default(ctx context.Context, obj runtime.Object) error {
+	return pm.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWavePodTemplate))
 }
 
 func NewRisingWavePodTemplateMutatingWebhook() webhook.CustomDefaulter {
-	return &RisingWavePodTemplateMutatingWebhook{}
+	return &MutWebhookMetricsRecorder{&RisingWavePodTemplateMutatingWebhook{}}
 }

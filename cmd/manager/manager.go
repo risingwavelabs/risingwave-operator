@@ -32,6 +32,7 @@ import (
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	risingwavecontroller "github.com/risingwavelabs/risingwave-operator/pkg/controller"
+	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/webhook"
 )
 
@@ -57,6 +58,8 @@ var (
 )
 
 func main() {
+	metrics.InitMetrics()
+	metrics.ReceivingMetricsFromOperator.Inc()
 	flag.StringVar(&configPath, "config-file", "/config/config.yaml", "The file path of the configuration file.")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")

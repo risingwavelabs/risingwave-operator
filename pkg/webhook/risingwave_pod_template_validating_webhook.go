@@ -26,23 +26,28 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
+	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
+
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
-type RisingWavePodTemplateValidatingWebhook struct {
-}
+type RisingWavePodTemplateValidatingWebhook struct{}
 
 // ValidateCreate implements admission.CustomValidator.
-func (h *RisingWavePodTemplateValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
+func (pt *RisingWavePodTemplateValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
 	return nil
+}
+
+func (pt *RisingWavePodTemplateValidatingWebhook) getType() utils.WebhookType {
+	return utils.NewWebhookTypes(true)
 }
 
 // ValidateDelete implements admission.CustomValidator.
-func (h *RisingWavePodTemplateValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
+func (pt *RisingWavePodTemplateValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
 	return nil
 }
 
-func (h *RisingWavePodTemplateValidatingWebhook) validateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWavePodTemplate) error {
+func (pt *RisingWavePodTemplateValidatingWebhook) validateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWavePodTemplate) error {
 	gvk := oldObj.GroupVersionKind()
 
 	if !equality.Semantic.DeepEqual(&oldObj.Template, &newObj.Template) {
@@ -57,10 +62,10 @@ func (h *RisingWavePodTemplateValidatingWebhook) validateUpdate(ctx context.Cont
 }
 
 // ValidateUpdate implements admission.CustomValidator.
-func (h *RisingWavePodTemplateValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error {
-	return h.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWavePodTemplate), newObj.(*risingwavev1alpha1.RisingWavePodTemplate))
+func (pt *RisingWavePodTemplateValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error {
+	return pt.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWavePodTemplate), newObj.(*risingwavev1alpha1.RisingWavePodTemplate))
 }
 
 func NewRisingWavePodTemplateValidatingWebhook() webhook.CustomValidator {
-	return &RisingWavePodTemplateValidatingWebhook{}
+	return &ValWebhookMetricsRecorder{&RisingWavePodTemplateValidatingWebhook{}}
 }

@@ -19,6 +19,8 @@ package webhook
 import (
 	"context"
 
+	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
@@ -26,8 +28,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
 
-type RisingWaveMutatingWebhook struct {
-}
+type RisingWaveMutatingWebhook struct{}
 
 func setDefaultIfZero[T comparable](dst *T, defaultVal T) {
 	var zero T
@@ -36,7 +37,11 @@ func setDefaultIfZero[T comparable](dst *T, defaultVal T) {
 	}
 }
 
-func (h *RisingWaveMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWave) error {
+func (m *RisingWaveMutatingWebhook) getType() utils.WebhookType {
+	return utils.NewWebhookTypes(false)
+}
+
+func (m *RisingWaveMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWave) error {
 	setDefaultIfZero(&obj.Spec.Components.Meta.Ports.ServicePort, consts.DefaultMetaServicePort)
 	setDefaultIfZero(&obj.Spec.Components.Meta.Ports.MetricsPort, consts.DefaultMetaMetricsPort)
 	setDefaultIfZero(&obj.Spec.Components.Meta.Ports.DashboardPort, consts.DefaultMetaDashboardPort)
@@ -54,10 +59,10 @@ func (h *RisingWaveMutatingWebhook) setDefault(ctx context.Context, obj *risingw
 }
 
 // Default implements admission.CustomDefaulter.
-func (h *RisingWaveMutatingWebhook) Default(ctx context.Context, obj runtime.Object) error {
-	return h.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWave))
+func (m *RisingWaveMutatingWebhook) Default(ctx context.Context, obj runtime.Object) error {
+	return m.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWave))
 }
 
 func NewRisingWaveMutatingWebhook() webhook.CustomDefaulter {
-	return &RisingWaveMutatingWebhook{}
+	return &MutWebhookMetricsRecorder{&RisingWaveMutatingWebhook{}}
 }

@@ -101,3 +101,9 @@ func TestOptions_Run(t *testing.T) {
 	assert.Equal(t, risingwave.Spec.Global.Resources, rw.Spec.Global.Resources)
 	assert.Equal(t, len(risingwave.Spec.Components.Meta.Groups), 2)
 }
+
+func Test_NewCommand(t *testing.T) {
+	streams := genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}
+	cmd := NewCommand(ctx, streams)
+	assert.Equal(t, cmd.Use, "create")
+}

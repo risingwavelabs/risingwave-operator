@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -26,6 +27,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -40,6 +43,7 @@ import (
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
 	"github.com/risingwavelabs/risingwave-operator/pkg/manager"
+	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/object"
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
@@ -99,6 +103,7 @@ type RisingWaveController struct {
 	Client            client.Client
 	Recorder          record.EventRecorder
 	ActionHookFactory func() ctrlkit.ActionHook
+	name              string
 }
 
 func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit.Action) (result reconcile.Result, err error) {
@@ -115,11 +120,56 @@ func (c *RisingWaveController) managerOpts(risingwaveMgr *object.RisingWaveManag
 	return opts
 }
 
-func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	logger := log.FromContext(ctx)
+func (c *RisingWaveController) beforeReconcile(target types.NamespacedName, gvk schema.GroupVersionKind) {
+	metrics.IncControllerReconcileCount(target, gvk)
+}
+
+func (c *RisingWaveController) afterReconcile(
+	res *reconcile.Result,
+	err *error,
+	request reconcile.Request,
+	gvk schema.GroupVersionKind,
+	ctx context.Context,
+	reconcileStartTS time.Time) {
+
+	nn := request.NamespacedName
+	if rec := recover(); rec != nil {
+		metrics.IncControllerReconcilePanicCount(nn, gvk)
+		log.FromContext(ctx).Error(fmt.Errorf("%v", rec), fmt.Sprintf("Panic in reconciliation run\n"))
+		*res = reconcile.Result{}
+		*err = nil
+		return
+	}
+	if err != nil {
+		metrics.IncControllerReconcileRequeueErrorCount(nn, gvk)
+	} else if res.RequeueAfter > 0 {
+		metrics.UpdateControllerReconcileRequeueAfter(res.RequeueAfter.Milliseconds(), nn, gvk)
+	} else if res.Requeue {
+		metrics.IncControllerReconcileRequeueCount(nn, gvk)
+	}
+	metrics.UpdateControllerReconcileDuration(time.Since(reconcileStartTS).Milliseconds(), gvk, c.name, nn)
+}
+
+// Reconcile reconciles a request and also adds metrics information to prometheus.
+func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (res reconcile.Result, err error) {
+	reconcileStartTS := time.Now()
 
 	// Get the risingwave object.
+	gvk := client.Object.GetObjectKind(&risingwavev1alpha1.RisingWave{}).GroupVersionKind()
+
+	// handle metrics
+	c.beforeReconcile(request.NamespacedName, gvk)
+	defer c.afterReconcile(&res, &err, request, gvk, ctx, reconcileStartTS)
+
+	// actual reconciliation
+	return c.reconcile(ctx, request)
+}
+
+// reconcile implements the actual reconcile logic.
+func (c *RisingWaveController) reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+	logger := log.FromContext(ctx)
 	var risingwave risingwavev1alpha1.RisingWave
+
 	if err := c.Client.Get(ctx, request.NamespacedName, &risingwave); err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.V(1).Info("Not found, abort")
@@ -383,5 +433,6 @@ func NewRisingWaveController(client client.Client, recorder record.EventRecorder
 	return &RisingWaveController{
 		Client:   client,
 		Recorder: recorder,
+		name:     "RisingWaveController",
 	}
 }

@@ -16,17 +16,17 @@ package utils
 
 // Defines an immutable type for a webhook. Use NewWebhookType to instantiate.
 type WebhookType struct {
-	isValidating_ bool
+	isValidating bool
 }
 
 // NewWebhookTypes returns an immutable webhookType.
 func NewWebhookTypes(isValidating bool) WebhookType {
-	return WebhookType{isValidating_: isValidating}
+	return WebhookType{isValidating: isValidating}
 }
 
 // IsValidating is true if wt is a validating webhook, else false.
 func (wt *WebhookType) IsValidating() bool {
-	return wt.isValidating_
+	return wt.isValidating
 }
 
 // IsMutating is true if wt is a mutating webhook, else false.

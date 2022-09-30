@@ -131,7 +131,6 @@ func (c *RisingWaveController) afterReconcile(
 	gvk schema.GroupVersionKind,
 	ctx context.Context,
 	reconcileStartTS time.Time) reconcile.Result {
-
 	nn := request.NamespacedName
 
 	if rec := recover(); rec != nil {

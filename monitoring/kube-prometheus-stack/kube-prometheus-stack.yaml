@@ -2,6 +2,9 @@ prometheus-node-exporter:
   hostRootFsMount:
     enabled: false
 
+# Maybe we can also do this via an additional podmonitor? 
+# This way me may not need the additional service at all.
+# Would make deployment simpler
 prometheus:
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: false

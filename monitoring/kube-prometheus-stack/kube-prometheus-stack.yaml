@@ -5,6 +5,27 @@ prometheus-node-exporter:
 prometheus:
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: false
+  additionalServiceMonitors:
+  - name: prometheus-service-monitor-rw-operator
+    additionalLabels: {} ## Additional labels to set used for the ServiceMonitorSelector. Together with standard labels from the chart
+    targetLabels: [] ## labels to transfer from the kubernetes service to the target
+    podTargetLabels: [] ## labels to transfer from the kubernetes pods to the target
+    namespaceSelector: 
+      matchNames:
+      - risingwave-operator-system
+    endpoints:
+    - interval: 10s
+      path: /metrics
+      port: http
+      scheme: https
+      scrapeTimeout: 5s
+      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      tlsConfig:
+        caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecureSkipVerify: true
+    selector:
+      matchLabels: 
+        release: prometheus
 
 grafana:
   dashboardProviders:

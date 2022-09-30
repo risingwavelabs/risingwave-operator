@@ -433,6 +433,6 @@ func NewRisingWaveController(client client.Client, recorder record.EventRecorder
 	return &RisingWaveController{
 		Client:   client,
 		Recorder: recorder,
-		name:     "NewRisingWaveController",
+		name:     "RisingWaveController",
 	}
 }

@@ -136,7 +136,8 @@ func (c *RisingWaveController) afterReconcile(
 	if rec := recover(); rec != nil {
 		metrics.IncControllerReconcilePanicCount(nn, gvk)
 		log.FromContext(ctx).Error(fmt.Errorf("%v", rec), fmt.Sprintf("Panic in reconciliation run\n"))
-		*res = reconcile.Result{Requeue: true, RequeueAfter: 10 * time.Microsecond}
+		*res = reconcile.Result{}
+		*err = nil
 		return
 	}
 	if err != nil {

@@ -20,9 +20,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
-	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
@@ -124,48 +124,25 @@ var (
 	)
 )
 
-// defaultNamespaceName applies defaults in case the attributes of nn are undefined.
-func defaultNamespaceName(nn *types.NamespacedName) types.NamespacedName {
-	default_ := "undefined"
-	if nn == nil {
-		return types.NamespacedName{Name: default_, Namespace: default_}
-	}
-	if len(nn.Name) == 0 {
-		nn.Name = default_
-	}
-	if len(nn.Namespace) == 0 {
-		nn.Namespace = default_
-	}
-	return *nn
-}
-
-// getNamespacedName returns the relevant data about the RisingWave request.
-func getNamespacedName(obj runtime.Object) types.NamespacedName {
-	rw, ok := obj.(*risingwavev1alpha1.RisingWave)
-	if ok && rw != nil {
-		return defaultNamespaceName(&types.NamespacedName{Namespace: rw.Namespace, Name: rw.Name})
-	}
-	rw2, _ := obj.(*risingwavev1alpha1.RisingWavePodTemplate)
-	if rw2 != nil {
-		return defaultNamespaceName(&types.NamespacedName{Namespace: rw2.Namespace, Name: rw2.Name})
-	}
-	return defaultNamespaceName(nil)
+// toNamespacedName returns the relevant data about the RisingWave request.
+func toNamespacedName(obj client.Object) types.NamespacedName {
+	return types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}
 }
 
 // incWebhooksWithLabelValues increments the webhooks metric counter 'metric' by one.
 func incWebhooksWithLabelValues(metric prometheus.CounterVec, wt utils.WebhookType, obj runtime.Object) {
 	gvk := obj.GetObjectKind().GroupVersionKind()
-	reqData := getNamespacedName(obj)
-	metric.WithLabelValues(wt.String(), gvk.Group, gvk.Version, gvk.Kind, reqData.Namespace, reqData.Name).Inc()
+	nn := toNamespacedName(obj.(client.Object))
+	metric.WithLabelValues(wt.String(), gvk.Group, gvk.Version, gvk.Kind, nn.Namespace, nn.Name).Inc()
 }
 
 // getWebhooksWithLabelValues returns the numeric current counter of a metric.
 func getWebhooksWithLabelValues(metric prometheus.CounterVec, wt utils.WebhookType, obj runtime.Object) int {
 	gvk := obj.GetObjectKind().GroupVersionKind()
-	reqData := getNamespacedName(obj)
+	nn := toNamespacedName(obj.(client.Object))
 	counter, _ := metric.GetMetricWith(prometheus.Labels{
 		"type": wt.String(), "group": gvk.Group, "version": gvk.Version,
-		"kind": gvk.Version, "namespace": reqData.Namespace, "name": reqData.Name,
+		"kind": gvk.Version, "namespace": nn.Namespace, "name": nn.Name,
 	})
 	var m io_prometheus_client.Metric
 	counter.Write(&m)

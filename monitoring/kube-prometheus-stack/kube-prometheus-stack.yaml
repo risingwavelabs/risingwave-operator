@@ -25,6 +25,60 @@ prometheus:
       matchLabels: 
         release: prometheus
 
+  additionalPodMonitors:
+  ## Name of the PodMonitor to create
+  ##
+  - name: "prometheus-pod-monitor-rw-operator"
+
+    ## Additional labels to set used for the PodMonitorSelector. Together with standard labels from
+    ## the chart
+    ##
+    # additionalLabels: {}
+
+    ## Pod label for use in assembling a job name of the form <label value>-<port>
+    ## If no label is specified, the pod endpoint name is used.
+    ##
+    # jobLabel: ""
+
+    ## Label selector for pods to which this PodMonitor applies
+    ##
+    selector:
+      matchLabels:
+        control-plane: controller-manager
+
+    ## PodTargetLabels transfers labels on the Kubernetes Pod onto the target.
+    ##
+    # podTargetLabels: {}
+
+    ## SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+    ##
+    # sampleLimit: 0
+
+    ## Namespaces from which pods are selected
+    ##
+    namespaceSelector:
+      ## Match any namespace
+      ##
+      # any: false
+
+      ## Explicit list of namespace names to select
+      ##
+      matchNames:
+      - risingwave-operator-system
+
+    ## Endpoints of the selected pods to be monitored
+    ## https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#podmetricsendpoint
+    ##
+    podMetricsEndpoints:
+    - interval: 10s
+      path: /metrics
+      port: http
+      scheme: https
+      scrapeTimeout: 5s
+      tlsConfig:
+        insecureSkipVerify: true
+
+
 grafana:
   dashboardProviders:
     rw-dashboardproviders.yaml:

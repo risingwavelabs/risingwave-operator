@@ -1,0 +1,31 @@
+
+# below service successfully forwards metrics of our operator 
+# validate via k -n risingwave-operator-system port-forward svc/prometheus-rw-operator-metrics 2345:8080
+# also see risingwave-operator-controller-manager-metrics-manager
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+  labels: # using labels of k get svc prometheus-kube-prometheus-operator
+    app: kube-prometheus-stack-operator
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    app.kubernetes.io/version: 40.1.0 
+    release: prometheus
+  name: prometheus-rw-operator-metrics
+  namespace: risingwave-operator-system
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    control-plane: controller-manager # this is the label of the operator
+  type: ClusterIP

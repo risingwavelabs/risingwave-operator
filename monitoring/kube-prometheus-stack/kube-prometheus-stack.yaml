@@ -69,14 +69,27 @@ prometheus:
     ## Endpoints of the selected pods to be monitored
     ## https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#podmetricsendpoint
     ##
-    podMetricsEndpoints:
+    podMetricsEndpoints: # wrong endpoint? This is not the service that we access here
     - interval: 10s
       path: /metrics
-      port: http
+      port: metrics # 8080
       scheme: https
       scrapeTimeout: 5s
-      tlsConfig:
-        insecureSkipVerify: true
+      #tlsConfig:
+      #  insecureSkipVerify: true
+    #- interval: 10s
+    #  path: /metrics
+    #  port: https
+    #  scheme: https
+    #  scrapeTimeout: 5s
+    #  tlsConfig:
+    #    insecureSkipVerify: true
+    #  bearerTokenSecret: # We do not have this as a secret, but only as a file /var/run/secrets/kubernetes.io/serviceaccount/token
+    
+          # add this to the rw operator deployment
+          # - containerPort: 8080
+          #   name: metrics 
+          #   protocol: TCP
 
 
 grafana:

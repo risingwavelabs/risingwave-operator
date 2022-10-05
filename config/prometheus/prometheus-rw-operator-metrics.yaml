@@ -1,0 +1,23 @@
+# below service forwards metrics of the RW operator to be scraped by promethis via the servicemonitor
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+  labels:
+    release: prometheus
+  name: prometheus-rw-operator-metrics
+  namespace: risingwave-operator-system
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    control-plane: controller-manager # this must be the label of the operator
+  type: ClusterIP

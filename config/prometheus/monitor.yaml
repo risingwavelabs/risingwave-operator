@@ -18,3 +18,5 @@ spec:
   selector:
     matchLabels:
       control-plane: controller-manager
+# Is this already the service monitor we need to monitor the operator?
+# Can we remove this?

@@ -25,6 +25,8 @@ prometheus:
       matchLabels: 
         release: prometheus
 
+
+# Pod monitor does not work ATM 
   additionalPodMonitors:
   ## Name of the PodMonitor to create
   ##

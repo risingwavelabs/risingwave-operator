@@ -23,7 +23,7 @@ prometheus:
         insecureSkipVerify: true
     selector:
       matchLabels: 
-        release: prometheus
+        control-plane: controller-manager
 
 
 # Pod monitor does not work ATM 

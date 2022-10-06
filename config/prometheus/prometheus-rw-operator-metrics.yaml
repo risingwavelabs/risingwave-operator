@@ -6,9 +6,8 @@ metadata:
     prometheus.io/scrape: "true"
   labels:
     control-plane: controller-manager
-#    release: prometheus # TODO: remove this
-  name: metrics
-  namespace: system
+  name: metrics # will be overwritten by kustomize
+  namespace: system # will be overwritten by kustomize
 spec:
   internalTrafficPolicy: Cluster
   ipFamilies:

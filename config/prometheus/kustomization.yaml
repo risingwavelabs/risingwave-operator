@@ -1,3 +1,2 @@
 resources:
-# - monitor.yaml
 - prometheus-rw-operator-metrics.yaml

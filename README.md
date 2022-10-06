@@ -203,41 +203,11 @@ spec:
 
 ## Monitoring
 
+
+
 ### Install the `kube-prometheus-stack`
 
-Before getting started, you need to ensure that the [`helm`](https://helm.sh/) is installed. Please follow the instructions in the [Installing Helm](https://helm.sh/docs/intro/install/) chapter if you don't have one.
-
-We encourage using the [`kube-prometheus-stack`](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack), a helm chart maintained by the community, to install the `Prometheus operator` into the Kubernetes. Follow the instructions below to install:
-
-- Add `prometheus-community` repo
-
-```shell
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-```
-
-- Install or upgrade chart
-
-```shell
-helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
-  -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/monitoring/kube-prometheus-stack/kube-prometheus-stack.yaml
-```
-
-To check the running status, check the Pods with the following command:
-
-```shell
-kubectl get pods -l release=prometheus
-```
-
-The expected output is like this:
-
-<!-- spellchecker: disable -->
-```plain
-NAME                                                   READY   STATUS    RESTARTS   AGE
-prometheus-kube-prometheus-operator-5f6c8948fb-llvzm   1/1     Running   0          173m
-prometheus-kube-state-metrics-59dd9ffd47-z4777         1/1     Running   0          173m
-prometheus-prometheus-node-exporter-llgp9              1/1     Running   0          169m
-```
+You can install the monitoring stack manually or via the install script. To install it via the script type `./monitoring/install.sh`. If you wish to install it manually, then follow the instructions in the next paragraph
 
 #### Prometheus RemoteWrite (AWS)
 

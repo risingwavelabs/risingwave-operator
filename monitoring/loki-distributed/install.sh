@@ -15,4 +15,4 @@
 # limitations under the License.
 #
 
-helm upgrade --install loki grafana/loki-distributed
+helm --namespace monitoring upgrade --install --create-namespace loki grafana/loki-distributed

@@ -17,6 +17,6 @@
 
 _SCRIPT_BASEDIR=$(dirname "$0")
 
-helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+helm --namespace monitoring upgrade --install --create-namespace prometheus prometheus-community/kube-prometheus-stack \
   -f "${_SCRIPT_BASEDIR}"/kube-prometheus-stack.yaml \
   -f "${_SCRIPT_BASEDIR}"/grafana-loki-data-source.yaml

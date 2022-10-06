@@ -17,4 +17,4 @@
 
 _SCRIPT_BASEDIR=$(dirname "$0")
 
---namespace monitoring upgrade --install --create-namespace promtail grafana/promtail -f "${_SCRIPT_BASEDIR}"/loki-promtail-clients.yaml
+helm --namespace monitoring upgrade --install --create-namespace promtail grafana/promtail -f "${_SCRIPT_BASEDIR}"/loki-promtail-clients.yaml

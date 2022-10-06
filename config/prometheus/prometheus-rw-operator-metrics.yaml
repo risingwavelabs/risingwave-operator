@@ -5,9 +5,10 @@ metadata:
   annotations:
     prometheus.io/scrape: "true"
   labels:
-    release: prometheus
-  name: prometheus-rw-operator-metrics
-  namespace: risingwave-operator-system
+    control-plane: controller-manager
+#    release: prometheus # TODO: remove this
+  name: metrics
+  namespace: system
 spec:
   internalTrafficPolicy: Cluster
   ipFamilies:

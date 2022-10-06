@@ -19,7 +19,7 @@ prometheus:
       scrapeTimeout: 5s
       bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
       tlsConfig:
-        caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt # I think I can remove this
         insecureSkipVerify: true
     selector:
       matchLabels: 

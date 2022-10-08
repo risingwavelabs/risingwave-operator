@@ -29,12 +29,12 @@ import (
 
 func Test_RisingWavePodTemplateValidatingWebhook_ValidateCreate(t *testing.T) {
 	webhook := NewRisingWavePodTemplateValidatingWebhook()
-	assert.Nil(t, webhook.ValidateCreate(context.Background(), nil))
+	assert.Nil(t, webhook.ValidateCreate(context.Background(), &risingwavev1alpha1.RisingWavePodTemplate{}))
 }
 
 func Test_RisingWavePodTemplateValidatingWebhook_ValidateDelete(t *testing.T) {
 	webhook := NewRisingWavePodTemplateValidatingWebhook()
-	assert.Nil(t, webhook.ValidateDelete(context.Background(), nil))
+	assert.Nil(t, webhook.ValidateDelete(context.Background(), &risingwavev1alpha1.RisingWavePodTemplate{}))
 }
 
 func Test_RisingWavePodTemplateValidatingWebhook_ValidateUpdate(t *testing.T) {

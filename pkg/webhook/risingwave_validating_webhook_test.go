@@ -35,7 +35,7 @@ import (
 )
 
 func Test_RisingWaveValidatingWebhook_ValidateDelete(t *testing.T) {
-	assert.Nil(t, NewRisingWaveValidatingWebhook().ValidateDelete(context.Background(), nil))
+	assert.Nil(t, NewRisingWaveValidatingWebhook().ValidateDelete(context.Background(), &risingwavev1alpha1.RisingWave{}))
 }
 
 func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {

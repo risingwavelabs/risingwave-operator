@@ -26,9 +26,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
-
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 )
 
 type RisingWavePodTemplateValidatingWebhook struct{}
@@ -36,10 +35,6 @@ type RisingWavePodTemplateValidatingWebhook struct{}
 // ValidateCreate implements admission.CustomValidator.
 func (pt *RisingWavePodTemplateValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
 	return nil
-}
-
-func (pt *RisingWavePodTemplateValidatingWebhook) getType() utils.WebhookType {
-	return utils.NewWebhookTypes(true)
 }
 
 // ValidateDelete implements admission.CustomValidator.
@@ -67,5 +62,5 @@ func (pt *RisingWavePodTemplateValidatingWebhook) ValidateUpdate(ctx context.Con
 }
 
 func NewRisingWavePodTemplateValidatingWebhook() webhook.CustomValidator {
-	return &ValWebhookMetricsRecorder{&RisingWavePodTemplateValidatingWebhook{}}
+	return metrics.NewValidatingWebhookMetricsRecorder(&RisingWavePodTemplateValidatingWebhook{})
 }

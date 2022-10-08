@@ -27,23 +27,21 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
-	"github.com/risingwavelabs/risingwave-operator/pkg/event"
-
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
+	"github.com/risingwavelabs/risingwave-operator/pkg/event"
 	"github.com/risingwavelabs/risingwave-operator/pkg/manager"
-	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
+	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/object"
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
@@ -103,7 +101,6 @@ type RisingWaveController struct {
 	Client            client.Client
 	Recorder          record.EventRecorder
 	ActionHookFactory func() ctrlkit.ActionHook
-	name              string
 }
 
 func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit.Action) (result reconcile.Result, err error) {
@@ -120,53 +117,8 @@ func (c *RisingWaveController) managerOpts(risingwaveMgr *object.RisingWaveManag
 	return opts
 }
 
-func (c *RisingWaveController) beforeReconcile(target types.NamespacedName, gvk schema.GroupVersionKind) {
-	metrics.IncControllerReconcileCount(target, gvk)
-}
-
-func (c *RisingWaveController) afterReconcile(
-	res *reconcile.Result,
-	err *error,
-	request reconcile.Request,
-	gvk schema.GroupVersionKind,
-	ctx context.Context,
-	reconcileStartTS time.Time) {
-
-	nn := request.NamespacedName
-	if rec := recover(); rec != nil {
-		metrics.IncControllerReconcilePanicCount(nn, gvk)
-		log.FromContext(ctx).Error(fmt.Errorf("%v", rec), fmt.Sprintf("Panic in reconciliation run\n"))
-		*res = reconcile.Result{}
-		*err = nil
-		return
-	}
-	if err != nil {
-		metrics.IncControllerReconcileRequeueErrorCount(nn, gvk)
-	} else if res.RequeueAfter > 0 {
-		metrics.UpdateControllerReconcileRequeueAfter(res.RequeueAfter.Milliseconds(), nn, gvk)
-	} else if res.Requeue {
-		metrics.IncControllerReconcileRequeueCount(nn, gvk)
-	}
-	metrics.UpdateControllerReconcileDuration(time.Since(reconcileStartTS).Milliseconds(), gvk, c.name, nn)
-}
-
 // Reconcile reconciles a request and also adds metrics information to prometheus.
 func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (res reconcile.Result, err error) {
-	reconcileStartTS := time.Now()
-
-	// Get the risingwave object.
-	gvk := client.Object.GetObjectKind(&risingwavev1alpha1.RisingWave{}).GroupVersionKind()
-
-	// handle metrics
-	c.beforeReconcile(request.NamespacedName, gvk)
-	defer c.afterReconcile(&res, &err, request, gvk, ctx, reconcileStartTS)
-
-	// actual reconciliation
-	return c.reconcile(ctx, request)
-}
-
-// reconcile implements the actual reconcile logic.
-func (c *RisingWaveController) reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	logger := log.FromContext(ctx)
 	var risingwave risingwavev1alpha1.RisingWave
 
@@ -408,6 +360,11 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 }
 
 func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
+	gvk, err := apiutil.GVKForObject(&risingwavev1alpha1.RisingWave{}, c.Client.Scheme())
+	if err != nil {
+		return fmt.Errorf("unable to find gvk for RisingWave: %w", err)
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: 64,
@@ -426,13 +383,12 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 		// Can't watch an optional CRD. It will cause a panic in manager.
 		// So do not uncomment the following line.
 		// Owns(&prometheusv1.ServiceMonitor{}).
-		Complete(c)
+		Complete(metrics.NewControllerMetricsRecorder(c, "RisingWaveController", gvk))
 }
 
 func NewRisingWaveController(client client.Client, recorder record.EventRecorder) *RisingWaveController {
 	return &RisingWaveController{
 		Client:   client,
 		Recorder: recorder,
-		name:     "RisingWaveController",
 	}
 }

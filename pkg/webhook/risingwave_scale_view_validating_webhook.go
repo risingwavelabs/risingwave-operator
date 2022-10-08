@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/object"
 )
 
@@ -170,7 +171,5 @@ func (w *RisingWaveScaleViewValidatingWebhook) ValidateDelete(ctx context.Contex
 }
 
 func NewRisingWaveScaleViewValidatingWebhook(client client.Reader) webhook.CustomValidator {
-	return &RisingWaveScaleViewValidatingWebhook{
-		client: client,
-	}
+	return metrics.NewValidatingWebhookMetricsRecorder(&RisingWaveScaleViewValidatingWebhook{client: client})
 }

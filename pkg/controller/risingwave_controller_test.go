@@ -112,7 +112,6 @@ func Test_RisingWaveController_New(t *testing.T) {
 
 	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
-		name: "TestController",
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Scheme).
 			WithObjects(risingwave).
@@ -179,7 +178,6 @@ func Test_RisingWaveController_Deleted(t *testing.T) {
 
 	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
-		name: "TestController",
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Scheme).
 			WithObjects(risingwave).
@@ -222,7 +220,6 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 
 	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
-		name: "TestController",
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Scheme).
 			WithObjects(risingwave).
@@ -272,7 +269,6 @@ func Test_RisingWaveController_Recovery(t *testing.T) {
 
 	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
-		name: "TestController",
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Scheme).
 			WithObjects(risingwave).

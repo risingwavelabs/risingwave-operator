@@ -42,6 +42,7 @@ fatih
 logr
 ctrlkit
 multierr
+prometheusclient
 
 # Functions / Methods
 deepcopy

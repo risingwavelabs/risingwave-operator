@@ -36,3 +36,5 @@ risedev
 retryable
 yamlex
 risingwavelabs
+fallocate
+nums

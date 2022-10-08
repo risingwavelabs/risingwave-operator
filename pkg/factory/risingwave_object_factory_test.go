@@ -411,7 +411,7 @@ func Test_RisingWaveObjectFactory_ConfigMaps(t *testing.T) {
 				}),
 				newObjectAssert(cm, "configmap-data-match", func(obj *corev1.ConfigMap) bool {
 					return mapEquals(obj.Data, map[string]string{
-						risingWaveConfigMapKey: lo.If(tc.configVal == "", risingWaveConfigTemplate).Else(tc.configVal),
+						risingWaveConfigMapKey: lo.If(tc.configVal == "", "").Else(tc.configVal),
 					})
 				}),
 			).Assert(t)

@@ -38,27 +38,8 @@ import (
 )
 
 const (
-	risingWaveConfigVolume   = "risingwave-config"
-	risingWaveConfigMapKey   = "risingwave.toml"
-	risingWaveConfigTemplate = `[ server ]
-heartbeat_interval = 1000
-
-[ streaming ]
-checkpoint_interval_ms = 100
-
-[ storage ]
-sstable_size_mb = 256
-block_size_kb = 16
-bloom_false_positive = 0.1
-share_buffers_sync_parallelism = 2
-shared_buffer_capacity_mb = 1024
-data_directory = "hummock_001"
-write_conflict_detection_enabled = true
-block_cache_capacity_mb = 256
-meta_cache_capacity_mb = 64
-disable_remote_compactor = false
-enable_local_spill = true
-local_object_store = "tempdisk"`
+	risingWaveConfigVolume = "risingwave-config"
+	risingWaveConfigMapKey = "risingwave.toml"
 
 	envMinIOUsername = "MINIO_USERNAME"
 	envMinIOPassword = "MINIO_PASSWORD"
@@ -542,7 +523,7 @@ func (f *RisingWaveObjectFactory) NewConfigConfigMap(val string) *corev1.ConfigM
 	risingwaveConfigConfigMap := &corev1.ConfigMap{
 		ObjectMeta: f.componentObjectMeta(consts.ComponentConfig, false), // not synced
 		Data: map[string]string{
-			risingWaveConfigMapKey: nonZeroOrDefault(val, risingWaveConfigTemplate),
+			risingWaveConfigMapKey: nonZeroOrDefault(val, ""),
 		},
 	}
 	return mustSetControllerReference(f.risingwave, risingwaveConfigConfigMap, f.scheme)

@@ -156,12 +156,8 @@ copy-local-certs:
 run-local: manifests generate fmt vet lint install-local
 	go run cmd/manager/manager.go -zap-time-encoding rfc3339
 
-e2e-test: generate-test-yaml vendor
-	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=true -t docker.io/risingwavelabs/risingwave-operator:dev . --load
-	e2e/e2e.sh
-
 build-e2e-image:
-	docker build -f docker/Dockerfile --build-arg USE_VENDOR=true -t docker.io/risingwavelabs/risingwave-operator:dev . --output=type=docker
+	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=true -t docker.io/risingwavelabs/risingwave-operator:dev . --load
 
 e2e-test: generate-test-yaml vendor build-e2e-image
 	e2e/e2e.sh

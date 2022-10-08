@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-set -e
+set -ex
 
 BASEDIR=$(dirname "$0")
 NAME_SPACE="plugin-e2e"

@@ -20,6 +20,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -50,6 +51,30 @@ func Test_If(t *testing.T) {
 			if tc.expect != If(tc.condition, tc.action) {
 				t.Fail()
 			}
+		})
+	}
+}
+
+func Test_IfElse(t *testing.T) {
+	a := NewAction("a", func(ctx context.Context) (ctrl.Result, error) { return NoRequeue() })
+	b := NewAction("b", func(ctx context.Context) (ctrl.Result, error) { return NoRequeue() })
+	testcases := map[string]struct {
+		condition bool
+		expect    Action
+	}{
+		"if-true": {
+			condition: true,
+			expect:    a,
+		},
+		"if-false": {
+			condition: false,
+			expect:    b,
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.expect.Description(), IfElse(tc.condition, a, b).Description())
 		})
 	}
 }

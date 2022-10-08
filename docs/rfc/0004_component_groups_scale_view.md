@@ -4,13 +4,15 @@
 | Status             | In-progress                                             |
 | Date               | 2022-09-05                                              |
 | Authors            | arkbriar                                                |
-| RFC PR #           |                                                         |
+| RFC PR #           | #204                                                    |
 | Implementation PR #|                                                         |
 |                    |                                                         |
 
 # **Summary**
 
-The RFC aims to provide a new CR to support the [scale subresource](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#scale-subresource) over groups of some user-specified component of
+The RFC aims to provide a new CR to support
+the [scale subresource](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#scale-subresource)
+over groups of some user-specified component of
 the RisingWave resource. With that, the users can benefit from the scale subresource and apply any tools that have such
 requirement. For example, the horizontal auto-scaling service (HPA/[KEDA](https://github.com/kedacore/keda)) will work
 after this is implemented.
@@ -72,39 +74,37 @@ spec:
   targetRef:
     name: hello             # Name of the RisingWave object, in the same namespace.
     component: frontend     # One of meta, frontend, compute, and compactor.
+    uid: ''                 # UID of the target object. Should be set by the mutating webhook.
   replicas: 10              # Target replicas. It will be synced from the RisingWave object when the controller grabs the lock.
-  # Strict verification mode on replicas:
-  #   1. If enabled, the validating webhook will reject any invalid changes on .spec.replicas (e.g., exceeding the min/max range)
-  #   2. If disabled, the mutating webhook will adjust the .spec.replicas to be enclosed by the range.
-  # Serialized label selector. Would be set by the webhook.
-  strict: false
+  # Label selector in string. Should be updated by the mutating webhook.
   labelSelector: "risingwave/name=hello,risingwave/component=frontend,risingwave/group in (enduring,spot)"
   scalePolicy: # An array of groups and the policies for scale, 
   # optional and empty means the default group with the default policy.
-  # The order here indicates the priorities.
+  # Groups shouldn't be changed.
 
   - group: 'enduring'       # Target group name
     # 0-10, optional. The groups will be sorted by the priority and the current replicas. 
     # The higher it is, the more replicas of the target group will be considered kept, i.e. scale out first, scale in last.
     priority: 1
-    replicas: 2             # Controlled field, maintained by the mutating webhook. Current desired replicas.
-    constraints:
-      min: 1              # >= 0, optional, default is 0
-      max: 2              # >= minimum, optional, default is 1000 (indicates infinite because 1000 Pods are many enough to be considered as infinite).
+    maxReplicas: 2 # optional field, limit of the replicas
   - group: 'spot'
     priority: 0
-    replicas: 3
 status:
-  targetRef: # It has value only if the scale view has grabbed the lock on the target object.
-    uid:                    # UID of the target object.           
   replicas: 10             # Current replicas of target groups. Maintained by the controller.
 ```
+
+### Scale Subresource and Webhooks
+
+Updating on the scale subresource won't trigger the mutating or validating webhook of `RisingWaveScaleView`, thus we couldn't add any 
+processing or restrictions on the `.spec.replicas` field. Thus, 
+- There must be at least one group without `maxReplicas` limit, and won't be any limitation of `minReplicas`
+- The replicas splitting is performed by the controller rather than the webhook, with a stable algorithm
+- Updating of the RisingWave's replicas is performed with the split replicas record in the locks, under `.status.scaleViews`
 
 ### Priority and Replica Constraints
 
 When updating the scale subresource, it's updating the `.spec.replicas` field above. The mutating webhook will then work
 to distribute the replicas of `.spec.replicas` to the replicas under the `scalePolicy`, following the rules below:
-
 - The replicas in each group must be confined within the constraints.
 - The groups with higher priorities always consume replicas first until it reaches the max boundary. E.g.,
   when `.spec.replicas` is 4, the 'enduring' group (with priority 1, larger than the 'spot' group's) will have 2 (which
@@ -123,10 +123,10 @@ metadata:
 status:
   scaleViews: # An array of scale view summaries. Maintained by the RisingWaveScaleView controller.
   - name: hello-frontend-scale-view # Name of the RisingWaveScaleView object.
-    uid:                            # UID of the object.
+    uid: ''                         # UID of the object.
     component: frontend             # Component.
     generation: 10                  # Generation of the RisingWaveScaleView object. It indicates the locked version.
-    groupReplicas: # Group and their desired replicas. Once a group is owned by some scale view, then another scale view
+    groupLocks: # Group and their desired replicas. Once a group is owned by some scale view, then another scale view
     # would not be able to grab the lock again. It's achieved with the atomic update.
     # If a group and its desired replicas is listed below, then any changes to the target group's replicas will be rejected
     # unless it equals to the replicas here (hence locks that group). This should be guaranteed by the webhook. 
@@ -139,7 +139,9 @@ status:
 Validating webhook:
 
 - If the webhook observes scaleViews field, it must check the replicas field of each target groups and reject any change
-  not matches.
+  not matches, which is to say: if a group is locked, then the replicas of it must be either:
+  - not changed (identical to the older value)
+  - equals to the value in the lock
 
 This is a compatible change and should not affect the RisingWave's workflow.
 
@@ -156,7 +158,7 @@ This is a compatible change and should not affect the RisingWave's workflow.
 Case 1. Multi-AZ frontend and balanced scale
 
 ```yaml
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
   name: multi-az
@@ -209,7 +211,7 @@ template:
       operator: Exists
       effect: NoSchedule
 ---
-apiVersion: risingwave.singularity-data.com/v1alpha1
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
   name: spot-c
@@ -235,8 +237,7 @@ spec:
   scalePolicy:
   - group: normal
     priority: 1
-    constraints:
-      max: 2
+    maxReplicas: 2
   - group: spot
 ```
 

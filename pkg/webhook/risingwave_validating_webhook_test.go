@@ -21,19 +21,22 @@ import (
 	"fmt"
 	"testing"
 
-	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
-
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 
-	"github.com/stretchr/testify/assert"
-
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
+	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
+
+func Test_RisingWaveValidatingWebhook_ValidateDelete(t *testing.T) {
+	assert.Nil(t, NewRisingWaveValidatingWebhook().ValidateDelete(context.Background(), &risingwavev1alpha1.RisingWave{}))
+}
 
 func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 	testcases := map[string]struct {
@@ -625,4 +628,136 @@ func Test_MetricsValidatingWebhookError(t *testing.T) {
 	assert.Equal(t, 1, metrics.GetWebhookRequestCount(errorWebhook.GetType(), risingwave), "Request metric")
 	assert.Equal(t, 0, metrics.GetWebhookRequestPassCount(errorWebhook.GetType(), risingwave), "Pass metric")
 	metrics.ResetMetrics()
+}
+
+func Test_RisingWaveValidatingWebhook_ValidateUpdate_ScaleViews(t *testing.T) {
+	testcases := map[string]struct {
+		origin      *risingwavev1alpha1.RisingWave
+		mutate      func(wave *risingwavev1alpha1.RisingWave)
+		statusPatch func(status *risingwavev1alpha1.RisingWaveStatus)
+		pass        bool
+	}{
+		"empty-scale-views": {
+			mutate: func(wave *risingwavev1alpha1.RisingWave) {
+				wave.Spec.Global.Replicas.Frontend++
+			},
+			pass: true,
+		},
+		"scale-views-on-frontend": {
+			mutate: func(wave *risingwavev1alpha1.RisingWave) {
+				wave.Spec.Global.Replicas.Frontend++
+			},
+			statusPatch: func(status *risingwavev1alpha1.RisingWaveStatus) {
+				status.ScaleViews = append(status.ScaleViews, risingwavev1alpha1.RisingWaveScaleViewLock{
+					Name:       "x",
+					UID:        "1",
+					Component:  consts.ComponentFrontend,
+					Generation: 1,
+					GroupLocks: []risingwavev1alpha1.RisingWaveScaleViewLockGroupLock{
+						{
+							Name:     "",
+							Replicas: 0,
+						},
+					},
+				})
+			},
+			pass: false,
+		},
+		"scale-views-on-compactor-but-update-frontend": {
+			mutate: func(wave *risingwavev1alpha1.RisingWave) {
+				wave.Spec.Global.Replicas.Frontend++
+			},
+			statusPatch: func(status *risingwavev1alpha1.RisingWaveStatus) {
+				status.ScaleViews = append(status.ScaleViews, risingwavev1alpha1.RisingWaveScaleViewLock{
+					Name:       "x",
+					UID:        "1",
+					Component:  consts.ComponentCompactor,
+					Generation: 1,
+					GroupLocks: []risingwavev1alpha1.RisingWaveScaleViewLockGroupLock{
+						{
+							Name:     "",
+							Replicas: 0,
+						},
+					},
+				})
+			},
+			pass: true,
+		},
+		"delete-locked-group": {
+			origin: testutils.FakeRisingWaveComponentOnly(),
+			mutate: func(wave *risingwavev1alpha1.RisingWave) {
+				wave.Spec.Components.Frontend.Groups = nil
+			},
+			statusPatch: func(status *risingwavev1alpha1.RisingWaveStatus) {
+				status.ScaleViews = append(status.ScaleViews, risingwavev1alpha1.RisingWaveScaleViewLock{
+					Name:       "x",
+					UID:        "1",
+					Component:  consts.ComponentFrontend,
+					Generation: 1,
+					GroupLocks: []risingwavev1alpha1.RisingWaveScaleViewLockGroupLock{
+						{
+							Name:     testutils.GetGroupName(0),
+							Replicas: 0,
+						},
+					},
+				})
+			},
+			pass: false,
+		},
+		"multiple-locked-groups": {
+			origin: testutils.FakeRisingWaveComponentOnly(),
+			mutate: func(wave *risingwavev1alpha1.RisingWave) {
+				wave.Spec.Components.Frontend.Groups[0].Replicas = 2
+			},
+			statusPatch: func(status *risingwavev1alpha1.RisingWaveStatus) {
+				status.ScaleViews = append(status.ScaleViews, risingwavev1alpha1.RisingWaveScaleViewLock{
+					Name:       "x",
+					UID:        "1",
+					Component:  consts.ComponentFrontend,
+					Generation: 1,
+					GroupLocks: []risingwavev1alpha1.RisingWaveScaleViewLockGroupLock{
+						{
+							Name:     testutils.GetGroupName(0),
+							Replicas: 2,
+						},
+					},
+				}, risingwavev1alpha1.RisingWaveScaleViewLock{
+					Name:       "x",
+					UID:        "1",
+					Component:  consts.ComponentCompactor,
+					Generation: 1,
+					GroupLocks: []risingwavev1alpha1.RisingWaveScaleViewLockGroupLock{
+						{
+							Name:     testutils.GetGroupName(0),
+							Replicas: 1,
+						},
+					},
+				})
+			},
+			pass: true,
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			obj := tc.origin
+			if obj == nil {
+				obj = testutils.FakeRisingWave()
+			}
+
+			if tc.statusPatch != nil {
+				tc.statusPatch(&obj.Status)
+			}
+
+			newObj := obj.DeepCopy()
+			tc.mutate(newObj)
+
+			err := NewRisingWaveValidatingWebhook().ValidateUpdate(context.Background(), obj, newObj)
+			if tc.pass {
+				assert.Nil(t, err, "unexpected error")
+			} else {
+				assert.NotNil(t, err, "should be nil")
+			}
+		})
+	}
 }

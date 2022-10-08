@@ -93,6 +93,10 @@ generate-manager: ctrlkit-gen goimports-reviser ## Generate codes of controller 
 	@mv pkg/manager/risingwave_controller_manager.go pkg/manager/risingwave_controller_manager_generated.go
 	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_controller_manager_generated.go -local "github.com/risingwavelabs/risingwave-operator"
 
+	@$(CTRLKIT-GEN) -o pkg/manager/ -p "github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit" -b hack/boilerplate.go.txt pkg/manager/risingwave_scale_view_controller_manager.cm
+	@mv pkg/manager/risingwave_scale_view_controller_manager.go pkg/manager/risingwave_scale_view_controller_manager_generated.go
+	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_scale_view_controller_manager_generated.go -local "github.com/risingwavelabs/risingwave-operator"
+
 fmt: ## Run go fmt against code.
 	@go fmt ./...
 
@@ -142,6 +146,9 @@ build-local-certs:
 install-local: kustomize manifests
 	$(KUSTOMIZE) build config/local | kubectl apply -f - >/dev/null
 
+uninstall-local: kustomize manifests
+	$(KUSTOMIZE) build config/local | kubectl delete -f - >/dev/null
+
 copy-local-certs:
 	mkdir -p ${TMPDIR}/k8s-webhook-server/serving-certs
 	cp -R config/local/certs/* ${TMPDIR}/k8s-webhook-server/serving-certs
@@ -149,8 +156,10 @@ copy-local-certs:
 run-local: manifests generate fmt vet lint install-local
 	go run cmd/manager/manager.go -zap-time-encoding rfc3339
 
-e2e-test: generate-test-yaml vendor
+build-e2e-image:
 	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=true -t docker.io/risingwavelabs/risingwave-operator:dev . --load
+
+e2e-test: generate-test-yaml vendor build-e2e-image
 	e2e/e2e.sh
 
 e2e-plugin:

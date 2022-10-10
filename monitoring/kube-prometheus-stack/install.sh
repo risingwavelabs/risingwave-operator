@@ -26,6 +26,7 @@ usage() {
         echo "-r    Enable prometheus remote write (AWS). Requires that -k and -s are set"
         echo "-k    AWS access key"
         echo "-s    AWS secret key"
+        echo "-d    Dry-run. Print what would be done without executing"
     } 1>&2
 
     exit 1
@@ -34,8 +35,9 @@ usage() {
 # TODO: Is it secure to pass the secret key via the command line? Or should we pass this via an env var?
 
 r=false
+dry=false
 
-while getopts ":k:s:r" o; do
+while getopts ":k:s:rhd" o; do
     case "${o}" in
         k)
             k=${OPTARG}
@@ -49,17 +51,15 @@ while getopts ":k:s:r" o; do
         h)
             usage
             ;;
+        d)
+            dry=true
+            ;;
         *)
             usage
             ;;
     esac
 done
 shift $((OPTIND-1))
-
-echo "k = $k"
-echo "s = $s"
-echo "r = $r"
-exit 
 
 
 # We require credentials, if we use prometheus remote write
@@ -69,8 +69,10 @@ if [[ $r = true ]]; then
     fi
 fi
 
+dryParam=""
 if [[ $dry = true ]]; then 
-    echo "Dry-run modus activated"
+    echo "Dry-run modus activated in $0"
+    dryParam="--dry-run"
 fi
 
 _SCRIPT_BASEDIR=$(dirname "$0")
@@ -85,15 +87,22 @@ fi
 helm --namespace monitoring upgrade --install --create-namespace prometheus prometheus-community/kube-prometheus-stack \
   -f "${_SCRIPT_BASEDIR}"/kube-prometheus-stack.yaml \
   -f "${_SCRIPT_BASEDIR}"/${_DATA_SOURCE} \
-  --dry-run 
+  $dryParam
 
 # Create secret if required
 # TODO: Maybe this needs to be before helm upgrade,
 # but then we need to check if the monitoring ns exists first
 
+dryParam="none"
+if [[ $dry = true ]]; then 
+    dryParam="client"
+fi
+
 # TODO: remove dry run
 # Create secret with credentials
-kubectl create secret generic aws-prometheus-credentials --from-literal AccessKey=${k} --from-literal SecretAccessKey=${s} --dry-run='client'
+kubectl create secret generic aws-prometheus-credentials \
+  --from-literal AccessKey=${k} --from-literal SecretAccessKey=${s} \
+  --dry-run=$dryParam
 
 
 

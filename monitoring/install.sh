@@ -39,7 +39,7 @@ usage() {
 r=false
 dry=false
 
-while getopts ":k:s:rd" o; do
+while getopts ":k:s:rdh" o; do
     case "${o}" in
         k)
             k=${OPTARG}
@@ -71,7 +71,7 @@ if [[ $r = true ]]; then
 fi
 
 if [[ $dry = true ]]; then 
-    echo "Dry-run modus activated"
+    echo "Dry-run modus activated in $0"
     echo "Would add helm repositories if not in dry-mode"
 fi
 

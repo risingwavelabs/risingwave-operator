@@ -217,23 +217,17 @@ Before getting started, you need to ensure that you have an account which has th
 
 Follow the instructions below to set up the remote write:
 
-1. Create a Secret to store the AWS credentials.
-
-```shell 
-kubectl create secret generic aws-prometheus-credentials --from-literal AccessKey=${ACCESS_KEY} --from-literal SecretAccessKey=${SECRET_ACCESS_KEY}
-```
-
-2. Copy the [prometheus-remote-write-aws.yaml](./monitoring/kube-prometheus-stack/prometheus-remote-write-aws.yaml) file and replace the values of the these variables:
+1. Copy the [prometheus-remote-write-aws.yaml](./monitoring/kube-prometheus-stack/prometheus-remote-write-aws.yaml) file and replace the values of the these variables:
   - `${KUBERNETES_NAME}`: the name of the Kubernetes, e.g., `local-dev`. You can also add `externalLabels` yourself.
   - `${AWS_REGION}`: the region of the AWS Prometheus service, e.g., `ap-southeast-1`
   - `${WORKSPACE_ID}`: the workspace ID, e.g., `ws-12345678-abcd-1234-abcd-123456789012`
 
-3. Install or upgrade the `kube-prometheus-stack`.
+2. Use the install script 
 
-```shell
-helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
-  -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/monitoring/kube-prometheus-stack/kube-prometheus-stack.yaml \
-  -f prometheus-remote-write-aws.yaml
+```sh 
+# You can use dry run first with 
+# ./monitoring/install.sh -d -r -k <aws_access_key> -s <aws_secret_key>
+./monitoring/install.sh -r -k <aws_access_key> -s <aws_secret_key>
 ```
 
 Now, you can check the Prometheus logs to see if the remote write works, with the following commands:

@@ -18,22 +18,21 @@
 
 usage() {
     {
-        echo "This script installs the monitoring stack"
+        echo "This script installs the entire monitoring stack"
         echo ""
         echo "Usage:"
         echo "$0 [-h] [-r] [-d] [-k <aws_access_key>] [-s <aws_secret_key>]"
         echo ""
-        echo "-h    Show this help message"
-        echo "-r    Enable prometheus remote write (AWS). Requires that -k and -s are set"
-        echo "-k    AWS access key"
-        echo "-s    AWS secret key"
         echo "-d    Dry-run. Print what would be done without executing"
+        echo "-h    Show this help message"
+        echo "-k    AWS access key"
+        echo "-r    Enable prometheus remote write (AWS). Requires that -k and -s are set"
+        echo "-s    AWS secret key"
     } 1>&2
 
     exit 1
 }
 
-# TODO: add dryrun param
 # TODO: Is it secure to pass the secret key via the command line? Or should we pass this via an env var?
 
 r=false
@@ -72,7 +71,7 @@ fi
 
 if [[ $dry = true ]]; then 
     echo "Dry-run modus activated in $0"
-    echo "Would add helm repositories if not in dry-mode"
+    echo "Adding helm repositories"
 fi
 
 _SCRIPT_BASEDIR=$(dirname "$0")

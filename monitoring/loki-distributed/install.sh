@@ -22,8 +22,8 @@ usage() {
         echo "Usage:"
         echo "$0 [-h] [-d]"
         echo ""
-        echo "-h    Show this help message"
         echo "-d    Dry-run. Print what would be done without executing"
+        echo "-h    Show this help message"
     } 1>&2
 
     exit 1

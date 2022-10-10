@@ -22,11 +22,11 @@ usage() {
         echo "Usage:"
         echo "$0 [-r] [-k <aws_access_key>] [-s <aws_secret_key>]"
         echo ""
-        echo "-h    Show this help message"
-        echo "-r    Enable prometheus remote write (AWS). Requires that -k and -s are set"
-        echo "-k    AWS access key"
-        echo "-s    AWS secret key"
         echo "-d    Dry-run. Print what would be done without executing"
+        echo "-h    Show this help message"
+        echo "-k    AWS access key"
+        echo "-r    Enable prometheus remote write (AWS). Requires that -k and -s are set"
+        echo "-s    AWS secret key"
     } 1>&2
 
     exit 1
@@ -77,13 +77,14 @@ fi
 
 _SCRIPT_BASEDIR=$(dirname "$0")
 
-# Choose local or remote datasource  
+msg="Installing prometheus setup with local source" 
 _DATA_SOURCE=grafana-loki-data-source.yaml
 if [[ $r = true ]]; then
-  _DATA_SOURCE=prometheus-remote-write-aws.yaml
+    msg="Installing prometheus setup with remote source" 
+    _DATA_SOURCE=prometheus-remote-write-aws.yaml
 fi
+echo $msg
 
-# TODO: remove dry run
 helm --namespace monitoring upgrade --install --create-namespace prometheus prometheus-community/kube-prometheus-stack \
   -f "${_SCRIPT_BASEDIR}"/kube-prometheus-stack.yaml \
   -f "${_SCRIPT_BASEDIR}"/${_DATA_SOURCE} \
@@ -98,7 +99,6 @@ if [[ $dry = true ]]; then
     dryParam="client"
 fi
 
-# TODO: remove dry run
 # Create secret with credentials
 kubectl create secret generic aws-prometheus-credentials \
   --from-literal AccessKey=${k} --from-literal SecretAccessKey=${s} \

@@ -21,7 +21,7 @@ usage() {
         echo "This script installs the entire monitoring stack"
         echo ""
         echo "Usage:"
-        echo "$0 [-h] [-r] [-d] [-k <aws_access_key>] [-s <aws_secret_key>]"
+        echo "$0 [-h] [-d] [-r] [-k <aws_access_key>] [-s <aws_secret_key>]"
         echo ""
         echo "-d    Dry-run. Print what would be done without executing"
         echo "-h    Show this help message"

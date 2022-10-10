@@ -20,7 +20,7 @@ usage() {
         echo "This script installs the kube-prometheus-stack stack"
         echo ""
         echo "Usage:"
-        echo "$0 [-r] [-k <aws_access_key>] [-s <aws_secret_key>]"
+        echo "$0 [-h] [-d] [-r] [-k <aws_access_key>] [-s <aws_secret_key>]"
         echo ""
         echo "-d    Dry-run. Print what would be done without executing"
         echo "-h    Show this help message"

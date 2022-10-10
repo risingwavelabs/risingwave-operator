@@ -23,6 +23,7 @@ usage() {
         echo "Usage:"
         echo "$0 [-r] [-k <aws_access_key>] [-s <aws_secret_key>]"
         echo ""
+        echo "-h    Show this help message"
         echo "-r    Enable prometheus remote write (AWS). Requires that -k and -s are set"
         echo "-k    AWS access key"
         echo "-s    AWS secret key"
@@ -31,6 +32,8 @@ usage() {
     exit 1
 }
 
+# TODO: add dryrun param
+# TODO: Is it secure to pass the secret key via the command line? Or should we pass this via an env var?
 
 r=false
 
@@ -45,16 +48,15 @@ while getopts ":k:s:r" o; do
         r)
             r=true
             ;;
+        h)
+            usage
+            ;;
         *)
             usage
             ;;
     esac
 done
 shift $((OPTIND-1))
-
-echo "k = ${k}"
-echo "s = ${s}"
-echo "r = ${r}"
 
 # We require credentials, if we use prometheus remote write
 if [[ $r = true ]]; then
@@ -63,25 +65,30 @@ if [[ $r = true ]]; then
     fi
 fi
 
-# TODO use k and s if r is set
-# pass to kube-prometheus-stack/install.sh
-exit 1
 
 _SCRIPT_BASEDIR=$(dirname "$0")
 
 cd "${_SCRIPT_BASEDIR}" || exit
 
+# TODO: Do not do this if dry run
 # Set up the helm repos and update
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo update
+# helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 
+# helm repo add grafana https://grafana.github.io/helm-charts
+# helm repo update
 
-# Install the `kube-prometheus-stack`
-./kube-prometheus-stack/install.sh # pass parameters here
+if [[ $r = true ]]; then
+    # Install the `kube-prometheus-stack` with remote write
+    ./kube-prometheus-stack/install.sh -r -s $s -k $k
+else
+    # Install the `kube-prometheus-stack` locally
+    ./kube-prometheus-stack/install.sh
+fi
+
+exit # TODO: remove this line
+# TODO: Add dry run flags to other install scripts
 
 # Install the `loki-distributed`
 ./loki-distributed/install.sh
 
 # Install the `promtail`
-
 ./promtail/install.sh

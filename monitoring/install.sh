@@ -99,11 +99,8 @@ if [[ $r = true ]]; then
 fi 
 ./kube-prometheus-stack/install.sh $rParams $dryParam
 
-exit # TODO: remove this line
-# TODO: Add dry run flags to other install scripts
-
 # Install the `loki-distributed`
-./loki-distributed/install.sh
+./loki-distributed/install.sh $dryParam
 
 # Install the `promtail`
-./promtail/install.sh
+./promtail/install.sh $dryParam

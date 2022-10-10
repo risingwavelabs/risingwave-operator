@@ -15,6 +15,43 @@
 # limitations under the License.
 #
 
+usage() {
+    {
+        echo "This script installs the promtail stack stack"
+        echo ""
+        echo "Usage:"
+        echo "$0 [-h] [-d]"
+        echo ""
+        echo "-h    Show this help message"
+        echo "-d    Dry-run. Print what would be done without executing"
+    } 1>&2
+
+    exit 1
+}
+
+dry=false
+
+while getopts ":dh" o; do
+    case "${o}" in
+        d)
+            dry=true
+            ;;
+        h)
+            usage
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+dryParam=""
+if [[ $dry = true ]]; then 
+    echo "Dry-run modus activated in $0"
+    dryParam="--dry-run"
+fi
+
 _SCRIPT_BASEDIR=$(dirname "$0")
 
-helm --namespace monitoring upgrade --install --create-namespace promtail grafana/promtail -f "${_SCRIPT_BASEDIR}"/loki-promtail-clients.yaml
+helm --namespace monitoring upgrade --install --create-namespace promtail grafana/promtail -f "${_SCRIPT_BASEDIR}"/loki-promtail-clients.yaml $dryParam

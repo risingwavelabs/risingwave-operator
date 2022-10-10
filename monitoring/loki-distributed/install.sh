@@ -15,4 +15,41 @@
 # limitations under the License.
 #
 
-helm --namespace monitoring upgrade --install --create-namespace loki grafana/loki-distributed
+usage() {
+    {
+        echo "This script installs the loki stack stack"
+        echo ""
+        echo "Usage:"
+        echo "$0 [-h] [-d]"
+        echo ""
+        echo "-h    Show this help message"
+        echo "-d    Dry-run. Print what would be done without executing"
+    } 1>&2
+
+    exit 1
+}
+
+dry=false
+
+while getopts ":dh" o; do
+    case "${o}" in
+        d)
+            dry=true
+            ;;
+        h)
+            usage
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+dryParam=""
+if [[ $dry = true ]]; then 
+    echo "Dry-run modus activated in $0"
+    dryParam="--dry-run"
+fi
+
+helm --namespace monitoring upgrade --install --create-namespace loki grafana/loki-distributed $dryParam

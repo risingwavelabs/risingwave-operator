@@ -20,11 +20,22 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/pointer"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
+
+func Test_RisingWavePodTemplateValidatingWebhook_ValidateCreate(t *testing.T) {
+	webhook := NewRisingWavePodTemplateValidatingWebhook()
+	assert.Nil(t, webhook.ValidateCreate(context.Background(), &risingwavev1alpha1.RisingWavePodTemplate{}))
+}
+
+func Test_RisingWavePodTemplateValidatingWebhook_ValidateDelete(t *testing.T) {
+	webhook := NewRisingWavePodTemplateValidatingWebhook()
+	assert.Nil(t, webhook.ValidateDelete(context.Background(), &risingwavev1alpha1.RisingWavePodTemplate{}))
+}
 
 func Test_RisingWavePodTemplateValidatingWebhook_ValidateUpdate(t *testing.T) {
 	template1 := &risingwavev1alpha1.RisingWavePodTemplate{

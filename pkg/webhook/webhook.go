@@ -24,7 +24,7 @@ import (
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
-// Setup webhooks with manager.
+// SetupWebhooksWithManager set up the webhooks.
 func SetupWebhooksWithManager(mgr ctrl.Manager) error {
 	if err := ctrl.NewWebhookManagedBy(mgr).
 		For(&risingwavev1alpha1.RisingWavePodTemplate{}).
@@ -40,6 +40,14 @@ func SetupWebhooksWithManager(mgr ctrl.Manager) error {
 		WithValidator(NewRisingWaveValidatingWebhook()).
 		Complete(); err != nil {
 		return fmt.Errorf("unable to setup webhooks for risingwave: %w", err)
+	}
+
+	if err := ctrl.NewWebhookManagedBy(mgr).
+		For(&risingwavev1alpha1.RisingWaveScaleView{}).
+		WithDefaulter(NewRisingWaveScaleViewMutatingWebhook(mgr.GetAPIReader())).
+		WithValidator(NewRisingWaveScaleViewValidatingWebhook(mgr.GetClient())).
+		Complete(); err != nil {
+		return fmt.Errorf("unable to setup webhooks for risingwave scale view: %w", err)
 	}
 
 	return nil

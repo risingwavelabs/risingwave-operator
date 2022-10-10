@@ -17,6 +17,8 @@
 package testutils
 
 import (
+	"fmt"
+
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -24,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/utils/pointer"
@@ -32,14 +35,14 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
 
-// Schema for test only.
-var Schema = runtime.NewScheme()
+// Scheme for test only.
+var Scheme = runtime.NewScheme()
 
 func init() {
-	_ = clientgoscheme.AddToScheme(Schema)
-	_ = risingwavev1alpha1.AddToScheme(Schema)
-	_ = apiextensionsv1.AddToScheme(Schema)
-	_ = prometheusv1.AddToScheme(Schema)
+	_ = clientgoscheme.AddToScheme(Scheme)
+	_ = risingwavev1alpha1.AddToScheme(Scheme)
+	_ = apiextensionsv1.AddToScheme(Scheme)
+	_ = prometheusv1.AddToScheme(Scheme)
 }
 
 // Fake RisingWave.
@@ -190,13 +193,17 @@ func FakeRisingWave() *risingwavev1alpha1.RisingWave {
 	return fakeRisingWave.DeepCopy()
 }
 
+func GetGroupName(index int) string {
+	return fmt.Sprintf("group-%d", index)
+}
+
 var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 	TypeMeta: metav1.TypeMeta{
 		Kind:       "RisingWave",
 		APIVersion: "risingwave.risingwavelabs.com/v1alpha1",
 	},
 	ObjectMeta: metav1.ObjectMeta{
-		Name:       "fake-risingwave",
+		Name:       "fake-risingwave-component-only",
 		Namespace:  "default",
 		Generation: 2,
 		UID:        uuid.NewUUID(),
@@ -242,7 +249,7 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				},
 				Groups: []risingwavev1alpha1.RisingWaveComponentGroup{
 					{
-						Name:     "group1",
+						Name:     GetGroupName(0),
 						Replicas: 1,
 					},
 				},
@@ -254,7 +261,7 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				},
 				Groups: []risingwavev1alpha1.RisingWaveComponentGroup{
 					{
-						Name:     "group1",
+						Name:     GetGroupName(0),
 						Replicas: 1,
 					},
 				},
@@ -266,7 +273,7 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				},
 				Groups: []risingwavev1alpha1.RisingWaveComputeGroup{
 					{
-						Name:     "group1",
+						Name:     GetGroupName(0),
 						Replicas: 1,
 					},
 				},
@@ -278,7 +285,7 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				},
 				Groups: []risingwavev1alpha1.RisingWaveComponentGroup{
 					{
-						Name:     "group1",
+						Name:     GetGroupName(0),
 						Replicas: 1,
 					},
 				},
@@ -308,7 +315,7 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				Running: 1,
 				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
 					{
-						Name:    "group1",
+						Name:    GetGroupName(0),
 						Target:  1,
 						Running: 1,
 					},
@@ -319,7 +326,7 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				Running: 1,
 				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
 					{
-						Name:    "group1",
+						Name:    GetGroupName(0),
 						Target:  1,
 						Running: 1,
 					},
@@ -330,7 +337,7 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				Running: 1,
 				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
 					{
-						Name:    "group1",
+						Name:    GetGroupName(0),
 						Target:  1,
 						Running: 1,
 					},
@@ -341,7 +348,7 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				Running: 1,
 				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
 					{
-						Name:    "group1",
+						Name:    GetGroupName(0),
 						Target:  1,
 						Running: 1,
 					},
@@ -357,4 +364,35 @@ func FakeRisingWaveComponentOnly() *risingwavev1alpha1.RisingWave {
 
 func DeepEqual[T any](x, y T) bool {
 	return equality.Semantic.DeepEqual(x, y)
+}
+
+func NewFakeRisingWaveScaleViewFor(risingwave *risingwavev1alpha1.RisingWave, component string, mutates ...func(*risingwavev1alpha1.RisingWave, *risingwavev1alpha1.RisingWaveScaleView)) *risingwavev1alpha1.RisingWaveScaleView {
+	r := &risingwavev1alpha1.RisingWaveScaleView{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "RisingWaveScaleView",
+			APIVersion: "risingwave.risingwavelabs.com/v1alpha1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:       "fake-risingwave-scaleview-" + rand.String(4),
+			Namespace:  "default",
+			Generation: 1,
+			UID:        uuid.NewUUID(),
+		},
+		Spec: risingwavev1alpha1.RisingWaveScaleViewSpec{
+			TargetRef: risingwavev1alpha1.RisingWaveScaleViewTargetRef{
+				Name:      risingwave.Name,
+				Component: component,
+			},
+		},
+	}
+	for _, m := range mutates {
+		m(risingwave, r)
+	}
+	return r
+}
+
+func FakeRisingWaveWithMutate(mutate func(wave *risingwavev1alpha1.RisingWave)) *risingwavev1alpha1.RisingWave {
+	r := FakeRisingWave()
+	mutate(r)
+	return r
 }

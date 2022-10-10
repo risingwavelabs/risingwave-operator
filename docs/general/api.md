@@ -2503,6 +2503,464 @@ Defaults to 25%.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleView">RisingWaveScaleView
+</h3>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewSpec">
+RisingWaveScaleViewSpec
+</a>
+</em>
+</td>
+<td>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>targetRef</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewTargetRef">
+RisingWaveScaleViewTargetRef
+</a>
+</em>
+</td>
+<td>
+<p>Reference of the target RisingWave.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>replicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Desired replicas.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelSelector</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Serialized label selector. Would be set by the webhook.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scalePolicy</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewSpecScalePolicy">
+[]RisingWaveScaleViewSpecScalePolicy
+</a>
+</em>
+</td>
+<td>
+<p>An array of groups and the policies for scale, optional and empty means the default group with the default policy.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewStatus">
+RisingWaveScaleViewStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewLock">RisingWaveScaleViewLock
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>)
+</p>
+<div>
+<p>RisingWaveScaleViewLock is a lock for RisingWaveScaleViews.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the owned RisingWaveScaleView object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>uid</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/types#UID">
+k8s.io/apimachinery/pkg/types.UID
+</a>
+</em>
+</td>
+<td>
+<p>UID of the owned RisingWaveScaleView object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>component</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Component of the lock.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>generation</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<p>Generation of the lock.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>groupLocks</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewLockGroupLock">
+[]RisingWaveScaleViewLockGroupLock
+</a>
+</em>
+</td>
+<td>
+<p>Group locks.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewLockGroupLock">RisingWaveScaleViewLockGroupLock
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewLock">RisingWaveScaleViewLock</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Group name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>replicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Locked replica value.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewSpec">RisingWaveScaleViewSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleView">RisingWaveScaleView</a>)
+</p>
+<div>
+<p>RisingWaveScaleViewSpec is the spec of RisingWaveScaleView.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>targetRef</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewTargetRef">
+RisingWaveScaleViewTargetRef
+</a>
+</em>
+</td>
+<td>
+<p>Reference of the target RisingWave.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>replicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Desired replicas.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelSelector</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Serialized label selector. Would be set by the webhook.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scalePolicy</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewSpecScalePolicy">
+[]RisingWaveScaleViewSpecScalePolicy
+</a>
+</em>
+</td>
+<td>
+<p>An array of groups and the policies for scale, optional and empty means the default group with the default policy.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewSpecScalePolicy">RisingWaveScaleViewSpecScalePolicy
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewSpec">RisingWaveScaleViewSpec</a>)
+</p>
+<div>
+<p>RisingWaveScaleViewSpecScalePolicy is the scale policy of a group.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>group</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Group name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priority</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>0-10, optional. The groups will be sorted by the priority and the current replicas.
+The higher it is, the more replicas of the target group will be considered kept, i.e. scale out first, scale in last.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxReplicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>MaxReplicas is the limit of the replicas.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewSpecScalePolicyConstraints">RisingWaveScaleViewSpecScalePolicyConstraints
+</h3>
+<div>
+<p>RisingWaveScaleViewSpecScalePolicyConstraints is the constraints of replicas in scale policy.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>max</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Maximum value of the replicas.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewStatus">RisingWaveScaleViewStatus
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleView">RisingWaveScaleView</a>)
+</p>
+<div>
+<p>RisingWaveScaleViewStatus is the status of RisingWaveScaleView.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>replicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Running replicas.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>locked</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Lock status.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewTargetRef">RisingWaveScaleViewTargetRef
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewSpec">RisingWaveScaleViewSpec</a>)
+</p>
+<div>
+<p>RisingWaveScaleViewTargetRef is the reference of the target RisingWave.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the RisingWave object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>component</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Component name. Must be one of meta, frontend, compute, and compactor.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>uid</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/types#UID">
+k8s.io/apimachinery/pkg/types.UID
+</a>
+</em>
+</td>
+<td>
+<p>UID of the target RisingWave object. Should be set by the mutating webhook.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecuritySpec">RisingWaveSecuritySpec
 </h3>
 <p>
@@ -2685,6 +3143,19 @@ RisingWaveStoragesStatus
 </td>
 <td>
 <p>Status of the external storages.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scaleViews</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewLock">
+[]RisingWaveScaleViewLock
+</a>
+</em>
+</td>
+<td>
+<p>Scale view locks.</p>
 </td>
 </tr>
 </tbody>

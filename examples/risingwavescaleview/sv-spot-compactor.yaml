@@ -1,0 +1,37 @@
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: sv-spot
+spec:
+  storages:
+    meta:
+      memory: true
+    object:
+      memory: true
+  global:
+    image: ghcr.io/risingwavelabs/risingwave:latest
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+  components:
+    compactor:
+      groups:
+      - name: normal
+        replicas: 1
+      - name: spot
+        replicas: 0
+---
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWaveScaleView
+metadata:
+  name: sv-spot-compact
+spec:
+  targetRef:
+    name: sv-spot
+    component: compactor
+  scalePolicy:
+  - group: normal
+    priority: 1
+    maxReplicas: 2
+  - group: spot

@@ -114,7 +114,7 @@ func Test_RisingWaveController_New(t *testing.T) {
 	controller := &RisingWaveController{
 		name: "TestController",
 		Client: fake.NewClientBuilder().
-			WithScheme(testutils.Schema).
+			WithScheme(testutils.Scheme).
 			WithObjects(risingwave).
 			Build(),
 		ActionHookFactory: func() ctrlkit.ActionHook {
@@ -181,7 +181,7 @@ func Test_RisingWaveController_Deleted(t *testing.T) {
 	controller := &RisingWaveController{
 		name: "TestController",
 		Client: fake.NewClientBuilder().
-			WithScheme(testutils.Schema).
+			WithScheme(testutils.Scheme).
 			WithObjects(risingwave).
 			Build(),
 		ActionHookFactory: func() ctrlkit.ActionHook {
@@ -224,7 +224,7 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 	controller := &RisingWaveController{
 		name: "TestController",
 		Client: fake.NewClientBuilder().
-			WithScheme(testutils.Schema).
+			WithScheme(testutils.Scheme).
 			WithObjects(risingwave).
 			Build(),
 		Recorder: recorder,
@@ -274,7 +274,7 @@ func Test_RisingWaveController_Recovery(t *testing.T) {
 	controller := &RisingWaveController{
 		name: "TestController",
 		Client: fake.NewClientBuilder().
-			WithScheme(testutils.Schema).
+			WithScheme(testutils.Scheme).
 			WithObjects(risingwave).
 			Build(),
 		Recorder: recorder,

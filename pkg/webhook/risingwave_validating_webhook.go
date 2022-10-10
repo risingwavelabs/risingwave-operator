@@ -29,7 +29,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
-	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
+	"github.com/risingwavelabs/risingwave-operator/pkg/scaleview"
+	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
 type RisingWaveValidatingWebhook struct{}
@@ -228,6 +229,15 @@ func (v *RisingWaveValidatingWebhook) isObjectStoragesTheSame(oldObj, newObj *ri
 	return equality.Semantic.DeepEqual(oldObj.Spec.Storages.Object, newObj.Spec.Storages.Object)
 }
 
+func pathForGroupReplicas(obj *risingwavev1alpha1.RisingWave, component, group string) *field.Path {
+	if group == "" {
+		return field.NewPath("spec", "global", "replicas", component)
+	} else {
+		index, _ := scaleview.NewRisingWaveScaleViewHelper(obj, component).GetGroupIndex(group)
+		return field.NewPath("spec", "components", component, "groups").Index(index).Child("replicas")
+	}
+}
+
 func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWave) error {
 	gvk := oldObj.GroupVersionKind()
 
@@ -246,6 +256,46 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 			oldObj.Name,
 			field.Forbidden(field.NewPath("spec", "storages", "object"), "object storage must be kept consistent"),
 		)
+	}
+
+	// Validate the locks from scale views.
+	fieldErrs := field.ErrorList{}
+	for _, scaleView := range newObj.Status.ScaleViews {
+		oldHelper := scaleview.NewRisingWaveScaleViewHelper(oldObj, scaleView.Component)
+		newHelper := scaleview.NewRisingWaveScaleViewHelper(newObj, scaleView.Component)
+
+		unchangedCnt, updateCnt := 0, 0
+		for _, lock := range scaleView.GroupLocks {
+			// Ignore the existence of the old group and allow adding locked (but not exist) groups.
+			old, _ := oldHelper.ReadReplicas(lock.Name)
+
+			if cur, ok := newHelper.ReadReplicas(lock.Name); !ok {
+				fieldErrs = append(fieldErrs, field.Forbidden(
+					pathForGroupReplicas(oldObj, scaleView.Component, lock.Name),
+					"group is locked (delete)",
+				))
+			} else {
+				// Either
+				if cur == lock.Replicas {
+					updateCnt++
+				} else if cur == old {
+					unchangedCnt++
+				} else {
+					updateCnt++
+				}
+
+				if (unchangedCnt > 0 && cur != old) || (updateCnt > 0 && cur != lock.Replicas) {
+					fieldErrs = append(fieldErrs, field.Forbidden(
+						pathForGroupReplicas(newObj, scaleView.Component, lock.Name),
+						"group is locked (update)",
+					))
+				}
+			}
+		}
+	}
+
+	if len(fieldErrs) > 0 {
+		return apierrors.NewInvalid(gvk.GroupKind(), oldObj.Name, fieldErrs)
 	}
 
 	return nil

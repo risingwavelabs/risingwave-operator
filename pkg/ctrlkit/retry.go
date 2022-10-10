@@ -19,6 +19,7 @@ package ctrlkit
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -28,8 +29,9 @@ import (
 var _ internal.Decorator = &retryAction{}
 
 type retryAction struct {
-	inner Action
-	limit int
+	inner    Action
+	limit    int
+	interval time.Duration
 }
 
 func (act *retryAction) Inner() Action {
@@ -45,7 +47,11 @@ func (act *retryAction) Name() string {
 }
 
 func (act *retryAction) Description() string {
-	return fmt.Sprintf("Retry(%s, limit=%d)", act.inner.Description(), act.limit)
+	if act.interval == 0 {
+		return fmt.Sprintf("Retry(%s, limit=%d)", act.inner.Description(), act.limit)
+	} else {
+		return fmt.Sprintf("Retry(%s, limit=%d, interval=%s)", act.inner.Description(), act.limit, act.interval.String())
+	}
 }
 
 func (act *retryAction) Run(ctx context.Context) (result reconcile.Result, err error) {
@@ -53,6 +59,15 @@ func (act *retryAction) Run(ctx context.Context) (result reconcile.Result, err e
 		result, err = act.inner.Run(ctx)
 		if err == nil || err == ErrExit {
 			return
+		}
+
+		if act.interval > 0 && i < act.limit-1 {
+			select {
+			case <-ctx.Done():
+				return RequeueIfError(ctx.Err())
+			case <-time.After(act.interval):
+				continue
+			}
 		}
 	}
 	return
@@ -68,5 +83,20 @@ func Retry(limit int, act Action) Action {
 	return &retryAction{
 		limit: limit,
 		inner: act,
+	}
+}
+
+func RetryInterval(limit int, interval time.Duration, act Action) Action {
+	if limit < 1 {
+		panic("limit must be positive")
+	}
+	if interval <= 0 {
+		panic("interval must be positive")
+	}
+
+	return &retryAction{
+		limit:    limit,
+		inner:    act,
+		interval: interval,
 	}
 }

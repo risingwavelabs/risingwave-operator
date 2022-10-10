@@ -43,6 +43,25 @@ webhooks:
     resources:
     - risingwavepodtemplates
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-risingwave-risingwavelabs-com-v1alpha1-risingwavescaleview
+  failurePolicy: Fail
+  name: mrisingwavescaleview.kb.io
+  rules:
+  - apiGroups:
+    - risingwave.risingwavelabs.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    resources:
+    - risingwavescaleviews
+  sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
@@ -91,4 +110,25 @@ webhooks:
     - DELETE
     resources:
     - risingwavepodtemplates
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-risingwave-risingwavelabs-com-v1alpha1-risingwavescaleview
+  failurePolicy: Fail
+  name: vrisingwavescaleview.kb.io
+  rules:
+  - apiGroups:
+    - risingwave.risingwavelabs.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    - DELETE
+    resources:
+    - risingwavescaleview
   sideEffects: None

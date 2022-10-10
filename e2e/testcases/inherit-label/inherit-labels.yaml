@@ -1,0 +1,29 @@
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: inherit-labels
+  labels:
+    risingwave.dev/user: "random"
+  annotations:
+    risingwave.risingwavelabs.com/inherit-label-prefix: risingwave.dev
+spec:
+  storages:
+    meta:
+      memory: true
+    object:
+      memory: true
+  global:
+    image: ghcr.io/risingwavelabs/risingwave:e2e
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+      compactor: 1

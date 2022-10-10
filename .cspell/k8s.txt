@@ -17,6 +17,12 @@ krew
 kubeconfig
 keda
 tolerations
+controllerutil
+
+# Scale subresource
+specpath
+statuspath
+selectorpath
 
 # Builtin APIs
 pod*
@@ -57,6 +63,8 @@ rw
 risingwavepodtemplate
 risingwavepodtemplates
 rwpt
+scaleview
+scaleviews
 risingwavescaleview
 risingwavescaleviews
 rwsv

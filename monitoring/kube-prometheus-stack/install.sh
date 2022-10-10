@@ -56,11 +56,21 @@ while getopts ":k:s:r" o; do
 done
 shift $((OPTIND-1))
 
+echo "k = $k"
+echo "s = $s"
+echo "r = $r"
+exit 
+
+
 # We require credentials, if we use prometheus remote write
 if [[ $r = true ]]; then
     if [ -z "${s}" ] || [ -z "${k}" ]; then
         usage
     fi
+fi
+
+if [[ $dry = true ]]; then 
+    echo "Dry-run modus activated"
 fi
 
 _SCRIPT_BASEDIR=$(dirname "$0")

@@ -107,7 +107,7 @@ func (r *RisingWaveScaleViewHelper) ListComponentGroups() []string {
 	case consts.ComponentCompactor:
 		return lo.Map(r.risingwave.Spec.Components.Compactor.Groups, func(g risingwavev1alpha1.RisingWaveComponentGroup, _ int) string { return g.Name })
 	default:
-		panic("never reach here")
+		panic(fmt.Sprintf("Unknown component %v", r.component))
 	}
 }
 

@@ -1,2 +1,2 @@
 resources:
-- prometheus-rw-operator-metrics.yaml
+- metrics-service.yaml.yaml

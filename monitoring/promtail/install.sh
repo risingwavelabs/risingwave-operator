@@ -20,24 +20,29 @@ usage() {
         echo "This script installs the promtail stack stack"
         echo ""
         echo "Usage:"
-        echo "$0 [-h] [-d]"
+        echo "$0 [-h] [-d] [-n <namespace>]"
         echo ""
         echo "-d    Dry-run. Print what would be done without executing"
         echo "-h    Show this help message"
+        echo "-n    The namespace in which to install the monitoring stack. Defaults to 'monitoring'"
     } 1>&2
 
     exit 1
 }
 
 dry=false
+ns="monitoring"
 
-while getopts ":dh" o; do
+while getopts ":n:dh" o; do
     case "${o}" in
         d)
             dry=true
             ;;
         h)
             usage
+            ;;
+        n)
+            ns=${OPTARG}
             ;;
         *)
             usage
@@ -54,4 +59,4 @@ fi
 
 _SCRIPT_BASEDIR=$(dirname "$0")
 
-helm --namespace monitoring upgrade --install --create-namespace promtail grafana/promtail -f "${_SCRIPT_BASEDIR}"/loki-promtail-clients.yaml $dryParam
+helm --namespace $ns upgrade --install --create-namespace promtail grafana/promtail -f "${_SCRIPT_BASEDIR}"/loki-promtail-clients.yaml $dryParam

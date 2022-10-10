@@ -20,24 +20,29 @@ usage() {
         echo "This script installs the loki stack stack"
         echo ""
         echo "Usage:"
-        echo "$0 [-h] [-d]"
+        echo "$0 [-h] [-d] [-n] <namespace>"
         echo ""
         echo "-d    Dry-run. Print what would be done without executing"
         echo "-h    Show this help message"
+        echo "-n    The namespace in which to install the monitoring stack. Defaults to 'monitoring'"
     } 1>&2
 
     exit 1
 }
 
 dry=false
+ns="monitoring"
 
-while getopts ":dh" o; do
+while getopts ":n:dh" o; do
     case "${o}" in
         d)
             dry=true
             ;;
         h)
             usage
+            ;;
+        n)
+            ns=${OPTARG}
             ;;
         *)
             usage
@@ -52,4 +57,4 @@ if [[ $dry = true ]]; then
     dryParam="--dry-run"
 fi
 
-helm --namespace monitoring upgrade --install --create-namespace loki grafana/loki-distributed $dryParam
+helm --namespace $ns upgrade --install --create-namespace loki grafana/loki-distributed $dryParam

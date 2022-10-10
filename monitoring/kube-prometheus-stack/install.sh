@@ -20,11 +20,12 @@ usage() {
         echo "This script installs the kube-prometheus-stack stack"
         echo ""
         echo "Usage:"
-        echo "$0 [-h] [-d] [-r] [-k <aws_access_key>] [-s <aws_secret_key>]"
+        echo "$0 [-h] [-d] [-r] [-k <aws_access_key>] [-s <aws_secret_key>] [-n <namespace>]"
         echo ""
         echo "-d    Dry-run. Print what would be done without executing"
         echo "-h    Show this help message"
         echo "-k    AWS access key"
+        echo "-n    The namespace in which to install the monitoring stack. Defaults to 'monitoring'"
         echo "-r    Enable prometheus remote write (AWS). Requires that -k and -s are set"
         echo "-s    AWS secret key"
     } 1>&2
@@ -34,10 +35,11 @@ usage() {
 
 # TODO: Is it secure to pass the secret key via the command line? Or should we pass this via an env var?
 
-r=false
 dry=false
+ns="monitoring"
+r=false
 
-while getopts ":k:s:rhd" o; do
+while getopts ":n:k:s:rhd" o; do
     case "${o}" in
         k)
             k=${OPTARG}
@@ -53,6 +55,9 @@ while getopts ":k:s:rhd" o; do
             ;;
         d)
             dry=true
+            ;;
+        n)
+            ns=${OPTARG}
             ;;
         *)
             usage
@@ -85,14 +90,14 @@ if [[ $r = true ]]; then
 fi
 echo $msg
 
-helm --namespace monitoring upgrade --install --create-namespace prometheus prometheus-community/kube-prometheus-stack \
+helm --namespace $ns upgrade --install --create-namespace prometheus prometheus-community/kube-prometheus-stack \
   -f "${_SCRIPT_BASEDIR}"/kube-prometheus-stack.yaml \
   -f "${_SCRIPT_BASEDIR}"/${_DATA_SOURCE} \
   $dryParam
 
 # Create secret if required
 # TODO: Maybe this needs to be before helm upgrade,
-# but then we need to check if the monitoring ns exists first
+# but then we need to check if the ns exists first
 
 dryParam="none"
 if [[ $dry = true ]]; then 
@@ -100,7 +105,7 @@ if [[ $dry = true ]]; then
 fi
 
 # Create secret with credentials
-kubectl create secret generic aws-prometheus-credentials \
+kubectl -n $ns create secret generic aws-prometheus-credentials \
   --from-literal AccessKey=${k} --from-literal SecretAccessKey=${s} \
   --dry-run=$dryParam
 

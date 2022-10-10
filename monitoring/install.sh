@@ -21,11 +21,12 @@ usage() {
         echo "This script installs the entire monitoring stack"
         echo ""
         echo "Usage:"
-        echo "$0 [-h] [-d] [-r] [-k <aws_access_key>] [-s <aws_secret_key>]"
+        echo "$0 [-h] [-d] [-r] [-k <aws_access_key>] [-s <aws_secret_key>] [-n <namespace>]"
         echo ""
         echo "-d    Dry-run. Print what would be done without executing"
         echo "-h    Show this help message"
         echo "-k    AWS access key"
+        echo "-n    The namespace in which to install the monitoring stack. Defaults to 'monitoring'"
         echo "-r    Enable prometheus remote write (AWS). Requires that -k and -s are set"
         echo "-s    AWS secret key"
     } 1>&2
@@ -35,10 +36,11 @@ usage() {
 
 # TODO: Is it secure to pass the secret key via the command line? Or should we pass this via an env var?
 
-r=false
 dry=false
+ns="monitoring"
+r=false
 
-while getopts ":k:s:rdh" o; do
+while getopts ":n:k:s:rdh" o; do
     case "${o}" in
         k)
             k=${OPTARG}
@@ -51,6 +53,9 @@ while getopts ":k:s:rdh" o; do
             ;;
         d)
             dry=true
+            ;;
+        n)
+            ns=${OPTARG}
             ;;
         h)
             usage
@@ -96,10 +101,10 @@ if [[ $r = true ]]; then
     # Install the `kube-prometheus-stack` with remote write
     rParams=" -r -s $s -k $k "
 fi 
-./kube-prometheus-stack/install.sh $rParams $dryParam
+./kube-prometheus-stack/install.sh $rParams $dryParam -n $ns
 
 # Install the `loki-distributed`
-./loki-distributed/install.sh $dryParam
+./loki-distributed/install.sh $dryParam -n $ns
 
 # Install the `promtail`
-./promtail/install.sh $dryParam
+./promtail/install.sh $dryParam -n $ns

@@ -366,6 +366,38 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: false,
 		},
+		"limit-not-exist-pass-1": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								"cpu":    resource.MustParse("1"),
+								"memory": resource.MustParse("100Mi"),
+							},
+						},
+					},
+				}
+			},
+			pass: true,
+		},
+		"limit-not-exist-pass-2": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Resources: corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								"cpu": resource.MustParse("1"),
+							},
+							Requests: corev1.ResourceList{
+								"memory": resource.MustParse("100Mi"),
+							},
+						},
+					},
+				}
+			},
+			pass: true,
+		},
 	}
 
 	webhook := NewRisingWaveValidatingWebhook()

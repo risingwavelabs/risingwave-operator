@@ -58,13 +58,20 @@ func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 		}
 	}
 
+	// Validate the resources only when limits exist
+	if groupTemplate.Resources.Limits == nil {
+		return fieldErrs
+	}
+
 	// Validate the cpu resources.
-	if groupTemplate.Resources.Limits.Cpu().Cmp(*groupTemplate.Resources.Requests.Cpu()) == -1 {
+	if _, ok := groupTemplate.Resources.Limits["cpu"]; ok &&
+		groupTemplate.Resources.Limits.Cpu().Cmp(*groupTemplate.Resources.Requests.Cpu()) == -1 {
 		fieldErrs = append(fieldErrs, field.Required(path.Child("resources", "cpu"), "insufficient cpu resource"))
 	}
 
 	// Validate the memory resources.
-	if groupTemplate.Resources.Limits.Memory().Cmp(*groupTemplate.Resources.Requests.Memory()) == -1 {
+	if _, ok := groupTemplate.Resources.Limits["memory"]; ok &&
+		groupTemplate.Resources.Limits.Memory().Cmp(*groupTemplate.Resources.Requests.Memory()) == -1 {
 		fieldErrs = append(fieldErrs, field.Required(path.Child("resources", "memory"), "insufficient memory resource"))
 	}
 

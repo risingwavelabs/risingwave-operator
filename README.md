@@ -227,6 +227,9 @@ Follow the instructions below to set up the remote write:
 ```sh 
 # You can use dry run first with 
 # ./monitoring/install.sh -d -r -k <aws_access_key> -s <aws_secret_key>
+# See more customization options with 
+# ./monitoring/install.sh -h
+
 ./monitoring/install.sh -r -k <aws_access_key> -s <aws_secret_key>
 ```
 

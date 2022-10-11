@@ -64,7 +64,7 @@ func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 	}
 
 	// Validate the cpu resources.
-	if _, ok := groupTemplate.Resources.Limits["cpu"]; ok &&
+	if _, ok := groupTemplate.Resources.Limits[corev1.ResourceCPU]; ok &&
 		groupTemplate.Resources.Limits.Cpu().Cmp(*groupTemplate.Resources.Requests.Cpu()) == -1 {
 		fieldErrs = append(fieldErrs, field.Required(path.Child("resources", "cpu"), "insufficient cpu resource"))
 	}

@@ -105,3 +105,9 @@ restmapper
 
 # Controller specific
 +controller
+
+# Monitoring 
+resharding
+Grafana
+promtail
+edcf

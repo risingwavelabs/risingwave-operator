@@ -203,41 +203,11 @@ spec:
 
 ## Monitoring
 
+
+
 ### Install the `kube-prometheus-stack`
 
-Before getting started, you need to ensure that the [`helm`](https://helm.sh/) is installed. Please follow the instructions in the [Installing Helm](https://helm.sh/docs/intro/install/) chapter if you don't have one.
-
-We encourage using the [`kube-prometheus-stack`](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack), a helm chart maintained by the community, to install the `Prometheus operator` into the Kubernetes. Follow the instructions below to install:
-
-- Add `prometheus-community` repo
-
-```shell
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-```
-
-- Install or upgrade chart
-
-```shell
-helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
-  -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/monitoring/kube-prometheus-stack/kube-prometheus-stack.yaml
-```
-
-To check the running status, check the Pods with the following command:
-
-```shell
-kubectl get pods -l release=prometheus
-```
-
-The expected output is like this:
-
-<!-- spellchecker: disable -->
-```plain
-NAME                                                   READY   STATUS    RESTARTS   AGE
-prometheus-kube-prometheus-operator-5f6c8948fb-llvzm   1/1     Running   0          173m
-prometheus-kube-state-metrics-59dd9ffd47-z4777         1/1     Running   0          173m
-prometheus-prometheus-node-exporter-llgp9              1/1     Running   0          169m
-```
+You can install the monitoring stack manually or via the install script. To install it via the script type `./monitoring/install.sh`. If you wish to install it manually, then follow the instructions in the next paragraph
 
 #### Prometheus RemoteWrite (AWS)
 
@@ -247,23 +217,20 @@ Before getting started, you need to ensure that you have an account which has th
 
 Follow the instructions below to set up the remote write:
 
-1. Create a Secret to store the AWS credentials.
-
-```shell 
-kubectl create secret generic aws-prometheus-credentials --from-literal AccessKey=${ACCESS_KEY} --from-literal SecretAccessKey=${SECRET_ACCESS_KEY}
-```
-
-2. Copy the [prometheus-remote-write-aws.yaml](./monitoring/kube-prometheus-stack/prometheus-remote-write-aws.yaml) file and replace the values of the these variables:
+1. Copy the [prometheus-remote-write-aws.yaml](./monitoring/kube-prometheus-stack/prometheus-remote-write-aws.yaml) file and replace the values of the these variables:
   - `${KUBERNETES_NAME}`: the name of the Kubernetes, e.g., `local-dev`. You can also add `externalLabels` yourself.
   - `${AWS_REGION}`: the region of the AWS Prometheus service, e.g., `ap-southeast-1`
   - `${WORKSPACE_ID}`: the workspace ID, e.g., `ws-12345678-abcd-1234-abcd-123456789012`
 
-3. Install or upgrade the `kube-prometheus-stack`.
+2. Use the install script 
 
-```shell
-helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
-  -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/monitoring/kube-prometheus-stack/kube-prometheus-stack.yaml \
-  -f prometheus-remote-write-aws.yaml
+```sh 
+# You can use dry run first with 
+# ./monitoring/install.sh -d -r -k <aws_access_key> -s <aws_secret_key>
+# See more customization options with 
+# ./monitoring/install.sh -h
+
+./monitoring/install.sh -r -k <aws_access_key> -s <aws_secret_key>
 ```
 
 Now, you can check the Prometheus logs to see if the remote write works, with the following commands:

@@ -74,14 +74,14 @@ fi
 
 if [[ $dry = true ]]; then 
     echo "Dry-run modus activated in $0"
-    echo "Adding helm repositories"
 fi
+echo "Installing monitoring stack in namespace $ns"
 
 _SCRIPT_BASEDIR=$(dirname "$0")
 
 cd "${_SCRIPT_BASEDIR}" || exit
 
-# Set up the helm repos and update
+echo "Set up the helm repos and update"
 if [[ $dry = false ]]; then 
     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 
     helm repo add grafana https://grafana.github.io/helm-charts

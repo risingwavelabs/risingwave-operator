@@ -19,6 +19,7 @@ package webhook
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"testing"
 
 	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
@@ -324,6 +325,40 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 								{
 									Name: "pvc0",
 								},
+							},
+						},
+					},
+				}
+			},
+			pass: false,
+		},
+		"insufficient-resources-cpu-fail": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Resources: corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								"cpu": resource.MustParse("250m"),
+							},
+							Requests: corev1.ResourceList{
+								"cpu": resource.MustParse("1000m"),
+							},
+						},
+					},
+				}
+			},
+			pass: false,
+		},
+		"insufficient-resources-memory-fail": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Resources: corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								"memory": resource.MustParse("100Mi"),
+							},
+							Requests: corev1.ResourceList{
+								"memory": resource.MustParse("1Gi"),
 							},
 						},
 					},

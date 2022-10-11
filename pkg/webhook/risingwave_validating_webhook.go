@@ -74,6 +74,14 @@ func (v *RisingWaveValidatingWebhook) validateGlobal(path *field.Path, global *r
 		}
 	}
 
+	if global.Resources.Limits.Cpu().Cmp(*global.Resources.Requests.Cpu()) == -1 {
+		fieldErrs = append(fieldErrs, field.Required(path.Child("resources", "cpu"), "insufficient cpu resource"))
+	}
+
+	if global.Resources.Limits.Memory().Cmp(*global.Resources.Requests.Memory()) == -1 {
+		fieldErrs = append(fieldErrs, field.Required(path.Child("resources", "memory"), "insufficient memory resource"))
+	}
+
 	return fieldErrs
 }
 

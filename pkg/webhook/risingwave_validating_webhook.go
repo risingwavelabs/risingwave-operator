@@ -21,6 +21,7 @@ import (
 
 	"github.com/distribution/distribution/reference"
 	"github.com/samber/lo"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -56,6 +57,23 @@ func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 		if groupTemplate.UpgradeStrategy.RollingUpdate != nil {
 			fieldErrs = append(fieldErrs, field.Forbidden(path.Child("upgradeStrategy", "rollingUpdate"), "must be nil when type is Recreate"))
 		}
+	}
+
+	// Validate the resources only when limits exist
+	if groupTemplate.Resources.Limits == nil {
+		return fieldErrs
+	}
+
+	// Validate the cpu resources.
+	if _, ok := groupTemplate.Resources.Limits[corev1.ResourceCPU]; ok &&
+		groupTemplate.Resources.Limits.Cpu().Cmp(*groupTemplate.Resources.Requests.Cpu()) == -1 {
+		fieldErrs = append(fieldErrs, field.Required(path.Child("resources", "cpu"), "insufficient cpu resource"))
+	}
+
+	// Validate the memory resources.
+	if _, ok := groupTemplate.Resources.Limits[corev1.ResourceMemory]; ok &&
+		groupTemplate.Resources.Limits.Memory().Cmp(*groupTemplate.Resources.Requests.Memory()) == -1 {
+		fieldErrs = append(fieldErrs, field.Required(path.Child("resources", "memory"), "insufficient memory resource"))
 	}
 
 	return fieldErrs

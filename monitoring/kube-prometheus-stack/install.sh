@@ -108,7 +108,3 @@ fi
 kubectl -n $ns create secret generic aws-prometheus-credentials \
   --from-literal AccessKey=${k} --from-literal SecretAccessKey=${s} \
   --dry-run=$dryParam
-
-
-
-

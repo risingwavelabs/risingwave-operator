@@ -292,5 +292,5 @@ func Test_RisingWaveScaleViewValidatingWebhook_ValidateUpdate(t *testing.T) {
 }
 
 func Test_RisingWaveScaleViewValidatingWebhook_ValidateDelete(t *testing.T) {
-	assert.Nil(t, NewRisingWaveScaleViewValidatingWebhook(nil).ValidateDelete(context.Background(), nil))
+	assert.Nil(t, NewRisingWaveScaleViewValidatingWebhook(nil).ValidateDelete(context.Background(), &risingwavev1alpha1.RisingWaveScaleView{}))
 }

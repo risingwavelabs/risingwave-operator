@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/samber/lo"
@@ -27,6 +28,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -36,6 +38,7 @@ import (
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
 	"github.com/risingwavelabs/risingwave-operator/pkg/manager"
+	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
@@ -106,6 +109,11 @@ func (c *RisingWaveScaleViewController) Reconcile(ctx context.Context, request r
 }
 
 func (c *RisingWaveScaleViewController) SetupWithManager(mgr ctrl.Manager) error {
+	gvk, err := apiutil.GVKForObject(&risingwavev1alpha1.RisingWaveScaleView{}, c.Client.Scheme())
+	if err != nil {
+		return fmt.Errorf("unable to find gvk for RisingWaveScaleView: %w", err)
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: 64,
@@ -131,7 +139,7 @@ func (c *RisingWaveScaleViewController) SetupWithManager(mgr ctrl.Manager) error
 				})
 			}),
 		).
-		Complete(c)
+		Complete(metrics.NewControllerMetricsRecorder(c, "RisingWaveScaleViewController", gvk))
 }
 
 func NewRisingWaveScaleViewController(client client.Client) *RisingWaveScaleViewController {

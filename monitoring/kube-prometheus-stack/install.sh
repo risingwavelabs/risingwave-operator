@@ -33,8 +33,6 @@ usage() {
     exit 1
 }
 
-# TODO: Is it secure to pass the secret key via the command line? Or should we pass this via an env var?
-
 dry=false
 ns="monitoring"
 r=false

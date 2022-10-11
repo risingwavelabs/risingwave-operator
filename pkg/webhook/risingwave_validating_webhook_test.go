@@ -19,10 +19,11 @@ package webhook
 import (
 	"context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/api/resource"
 	"testing"
 
-	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
+	"k8s.io/apimachinery/pkg/api/resource"
+
+	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

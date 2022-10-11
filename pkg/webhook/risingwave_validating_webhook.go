@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
-	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
+	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
 type RisingWaveValidatingWebhook struct{}
@@ -61,6 +61,16 @@ func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 		}
 	}
 
+	// Validate the cpu resources.
+	if groupTemplate.Resources.Limits.Cpu().Cmp(*groupTemplate.Resources.Requests.Cpu()) == -1 {
+		fieldErrs = append(fieldErrs, field.Required(path.Child("resources", "cpu"), "insufficient cpu resource"))
+	}
+
+	// Validate the memory resources.
+	if groupTemplate.Resources.Limits.Memory().Cmp(*groupTemplate.Resources.Requests.Memory()) == -1 {
+		fieldErrs = append(fieldErrs, field.Required(path.Child("resources", "memory"), "insufficient memory resource"))
+	}
+
 	return fieldErrs
 }
 
@@ -72,14 +82,6 @@ func (v *RisingWaveValidatingWebhook) validateGlobal(path *field.Path, global *r
 		if global.Image == "" {
 			fieldErrs = append(fieldErrs, field.Required(path.Child("image"), "must be specified when there're global replicas"))
 		}
-	}
-
-	if global.Resources.Limits.Cpu().Cmp(*global.Resources.Requests.Cpu()) == -1 {
-		fieldErrs = append(fieldErrs, field.Required(path.Child("resources", "cpu"), "insufficient cpu resource"))
-	}
-
-	if global.Resources.Limits.Memory().Cmp(*global.Resources.Requests.Memory()) == -1 {
-		fieldErrs = append(fieldErrs, field.Required(path.Child("resources", "memory"), "insufficient memory resource"))
 	}
 
 	return fieldErrs

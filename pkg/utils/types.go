@@ -14,34 +14,25 @@
 
 package utils
 
-// Defines an immutable type for a webhook. Use NewWebhookType to instantiate.
-type WebhookType struct {
-	isValidating bool
-}
+// WebhookType defines an immutable type for a webhook. Use NewWebhookType to instantiate.
+type WebhookType string
 
-// NewWebhookTypes returns an immutable webhookType.
-func NewWebhookTypes(isValidating bool) WebhookType {
-	return WebhookType{isValidating: isValidating}
-}
+// Valid webhook types.
+const (
+	ValidatingWebhookType WebhookType = "validating"
+	MutatingWebhookType   WebhookType = "mutating"
+)
 
 // IsValidating is true if wt is a validating webhook, else false.
-func (wt *WebhookType) IsValidating() bool {
-	return wt.isValidating
+func (wt WebhookType) IsValidating() bool {
+	return wt == ValidatingWebhookType
 }
 
 // IsMutating is true if wt is a mutating webhook, else false.
-func (wt *WebhookType) IsMutating() bool {
+func (wt WebhookType) IsMutating() bool {
 	return !wt.IsValidating()
 }
 
-func (wt *WebhookType) String() string {
-	if wt.IsValidating() {
-		return "validating"
-	}
-	return "mutating"
-}
-
-// Equal is true if wt is equivalent to other.
-func (wt *WebhookType) Equal(other *WebhookType) bool {
-	return wt.IsValidating() == other.IsValidating()
+func (wt WebhookType) String() string {
+	return string(wt)
 }

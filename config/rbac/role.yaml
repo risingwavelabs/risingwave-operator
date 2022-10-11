@@ -128,3 +128,23 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - risingwave.risingwavelabs.com
+  resources:
+  - risingwavescaleviews
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - risingwave.risingwavelabs.com
+  resources:
+  - risingwavescaleviews/status
+  verbs:
+  - get
+  - patch
+  - update

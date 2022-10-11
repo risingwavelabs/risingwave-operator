@@ -39,3 +39,17 @@ function reap() {
   done
   return ${status}
 }
+
+## Trap and add traps.
+function overtrap {
+  trap="$1"
+  sig=$(echo "$2" | tr [a-z] [A-Z])
+  cur="$(trap -p "$sig" | sed -nr "s/trap -- '(.*)' $sig\$/\1/p")"
+
+  # shellcheck disable=SC2064
+  if test ${cur:+x}; then
+    trap "{ $trap; }; $cur" "$sig"
+  else
+    trap "$trap" "$sig"
+  fi
+}

@@ -47,7 +47,7 @@ import (
 func newRisingWaveControllerManagerImplForTest(risingwave *risingwavev1alpha1.RisingWave, objects ...client.Object) *risingWaveControllerManagerImpl {
 	fakeClient := fake.NewClientBuilder().
 		WithObjects(append(objects, risingwave.DeepCopy())...).
-		WithScheme(testutils.Schema).
+		WithScheme(testutils.Scheme).
 		Build()
 	risingwaveManager := object.NewRisingWaveManager(fakeClient, risingwave.DeepCopy())
 	return newRisingWaveControllerManagerImpl(fakeClient, risingwaveManager, event.NewMessageStore())
@@ -468,7 +468,7 @@ func testRisingWaveControllerManagerImplSyncObjectGroups[T any, TL any, TP ptrAs
 		"some-groups": {
 			origin: []T{
 				newGroupObjectFromGroup[T, TP](risingwave.Namespace, risingwave.Name, "", labelSelector),
-				newGroupObjectFromGroup[T, TP](risingwave.Namespace, risingwave.Name, "group1", labelSelector),
+				newGroupObjectFromGroup[T, TP](risingwave.Namespace, risingwave.Name, testutils.GetGroupName(0), labelSelector),
 				newGroupObjectFromGroup[T, TP](risingwave.Namespace, risingwave.Name, "group3", labelSelector),
 			},
 		},
@@ -533,7 +533,7 @@ func TestRisingWaveControllerManagerImpl_SyncMetaDeployments(t *testing.T) {
 		},
 	)
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, fakeRisingwaveComponentOnly, nil, []string{"group1"},
+		t, fakeRisingwaveComponentOnly, nil, []string{testutils.GetGroupName(0)},
 		map[string]string{
 			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentMeta,
@@ -571,7 +571,7 @@ func TestRisingWaveControllerManagerImpl_SyncFrontendDeployments(t *testing.T) {
 		},
 	)
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, fakeRisingwaveComponentOnly, nil, []string{"group1"},
+		t, fakeRisingwaveComponentOnly, nil, []string{testutils.GetGroupName(0)},
 		map[string]string{
 			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentFrontend,
@@ -609,7 +609,7 @@ func TestRisingWaveControllerManagerImpl_SyncCompactorDeployments(t *testing.T) 
 		},
 	)
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, fakeRisingwaveComponentOnly, nil, []string{"group1"},
+		t, fakeRisingwaveComponentOnly, nil, []string{testutils.GetGroupName(0)},
 		map[string]string{
 			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentCompactor,
@@ -647,7 +647,7 @@ func TestRisingWaveControllerManagerImpl_SyncComputeStatefulSets(t *testing.T) {
 		},
 	)
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, fakeRisingwaveComponentOnly, nil, []string{"group1"},
+		t, fakeRisingwaveComponentOnly, nil, []string{testutils.GetGroupName(0)},
 		map[string]string{
 			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentCompute,
@@ -699,14 +699,14 @@ func Test_WaitComponentGroupWorkloadsReady(t *testing.T) {
 		},
 		"objects-some-not-ready": {
 			groups: map[string]int{
-				"":       1,
-				"group1": 1,
+				"":                        1,
+				testutils.GetGroupName(0): 1,
 			},
 			objects: []appsv1.Deployment{
 				newGroupObjectFromGroup[appsv1.Deployment]("", "", "", map[string]string{
 					"ready": "1",
 				}),
-				newGroupObjectFromGroup[appsv1.Deployment]("", "", "group1", map[string]string{}),
+				newGroupObjectFromGroup[appsv1.Deployment]("", "", testutils.GetGroupName(0), map[string]string{}),
 			},
 			ready: false,
 		},
@@ -718,7 +718,7 @@ func Test_WaitComponentGroupWorkloadsReady(t *testing.T) {
 				newGroupObjectFromGroup[appsv1.Deployment]("", "", "", map[string]string{
 					"ready": "1",
 				}),
-				newGroupObjectFromGroup[appsv1.Deployment]("", "", "group1", map[string]string{
+				newGroupObjectFromGroup[appsv1.Deployment]("", "", testutils.GetGroupName(0), map[string]string{
 					"ready": "1",
 				}),
 			},

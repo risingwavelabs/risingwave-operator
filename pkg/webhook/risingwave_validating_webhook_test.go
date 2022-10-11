@@ -18,24 +18,23 @@ package webhook
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
-
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 
-	"github.com/stretchr/testify/assert"
-
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
-	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
+
+func Test_RisingWaveValidatingWebhook_ValidateDelete(t *testing.T) {
+	assert.Nil(t, NewRisingWaveValidatingWebhook().ValidateDelete(context.Background(), &risingwavev1alpha1.RisingWave{}))
+}
 
 func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 	testcases := map[string]struct {
@@ -528,137 +527,134 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 	}
 }
 
-type panicValWebhook struct{}
+func Test_RisingWaveValidatingWebhook_ValidateUpdate_ScaleViews(t *testing.T) {
+	testcases := map[string]struct {
+		origin      *risingwavev1alpha1.RisingWave
+		mutate      func(wave *risingwavev1alpha1.RisingWave)
+		statusPatch func(status *risingwavev1alpha1.RisingWaveStatus)
+		pass        bool
+	}{
+		"empty-scale-views": {
+			mutate: func(wave *risingwavev1alpha1.RisingWave) {
+				wave.Spec.Global.Replicas.Frontend++
+			},
+			pass: true,
+		},
+		"scale-views-on-frontend": {
+			mutate: func(wave *risingwavev1alpha1.RisingWave) {
+				wave.Spec.Global.Replicas.Frontend++
+			},
+			statusPatch: func(status *risingwavev1alpha1.RisingWaveStatus) {
+				status.ScaleViews = append(status.ScaleViews, risingwavev1alpha1.RisingWaveScaleViewLock{
+					Name:       "x",
+					UID:        "1",
+					Component:  consts.ComponentFrontend,
+					Generation: 1,
+					GroupLocks: []risingwavev1alpha1.RisingWaveScaleViewLockGroupLock{
+						{
+							Name:     "",
+							Replicas: 0,
+						},
+					},
+				})
+			},
+			pass: false,
+		},
+		"scale-views-on-compactor-but-update-frontend": {
+			mutate: func(wave *risingwavev1alpha1.RisingWave) {
+				wave.Spec.Global.Replicas.Frontend++
+			},
+			statusPatch: func(status *risingwavev1alpha1.RisingWaveStatus) {
+				status.ScaleViews = append(status.ScaleViews, risingwavev1alpha1.RisingWaveScaleViewLock{
+					Name:       "x",
+					UID:        "1",
+					Component:  consts.ComponentCompactor,
+					Generation: 1,
+					GroupLocks: []risingwavev1alpha1.RisingWaveScaleViewLockGroupLock{
+						{
+							Name:     "",
+							Replicas: 0,
+						},
+					},
+				})
+			},
+			pass: true,
+		},
+		"delete-locked-group": {
+			origin: testutils.FakeRisingWaveComponentOnly(),
+			mutate: func(wave *risingwavev1alpha1.RisingWave) {
+				wave.Spec.Components.Frontend.Groups = nil
+			},
+			statusPatch: func(status *risingwavev1alpha1.RisingWaveStatus) {
+				status.ScaleViews = append(status.ScaleViews, risingwavev1alpha1.RisingWaveScaleViewLock{
+					Name:       "x",
+					UID:        "1",
+					Component:  consts.ComponentFrontend,
+					Generation: 1,
+					GroupLocks: []risingwavev1alpha1.RisingWaveScaleViewLockGroupLock{
+						{
+							Name:     testutils.GetGroupName(0),
+							Replicas: 0,
+						},
+					},
+				})
+			},
+			pass: false,
+		},
+		"multiple-locked-groups": {
+			origin: testutils.FakeRisingWaveComponentOnly(),
+			mutate: func(wave *risingwavev1alpha1.RisingWave) {
+				wave.Spec.Components.Frontend.Groups[0].Replicas = 2
+			},
+			statusPatch: func(status *risingwavev1alpha1.RisingWaveStatus) {
+				status.ScaleViews = append(status.ScaleViews, risingwavev1alpha1.RisingWaveScaleViewLock{
+					Name:       "x",
+					UID:        "1",
+					Component:  consts.ComponentFrontend,
+					Generation: 1,
+					GroupLocks: []risingwavev1alpha1.RisingWaveScaleViewLockGroupLock{
+						{
+							Name:     testutils.GetGroupName(0),
+							Replicas: 2,
+						},
+					},
+				}, risingwavev1alpha1.RisingWaveScaleViewLock{
+					Name:       "x",
+					UID:        "1",
+					Component:  consts.ComponentCompactor,
+					Generation: 1,
+					GroupLocks: []risingwavev1alpha1.RisingWaveScaleViewLockGroupLock{
+						{
+							Name:     testutils.GetGroupName(0),
+							Replicas: 1,
+						},
+					},
+				})
+			},
+			pass: true,
+		},
+	}
 
-func (p *panicValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
-	panic("validateCreate panic")
-}
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			obj := tc.origin
+			if obj == nil {
+				obj = testutils.FakeRisingWave()
+			}
 
-func (p *panicValWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
-	panic("validateDelete update")
-}
+			if tc.statusPatch != nil {
+				tc.statusPatch(&obj.Status)
+			}
 
-func (p *panicValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
-	panic("validateUpdate panic")
-}
+			newObj := obj.DeepCopy()
+			tc.mutate(newObj)
 
-func (p *panicValWebhook) getType() utils.WebhookType {
-	return utils.NewWebhookTypes(true)
-}
-
-func Test_MetricsValidatingWebhookPanic(t *testing.T) {
-	metrics.ResetMetrics()
-	risingwave := &risingwavev1alpha1.RisingWave{}
-	panicWebhook := &ValWebhookMetricsRecorder{&panicValWebhook{}}
-
-	panicWebhook.ValidateCreate(context.Background(), risingwave)
-	assert.Equal(t, 1, metrics.GetWebhookRequestPanicCountWith(panicWebhook.GetType(), risingwave), "Panic metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestRejectCount(panicWebhook.GetType(), risingwave), "Reject metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestCount(panicWebhook.GetType(), risingwave), "Count metric")
-	assert.Equal(t, 0, metrics.GetWebhookRequestPassCount(panicWebhook.GetType(), risingwave), "Pass metric")
-	metrics.ResetMetrics()
-
-	panicWebhook.ValidateDelete(context.Background(), risingwave)
-	assert.Equal(t, 1, metrics.GetWebhookRequestPanicCountWith(panicWebhook.GetType(), risingwave), "Panic metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestRejectCount(panicWebhook.GetType(), risingwave), "Reject metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestCount(panicWebhook.GetType(), risingwave), "Count metric")
-	assert.Equal(t, 0, metrics.GetWebhookRequestPassCount(panicWebhook.GetType(), risingwave), "Pass metric")
-	metrics.ResetMetrics()
-
-	panicWebhook.ValidateUpdate(context.Background(), risingwave, risingwave)
-	assert.Equal(t, 1, metrics.GetWebhookRequestPanicCountWith(panicWebhook.GetType(), risingwave), "Panic metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestRejectCount(panicWebhook.GetType(), risingwave), "Reject metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestCount(panicWebhook.GetType(), risingwave), "Count metric")
-	assert.Equal(t, 0, metrics.GetWebhookRequestPassCount(panicWebhook.GetType(), risingwave), "Pass metric")
-	metrics.ResetMetrics()
-}
-
-type successfulValWebhook struct{}
-
-func (s *successfulValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
-	return nil
-}
-
-func (s *successfulValWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
-	return nil
-}
-
-func (s *successfulValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
-	return nil
-}
-
-func (s *successfulValWebhook) getType() utils.WebhookType {
-	return utils.NewWebhookTypes(true)
-}
-
-func Test_MetricsValidatingWebhookSuccess(t *testing.T) {
-	metrics.ResetMetrics()
-	risingwave := &risingwavev1alpha1.RisingWave{}
-	successWebhook := &ValWebhookMetricsRecorder{&successfulValWebhook{}}
-
-	successWebhook.ValidateCreate(context.Background(), risingwave)
-	assert.Equal(t, 0, metrics.GetWebhookRequestPanicCountWith(successWebhook.GetType(), risingwave), "Panic metric")
-	assert.Equal(t, 0, metrics.GetWebhookRequestRejectCount(successWebhook.GetType(), risingwave), "Reject metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestCount(successWebhook.GetType(), risingwave), "Count metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestPassCount(successWebhook.GetType(), risingwave), "Request metric")
-	metrics.ResetMetrics()
-
-	successWebhook.ValidateDelete(context.Background(), risingwave)
-	assert.Equal(t, 0, metrics.GetWebhookRequestPanicCountWith(successWebhook.GetType(), risingwave), "Panic metric")
-	assert.Equal(t, 0, metrics.GetWebhookRequestRejectCount(successWebhook.GetType(), risingwave), "Reject metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestCount(successWebhook.GetType(), risingwave), "Count metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestPassCount(successWebhook.GetType(), risingwave), "Request metric")
-	metrics.ResetMetrics()
-
-	successWebhook.ValidateUpdate(context.Background(), risingwave, risingwave)
-	assert.Equal(t, 0, metrics.GetWebhookRequestPanicCountWith(successWebhook.GetType(), risingwave), "Panic metric")
-	assert.Equal(t, 0, metrics.GetWebhookRequestRejectCount(successWebhook.GetType(), risingwave), "Reject metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestCount(successWebhook.GetType(), risingwave), "Count metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestPassCount(successWebhook.GetType(), risingwave), "Request metric")
-	metrics.ResetMetrics()
-}
-
-type errorValWebhook struct{}
-
-func (e *errorValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
-	return fmt.Errorf("validateCreate err")
-}
-
-func (e *errorValWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
-	return fmt.Errorf("validateDelete err")
-}
-
-func (e *errorValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (err error) {
-	return fmt.Errorf("validateUpdate err")
-}
-
-func (e *errorValWebhook) getType() utils.WebhookType {
-	return utils.NewWebhookTypes(true)
-}
-
-func Test_MetricsValidatingWebhookError(t *testing.T) {
-	metrics.ResetMetrics()
-	risingwave := &risingwavev1alpha1.RisingWave{}
-	errorWebhook := &ValWebhookMetricsRecorder{&errorValWebhook{}}
-
-	errorWebhook.ValidateCreate(context.Background(), risingwave)
-	assert.Equal(t, 0, metrics.GetWebhookRequestPanicCountWith(errorWebhook.GetType(), risingwave), "Panic metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestRejectCount(errorWebhook.GetType(), risingwave), "Reject metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestCount(errorWebhook.GetType(), risingwave), "Request metric")
-	assert.Equal(t, 0, metrics.GetWebhookRequestPassCount(errorWebhook.GetType(), risingwave), "Pass metric")
-	metrics.ResetMetrics()
-
-	errorWebhook.ValidateDelete(context.Background(), risingwave)
-	assert.Equal(t, 0, metrics.GetWebhookRequestPanicCountWith(errorWebhook.GetType(), risingwave), "Panic metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestRejectCount(errorWebhook.GetType(), risingwave), "Reject metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestCount(errorWebhook.GetType(), risingwave), "Request metric")
-	assert.Equal(t, 0, metrics.GetWebhookRequestPassCount(errorWebhook.GetType(), risingwave), "Pass metric")
-	metrics.ResetMetrics()
-
-	errorWebhook.ValidateUpdate(context.Background(), risingwave, risingwave)
-	assert.Equal(t, 0, metrics.GetWebhookRequestPanicCountWith(errorWebhook.GetType(), risingwave), "Panic metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestRejectCount(errorWebhook.GetType(), risingwave), "Reject metric")
-	assert.Equal(t, 1, metrics.GetWebhookRequestCount(errorWebhook.GetType(), risingwave), "Request metric")
-	assert.Equal(t, 0, metrics.GetWebhookRequestPassCount(errorWebhook.GetType(), risingwave), "Pass metric")
-	metrics.ResetMetrics()
+			err := NewRisingWaveValidatingWebhook().ValidateUpdate(context.Background(), obj, newObj)
+			if tc.pass {
+				assert.Nil(t, err, "unexpected error")
+			} else {
+				assert.NotNil(t, err, "should be nil")
+			}
+		})
+	}
 }

@@ -1,0 +1,139 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.9.2
+  creationTimestamp: null
+  name: risingwavescaleviews.risingwave.risingwavelabs.com
+spec:
+  group: risingwave.risingwavelabs.com
+  names:
+    categories:
+    - all
+    - streaming
+    kind: RisingWaveScaleView
+    listKind: RisingWaveScaleViewList
+    plural: risingwavescaleviews
+    shortNames:
+    - rwsv
+    singular: risingwavescaleview
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.targetRef.name
+      name: TARGET
+      type: string
+    - jsonPath: .spec.targetRef.component
+      name: COMPONENT
+      type: string
+    - jsonPath: .status.replicas
+      name: READY
+      type: integer
+    - jsonPath: .spec.replicas
+      name: REPLICAS
+      type: integer
+    - jsonPath: .status.locked
+      name: LOCKED
+      type: boolean
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: RisingWaveScaleViewSpec is the spec of RisingWaveScaleView.
+            properties:
+              labelSelector:
+                description: Serialized label selector. Would be set by the webhook.
+                type: string
+              replicas:
+                description: Desired replicas.
+                format: int32
+                type: integer
+              scalePolicy:
+                description: An array of groups and the policies for scale, optional
+                  and empty means the default group with the default policy.
+                items:
+                  description: RisingWaveScaleViewSpecScalePolicy is the scale policy
+                    of a group.
+                  properties:
+                    group:
+                      description: Group name.
+                      type: string
+                    maxReplicas:
+                      description: MaxReplicas is the limit of the replicas.
+                      format: int32
+                      maximum: 5000
+                      type: integer
+                    priority:
+                      description: 0-10, optional. The groups will be sorted by the
+                        priority and the current replicas. The higher it is, the more
+                        replicas of the target group will be considered kept, i.e.
+                        scale out first, scale in last.
+                      format: int32
+                      maximum: 10
+                      minimum: 0
+                      type: integer
+                  required:
+                  - group
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - group
+                x-kubernetes-list-type: map
+              targetRef:
+                description: Reference of the target RisingWave.
+                properties:
+                  component:
+                    description: Component name. Must be one of meta, frontend, compute,
+                      and compactor.
+                    enum:
+                    - meta
+                    - frontend
+                    - compute
+                    - compactor
+                    type: string
+                  name:
+                    description: Name of the RisingWave object.
+                    type: string
+                  uid:
+                    description: UID of the target RisingWave object. Should be set
+                      by the mutating webhook.
+                    type: string
+                required:
+                - component
+                - name
+                type: object
+            type: object
+          status:
+            description: RisingWaveScaleViewStatus is the status of RisingWaveScaleView.
+            properties:
+              locked:
+                description: Lock status.
+                type: boolean
+              replicas:
+                description: Running replicas.
+                format: int32
+                type: integer
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      scale:
+        labelSelectorPath: .status.selector
+        specReplicasPath: .spec.replicas
+        statusReplicasPath: .status.replicas
+      status: {}

@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package manager
+package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-	io_prometheus_client "github.com/prometheus/client_model/go"
+	prometheusclient "github.com/prometheus/client_model/go"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
-	utils "github.com/risingwavelabs/risingwave-operator/pkg/utils"
+	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
 var (
-	// Metric is used to test if metric collection works.
+	// ReceivingMetricsFromOperator is used to test if metric collection works.
 	ReceivingMetricsFromOperator = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "receiving_metrics_from_operator",
@@ -144,8 +144,8 @@ func getWebhooksWithLabelValues(metric prometheus.CounterVec, wt utils.WebhookTy
 		"type": wt.String(), "group": gvk.Group, "version": gvk.Version,
 		"kind": gvk.Version, "namespace": nn.Namespace, "name": nn.Name,
 	})
-	var m io_prometheus_client.Metric
-	counter.Write(&m)
+	var m prometheusclient.Metric
+	_ = counter.Write(&m)
 	return int(*m.Counter.Value)
 }
 
@@ -213,14 +213,14 @@ func IncControllerReconcileRequeueErrorCount(target types.NamespacedName, gvk sc
 	incControllersWithLabelValues(*controllerReconcileRequeueErrorCount, target, gvk)
 }
 
-func UpdateControllerReconcileDuration(time_ms int64, gvk schema.GroupVersionKind, webhookName string, target types.NamespacedName) {
+func UpdateControllerReconcileDuration(timeInMilliSeconds int64, gvk schema.GroupVersionKind, webhookName string, target types.NamespacedName) {
 	controllerReconcileDuration.WithLabelValues(webhookName, gvk.Group, gvk.Version,
-		gvk.Kind, target.Namespace, target.Name).Observe(float64(time_ms))
+		gvk.Kind, target.Namespace, target.Name).Observe(float64(timeInMilliSeconds))
 }
 
 // ResetMetrics resets all metrics. Use for testing only.
 func ResetMetrics() {
-	ReceivingMetricsFromOperator.Write(&io_prometheus_client.Metric{})
+	_ = ReceivingMetricsFromOperator.Write(&prometheusclient.Metric{})
 	controllerReconcileCount.Reset()
 	controllerReconcilePanicCount.Reset()
 	controllerReconcileRequeueAfter.Reset()

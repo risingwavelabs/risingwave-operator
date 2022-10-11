@@ -51,9 +51,6 @@ function prepare_cluster() {
   start_kubernetes_env
   echo "Started!"
 
-  # Set the trap for cleaning the Kubernetes.
-  trap stop_kubernetes_env EXIT
-
   OS="$(uname -s)"
   case "${OS}" in
   Linux*) NIGHTLY_IMAGE_TAG="nightly"-$(date -d "2 day ago" '+%Y%m%d') ;;
@@ -80,6 +77,10 @@ function prepare_cluster() {
   prepare_auxiliary_pods
 }
 
+function stop_cluster() {
+    stop_kubernetes_env EXIT
+}
+
 function prepare_operator_image() {
   kubernetes_load_image docker.io/risingwavelabs/risingwave-operator:dev
 }
@@ -89,3 +90,40 @@ function prepare_auxiliary_pods() {
   start_the_psql_console
 }
 
+function install_locally_built_operator() {
+    # Install the RisingWave operator.
+    echo "Installing the RisingWave operator..."
+    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
+
+    function wait_cert_manager_certificate() {
+      # wait for certificate
+      threshold=40
+      current_epoch=0
+      while :; do
+        certificate=$(kubectl get validatingwebhookconfigurations cert-manager-webhook -o jsonpath='{.webhooks[0].clientConfig.caBundle}')
+        if [ -n "$certificate" ]; then
+          break
+        fi
+        if [ $current_epoch -eq $threshold ]; then
+          echo "ERROR: timeout waiting for cert-manager"
+          exit 1
+        fi
+        sleep 2
+        current_epoch=$((current_epoch + 1))
+        echo "waiting for cert-manager to be ready ($current_epoch / $threshold)..."
+      done
+    }
+
+    wait_cert_manager_certificate
+    wait_until_service_ready cert-manager cert-manager-webhook
+
+    kubectl apply -f "$BASEDIR"/../config/risingwave-operator-test.yaml
+
+    wait_until_service_ready risingwave-operator-system risingwave-operator-webhook-service
+    echo "RisingWave operator installed!"
+}
+
+function uninstall_locally_built_risingwave_operator() {
+  kubectl delete -f "$BASEDIR"/../config/risingwave-operator-test.yaml
+  kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
+}

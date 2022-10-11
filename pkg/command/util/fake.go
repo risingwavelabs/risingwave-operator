@@ -31,7 +31,7 @@ import (
 func NewFakeClient() client.Client {
 	risingwave := &v1alpha1.RisingWave{}
 	c := fake.NewClientBuilder().
-		WithScheme(testutils.Schema).
+		WithScheme(testutils.Scheme).
 		WithObjects(risingwave).
 		Build()
 	return c

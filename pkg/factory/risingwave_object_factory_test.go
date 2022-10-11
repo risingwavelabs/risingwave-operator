@@ -339,7 +339,7 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 				}
 			})
 
-			factory := NewRisingWaveObjectFactory(risingwave, testutils.Schema)
+			factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
 
 			var svc *corev1.Service
 			switch tc.component {
@@ -395,7 +395,7 @@ func Test_RisingWaveObjectFactory_ConfigMaps(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			risingwave := newTestRisingwave()
 
-			factory := NewRisingWaveObjectFactory(risingwave, testutils.Schema)
+			factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
 
 			cm := factory.NewConfigConfigMap(tc.configVal)
 
@@ -411,7 +411,7 @@ func Test_RisingWaveObjectFactory_ConfigMaps(t *testing.T) {
 				}),
 				newObjectAssert(cm, "configmap-data-match", func(obj *corev1.ConfigMap) bool {
 					return mapEquals(obj.Data, map[string]string{
-						risingWaveConfigMapKey: lo.If(tc.configVal == "", risingWaveConfigTemplate).Else(tc.configVal),
+						risingWaveConfigMapKey: lo.If(tc.configVal == "", "").Else(tc.configVal),
 					})
 				}),
 			).Assert(t)
@@ -713,7 +713,7 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 
 				group := &tc.group.Name
 
-				factory := NewRisingWaveObjectFactory(risingwave, testutils.Schema)
+				factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
 
 				var deploy *appsv1.Deployment
 				switch component {
@@ -995,7 +995,7 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 
 			group := &tc.group.Name
 
-			factory := NewRisingWaveObjectFactory(risingwave, testutils.Schema)
+			factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
 
 			sts := factory.NewComputeStatefulSet(tc.group.Name, tc.podTemplate)
 
@@ -1167,7 +1167,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 				r.Spec.Storages.Object = tc.objectStorage
 			})
 
-			factory := NewRisingWaveObjectFactory(risingwave, testutils.Schema)
+			factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
 
 			deploy := factory.NewCompactorDeployment("", nil)
 
@@ -1276,7 +1276,7 @@ func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
 				r.Spec.Storages.Meta = tc.metaStorage
 			})
 
-			factory := NewRisingWaveObjectFactory(risingwave, testutils.Schema)
+			factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
 			deploy := factory.NewMetaDeployment("", nil)
 
 			composeAssertions(
@@ -1294,7 +1294,7 @@ func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
 func Test_RisingWaveObjectFactory_ServiceMonitor(t *testing.T) {
 	risingwave := testutils.FakeRisingWave()
 
-	factory := NewRisingWaveObjectFactory(risingwave, testutils.Schema)
+	factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
 	serviceMonitor := factory.NewServiceMonitor()
 
 	composeAssertions(

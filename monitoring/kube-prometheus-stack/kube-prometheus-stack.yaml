@@ -2,9 +2,28 @@ prometheus-node-exporter:
   hostRootFsMount:
     enabled: false
 
+# Run `helm show values prometheus-community/kube-prometheus-stack` to get information about the below values
 prometheus:
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: false
+  additionalServiceMonitors:
+  - name: prometheus-service-monitor-rw-operator
+    namespaceSelector: 
+      matchNames:
+      - risingwave-operator-system
+    endpoints:
+    - interval: 10s
+      path: /metrics
+      port: http
+      scheme: https
+      scrapeTimeout: 5s
+      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      tlsConfig:
+        caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt # I think I can remove this
+        insecureSkipVerify: true
+    selector:
+      matchLabels: 
+        control-plane: controller-manager
 
 grafana:
   dashboardProviders:

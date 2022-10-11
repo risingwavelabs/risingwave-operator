@@ -70,7 +70,7 @@ func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 	}
 
 	// Validate the memory resources.
-	if _, ok := groupTemplate.Resources.Limits["memory"]; ok &&
+	if _, ok := groupTemplate.Resources.Limits[corev1.ResourceMemory]; ok &&
 		groupTemplate.Resources.Limits.Memory().Cmp(*groupTemplate.Resources.Requests.Memory()) == -1 {
 		fieldErrs = append(fieldErrs, field.Required(path.Child("resources", "memory"), "insufficient memory resource"))
 	}

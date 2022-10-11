@@ -398,6 +398,59 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
+		"limit-zero-fail-1": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Resources: corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								"cpu": resource.MustParse("0"),
+							},
+							Requests: corev1.ResourceList{
+								"cpu": resource.MustParse("1"),
+							},
+						},
+					},
+				}
+			},
+			pass: false,
+		},
+		"limit-zero-fail-2": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Resources: corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								"memory": resource.MustParse("0"),
+							},
+							Requests: corev1.ResourceList{
+								"memory": resource.MustParse("100Mi"),
+							},
+						},
+					},
+				}
+			},
+			pass: false,
+		},
+		"limit-exist-pass": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Resources: corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								"cpu":    resource.MustParse("1"),
+								"memory": resource.MustParse("1Gi"),
+							},
+							Requests: corev1.ResourceList{
+								"cpu":    resource.MustParse("100m"),
+								"memory": resource.MustParse("100Mi"),
+							},
+						},
+					},
+				}
+			},
+			pass: true,
+		},
 	}
 
 	webhook := NewRisingWaveValidatingWebhook()

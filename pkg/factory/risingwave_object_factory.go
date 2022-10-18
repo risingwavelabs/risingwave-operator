@@ -794,6 +794,11 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 			},
 		},
 	}, func(env *corev1.EnvVar) bool { return env.Name == "POD_NAME" })
+	// Set RUST_BACKTRACE=1 by default.
+	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
+		Name:  "RUST_BACKTRACE",
+		Value: "full",
+	}, func(env *corev1.EnvVar) bool { return env.Name == "RUST_BACKTRACE" })
 	if cpuLimit, ok := template.Resources.Limits[corev1.ResourceCPU]; ok {
 		container.Env = mergeListByKey(container.Env, corev1.EnvVar{
 			Name:  "RW_WORKER_THREADS",

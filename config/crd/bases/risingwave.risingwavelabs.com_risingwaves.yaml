@@ -898,6 +898,10 @@ spec:
                               the MinIO service. It must contain the following keys:
                               * username * password'
                             type: string
+                        required:
+                        - bucket
+                        - endpoint
+                        - secret
                         type: object
                       s3:
                         description: S3 storage spec.
@@ -910,6 +914,9 @@ spec:
                               the AWS S3 service. It must contain the following keys:
                               * AccessKeyID * SecretAccessKey * Region'
                             type: string
+                        required:
+                        - bucket
+                        - secret
                         type: object
                     type: object
                   pvcTemplates:

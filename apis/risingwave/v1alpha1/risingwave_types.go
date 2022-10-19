@@ -299,15 +299,15 @@ type RisingWaveObjectStorageMinIO struct {
 	//   * username
 	//   * password
 	// +kubebuilder:validation:Required
-	Secret string `json:"secret,omitempty"`
+	Secret string `json:"secret"`
 
 	// Endpoint of the MinIO service.
 	// +kubebuilder:validation:Required
-	Endpoint string `json:"endpoint,omitempty"`
+	Endpoint string `json:"endpoint"`
 
 	// Bucket of the MinIO service.
 	// +kubebuilder:validation:Required
-	Bucket string `json:"bucket,omitempty"`
+	Bucket string `json:"bucket"`
 }
 
 // RisingWaveObjectStorageS3 is the details of AWS S3 storage for compute and compactor components.
@@ -317,11 +317,11 @@ type RisingWaveObjectStorageS3 struct {
 	//   * SecretAccessKey
 	//   * Region
 	// +kubebuilder:validation:Required
-	Secret string `json:"secret,omitempty"`
+	Secret string `json:"secret"`
 
 	// Bucket of the AWS S3 service.
 	// +kubebuilder:validation:Required
-	Bucket string `json:"bucket,omitempty"`
+	Bucket string `json:"bucket"`
 }
 
 // RisingWaveObjectStorage is the object storage for compute and compactor components.

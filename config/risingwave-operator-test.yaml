@@ -7821,6 +7821,10 @@ spec:
                               the MinIO service. It must contain the following keys:
                               * username * password'
                             type: string
+                        required:
+                        - bucket
+                        - endpoint
+                        - secret
                         type: object
                       s3:
                         description: S3 storage spec.
@@ -7833,6 +7837,9 @@ spec:
                               the AWS S3 service. It must contain the following keys:
                               * AccessKeyID * SecretAccessKey * Region'
                             type: string
+                        required:
+                        - bucket
+                        - secret
                         type: object
                     type: object
                   pvcTemplates:
@@ -8871,6 +8878,29 @@ spec:
     targetPort: https
   selector:
     control-plane: controller-manager
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+  labels:
+    control-plane: controller-manager
+  name: risingwave-operator-metrics
+  namespace: risingwave-operator-system
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    control-plane: controller-manager
+  type: ClusterIP
 ---
 apiVersion: v1
 kind: Service

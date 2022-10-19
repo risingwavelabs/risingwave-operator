@@ -82,7 +82,7 @@ spec:
         secret: s3-credentials
         bucket: hummock001
   global:
-    image: ghcr.io/risingwavelabs/risingwave:latest
+    image: ghcr.io/risingwavelabs/risingwave:v0.1.13
     imagePullPolicy: IfNotPresent
     resources:
       limits:

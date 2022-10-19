@@ -18,6 +18,7 @@ package factory
 
 import (
 	"fmt"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -46,7 +47,9 @@ const (
 	envEtcdUsername  = "ETCD_USERNAME"
 	envEtcdPassword  = "ETCD_PASSWORD"
 
-	risingwaveExecutablePath = "/risingwave/bin/risingwave"
+	risingwaveExecutablePath  = "/risingwave/bin/risingwave"
+	risingwaveConfigMountPath = "/risingwave/config"
+	risingwaveConfigFileName  = "risingwave.toml"
 )
 
 type RisingWaveObjectFactory struct {
@@ -339,7 +342,7 @@ func (f *RisingWaveObjectFactory) argsForMeta() []string {
 
 	args := []string{
 		"meta-node",
-		"--config-path", "/risingwave/config/risingwave.toml",
+		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", metaPorts.ServicePort),
 		"--host", "$(POD_IP)",
 		"--dashboard-host", fmt.Sprintf("0.0.0.0:%d", metaPorts.DashboardPort),
@@ -367,6 +370,7 @@ func (f *RisingWaveObjectFactory) argsForFrontend() []string {
 
 	return []string{
 		"frontend-node",
+		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--host", fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
 		"--meta-addr", fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 	}
@@ -376,9 +380,9 @@ func (f *RisingWaveObjectFactory) argsForCompute() []string {
 	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
 	computePorts := &f.risingwave.Spec.Components.Compute.Ports
 
-	return []string{ // TODO: mv args -> configuration file
+	return []string{
 		"compute-node",
-		"--config-path", "/risingwave/config/risingwave.toml",
+		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--host", fmt.Sprintf("$(POD_IP):%d", computePorts.ServicePort),
 		"--client-address", fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentCompute, ""), computePorts.ServicePort),
 		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", computePorts.MetricsPort),
@@ -396,7 +400,7 @@ func (f *RisingWaveObjectFactory) argsForCompactor() []string {
 
 	return []string{
 		"compactor-node",
-		"--config-path", "/risingwave/config/risingwave.toml",
+		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--host", fmt.Sprintf("$(POD_IP):%d", compactorPorts.ServicePort),
 		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", compactorPorts.MetricsPort),
 		"--metrics-level=1",
@@ -500,7 +504,7 @@ func (f *RisingWaveObjectFactory) risingWaveConfigVolume() corev1.Volume {
 				Items: []corev1.KeyToPath{
 					{
 						Key:  "risingwave.toml",
-						Path: "risingwave.toml",
+						Path: risingwaveConfigFileName,
 					},
 				},
 				LocalObjectReference: corev1.LocalObjectReference{
@@ -514,7 +518,7 @@ func (f *RisingWaveObjectFactory) risingWaveConfigVolume() corev1.Volume {
 func (f *RisingWaveObjectFactory) volumeMountForConfig() corev1.VolumeMount {
 	return corev1.VolumeMount{
 		Name:      risingWaveConfigVolume,
-		MountPath: "/risingwave/config",
+		MountPath: risingwaveConfigMountPath,
 		ReadOnly:  true,
 	}
 }

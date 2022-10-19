@@ -19,7 +19,7 @@ Before getting started, you need to ensure that you have an account which has th
 
 Follow the instructions below to set up the remote write:
 
-1. Copy the [prometheus-remote-write-aws.yaml](./monitoring/kube-prometheus-stack/prometheus-remote-write-aws.yaml) file and replace the values of the these variables:
+1. Copy the [prometheus-remote-write-aws.yaml](./kube-prometheus-stack/prometheus-remote-write-aws.yaml) file and replace the values of the these variables:
 - `${KUBERNETES_NAME}`: the name of the Kubernetes, e.g., `local-dev`. You can also add `externalLabels` yourself.
 - `${AWS_REGION}`: the region of the AWS Prometheus service, e.g., `ap-southeast-1`
 - `${WORKSPACE_ID}`: the workspace ID, e.g., `ws-12345678-abcd-1234-abcd-123456789012`

@@ -65,7 +65,7 @@ risingwave-risingwave-etcd-minio   119m
 Let's try to forward the web port of Grafana to localhost, with the following command:
 
 ```shell
-kubectl port-forward svc/prometheus-grafana 3000:http-web
+kubectl port-forward -n monitoring svc/prometheus-grafana 3000:http-web
 ```
 
 Now we can access the Grafana inside the Kubernetes via [http://localhost:3000](http://localhost:3000). By default, the username is `admin` and the password is `prom-operator`.

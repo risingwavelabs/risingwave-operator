@@ -25,7 +25,7 @@ import (
 const (
 	MinimumVersion = "v0.2.0"
 
-	DefaultVersion = "v0.2.0"
+	DefaultVersion = "v0.2.2"
 
 	LatestVersion = "latest" // TODO: need to convert latest to the version tag https://github.com/risingwavelabs/risingwave-operator/issues/201
 )

@@ -9,7 +9,7 @@ spec:
     object:
       memory: true
   global:
-    image: ghcr.io/risingwavelabs/risingwave:latest
+    image: ghcr.io/risingwavelabs/risingwave:e2e
     replicas:
       meta: 1
       compute: 1

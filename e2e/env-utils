@@ -58,6 +58,9 @@ function prepare_cluster() {
   *) echo "ERROR: unsupported platform $OS" && exit 1 ;;
   esac
 
+  # Override the nightly tag to keep test stable.
+  NIGHTLY_IMAGE_TAG=v0.1.13
+
   echo "Using a nightly tag $NIGHTLY_IMAGE_TAG for RisingWave images..."
 
   echo "Pulling images..."

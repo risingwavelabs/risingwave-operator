@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/samber/lo"
 	appsv1 "k8s.io/api/apps/v1"
@@ -916,6 +917,11 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment(group string, podTemplates m
 	}
 
 	return mustSetControllerReference(f.risingwave, metaDeployment, f.scheme)
+}
+
+func (f *RisingWaveObjectFactory) newMetaCloneSet() *kruiseappsv1alpha1.Cloneset {
+	metaCloneSet := kruiseappsv1alpha1.Cloneset{}
+
 }
 
 func (f *RisingWaveObjectFactory) portsForFrontendContainer() []corev1.ContainerPort {

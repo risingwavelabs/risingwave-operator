@@ -26,8 +26,10 @@ import (
 type RisingWaveUpgradeStrategyType string
 
 const (
-	RisingWaveUpgradeStrategyTypeRecreate      RisingWaveUpgradeStrategyType = "Recreate"
-	RisingWaveUpgradeStrategyTypeRollingUpdate RisingWaveUpgradeStrategyType = "RollingUpdate"
+	RisingWaveUpgradeStrategyTypeRecreate          RisingWaveUpgradeStrategyType = "Recreate"
+	RisingWaveUpgradeStrategyTypeRollingUpdate     RisingWaveUpgradeStrategyType = "RollingUpdate"
+	RisingWaveUpgradeStrategyTypeInPlaceIfPossible RisingWaveUpgradeStrategyType = "InPlaceIfPossible"
+	RisingWaveUpgradeStrategyTypeInPlaceOnly       RisingWaveUpgradeStrategyType = "InPlaceOnly"
 )
 
 type RisingWaveRollingUpdate struct {
@@ -76,6 +78,8 @@ type RisingWaveComponentGroupTemplate struct {
 	// +optional
 	// +patchStrategy=retainKeys
 	UpgradeStrategy RisingWaveUpgradeStrategy `json:"upgradeStrategy,omitempty"`
+
+	ScaleStrategy RisingWaveScaleStrategy `json:"scaleStrategy,omitempty"`
 
 	// Resources of the RisingWave component.
 	// +optional

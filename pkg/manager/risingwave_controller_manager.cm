@@ -85,6 +85,9 @@ decl RisingWaveControllerManager for RisingWave {
         // SyncMetaDeployments creates or updates the deployments for meta nodes.
         SyncMetaDeployments(metaDeployments)
 
+        // SyncMetaCloneSets
+        SyncMetaCloneSets(metaCloneSets)
+        
         // WaitBeforeMetaServiceIsAvailable waits (aborts the workflow) before the meta service is available.
         WaitBeforeMetaServiceIsAvailable(metaService)
 

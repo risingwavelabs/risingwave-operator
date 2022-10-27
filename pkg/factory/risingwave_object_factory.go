@@ -957,6 +957,8 @@ func (f *RisingWaveObjectFactory) newMetaCloneSet(group string, podTemplates map
 		return nil
 	}
 
+	restartAt := f.risingwave.Spec.Components.Meta.RestartAt
+
 	// Build the pod template.
 	podTemplate := f.buildPodTemplate(consts.ComponentMeta, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 

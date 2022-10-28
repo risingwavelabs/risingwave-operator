@@ -883,17 +883,17 @@ func buildUpgradeStrategyForDeployment(strategy risingwavev1alpha1.RisingWaveUpg
 	}
 }
 
-func buildUpgradeStrategyForCloneSet(strategy risingwavev1alpha1.RisingWaveUpgradeStrategy) kruiseappsv1alpha1.CloneSetUpdateStrategy {
+func buildUpgradeStrategyForCloneSet(strategy kruiseappsv1alpha1.CloneSetUpdateStrategy) kruiseappsv1alpha1.CloneSetUpdateStrategy {
 	switch strategy.Type {
-	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate:
+	case kruiseappsv1alpha1.RecreateCloneSetUpdateStrategyType:
 		return kruiseappsv1alpha1.CloneSetUpdateStrategy{
 			Type: kruiseappsv1alpha1.RecreateCloneSetUpdateStrategyType,
 		}
-	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible:
+	case kruiseappsv1alpha1.InPlaceIfPossibleCloneSetUpdateStrategyType:
 		return kruiseappsv1alpha1.CloneSetUpdateStrategy{
 			Type: kruiseappsv1alpha1.InPlaceIfPossibleCloneSetUpdateStrategyType,
 		}
-	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly:
+	case kruiseappsv1alpha1.InPlaceOnlyCloneSetUpdateStrategyType:
 		return kruiseappsv1alpha1.CloneSetUpdateStrategy{
 			Type: kruiseappsv1alpha1.InPlaceOnlyCloneSetUpdateStrategyType,
 		}
@@ -974,7 +974,7 @@ func (f *RisingWaveObjectFactory) newMetaCloneSet(group string, podTemplates map
 		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentMeta, group, true),
 		Spec: kruiseappsv1alpha1.CloneSetSpec{
 			Replicas:       pointer.Int32(componentGroup.Replicas),
-			UpdateStrategy: buildUpgradeStrategyForCloneSet(componentGroup.UpgradeStrategy),
+			UpdateStrategy: buildUpgradeStrategyForCloneSet(*componentGroup.UpgradeStrategy.CloneSeUpdateStrategy),
 			// ScaleStrategy:  buildScaleStrategyForCloneSet(componentGroup.ScaleStrategy),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labelsOrSelectors,
@@ -1078,7 +1078,7 @@ func (f *RisingWaveObjectFactory) NewFrontEndCloneSet(group string, podTemplates
 		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentFrontend, group, true),
 		Spec: kruiseappsv1alpha1.CloneSetSpec{
 			Replicas:       pointer.Int32(componentGroup.Replicas),
-			UpdateStrategy: buildUpgradeStrategyForCloneSet(componentGroup.UpgradeStrategy),
+			UpdateStrategy: buildUpgradeStrategyForCloneSet(*componentGroup.UpgradeStrategy.CloneSeUpdateStrategy),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labelsOrSelectors,
 			},
@@ -1194,7 +1194,7 @@ func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string, podTemplate
 		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentCompactor, group, true),
 		Spec: kruiseappsv1alpha1.CloneSetSpec{
 			Replicas:       pointer.Int32(componentGroup.Replicas),
-			UpdateStrategy: buildUpgradeStrategyForCloneSet(componentGroup.UpgradeStrategy),
+			UpdateStrategy: buildUpgradeStrategyForCloneSet(*componentGroup.UpgradeStrategy.CloneSeUpdateStrategy),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labelsOrSelectors,
 			},
@@ -1219,23 +1219,23 @@ func buildUpgradeStrategyForStatefulSet(strategy risingwavev1alpha1.RisingWaveUp
 	}
 }
 
-func buildUpgradeStrategyForAdvancedStatefulSet(strategy risingwavev1alpha1.RisingWaveUpgradeStrategy) kruiseappsv1beta1.StatefulSetUpdateStrategy {
-	switch strategy.Type {
-	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate:
+func buildUpgradeStrategyForAdvancedStatefulSet(strategy kruiseappsv1beta1.StatefulSetUpdateStrategy) kruiseappsv1beta1.StatefulSetUpdateStrategy {
+	switch strategy.RollingUpdate.PodUpdatePolicy {
+	case kruiseappsv1beta1.RecreatePodUpdateStrategyType:
 		return kruiseappsv1beta1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
 			RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
 				PodUpdatePolicy: kruiseappsv1beta1.RecreatePodUpdateStrategyType,
 			},
 		}
-	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible:
+	case kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType:
 		return kruiseappsv1beta1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
 			RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
 				PodUpdatePolicy: kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType,
 			},
 		}
-	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly:
+	case kruiseappsv1beta1.InPlaceOnlyPodUpdateStrategyType:
 		return kruiseappsv1beta1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
 			RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
@@ -1369,7 +1369,7 @@ func (f *RisingWaveObjectFactory) NewComputeAdvancedStatefulSet(group string, po
 		Spec: kruiseappsv1beta1.StatefulSetSpec{
 			Replicas:       pointer.Int32(componentGroup.Replicas),
 			ServiceName:    f.componentName(consts.ComponentCompute, ""),
-			UpdateStrategy: buildUpgradeStrategyForAdvancedStatefulSet(componentGroup.UpgradeStrategy),
+			UpdateStrategy: buildUpgradeStrategyForAdvancedStatefulSet(*componentGroup.UpgradeStrategy.AdvancedStatefulSetUpdateStrategy),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labelsOrSelectors,
 			},

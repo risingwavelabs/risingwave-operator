@@ -17,6 +17,8 @@
 package v1alpha1
 
 import (
+	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
+	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -47,11 +49,20 @@ type RisingWaveUpgradeStrategy struct {
 	// +optional
 	// +kubebuilder:default=RollingUpdate
 	// +kubebuilder:validation:Enum=Recreate;RollingUpdate
+	// +kubebuilder:if(enableOpenKruise)?validation:Enum=Recreate;InPlaceIfPossible;InPlaceOnly
 	Type RisingWaveUpgradeStrategyType `json:"type,omitempty"`
 
 	// Rolling update config params. Present only if DeploymentStrategyType = RollingUpdate.
 	// +optional
 	RollingUpdate *RisingWaveRollingUpdate `json:"rollingUpdate,omitempty"`
+
+	//Open Kruise cloneset update strategy config Params. Present only if EnableOpenkruise is True.
+	// +optional
+	CloneSeUpdateStrategy *kruiseappsv1alpha1.CloneSetUpdateStrategy `json:"cloneSetUpdateStrategy,omitempty"`
+
+	//Open Kruise Advanced stateful set strategy config params. Present only if EnableOpenKruise is True.
+	// +optional
+	AdvancedStatefulSetUpdateStrategy *kruiseappsv1beta1.StatefulSetUpdateStrategy `json:"statefulSetUpdateStrategy,omitempty"`
 }
 
 // RisingWaveComponentGroupTemplate is the common deployment template for groups of each component.
@@ -79,11 +90,18 @@ type RisingWaveComponentGroupTemplate struct {
 	// +patchStrategy=retainKeys
 	UpgradeStrategy RisingWaveUpgradeStrategy `json:"upgradeStrategy,omitempty"`
 
-	ScaleStrategy RisingWaveScaleStrategy `json:"scaleStrategy,omitempty"`
+	// ScaleStrategy RisingWaveScaleStrategy `json:"scaleStrategy,omitempty"`
 
 	// Resources of the RisingWave component.
 	// +optional
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+
+	// Flag to dicate if Openkruise should be enabled for components,
+	// If enabled, Clonesets will be utilized for meta/frontend/compactor
+	// AdvancedStateFul Set will be used for compute
+	// +optional
+	// default=false
+	EnableOpenKruise bool `json:"enableOpenKruise,omitempty"`
 
 	// A map of labels describing the nodes to be scheduled on.
 	// +optional

@@ -11,8 +11,6 @@
 
 ```shell
 make build-plugin
-
-mv ./bin/kubectl-rw /usr/local/bin/kubectl-rw
 ```
 
 ## Management Commands

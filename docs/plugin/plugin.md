@@ -27,6 +27,7 @@ Options:
 
 
 ### Operator Deletion
+
 Command: `kubectl rw uninstall`
 
 Uninstall the RisingWave Operator from the cluster.

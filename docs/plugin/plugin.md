@@ -11,8 +11,6 @@
 
 ```shell
 make build-plugin
-
-mv ./bin/kubectl-rw /usr/local/bin/kubectl-rw
 ```
 
 ## Management Commands
@@ -29,6 +27,7 @@ Options:
 
 
 ### Operator Deletion
+
 Command: `kubectl rw uninstall`
 
 Uninstall the RisingWave Operator from the cluster.

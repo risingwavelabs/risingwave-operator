@@ -34,8 +34,8 @@ List all risingwave instances.
 
 By specifying namespace or label-selectors, you can filter instances.
 `
-	listExample = `  # list all clusters and sync to local config
-  kubectl rw list
+	listExample = `  # list all rw instances
+  kubectl rw list -A
 
   # filter by namespace
   kubectl rw list --namespace=foo

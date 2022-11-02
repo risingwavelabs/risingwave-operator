@@ -17,8 +17,7 @@
 package v1alpha1
 
 import (
-	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
-	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
+	kruisepubs "github.com/openkruise/kruise-api/apps/pubs"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -56,13 +55,31 @@ type RisingWaveUpgradeStrategy struct {
 	// +optional
 	RollingUpdate *RisingWaveRollingUpdate `json:"rollingUpdate,omitempty"`
 
-	//Open Kruise cloneset update strategy config Params. Present only if EnableOpenkruise is True.
-	// +optional
-	CloneSeUpdateStrategy *kruiseappsv1alpha1.CloneSetUpdateStrategy `json:"cloneSetUpdateStrategy,omitempty"`
+	// Partition is the desired number of pods in old revisions.
+	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
+	// Absolute number is calculated from percentage by rounding up by default.
+	// It means when partition is set during pods updating, (replicas - partition value) number of pods will be updated.
+	// Default value is 0.
+	Partition *intstr.IntOrString `json:"partition,omitempty"`
 
-	//Open Kruise Advanced stateful set strategy config params. Present only if EnableOpenKruise is True.
-	// +optional
-	AdvancedStatefulSetUpdateStrategy *kruiseappsv1beta1.StatefulSetUpdateStrategy `json:"statefulSetUpdateStrategy,omitempty"`
+	// The maximum number of pods that can be unavailable during update or scale.
+	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
+	// Absolute number is calculated from percentage by rounding up by default.
+	// When maxSurge > 0, absolute number is calculated from percentage by rounding down.
+	// Defaults to 20%.
+	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty"`
+
+	// The maximum number of pods that can be scheduled above the desired replicas during update or specified delete.
+	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
+	// Absolute number is calculated from percentage by rounding up.
+	// Defaults to 0.
+	MaxSurge *intstr.IntOrString `json:"maxSurge,omitempty"`
+
+	// InPlaceUpdateStrategy contains strategies for in-place update.
+	// Contains GracePeriodSeconds
+	// GracePeriodSeconds is the timespan between set Pod status to not-ready and update images in Pod spec
+	// when in-place update a Pod.
+	InPlaceUpdateStrategy *kruisepubs.InPlaceUpdateStrategy `json:"inPlaceUpdateStrategy,omitempty"`
 }
 
 // RisingWaveComponentGroupTemplate is the common deployment template for groups of each component.

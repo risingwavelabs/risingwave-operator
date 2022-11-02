@@ -75,6 +75,10 @@ func (f *RisingWaveObjectFactory) isObjectStorageS3() bool {
 	return f.risingwave.Spec.Storages.Object.S3 != nil
 }
 
+func (f *RisingWaveObjectFactory) isObjectStorageAliyunOSS() bool {
+	return f.risingwave.Spec.Storages.Object.AliyunOSS != nil
+}
+
 func (f *RisingWaveObjectFactory) isObjectStorageMinIO() bool {
 	return f.risingwave.Spec.Storages.Object.MinIO != nil
 }
@@ -94,6 +98,9 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 	case objectStorage.MinIO != nil:
 		minio := objectStorage.MinIO
 		return fmt.Sprintf("hummock+minio://$(%s):$(%s)@%s/%s", envMinIOUsername, envMinIOPassword, minio.Endpoint, minio.Bucket)
+	case objectStorage.AliyunOSS != nil:
+		aliyunOSS := objectStorage.AliyunOSS
+		return fmt.Sprintf("hummock+virtual-hosted-s3://%s", aliyunOSS.Bucket)
 	default:
 		panic("unrecognized storage type")
 	}
@@ -467,6 +474,10 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 
 	return []corev1.EnvVar{
 		{
+			Name:  "S3_BUCKET",
+			Value: objectStorage.S3.Bucket,
+		},
+		{
 			Name: "AWS_REGION",
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
@@ -493,6 +504,72 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 				},
 			},
 		},
+	}
+}
+
+func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
+	objectStorage := &f.risingwave.Spec.Storages.Object
+
+	secretRef := corev1.LocalObjectReference{
+		Name: objectStorage.AliyunOSS.Secret,
+	}
+
+	var s3Endpoint string
+	if objectStorage.AliyunOSS.InternalEndpoint {
+		s3Endpoint = "$(S3_BUCKET).oss-$(S3_REGION)-internal.aliyuncs.com"
+	} else {
+		s3Endpoint = "$(S3_BUCKET).oss-$(S3_REGION).aliyuncs.com"
+	}
+
+	return []corev1.EnvVar{
+		{
+			Name:  "S3_BUCKET",
+			Value: objectStorage.AliyunOSS.Bucket,
+		},
+		{
+			Name: "S3_REGION",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyAWSS3Region,
+				},
+			},
+		},
+		{
+			Name: "S3_ACCESS_KEY_ID",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyAWSS3AccessKeyID,
+				},
+			},
+		},
+		{
+			Name: "S3_SECRET_ACCESS_KEY",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyAWSS3SecretAccessKey,
+				},
+			},
+		},
+		{
+			Name:  "S3_ENDPOINT",
+			Value: s3Endpoint,
+		},
+	}
+}
+
+func (f *RisingWaveObjectFactory) envsForObjectStorage() []corev1.EnvVar {
+	switch {
+	case f.isObjectStorageMinIO():
+		return f.envsForMinIO()
+	case f.isObjectStorageS3():
+		return f.envsForS3()
+	case f.isObjectStorageAliyunOSS():
+		return f.envsForAliyunOSS()
+	default:
+		return nil
 	}
 }
 
@@ -1012,18 +1089,10 @@ func (f *RisingWaveObjectFactory) setupCompactorContainer(container *corev1.Cont
 	container.Args = f.argsForCompactor()
 	container.Ports = f.portsForCompactorContainer()
 
-	if f.isObjectStorageS3() {
-		for _, env := range f.envsForS3() {
-			container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-				return a.Name == b.Name
-			})
-		}
-	} else if f.isObjectStorageMinIO() {
-		for _, env := range f.envsForMinIO() {
-			container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-				return a.Name == b.Name
-			})
-		}
+	for _, env := range f.envsForObjectStorage() {
+		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
 	}
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
@@ -1108,18 +1177,10 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	container.Args = f.argsForCompute()
 	container.Ports = f.portsForComputeContainer()
 
-	if f.isObjectStorageS3() {
-		for _, env := range f.envsForS3() {
-			container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-				return a.Name == b.Name
-			})
-		}
-	} else if f.isObjectStorageMinIO() {
-		for _, env := range f.envsForMinIO() {
-			container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-				return a.Name == b.Name
-			})
-		}
+	for _, env := range f.envsForObjectStorage() {
+		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
 	}
 
 	for _, volumeMount := range template.VolumeMounts {

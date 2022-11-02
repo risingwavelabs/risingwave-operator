@@ -1635,6 +1635,75 @@ RisingWaveObjectStorageS3
 <p>S3 storage spec.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>aliyunOSS</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageAliyunOSS">
+RisingWaveObjectStorageAliyunOSS
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AliyunOSS storage spec.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageAliyunOSS">RisingWaveObjectStorageAliyunOSS
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage</a>)
+</p>
+<div>
+<p>RisingWaveObjectStorageAliyunOSS is the details of Aliyun OSS storage (S3 compatible) for compute and compactor components.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secret</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Secret contains the credentials to access the Aliyun OSS service. It must contain the following keys:
+* AccessKeyID
+* SecretAccessKey
+* Region</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bucket</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Bucket of the Aliyun OSS service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>internalEndpoint</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>InternalEndpoint indicates if we use the internal endpoint to access Aliyun OSS, which is
+only available in the internal network.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageMinIO">RisingWaveObjectStorageMinIO

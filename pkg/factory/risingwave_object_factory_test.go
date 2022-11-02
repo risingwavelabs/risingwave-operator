@@ -89,6 +89,21 @@ func mapContains[K, V comparable](a, b map[K]V) bool {
 	return true
 }
 
+func mapContainsWith[K comparable, V any](a, b map[K]V, equals func(a, b V) bool) bool {
+	if len(a) < len(b) {
+		return false
+	}
+
+	for k, v := range b {
+		va, ok := a[k]
+		if !ok || !equals(va, v) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func mapEquals[K, V comparable](a, b map[K]V) bool {
 	if len(a) == 0 && len(b) == 0 {
 		return true
@@ -444,18 +459,15 @@ func listContains[T comparable](a, b []T) bool {
 }
 
 func listContainsByKey[T any, K comparable](a, b []T, key func(*T) K, equals func(x, y T) bool) bool {
-	bKeys := make(map[K]*T)
+	aKeys, bKeys := make(map[K]T), make(map[K]T)
+	for i, x := range a {
+		aKeys[key(&x)] = a[i]
+	}
 	for i, x := range b {
-		bKeys[key(&x)] = &b[i]
+		bKeys[key(&x)] = b[i]
 	}
-	for _, x := range a {
-		if y, ok := bKeys[key(&x)]; ok {
-			if !equals(x, *y) {
-				return false
-			}
-		}
-	}
-	return true
+
+	return mapContainsWith(aKeys, bKeys, equals)
 }
 
 func matchesPodTemplate(podSpec *corev1.PodTemplateSpec, podTemplate *risingwavev1alpha1.RisingWavePodTemplateSpec) bool {
@@ -1148,6 +1160,103 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 				},
 				{
 					Name: "AWS_REGION",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3Region,
+						},
+					},
+				},
+			},
+		},
+		"aliyun-oss": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				AliyunOSS: &risingwavev1alpha1.RisingWaveObjectStorageAliyunOSS{
+					Secret: "s3-creds",
+					Bucket: "s3-hummock01",
+				},
+			},
+			hummockArg: "hummock+virtual-hosted-s3://s3-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "S3_ENDPOINT",
+					Value: "$(S3_BUCKET).oss-$(S3_REGION).aliyuncs.com",
+				},
+				{
+					Name: "S3_ACCESS_KEY_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3AccessKeyID,
+						},
+					},
+				},
+				{
+					Name: "S3_SECRET_ACCESS_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3SecretAccessKey,
+						},
+					},
+				},
+				{
+					Name: "S3_REGION",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3Region,
+						},
+					},
+				},
+			},
+		},
+		"aliyun-oss-internal": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				AliyunOSS: &risingwavev1alpha1.RisingWaveObjectStorageAliyunOSS{
+					Secret:           "s3-creds",
+					Bucket:           "s3-hummock01",
+					InternalEndpoint: true,
+				},
+			},
+			hummockArg: "hummock+virtual-hosted-s3://s3-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "S3_ENDPOINT",
+					Value: "$(S3_BUCKET).oss-$(S3_REGION)-internal.aliyuncs.com",
+				},
+				{
+					Name: "S3_ACCESS_KEY_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3AccessKeyID,
+						},
+					},
+				},
+				{
+					Name: "S3_SECRET_ACCESS_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3SecretAccessKey,
+						},
+					},
+				},
+				{
+					Name: "S3_REGION",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{

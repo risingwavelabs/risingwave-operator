@@ -324,6 +324,24 @@ type RisingWaveObjectStorageS3 struct {
 	Bucket string `json:"bucket"`
 }
 
+// RisingWaveObjectStorageAliyunOSS is the details of Aliyun OSS storage (S3 compatible) for compute and compactor components.
+type RisingWaveObjectStorageAliyunOSS struct {
+	// Secret contains the credentials to access the Aliyun OSS service. It must contain the following keys:
+	//   * AccessKeyID
+	//   * SecretAccessKey
+	//   * Region
+	// +kubebuilder:validation:Required
+	Secret string `json:"secret"`
+
+	// Bucket of the Aliyun OSS service.
+	// +kubebuilder:validation:Required
+	Bucket string `json:"bucket"`
+
+	// InternalEndpoint indicates if we use the internal endpoint to access Aliyun OSS, which is
+	// only available in the internal network.
+	InternalEndpoint bool `json:"internalEndpoint,omitempty"`
+}
+
 // RisingWaveObjectStorage is the object storage for compute and compactor components.
 type RisingWaveObjectStorage struct {
 	// Memory indicates to store the data in memory. It's only for test usage and strongly discouraged to
@@ -338,6 +356,10 @@ type RisingWaveObjectStorage struct {
 	// S3 storage spec.
 	// +optional
 	S3 *RisingWaveObjectStorageS3 `json:"s3,omitempty"`
+
+	// AliyunOSS storage spec.
+	// +optional
+	AliyunOSS *RisingWaveObjectStorageAliyunOSS `json:"aliyunOSS,omitempty"`
 }
 
 // RisingWaveStoragesSpec is the storages spec.

@@ -38,3 +38,5 @@ yamlex
 risingwavelabs
 fallocate
 nums
+aliyun
+aliyuncs

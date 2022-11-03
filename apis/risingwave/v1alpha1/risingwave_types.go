@@ -17,7 +17,7 @@
 package v1alpha1
 
 import (
-	kruisepubs "github.com/openkruise/kruise-api/apps/pubs"
+	kruisepubs "github.com/openkruise/kruise-api/apps/pub"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -41,6 +41,19 @@ type RisingWaveRollingUpdate struct {
 	// +optional
 	// +kubebuilder:default="25%"
 	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty" protobuf:"bytes,1,opt,name=maxUnavailable"`
+
+	// Partition is the desired number of pods in old revisions.
+	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
+	// Absolute number is calculated from percentage by rounding up by default.
+	// It means when partition is set during pods updating, (replicas - partition value) number of pods will be updated.
+	// Default value is 0.
+	Partition *intstr.IntOrString `json:"partition,omitempty"`
+
+	// The maximum number of pods that can be scheduled above the desired replicas during update or specified delete.
+	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
+	// Absolute number is calculated from percentage by rounding up.
+	// Defaults to 0.
+	MaxSurge *intstr.IntOrString `json:"maxSurge,omitempty"`
 }
 
 type RisingWaveUpgradeStrategy struct {
@@ -54,26 +67,6 @@ type RisingWaveUpgradeStrategy struct {
 	// Rolling update config params. Present only if DeploymentStrategyType = RollingUpdate.
 	// +optional
 	RollingUpdate *RisingWaveRollingUpdate `json:"rollingUpdate,omitempty"`
-
-	// Partition is the desired number of pods in old revisions.
-	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
-	// Absolute number is calculated from percentage by rounding up by default.
-	// It means when partition is set during pods updating, (replicas - partition value) number of pods will be updated.
-	// Default value is 0.
-	Partition *intstr.IntOrString `json:"partition,omitempty"`
-
-	// The maximum number of pods that can be unavailable during update or scale.
-	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
-	// Absolute number is calculated from percentage by rounding up by default.
-	// When maxSurge > 0, absolute number is calculated from percentage by rounding down.
-	// Defaults to 20%.
-	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty"`
-
-	// The maximum number of pods that can be scheduled above the desired replicas during update or specified delete.
-	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
-	// Absolute number is calculated from percentage by rounding up.
-	// Defaults to 0.
-	MaxSurge *intstr.IntOrString `json:"maxSurge,omitempty"`
 
 	// InPlaceUpdateStrategy contains strategies for in-place update.
 	// Contains GracePeriodSeconds
@@ -112,13 +105,6 @@ type RisingWaveComponentGroupTemplate struct {
 	// Resources of the RisingWave component.
 	// +optional
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
-
-	// Flag to dicate if Openkruise should be enabled for components,
-	// If enabled, Clonesets will be utilized for meta/frontend/compactor
-	// AdvancedStateFul Set will be used for compute
-	// +optional
-	// default=false
-	EnableOpenKruise bool `json:"enableOpenKruise,omitempty"`
 
 	// A map of labels describing the nodes to be scheduled on.
 	// +optional
@@ -496,6 +482,13 @@ type RisingWaveSpec struct {
 
 	// The spec of configuration template for RisingWave.
 	Configuration RisingWaveConfigurationSpec `json:"configuration,omitempty"`
+
+	// Flag to dicate if Openkruise should be enabled for components,
+	// If enabled, Clonesets will be utilized for meta/frontend/compactor
+	// AdvancedStateFul Set will be used for compute
+	// +optional
+	// default=false
+	EnableOpenKruise bool `json:"enableOpenKruise,omitempty"`
 }
 
 // ComponentGroupReplicasStatus are the running status of Pods in group.

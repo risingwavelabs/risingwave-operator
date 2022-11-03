@@ -68,6 +68,15 @@ spec:
             name: client
             protocol: TCP
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: s3-credentials
+stringData:
+  Region: ap-southeast-1
+  AccessKeyID: your-access-key
+  SecretAccessKey: your-access-secret
+---
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:

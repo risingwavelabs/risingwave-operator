@@ -322,6 +322,15 @@ type RisingWaveObjectStorageS3 struct {
 	// Bucket of the AWS S3 service.
 	// +kubebuilder:validation:Required
 	Bucket string `json:"bucket"`
+
+	// Endpoint of the AWS (or other vendor's S3-compatible) service. Leave it empty
+	// when using AWS S3 service.
+	// +optional
+	// +kubebuilder:validation:Pattern="^(?:https://)?(?:[^/.\\s]+\\.)*(?:[^/\\s]+)*$"
+	Endpoint string `json:"endpoint,omitempty"`
+
+	// VirtualHostedStyle indicates to use a virtual hosted endpoint when endpoint is specified.
+	VirtualHostedStyle bool `json:"virtualHostedStyle,omitempty"`
 }
 
 // RisingWaveObjectStorageAliyunOSS is the details of Aliyun OSS storage (S3 compatible) for compute and compactor components.

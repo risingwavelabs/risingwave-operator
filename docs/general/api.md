@@ -1800,6 +1800,30 @@ string
 <p>Bucket of the AWS S3 service.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>endpoint</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Endpoint of the AWS (or other vendor&rsquo;s S3-compatible) service. Leave it empty
+when using AWS S3 service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>virtualHostedStyle</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>VirtualHostedStyle indicates to use a virtual hosted endpoint when endpoint is specified.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageStatus">RisingWaveObjectStorageStatus

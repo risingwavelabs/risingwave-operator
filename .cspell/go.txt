@@ -46,6 +46,7 @@ prometheusclient
 
 # Functions / Methods
 deepcopy
+deref
 
 # Tags
 protobuf

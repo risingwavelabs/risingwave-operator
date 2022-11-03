@@ -74,8 +74,8 @@ metadata:
   name: aliyun-oss-credentials
 stringData:
   Region: cn-hangzhou
-  AccessKey: your-access-key
-  AccessSecret: your-access-secret
+  AccessKeyID: your-access-key
+  SecretAccessKey: your-access-secret
 ---
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave

@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cos-credentials
+stringData:
+  Region: ap-guangzhou
+  AccessKeyID: your-access-key
+  SecretAccessKey: your-access-secret
+---
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-s3-compatible
+spec:
+  storages:
+    meta:
+      memory: true
+    object:
+      s3:
+        secret: cos-credentials
+        bucket: hummock001
+        endpoint: cos.$(S3_REGION).myqcloud.com
+        virtualHostedStyle: true
+  global:
+    image: ghcr.io/risingwavelabs/risingwave:v0.1.13
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+      compactor: 1

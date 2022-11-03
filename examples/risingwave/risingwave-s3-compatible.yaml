@@ -36,3 +36,4 @@ spec:
       frontend: 1
       compute: 1
       compactor: 1
+ 

@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aliyun-oss-credentials
+stringData:
+  AccessKeyID: your-access-key
+  SecretAccessKey: your-access-secret
+---
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-aliyun-oss
+spec:
+  storages:
+    meta:
+      memory: true
+    object:
+      aliyunOSS:
+        secret: aliyun-oss-credentials
+        region: cn-hangzhou
+        bucket: hummock001
+        internalEndpoint: true
+  global:
+    image: ghcr.io/risingwavelabs/risingwave:v0.1.13
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+      compactor: 1

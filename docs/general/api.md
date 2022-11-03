@@ -1678,7 +1678,19 @@ string
 <p>Secret contains the credentials to access the Aliyun OSS service. It must contain the following keys:
 * AccessKeyID
 * SecretAccessKey
-* Region</p>
+* Region (optional if region is specified in the field.)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region of Aliyun OSS service. It is an optional field that overrides the <code>Region</code> key from the secret.
+Specifying the region here makes a guarantee that it won&rsquo;t be changed anymore.</p>
 </td>
 </tr>
 <tr>
@@ -1786,7 +1798,7 @@ string
 <p>Secret contains the credentials to access the AWS S3 service. It must contain the following keys:
 * AccessKeyID
 * SecretAccessKey
-* Region</p>
+* Region (optional if region is specified in the field.)</p>
 </td>
 </tr>
 <tr>
@@ -1802,6 +1814,18 @@ string
 </tr>
 <tr>
 <td>
+<code>region</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region of AWS S3 service. It is an optional field that overrides the <code>Region</code> key from the secret.
+Specifying the region here makes a guarantee that it won&rsquo;t be changed anymore.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>endpoint</code><br/>
 <em>
 string
@@ -1810,7 +1834,10 @@ string
 <td>
 <em>(Optional)</em>
 <p>Endpoint of the AWS (or other vendor&rsquo;s S3-compatible) service. Leave it empty
-when using AWS S3 service.</p>
+when using AWS S3 service. You can reference the <code>S3_REGION</code> and <code>S3_BUCKET</code> in the endpoint with
+<code>$(S3_BUCKET)</code> and <code>$(S3_REGION)</code>, e.g.,
+s3.$(S3_REGION).amazonaws.com
+$(S3_BUCKET).s3.$(S3_REGION).amazonaws.com</p>
 </td>
 </tr>
 <tr>
@@ -1821,7 +1848,9 @@ bool
 </em>
 </td>
 <td>
-<p>VirtualHostedStyle indicates to use a virtual hosted endpoint when endpoint is specified.</p>
+<p>VirtualHostedStyle indicates to use a virtual hosted endpoint when endpoint is specified. The operator automatically
+adds the bucket prefix for you if this is enabled. Be careful about doubly using the style by specifying an endpoint
+of virtual hosted style as well as enabling this.</p>
 </td>
 </tr>
 </tbody>

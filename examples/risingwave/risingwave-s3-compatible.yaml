@@ -3,7 +3,6 @@ kind: Secret
 metadata:
   name: cos-credentials
 stringData:
-  Region: ap-guangzhou
   AccessKeyID: your-access-key
   SecretAccessKey: your-access-secret
 ---
@@ -18,6 +17,7 @@ spec:
     object:
       s3:
         secret: cos-credentials
+        region: ap-guangzhou
         bucket: hummock001
         endpoint: cos.$(S3_REGION).myqcloud.com
         virtualHostedStyle: true

@@ -73,7 +73,6 @@ kind: Secret
 metadata:
   name: aliyun-oss-credentials
 stringData:
-  Region: cn-hangzhou
   AccessKeyID: your-access-key
   SecretAccessKey: your-access-secret
 ---
@@ -89,6 +88,7 @@ spec:
     object:
       aliyunOSS:
         secret: aliyun-oss-credentials
+        region: cn-hangzhou
         bucket: hummock001
         internalEndpoint: true
   global:

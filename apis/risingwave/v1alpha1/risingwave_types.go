@@ -315,7 +315,7 @@ type RisingWaveObjectStorageS3 struct {
 	// Secret contains the credentials to access the AWS S3 service. It must contain the following keys:
 	//   * AccessKeyID
 	//   * SecretAccessKey
-	//   * Region
+	//   * Region (optional if region is specified in the field.)
 	// +kubebuilder:validation:Required
 	Secret string `json:"secret"`
 
@@ -323,13 +323,22 @@ type RisingWaveObjectStorageS3 struct {
 	// +kubebuilder:validation:Required
 	Bucket string `json:"bucket"`
 
+	// Region of AWS S3 service. It is an optional field that overrides the `Region` key from the secret.
+	// Specifying the region here makes a guarantee that it won't be changed anymore.
+	Region string `json:"region,omitempty"`
+
 	// Endpoint of the AWS (or other vendor's S3-compatible) service. Leave it empty
-	// when using AWS S3 service.
+	// when using AWS S3 service. You can reference the `S3_REGION` and `S3_BUCKET` in the endpoint with
+	// `$(S3_BUCKET)` and `$(S3_REGION)`, e.g.,
+	//   s3.$(S3_REGION).amazonaws.com
+	//   $(S3_BUCKET).s3.$(S3_REGION).amazonaws.com
 	// +optional
 	// +kubebuilder:validation:Pattern="^(?:https://)?(?:[^/.\\s]+\\.)*(?:[^/\\s]+)*$"
 	Endpoint string `json:"endpoint,omitempty"`
 
-	// VirtualHostedStyle indicates to use a virtual hosted endpoint when endpoint is specified.
+	// VirtualHostedStyle indicates to use a virtual hosted endpoint when endpoint is specified. The operator automatically
+	// adds the bucket prefix for you if this is enabled. Be careful about doubly using the style by specifying an endpoint
+	// of virtual hosted style as well as enabling this.
 	VirtualHostedStyle bool `json:"virtualHostedStyle,omitempty"`
 }
 
@@ -338,9 +347,13 @@ type RisingWaveObjectStorageAliyunOSS struct {
 	// Secret contains the credentials to access the Aliyun OSS service. It must contain the following keys:
 	//   * AccessKeyID
 	//   * SecretAccessKey
-	//   * Region
+	//   * Region (optional if region is specified in the field.)
 	// +kubebuilder:validation:Required
 	Secret string `json:"secret"`
+
+	// Region of Aliyun OSS service. It is an optional field that overrides the `Region` key from the secret.
+	// Specifying the region here makes a guarantee that it won't be changed anymore.
+	Region string `json:"region,omitempty"`
 
 	// Bucket of the Aliyun OSS service.
 	// +kubebuilder:validation:Required

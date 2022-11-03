@@ -890,10 +890,17 @@ spec:
                               internal endpoint to access Aliyun OSS, which is only
                               available in the internal network.
                             type: boolean
+                          region:
+                            description: Region of Aliyun OSS service. It is an optional
+                              field that overrides the `Region` key from the secret.
+                              Specifying the region here makes a guarantee that it
+                              won't be changed anymore.
+                            type: string
                           secret:
                             description: 'Secret contains the credentials to access
                               the Aliyun OSS service. It must contain the following
-                              keys: * AccessKeyID * SecretAccessKey * Region'
+                              keys: * AccessKeyID * SecretAccessKey * Region (optional
+                              if region is specified in the field.)'
                             type: string
                         required:
                         - bucket
@@ -931,17 +938,31 @@ spec:
                             type: string
                           endpoint:
                             description: Endpoint of the AWS (or other vendor's S3-compatible)
-                              service. Leave it empty when using AWS S3 service.
+                              service. Leave it empty when using AWS S3 service. You
+                              can reference the `S3_REGION` and `S3_BUCKET` in the
+                              endpoint with `$(S3_BUCKET)` and `$(S3_REGION)`, e.g.,
+                              s3.$(S3_REGION).amazonaws.com $(S3_BUCKET).s3.$(S3_REGION).amazonaws.com
                             pattern: ^(?:https://)?(?:[^/.\s]+\.)*(?:[^/\s]+)*$
+                            type: string
+                          region:
+                            description: Region of AWS S3 service. It is an optional
+                              field that overrides the `Region` key from the secret.
+                              Specifying the region here makes a guarantee that it
+                              won't be changed anymore.
                             type: string
                           secret:
                             description: 'Secret contains the credentials to access
                               the AWS S3 service. It must contain the following keys:
-                              * AccessKeyID * SecretAccessKey * Region'
+                              * AccessKeyID * SecretAccessKey * Region (optional if
+                              region is specified in the field.)'
                             type: string
                           virtualHostedStyle:
                             description: VirtualHostedStyle indicates to use a virtual
-                              hosted endpoint when endpoint is specified.
+                              hosted endpoint when endpoint is specified. The operator
+                              automatically adds the bucket prefix for you if this
+                              is enabled. Be careful about doubly using the style
+                              by specifying an endpoint of virtual hosted style as
+                              well as enabling this.
                             type: boolean
                         required:
                         - bucket

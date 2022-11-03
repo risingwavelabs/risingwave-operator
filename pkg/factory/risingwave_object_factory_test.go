@@ -1280,6 +1280,52 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 				},
 			},
 		},
+		"aliyun-oss-with-region": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				AliyunOSS: &risingwavev1alpha1.RisingWaveObjectStorageAliyunOSS{
+					Secret: "s3-creds",
+					Bucket: "s3-hummock01",
+					Region: "cn-hangzhou",
+				},
+			},
+			hummockArg: "hummock+s3-compatible://s3-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "S3_BUCKET",
+					Value: "s3-hummock01",
+				},
+				{
+					Name:  "S3_ENDPOINT",
+					Value: "https://$(S3_BUCKET).oss-$(S3_REGION).aliyuncs.com",
+				},
+				{
+					Name: "S3_ACCESS_KEY_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3AccessKeyID,
+						},
+					},
+				},
+				{
+					Name: "S3_SECRET_ACCESS_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3SecretAccessKey,
+						},
+					},
+				},
+				{
+					Name:  "S3_REGION",
+					Value: "cn-hangzhou",
+				},
+			},
+		},
 		"s3-compatible": {
 			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
 				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
@@ -1384,6 +1430,48 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 							Key: consts.SecretKeyAWSS3Region,
 						},
 					},
+				},
+			},
+		},
+		"s3-with-region": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
+					Secret: "s3-creds",
+					Bucket: "s3-hummock01",
+					Region: "ap-southeast-1",
+				},
+			},
+			hummockArg: "hummock+s3://s3-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "S3_BUCKET",
+					Value: "s3-hummock01",
+				},
+				{
+					Name: "AWS_ACCESS_KEY_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3AccessKeyID,
+						},
+					},
+				},
+				{
+					Name: "AWS_SECRET_ACCESS_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3SecretAccessKey,
+						},
+					},
+				},
+				{
+					Name:  "AWS_REGION",
+					Value: "ap-southeast-1",
 				},
 			},
 		},

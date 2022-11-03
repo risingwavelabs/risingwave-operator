@@ -73,7 +73,6 @@ kind: Secret
 metadata:
   name: s3-credentials
 stringData:
-  Region: ap-southeast-1
   AccessKeyID: your-access-key
   SecretAccessKey: your-access-secret
 ---
@@ -89,6 +88,7 @@ spec:
     object:
       s3:
         secret: s3-credentials
+        region: ap-southeast-1
         bucket: hummock001
   global:
     image: ghcr.io/risingwavelabs/risingwave:v0.1.13

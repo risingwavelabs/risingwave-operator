@@ -496,17 +496,19 @@ func (f *RisingWaveObjectFactory) envsForMinIO() []corev1.EnvVar {
 	}
 }
 
-func envsForAWSS3(bucket, secret string) []corev1.EnvVar {
+func envsForAWSS3(region, bucket, secret string) []corev1.EnvVar {
 	secretRef := corev1.LocalObjectReference{
 		Name: secret,
 	}
 
-	return []corev1.EnvVar{
-		{
-			Name:  s3BucketEnvName,
-			Value: bucket,
-		},
-		{
+	var regionEnvVar corev1.EnvVar
+	if len(region) > 0 {
+		regionEnvVar = corev1.EnvVar{
+			Name:  awsS3RegionEnvName,
+			Value: region,
+		}
+	} else {
+		regionEnvVar = corev1.EnvVar{
 			Name: awsS3RegionEnvName,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
@@ -514,7 +516,15 @@ func envsForAWSS3(bucket, secret string) []corev1.EnvVar {
 					Key:                  consts.SecretKeyAWSS3Region,
 				},
 			},
+		}
+	}
+
+	return []corev1.EnvVar{
+		{
+			Name:  s3BucketEnvName,
+			Value: bucket,
 		},
+		regionEnvVar,
 		{
 			Name: awsS3AccessKeyEnvName,
 			ValueFrom: &corev1.EnvVarSource{
@@ -556,24 +566,26 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 			}
 		}
 
-		return envsForS3Compatible(endpoint, s3Spec.Bucket, s3Spec.Secret)
+		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.Secret)
 	} else {
 		// AWS S3 mode.
-		return envsForAWSS3(s3Spec.Bucket, s3Spec.Secret)
+		return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.Secret)
 	}
 }
 
-func envsForS3Compatible(endpoint, bucket, secret string) []corev1.EnvVar {
+func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVar {
 	secretRef := corev1.LocalObjectReference{
 		Name: secret,
 	}
 
-	return []corev1.EnvVar{
-		{
-			Name:  s3BucketEnvName,
-			Value: bucket,
-		},
-		{
+	var regionEnvVar corev1.EnvVar
+	if len(region) > 0 {
+		regionEnvVar = corev1.EnvVar{
+			Name:  s3RegionEnvName,
+			Value: region,
+		}
+	} else {
+		regionEnvVar = corev1.EnvVar{
 			Name: s3RegionEnvName,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
@@ -581,7 +593,15 @@ func envsForS3Compatible(endpoint, bucket, secret string) []corev1.EnvVar {
 					Key:                  consts.SecretKeyAWSS3Region,
 				},
 			},
+		}
+	}
+
+	return []corev1.EnvVar{
+		{
+			Name:  s3BucketEnvName,
+			Value: bucket,
 		},
+		regionEnvVar,
 		{
 			Name: s3AccessKeyEnvName,
 			ValueFrom: &corev1.EnvVarSource{
@@ -610,14 +630,14 @@ func envsForS3Compatible(endpoint, bucket, secret string) []corev1.EnvVar {
 func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 	objectStorage := &f.risingwave.Spec.Storages.Object
 
-	var s3Endpoint string
+	var endpoint string
 	if objectStorage.AliyunOSS.InternalEndpoint {
-		s3Endpoint = internalAliyunOSSEndpoint
+		endpoint = internalAliyunOSSEndpoint
 	} else {
-		s3Endpoint = aliyunOSSEndpoint
+		endpoint = aliyunOSSEndpoint
 	}
 
-	return envsForS3Compatible(s3Endpoint, objectStorage.AliyunOSS.Bucket, objectStorage.AliyunOSS.Secret)
+	return envsForS3Compatible(objectStorage.AliyunOSS.Region, endpoint, objectStorage.AliyunOSS.Bucket, objectStorage.AliyunOSS.Secret)
 }
 
 func (f *RisingWaveObjectFactory) envsForObjectStorage() []corev1.EnvVar {

@@ -1137,7 +1137,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 			hummockArg: "hummock+s3://s3-hummock01",
 			envs: []corev1.EnvVar{
 				{
-					Name:  "S3_BUCKET",
+					Name:  "AWS_S3_BUCKET",
 					Value: "s3-hummock01",
 				},
 				{
@@ -1185,15 +1185,15 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 			hummockArg: "hummock+s3-compatible://s3-hummock01",
 			envs: []corev1.EnvVar{
 				{
-					Name:  "S3_BUCKET",
+					Name:  "S3_COMPATIBLE_BUCKET",
 					Value: "s3-hummock01",
 				},
 				{
-					Name:  "S3_ENDPOINT",
-					Value: "https://$(S3_BUCKET).oss-$(S3_REGION).aliyuncs.com",
+					Name:  "S3_COMPATIBLE_ENDPOINT",
+					Value: "https://$(S3_COMPATIBLE_BUCKET).oss-$(S3_COMPATIBLE_REGION).aliyuncs.com",
 				},
 				{
-					Name: "S3_ACCESS_KEY_ID",
+					Name: "S3_COMPATIBLE_ACCESS_KEY_ID",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -1204,7 +1204,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 					},
 				},
 				{
-					Name: "S3_SECRET_ACCESS_KEY",
+					Name: "S3_COMPATIBLE_SECRET_ACCESS_KEY",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -1215,7 +1215,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 					},
 				},
 				{
-					Name: "S3_REGION",
+					Name: "S3_COMPATIBLE_REGION",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -1238,15 +1238,15 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 			hummockArg: "hummock+s3-compatible://s3-hummock01",
 			envs: []corev1.EnvVar{
 				{
-					Name:  "S3_BUCKET",
+					Name:  "S3_COMPATIBLE_BUCKET",
 					Value: "s3-hummock01",
 				},
 				{
-					Name:  "S3_ENDPOINT",
-					Value: "https://$(S3_BUCKET).oss-$(S3_REGION)-internal.aliyuncs.com",
+					Name:  "S3_COMPATIBLE_ENDPOINT",
+					Value: "https://$(S3_COMPATIBLE_BUCKET).oss-$(S3_COMPATIBLE_REGION)-internal.aliyuncs.com",
 				},
 				{
-					Name: "S3_ACCESS_KEY_ID",
+					Name: "S3_COMPATIBLE_ACCESS_KEY_ID",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -1257,7 +1257,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 					},
 				},
 				{
-					Name: "S3_SECRET_ACCESS_KEY",
+					Name: "S3_COMPATIBLE_SECRET_ACCESS_KEY",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -1268,7 +1268,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 					},
 				},
 				{
-					Name: "S3_REGION",
+					Name: "S3_COMPATIBLE_REGION",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -1291,15 +1291,15 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 			hummockArg: "hummock+s3-compatible://s3-hummock01",
 			envs: []corev1.EnvVar{
 				{
-					Name:  "S3_BUCKET",
+					Name:  "S3_COMPATIBLE_BUCKET",
 					Value: "s3-hummock01",
 				},
 				{
-					Name:  "S3_ENDPOINT",
-					Value: "https://$(S3_BUCKET).oss-$(S3_REGION).aliyuncs.com",
+					Name:  "S3_COMPATIBLE_ENDPOINT",
+					Value: "https://$(S3_COMPATIBLE_BUCKET).oss-$(S3_COMPATIBLE_REGION).aliyuncs.com",
 				},
 				{
-					Name: "S3_ACCESS_KEY_ID",
+					Name: "S3_COMPATIBLE_ACCESS_KEY_ID",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -1310,7 +1310,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 					},
 				},
 				{
-					Name: "S3_SECRET_ACCESS_KEY",
+					Name: "S3_COMPATIBLE_SECRET_ACCESS_KEY",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -1321,7 +1321,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 					},
 				},
 				{
-					Name:  "S3_REGION",
+					Name:  "S3_COMPATIBLE_REGION",
 					Value: "cn-hangzhou",
 				},
 			},
@@ -1337,15 +1337,15 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 			hummockArg: "hummock+s3-compatible://s3-hummock01",
 			envs: []corev1.EnvVar{
 				{
-					Name:  "S3_BUCKET",
+					Name:  "S3_COMPATIBLE_BUCKET",
 					Value: "s3-hummock01",
 				},
 				{
-					Name:  "S3_ENDPOINT",
+					Name:  "S3_COMPATIBLE_ENDPOINT",
 					Value: "https://oss-cn-hangzhou.aliyuncs.com",
 				},
 				{
-					Name: "S3_ACCESS_KEY_ID",
+					Name: "S3_COMPATIBLE_ACCESS_KEY_ID",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -1356,7 +1356,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 					},
 				},
 				{
-					Name: "S3_SECRET_ACCESS_KEY",
+					Name: "S3_COMPATIBLE_SECRET_ACCESS_KEY",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -1367,7 +1367,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 					},
 				},
 				{
-					Name: "S3_REGION",
+					Name: "S3_COMPATIBLE_REGION",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -1391,15 +1391,15 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 			hummockArg: "hummock+s3-compatible://s3-hummock01",
 			envs: []corev1.EnvVar{
 				{
-					Name:  "S3_BUCKET",
+					Name:  "S3_COMPATIBLE_BUCKET",
 					Value: "s3-hummock01",
 				},
 				{
-					Name:  "S3_ENDPOINT",
-					Value: "https://$(S3_BUCKET).oss-cn-hangzhou.aliyuncs.com",
+					Name:  "S3_COMPATIBLE_ENDPOINT",
+					Value: "https://$(S3_COMPATIBLE_BUCKET).oss-cn-hangzhou.aliyuncs.com",
 				},
 				{
-					Name: "S3_ACCESS_KEY_ID",
+					Name: "S3_COMPATIBLE_ACCESS_KEY_ID",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -1410,7 +1410,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 					},
 				},
 				{
-					Name: "S3_SECRET_ACCESS_KEY",
+					Name: "S3_COMPATIBLE_SECRET_ACCESS_KEY",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -1421,7 +1421,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 					},
 				},
 				{
-					Name: "S3_REGION",
+					Name: "S3_COMPATIBLE_REGION",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -1444,7 +1444,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 			hummockArg: "hummock+s3://s3-hummock01",
 			envs: []corev1.EnvVar{
 				{
-					Name:  "S3_BUCKET",
+					Name:  "AWS_S3_BUCKET",
 					Value: "s3-hummock01",
 				},
 				{
@@ -1472,6 +1472,36 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 				{
 					Name:  "AWS_REGION",
 					Value: "ap-southeast-1",
+				},
+			},
+		},
+		"endpoint-with-region-variable": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
+					Bucket:   "s3-hummock01",
+					Endpoint: "s3.${REGION}.amazonaws.com",
+				},
+			},
+			hummockArg: "hummock+s3-compatible://s3-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "S3_COMPATIBLE_ENDPOINT",
+					Value: "https://s3.$(S3_COMPATIBLE_REGION).amazonaws.com",
+				},
+			},
+		},
+		"endpoint-with-bucket-variable": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
+					Bucket:   "s3-hummock01",
+					Endpoint: "${BUCKET}.s3.${REGION}.amazonaws.com",
+				},
+			},
+			hummockArg: "hummock+s3-compatible://s3-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "S3_COMPATIBLE_ENDPOINT",
+					Value: "https://$(S3_COMPATIBLE_BUCKET).s3.$(S3_COMPATIBLE_REGION).amazonaws.com",
 				},
 			},
 		},

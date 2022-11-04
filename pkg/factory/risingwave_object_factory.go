@@ -55,16 +55,20 @@ const (
 )
 
 const (
-	awsS3RegionEnvName          = "AWS_REGION"
-	awsS3AccessKeyEnvName       = "AWS_ACCESS_KEY_ID"
-	awsS3SecretAccessKeyEnvName = "AWS_SECRET_ACCESS_KEY"
-	s3RegionEnvName             = "S3_REGION"
-	s3BucketEnvName             = "S3_BUCKET"
-	s3AccessKeyEnvName          = "S3_ACCESS_KEY_ID"
-	s3SecretAccessKeyEnvName    = "S3_SECRET_ACCESS_KEY"
-	s3EndpointEnvName           = "S3_ENDPOINT"
-	aliyunOSSEndpoint           = "https://$(S3_BUCKET).oss-$(S3_REGION).aliyuncs.com"
-	internalAliyunOSSEndpoint   = "https://$(S3_BUCKET).oss-$(S3_REGION)-internal.aliyuncs.com"
+	awsS3RegionEnvName                 = "AWS_REGION"
+	awsS3AccessKeyEnvName              = "AWS_ACCESS_KEY_ID"
+	awsS3SecretAccessKeyEnvName        = "AWS_SECRET_ACCESS_KEY"
+	awsS3BucketEnvName                 = "AWS_S3_BUCKET"
+	s3CompatibleRegionEnvName          = "S3_COMPATIBLE_REGION"
+	s3CompatibleBucketEnvName          = "S3_COMPATIBLE_BUCKET"
+	s3CompatibleAccessKeyEnvName       = "S3_COMPATIBLE_ACCESS_KEY_ID"
+	s3CompatibleSecretAccessKeyEnvName = "S3_COMPATIBLE_SECRET_ACCESS_KEY"
+	s3EndpointEnvName                  = "S3_COMPATIBLE_ENDPOINT"
+)
+
+var (
+	aliyunOSSEndpoint         = fmt.Sprintf("https://$(%s).oss-$(%s).aliyuncs.com", s3CompatibleBucketEnvName, s3CompatibleRegionEnvName)
+	internalAliyunOSSEndpoint = fmt.Sprintf("https://$(%s).oss-$(%s)-internal.aliyuncs.com", s3CompatibleBucketEnvName, s3CompatibleRegionEnvName)
 )
 
 type RisingWaveObjectFactory struct {
@@ -521,7 +525,7 @@ func envsForAWSS3(region, bucket, secret string) []corev1.EnvVar {
 
 	return []corev1.EnvVar{
 		{
-			Name:  s3BucketEnvName,
+			Name:  awsS3BucketEnvName,
 			Value: bucket,
 		},
 		regionEnvVar,
@@ -554,11 +558,15 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 		// S3 compatible mode.
 		endpoint := strings.TrimSpace(s3Spec.Endpoint)
 
+		// Interpret the variables.
+		endpoint = strings.ReplaceAll(endpoint, "${REGION}", fmt.Sprintf("$(%s)", s3CompatibleRegionEnvName))
+		endpoint = strings.ReplaceAll(endpoint, "${BUCKET}", fmt.Sprintf("$(%s)", s3CompatibleBucketEnvName))
+
 		if s3Spec.VirtualHostedStyle {
 			if strings.HasPrefix(endpoint, "https://") {
-				endpoint = "https://$(S3_BUCKET)." + endpoint[len("https://"):]
+				endpoint = fmt.Sprintf("https://$(%s).%s", s3CompatibleBucketEnvName, endpoint[len("https://"):])
 			} else {
-				endpoint = "https://$(S3_BUCKET)." + endpoint
+				endpoint = fmt.Sprintf("https://$(%s).%s", s3CompatibleBucketEnvName, endpoint)
 			}
 		} else {
 			if !strings.HasPrefix(endpoint, "https://") {
@@ -581,12 +589,12 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 	var regionEnvVar corev1.EnvVar
 	if len(region) > 0 {
 		regionEnvVar = corev1.EnvVar{
-			Name:  s3RegionEnvName,
+			Name:  s3CompatibleRegionEnvName,
 			Value: region,
 		}
 	} else {
 		regionEnvVar = corev1.EnvVar{
-			Name: s3RegionEnvName,
+			Name: s3CompatibleRegionEnvName,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -598,12 +606,12 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 
 	return []corev1.EnvVar{
 		{
-			Name:  s3BucketEnvName,
+			Name:  s3CompatibleBucketEnvName,
 			Value: bucket,
 		},
 		regionEnvVar,
 		{
-			Name: s3AccessKeyEnvName,
+			Name: s3CompatibleAccessKeyEnvName,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -612,7 +620,7 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 			},
 		},
 		{
-			Name: s3SecretAccessKeyEnvName,
+			Name: s3CompatibleSecretAccessKeyEnvName,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,

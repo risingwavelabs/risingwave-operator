@@ -327,11 +327,10 @@ type RisingWaveObjectStorageS3 struct {
 	// Specifying the region here makes a guarantee that it won't be changed anymore.
 	Region string `json:"region,omitempty"`
 
-	// Endpoint of the AWS (or other vendor's S3-compatible) service. Leave it empty
-	// when using AWS S3 service. You can reference the `S3_REGION` and `S3_BUCKET` in the endpoint with
-	// `$(S3_BUCKET)` and `$(S3_REGION)`, e.g.,
-	//   s3.$(S3_REGION).amazonaws.com
-	//   $(S3_BUCKET).s3.$(S3_REGION).amazonaws.com
+	// Endpoint of the AWS (or other vendor's S3-compatible) service. Leave it empty when using AWS S3 service.
+	// You can reference the `REGION` and `BUCKET` variables in the endpoint with `${BUCKET}` and `${REGION}`, e.g.,
+	//   s3.${REGION}.amazonaws.com
+	//   ${BUCKET}.s3.${REGION}.amazonaws.com
 	// +optional
 	// +kubebuilder:validation:Pattern="^(?:https://)?(?:[^/.\\s]+\\.)*(?:[^/\\s]+)*$"
 	Endpoint string `json:"endpoint,omitempty"`

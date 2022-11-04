@@ -1833,11 +1833,10 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Endpoint of the AWS (or other vendor&rsquo;s S3-compatible) service. Leave it empty
-when using AWS S3 service. You can reference the <code>S3_REGION</code> and <code>S3_BUCKET</code> in the endpoint with
-<code>$(S3_BUCKET)</code> and <code>$(S3_REGION)</code>, e.g.,
-s3.$(S3_REGION).amazonaws.com
-$(S3_BUCKET).s3.$(S3_REGION).amazonaws.com</p>
+<p>Endpoint of the AWS (or other vendor&rsquo;s S3-compatible) service. Leave it empty when using AWS S3 service.
+You can reference the <code>REGION</code> and <code>BUCKET</code> variables in the endpoint with <code>${BUCKET}</code> and <code>${REGION}</code>, e.g.,
+s3.${REGION}.amazonaws.com
+${BUCKET}.s3.${REGION}.amazonaws.com</p>
 </td>
 </tr>
 <tr>

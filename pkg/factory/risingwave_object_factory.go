@@ -896,8 +896,9 @@ func buildUpgradeStrategyForCloneSet(strategy risingwavev1alpha1.RisingWaveUpgra
 	cloneSetUpdateStrategy.MaxUnavailable = rollingUpdateOrDefault(strategy.RollingUpdate).MaxUnavailable
 	cloneSetUpdateStrategy.MaxSurge = rollingUpdateOrDefault(strategy.RollingUpdate).MaxSurge
 	cloneSetUpdateStrategy.Partition = rollingUpdateOrDefault(strategy.RollingUpdate).Partition
-	cloneSetUpdateStrategy.InPlaceUpdateStrategy = InPlaceUpdateStrategyOrDefault(strategy.InPlaceUpdateStrategy)
-
+	if strategy.InPlaceUpdateStrategy != nil {
+		cloneSetUpdateStrategy.InPlaceUpdateStrategy = InPlaceUpdateStrategyOrDefault(strategy.InPlaceUpdateStrategy)
+	}
 	switch strategy.Type {
 	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate:
 		cloneSetUpdateStrategy.Type = kruiseappsv1alpha1.RecreateCloneSetUpdateStrategyType

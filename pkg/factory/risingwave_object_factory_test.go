@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	kruisepubs "github.com/openkruise/kruise-api/apps/pub"
+	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
@@ -784,6 +786,567 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 						}
 					}),
 					newObjectAssert(deploy, "first-container-must-have-probes", func(obj *appsv1.Deployment) bool {
+						container := &obj.Spec.Template.Spec.Containers[0]
+						return container.LivenessProbe != nil && container.ReadinessProbe != nil
+					}),
+				).Assert(t)
+			})
+		}
+	}
+}
+
+// JUMP BACK HERE
+func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
+	testcases := map[string]struct {
+		podTemplate             map[string]risingwavev1alpha1.RisingWavePodTemplate
+		group                   risingwavev1alpha1.RisingWaveComponentGroup
+		restartAt               *metav1.Time
+		expectedUpgradeStrategy *kruiseappsv1alpha1.CloneSetUpdateStrategy
+	}{
+		"default-group": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+				},
+			},
+		},
+		"node-selectors": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					NodeSelector: map[string]string{
+						"a": "b",
+					},
+				},
+			},
+		},
+		"with-group-name": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "test-group",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+				},
+			},
+		},
+		"with-restart": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "test-group",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+				},
+			},
+			restartAt: &metav1.Time{Time: time.Now()},
+		},
+		"image-pull-policy-always": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "test-group",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image:           rand.String(20),
+					ImagePullPolicy: corev1.PullAlways,
+				},
+			},
+			restartAt: &metav1.Time{Time: time.Now()},
+		},
+		"image-pull-secrets": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "test-group",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					ImagePullSecrets: []string{
+						"a",
+					},
+				},
+			},
+		},
+		"upgrade-strategy-Recreate": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
+				Type: kruiseappsv1alpha1.RecreateCloneSetUpdateStrategyType,
+			},
+		},
+		"upgrade-strategy-Recreate-max-unavailable-50%": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
+							MaxUnavailable: &intstr.IntOrString{
+								Type:   intstr.String,
+								StrVal: "50%",
+							},
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
+				Type: kruiseappsv1alpha1.RecreateCloneSetUpdateStrategyType,
+				MaxUnavailable: &intstr.IntOrString{
+					Type:   intstr.String,
+					StrVal: "50%",
+				},
+			},
+		},
+		"upgrade-strategy-Recreate-max-surge-50%": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
+							MaxSurge: &intstr.IntOrString{
+								Type:   intstr.String,
+								StrVal: "50%",
+							},
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
+				Type: kruiseappsv1alpha1.RecreateCloneSetUpdateStrategyType,
+				MaxSurge: &intstr.IntOrString{
+					Type:   intstr.String,
+					StrVal: "50%",
+				},
+			},
+		},
+		"upgrade-strategy-Recreate-partition-50%": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
+							Partition: &intstr.IntOrString{
+								Type:   intstr.String,
+								StrVal: "50%",
+							},
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
+				Type: kruiseappsv1alpha1.RecreateCloneSetUpdateStrategyType,
+				Partition: &intstr.IntOrString{
+					Type:   intstr.String,
+					StrVal: "50%",
+				},
+			},
+		},
+		"upgrade-strategy-Recreate-Grace-Period-20seconds": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+						InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+							GracePeriodSeconds: 20,
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
+				Type: kruiseappsv1alpha1.RecreateCloneSetUpdateStrategyType,
+				InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+					GracePeriodSeconds: 20,
+				},
+			},
+		},
+		"upgrade-strategy-InplaceOnly": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
+				Type: kruiseappsv1alpha1.InPlaceOnlyCloneSetUpdateStrategyType,
+			},
+		},
+		"upgrade-strategy-InplaceOnly-max-unavailable-50%": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
+							MaxUnavailable: &intstr.IntOrString{
+								Type:   intstr.String,
+								StrVal: "50%",
+							},
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
+				Type: kruiseappsv1alpha1.InPlaceOnlyCloneSetUpdateStrategyType,
+				MaxUnavailable: &intstr.IntOrString{
+					Type:   intstr.String,
+					StrVal: "50%",
+				},
+			},
+		},
+		"upgrade-strategy-InplaceOnly-max-surge-50%": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
+							MaxSurge: &intstr.IntOrString{
+								Type:   intstr.String,
+								StrVal: "50%",
+							},
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
+				Type: kruiseappsv1alpha1.InPlaceOnlyCloneSetUpdateStrategyType,
+				MaxSurge: &intstr.IntOrString{
+					Type:   intstr.String,
+					StrVal: "50%",
+				},
+			},
+		},
+		"upgrade-strategy-InplaceOnly-partition-50%": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
+							Partition: &intstr.IntOrString{
+								Type:   intstr.String,
+								StrVal: "50%",
+							},
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
+				Type: kruiseappsv1alpha1.InPlaceOnlyCloneSetUpdateStrategyType,
+				Partition: &intstr.IntOrString{
+					Type:   intstr.String,
+					StrVal: "50%",
+				},
+			},
+		},
+		// HERE
+		"upgrade-strategy-InplaceOnly-Grace-Period-20seconds": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+						InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+							GracePeriodSeconds: 20,
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
+				Type: kruiseappsv1alpha1.RecreateCloneSetUpdateStrategyType,
+				InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+					GracePeriodSeconds: 20,
+				},
+			},
+		},
+		"upgrade-strategy-InplaceIfPossible": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
+				Type: kruiseappsv1alpha1.InPlaceIfPossibleCloneSetUpdateStrategyType,
+			},
+		},
+		"upgrade-strategy-InplaceIfPossible-max-unavailable-50%": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
+							MaxUnavailable: &intstr.IntOrString{
+								Type:   intstr.String,
+								StrVal: "50%",
+							},
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
+				Type: kruiseappsv1alpha1.InPlaceIfPossibleCloneSetUpdateStrategyType,
+				MaxUnavailable: &intstr.IntOrString{
+					Type:   intstr.String,
+					StrVal: "50%",
+				},
+			},
+		},
+		"upgrade-strategy-InplaceIfPossible-max-surge-50%": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
+							MaxSurge: &intstr.IntOrString{
+								Type:   intstr.String,
+								StrVal: "50%",
+							},
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
+				Type: kruiseappsv1alpha1.InPlaceIfPossibleCloneSetUpdateStrategyType,
+				MaxSurge: &intstr.IntOrString{
+					Type:   intstr.String,
+					StrVal: "50%",
+				},
+			},
+		},
+		"upgrade-strategy-InplaceIfPossible-partition-50%": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
+							Partition: &intstr.IntOrString{
+								Type:   intstr.String,
+								StrVal: "50%",
+							},
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
+				Type: kruiseappsv1alpha1.InPlaceIfPossibleCloneSetUpdateStrategyType,
+				Partition: &intstr.IntOrString{
+					Type:   intstr.String,
+					StrVal: "50%",
+				},
+			},
+		},
+		"upgrade-strategy-InplaceIfPossible-Grace-Period-20seconds": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+						InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+							GracePeriodSeconds: 20,
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
+				Type: kruiseappsv1alpha1.InPlaceIfPossibleCloneSetUpdateStrategyType,
+				InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+					GracePeriodSeconds: 20,
+				},
+			},
+		},
+		"resources-1c1g": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					Resources: corev1.ResourceRequirements{
+						Limits: corev1.ResourceList{
+							corev1.ResourceCPU:    resource.MustParse("1"),
+							corev1.ResourceMemory: resource.MustParse("1Gi"),
+						},
+					},
+				},
+			},
+		},
+		"with-pod-template": {
+			podTemplate: map[string]risingwavev1alpha1.RisingWavePodTemplate{
+				"test": {
+					Template: *newPodTemplate(func(t *risingwavev1alpha1.RisingWavePodTemplateSpec) {
+						t.Spec.Containers[0].SecurityContext = &corev1.SecurityContext{
+							Privileged: pointer.Bool(true),
+						}
+					}),
+				},
+			},
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image:       rand.String(20),
+					PodTemplate: pointer.String("test"),
+				},
+			},
+		},
+	}
+
+	for _, component := range []string{consts.ComponentMeta} {
+		for name, tc := range testcases {
+			t.Run(component+"-"+name, func(t *testing.T) {
+				risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+					r.Spec.Storages.Meta.Memory = pointer.Bool(true)
+					r.Spec.Storages.Object.Memory = pointer.Bool(true)
+					if tc.group.Name == "" {
+						r.Spec.Global.RisingWaveComponentGroupTemplate = *tc.group.RisingWaveComponentGroupTemplate
+						switch component {
+						case consts.ComponentMeta:
+							r.Spec.Global.Replicas.Meta = tc.group.Replicas
+						case consts.ComponentFrontend:
+							r.Spec.Global.Replicas.Frontend = tc.group.Replicas
+						case consts.ComponentCompactor:
+							r.Spec.Global.Replicas.Compactor = tc.group.Replicas
+						}
+					} else {
+						switch component {
+						case consts.ComponentMeta:
+							r.Spec.Components.Meta.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
+								tc.group,
+							}
+						case consts.ComponentFrontend:
+							r.Spec.Components.Frontend.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
+								tc.group,
+							}
+							r.Spec.Components.Frontend.RestartAt = tc.restartAt
+						case consts.ComponentCompactor:
+							r.Spec.Components.Compactor.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
+								tc.group,
+							}
+							r.Spec.Components.Compactor.RestartAt = tc.restartAt
+						}
+
+					}
+					switch component {
+					case consts.ComponentMeta:
+						r.Spec.Components.Meta.RestartAt = tc.restartAt
+					case consts.ComponentFrontend:
+						r.Spec.Components.Frontend.RestartAt = tc.restartAt
+					case consts.ComponentCompactor:
+						r.Spec.Components.Compactor.RestartAt = tc.restartAt
+					}
+				})
+
+				group := &tc.group.Name
+				factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
+
+				var cloneSet *kruiseappsv1alpha1.CloneSet
+				switch component {
+				case consts.ComponentMeta:
+					cloneSet = factory.newMetaCloneSet(tc.group.Name, tc.podTemplate)
+				case consts.ComponentFrontend:
+					cloneSet = factory.NewFrontEndCloneSet(tc.group.Name, tc.podTemplate)
+				case consts.ComponentCompactor:
+					cloneSet = factory.NewCompactorCloneSet(tc.group.Name, tc.podTemplate)
+				}
+
+				composeAssertions(
+					newObjectAssert(cloneSet, "namespace-equals", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						return obj.Namespace == risingwave.Namespace
+					}),
+					newObjectAssert(cloneSet, "labels-equal", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						return hasLabels(obj, componentLabels(risingwave, component, group, true), true)
+					}),
+					newObjectAssert(cloneSet, "replicas-equal", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						return *obj.Spec.Replicas == tc.group.Replicas
+					}),
+					newObjectAssert(cloneSet, "pod-template-labels-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						return mapContains(obj.Spec.Template.Labels, podSelector(risingwave, component, group))
+					}),
+					newObjectAssert(cloneSet, "pod-template-annotations-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						if tc.restartAt != nil {
+							return mapContains(obj.Spec.Template.Annotations, map[string]string{
+								consts.AnnotationRestartAt: tc.restartAt.In(time.UTC).Format("2006-01-02T15:04:05Z"),
+							})
+						} else {
+							_, ok := obj.Spec.Template.Annotations[consts.AnnotationRestartAt]
+							return !ok
+						}
+					}),
+					newObjectAssert(cloneSet, "pod-template-works", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						if tc.group.PodTemplate != nil {
+							temp := tc.podTemplate[*tc.group.PodTemplate].Template
+							return matchesPodTemplate(&obj.Spec.Template, &temp)
+						} else {
+							return true
+						}
+					}),
+					newObjectAssert(cloneSet, "image-pull-secrets-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						for _, s := range tc.group.ImagePullSecrets {
+							if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, corev1.LocalObjectReference{Name: s}) {
+								return false
+							}
+						}
+						return true
+					}),
+					newObjectAssert(cloneSet, "resources-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
+					}),
+					newObjectAssert(cloneSet, "node-selector-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						return mapContains(obj.Spec.Template.Spec.NodeSelector, tc.group.NodeSelector)
+					}),
+					newObjectAssert(cloneSet, "upgrade-strategy-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						if tc.expectedUpgradeStrategy == nil {
+							return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, kruiseappsv1alpha1.CloneSetUpdateStrategy{})
+						} else {
+							return equality.Semantic.DeepEqual(&obj.Spec.UpdateStrategy, tc.expectedUpgradeStrategy)
+						}
+					}),
+					newObjectAssert(cloneSet, "first-container-must-have-probes", func(obj *kruiseappsv1alpha1.CloneSet) bool {
 						container := &obj.Spec.Template.Spec.Containers[0]
 						return container.LivenessProbe != nil && container.ReadinessProbe != nil
 					}),

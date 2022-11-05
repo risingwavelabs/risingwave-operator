@@ -795,7 +795,6 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 	}
 }
 
-// JUMP BACK HERE
 func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 	testcases := map[string]struct {
 		podTemplate             map[string]risingwavev1alpha1.RisingWavePodTemplate

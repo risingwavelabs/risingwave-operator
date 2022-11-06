@@ -1240,6 +1240,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 		for name, tc := range testcases {
 			t.Run(component+"-"+name, func(t *testing.T) {
 				risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+					r.Spec.EnableOpenKruise = pointer.Bool(true)
 					r.Spec.Storages.Meta.Memory = pointer.Bool(true)
 					r.Spec.Storages.Object.Memory = pointer.Bool(true)
 					if tc.group.Name == "" {
@@ -1541,6 +1542,7 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 	for name, tc := range testcases {
 		t.Run("compute-"+name, func(t *testing.T) {
 			risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.EnableOpenKruise = pointer.Bool(true)
 				r.Spec.Storages.Meta.Memory = pointer.Bool(true)
 				r.Spec.Storages.Object.Memory = pointer.Bool(true)
 				if tc.group.Name == "" {

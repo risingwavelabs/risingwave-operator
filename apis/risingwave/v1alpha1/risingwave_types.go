@@ -488,7 +488,7 @@ type RisingWaveSpec struct {
 	// AdvancedStateFul Set will be used for compute
 	// +optional
 	// default=false
-	EnableOpenKruise bool `json:"enableOpenKruise,omitempty"`
+	EnableOpenKruise *bool `json:"enableOpenKruise,omitempty"`
 }
 
 // ComponentGroupReplicasStatus are the running status of Pods in group.

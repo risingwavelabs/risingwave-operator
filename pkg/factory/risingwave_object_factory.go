@@ -1233,9 +1233,22 @@ func buildUpgradeStrategyForAdvancedStatefulSet(strategy risingwavev1alpha1.Risi
 	advancedStatefulSetUpgradeStrategy := kruiseappsv1beta1.StatefulSetUpdateStrategy{}
 	advancedStatefulSetUpgradeStrategy.Type = appsv1.RollingUpdateStatefulSetStrategyType
 	advancedStatefulSetUpgradeStrategy.RollingUpdate = &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
-		Partition:             &rollingUpdateOrDefault(strategy.RollingUpdate).Partition.IntVal,
-		MaxUnavailable:        rollingUpdateOrDefault(strategy.RollingUpdate).MaxUnavailable,
-		InPlaceUpdateStrategy: InPlaceUpdateStrategyOrDefault(strategy.InPlaceUpdateStrategy),
+		MaxUnavailable: rollingUpdateOrDefault(strategy.RollingUpdate).MaxUnavailable,
+	}
+	if strategy.InPlaceUpdateStrategy != nil {
+		advancedStatefulSetUpgradeStrategy.RollingUpdate.InPlaceUpdateStrategy = strategy.InPlaceUpdateStrategy.DeepCopy()
+	}
+	if rollingUpdateOrDefault(strategy.RollingUpdate).Partition != nil {
+		// Change a percentage to an integer, partition only accepts int pointers for advanced stateful sets
+		if rollingUpdateOrDefault(strategy.RollingUpdate).Partition.Type != intstr.Int {
+			intValue, err := strconv.Atoi(strings.Replace((strategy.RollingUpdate).Partition.StrVal, "%", "", -1))
+			if err != nil {
+				panic(err)
+			}
+			advancedStatefulSetUpgradeStrategy.RollingUpdate.Partition = pointer.Int32(int32(intValue))
+		} else {
+			advancedStatefulSetUpgradeStrategy.RollingUpdate.Partition = pointer.Int32(rollingUpdateOrDefault(strategy.RollingUpdate).Partition.IntVal)
+		}
 	}
 	switch strategy.Type {
 	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate:

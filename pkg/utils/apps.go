@@ -17,6 +17,8 @@
 package utils
 
 import (
+	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
+	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 )
 
@@ -52,6 +54,55 @@ func IsStatefulSetRolledOut(statefulSet *appsv1.StatefulSet) bool {
 	}
 	if statefulSet.Status.ObservedGeneration < statefulSet.Generation {
 		return false
+	}
+	if statefulSet.Spec.Replicas != nil && statefulSet.Status.UpdatedReplicas < *statefulSet.Spec.Replicas {
+		return false
+	}
+	if statefulSet.Status.Replicas > statefulSet.Status.UpdatedReplicas {
+		return false
+	}
+	if statefulSet.Status.AvailableReplicas < statefulSet.Status.UpdatedReplicas {
+		return false
+	}
+	return true
+}
+
+func isCloneSetRolledOut(cloneset *kruiseappsv1alpha1.CloneSet) bool {
+	if cloneset == nil {
+		return false
+	}
+	if cloneset.Status.ObservedGeneration < cloneset.Generation {
+		return false
+	}
+	for _, cond := range cloneset.Status.Conditions {
+		if cond.Type == kruiseappsv1alpha1.CloneSetConditionFailedUpdate || cond.Type == kruiseappsv1alpha1.CloneSetConditionFailedScale {
+			return false
+		}
+	}
+	if cloneset.Spec.Replicas != nil && cloneset.Status.UpdatedReplicas < *cloneset.Spec.Replicas {
+		return false
+	}
+	if cloneset.Status.Replicas > cloneset.Status.UpdatedReplicas {
+		return false
+	}
+	if cloneset.Status.AvailableReplicas < cloneset.Status.UpdatedReplicas {
+		return false
+	}
+	return true
+}
+
+func IsAdvancedStatefulSetRolledOut(statefulSet *kruiseappsv1beta1.StatefulSet) bool {
+	if statefulSet == nil {
+		return false
+	}
+	if statefulSet.Status.ObservedGeneration < statefulSet.Generation {
+		return false
+	}
+
+	for _, cond := range statefulSet.Status.Conditions {
+		if cond.Type == kruiseappsv1beta1.FailedCreatePod || cond.Type == kruiseappsv1beta1.FailedUpdatePod {
+			return false
+		}
 	}
 	if statefulSet.Spec.Replicas != nil && statefulSet.Status.UpdatedReplicas < *statefulSet.Spec.Replicas {
 		return false

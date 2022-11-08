@@ -25,6 +25,8 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
+	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
+	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/samber/lo"
 	appsv1 "k8s.io/api/apps/v1"
@@ -423,6 +425,28 @@ func (mgr *risingWaveControllerManagerImpl) SyncCompactorDeployments(ctx context
 	)
 }
 
+// SyncFrontendCloneSets implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) SyncCompactorCloneSets(ctx context.Context, logger logr.Logger, compactorCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
+	risingwave := mgr.risingwaveManager.RisingWave()
+
+	groupPodTemplates := buildGroupPodTemplateMap(risingwave.Spec.Components.Compactor.Groups, extractNameAndPodTemplateFromComponentGroup)
+
+	// Enable the default group only if the global replicas > 0.
+	if risingwave.Spec.Global.Replicas.Frontend > 0 {
+		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+	}
+
+	return syncComponentGroupWorkloads(
+		mgr, ctx, logger,
+		consts.ComponentCompactor,
+		groupPodTemplates,
+		compactorCloneSets,
+		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
+			return mgr.objectFactory.NewFrontEndCloneSet(group, podTemplates)
+		},
+	)
+}
+
 // SyncComputeStatefulSets implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncComputeStatefulSets(ctx context.Context, logger logr.Logger, computeStatefulSets []appsv1.StatefulSet) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
@@ -441,6 +465,28 @@ func (mgr *risingWaveControllerManagerImpl) SyncComputeStatefulSets(ctx context.
 		computeStatefulSets,
 		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.StatefulSet {
 			return mgr.objectFactory.NewComputeStatefulSet(group, podTemplates)
+		},
+	)
+}
+
+// SyncComputeAdvancedStatefulSets implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) SyncComputeAdvancedStatefulSets(ctx context.Context, logger logr.Logger, computeStatefulSets []kruiseappsv1beta1.StatefulSet) (reconcile.Result, error) {
+	risingwave := mgr.risingwaveManager.RisingWave()
+
+	groupPodTemplates := buildGroupPodTemplateMap(risingwave.Spec.Components.Compute.Groups, extractNameAndPodTemplateFromComputeGroup)
+
+	// Enable the default group only if the global replicas > 0.
+	if risingwave.Spec.Global.Replicas.Compute > 0 {
+		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+	}
+
+	return syncComponentGroupWorkloads(
+		mgr, ctx, logger,
+		consts.ComponentCompactor,
+		groupPodTemplates,
+		computeStatefulSets,
+		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1beta1.StatefulSet {
+			return mgr.objectFactory.NewComputeAdvancedStatefulSet(group, podTemplates)
 		},
 	)
 }
@@ -467,6 +513,28 @@ func (mgr *risingWaveControllerManagerImpl) SyncFrontendDeployments(ctx context.
 	)
 }
 
+// SyncFrontendCloneSets implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) SyncFrontendCloneSets(ctx context.Context, logger logr.Logger, frontendCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
+	risingwave := mgr.risingwaveManager.RisingWave()
+
+	groupPodTemplates := buildGroupPodTemplateMap(risingwave.Spec.Components.Frontend.Groups, extractNameAndPodTemplateFromComponentGroup)
+
+	// Enable the default group only if the global replicas > 0.
+	if risingwave.Spec.Global.Replicas.Frontend > 0 {
+		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+	}
+
+	return syncComponentGroupWorkloads(
+		mgr, ctx, logger,
+		consts.ComponentCompactor,
+		groupPodTemplates,
+		frontendCloneSets,
+		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
+			return mgr.objectFactory.NewFrontEndCloneSet(group, podTemplates)
+		},
+	)
+}
+
 // SyncMetaDeployments implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncMetaDeployments(ctx context.Context, logger logr.Logger, metaDeployments []appsv1.Deployment) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
@@ -485,6 +553,28 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaDeployments(ctx context.Cont
 		metaDeployments,
 		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
 			return mgr.objectFactory.NewMetaDeployment(group, podTemplates)
+		},
+	)
+}
+
+// SyncCloneSetDeployments implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) SyncMetaCloneSets(ctx context.Context, logger logr.Logger, metaCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
+	risingwave := mgr.risingwaveManager.RisingWave()
+
+	groupPodTemplates := buildGroupPodTemplateMap(risingwave.Spec.Components.Meta.Groups, extractNameAndPodTemplateFromComponentGroup)
+
+	// Enable the default group only if the global replicas > 0.
+	if risingwave.Spec.Global.Replicas.Meta > 0 {
+		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+	}
+
+	return syncComponentGroupWorkloads(
+		mgr, ctx, logger,
+		consts.ComponentCompactor,
+		groupPodTemplates,
+		metaCloneSets,
+		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
+			return mgr.objectFactory.NewMetaCloneSet(group, podTemplates)
 		},
 	)
 }

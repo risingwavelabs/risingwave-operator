@@ -955,7 +955,7 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment(group string, podTemplates m
 	return mustSetControllerReference(f.risingwave, metaDeployment, f.scheme)
 }
 
-func (f *RisingWaveObjectFactory) newMetaCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
+func (f *RisingWaveObjectFactory) NewMetaCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
 	if f.risingwave.Spec.EnableOpenKruise == nil || !(*f.risingwave.Spec.EnableOpenKruise) {
 		panic("Open kruise not enabled for risingwave")
 	}

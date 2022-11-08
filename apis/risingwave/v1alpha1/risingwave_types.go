@@ -598,10 +598,11 @@ type ObjectStorageType string
 
 // These are valid values of ObjectStorageType.
 const (
-	ObjectStorageTypeMemory  ObjectStorageType = "Memory"
-	ObjectStorageTypeMinIO   ObjectStorageType = "MinIO"
-	ObjectStorageTypeS3      ObjectStorageType = "S3"
-	ObjectStorageTypeUnknown ObjectStorageType = "Unknown"
+	ObjectStorageTypeMemory    ObjectStorageType = "Memory"
+	ObjectStorageTypeMinIO     ObjectStorageType = "MinIO"
+	ObjectStorageTypeS3        ObjectStorageType = "S3"
+	ObjectStorageTypeAliyunOSS ObjectStorageType = "AliyunOSS"
+	ObjectStorageTypeUnknown   ObjectStorageType = "Unknown"
 )
 
 // RisingWaveObjectStorageStatus is the status of object storage.

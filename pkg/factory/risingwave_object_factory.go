@@ -55,15 +55,16 @@ const (
 )
 
 const (
-	awsS3RegionEnvName                 = "AWS_REGION"
-	awsS3AccessKeyEnvName              = "AWS_ACCESS_KEY_ID"
-	awsS3SecretAccessKeyEnvName        = "AWS_SECRET_ACCESS_KEY"
-	awsS3BucketEnvName                 = "AWS_S3_BUCKET"
-	s3CompatibleRegionEnvName          = "S3_COMPATIBLE_REGION"
-	s3CompatibleBucketEnvName          = "S3_COMPATIBLE_BUCKET"
-	s3CompatibleAccessKeyEnvName       = "S3_COMPATIBLE_ACCESS_KEY_ID"
-	s3CompatibleSecretAccessKeyEnvName = "S3_COMPATIBLE_SECRET_ACCESS_KEY"
-	s3EndpointEnvName                  = "S3_COMPATIBLE_ENDPOINT"
+	awsS3RegionEnvName                   = "AWS_REGION"
+	awsS3AccessKeyEnvName                = "AWS_ACCESS_KEY_ID"
+	awsS3SecretAccessKeyEnvName          = "AWS_SECRET_ACCESS_KEY"
+	awsS3BucketEnvName                   = "AWS_S3_BUCKET"
+	awsRustSdkEC2MetadataDisabledEnvName = "AWS_EC2_METADATA_DISABLED"
+	s3CompatibleRegionEnvName            = "S3_COMPATIBLE_REGION"
+	s3CompatibleBucketEnvName            = "S3_COMPATIBLE_BUCKET"
+	s3CompatibleAccessKeyEnvName         = "S3_COMPATIBLE_ACCESS_KEY_ID"
+	s3CompatibleSecretAccessKeyEnvName   = "S3_COMPATIBLE_SECRET_ACCESS_KEY"
+	s3EndpointEnvName                    = "S3_COMPATIBLE_ENDPOINT"
 )
 
 var (
@@ -605,6 +606,12 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 	}
 
 	return []corev1.EnvVar{
+		{
+			// Disable auto region loading. Refer to the original source for more information.
+			// https://github.com/awslabs/aws-sdk-rust/blob/main/sdk/aws-config/src/imds/region.rs
+			Name:  awsRustSdkEC2MetadataDisabledEnvName,
+			Value: "true",
+		},
 		{
 			Name:  s3CompatibleBucketEnvName,
 			Value: bucket,

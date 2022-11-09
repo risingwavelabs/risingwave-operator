@@ -42,14 +42,34 @@ const (
 	risingWaveConfigVolume = "risingwave-config"
 	risingWaveConfigMapKey = "risingwave.toml"
 
-	envMinIOUsername = "MINIO_USERNAME"
-	envMinIOPassword = "MINIO_PASSWORD"
-	envEtcdUsername  = "ETCD_USERNAME"
-	envEtcdPassword  = "ETCD_PASSWORD"
+	minIOEndpointEnvName = "MINIO_ENDPOINT"
+	minIOBucketEnvName   = "MINIO_BUCKET"
+	minIOUsernameEnvName = "MINIO_USERNAME"
+	minIOPasswordEnvName = "MINIO_PASSWORD"
+	etcdUsernameEnvName  = "ETCD_USERNAME"
+	etcdPasswordEnvName  = "ETCD_PASSWORD"
 
 	risingwaveExecutablePath  = "/risingwave/bin/risingwave"
 	risingwaveConfigMountPath = "/risingwave/config"
 	risingwaveConfigFileName  = "risingwave.toml"
+)
+
+const (
+	awsS3RegionEnvName                   = "AWS_REGION"
+	awsS3AccessKeyEnvName                = "AWS_ACCESS_KEY_ID"
+	awsS3SecretAccessKeyEnvName          = "AWS_SECRET_ACCESS_KEY"
+	awsS3BucketEnvName                   = "AWS_S3_BUCKET"
+	awsRustSdkEC2MetadataDisabledEnvName = "AWS_EC2_METADATA_DISABLED"
+	s3CompatibleRegionEnvName            = "S3_COMPATIBLE_REGION"
+	s3CompatibleBucketEnvName            = "S3_COMPATIBLE_BUCKET"
+	s3CompatibleAccessKeyEnvName         = "S3_COMPATIBLE_ACCESS_KEY_ID"
+	s3CompatibleSecretAccessKeyEnvName   = "S3_COMPATIBLE_SECRET_ACCESS_KEY"
+	s3EndpointEnvName                    = "S3_COMPATIBLE_ENDPOINT"
+)
+
+var (
+	aliyunOSSEndpoint         = fmt.Sprintf("https://$(%s).oss-$(%s).aliyuncs.com", s3CompatibleBucketEnvName, s3CompatibleRegionEnvName)
+	internalAliyunOSSEndpoint = fmt.Sprintf("https://$(%s).oss-$(%s)-internal.aliyuncs.com", s3CompatibleBucketEnvName, s3CompatibleRegionEnvName)
 )
 
 type RisingWaveObjectFactory struct {
@@ -72,7 +92,15 @@ func (f *RisingWaveObjectFactory) namespace() string {
 }
 
 func (f *RisingWaveObjectFactory) isObjectStorageS3() bool {
-	return f.risingwave.Spec.Storages.Object.S3 != nil
+	return f.risingwave.Spec.Storages.Object.S3 != nil && len(f.risingwave.Spec.Storages.Object.S3.Endpoint) == 0
+}
+
+func (f *RisingWaveObjectFactory) isObjectStorageS3Compatible() bool {
+	return f.risingwave.Spec.Storages.Object.S3 != nil && len(f.risingwave.Spec.Storages.Object.S3.Endpoint) > 0
+}
+
+func (f *RisingWaveObjectFactory) isObjectStorageAliyunOSS() bool {
+	return f.risingwave.Spec.Storages.Object.AliyunOSS != nil
 }
 
 func (f *RisingWaveObjectFactory) isObjectStorageMinIO() bool {
@@ -86,14 +114,21 @@ func (f *RisingWaveObjectFactory) isMetaStorageEtcd() bool {
 func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 	objectStorage := f.risingwave.Spec.Storages.Object
 	switch {
-	case objectStorage.Memory != nil && *objectStorage.Memory:
+	case pointer.BoolDeref(objectStorage.Memory, false):
 		return "hummock+memory"
-	case objectStorage.S3 != nil:
+	case f.isObjectStorageS3():
 		bucket := objectStorage.S3.Bucket
 		return fmt.Sprintf("hummock+s3://%s", bucket)
+	case f.isObjectStorageS3Compatible():
+		bucket := objectStorage.S3.Bucket
+		return fmt.Sprintf("hummock+s3-compatible://%s", bucket)
 	case objectStorage.MinIO != nil:
 		minio := objectStorage.MinIO
-		return fmt.Sprintf("hummock+minio://$(%s):$(%s)@%s/%s", envMinIOUsername, envMinIOPassword, minio.Endpoint, minio.Bucket)
+		return fmt.Sprintf("hummock+minio://$(%s):$(%s)@%s/%s", minIOUsernameEnvName, minIOPasswordEnvName, minio.Endpoint, minio.Bucket)
+	case objectStorage.AliyunOSS != nil:
+		aliyunOSS := objectStorage.AliyunOSS
+		// Redirect to s3-compatible.
+		return fmt.Sprintf("hummock+s3-compatible://%s", aliyunOSS.Bucket)
 	default:
 		panic("unrecognized storage type")
 	}
@@ -316,7 +351,7 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 
 	return []corev1.EnvVar{
 		{
-			Name: envEtcdUsername,
+			Name: etcdUsernameEnvName,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -325,7 +360,7 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 			},
 		},
 		{
-			Name: envEtcdPassword,
+			Name: etcdPasswordEnvName,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -438,7 +473,15 @@ func (f *RisingWaveObjectFactory) envsForMinIO() []corev1.EnvVar {
 
 	return []corev1.EnvVar{
 		{
-			Name: envMinIOUsername,
+			Name:  minIOEndpointEnvName,
+			Value: objectStorage.MinIO.Endpoint,
+		},
+		{
+			Name:  minIOBucketEnvName,
+			Value: objectStorage.MinIO.Bucket,
+		},
+		{
+			Name: minIOUsernameEnvName,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -447,7 +490,7 @@ func (f *RisingWaveObjectFactory) envsForMinIO() []corev1.EnvVar {
 			},
 		},
 		{
-			Name: envMinIOPassword,
+			Name: minIOPasswordEnvName,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -458,25 +501,37 @@ func (f *RisingWaveObjectFactory) envsForMinIO() []corev1.EnvVar {
 	}
 }
 
-func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
-	objectStorage := &f.risingwave.Spec.Storages.Object
-
+func envsForAWSS3(region, bucket, secret string) []corev1.EnvVar {
 	secretRef := corev1.LocalObjectReference{
-		Name: objectStorage.S3.Secret,
+		Name: secret,
 	}
 
-	return []corev1.EnvVar{
-		{
-			Name: "AWS_REGION",
+	var regionEnvVar corev1.EnvVar
+	if len(region) > 0 {
+		regionEnvVar = corev1.EnvVar{
+			Name:  awsS3RegionEnvName,
+			Value: region,
+		}
+	} else {
+		regionEnvVar = corev1.EnvVar{
+			Name: awsS3RegionEnvName,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
 					Key:                  consts.SecretKeyAWSS3Region,
 				},
 			},
-		},
+		}
+	}
+
+	return []corev1.EnvVar{
 		{
-			Name: "AWS_ACCESS_KEY_ID",
+			Name:  awsS3BucketEnvName,
+			Value: bucket,
+		},
+		regionEnvVar,
+		{
+			Name: awsS3AccessKeyEnvName,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -485,7 +540,7 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 			},
 		},
 		{
-			Name: "AWS_SECRET_ACCESS_KEY",
+			Name: awsS3SecretAccessKeyEnvName,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -493,6 +548,123 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 				},
 			},
 		},
+	}
+}
+
+func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
+	objectStorage := &f.risingwave.Spec.Storages.Object
+	s3Spec := objectStorage.S3
+
+	if len(s3Spec.Endpoint) > 0 {
+		// S3 compatible mode.
+		endpoint := strings.TrimSpace(s3Spec.Endpoint)
+
+		// Interpret the variables.
+		endpoint = strings.ReplaceAll(endpoint, "${REGION}", fmt.Sprintf("$(%s)", s3CompatibleRegionEnvName))
+		endpoint = strings.ReplaceAll(endpoint, "${BUCKET}", fmt.Sprintf("$(%s)", s3CompatibleBucketEnvName))
+
+		if s3Spec.VirtualHostedStyle {
+			if strings.HasPrefix(endpoint, "https://") {
+				endpoint = fmt.Sprintf("https://$(%s).%s", s3CompatibleBucketEnvName, endpoint[len("https://"):])
+			} else {
+				endpoint = fmt.Sprintf("https://$(%s).%s", s3CompatibleBucketEnvName, endpoint)
+			}
+		} else {
+			if !strings.HasPrefix(endpoint, "https://") {
+				endpoint = "https://" + endpoint
+			}
+		}
+
+		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.Secret)
+	} else {
+		// AWS S3 mode.
+		return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.Secret)
+	}
+}
+
+func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVar {
+	secretRef := corev1.LocalObjectReference{
+		Name: secret,
+	}
+
+	var regionEnvVar corev1.EnvVar
+	if len(region) > 0 {
+		regionEnvVar = corev1.EnvVar{
+			Name:  s3CompatibleRegionEnvName,
+			Value: region,
+		}
+	} else {
+		regionEnvVar = corev1.EnvVar{
+			Name: s3CompatibleRegionEnvName,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyAWSS3Region,
+				},
+			},
+		}
+	}
+
+	return []corev1.EnvVar{
+		{
+			// Disable auto region loading. Refer to the original source for more information.
+			// https://github.com/awslabs/aws-sdk-rust/blob/main/sdk/aws-config/src/imds/region.rs
+			Name:  awsRustSdkEC2MetadataDisabledEnvName,
+			Value: "true",
+		},
+		{
+			Name:  s3CompatibleBucketEnvName,
+			Value: bucket,
+		},
+		regionEnvVar,
+		{
+			Name: s3CompatibleAccessKeyEnvName,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyAWSS3AccessKeyID,
+				},
+			},
+		},
+		{
+			Name: s3CompatibleSecretAccessKeyEnvName,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyAWSS3SecretAccessKey,
+				},
+			},
+		},
+		{
+			Name:  s3EndpointEnvName,
+			Value: endpoint,
+		},
+	}
+}
+
+func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
+	objectStorage := &f.risingwave.Spec.Storages.Object
+
+	var endpoint string
+	if objectStorage.AliyunOSS.InternalEndpoint {
+		endpoint = internalAliyunOSSEndpoint
+	} else {
+		endpoint = aliyunOSSEndpoint
+	}
+
+	return envsForS3Compatible(objectStorage.AliyunOSS.Region, endpoint, objectStorage.AliyunOSS.Bucket, objectStorage.AliyunOSS.Secret)
+}
+
+func (f *RisingWaveObjectFactory) envsForObjectStorage() []corev1.EnvVar {
+	switch {
+	case f.isObjectStorageMinIO():
+		return f.envsForMinIO()
+	case f.isObjectStorageS3() || f.isObjectStorageS3Compatible():
+		return f.envsForS3()
+	case f.isObjectStorageAliyunOSS():
+		return f.envsForAliyunOSS()
+	default:
+		return nil
 	}
 }
 
@@ -1012,18 +1184,10 @@ func (f *RisingWaveObjectFactory) setupCompactorContainer(container *corev1.Cont
 	container.Args = f.argsForCompactor()
 	container.Ports = f.portsForCompactorContainer()
 
-	if f.isObjectStorageS3() {
-		for _, env := range f.envsForS3() {
-			container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-				return a.Name == b.Name
-			})
-		}
-	} else if f.isObjectStorageMinIO() {
-		for _, env := range f.envsForMinIO() {
-			container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-				return a.Name == b.Name
-			})
-		}
+	for _, env := range f.envsForObjectStorage() {
+		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
 	}
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
@@ -1108,18 +1272,10 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	container.Args = f.argsForCompute()
 	container.Ports = f.portsForComputeContainer()
 
-	if f.isObjectStorageS3() {
-		for _, env := range f.envsForS3() {
-			container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-				return a.Name == b.Name
-			})
-		}
-	} else if f.isObjectStorageMinIO() {
-		for _, env := range f.envsForMinIO() {
-			container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-				return a.Name == b.Name
-			})
-		}
+	for _, env := range f.envsForObjectStorage() {
+		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
 	}
 
 	for _, volumeMount := range template.VolumeMounts {

@@ -315,13 +315,52 @@ type RisingWaveObjectStorageS3 struct {
 	// Secret contains the credentials to access the AWS S3 service. It must contain the following keys:
 	//   * AccessKeyID
 	//   * SecretAccessKey
-	//   * Region
+	//   * Region (optional if region is specified in the field.)
 	// +kubebuilder:validation:Required
 	Secret string `json:"secret"`
 
 	// Bucket of the AWS S3 service.
 	// +kubebuilder:validation:Required
 	Bucket string `json:"bucket"`
+
+	// Region of AWS S3 service. It is an optional field that overrides the `Region` key from the secret.
+	// Specifying the region here makes a guarantee that it won't be changed anymore.
+	Region string `json:"region,omitempty"`
+
+	// Endpoint of the AWS (or other vendor's S3-compatible) service. Leave it empty when using AWS S3 service.
+	// You can reference the `REGION` and `BUCKET` variables in the endpoint with `${BUCKET}` and `${REGION}`, e.g.,
+	//   s3.${REGION}.amazonaws.com
+	//   ${BUCKET}.s3.${REGION}.amazonaws.com
+	// +optional
+	// +kubebuilder:validation:Pattern="^(?:https://)?(?:[^/.\\s]+\\.)*(?:[^/\\s]+)*$"
+	Endpoint string `json:"endpoint,omitempty"`
+
+	// VirtualHostedStyle indicates to use a virtual hosted endpoint when endpoint is specified. The operator automatically
+	// adds the bucket prefix for you if this is enabled. Be careful about doubly using the style by specifying an endpoint
+	// of virtual hosted style as well as enabling this.
+	VirtualHostedStyle bool `json:"virtualHostedStyle,omitempty"`
+}
+
+// RisingWaveObjectStorageAliyunOSS is the details of Aliyun OSS storage (S3 compatible) for compute and compactor components.
+type RisingWaveObjectStorageAliyunOSS struct {
+	// Secret contains the credentials to access the Aliyun OSS service. It must contain the following keys:
+	//   * AccessKeyID
+	//   * SecretAccessKey
+	//   * Region (optional if region is specified in the field.)
+	// +kubebuilder:validation:Required
+	Secret string `json:"secret"`
+
+	// Region of Aliyun OSS service. It is an optional field that overrides the `Region` key from the secret.
+	// Specifying the region here makes a guarantee that it won't be changed anymore.
+	Region string `json:"region,omitempty"`
+
+	// Bucket of the Aliyun OSS service.
+	// +kubebuilder:validation:Required
+	Bucket string `json:"bucket"`
+
+	// InternalEndpoint indicates if we use the internal endpoint to access Aliyun OSS, which is
+	// only available in the internal network.
+	InternalEndpoint bool `json:"internalEndpoint,omitempty"`
 }
 
 // RisingWaveObjectStorage is the object storage for compute and compactor components.
@@ -338,6 +377,10 @@ type RisingWaveObjectStorage struct {
 	// S3 storage spec.
 	// +optional
 	S3 *RisingWaveObjectStorageS3 `json:"s3,omitempty"`
+
+	// AliyunOSS storage spec.
+	// +optional
+	AliyunOSS *RisingWaveObjectStorageAliyunOSS `json:"aliyunOSS,omitempty"`
 }
 
 // RisingWaveStoragesSpec is the storages spec.
@@ -555,10 +598,11 @@ type ObjectStorageType string
 
 // These are valid values of ObjectStorageType.
 const (
-	ObjectStorageTypeMemory  ObjectStorageType = "Memory"
-	ObjectStorageTypeMinIO   ObjectStorageType = "MinIO"
-	ObjectStorageTypeS3      ObjectStorageType = "S3"
-	ObjectStorageTypeUnknown ObjectStorageType = "Unknown"
+	ObjectStorageTypeMemory    ObjectStorageType = "Memory"
+	ObjectStorageTypeMinIO     ObjectStorageType = "MinIO"
+	ObjectStorageTypeS3        ObjectStorageType = "S3"
+	ObjectStorageTypeAliyunOSS ObjectStorageType = "AliyunOSS"
+	ObjectStorageTypeUnknown   ObjectStorageType = "Unknown"
 )
 
 // RisingWaveObjectStorageStatus is the status of object storage.

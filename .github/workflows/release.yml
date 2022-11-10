@@ -1,0 +1,17 @@
+name: Release Pipeline
+
+on:
+  release:
+    types: [ published ]
+
+jobs:
+  build-and-upload-manifests:
+    name: build-and-upload-manifests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: make generate-yaml TAG=${github.ref_name}
+    - uses: actions/upload-artifact@v3
+      with:
+        name: risingwave-operator.yaml
+        path: config/risingwave-operator.yaml

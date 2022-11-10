@@ -48,12 +48,31 @@ func (act *parallelAction) Description() string {
 }
 
 func (act *parallelAction) Run(ctx context.Context) (result ctrl.Result, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Parallel Panic:", r)
+		}
+	}()
+
 	done := make(chan bool)
+	panics := make(chan error)
+
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				panics <- fmt.Errorf("%v", r)
+			}
+		}()
 		result, err = act.inner.Run(ctx)
 		done <- true
 	}()
-	<-done
+
+	select {
+	case msg := <-panics:
+		panic(msg)
+	case <-done:
+
+	}
 
 	return
 }

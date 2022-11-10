@@ -82,3 +82,11 @@ func Test_Parallel_Run(t *testing.T) {
 
 	Parallel(x).Run(context.Background())
 }
+
+func Test_Parallel_Run_Panic(t *testing.T) {
+	x := NewAction("block chan", func(ctx context.Context) (ctrl.Result, error) {
+		panic("Aaa panic!!")
+	})
+
+	Parallel(x).Run(context.Background())
+}

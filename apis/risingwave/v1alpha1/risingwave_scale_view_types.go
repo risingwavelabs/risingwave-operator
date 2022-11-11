@@ -87,7 +87,7 @@ type RisingWaveScaleViewStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.status.selector
+// +kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.spec.labelSelector
 // +kubebuilder:printcolumn:name="TARGET",type=string,JSONPath=`.spec.targetRef.name`
 // +kubebuilder:printcolumn:name="COMPONENT",type=string,JSONPath=`.spec.targetRef.component`
 // +kubebuilder:printcolumn:name="READY",type=integer,JSONPath=`.status.replicas`

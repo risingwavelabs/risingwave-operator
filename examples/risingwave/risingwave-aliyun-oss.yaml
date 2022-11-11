@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: risingwave-aliyun-oss-config-template
+data:
+  risingwave.toml: |-
+    [storage]
+    # Support of DeleteObjects API is currently broken in Aliyun OSS. 
+    object_store_use_batch_delete = false
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aliyun-oss-credentials
+stringData:
+  AccessKeyID: your-access-key
+  SecretAccessKey: your-access-secret
+---
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-aliyun-oss
+spec:
+  configuration:
+    configmap:
+      key: risingwave.toml
+      name: risingwave-aliyun-oss-config-template
+  storages:
+    meta:
+      memory: true
+    object:
+      aliyunOSS:
+        secret: aliyun-oss-credentials
+        region: cn-hangzhou
+        bucket: hummock001
+        internalEndpoint: true
+  global:
+    image: ghcr.io/risingwavelabs/risingwave:nightly-20221107
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+      compactor: 1

@@ -207,6 +207,17 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
+		"aliyun-oss-object-storage-pass": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
+					AliyunOSS: &risingwavev1alpha1.RisingWaveObjectStorageAliyunOSS{
+						Secret: "aliyun-oss-creds",
+						Bucket: "hummock",
+					},
+				}
+			},
+			pass: true,
+		},
 		"empty-object-storage-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{}

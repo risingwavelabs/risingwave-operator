@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: make generate-yaml TAG=${github.ref_name}
+    - run: make generate-yaml TAG="${{ github.ref_name }}"
     - uses: actions/upload-artifact@v3
       with:
         name: risingwave-operator.yaml

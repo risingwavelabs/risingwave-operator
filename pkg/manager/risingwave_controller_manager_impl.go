@@ -31,6 +31,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -127,12 +128,14 @@ func buildMetaStorageType(metaStorage *risingwavev1alpha1.RisingWaveMetaStorage)
 
 func buildObjectStorageType(objectStorage *risingwavev1alpha1.RisingWaveObjectStorage) risingwavev1alpha1.ObjectStorageType {
 	switch {
-	case objectStorage.Memory != nil && *objectStorage.Memory:
+	case pointer.BoolDeref(objectStorage.Memory, false):
 		return risingwavev1alpha1.ObjectStorageTypeMemory
 	case objectStorage.MinIO != nil:
 		return risingwavev1alpha1.ObjectStorageTypeMinIO
 	case objectStorage.S3 != nil:
 		return risingwavev1alpha1.ObjectStorageTypeS3
+	case objectStorage.AliyunOSS != nil:
+		return risingwavev1alpha1.ObjectStorageTypeAliyunOSS
 	default:
 		return risingwavev1alpha1.ObjectStorageTypeUnknown
 	}

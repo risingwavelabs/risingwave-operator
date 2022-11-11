@@ -1635,6 +1635,87 @@ RisingWaveObjectStorageS3
 <p>S3 storage spec.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>aliyunOSS</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageAliyunOSS">
+RisingWaveObjectStorageAliyunOSS
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AliyunOSS storage spec.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageAliyunOSS">RisingWaveObjectStorageAliyunOSS
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage</a>)
+</p>
+<div>
+<p>RisingWaveObjectStorageAliyunOSS is the details of Aliyun OSS storage (S3 compatible) for compute and compactor components.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secret</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Secret contains the credentials to access the Aliyun OSS service. It must contain the following keys:
+* AccessKeyID
+* SecretAccessKey
+* Region (optional if region is specified in the field.)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region of Aliyun OSS service. It is an optional field that overrides the <code>Region</code> key from the secret.
+Specifying the region here makes a guarantee that it won&rsquo;t be changed anymore.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bucket</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Bucket of the Aliyun OSS service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>internalEndpoint</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>InternalEndpoint indicates if we use the internal endpoint to access Aliyun OSS, which is
+only available in the internal network.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageMinIO">RisingWaveObjectStorageMinIO
@@ -1717,7 +1798,7 @@ string
 <p>Secret contains the credentials to access the AWS S3 service. It must contain the following keys:
 * AccessKeyID
 * SecretAccessKey
-* Region</p>
+* Region (optional if region is specified in the field.)</p>
 </td>
 </tr>
 <tr>
@@ -1729,6 +1810,46 @@ string
 </td>
 <td>
 <p>Bucket of the AWS S3 service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region of AWS S3 service. It is an optional field that overrides the <code>Region</code> key from the secret.
+Specifying the region here makes a guarantee that it won&rsquo;t be changed anymore.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>endpoint</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Endpoint of the AWS (or other vendor&rsquo;s S3-compatible) service. Leave it empty when using AWS S3 service.
+You can reference the <code>REGION</code> and <code>BUCKET</code> variables in the endpoint with <code>${BUCKET}</code> and <code>${REGION}</code>, e.g.,
+s3.${REGION}.amazonaws.com
+${BUCKET}.s3.${REGION}.amazonaws.com</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>virtualHostedStyle</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>VirtualHostedStyle indicates to use a virtual hosted endpoint when endpoint is specified. The operator automatically
+adds the bucket prefix for you if this is enabled. Be careful about doubly using the style by specifying an endpoint
+of virtual hosted style as well as enabling this.</p>
 </td>
 </tr>
 </tbody>

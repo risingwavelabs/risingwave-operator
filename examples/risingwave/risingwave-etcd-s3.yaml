@@ -68,6 +68,14 @@ spec:
             name: client
             protocol: TCP
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: s3-credentials
+stringData:
+  AccessKeyID: your-access-key
+  SecretAccessKey: your-access-secret
+---
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
@@ -80,6 +88,7 @@ spec:
     object:
       s3:
         secret: s3-credentials
+        region: ap-southeast-1
         bucket: hummock001
   global:
     image: ghcr.io/risingwavelabs/risingwave:v0.1.13

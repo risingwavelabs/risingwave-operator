@@ -67,7 +67,7 @@ func IsStatefulSetRolledOut(statefulSet *appsv1.StatefulSet) bool {
 	return true
 }
 
-func isCloneSetRolledOut(cloneset *kruiseappsv1alpha1.CloneSet) bool {
+func IsCloneSetRolledOut(cloneset *kruiseappsv1alpha1.CloneSet) bool {
 	if cloneset == nil {
 		return false
 	}

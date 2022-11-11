@@ -48,22 +48,30 @@ import (
 
 const (
 	// Pre-defined actions. Import from manager package.
-	RisingWaveAction_SyncMetaService                       = manager.RisingWaveAction_SyncMetaService
-	RisingWaveAction_SyncMetaDeployments                   = manager.RisingWaveAction_SyncMetaDeployments
-	RisingWaveAction_WaitBeforeMetaServiceIsAvailable      = manager.RisingWaveAction_WaitBeforeMetaServiceIsAvailable
-	RisingWaveAction_WaitBeforeMetaDeploymentsReady        = manager.RisingWaveAction_WaitBeforeMetaDeploymentsReady
-	RisingWaveAction_SyncFrontendService                   = manager.RisingWaveAction_SyncFrontendService
-	RisingWaveAction_SyncFrontendDeployments               = manager.RisingWaveAction_SyncFrontendDeployments
-	RisingWaveAction_WaitBeforeFrontendDeploymentsReady    = manager.RisingWaveAction_WaitBeforeFrontendDeploymentsReady
-	RisingWaveAction_SyncComputeService                    = manager.RisingWaveAction_SyncComputeService
-	RisingWaveAction_SyncComputeStatefulSets               = manager.RisingWaveAction_SyncComputeStatefulSets
-	RisingWaveAction_WaitBeforeComputeStatefulSetsReady    = manager.RisingWaveAction_WaitBeforeComputeStatefulSetsReady
-	RisingWaveAction_SyncCompactorService                  = manager.RisingWaveAction_SyncCompactorService
-	RisingWaveAction_SyncCompactorDeployments              = manager.RisingWaveAction_SyncCompactorDeployments
-	RisingWaveAction_WaitBeforeCompactorDeploymentsReady   = manager.RisingWaveAction_WaitBeforeCompactorDeploymentsReady
-	RisingWaveAction_SyncConfigConfigMap                   = manager.RisingWaveAction_SyncConfigConfigMap
-	RisingWaveAction_CollectRunningStatisticsAndSyncStatus = manager.RisingWaveAction_CollectRunningStatisticsAndSyncStatus
-	RisingWaveAction_SyncServiceMonitor                    = manager.RisingWaveAction_SyncServiceMonitor
+	RisingWaveAction_SyncMetaService                            = manager.RisingWaveAction_SyncMetaService
+	RisingWaveAction_SyncMetaDeployments                        = manager.RisingWaveAction_SyncMetaDeployments
+	RisingWaveAction_SyncMetaCloneSets                          = manager.RisingWaveAction_SyncMetaCloneSets
+	RisingWaveAction_WaitBeforeMetaServiceIsAvailable           = manager.RisingWaveAction_WaitBeforeMetaServiceIsAvailable
+	RisingWaveAction_WaitBeforeMetaDeploymentsReady             = manager.RisingWaveAction_WaitBeforeMetaDeploymentsReady
+	RisingWaveAction_WaitBeforeMetaCloneSetsReady               = manager.RisingWaveAction_WaitBeforeMetaCloneSetsReady
+	RisingWaveAction_SyncFrontendService                        = manager.RisingWaveAction_SyncFrontendService
+	RisingWaveAction_SyncFrontendDeployments                    = manager.RisingWaveAction_SyncFrontendDeployments
+	RisingWaveAction_SyncFrontendCloneSets                      = manager.RisingWaveAction_SyncFrontendCloneSets
+	RisingWaveAction_WaitBeforeFrontendDeploymentsReady         = manager.RisingWaveAction_WaitBeforeFrontendDeploymentsReady
+	RisingWaveAction_WaitBeforeFrontendCloneSetsReady           = manager.RisingWaveAction_WaitBeforeFrontendCloneSetsReady
+	RisingWaveAction_SyncComputeService                         = manager.RisingWaveAction_SyncComputeService
+	RisingWaveAction_SyncComputeStatefulSets                    = manager.RisingWaveAction_SyncComputeStatefulSets
+	RisingWaveAction_SyncComputeAdvancedStatefulSets            = manager.RisingWaveAction_SyncComputeAdvancedStatefulSets
+	RisingWaveAction_WaitBeforeComputeStatefulSetsReady         = manager.RisingWaveAction_WaitBeforeComputeStatefulSetsReady
+	RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady = manager.RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady
+	RisingWaveAction_SyncCompactorService                       = manager.RisingWaveAction_SyncCompactorService
+	RisingWaveAction_SyncCompactorDeployments                   = manager.RisingWaveAction_SyncCompactorDeployments
+	RisingWaveAction_SyncCompactorCloneSets                     = manager.RisingWaveAction_SyncCompactorCloneSets
+	RisingWaveAction_WaitBeforeCompactorDeploymentsReady        = manager.RisingWaveAction_WaitBeforeCompactorDeploymentsReady
+	RisingWaveAction_WaitBeforeCompactorCloneSetsReady          = manager.RisingWaveAction_WaitBeforeCompactorCloneSetsReady
+	RisingWaveAction_SyncConfigConfigMap                        = manager.RisingWaveAction_SyncConfigConfigMap
+	RisingWaveAction_CollectRunningStatisticsAndSyncStatus      = manager.RisingWaveAction_CollectRunningStatisticsAndSyncStatus
+	RisingWaveAction_SyncServiceMonitor                         = manager.RisingWaveAction_SyncServiceMonitor
 
 	// Actions defined in controller.
 	RisingWaveAction_UpdateRisingWaveStatusViaClient    = "UpdateRisingWaveStatusViaClient"
@@ -241,9 +249,10 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		return ctrlkit.Continue()
 	})
 	syncConfigs := mgr.SyncConfigConfigMap()
-	syncMetaComponent := ctrlkit.ParallelJoin(mgr.SyncMetaService(), mgr.SyncMetaDeployments())
+	syncMetaComponent := ctrlkit.ParallelJoin(mgr.SyncMetaService(), mgr.SyncMetaDeployments(), mgr.SyncMetaCloneSets())
 	metaComponentReadyBarrier := ctrlkit.Sequential(
 		mgr.WaitBeforeMetaDeploymentsReady(),
+		mgr.WaitBeforeMetaCloneSetsReady(),
 		ctrlkit.Timeout(time.Second, mgr.WaitBeforeMetaServiceIsAvailable()),
 	)
 	prometheusCRDsInstalledBarrier := mgr.NewAction(RisingWaveAction_BarrierPrometheusCRDsInstalled, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
@@ -267,20 +276,26 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		ctrlkit.Sequential(
 			mgr.SyncComputeService(),
 			mgr.SyncComputeStatefulSets(),
+			mgr.SyncComputeAdvancedStatefulSets(),
 		),
 		ctrlkit.ParallelJoin(
 			mgr.SyncCompactorService(),
 			mgr.SyncCompactorDeployments(),
+			mgr.SyncCompactorCloneSets(),
 		),
 		ctrlkit.ParallelJoin(
 			mgr.SyncFrontendService(),
 			mgr.SyncFrontendDeployments(),
+			mgr.SyncFrontendCloneSets(),
 		),
 	)
 	otherComponentsReadyBarrier := ctrlkit.Join(
 		mgr.WaitBeforeFrontendDeploymentsReady(),
+		mgr.WaitBeforeFrontendCloneSetsReady(),
 		mgr.WaitBeforeComputeStatefulSetsReady(),
+		mgr.WaitBeforeComputeAdvancedStatefulSetsReady(),
 		mgr.WaitBeforeCompactorDeploymentsReady(),
+		mgr.WaitBeforeCompactorCloneSetsReady(),
 	)
 	syncAllComponents := ctrlkit.ParallelJoin(syncConfigs, syncMetaComponent, syncOtherComponents)
 	allComponentsReadyBarrier := ctrlkit.Join(metaComponentReadyBarrier, otherComponentsReadyBarrier)

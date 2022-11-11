@@ -93,7 +93,7 @@ func (mgr *RisingWaveManager) RemoveCondition(conditionType risingwavev1alpha1.R
 
 	conditions := mgr.mutableRisingWave.Status.Conditions
 
-	// TODO: Ask Shun Jie about iterating through aslice and mutating it? 
+	// TODO: Ask Shun Jie about iterating through aslice and mutating it?
 	for i, cond := range conditions {
 		if cond.Type == conditionType {
 			// Remove it.
@@ -105,17 +105,14 @@ func (mgr *RisingWaveManager) RemoveCondition(conditionType risingwavev1alpha1.R
 }
 
 func (mgr *RisingWaveManager) UpdateCondition(condition risingwavev1alpha1.RisingWaveCondition) {
-	mgr.mu.Lock()
-	defer mgr.mu.Unlock()
-
 	// Set the last transition time to now if it's a new condition or status changed.
 	lastObservedCondition := mgr.GetCondition(condition.Type)
 	if lastObservedCondition == nil || lastObservedCondition.Status != condition.Status {
 		condition.LastTransitionTime = metav1.Now()
 	}
 
-	// Add or update the condition.
-	// TODO : Critical section can be minimized
+	mgr.mu.Lock()
+	defer mgr.mu.Unlock()
 	conditions := mgr.mutableRisingWave.Status.Conditions
 	_, curIndex, found := lo.FindIndexOf(conditions, func(cond risingwavev1alpha1.RisingWaveCondition) bool {
 		return cond.Type == condition.Type
@@ -145,6 +142,14 @@ func (mgr *RisingWaveManager) UpdateRemoteRisingWaveStatus(ctx context.Context) 
 	}
 
 	return mgr.client.Status().Update(ctx, mgr.mutableRisingWave)
+}
+
+func (mgr *RisingWaveManager) IsOpenKruiseEnabled(ctx context.Context) bool {
+	RisingWave := mgr.RisingWaveReader.RisingWave()
+	if RisingWave.Spec.EnableOpenKruise != nil {
+		return *RisingWave.Spec.EnableOpenKruise
+	}
+	return false
 }
 
 func NewRisingWaveManager(client client.Client, risingwave *risingwavev1alpha1.RisingWave) *RisingWaveManager {

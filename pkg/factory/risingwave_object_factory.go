@@ -27,7 +27,7 @@ import (
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
 	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
 
-	// kruiseclientset "github.com/openkruise/kruise-api/client/clientset/versioned"
+	// kruiseclientset "github.com/openkruise/kruise-api/client/clientset/versioned".
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/samber/lo"
 	appsv1 "k8s.io/api/apps/v1"
@@ -956,9 +956,6 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment(group string, podTemplates m
 }
 
 func (f *RisingWaveObjectFactory) NewMetaCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
-	if f.risingwave.Spec.EnableOpenKruise == nil || !(*f.risingwave.Spec.EnableOpenKruise) {
-		panic("Open kruise not enabled for risingwave")
-	}
 
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Meta,
@@ -1069,9 +1066,6 @@ func (f *RisingWaveObjectFactory) NewFrontendDeployment(group string, podTemplat
 }
 
 func (f *RisingWaveObjectFactory) NewFrontEndCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
-	if f.risingwave.Spec.EnableOpenKruise == nil || !(*f.risingwave.Spec.EnableOpenKruise) {
-		panic("Open kruise not enabled for risingwave")
-	}
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Frontend,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -1188,9 +1182,6 @@ func (f *RisingWaveObjectFactory) NewCompactorDeployment(group string, podTempla
 }
 
 func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
-	if f.risingwave.Spec.EnableOpenKruise == nil || !(*f.risingwave.Spec.EnableOpenKruise) {
-		panic("Open kruise not enabled for risingwave")
-	}
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Compactor,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -1369,9 +1360,6 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet(group string, podTemplat
 }
 
 func (f *RisingWaveObjectFactory) NewComputeAdvancedStatefulSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1beta1.StatefulSet {
-	if f.risingwave.Spec.EnableOpenKruise == nil || !(*f.risingwave.Spec.EnableOpenKruise) {
-		panic("Open kruise not enabled for risingwave")
-	}
 	componentGroup := buildComputeGroup(
 		f.risingwave.Spec.Global.Replicas.Compute,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,

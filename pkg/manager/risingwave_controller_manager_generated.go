@@ -25,10 +25,9 @@ import (
 	"context"
 	"fmt"
 
-	kruisepubs "github.com/openkruise/kruise-api/apps/pub"
-	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
-	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
 	"github.com/go-logr/logr"
+	appsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
+	appsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -46,6 +45,34 @@ import (
 type RisingWaveControllerManagerState struct {
 	client.Reader
 	target *risingwavev1alpha1.RisingWave
+}
+
+// GetCompactorCloneSets lists compactorCloneSets with the following selectors:
+//   - labels/risingwave/component=compactor
+//   - labels/risingwave/name=${target.Name}
+//   - owned
+func (s *RisingWaveControllerManagerState) GetCompactorCloneSets(ctx context.Context) ([]appsv1alpha1.CloneSet, error) {
+	var compactorCloneSetsList appsv1alpha1.CloneSetList
+
+	matchingLabels := map[string]string{
+		"risingwave/component": "compactor",
+		"risingwave/name":      s.target.Name,
+	}
+
+	err := s.List(ctx, &compactorCloneSetsList, client.InNamespace(s.target.Namespace),
+		client.MatchingLabels(matchingLabels))
+	if err != nil {
+		return nil, fmt.Errorf("unable to get state 'compactorCloneSets': %w", err)
+	}
+
+	var validated []appsv1alpha1.CloneSet
+	for _, obj := range compactorCloneSetsList.Items {
+		if ctrlkit.ValidateOwnership(&obj, s.target) {
+			validated = append(validated, obj)
+		}
+	}
+
+	return validated, nil
 }
 
 // GetCompactorDeployments lists compactorDeployments with the following selectors:
@@ -76,33 +103,6 @@ func (s *RisingWaveControllerManagerState) GetCompactorDeployments(ctx context.C
 	return validated, nil
 }
 
-// Get Compactor Clonesets lists compactorCloneSets with the following selectors:
-//     - labels/risingwave/component=compactor
-//     - labels/risingwave/name=${target.name}
-//     - owned
-func (s *RisingWaveControllerManagerState) getCompactorCloneSets(ctx context.Context) ([]kruiseappsv1alpha1.CloneSet, error){
-	var compactorCloneSetList kruiseappsv1alpha1.CloneSetList
-
-	matchingLabels := map[string]string{
-		"risingwave/component": "compactor",
-		"risingwave/name": s.target.Name,
-	}
-
-	err := s.List(ctx, &compactorCloneSetList, client.InNamespace(s.target.Namespace), client.MatchingLabels(matchingLabels))
-	if err != nil {
-		return nil, fmt.Errorf("unable to get state 'compactorCloneSets': %w", err)
-	}
-
-	var validated []kruiseappsv1alpha1.CloneSet
-	for _, obj := range compactorCloneSetList.Items {
-		if ctrlkit.ValidateOwnership(&obj, s.target){
-			validated = append(validated, obj)
-		}
-	} 
-
-	return validated, nil
-}
-
 // GetCompactorService gets compactorService with name equals to ${target.Name}-compactor.
 func (s *RisingWaveControllerManagerState) GetCompactorService(ctx context.Context) (*corev1.Service, error) {
 	var compactorService corev1.Service
@@ -122,6 +122,34 @@ func (s *RisingWaveControllerManagerState) GetCompactorService(ctx context.Conte
 	}
 
 	return &compactorService, nil
+}
+
+// GetComputeAdvancedStatefulSets lists computeAdvancedStatefulSets with the following selectors:
+//   - labels/risingwave/component=compute
+//   - labels/risingwave/name=${target.Name}
+//   - owned
+func (s *RisingWaveControllerManagerState) GetComputeAdvancedStatefulSets(ctx context.Context) ([]appsv1beta1.StatefulSet, error) {
+	var computeAdvancedStatefulSetsList appsv1beta1.StatefulSetList
+
+	matchingLabels := map[string]string{
+		"risingwave/component": "compute",
+		"risingwave/name":      s.target.Name,
+	}
+
+	err := s.List(ctx, &computeAdvancedStatefulSetsList, client.InNamespace(s.target.Namespace),
+		client.MatchingLabels(matchingLabels))
+	if err != nil {
+		return nil, fmt.Errorf("unable to get state 'computeAdvancedStatefulSets': %w", err)
+	}
+
+	var validated []appsv1beta1.StatefulSet
+	for _, obj := range computeAdvancedStatefulSetsList.Items {
+		if ctrlkit.ValidateOwnership(&obj, s.target) {
+			validated = append(validated, obj)
+		}
+	}
+
+	return validated, nil
 }
 
 // GetComputeService gets computeService with name equals to ${target.Name}-compute.
@@ -173,35 +201,6 @@ func (s *RisingWaveControllerManagerState) GetComputeStatefulSets(ctx context.Co
 	return validated, nil
 }
 
-// GetComputeAdvancedStatefulSets lists computeStatefulSets with the following selectors:
-//   - labels/risingwave/component=compute
-//   - labels/risingwave/name=${target.Name}
-//   - owned
-func (s *RisingWaveControllerManagerState) GetComputeAdvancedStatefulSets(ctx context.Context) ([]kruiseappsv1beta1.StatefulSet, error) {
-	var computeStatefulSetsList kruiseappsv1beta1.StatefulSetList
-
-	matchingLabels := map[string]string{
-		"risingwave/component": "compute",
-		"risingwave/name":      s.target.Name,
-	}
-
-	err := s.List(ctx, &computeStatefulSetsList, client.InNamespace(s.target.Namespace),
-		client.MatchingLabels(matchingLabels))
-	if err != nil {
-		return nil, fmt.Errorf("unable to get state 'computeStatefulSets': %w", err)
-	}
-
-	var validated []kruiseappsv1beta1.StatefulSet
-	for _, obj := range computeStatefulSetsList.Items {
-		if ctrlkit.ValidateOwnership(&obj, s.target) {
-			validated = append(validated, obj)
-		}
-	}
-
-	return validated, nil
-}
-
-
 // GetConfigConfigMap gets configConfigMap with name equals to ${target.Name}-config.
 func (s *RisingWaveControllerManagerState) GetConfigConfigMap(ctx context.Context) (*corev1.ConfigMap, error) {
 	var configConfigMap corev1.ConfigMap
@@ -221,6 +220,34 @@ func (s *RisingWaveControllerManagerState) GetConfigConfigMap(ctx context.Contex
 	}
 
 	return &configConfigMap, nil
+}
+
+// GetFrontendCloneSets lists frontendCloneSets with the following selectors:
+//   - labels/risingwave/component=frontend
+//   - labels/risingwave/name=${target.Name}
+//   - owned
+func (s *RisingWaveControllerManagerState) GetFrontendCloneSets(ctx context.Context) ([]appsv1alpha1.CloneSet, error) {
+	var frontendCloneSetsList appsv1alpha1.CloneSetList
+
+	matchingLabels := map[string]string{
+		"risingwave/component": "frontend",
+		"risingwave/name":      s.target.Name,
+	}
+
+	err := s.List(ctx, &frontendCloneSetsList, client.InNamespace(s.target.Namespace),
+		client.MatchingLabels(matchingLabels))
+	if err != nil {
+		return nil, fmt.Errorf("unable to get state 'frontendCloneSets': %w", err)
+	}
+
+	var validated []appsv1alpha1.CloneSet
+	for _, obj := range frontendCloneSetsList.Items {
+		if ctrlkit.ValidateOwnership(&obj, s.target) {
+			validated = append(validated, obj)
+		}
+	}
+
+	return validated, nil
 }
 
 // GetFrontendDeployments lists frontendDeployments with the following selectors:
@@ -251,33 +278,6 @@ func (s *RisingWaveControllerManagerState) GetFrontendDeployments(ctx context.Co
 	return validated, nil
 }
 
-// Get Frontend Clonesets lists frontendCloneSets with the following selectors:
-//     - labels/risingwave/component=frontend
-//     - labels/risingwave/name=${target.name}
-//     - owned
-func (s *RisingWaveControllerManagerState) getFrontendCloneSets(ctx context.Context) ([]kruiseappsv1alpha1.CloneSet, error){
-	var frontendCloneSetList kruiseappsv1alpha1.CloneSetList
-
-	matchingLabels := map[string]string{
-		"risingwave/component": "frontend",
-		"risingwave/name": s.target.Name,
-	}
-
-	err := s.List(ctx, &frontendCloneSetList, client.InNamespace(s.target.Namespace), client.MatchingLabels(matchingLabels))
-	if err != nil {
-		return nil, fmt.Errorf("unable to get state 'frontendCloneSets': %w", err)
-	}
-
-	var validated []kruiseappsv1alpha1.CloneSet
-	for _, obj := range frontendCloneSetList.Items {
-		if ctrlkit.ValidateOwnership(&obj, s.target){
-			validated = append(validated, obj)
-		}
-	} 
-
-	return validated, nil
-}
-
 // GetFrontendService gets frontendService with name equals to ${target.Name}-frontend.
 func (s *RisingWaveControllerManagerState) GetFrontendService(ctx context.Context) (*corev1.Service, error) {
 	var frontendService corev1.Service
@@ -297,6 +297,34 @@ func (s *RisingWaveControllerManagerState) GetFrontendService(ctx context.Contex
 	}
 
 	return &frontendService, nil
+}
+
+// GetMetaCloneSets lists metaCloneSets with the following selectors:
+//   - labels/risingwave/component=meta
+//   - labels/risingwave/name=${target.Name}
+//   - owned
+func (s *RisingWaveControllerManagerState) GetMetaCloneSets(ctx context.Context) ([]appsv1alpha1.CloneSet, error) {
+	var metaCloneSetsList appsv1alpha1.CloneSetList
+
+	matchingLabels := map[string]string{
+		"risingwave/component": "meta",
+		"risingwave/name":      s.target.Name,
+	}
+
+	err := s.List(ctx, &metaCloneSetsList, client.InNamespace(s.target.Namespace),
+		client.MatchingLabels(matchingLabels))
+	if err != nil {
+		return nil, fmt.Errorf("unable to get state 'metaCloneSets': %w", err)
+	}
+
+	var validated []appsv1alpha1.CloneSet
+	for _, obj := range metaCloneSetsList.Items {
+		if ctrlkit.ValidateOwnership(&obj, s.target) {
+			validated = append(validated, obj)
+		}
+	}
+
+	return validated, nil
 }
 
 // GetMetaDeployments lists metaDeployments with the following selectors:
@@ -323,33 +351,6 @@ func (s *RisingWaveControllerManagerState) GetMetaDeployments(ctx context.Contex
 			validated = append(validated, obj)
 		}
 	}
-
-	return validated, nil
-}
-
-// Get Meta Clonesets lists frontendCloneSets with the following selectors:
-//     - labels/risingwave/component=meta
-//     - labels/risingwave/name=${target.name}
-//     - owned
-func (s *RisingWaveControllerManagerState) getMetaCloneSets(ctx context.Context) ([]kruiseappsv1alpha1.CloneSet, error){
-	var metaCloneSetList kruiseappsv1alpha1.CloneSetList
-
-	matchingLabels := map[string]string{
-		"risingwave/component": "meta",
-		"risingwave/name": s.target.Name,
-	}
-
-	err := s.List(ctx, &metaCloneSetList, client.InNamespace(s.target.Namespace), client.MatchingLabels(matchingLabels))
-	if err != nil {
-		return nil, fmt.Errorf("unable to get state 'metaCloneSets': %w", err)
-	}
-
-	var validated []kruiseappsv1alpha1.CloneSet
-	for _, obj := range metaCloneSetList.Items {
-		if ctrlkit.ValidateOwnership(&obj, s.target){
-			validated = append(validated, obj)
-		}
-	} 
 
 	return validated, nil
 }
@@ -412,8 +413,8 @@ type RisingWaveControllerManagerImpl interface {
 	// SyncMetaDeployments creates or updates the deployments for meta nodes.
 	SyncMetaDeployments(ctx context.Context, logger logr.Logger, metaDeployments []appsv1.Deployment) (ctrl.Result, error)
 
-	// SyncMetaCloneSets creates or updates the clonesets for meta nodes.
-	SyncMetaCloneSets(ctx context.Context, logger logr.Logger, metaCloneSets []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error)
+	// SyncMetaCloneSets creates or updates the CloneSets for meta nodes.
+	SyncMetaCloneSets(ctx context.Context, logger logr.Logger, metaCloneSets []appsv1alpha1.CloneSet) (ctrl.Result, error)
 
 	// WaitBeforeMetaServiceIsAvailable waits (aborts the workflow) before the meta service is available.
 	WaitBeforeMetaServiceIsAvailable(ctx context.Context, logger logr.Logger, metaService *corev1.Service) (ctrl.Result, error)
@@ -421,17 +422,23 @@ type RisingWaveControllerManagerImpl interface {
 	// WaitBeforeMetaDeploymentsReady waits (aborts the workflow) before the meta deployments are ready.
 	WaitBeforeMetaDeploymentsReady(ctx context.Context, logger logr.Logger, metaDeployments []appsv1.Deployment) (ctrl.Result, error)
 
+	// WaitBeforeMetaCloneSetsReady waits (aborts the workflow) before the meta CloneSets are ready.
+	WaitBeforeMetaCloneSetsReady(ctx context.Context, logger logr.Logger, metaCloneSets []appsv1alpha1.CloneSet) (ctrl.Result, error)
+
 	// SyncFrontendService creates or updates the service for frontend nodes.
 	SyncFrontendService(ctx context.Context, logger logr.Logger, frontendService *corev1.Service) (ctrl.Result, error)
 
 	// SyncFrontendDeployments creates or updates the deployments for frontend nodes.
 	SyncFrontendDeployments(ctx context.Context, logger logr.Logger, frontendDeployments []appsv1.Deployment) (ctrl.Result, error)
 
-	// SyncFrontendCloneSets creates or updates the clonesets for meta nodes.
-	SyncFrontendCloneSets(ctx context.Context, logger logr.Logger, frontendCloneSets []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error)
+	// SyncFrontendCloneSets creates or updates the deployments for frontend nodes.
+	SyncFrontendCloneSets(ctx context.Context, logger logr.Logger, frontendCloneSets []appsv1alpha1.CloneSet) (ctrl.Result, error)
 
 	// WaitBeforeFrontendDeploymentsReady waits (aborts the workflow) before the frontend deployments are ready.
 	WaitBeforeFrontendDeploymentsReady(ctx context.Context, logger logr.Logger, frontendDeployments []appsv1.Deployment) (ctrl.Result, error)
+
+	// WaitBeforeFrontendCloneSetsReady waits (aborts the workflow) before the frontend CloneSets are ready.
+	WaitBeforeFrontendCloneSetsReady(ctx context.Context, logger logr.Logger, frontendCloneSets []appsv1alpha1.CloneSet) (ctrl.Result, error)
 
 	// SyncComputeService creates or updates the service for compute nodes.
 	SyncComputeService(ctx context.Context, logger logr.Logger, computeService *corev1.Service) (ctrl.Result, error)
@@ -440,10 +447,13 @@ type RisingWaveControllerManagerImpl interface {
 	SyncComputeStatefulSets(ctx context.Context, logger logr.Logger, computeStatefulSets []appsv1.StatefulSet) (ctrl.Result, error)
 
 	// SyncComputeAdvancedStatefulSets creates or updates the statefulsets for compute nodes.
-	SyncComputeAdvancedStatefulSets(ctx context.Context, logger logr.Logger, computeStatefulSets []kruiseappsv1beta1.StatefulSet) (ctrl.Result, error)
+	SyncComputeAdvancedStatefulSets(ctx context.Context, logger logr.Logger, computeAdvancedStatefulSets []appsv1beta1.StatefulSet) (ctrl.Result, error)
 
 	// WaitBeforeComputeStatefulSetsReady waits (aborts the workflow) before the compute statefulsets are ready.
 	WaitBeforeComputeStatefulSetsReady(ctx context.Context, logger logr.Logger, computeStatefulSets []appsv1.StatefulSet) (ctrl.Result, error)
+
+	// WaitBeforeComputeStatefulSetsReady waits (aborts the workflow) before the compute Advanced statefulsets are ready.
+	WaitBeforeComputeAdvancedStatefulSetsReady(ctx context.Context, logger logr.Logger, computeAdvancedStatefulSets []appsv1beta1.StatefulSet) (ctrl.Result, error)
 
 	// SyncCompactorService creates or updates the service for compactor nodes.
 	SyncCompactorService(ctx context.Context, logger logr.Logger, compactorService *corev1.Service) (ctrl.Result, error)
@@ -451,11 +461,14 @@ type RisingWaveControllerManagerImpl interface {
 	// SyncCompactorDeployments creates or updates the deployments for compactor nodes.
 	SyncCompactorDeployments(ctx context.Context, logger logr.Logger, compactorDeployments []appsv1.Deployment) (ctrl.Result, error)
 
-	// SyncCompactorCloneSets creates or updates the clonesets for meta nodes.
-	SyncCompactorCloneSets(ctx context.Context, logger logr.Logger, frontendCloneSets []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error)
+	// SyncCompactorCloneSets creates or updates the deployments for compactor nodes.
+	SyncCompactorCloneSets(ctx context.Context, logger logr.Logger, compactorCloneSets []appsv1alpha1.CloneSet) (ctrl.Result, error)
 
 	// WaitBeforeCompactorDeploymentsReady waits (aborts the workflow) before the compactor deployments are ready.
 	WaitBeforeCompactorDeploymentsReady(ctx context.Context, logger logr.Logger, compactorDeployments []appsv1.Deployment) (ctrl.Result, error)
+
+	// WaitBeforeCompactorDeploymentsReady waits (aborts the workflow) before the compactor CloneSets are ready.
+	WaitBeforeCompactorCloneSetsReady(ctx context.Context, logger logr.Logger, compactorCloneSets []appsv1alpha1.CloneSet) (ctrl.Result, error)
 
 	// SyncConfigConfigMap creates or updates the configmap for RisingWave configs.
 	SyncConfigConfigMap(ctx context.Context, logger logr.Logger, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
@@ -469,27 +482,30 @@ type RisingWaveControllerManagerImpl interface {
 
 // Pre-defined actions in RisingWaveControllerManager.
 const (
-	RisingWaveAction_SyncMetaService                       = "SyncMetaService"
-	RisingWaveAction_SyncMetaDeployments                   = "SyncMetaDeployments"
-	RisingWaveAction_SyncMetaCloneSets                     = "SyncMetaCloneSets"
-	RisingWaveAction_WaitBeforeMetaServiceIsAvailable      = "WaitBeforeMetaServiceIsAvailable"
-	RisingWaveAction_WaitBeforeMetaDeploymentsReady        = "WaitBeforeMetaDeploymentsReady"
-	// RisingWaveAction_WaitBeforeMetaDeploymentsReady        = "WaitBeforeMetaClonesetsReady"
-	RisingWaveAction_SyncFrontendService                   = "SyncFrontendService"
-	RisingWaveAction_SyncFrontendDeployments               = "SyncFrontendDeployments"
-	RisingWaveAction_SyncFrontendClonesets                 = "SyncFrontendCloneSets"
-	RisingWaveAction_WaitBeforeFrontendDeploymentsReady    = "WaitBeforeFrontendDeploymentsReady"
-	RisingWaveAction_SyncComputeService                    = "SyncComputeService"
-	RisingWaveAction_SyncComputeStatefulSets               = "SyncComputeStatefulSets"
-	RisingWaveAction_SyncComputeAdvancedStatefulSets       = "SyncComputeAdvancedStatefulSets"
-	RisingWaveAction_WaitBeforeComputeStatefulSetsReady    = "WaitBeforeComputeStatefulSetsReady"
-	RisingWaveAction_SyncCompactorService                  = "SyncCompactorService"
-	RisingWaveAction_SyncCompactorDeployments              = "SyncCompactorDeployments"
-	RisingWaveAction_SyncCompactorCloneSets                = "SyncCompactorCloneSets"
-	RisingWaveAction_WaitBeforeCompactorDeploymentsReady   = "WaitBeforeCompactorDeploymentsReady"
-	RisingWaveAction_SyncConfigConfigMap                   = "SyncConfigConfigMap"
-	RisingWaveAction_SyncServiceMonitor                    = "SyncServiceMonitor"
-	RisingWaveAction_CollectRunningStatisticsAndSyncStatus = "CollectRunningStatisticsAndSyncStatus"
+	RisingWaveAction_SyncMetaService                            = "SyncMetaService"
+	RisingWaveAction_SyncMetaDeployments                        = "SyncMetaDeployments"
+	RisingWaveAction_SyncMetaCloneSets                          = "SyncMetaCloneSets"
+	RisingWaveAction_WaitBeforeMetaServiceIsAvailable           = "WaitBeforeMetaServiceIsAvailable"
+	RisingWaveAction_WaitBeforeMetaDeploymentsReady             = "WaitBeforeMetaDeploymentsReady"
+	RisingWaveAction_WaitBeforeMetaCloneSetsReady               = "WaitBeforeMetaCloneSetsReady"
+	RisingWaveAction_SyncFrontendService                        = "SyncFrontendService"
+	RisingWaveAction_SyncFrontendDeployments                    = "SyncFrontendDeployments"
+	RisingWaveAction_SyncFrontendCloneSets                      = "SyncFrontendCloneSets"
+	RisingWaveAction_WaitBeforeFrontendDeploymentsReady         = "WaitBeforeFrontendDeploymentsReady"
+	RisingWaveAction_WaitBeforeFrontendCloneSetsReady           = "WaitBeforeFrontendCloneSetsReady"
+	RisingWaveAction_SyncComputeService                         = "SyncComputeService"
+	RisingWaveAction_SyncComputeStatefulSets                    = "SyncComputeStatefulSets"
+	RisingWaveAction_SyncComputeAdvancedStatefulSets            = "SyncComputeAdvancedStatefulSets"
+	RisingWaveAction_WaitBeforeComputeStatefulSetsReady         = "WaitBeforeComputeStatefulSetsReady"
+	RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady = "WaitBeforeComputeAdvancedStatefulSetsReady"
+	RisingWaveAction_SyncCompactorService                       = "SyncCompactorService"
+	RisingWaveAction_SyncCompactorDeployments                   = "SyncCompactorDeployments"
+	RisingWaveAction_SyncCompactorCloneSets                     = "SyncCompactorCloneSets"
+	RisingWaveAction_WaitBeforeCompactorDeploymentsReady        = "WaitBeforeCompactorDeploymentsReady"
+	RisingWaveAction_WaitBeforeCompactorCloneSetsReady          = "WaitBeforeCompactorCloneSetsReady"
+	RisingWaveAction_SyncConfigConfigMap                        = "SyncConfigConfigMap"
+	RisingWaveAction_SyncServiceMonitor                         = "SyncServiceMonitor"
+	RisingWaveAction_CollectRunningStatisticsAndSyncStatus      = "CollectRunningStatisticsAndSyncStatus"
 )
 
 // RisingWaveControllerManager encapsulates the states and actions used by RisingWaveController.
@@ -550,7 +566,6 @@ func (m *RisingWaveControllerManager) SyncMetaDeployments() ctrlkit.Action {
 
 		// Invoke action.
 		if m.hook != nil {
-			// TODO: Why wrap a function around a function call ?
 			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncMetaDeployments, result, err) }()
 			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncMetaDeployments, map[string]runtime.Object{
 				"metaDeployments": &appsv1.DeploymentList{Items: metaDeployments},
@@ -560,30 +575,30 @@ func (m *RisingWaveControllerManager) SyncMetaDeployments() ctrlkit.Action {
 		return m.impl.SyncMetaDeployments(ctx, logger, metaDeployments)
 	})
 }
-//SyncMetaCloneSets generates the action of "SyncMetaCloneSets"
+
+// SyncMetaCloneSets generates the action of "SyncMetaCloneSets".
 func (m *RisingWaveControllerManager) SyncMetaCloneSets() ctrlkit.Action {
 	return ctrlkit.NewAction(RisingWaveAction_SyncMetaCloneSets, func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", RisingWaveAction_SyncMetaCloneSets)
 
-		//get states
-		metaCloneSets, err := m.state.getMetaCloneSets(ctx)
+		// Get states.
+		metaCloneSets, err := m.state.GetMetaCloneSets(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
-		//Invoke action.
-		// if hook exists, run pre hook then defer post hook to run after
+		// Invoke action.
 		if m.hook != nil {
-			// TODO: Why wrap a function around a function call ?
 			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncMetaCloneSets, result, err) }()
 			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncMetaCloneSets, map[string]runtime.Object{
-				"metaCloneSets": &kruiseappsv1alpha1.CloneSetList{Items: metaCloneSets},
+				"metaCloneSets": &appsv1alpha1.CloneSetList{Items: metaCloneSets},
 			})
 		}
 
 		return m.impl.SyncMetaCloneSets(ctx, logger, metaCloneSets)
 	})
 }
+
 // WaitBeforeMetaServiceIsAvailable generates the action of "WaitBeforeMetaServiceIsAvailable".
 func (m *RisingWaveControllerManager) WaitBeforeMetaServiceIsAvailable() ctrlkit.Action {
 	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeMetaServiceIsAvailable, func(ctx context.Context) (result ctrl.Result, err error) {
@@ -627,6 +642,29 @@ func (m *RisingWaveControllerManager) WaitBeforeMetaDeploymentsReady() ctrlkit.A
 		}
 
 		return m.impl.WaitBeforeMetaDeploymentsReady(ctx, logger, metaDeployments)
+	})
+}
+
+// WaitBeforeMetaCloneSetsReady generates the action of "WaitBeforeMetaCloneSetsReady".
+func (m *RisingWaveControllerManager) WaitBeforeMetaCloneSetsReady() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeMetaCloneSetsReady, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeMetaCloneSetsReady)
+
+		// Get states.
+		metaCloneSets, err := m.state.GetMetaCloneSets(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeMetaCloneSetsReady, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeMetaCloneSetsReady, map[string]runtime.Object{
+				"metaCloneSets": &appsv1alpha1.CloneSetList{Items: metaCloneSets},
+			})
+		}
+
+		return m.impl.WaitBeforeMetaCloneSetsReady(ctx, logger, metaCloneSets)
 	})
 }
 
@@ -676,24 +714,22 @@ func (m *RisingWaveControllerManager) SyncFrontendDeployments() ctrlkit.Action {
 	})
 }
 
-// SyncFrontendCloneSets generates the "SyncFrontendCloneSets" action.
+// SyncFrontendCloneSets generates the action of "SyncFrontendCloneSets".
 func (m *RisingWaveControllerManager) SyncFrontendCloneSets() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_SyncFrontendClonesets, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_SyncFrontendClonesets)
+	return ctrlkit.NewAction(RisingWaveAction_SyncFrontendCloneSets, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_SyncFrontendCloneSets)
 
-		//get states
-		frontendCloneSets, err := m.state.getFrontendCloneSets(ctx)
+		// Get states.
+		frontendCloneSets, err := m.state.GetFrontendCloneSets(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
-		//Invoke action.
-		// if hook exists, run pre hook then defer post hook to run after
+		// Invoke action.
 		if m.hook != nil {
-			// TODO: Why wrap a function around a function call ?
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncMetaCloneSets, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncMetaCloneSets, map[string]runtime.Object{
-				"frontenedCloneSets": &kruiseappsv1alpha1.CloneSetList{Items: frontendCloneSets},
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncFrontendCloneSets, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncFrontendCloneSets, map[string]runtime.Object{
+				"frontendCloneSets": &appsv1alpha1.CloneSetList{Items: frontendCloneSets},
 			})
 		}
 
@@ -721,6 +757,29 @@ func (m *RisingWaveControllerManager) WaitBeforeFrontendDeploymentsReady() ctrlk
 		}
 
 		return m.impl.WaitBeforeFrontendDeploymentsReady(ctx, logger, frontendDeployments)
+	})
+}
+
+// WaitBeforeFrontendCloneSetsReady generates the action of "WaitBeforeFrontendCloneSetsReady".
+func (m *RisingWaveControllerManager) WaitBeforeFrontendCloneSetsReady() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeFrontendCloneSetsReady, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeFrontendCloneSetsReady)
+
+		// Get states.
+		frontendCloneSets, err := m.state.GetFrontendCloneSets(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeFrontendCloneSetsReady, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeFrontendCloneSetsReady, map[string]runtime.Object{
+				"frontendCloneSets": &appsv1alpha1.CloneSetList{Items: frontendCloneSets},
+			})
+		}
+
+		return m.impl.WaitBeforeFrontendCloneSetsReady(ctx, logger, frontendCloneSets)
 	})
 }
 
@@ -770,14 +829,13 @@ func (m *RisingWaveControllerManager) SyncComputeStatefulSets() ctrlkit.Action {
 	})
 }
 
-
-// SyncAdvancedComputeStatefulSets generates the action of "SyncComputeStatefulSets".
-func (m *RisingWaveControllerManager) SyncAdvancedComputeStatefulSets() ctrlkit.Action {
+// SyncComputeAdvancedStatefulSets generates the action of "SyncComputeAdvancedStatefulSets".
+func (m *RisingWaveControllerManager) SyncComputeAdvancedStatefulSets() ctrlkit.Action {
 	return ctrlkit.NewAction(RisingWaveAction_SyncComputeAdvancedStatefulSets, func(ctx context.Context) (result ctrl.Result, err error) {
 		logger := m.logger.WithValues("action", RisingWaveAction_SyncComputeAdvancedStatefulSets)
 
 		// Get states.
-		computeStatefulSets, err := m.state.GetComputeAdvancedStatefulSets(ctx)
+		computeAdvancedStatefulSets, err := m.state.GetComputeAdvancedStatefulSets(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
@@ -786,11 +844,11 @@ func (m *RisingWaveControllerManager) SyncAdvancedComputeStatefulSets() ctrlkit.
 		if m.hook != nil {
 			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncComputeAdvancedStatefulSets, result, err) }()
 			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncComputeAdvancedStatefulSets, map[string]runtime.Object{
-				"computeStatefulSets": &kruiseappsv1beta1.StatefulSetList{Items: computeStatefulSets},
+				"computeAdvancedStatefulSets": &appsv1beta1.StatefulSetList{Items: computeAdvancedStatefulSets},
 			})
 		}
 
-		return m.impl.SyncComputeAdvancedStatefulSets(ctx, logger, computeStatefulSets)
+		return m.impl.SyncComputeAdvancedStatefulSets(ctx, logger, computeAdvancedStatefulSets)
 	})
 }
 
@@ -814,6 +872,31 @@ func (m *RisingWaveControllerManager) WaitBeforeComputeStatefulSetsReady() ctrlk
 		}
 
 		return m.impl.WaitBeforeComputeStatefulSetsReady(ctx, logger, computeStatefulSets)
+	})
+}
+
+// WaitBeforeComputeAdvancedStatefulSetsReady generates the action of "WaitBeforeComputeAdvancedStatefulSetsReady".
+func (m *RisingWaveControllerManager) WaitBeforeComputeAdvancedStatefulSetsReady() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady)
+
+		// Get states.
+		computeAdvancedStatefulSets, err := m.state.GetComputeAdvancedStatefulSets(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() {
+				m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady, result, err)
+			}()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady, map[string]runtime.Object{
+				"computeAdvancedStatefulSets": &appsv1beta1.StatefulSetList{Items: computeAdvancedStatefulSets},
+			})
+		}
+
+		return m.impl.WaitBeforeComputeAdvancedStatefulSetsReady(ctx, logger, computeAdvancedStatefulSets)
 	})
 }
 
@@ -863,24 +946,22 @@ func (m *RisingWaveControllerManager) SyncCompactorDeployments() ctrlkit.Action 
 	})
 }
 
-// SyncCompactorCloneSets generates the "SyncCompactorCloneSets" action.
+// SyncCompactorCloneSets generates the action of "SyncCompactorCloneSets".
 func (m *RisingWaveControllerManager) SyncCompactorCloneSets() ctrlkit.Action {
 	return ctrlkit.NewAction(RisingWaveAction_SyncCompactorCloneSets, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_SyncMetaCloneSets)
+		logger := m.logger.WithValues("action", RisingWaveAction_SyncCompactorCloneSets)
 
-		//get states
-		compactorCloneSets, err := m.state.getCompactorCloneSets(ctx)
+		// Get states.
+		compactorCloneSets, err := m.state.GetCompactorCloneSets(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
-		//Invoke action.
-		// if hook exists, run pre hook then defer post hook to run after
+		// Invoke action.
 		if m.hook != nil {
-			// TODO: Why wrap a function around a function call ?
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncMetaCloneSets, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncMetaCloneSets, map[string]runtime.Object{
-				"compactorCloneSets": &kruiseappsv1alpha1.CloneSetList{Items: compactorCloneSets},
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncCompactorCloneSets, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncCompactorCloneSets, map[string]runtime.Object{
+				"compactorCloneSets": &appsv1alpha1.CloneSetList{Items: compactorCloneSets},
 			})
 		}
 
@@ -908,6 +989,29 @@ func (m *RisingWaveControllerManager) WaitBeforeCompactorDeploymentsReady() ctrl
 		}
 
 		return m.impl.WaitBeforeCompactorDeploymentsReady(ctx, logger, compactorDeployments)
+	})
+}
+
+// WaitBeforeCompactorCloneSetsReady generates the action of "WaitBeforeCompactorCloneSetsReady".
+func (m *RisingWaveControllerManager) WaitBeforeCompactorCloneSetsReady() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeCompactorCloneSetsReady, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeCompactorCloneSetsReady)
+
+		// Get states.
+		compactorCloneSets, err := m.state.GetCompactorCloneSets(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeCompactorCloneSetsReady, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeCompactorCloneSetsReady, map[string]runtime.Object{
+				"compactorCloneSets": &appsv1alpha1.CloneSetList{Items: compactorCloneSets},
+			})
+		}
+
+		return m.impl.WaitBeforeCompactorCloneSetsReady(ctx, logger, compactorCloneSets)
 	})
 }
 

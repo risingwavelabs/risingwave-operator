@@ -1288,7 +1288,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 				var cloneSet *kruiseappsv1alpha1.CloneSet
 				switch component {
 				case consts.ComponentMeta:
-					cloneSet = factory.newMetaCloneSet(tc.group.Name, tc.podTemplate)
+					cloneSet = factory.NewMetaCloneSet(tc.group.Name, tc.podTemplate)
 				case consts.ComponentFrontend:
 					cloneSet = factory.NewFrontEndCloneSet(tc.group.Name, tc.podTemplate)
 				case consts.ComponentCompactor:

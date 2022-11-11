@@ -8619,7 +8619,7 @@ spec:
     storage: true
     subresources:
       scale:
-        labelSelectorPath: .status.selector
+        labelSelectorPath: .spec.labelSelector
         specReplicasPath: .spec.replicas
         statusReplicasPath: .status.replicas
       status: {}

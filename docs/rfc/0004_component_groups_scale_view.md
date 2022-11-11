@@ -22,12 +22,15 @@ after this is implemented.
 > Why are we doing this?
 
 The [scale subresource](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#scale-subresource)
-is
-a subresource like the status but exposes three fixed fields:
+is a subresource like the status but exposes three fields:
 
-- `.spec.replicas` which refers to the desired replicas
-- `.status.replicas` which refers to the current replicas
-- `.status.selector` which refers to the Pod selector (but in a serialized manner)
+- `scale.spec.replicas` which refers to the desired replicas.
+- `scale.status.replicas` which refers to the current replicas.
+- `scale.status.selector` which refers to the Pod selector (but in a serialized manner).
+
+`scale` here is the payload object in the type of `autoscaling/v1.Scale` to be sent to the scale subresource. We can
+reflect these fields to those in our CR by defining these three JSON paths: `specReplicasPath`, `statusReplicasPath`,
+and `labelSelectorPath`.
 
 However, the current design of the `RisingWave` resource can not provide such a subresource because it is consisted of
 four independent components, and each of the component can have one or more groups. Therefore, the `kubectl scale` can
@@ -95,16 +98,20 @@ status:
 
 ### Scale Subresource and Webhooks
 
-Updating on the scale subresource won't trigger the mutating or validating webhook of `RisingWaveScaleView`, thus we couldn't add any 
-processing or restrictions on the `.spec.replicas` field. Thus, 
+Updating on the scale subresource won't trigger the mutating or validating webhook of `RisingWaveScaleView`, thus we
+couldn't add any
+processing or restrictions on the `.spec.replicas` field. Thus,
+
 - There must be at least one group without `maxReplicas` limit, and won't be any limitation of `minReplicas`
 - The replicas splitting is performed by the controller rather than the webhook, with a stable algorithm
-- Updating of the RisingWave's replicas is performed with the split replicas record in the locks, under `.status.scaleViews`
+- Updating of the RisingWave's replicas is performed with the split replicas record in the locks,
+  under `.status.scaleViews`
 
 ### Priority and Replica Constraints
 
 When updating the scale subresource, it's updating the `.spec.replicas` field above. The mutating webhook will then work
 to distribute the replicas of `.spec.replicas` to the replicas under the `scalePolicy`, following the rules below:
+
 - The replicas in each group must be confined within the constraints.
 - The groups with higher priorities always consume replicas first until it reaches the max boundary. E.g.,
   when `.spec.replicas` is 4, the 'enduring' group (with priority 1, larger than the 'spot' group's) will have 2 (which
@@ -140,8 +147,8 @@ Validating webhook:
 
 - If the webhook observes scaleViews field, it must check the replicas field of each target groups and reject any change
   not matches, which is to say: if a group is locked, then the replicas of it must be either:
-  - not changed (identical to the older value)
-  - equals to the value in the lock
+    - not changed (identical to the older value)
+    - equals to the value in the lock
 
 This is a compatible change and should not affect the RisingWave's workflow.
 

@@ -18,6 +18,7 @@ package ctrlkit
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -84,6 +85,12 @@ func Test_Parallel_Run(t *testing.T) {
 }
 
 func Test_Parallel_Run_Panic(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Parallel Panic:", r)
+		}
+	}()
+
 	x := NewAction("block chan", func(ctx context.Context) (ctrl.Result, error) {
 		panic("Aaa panic!!")
 	})

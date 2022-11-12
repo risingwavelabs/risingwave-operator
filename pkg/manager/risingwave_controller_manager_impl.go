@@ -444,7 +444,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncCompactorCloneSets(ctx context.C
 	}
 
 	// Enable the default group only if the global replicas > 0.
-	if risingwave.Spec.Global.Replicas.Frontend > 0 {
+	if risingwave.Spec.Global.Replicas.Compactor > 0 {
 		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
 	}
 
@@ -454,7 +454,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncCompactorCloneSets(ctx context.C
 		groupPodTemplates,
 		compactorCloneSets,
 		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
-			return mgr.objectFactory.NewFrontEndCloneSet(group, podTemplates)
+			return mgr.objectFactory.NewCompactorCloneSet(group, podTemplates)
 		},
 	)
 }
@@ -602,7 +602,6 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaCloneSets(ctx context.Contex
 	if risingwave.Spec.EnableOpenKruise != nil && *risingwave.Spec.EnableOpenKruise {
 		groupPodTemplates = buildGroupPodTemplateMap(risingwave.Spec.Components.Meta.Groups, extractNameAndPodTemplateFromComponentGroup)
 	}
-
 	// Enable the default group only if the global replicas > 0.
 	if risingwave.Spec.Global.Replicas.Meta > 0 {
 		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)

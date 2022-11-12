@@ -22,6 +22,8 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
+	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
 	"golang.org/x/time/rate"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -395,6 +397,8 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.StatefulSet{}).
 		Owns(&corev1.Service{}).
 		Owns(&corev1.ConfigMap{}).
+		Owns(&kruiseappsv1alpha1.CloneSet{}).
+		Owns(&kruiseappsv1beta1.StatefulSet{}).
 		// Can't watch an optional CRD. It will cause a panic in manager.
 		// So do not uncomment the following line.
 		// Owns(&prometheusv1.ServiceMonitor{}).

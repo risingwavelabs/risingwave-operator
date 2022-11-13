@@ -273,12 +273,12 @@ func Test_JoinInParallel_Run_Panic(t *testing.T) {
 		}
 	}()
 
-	x := NewAction("panic chan", func(ctx context.Context) (ctrl.Result, error) {
+	x := NewAction("panic", func(ctx context.Context) (ctrl.Result, error) {
 		panic("Aaa panic!!")
 	})
 
-	y := NewAction("panic chan", func(ctx context.Context) (ctrl.Result, error) {
-		return NoRequeue()
+	y := NewAction("panic", func(ctx context.Context) (ctrl.Result, error) {
+		panic("Bbb panic!!")
 	})
 
 	ParallelJoin(x, y).Run(context.Background())

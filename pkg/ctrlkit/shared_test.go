@@ -120,7 +120,7 @@ func Test_Shared_Run_Panic(t *testing.T) {
 		}
 	}()
 
-	x := NewAction("panic chan", func(ctx context.Context) (ctrl.Result, error) {
+	x := NewAction("panic", func(ctx context.Context) (ctrl.Result, error) {
 		panic("Aaa panic!!")
 	})
 

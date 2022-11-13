@@ -265,3 +265,21 @@ func Test_JoinInOrder_Run(t *testing.T) {
 	cnt := 0
 	OrderedJoin(newSequentialCountActs(10, &cnt)...).Run(context.Background())
 }
+
+func Test_JoinInParallel_Run_Panic(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("JoinInParallel Panic:", r)
+		}
+	}()
+
+	x := NewAction("panic chan", func(ctx context.Context) (ctrl.Result, error) {
+		panic("Aaa panic!!")
+	})
+
+	y := NewAction("panic chan", func(ctx context.Context) (ctrl.Result, error) {
+		return NoRequeue()
+	})
+
+	ParallelJoin(x, y).Run(context.Background())
+}

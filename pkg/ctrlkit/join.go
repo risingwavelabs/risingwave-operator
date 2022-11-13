@@ -82,6 +82,8 @@ func runJoinActions(ctx context.Context, actions ...Action) (result ctrl.Result,
 func runJoinActionsInParallel(ctx context.Context, actions ...Action) (result ctrl.Result, err error) {
 	lresults := make([]ctrl.Result, len(actions))
 	lerrs := make([]error, len(actions))
+	done := make(chan bool)
+	panics := make(chan any)
 
 	// Run each action in a new goroutine and organize with WaitGroup.
 	wg := &sync.WaitGroup{}
@@ -92,13 +94,28 @@ func runJoinActionsInParallel(ctx context.Context, actions ...Action) (result ct
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			defer func() {
+				if r := recover(); r != nil {
+					panics <- r
+				}
+			}()
 
 			*lresult, *lerr = act.Run(ctx)
 		}()
 	}
 
 	// Wait should set a memory barrier.
-	wg.Wait()
+	go func() {
+		wg.Wait()
+		done <- true
+	}()
+
+	select {
+	case msg := <-panics:
+		panic(msg)
+	case <-done:
+
+	}
 
 	// Join results.
 	for i := 0; i < len(actions); i++ {

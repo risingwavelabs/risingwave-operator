@@ -57,12 +57,12 @@ func (s *sharedAction) Description() string {
 func (s *sharedAction) Run(ctx context.Context) (ctrl.Result, error) {
 	// Start a new goroutine to do this.
 	go s.once.Do(func() {
+		defer close(s.done)
 		defer func() {
 			if r := recover(); r != nil {
 				s.panics <- r
 			}
 		}()
-		defer close(s.done)
 		s.result, s.err = s.inner.Run(ctx)
 		s.done <- true
 	})

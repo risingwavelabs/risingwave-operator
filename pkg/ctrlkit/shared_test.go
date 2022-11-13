@@ -19,6 +19,7 @@ package ctrlkit
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -110,4 +111,18 @@ func Test_Shared(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_Shared_Run_Panic(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Shared Panic:", r)
+		}
+	}()
+
+	x := NewAction("panic chan", func(ctx context.Context) (ctrl.Result, error) {
+		panic("Aaa panic!!")
+	})
+
+	Shared(x).Run(context.Background())
 }

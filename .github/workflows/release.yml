@@ -10,7 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: make generate-yaml TAG=${github.ref_name}
+    - uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+    - run: make generate-yaml TAG="${{ github.ref_name }}"
     - uses: actions/upload-artifact@v3
       with:
         name: risingwave-operator.yaml

@@ -1360,7 +1360,7 @@ func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string, podTemplate
 
 	podTemplate := f.buildPodTemplate(consts.ComponentCompactor, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 
-	f.setupFrontendContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
+	f.setupCompactorContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
 
 	keepPodSpecConsistent(&podTemplate.Spec)
 	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentCompactor, group)
@@ -1529,7 +1529,10 @@ func (f *RisingWaveObjectFactory) NewComputeAdvancedStatefulSet(group string, po
 	pvcTemplates := f.risingwave.Spec.Storages.PVCTemplates
 
 	podTemplate := f.buildPodTemplate(consts.ComponentCompute, group, podTemplates, &componentGroup.RisingWaveComponentGroupTemplate, restartAt)
-
+	// Readiness gate InPlaceUpdateReady required for advanced statefulset
+	podTemplate.Spec.ReadinessGates = append(podTemplate.Spec.ReadinessGates, corev1.PodReadinessGate{
+		ConditionType: "InPlaceUpdateReady",
+	})
 	f.setupComputeContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComputeGroupTemplate)
 
 	keepPodSpecConsistent(&podTemplate.Spec)

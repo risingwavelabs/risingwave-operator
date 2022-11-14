@@ -60,8 +60,7 @@ type RisingWaveUpgradeStrategy struct {
 	// Type of upgrade. Can be "Recreate" or "RollingUpdate". Default is RollingUpdate.
 	// +optional
 	// +kubebuilder:default=RollingUpdate
-	// +kubebuilder:validation:Enum=Recreate;RollingUpdate
-	// +kubebuilder:if(enableOpenKruise)?validation:Enum=Recreate;InPlaceIfPossible;InPlaceOnly
+	// +kubebuilder:validation:Enum=Recreate;RollingUpdate;InPlaceIfPossible;InPlaceOnly
 	Type RisingWaveUpgradeStrategyType `json:"type,omitempty"`
 
 	// Rolling update config params. Present only if DeploymentStrategyType = RollingUpdate.
@@ -581,11 +580,12 @@ type RisingWaveConditionType string
 
 // These are valid value of RisingWaveConditionType.
 const (
-	RisingWaveConditionRunning      RisingWaveConditionType = "Running"
-	RisingWaveConditionInitializing RisingWaveConditionType = "Initializing"
-	RisingWaveConditionUpgrading    RisingWaveConditionType = "Upgrading"
-	RisingWaveConditionFailed       RisingWaveConditionType = "Failed"
-	RisingWaveConditionUnknown      RisingWaveConditionType = "Unknown"
+	RisingWaveConditionRunning            RisingWaveConditionType = "Running"
+	RisingWaveConditionInitializing       RisingWaveConditionType = "Initializing"
+	RisingWaveConditionUpgrading          RisingWaveConditionType = "Upgrading"
+	RisingWaveConditionFailed             RisingWaveConditionType = "Failed"
+	RisingWaveConditionUnknown            RisingWaveConditionType = "Unknown"
+	RisingWaceConditionInPlaceUpdateReady RisingWaveConditionType = " InPlaceUpdateReady"
 )
 
 // RisingWaveCondition indicates a condition of RisingWave.

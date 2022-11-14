@@ -414,11 +414,11 @@ func (mgr *risingWaveControllerManagerImpl) SyncCompactorDeployments(ctx context
 	// We only want groupPodTemplates to be populated for deployments if open Kruise is disabled
 	if risingwave.Spec.EnableOpenKruise == nil || !(*risingwave.Spec.EnableOpenKruise) {
 		groupPodTemplates = buildGroupPodTemplateMap(risingwave.Spec.Components.Compactor.Groups, extractNameAndPodTemplateFromComponentGroup)
+		// Enable the default group only if the global replicas > 0.
+		if risingwave.Spec.Global.Replicas.Compactor > 0 {
+			groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+		}
 
-	}
-	// Enable the default group only if the global replicas > 0.
-	if risingwave.Spec.Global.Replicas.Compactor > 0 {
-		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
 	}
 
 	return syncComponentGroupWorkloads(
@@ -440,12 +440,10 @@ func (mgr *risingWaveControllerManagerImpl) SyncCompactorCloneSets(ctx context.C
 	var groupPodTemplates = make(map[string]string)
 	if risingwave.Spec.EnableOpenKruise != nil && *risingwave.Spec.EnableOpenKruise {
 		groupPodTemplates = buildGroupPodTemplateMap(risingwave.Spec.Components.Compactor.Groups, extractNameAndPodTemplateFromComponentGroup)
-
-	}
-
-	// Enable the default group only if the global replicas > 0.
-	if risingwave.Spec.Global.Replicas.Compactor > 0 {
-		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+		// Enable the default group only if the global replicas > 0.
+		if risingwave.Spec.Global.Replicas.Compactor > 0 {
+			groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+		}
 	}
 
 	return syncComponentGroupWorkloads(
@@ -468,11 +466,10 @@ func (mgr *risingWaveControllerManagerImpl) SyncComputeStatefulSets(ctx context.
 	// We only want groupPodTemplates to be populated for statefulsets if open Kruise is disabled
 	if risingwave.Spec.EnableOpenKruise == nil || !(*risingwave.Spec.EnableOpenKruise) {
 		groupPodTemplates = buildGroupPodTemplateMap(risingwave.Spec.Components.Compute.Groups, extractNameAndPodTemplateFromComputeGroup)
-	}
-
-	// Enable the default group only if the global replicas > 0.
-	if risingwave.Spec.Global.Replicas.Compute > 0 {
-		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+		// Enable the default group only if the global replicas > 0.
+		if risingwave.Spec.Global.Replicas.Compute > 0 {
+			groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+		}
 	}
 
 	return syncComponentGroupWorkloads(
@@ -494,11 +491,11 @@ func (mgr *risingWaveControllerManagerImpl) SyncComputeAdvancedStatefulSets(ctx 
 	// We only want groupPodTemplates to be populated for deployments if open Kruise is disabled
 	if risingwave.Spec.EnableOpenKruise != nil && *risingwave.Spec.EnableOpenKruise {
 		groupPodTemplates = buildGroupPodTemplateMap(risingwave.Spec.Components.Compute.Groups, extractNameAndPodTemplateFromComputeGroup)
-	}
+		// Enable the default group only if the global replicas > 0.
+		if risingwave.Spec.Global.Replicas.Compute > 0 {
+			groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+		}
 
-	// Enable the default group only if the global replicas > 0.
-	if risingwave.Spec.Global.Replicas.Compute > 0 {
-		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
 	}
 
 	return syncComponentGroupWorkloads(
@@ -521,12 +518,11 @@ func (mgr *risingWaveControllerManagerImpl) SyncFrontendDeployments(ctx context.
 	// We only want groupPodTemplates to be populated for deployments if open Kruise is disabled
 	if risingwave.Spec.EnableOpenKruise == nil || !(*risingwave.Spec.EnableOpenKruise) {
 		groupPodTemplates = buildGroupPodTemplateMap(risingwave.Spec.Components.Frontend.Groups, extractNameAndPodTemplateFromComponentGroup)
+		// Enable the default group only if the global replicas > 0.
+		if risingwave.Spec.Global.Replicas.Frontend > 0 {
+			groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+		}
 
-	}
-
-	// Enable the default group only if the global replicas > 0.
-	if risingwave.Spec.Global.Replicas.Frontend > 0 {
-		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
 	}
 
 	return syncComponentGroupWorkloads(
@@ -548,11 +544,10 @@ func (mgr *risingWaveControllerManagerImpl) SyncFrontendCloneSets(ctx context.Co
 	var groupPodTemplates = make(map[string]string)
 	if risingwave.Spec.EnableOpenKruise != nil && *risingwave.Spec.EnableOpenKruise {
 		groupPodTemplates = buildGroupPodTemplateMap(risingwave.Spec.Components.Frontend.Groups, extractNameAndPodTemplateFromComponentGroup)
-	}
-
-	// Enable the default group only if the global replicas > 0.
-	if risingwave.Spec.Global.Replicas.Frontend > 0 {
-		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+		// Enable the default group only if the global replicas > 0.
+		if risingwave.Spec.Global.Replicas.Frontend > 0 {
+			groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+		}
 	}
 
 	return syncComponentGroupWorkloads(
@@ -574,12 +569,11 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaDeployments(ctx context.Cont
 	// We only want groupPodTemplates to be populated for deployments if open Kruise is disabled
 	if risingwave.Spec.EnableOpenKruise == nil || !(*risingwave.Spec.EnableOpenKruise) {
 		groupPodTemplates = buildGroupPodTemplateMap(risingwave.Spec.Components.Meta.Groups, extractNameAndPodTemplateFromComponentGroup)
+		// Enable the default group only if the global replicas > 0.
+		if risingwave.Spec.Global.Replicas.Meta > 0 {
+			groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+		}
 
-	}
-
-	// Enable the default group only if the global replicas > 0.
-	if risingwave.Spec.Global.Replicas.Meta > 0 {
-		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
 	}
 
 	return syncComponentGroupWorkloads(
@@ -599,12 +593,14 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaCloneSets(ctx context.Contex
 
 	// We only want to populate groupPodTemplates for Clonesets if Open Kruise is enabled.
 	var groupPodTemplates = make(map[string]string)
+
 	if risingwave.Spec.EnableOpenKruise != nil && *risingwave.Spec.EnableOpenKruise {
 		groupPodTemplates = buildGroupPodTemplateMap(risingwave.Spec.Components.Meta.Groups, extractNameAndPodTemplateFromComponentGroup)
-	}
-	// Enable the default group only if the global replicas > 0.
-	if risingwave.Spec.Global.Replicas.Meta > 0 {
-		groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+
+		// Enable the default group only if the global replicas > 0.
+		if risingwave.Spec.Global.Replicas.Meta > 0 {
+			groupPodTemplates[""] = followPtrOrDefault(risingwave.Spec.Global.PodTemplate)
+		}
 	}
 
 	return syncComponentGroupWorkloads(

@@ -7062,10 +7062,37 @@ spec:
                                 the maxSurge will not take effect for the compute
                                 component.'
                               properties:
+                                inPlaceUpdateStrategy:
+                                  description: InPlaceUpdateStrategy contains strategies
+                                    for in-place update. Contains GracePeriodSeconds
+                                    GracePeriodSeconds is the timespan between set
+                                    Pod status to not-ready and update images in Pod
+                                    spec when in-place update a Pod.
+                                  properties:
+                                    gracePeriodSeconds:
+                                      description: GracePeriodSeconds is the timespan
+                                        between set Pod status to not-ready and update
+                                        images in Pod spec when in-place update a
+                                        Pod.
+                                      format: int32
+                                      type: integer
+                                  type: object
                                 rollingUpdate:
                                   description: Rolling update config params. Present
                                     only if DeploymentStrategyType = RollingUpdate.
                                   properties:
+                                    maxSurge:
+                                      anyOf:
+                                      - type: integer
+                                      - type: string
+                                      description: 'The maximum number of pods that
+                                        can be scheduled above the desired replicas
+                                        during update or specified delete. Value can
+                                        be an absolute number (ex: 5) or a percentage
+                                        of desired pods (ex: 10%). Absolute number
+                                        is calculated from percentage by rounding
+                                        up. Defaults to 0.'
+                                      x-kubernetes-int-or-string: true
                                     maxUnavailable:
                                       anyOf:
                                       - type: integer
@@ -7078,14 +7105,30 @@ spec:
                                         is calculated from percentage by rounding
                                         down. Defaults to 25%.'
                                       x-kubernetes-int-or-string: true
+                                    partition:
+                                      anyOf:
+                                      - type: integer
+                                      - type: string
+                                      description: 'Partition is the desired number
+                                        of pods in old revisions. Value can be an
+                                        absolute number (ex: 5) or a percentage of
+                                        desired pods (ex: 10%). Absolute number is
+                                        calculated from percentage by rounding up
+                                        by default. It means when partition is set
+                                        during pods updating, (replicas - partition
+                                        value) number of pods will be updated. Default
+                                        value is 0.'
+                                      x-kubernetes-int-or-string: true
                                   type: object
                                 type:
-                                  default: RollingUpdate
+                                  default: Recreate
                                   description: Type of upgrade. Can be "Recreate"
                                     or "RollingUpdate". Default is RollingUpdate.
                                   enum:
                                   - Recreate
                                   - RollingUpdate
+                                  - InPlaceIfPossible
+                                  - InPlaceOnly
                                   type: string
                               type: object
                           required:
@@ -7199,10 +7242,37 @@ spec:
                                 the maxSurge will not take effect for the compute
                                 component.'
                               properties:
+                                inPlaceUpdateStrategy:
+                                  description: InPlaceUpdateStrategy contains strategies
+                                    for in-place update. Contains GracePeriodSeconds
+                                    GracePeriodSeconds is the timespan between set
+                                    Pod status to not-ready and update images in Pod
+                                    spec when in-place update a Pod.
+                                  properties:
+                                    gracePeriodSeconds:
+                                      description: GracePeriodSeconds is the timespan
+                                        between set Pod status to not-ready and update
+                                        images in Pod spec when in-place update a
+                                        Pod.
+                                      format: int32
+                                      type: integer
+                                  type: object
                                 rollingUpdate:
                                   description: Rolling update config params. Present
                                     only if DeploymentStrategyType = RollingUpdate.
                                   properties:
+                                    maxSurge:
+                                      anyOf:
+                                      - type: integer
+                                      - type: string
+                                      description: 'The maximum number of pods that
+                                        can be scheduled above the desired replicas
+                                        during update or specified delete. Value can
+                                        be an absolute number (ex: 5) or a percentage
+                                        of desired pods (ex: 10%). Absolute number
+                                        is calculated from percentage by rounding
+                                        up. Defaults to 0.'
+                                      x-kubernetes-int-or-string: true
                                     maxUnavailable:
                                       anyOf:
                                       - type: integer
@@ -7215,14 +7285,30 @@ spec:
                                         is calculated from percentage by rounding
                                         down. Defaults to 25%.'
                                       x-kubernetes-int-or-string: true
+                                    partition:
+                                      anyOf:
+                                      - type: integer
+                                      - type: string
+                                      description: 'Partition is the desired number
+                                        of pods in old revisions. Value can be an
+                                        absolute number (ex: 5) or a percentage of
+                                        desired pods (ex: 10%). Absolute number is
+                                        calculated from percentage by rounding up
+                                        by default. It means when partition is set
+                                        during pods updating, (replicas - partition
+                                        value) number of pods will be updated. Default
+                                        value is 0.'
+                                      x-kubernetes-int-or-string: true
                                   type: object
                                 type:
-                                  default: RollingUpdate
+                                  default: Recreate
                                   description: Type of upgrade. Can be "Recreate"
                                     or "RollingUpdate". Default is RollingUpdate.
                                   enum:
                                   - Recreate
                                   - RollingUpdate
+                                  - InPlaceIfPossible
+                                  - InPlaceOnly
                                   type: string
                               type: object
                             volumeMounts:
@@ -7382,10 +7468,37 @@ spec:
                                 the maxSurge will not take effect for the compute
                                 component.'
                               properties:
+                                inPlaceUpdateStrategy:
+                                  description: InPlaceUpdateStrategy contains strategies
+                                    for in-place update. Contains GracePeriodSeconds
+                                    GracePeriodSeconds is the timespan between set
+                                    Pod status to not-ready and update images in Pod
+                                    spec when in-place update a Pod.
+                                  properties:
+                                    gracePeriodSeconds:
+                                      description: GracePeriodSeconds is the timespan
+                                        between set Pod status to not-ready and update
+                                        images in Pod spec when in-place update a
+                                        Pod.
+                                      format: int32
+                                      type: integer
+                                  type: object
                                 rollingUpdate:
                                   description: Rolling update config params. Present
                                     only if DeploymentStrategyType = RollingUpdate.
                                   properties:
+                                    maxSurge:
+                                      anyOf:
+                                      - type: integer
+                                      - type: string
+                                      description: 'The maximum number of pods that
+                                        can be scheduled above the desired replicas
+                                        during update or specified delete. Value can
+                                        be an absolute number (ex: 5) or a percentage
+                                        of desired pods (ex: 10%). Absolute number
+                                        is calculated from percentage by rounding
+                                        up. Defaults to 0.'
+                                      x-kubernetes-int-or-string: true
                                     maxUnavailable:
                                       anyOf:
                                       - type: integer
@@ -7398,14 +7511,30 @@ spec:
                                         is calculated from percentage by rounding
                                         down. Defaults to 25%.'
                                       x-kubernetes-int-or-string: true
+                                    partition:
+                                      anyOf:
+                                      - type: integer
+                                      - type: string
+                                      description: 'Partition is the desired number
+                                        of pods in old revisions. Value can be an
+                                        absolute number (ex: 5) or a percentage of
+                                        desired pods (ex: 10%). Absolute number is
+                                        calculated from percentage by rounding up
+                                        by default. It means when partition is set
+                                        during pods updating, (replicas - partition
+                                        value) number of pods will be updated. Default
+                                        value is 0.'
+                                      x-kubernetes-int-or-string: true
                                   type: object
                                 type:
-                                  default: RollingUpdate
+                                  default: Recreate
                                   description: Type of upgrade. Can be "Recreate"
                                     or "RollingUpdate". Default is RollingUpdate.
                                   enum:
                                   - Recreate
                                   - RollingUpdate
+                                  - InPlaceIfPossible
+                                  - InPlaceOnly
                                   type: string
                               type: object
                           required:
@@ -7521,10 +7650,37 @@ spec:
                                 the maxSurge will not take effect for the compute
                                 component.'
                               properties:
+                                inPlaceUpdateStrategy:
+                                  description: InPlaceUpdateStrategy contains strategies
+                                    for in-place update. Contains GracePeriodSeconds
+                                    GracePeriodSeconds is the timespan between set
+                                    Pod status to not-ready and update images in Pod
+                                    spec when in-place update a Pod.
+                                  properties:
+                                    gracePeriodSeconds:
+                                      description: GracePeriodSeconds is the timespan
+                                        between set Pod status to not-ready and update
+                                        images in Pod spec when in-place update a
+                                        Pod.
+                                      format: int32
+                                      type: integer
+                                  type: object
                                 rollingUpdate:
                                   description: Rolling update config params. Present
                                     only if DeploymentStrategyType = RollingUpdate.
                                   properties:
+                                    maxSurge:
+                                      anyOf:
+                                      - type: integer
+                                      - type: string
+                                      description: 'The maximum number of pods that
+                                        can be scheduled above the desired replicas
+                                        during update or specified delete. Value can
+                                        be an absolute number (ex: 5) or a percentage
+                                        of desired pods (ex: 10%). Absolute number
+                                        is calculated from percentage by rounding
+                                        up. Defaults to 0.'
+                                      x-kubernetes-int-or-string: true
                                     maxUnavailable:
                                       anyOf:
                                       - type: integer
@@ -7537,14 +7693,30 @@ spec:
                                         is calculated from percentage by rounding
                                         down. Defaults to 25%.'
                                       x-kubernetes-int-or-string: true
+                                    partition:
+                                      anyOf:
+                                      - type: integer
+                                      - type: string
+                                      description: 'Partition is the desired number
+                                        of pods in old revisions. Value can be an
+                                        absolute number (ex: 5) or a percentage of
+                                        desired pods (ex: 10%). Absolute number is
+                                        calculated from percentage by rounding up
+                                        by default. It means when partition is set
+                                        during pods updating, (replicas - partition
+                                        value) number of pods will be updated. Default
+                                        value is 0.'
+                                      x-kubernetes-int-or-string: true
                                   type: object
                                 type:
-                                  default: RollingUpdate
+                                  default: Recreate
                                   description: Type of upgrade. Can be "Recreate"
                                     or "RollingUpdate". Default is RollingUpdate.
                                   enum:
                                   - Recreate
                                   - RollingUpdate
+                                  - InPlaceIfPossible
+                                  - InPlaceOnly
                                   type: string
                               type: object
                           required:
@@ -7611,6 +7783,11 @@ spec:
                     type: object
                     x-kubernetes-map-type: atomic
                 type: object
+              enableOpenKruise:
+                description: Flag to dicate if Openkruise should be enabled for components,
+                  If enabled, Clonesets will be utilized for meta/frontend/compactor
+                  AdvancedStateFul Set will be used for compute default=false
+                type: boolean
               global:
                 description: The spec of a shared template for components and a global
                   scope of replicas.
@@ -7711,10 +7888,34 @@ spec:
                       component is deployed with. Note: the maxSurge will not take
                       effect for the compute component.'
                     properties:
+                      inPlaceUpdateStrategy:
+                        description: InPlaceUpdateStrategy contains strategies for
+                          in-place update. Contains GracePeriodSeconds GracePeriodSeconds
+                          is the timespan between set Pod status to not-ready and
+                          update images in Pod spec when in-place update a Pod.
+                        properties:
+                          gracePeriodSeconds:
+                            description: GracePeriodSeconds is the timespan between
+                              set Pod status to not-ready and update images in Pod
+                              spec when in-place update a Pod.
+                            format: int32
+                            type: integer
+                        type: object
                       rollingUpdate:
                         description: Rolling update config params. Present only if
                           DeploymentStrategyType = RollingUpdate.
                         properties:
+                          maxSurge:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            description: 'The maximum number of pods that can be scheduled
+                              above the desired replicas during update or specified
+                              delete. Value can be an absolute number (ex: 5) or a
+                              percentage of desired pods (ex: 10%). Absolute number
+                              is calculated from percentage by rounding up. Defaults
+                              to 0.'
+                            x-kubernetes-int-or-string: true
                           maxUnavailable:
                             anyOf:
                             - type: integer
@@ -7726,14 +7927,28 @@ spec:
                               number is calculated from percentage by rounding down.
                               Defaults to 25%.'
                             x-kubernetes-int-or-string: true
+                          partition:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            description: 'Partition is the desired number of pods
+                              in old revisions. Value can be an absolute number (ex:
+                              5) or a percentage of desired pods (ex: 10%). Absolute
+                              number is calculated from percentage by rounding up
+                              by default. It means when partition is set during pods
+                              updating, (replicas - partition value) number of pods
+                              will be updated. Default value is 0.'
+                            x-kubernetes-int-or-string: true
                         type: object
                       type:
-                        default: RollingUpdate
+                        default: Recreate
                         description: Type of upgrade. Can be "Recreate" or "RollingUpdate".
                           Default is RollingUpdate.
                         enum:
                         - Recreate
                         - RollingUpdate
+                        - InPlaceIfPossible
+                        - InPlaceOnly
                         type: string
                     type: object
                 type: object
@@ -8703,6 +8918,30 @@ rules:
   - watch
 - apiGroups:
   - apps
+  resources:
+  - statefulsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.kruise.io
+  resources:
+  - clonesets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.kruise.io
   resources:
   - statefulsets
   verbs:

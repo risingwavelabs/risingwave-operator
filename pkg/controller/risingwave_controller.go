@@ -98,6 +98,8 @@ const (
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwavepodtemplates/finalizers,verbs=update
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves/finalizers,verbs=update
+// +kubebuilder:rbac:groups=apps.kruise.io,resources=clonesets,verbs=get;list;watch;create;delete;update;patch
+// +kubebuilder:rbac:groups=apps.kruise.io,resources=statefulsets,verbs=get;list;watch;create;delete;update;patch
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;delete;
@@ -266,10 +268,11 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			if apierrors.IsNotFound(err) {
 				return ctrlkit.Exit()
 			}
-			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for service monitor", err)
+			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for statefulset", err)
 		}
 		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1"))
 	})
+
 	syncServiceMonitorIfPossible := ctrlkit.Sequential(
 		prometheusCRDsInstalledBarrier,
 		mgr.SyncServiceMonitor(),

@@ -198,12 +198,14 @@ spec:
                                       x-kubernetes-int-or-string: true
                                   type: object
                                 type:
-                                  default: RollingUpdate
+                                  default: Recreate
                                   description: Type of upgrade. Can be "Recreate"
                                     or "RollingUpdate". Default is RollingUpdate.
                                   enum:
                                   - Recreate
                                   - RollingUpdate
+                                  - InPlaceIfPossible
+                                  - InPlaceOnly
                                   type: string
                               type: object
                           required:
@@ -376,12 +378,14 @@ spec:
                                       x-kubernetes-int-or-string: true
                                   type: object
                                 type:
-                                  default: RollingUpdate
+                                  default: Recreate
                                   description: Type of upgrade. Can be "Recreate"
                                     or "RollingUpdate". Default is RollingUpdate.
                                   enum:
                                   - Recreate
                                   - RollingUpdate
+                                  - InPlaceIfPossible
+                                  - InPlaceOnly
                                   type: string
                               type: object
                             volumeMounts:
@@ -600,12 +604,14 @@ spec:
                                       x-kubernetes-int-or-string: true
                                   type: object
                                 type:
-                                  default: RollingUpdate
+                                  default: Recreate
                                   description: Type of upgrade. Can be "Recreate"
                                     or "RollingUpdate". Default is RollingUpdate.
                                   enum:
                                   - Recreate
                                   - RollingUpdate
+                                  - InPlaceIfPossible
+                                  - InPlaceOnly
                                   type: string
                               type: object
                           required:
@@ -780,12 +786,14 @@ spec:
                                       x-kubernetes-int-or-string: true
                                   type: object
                                 type:
-                                  default: RollingUpdate
+                                  default: Recreate
                                   description: Type of upgrade. Can be "Recreate"
                                     or "RollingUpdate". Default is RollingUpdate.
                                   enum:
                                   - Recreate
                                   - RollingUpdate
+                                  - InPlaceIfPossible
+                                  - InPlaceOnly
                                   type: string
                               type: object
                           required:
@@ -1010,12 +1018,14 @@ spec:
                             x-kubernetes-int-or-string: true
                         type: object
                       type:
-                        default: RollingUpdate
+                        default: Recreate
                         description: Type of upgrade. Can be "Recreate" or "RollingUpdate".
                           Default is RollingUpdate.
                         enum:
                         - Recreate
                         - RollingUpdate
+                        - InPlaceIfPossible
+                        - InPlaceOnly
                         type: string
                     type: object
                 type: object

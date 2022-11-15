@@ -1,0 +1,19 @@
+# For documentation please see https://docs.codecov.com/docs/commit-status
+
+coverage:
+  status:
+    patch: off
+    project:
+      default:
+        target: auto  # base branch coverage is target
+        threshold: 0% # percent deviation allowed from target branch coverage
+        base: auto 
+        flags: 
+          - unit
+        paths: 
+          - "pkg"
+          - "examples"
+          - "cmd"
+          - "apis"
+
+

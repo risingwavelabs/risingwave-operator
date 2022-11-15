@@ -67,8 +67,9 @@ type RisingWaveManager struct {
 
 	client client.Client
 
-	mu                sync.RWMutex
-	mutableRisingWave *risingwavev1alpha1.RisingWave // Mutable copy of original.
+	mu                 sync.RWMutex
+	mutableRisingWave  *risingwavev1alpha1.RisingWave // Mutable copy of original.
+	openkruiseAvailble bool                           // availability and admistrative switch of openkruise
 }
 
 // RisingWaveAfterImage returns a copy of the mutable RisingWave.
@@ -144,20 +145,22 @@ func (mgr *RisingWaveManager) UpdateRemoteRisingWaveStatus(ctx context.Context) 
 	return mgr.client.Status().Update(ctx, mgr.mutableRisingWave)
 }
 
-func (mgr *RisingWaveManager) IsOpenKruiseEnabled(ctx context.Context) bool {
-	RisingWave := mgr.RisingWaveReader.RisingWave()
-	if RisingWave.Spec.EnableOpenKruise != nil {
-		return *RisingWave.Spec.EnableOpenKruise
-	}
-	return false
+func (mgr *RisingWaveManager) IsOpenKruiseAvailable() bool {
+	return mgr.openkruiseAvailble
 }
 
-func NewRisingWaveManager(client client.Client, risingwave *risingwavev1alpha1.RisingWave) *RisingWaveManager {
+func (mgr *RisingWaveManager) IsOpenKruiseEnabled() bool {
+	risingwave := mgr.RisingWaveReader.RisingWave()
+	return mgr.IsOpenKruiseAvailable() && risingwave.Spec.EnableOpenKruise != nil && *risingwave.Spec.EnableOpenKruise
+}
+
+func NewRisingWaveManager(client client.Client, risingwave *risingwavev1alpha1.RisingWave, openkruiseAvailble bool) *RisingWaveManager {
 	return &RisingWaveManager{
 		RisingWaveReader: RisingWaveReader{
 			risingwave: risingwave,
 		},
-		client:            client,
-		mutableRisingWave: risingwave.DeepCopy(),
+		client:             client,
+		mutableRisingWave:  risingwave.DeepCopy(),
+		openkruiseAvailble: openkruiseAvailble,
 	}
 }

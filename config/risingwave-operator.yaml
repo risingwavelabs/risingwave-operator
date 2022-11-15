@@ -7121,7 +7121,7 @@ spec:
                                       x-kubernetes-int-or-string: true
                                   type: object
                                 type:
-                                  default: Recreate
+                                  default: RollingUpdate
                                   description: Type of upgrade. Can be "Recreate"
                                     or "RollingUpdate". Default is RollingUpdate.
                                   enum:
@@ -7301,7 +7301,7 @@ spec:
                                       x-kubernetes-int-or-string: true
                                   type: object
                                 type:
-                                  default: Recreate
+                                  default: RollingUpdate
                                   description: Type of upgrade. Can be "Recreate"
                                     or "RollingUpdate". Default is RollingUpdate.
                                   enum:
@@ -7527,7 +7527,7 @@ spec:
                                       x-kubernetes-int-or-string: true
                                   type: object
                                 type:
-                                  default: Recreate
+                                  default: RollingUpdate
                                   description: Type of upgrade. Can be "Recreate"
                                     or "RollingUpdate". Default is RollingUpdate.
                                   enum:
@@ -7709,7 +7709,7 @@ spec:
                                       x-kubernetes-int-or-string: true
                                   type: object
                                 type:
-                                  default: Recreate
+                                  default: RollingUpdate
                                   description: Type of upgrade. Can be "Recreate"
                                     or "RollingUpdate". Default is RollingUpdate.
                                   enum:
@@ -7941,7 +7941,7 @@ spec:
                             x-kubernetes-int-or-string: true
                         type: object
                       type:
-                        default: Recreate
+                        default: RollingUpdate
                         description: Type of upgrade. Can be "Recreate" or "RollingUpdate".
                           Default is RollingUpdate.
                         enum:

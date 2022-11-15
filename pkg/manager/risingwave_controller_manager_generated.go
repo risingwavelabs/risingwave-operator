@@ -478,34 +478,37 @@ type RisingWaveControllerManagerImpl interface {
 
 	// CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
 	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaDeployments []appsv1.Deployment, frontendDeployments []appsv1.Deployment, computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
+
+	CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaCloneSets []appsv1alpha1.CloneSet, frontendCloneSets []appsv1alpha1.CloneSet, computeAdvancedStatefulSets []appsv1beta1.StatefulSet, compactorCloneSets []appsv1alpha1.CloneSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 }
 
 // Pre-defined actions in RisingWaveControllerManager.
 const (
-	RisingWaveAction_SyncMetaService                            = "SyncMetaService"
-	RisingWaveAction_SyncMetaDeployments                        = "SyncMetaDeployments"
-	RisingWaveAction_SyncMetaCloneSets                          = "SyncMetaCloneSets"
-	RisingWaveAction_WaitBeforeMetaServiceIsAvailable           = "WaitBeforeMetaServiceIsAvailable"
-	RisingWaveAction_WaitBeforeMetaDeploymentsReady             = "WaitBeforeMetaDeploymentsReady"
-	RisingWaveAction_WaitBeforeMetaCloneSetsReady               = "WaitBeforeMetaCloneSetsReady"
-	RisingWaveAction_SyncFrontendService                        = "SyncFrontendService"
-	RisingWaveAction_SyncFrontendDeployments                    = "SyncFrontendDeployments"
-	RisingWaveAction_SyncFrontendCloneSets                      = "SyncFrontendCloneSets"
-	RisingWaveAction_WaitBeforeFrontendDeploymentsReady         = "WaitBeforeFrontendDeploymentsReady"
-	RisingWaveAction_WaitBeforeFrontendCloneSetsReady           = "WaitBeforeFrontendCloneSetsReady"
-	RisingWaveAction_SyncComputeService                         = "SyncComputeService"
-	RisingWaveAction_SyncComputeStatefulSets                    = "SyncComputeStatefulSets"
-	RisingWaveAction_SyncComputeAdvancedStatefulSets            = "SyncComputeAdvancedStatefulSets"
-	RisingWaveAction_WaitBeforeComputeStatefulSetsReady         = "WaitBeforeComputeStatefulSetsReady"
-	RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady = "WaitBeforeComputeAdvancedStatefulSetsReady"
-	RisingWaveAction_SyncCompactorService                       = "SyncCompactorService"
-	RisingWaveAction_SyncCompactorDeployments                   = "SyncCompactorDeployments"
-	RisingWaveAction_SyncCompactorCloneSets                     = "SyncCompactorCloneSets"
-	RisingWaveAction_WaitBeforeCompactorDeploymentsReady        = "WaitBeforeCompactorDeploymentsReady"
-	RisingWaveAction_WaitBeforeCompactorCloneSetsReady          = "WaitBeforeCompactorCloneSetsReady"
-	RisingWaveAction_SyncConfigConfigMap                        = "SyncConfigConfigMap"
-	RisingWaveAction_SyncServiceMonitor                         = "SyncServiceMonitor"
-	RisingWaveAction_CollectRunningStatisticsAndSyncStatus      = "CollectRunningStatisticsAndSyncStatus"
+	RisingWaveAction_SyncMetaService                                 = "SyncMetaService"
+	RisingWaveAction_SyncMetaDeployments                             = "SyncMetaDeployments"
+	RisingWaveAction_SyncMetaCloneSets                               = "SyncMetaCloneSets"
+	RisingWaveAction_WaitBeforeMetaServiceIsAvailable                = "WaitBeforeMetaServiceIsAvailable"
+	RisingWaveAction_WaitBeforeMetaDeploymentsReady                  = "WaitBeforeMetaDeploymentsReady"
+	RisingWaveAction_WaitBeforeMetaCloneSetsReady                    = "WaitBeforeMetaCloneSetsReady"
+	RisingWaveAction_SyncFrontendService                             = "SyncFrontendService"
+	RisingWaveAction_SyncFrontendDeployments                         = "SyncFrontendDeployments"
+	RisingWaveAction_SyncFrontendCloneSets                           = "SyncFrontendCloneSets"
+	RisingWaveAction_WaitBeforeFrontendDeploymentsReady              = "WaitBeforeFrontendDeploymentsReady"
+	RisingWaveAction_WaitBeforeFrontendCloneSetsReady                = "WaitBeforeFrontendCloneSetsReady"
+	RisingWaveAction_SyncComputeService                              = "SyncComputeService"
+	RisingWaveAction_SyncComputeStatefulSets                         = "SyncComputeStatefulSets"
+	RisingWaveAction_SyncComputeAdvancedStatefulSets                 = "SyncComputeAdvancedStatefulSets"
+	RisingWaveAction_WaitBeforeComputeStatefulSetsReady              = "WaitBeforeComputeStatefulSetsReady"
+	RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady      = "WaitBeforeComputeAdvancedStatefulSetsReady"
+	RisingWaveAction_SyncCompactorService                            = "SyncCompactorService"
+	RisingWaveAction_SyncCompactorDeployments                        = "SyncCompactorDeployments"
+	RisingWaveAction_SyncCompactorCloneSets                          = "SyncCompactorCloneSets"
+	RisingWaveAction_WaitBeforeCompactorDeploymentsReady             = "WaitBeforeCompactorDeploymentsReady"
+	RisingWaveAction_WaitBeforeCompactorCloneSetsReady               = "WaitBeforeCompactorCloneSetsReady"
+	RisingWaveAction_SyncConfigConfigMap                             = "SyncConfigConfigMap"
+	RisingWaveAction_SyncServiceMonitor                              = "SyncServiceMonitor"
+	RisingWaveAction_CollectRunningStatisticsAndSyncStatus           = "CollectRunningStatisticsAndSyncStatus"
+	RisingWaveAction_CollectOpenKruiseRunningStatisticsAndSyncStatus = "CollectOpenKruiseRunningStatisticsAndSyncStatus"
 )
 
 // RisingWaveControllerManager encapsulates the states and actions used by RisingWaveController.
@@ -1131,6 +1134,79 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 		}
 
 		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
+	})
+}
+
+// CollectOpenKruiseRunningStatisticsAndSyncStatus generates the action of "CollectOpenKruiseRunningStatisticsAndSyncStatus".
+func (m *RisingWaveControllerManager) CollectOpenKruiseRunningStatisticsAndSyncStatus() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_CollectOpenKruiseRunningStatisticsAndSyncStatus, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_CollectOpenKruiseRunningStatisticsAndSyncStatus)
+
+		// Get states.
+		frontendService, err := m.state.GetFrontendService(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		metaService, err := m.state.GetMetaService(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		computeService, err := m.state.GetComputeService(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		compactorService, err := m.state.GetCompactorService(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		metaCloneSets, err := m.state.GetMetaCloneSets(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		frontendCloneSets, err := m.state.GetFrontendCloneSets(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		computeAdvancedStatefulSets, err := m.state.GetComputeAdvancedStatefulSets(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		compactorCloneSets, err := m.state.GetCompactorCloneSets(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		configConfigMap, err := m.state.GetConfigConfigMap(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() {
+				m.hook.PostRun(ctx, logger, RisingWaveAction_CollectOpenKruiseRunningStatisticsAndSyncStatus, result, err)
+			}()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_CollectOpenKruiseRunningStatisticsAndSyncStatus, map[string]runtime.Object{
+				"frontendService":             frontendService,
+				"metaService":                 metaService,
+				"computeService":              computeService,
+				"compactorService":            compactorService,
+				"metaCloneSets":               &appsv1alpha1.CloneSetList{Items: metaCloneSets},
+				"frontendCloneSets":           &appsv1alpha1.CloneSetList{Items: frontendCloneSets},
+				"computeAdvancedStatefulSets": &appsv1beta1.StatefulSetList{Items: computeAdvancedStatefulSets},
+				"compactorCloneSets":          &appsv1alpha1.CloneSetList{Items: compactorCloneSets},
+				"configConfigMap":             configConfigMap,
+			})
+		}
+
+		return m.impl.CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaCloneSets, frontendCloneSets, computeAdvancedStatefulSets, compactorCloneSets, configConfigMap)
 	})
 }
 

@@ -49,7 +49,7 @@ func newRisingWaveControllerManagerImplForTest(risingwave *risingwavev1alpha1.Ri
 		WithObjects(append(objects, risingwave.DeepCopy())...).
 		WithScheme(testutils.Scheme).
 		Build()
-	risingwaveManager := object.NewRisingWaveManager(fakeClient, risingwave.DeepCopy())
+	risingwaveManager := object.NewRisingWaveManager(fakeClient, risingwave.DeepCopy(), false)
 	return newRisingWaveControllerManagerImpl(fakeClient, risingwaveManager, event.NewMessageStore())
 }
 

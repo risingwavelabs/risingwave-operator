@@ -30,7 +30,7 @@ import (
 )
 
 func Test_NewRisingWaveManager(t *testing.T) {
-	mgr := NewRisingWaveManager(nil, testutils.FakeRisingWave())
+	mgr := NewRisingWaveManager(nil, testutils.FakeRisingWave(), false)
 
 	if mgr.risingwave == mgr.mutableRisingWave {
 		t.Fail()
@@ -50,6 +50,7 @@ func Test_RisingWaveManager_UpdateRemote(t *testing.T) {
 			WithObjects(risingwave).
 			Build(),
 		risingwave,
+		false,
 	)
 
 	// Should do nothing.
@@ -84,7 +85,7 @@ func Test_RisingWaveManager_UpdateRemote(t *testing.T) {
 
 func Test_RisingWaveManager_UpdateMemoryAndGet(t *testing.T) {
 	risingwave := testutils.FakeRisingWave()
-	mgr := NewRisingWaveManager(nil, risingwave)
+	mgr := NewRisingWaveManager(nil, risingwave, false)
 
 	// IsObservedGenerationOutdated
 	if !mgr.IsObservedGenerationOutdated() {

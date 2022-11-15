@@ -91,6 +91,8 @@ const (
 	RisingWaveAction_BarrierObservedGenerationOutdated  = "BarrierObservedGenerationOutdated"
 	RisingWaveAction_SyncObservedGeneration             = "SyncObservedGeneration"
 	RisingWaveAction_BarrierPrometheusCRDsInstalled     = "BarrierPrometheusCRDsInstalled"
+	// RisingWaveAction_BarrierCloneSetCRDsInstalled       = "BarrierCloneSetCRDsInstalled"
+	// RisingWaveAction_BarrierAdvancedStsCRDsInstalled    = "BarrierCloneSetCRDsInstalled"
 )
 
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves,verbs=get;list;watch;create;update;patch;delete
@@ -110,9 +112,10 @@ const (
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 type RisingWaveController struct {
-	Client            client.Client
-	Recorder          record.EventRecorder
-	ActionHookFactory func() ctrlkit.ActionHook
+	Client              client.Client
+	Recorder            record.EventRecorder
+	openKruiseAvailable bool
+	ActionHookFactory   func() ctrlkit.ActionHook
 }
 
 func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit.Action) (result reconcile.Result, err error) {
@@ -158,7 +161,7 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 		return ctrlkit.NoRequeue()
 	}
 
-	risingwaveManager := object.NewRisingWaveManager(c.Client, risingwave.DeepCopy())
+	risingwaveManager := object.NewRisingWaveManager(c.Client, risingwave.DeepCopy(), c.openKruiseAvailable)
 	eventMessageStore := event.NewMessageStore()
 
 	mgr := manager.NewRisingWaveControllerManager(
@@ -253,10 +256,40 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		return ctrlkit.Continue()
 	})
 	syncConfigs := mgr.SyncConfigConfigMap()
-	syncMetaComponent := ctrlkit.ParallelJoin(mgr.SyncMetaService(), mgr.SyncMetaDeployments(), mgr.SyncMetaCloneSets())
+
+	// cloneSetCRDsInstalledBarrier := mgr.NewAction(RisingWaveAction_BarrierCloneSetCRDsInstalled, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+	// 	crd, err := utils.GetCustomResourceDefinition(c.Client, ctx, metav1.GroupKind{
+	// 		Group: "apps.kruise.io",
+	// 		Kind:  "CloneSet",
+	// 	})
+	// 	if err != nil {
+	// 		if apierrors.IsNotFound(err) {
+	// 			return ctrlkit.Exit()
+	// 		}
+	// 		return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for Cloneset", err)
+	// 	}
+	// 	return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1"))
+	// })
+
+	// advancedStsCRDsInstalledBarrier := mgr.NewAction(RisingWaveAction_BarrierAdvancedStsCRDsInstalled, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+	// 	crd, err := utils.GetCustomResourceDefinition(c.Client, ctx, metav1.GroupKind{
+	// 		Group: "apps.kruise.io",
+	// 		Kind:  "StatefulSet",
+	// 	})
+	// 	if err != nil {
+	// 		if apierrors.IsNotFound(err) {
+	// 			return ctrlkit.Exit()
+	// 		}
+	// 		return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for Advanced Statefulset", err)
+	// 	}
+	// 	return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1"))
+	// })
+
+	// syncMetaComponent := ctrlkit.ParallelJoin(mgr.SyncMetaService(), mgr.SyncMetaDeployments(), ctrlkit.If(c.openKruise, ctrlkit.SequentialJoin(cloneSetCRDsInstalledBarrier, mgr.SyncMetaCloneSets())))
+	syncMetaComponent := ctrlkit.ParallelJoin(mgr.SyncMetaService(), mgr.SyncMetaDeployments(), ctrlkit.If(c.openKruiseAvailable, mgr.SyncMetaCloneSets()))
 	metaComponentReadyBarrier := ctrlkit.Sequential(
 		mgr.WaitBeforeMetaDeploymentsReady(),
-		mgr.WaitBeforeMetaCloneSetsReady(),
+		ctrlkit.If(c.openKruiseAvailable, mgr.WaitBeforeMetaCloneSetsReady()),
 		ctrlkit.Timeout(time.Second, mgr.WaitBeforeMetaServiceIsAvailable()),
 	)
 	prometheusCRDsInstalledBarrier := mgr.NewAction(RisingWaveAction_BarrierPrometheusCRDsInstalled, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
@@ -268,7 +301,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			if apierrors.IsNotFound(err) {
 				return ctrlkit.Exit()
 			}
-			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for statefulset", err)
+			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for Prometheus", err)
 		}
 		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1"))
 	})
@@ -281,26 +314,33 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		ctrlkit.Sequential(
 			mgr.SyncComputeService(),
 			mgr.SyncComputeStatefulSets(),
-			mgr.SyncComputeAdvancedStatefulSets(),
+			// ctrlkit.If(c.openKruise, ctrlkit.SequentialJoin(advancedStsCRDsInstalledBarrier, mgr.SyncComputeAdvancedStatefulSets())),
+			ctrlkit.If(c.openKruiseAvailable, mgr.SyncComputeAdvancedStatefulSets()),
 		),
 		ctrlkit.ParallelJoin(
 			mgr.SyncCompactorService(),
 			mgr.SyncCompactorDeployments(),
-			mgr.SyncCompactorCloneSets(),
+			// ctrlkit.If(c.openKruise, ctrlkit.SequentialJoin(cloneSetCRDsInstalledBarrier, mgr.SyncCompactorCloneSets())),
+			ctrlkit.If(c.openKruiseAvailable, mgr.SyncCompactorCloneSets()),
 		),
 		ctrlkit.ParallelJoin(
 			mgr.SyncFrontendService(),
 			mgr.SyncFrontendDeployments(),
-			mgr.SyncFrontendCloneSets(),
+			// ctrlkit.If(c.openKruise, ctrlkit.SequentialJoin(cloneSetCRDsInstalledBarrier, mgr.SyncFrontendCloneSets())),
+			ctrlkit.If(c.openKruiseAvailable, mgr.SyncFrontendCloneSets()),
 		),
 	)
+	otherOpenKruiseComponentsReadyBarrier := ctrlkit.ParallelJoin(
+		mgr.WaitBeforeFrontendCloneSetsReady(),
+		mgr.WaitBeforeComputeAdvancedStatefulSetsReady(),
+		mgr.WaitBeforeCompactorCloneSetsReady(),
+	)
+
 	otherComponentsReadyBarrier := ctrlkit.Join(
 		mgr.WaitBeforeFrontendDeploymentsReady(),
-		mgr.WaitBeforeFrontendCloneSetsReady(),
 		mgr.WaitBeforeComputeStatefulSetsReady(),
-		mgr.WaitBeforeComputeAdvancedStatefulSetsReady(),
 		mgr.WaitBeforeCompactorDeploymentsReady(),
-		mgr.WaitBeforeCompactorCloneSetsReady(),
+		ctrlkit.If(c.openKruiseAvailable, otherOpenKruiseComponentsReadyBarrier),
 	)
 	syncAllComponents := ctrlkit.ParallelJoin(syncConfigs, syncMetaComponent, syncOtherComponents)
 	allComponentsReadyBarrier := ctrlkit.Join(metaComponentReadyBarrier, otherComponentsReadyBarrier)
@@ -312,8 +352,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		risingwaveManger.SyncObservedGeneration()
 		return ctrlkit.Continue()
 	})
-	syncRunningStatus := mgr.CollectRunningStatisticsAndSyncStatus()
-
+	syncRunningStatus := ctrlkit.IfElse(risingwaveManger.IsOpenKruiseEnabled(), mgr.CollectOpenKruiseRunningStatisticsAndSyncStatus(), mgr.CollectRunningStatisticsAndSyncStatus())
 	syncAllAndWait := ctrlkit.Sequential(
 		// Set .status.observedGeneration = .metadata.generation
 		syncObservedGeneration,
@@ -385,7 +424,7 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 		return fmt.Errorf("unable to find gvk for RisingWave: %w", err)
 	}
 
-	return ctrl.NewControllerManagedBy(mgr).
+	newCtrl := ctrl.NewControllerManagedBy(mgr).
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: 64,
 			RateLimiter: workqueue.NewMaxOfRateLimiter(
@@ -399,18 +438,22 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.Deployment{}).
 		Owns(&appsv1.StatefulSet{}).
 		Owns(&corev1.Service{}).
-		Owns(&corev1.ConfigMap{}).
-		Owns(&kruiseappsv1alpha1.CloneSet{}).
-		Owns(&kruiseappsv1beta1.StatefulSet{}).
-		// Can't watch an optional CRD. It will cause a panic in manager.
-		// So do not uncomment the following line.
-		// Owns(&prometheusv1.ServiceMonitor{}).
-		Complete(metrics.NewControllerMetricsRecorder(c, "RisingWaveController", gvk))
+		Owns(&corev1.ConfigMap{})
+
+	if c.openKruiseAvailable {
+		newCtrl.Owns(&kruiseappsv1alpha1.CloneSet{}).
+			Owns(&kruiseappsv1beta1.StatefulSet{})
+	}
+	// Can't watch an optional CRD. It will cause a panic in manager.
+	// So do not uncomment the following line.
+	// Owns(&prometheusv1.ServiceMonitor{}).
+	return newCtrl.Complete(metrics.NewControllerMetricsRecorder(c, "RisingWaveController", gvk))
 }
 
-func NewRisingWaveController(client client.Client, recorder record.EventRecorder) *RisingWaveController {
+func NewRisingWaveController(client client.Client, recorder record.EventRecorder, openKruiseAvailable bool) *RisingWaveController {
 	return &RisingWaveController{
-		Client:   client,
-		Recorder: recorder,
+		Client:              client,
+		Recorder:            recorder,
+		openKruiseAvailable: openKruiseAvailable,
 	}
 }

@@ -202,5 +202,6 @@ decl RisingWaveControllerManager for RisingWave {
     action {
         // CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
         CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
+        CollectOpenKruiseRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaCloneSets, frontendCloneSets, computeAdvancedStatefulSets, compactorCloneSets, configConfigMap)
     }
 }

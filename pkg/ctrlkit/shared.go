@@ -31,11 +31,12 @@ var _ internal.Decorator = &sharedAction{}
 type sharedAction struct {
 	inner Action
 
-	once   sync.Once
-	done   chan bool
-	result ctrl.Result
-	err    error
-	panics chan any
+	once      sync.Once
+	done      chan bool
+	result    ctrl.Result
+	err       error
+	chanPanic chan any
+	panic     any
 }
 
 func (s *sharedAction) Inner() internal.Action {
@@ -60,7 +61,8 @@ func (s *sharedAction) Run(ctx context.Context) (ctrl.Result, error) {
 		defer close(s.done)
 		defer func() {
 			if r := recover(); r != nil {
-				s.panics <- r
+				s.chanPanic <- r
+				s.panic = r
 			}
 		}()
 		s.result, s.err = s.inner.Run(ctx)
@@ -69,10 +71,12 @@ func (s *sharedAction) Run(ctx context.Context) (ctrl.Result, error) {
 
 	// Wait on the done channel. Memory barrier should also be carried here.
 	select {
-	case msg := <-s.panics:
+	case msg := <-s.chanPanic:
 		panic(msg)
 	case <-s.done:
-
+		if s.panic != nil {
+			panic(s.panic)
+		}
 	}
 
 	return s.result, s.err
@@ -85,8 +89,8 @@ func Shared(inner Action) Action {
 		return inner
 	}
 	return &sharedAction{
-		inner:  inner,
-		done:   make(chan bool),
-		panics: make(chan any),
+		inner:     inner,
+		done:      make(chan bool),
+		chanPanic: make(chan any),
 	}
 }

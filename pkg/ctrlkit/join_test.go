@@ -270,6 +270,8 @@ func Test_JoinInParallel_Run_Panic(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("JoinInParallel Panic:", r)
+		} else {
+			t.Fail()
 		}
 	}()
 

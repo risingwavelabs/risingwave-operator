@@ -92,7 +92,7 @@ const (
 	RisingWaveAction_SyncObservedGeneration             = "SyncObservedGeneration"
 	RisingWaveAction_BarrierPrometheusCRDsInstalled     = "BarrierPrometheusCRDsInstalled"
 	RisingWaveAction_BarrierCloneSetCRDsInstalled       = "BarrierCloneSetCRDsInstalled"
-	RisingWaveAction_BarrierAdvancedStsCRDsInstalled    = "BarrierCloneSetCRDsInstalled"
+	RisingWaveAction_BarrierAdvancedStsCRDsInstalled    = "BarrierAdvancedStatefulsetCRDsInstalled"
 )
 
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves,verbs=get;list;watch;create;update;patch;delete
@@ -300,7 +300,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			if apierrors.IsNotFound(err) {
 				return ctrlkit.Exit()
 			}
-			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for Prometheus", err)
+			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for Service Monitor", err)
 		}
 		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1"))
 	})

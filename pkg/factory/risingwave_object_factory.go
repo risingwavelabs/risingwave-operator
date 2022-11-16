@@ -1529,6 +1529,7 @@ func (f *RisingWaveObjectFactory) NewComputeAdvancedStatefulSet(group string, po
 	pvcTemplates := f.risingwave.Spec.Storages.PVCTemplates
 
 	podTemplate := f.buildPodTemplate(consts.ComponentCompute, group, podTemplates, &componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+
 	// Readiness gate InPlaceUpdateReady required for advanced statefulset
 	podTemplate.Spec.ReadinessGates = append(podTemplate.Spec.ReadinessGates, corev1.PodReadinessGate{
 		ConditionType: "InPlaceUpdateReady",

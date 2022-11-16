@@ -199,6 +199,12 @@ func FakeRisingWaveOpenKruiseEnabled() *risingwavev1alpha1.RisingWave {
 	return risingwaveCopy
 }
 
+func FakeRisingWaveOpenKruiseDisabled() *risingwavev1alpha1.RisingWave {
+	risingwaveCopy := fakeRisingWave.DeepCopy()
+	risingwaveCopy.Spec.EnableOpenKruise = pointer.Bool(false)
+	return risingwaveCopy
+}
+
 func FakeRisingWave() *risingwavev1alpha1.RisingWave {
 	return fakeRisingWave.DeepCopy()
 }

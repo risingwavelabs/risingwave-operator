@@ -65,10 +65,9 @@ func (act *parallelAction) Run(ctx context.Context) (result ctrl.Result, err err
 	case msg := <-panics:
 		panic(msg)
 	case <-done:
-
+		return
 	}
 
-	return
 }
 
 // Parallel wraps the action and runs it in parallel.

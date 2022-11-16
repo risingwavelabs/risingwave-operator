@@ -158,7 +158,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 	nameAndReplicasForComponentGroup := func(g *risingwavev1alpha1.RisingWaveComponentGroup) (string, int32) {
 		return g.Name, g.Replicas
 	}
-	groupAndReadyReplicasForDeployment := func(t *kruiseappsv1alpha1.CloneSet) (string, int32) {
+	groupAndReadyReplicasForCloneSets := func(t *kruiseappsv1alpha1.CloneSet) (string, int32) {
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
 	nameAndReplicasForComputeGroup := func(g *risingwavev1alpha1.RisingWaveComputeGroup) (string, int32) {
@@ -168,9 +168,9 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
 	componentReplicas := risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
-		Meta:      buildGroupStatus(globalSpec.Replicas.Meta, componentsSpec.Meta.Groups, nameAndReplicasForComponentGroup, metaCloneSets, groupAndReadyReplicasForDeployment),
-		Frontend:  buildGroupStatus(globalSpec.Replicas.Frontend, componentsSpec.Frontend.Groups, nameAndReplicasForComponentGroup, frontendCloneSets, groupAndReadyReplicasForDeployment),
-		Compactor: buildGroupStatus(globalSpec.Replicas.Compactor, componentsSpec.Compactor.Groups, nameAndReplicasForComponentGroup, compactorCloneSets, groupAndReadyReplicasForDeployment),
+		Meta:      buildGroupStatus(globalSpec.Replicas.Meta, componentsSpec.Meta.Groups, nameAndReplicasForComponentGroup, metaCloneSets, groupAndReadyReplicasForCloneSets),
+		Frontend:  buildGroupStatus(globalSpec.Replicas.Frontend, componentsSpec.Frontend.Groups, nameAndReplicasForComponentGroup, frontendCloneSets, groupAndReadyReplicasForCloneSets),
+		Compactor: buildGroupStatus(globalSpec.Replicas.Compactor, componentsSpec.Compactor.Groups, nameAndReplicasForComponentGroup, compactorCloneSets, groupAndReadyReplicasForCloneSets),
 		Compute:   buildGroupStatus(globalSpec.Replicas.Compute, componentsSpec.Compute.Groups, nameAndReplicasForComputeGroup, computeStatefulSets, groupAndReadyReplicasForStatefulSet),
 	}
 	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
@@ -270,7 +270,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 	nameAndReplicasForComponentGroup := func(g *risingwavev1alpha1.RisingWaveComponentGroup) (string, int32) {
 		return g.Name, g.Replicas
 	}
-	groupAndReadyReplicasForCloneSets := func(t *appsv1.Deployment) (string, int32) {
+	groupAndReadyReplicasForDeployments := func(t *appsv1.Deployment) (string, int32) {
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
 	nameAndReplicasForComputeGroup := func(g *risingwavev1alpha1.RisingWaveComputeGroup) (string, int32) {
@@ -280,9 +280,9 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
 	componentReplicas := risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
-		Meta:      buildGroupStatus(globalSpec.Replicas.Meta, componentsSpec.Meta.Groups, nameAndReplicasForComponentGroup, metaDeployments, groupAndReadyReplicasForCloneSets),
-		Frontend:  buildGroupStatus(globalSpec.Replicas.Frontend, componentsSpec.Frontend.Groups, nameAndReplicasForComponentGroup, frontendDeployments, groupAndReadyReplicasForCloneSets),
-		Compactor: buildGroupStatus(globalSpec.Replicas.Compactor, componentsSpec.Compactor.Groups, nameAndReplicasForComponentGroup, compactorDeployments, groupAndReadyReplicasForCloneSets),
+		Meta:      buildGroupStatus(globalSpec.Replicas.Meta, componentsSpec.Meta.Groups, nameAndReplicasForComponentGroup, metaDeployments, groupAndReadyReplicasForDeployments),
+		Frontend:  buildGroupStatus(globalSpec.Replicas.Frontend, componentsSpec.Frontend.Groups, nameAndReplicasForComponentGroup, frontendDeployments, groupAndReadyReplicasForDeployments),
+		Compactor: buildGroupStatus(globalSpec.Replicas.Compactor, componentsSpec.Compactor.Groups, nameAndReplicasForComponentGroup, compactorDeployments, groupAndReadyReplicasForDeployments),
 		Compute:   buildGroupStatus(globalSpec.Replicas.Compute, componentsSpec.Compute.Groups, nameAndReplicasForComputeGroup, computeStatefulSets, groupAndReadyReplicasForStatefulSet),
 	}
 	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {

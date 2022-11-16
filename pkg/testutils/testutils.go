@@ -193,6 +193,12 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 	},
 }
 
+func FakeRisingWaveOpenKruiseEnabled() *risingwavev1alpha1.RisingWave {
+	risingwaveCopy := fakeRisingWave.DeepCopy()
+	risingwaveCopy.Spec.EnableOpenKruise = pointer.Bool(true)
+	return risingwaveCopy
+}
+
 func FakeRisingWave() *risingwavev1alpha1.RisingWave {
 	return fakeRisingWave.DeepCopy()
 }
@@ -364,6 +370,12 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 
 func FakeRisingWaveComponentOnly() *risingwavev1alpha1.RisingWave {
 	return fakeRisingWaveComponentOnly.DeepCopy()
+}
+
+func FakeRisingWaveComponentOnlyOpenKruiseEnabled() *risingwavev1alpha1.RisingWave {
+	fakeRisingWaveComponentOnlyCopy := fakeRisingWaveComponentOnly.DeepCopy()
+	fakeRisingWaveComponentOnlyCopy.Spec.EnableOpenKruise = pointer.Bool(true)
+	return fakeRisingWaveComponentOnlyCopy.DeepCopy()
 }
 
 func DeepEqual[T any](x, y T) bool {

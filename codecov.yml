@@ -9,7 +9,7 @@ coverage:
         threshold: 0% # percent deviation allowed from target branch coverage
         base: auto 
         flags: 
-          - unit
+          - unittests
         paths: 
           - "pkg"
           - "examples"

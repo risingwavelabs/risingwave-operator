@@ -112,6 +112,7 @@ func (mgr *RisingWaveManager) UpdateCondition(condition risingwavev1alpha1.Risin
 
 	mgr.mu.Lock()
 	defer mgr.mu.Unlock()
+	
 	conditions := mgr.mutableRisingWave.Status.Conditions
 	_, curIndex, found := lo.FindIndexOf(conditions, func(cond risingwavev1alpha1.RisingWaveCondition) bool {
 		return cond.Type == condition.Type

@@ -143,7 +143,7 @@ func buildObjectStorageType(objectStorage *risingwavev1alpha1.RisingWaveObjectSt
 	}
 }
 
-// CollectRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl.
+// CollectOpenKruiseRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger,
 	frontendService *corev1.Service, metaService *corev1.Service,
 	computeService *corev1.Service, compactorService *corev1.Service,

@@ -99,8 +99,6 @@ type RisingWaveComponentGroupTemplate struct {
 	// +patchStrategy=retainKeys
 	UpgradeStrategy RisingWaveUpgradeStrategy `json:"upgradeStrategy,omitempty"`
 
-	// ScaleStrategy RisingWaveScaleStrategy `json:"scaleStrategy,omitempty"`
-
 	// Resources of the RisingWave component.
 	// +optional
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`

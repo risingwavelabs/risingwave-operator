@@ -1128,7 +1128,6 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment(group string, podTemplates m
 }
 
 func (f *RisingWaveObjectFactory) NewMetaCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
-
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Meta,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,

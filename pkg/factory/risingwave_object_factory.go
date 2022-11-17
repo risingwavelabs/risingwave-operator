@@ -1268,7 +1268,6 @@ func (f *RisingWaveObjectFactory) NewFrontEndCloneSet(group string, podTemplates
 		},
 	}
 	return mustSetControllerReference(f.risingwave, frontendCloneSet, f.scheme)
-
 }
 
 func (f *RisingWaveObjectFactory) portsForCompactorContainer() []corev1.ContainerPort {

@@ -1376,7 +1376,6 @@ func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string, podTemplate
 		},
 	}
 	return mustSetControllerReference(f.risingwave, compactorCloneSet, f.scheme)
-
 }
 
 func buildUpgradeStrategyForStatefulSet(strategy risingwavev1alpha1.RisingWaveUpgradeStrategy) appsv1.StatefulSetUpdateStrategy {

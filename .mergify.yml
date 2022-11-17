@@ -41,6 +41,7 @@ pull_request_rules:
       - "check-pending!=codecov/project"
       - "check-failure!=codecov/project"
       - "check-skipped!=codecov/project"
+      - "check-success=codecov/project"
       - "check-pending!=e2e-test"
       - "check-failure!=e2e-test"
       - "check-pending!=build_docker_images"

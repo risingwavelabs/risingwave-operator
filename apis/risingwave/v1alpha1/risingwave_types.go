@@ -68,9 +68,6 @@ type RisingWaveUpgradeStrategy struct {
 	RollingUpdate *RisingWaveRollingUpdate `json:"rollingUpdate,omitempty"`
 
 	// InPlaceUpdateStrategy contains strategies for in-place update.
-	// Contains GracePeriodSeconds
-	// GracePeriodSeconds is the timespan between set Pod status to not-ready and update images in Pod spec
-	// when in-place update a Pod.
 	InPlaceUpdateStrategy *kruisepubs.InPlaceUpdateStrategy `json:"inPlaceUpdateStrategy,omitempty"`
 }
 
@@ -583,7 +580,7 @@ const (
 	RisingWaveConditionUpgrading          RisingWaveConditionType = "Upgrading"
 	RisingWaveConditionFailed             RisingWaveConditionType = "Failed"
 	RisingWaveConditionUnknown            RisingWaveConditionType = "Unknown"
-	RisingWaceConditionInPlaceUpdateReady RisingWaveConditionType = " InPlaceUpdateReady"
+	RisingWaceConditionInPlaceUpdateReady RisingWaveConditionType = RisingWaveConditionType(kruisepubs.InPlaceUpdateReady)
 )
 
 // RisingWaveCondition indicates a condition of RisingWave.

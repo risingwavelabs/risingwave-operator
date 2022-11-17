@@ -258,7 +258,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	syncConfigs := mgr.SyncConfigConfigMap()
 
 	cloneSetCRDsInstalledBarrier := mgr.NewAction(RisingWaveAction_BarrierCloneSetCRDsInstalled, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-		_, err := utils.GetCustomResourceDefinition(c.Client, ctx, metav1.GroupKind{
+		crd, err := utils.GetCustomResourceDefinition(c.Client, ctx, metav1.GroupKind{
 			Group: "apps.kruise.io",
 			Kind:  "CloneSet",
 		})
@@ -268,11 +268,11 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			}
 			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for Cloneset", err)
 		}
-		return ctrlkit.Continue()
+		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1alpha1"))
 	})
 
 	advancedStsCRDsInstalledBarrier := mgr.NewAction(RisingWaveAction_BarrierAdvancedStsCRDsInstalled, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-		_, err := utils.GetCustomResourceDefinition(c.Client, ctx, metav1.GroupKind{
+		crd, err := utils.GetCustomResourceDefinition(c.Client, ctx, metav1.GroupKind{
 			Group: "apps.kruise.io",
 			Kind:  "StatefulSet",
 		})
@@ -282,7 +282,8 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			}
 			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for Advanced Statefulset", err)
 		}
-		return ctrlkit.Continue()
+
+		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1beta1"))
 	})
 
 	syncMetaComponent := ctrlkit.ParallelJoin(mgr.SyncMetaService(), mgr.SyncMetaDeployments(), ctrlkit.If(c.openKruiseAvailable, ctrlkit.SequentialJoin(cloneSetCRDsInstalledBarrier, mgr.SyncMetaCloneSets())))
@@ -443,7 +444,7 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 		newCtrl.Owns(&kruiseappsv1alpha1.CloneSet{}).
 			Owns(&kruiseappsv1beta1.StatefulSet{})
 	}
-	
+
 	return newCtrl.Complete(metrics.NewControllerMetricsRecorder(c, "RisingWaveController", gvk))
 }
 

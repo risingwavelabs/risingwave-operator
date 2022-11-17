@@ -58,7 +58,7 @@ var (
 	metricsAddr          string
 	probeAddr            string
 	configPath           string
-	openKruiseAvailable  bool
+	enableOpenKruise     bool
 	enableLeaderElection bool
 )
 
@@ -74,7 +74,7 @@ func main() {
 	opts := zap.Options{
 		Development: true,
 	}
-	flag.BoolVar(&openKruiseAvailable, "open-kruise", true, "Enabling this will allow openkruise to be available as an optional provider")
+	flag.BoolVar(&enableOpenKruise, "enable-open-kruise", true, "Enabling this will allow openkruise to be available as an optional provider")
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
@@ -99,7 +99,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = risingwavecontroller.NewRisingWaveController(mgr.GetClient(), mgr.GetEventRecorderFor("risingwave-controller"), openKruiseAvailable).SetupWithManager(mgr); err != nil {
+	if err = risingwavecontroller.NewRisingWaveController(mgr.GetClient(), mgr.GetEventRecorderFor("risingwave-controller"), enableOpenKruise).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RisingWave")
 		os.Exit(1)
 	}

@@ -141,10 +141,7 @@ spec:
                               properties:
                                 inPlaceUpdateStrategy:
                                   description: InPlaceUpdateStrategy contains strategies
-                                    for in-place update. Contains GracePeriodSeconds
-                                    GracePeriodSeconds is the timespan between set
-                                    Pod status to not-ready and update images in Pod
-                                    spec when in-place update a Pod.
+                                    for in-place update.
                                   properties:
                                     gracePeriodSeconds:
                                       description: GracePeriodSeconds is the timespan
@@ -321,10 +318,7 @@ spec:
                               properties:
                                 inPlaceUpdateStrategy:
                                   description: InPlaceUpdateStrategy contains strategies
-                                    for in-place update. Contains GracePeriodSeconds
-                                    GracePeriodSeconds is the timespan between set
-                                    Pod status to not-ready and update images in Pod
-                                    spec when in-place update a Pod.
+                                    for in-place update.
                                   properties:
                                     gracePeriodSeconds:
                                       description: GracePeriodSeconds is the timespan
@@ -547,10 +541,7 @@ spec:
                               properties:
                                 inPlaceUpdateStrategy:
                                   description: InPlaceUpdateStrategy contains strategies
-                                    for in-place update. Contains GracePeriodSeconds
-                                    GracePeriodSeconds is the timespan between set
-                                    Pod status to not-ready and update images in Pod
-                                    spec when in-place update a Pod.
+                                    for in-place update.
                                   properties:
                                     gracePeriodSeconds:
                                       description: GracePeriodSeconds is the timespan
@@ -729,10 +720,7 @@ spec:
                               properties:
                                 inPlaceUpdateStrategy:
                                   description: InPlaceUpdateStrategy contains strategies
-                                    for in-place update. Contains GracePeriodSeconds
-                                    GracePeriodSeconds is the timespan between set
-                                    Pod status to not-ready and update images in Pod
-                                    spec when in-place update a Pod.
+                                    for in-place update.
                                   properties:
                                     gracePeriodSeconds:
                                       description: GracePeriodSeconds is the timespan
@@ -861,9 +849,10 @@ spec:
                     x-kubernetes-map-type: atomic
                 type: object
               enableOpenKruise:
-                description: Flag to dicate if Openkruise should be enabled for components,
-                  If enabled, Clonesets will be utilized for meta/frontend/compactor
-                  AdvancedStateFul Set will be used for compute default=false
+                default: false
+                description: Flag to dicate if Openkruise should be enabled for components.
+                  If enabled, Clonesets will be used for the meta/frontend/compactor
+                  and AdvancedStateFulSet will be used for the compute.
                 type: boolean
               global:
                 description: The spec of a shared template for components and a global
@@ -967,9 +956,7 @@ spec:
                     properties:
                       inPlaceUpdateStrategy:
                         description: InPlaceUpdateStrategy contains strategies for
-                          in-place update. Contains GracePeriodSeconds GracePeriodSeconds
-                          is the timespan between set Pod status to not-ready and
-                          update images in Pod spec when in-place update a Pod.
+                          in-place update.
                         properties:
                           gracePeriodSeconds:
                             description: GracePeriodSeconds is the timespan between

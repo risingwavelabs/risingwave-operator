@@ -435,14 +435,15 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.StatefulSet{}).
 		Owns(&corev1.Service{}).
 		Owns(&corev1.ConfigMap{})
+		// Can't watch an optional CRD. It will cause a panic in manager.
+		// So do not uncomment the following line.
+		// Owns(&prometheusv1.ServiceMonitor{})
 
 	if c.openKruiseAvailable {
 		newCtrl.Owns(&kruiseappsv1alpha1.CloneSet{}).
 			Owns(&kruiseappsv1beta1.StatefulSet{})
 	}
-	// Can't watch an optional CRD. It will cause a panic in manager.
-	// So do not uncomment the following line.
-	// Owns(&prometheusv1.ServiceMonitor{}).
+	
 	return newCtrl.Complete(metrics.NewControllerMetricsRecorder(c, "RisingWaveController", gvk))
 }
 

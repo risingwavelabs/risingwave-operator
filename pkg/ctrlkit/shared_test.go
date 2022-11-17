@@ -19,6 +19,7 @@ package ctrlkit
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -109,5 +110,46 @@ func Test_Shared(t *testing.T) {
 				t.Fatal("run count is not 1")
 			}
 		})
+	}
+}
+
+func Test_Shared_Run_Panic(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Shared Panic:", r)
+		} else {
+			t.Fail()
+		}
+	}()
+
+	x := NewAction("panic", func(ctx context.Context) (ctrl.Result, error) {
+		panic("Aaa panic!!")
+	})
+
+	Shared(x).Run(context.Background())
+}
+
+func Test_Shared_Run_Panic_2(t *testing.T) {
+	s := Shared(NewAction("panic", func(ctx context.Context) (ctrl.Result, error) {
+		panic("Aaa panic!!")
+	}))
+
+	runPanickingActionOnceAndReturnPanic := func(s Action) (p any) {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Println("Panic:", r)
+				p = r
+			} else {
+				t.Fail()
+			}
+		}()
+		s.Run(context.Background())
+		return nil
+	}
+
+	firstPanic := runPanickingActionOnceAndReturnPanic(s)
+	secondPanic := runPanickingActionOnceAndReturnPanic(s)
+	if firstPanic != secondPanic {
+		t.Fail()
 	}
 }

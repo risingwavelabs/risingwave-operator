@@ -261,7 +261,27 @@ func Test_JoinInParallel_Run(t *testing.T) {
 }
 
 func Test_JoinInOrder_Run(t *testing.T) {
-	// Should work only in order. Otherwise the count actions would panic.
+	// Should work only in order. Otherwise, the count actions would panic.
 	cnt := 0
 	OrderedJoin(newSequentialCountActs(10, &cnt)...).Run(context.Background())
+}
+
+func Test_JoinInParallel_Run_Panic(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("JoinInParallel Panic:", r)
+		} else {
+			t.Fail()
+		}
+	}()
+
+	x := NewAction("panic", func(ctx context.Context) (ctrl.Result, error) {
+		panic("Aaa panic!!")
+	})
+
+	y := NewAction("panic", func(ctx context.Context) (ctrl.Result, error) {
+		panic("Bbb panic!!")
+	})
+
+	ParallelJoin(x, y).Run(context.Background())
 }

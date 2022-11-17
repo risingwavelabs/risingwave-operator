@@ -1255,6 +1255,7 @@ func (f *RisingWaveObjectFactory) NewFrontEndCloneSet(group string, podTemplates
 	f.setupFrontendContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
 
 	keepPodSpecConsistent(&podTemplate.Spec)
+	
 	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentFrontend, group)
 	frontendCloneSet := &kruiseappsv1alpha1.CloneSet{
 		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentFrontend, group, true),

@@ -300,7 +300,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			if apierrors.IsNotFound(err) {
 				return ctrlkit.Exit()
 			}
-			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for Service Monitor", err)
+			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for ServiceMonitor", err)
 		}
 		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1"))
 	})

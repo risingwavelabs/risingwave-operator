@@ -524,8 +524,8 @@ type RisingWaveSpec struct {
 	Configuration RisingWaveConfigurationSpec `json:"configuration,omitempty"`
 
 	// Flag to dicate if Openkruise should be enabled for components.
-	// If enabled, Clonesets will be utilized for meta/frontend/compactor
-	// AdvancedStateFul Set will be used for compute
+	// If enabled, Clonesets will be used for the meta/frontend/compactor
+	// and AdvancedStateFulSet will be used for the compute.
 	// +optional
 	// +kubebuilder:default=false
 	EnableOpenKruise *bool `json:"enableOpenKruise,omitempty"`

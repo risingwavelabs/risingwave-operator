@@ -529,7 +529,7 @@ type RisingWaveSpec struct {
 	// If enabled, Clonesets will be utilized for meta/frontend/compactor
 	// AdvancedStateFul Set will be used for compute
 	// +optional
-	// default=false
+	// +kubebuilder:default=false
 	EnableOpenKruise *bool `json:"enableOpenKruise,omitempty"`
 }
 

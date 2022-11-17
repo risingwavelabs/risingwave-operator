@@ -93,8 +93,6 @@ func (mgr *RisingWaveManager) RemoveCondition(conditionType risingwavev1alpha1.R
 	defer mgr.mu.Unlock()
 
 	conditions := mgr.mutableRisingWave.Status.Conditions
-
-	// TODO: Ask Shun Jie about iterating through aslice and mutating it?
 	for i, cond := range conditions {
 		if cond.Type == conditionType {
 			// Remove it.

@@ -523,7 +523,7 @@ type RisingWaveSpec struct {
 	// The spec of configuration template for RisingWave.
 	Configuration RisingWaveConfigurationSpec `json:"configuration,omitempty"`
 
-	// Flag to dicate if Openkruise should be enabled for components,
+	// Flag to dicate if Openkruise should be enabled for components.
 	// If enabled, Clonesets will be utilized for meta/frontend/compactor
 	// AdvancedStateFul Set will be used for compute
 	// +optional

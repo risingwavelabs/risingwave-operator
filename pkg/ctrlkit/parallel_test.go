@@ -18,6 +18,7 @@ package ctrlkit
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -79,6 +80,22 @@ func Test_Parallel_Run(t *testing.T) {
 	go func() {
 		blockChan <- 1
 	}()
+
+	Parallel(x).Run(context.Background())
+}
+
+func Test_Parallel_Run_Panic(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Parallel Panic:", r)
+		} else {
+			t.Fail()
+		}
+	}()
+
+	x := NewAction("panic", func(ctx context.Context) (ctrl.Result, error) {
+		panic("Aaa panic!!")
+	})
 
 	Parallel(x).Run(context.Background())
 }

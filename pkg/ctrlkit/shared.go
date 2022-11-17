@@ -31,12 +31,11 @@ var _ internal.Decorator = &sharedAction{}
 type sharedAction struct {
 	inner Action
 
-	once      sync.Once
-	done      chan bool
-	result    ctrl.Result
-	err       error
-	chanPanic chan any
-	panic     any
+	once   sync.Once
+	done   chan bool
+	result ctrl.Result
+	err    error
+	panic  any
 }
 
 func (s *sharedAction) Inner() internal.Action {
@@ -58,28 +57,23 @@ func (s *sharedAction) Description() string {
 func (s *sharedAction) Run(ctx context.Context) (ctrl.Result, error) {
 	// Start a new goroutine to do this.
 	go s.once.Do(func() {
-		defer close(s.done)
 		defer func() {
 			if r := recover(); r != nil {
-				s.chanPanic <- r
 				s.panic = r
 			}
+			close(s.done)
 		}()
 		s.result, s.err = s.inner.Run(ctx)
-		s.done <- true
 	})
 
 	// Wait on the done channel. Memory barrier should also be carried here.
-	select {
-	case msg := <-s.chanPanic:
-		panic(msg)
-	case <-s.done:
-		if s.panic != nil {
-			panic(s.panic)
-		}
-	}
+	<-s.done
 
-	return s.result, s.err
+	if s.panic != nil {
+		panic(s.panic)
+	} else {
+		return s.result, s.err
+	}
 }
 
 // Shared wraps the action into a shared action. Any executions against this action
@@ -89,8 +83,7 @@ func Shared(inner Action) Action {
 		return inner
 	}
 	return &sharedAction{
-		inner:     inner,
-		done:      make(chan bool),
-		chanPanic: make(chan any),
+		inner: inner,
+		done:  make(chan bool),
 	}
 }

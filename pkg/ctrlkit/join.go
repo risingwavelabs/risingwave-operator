@@ -80,48 +80,46 @@ func runJoinActions(ctx context.Context, actions ...Action) (result ctrl.Result,
 }
 
 func runJoinActionsInParallel(ctx context.Context, actions ...Action) (result ctrl.Result, err error) {
-	lresults := make([]ctrl.Result, len(actions))
-	lerrs := make([]error, len(actions))
-	done := make(chan bool)
-	chanPanics := make(chan any, len(actions))
-	lpanics := make([]any, len(actions))
+	results := make([]ctrl.Result, len(actions))
+	errs := make([]error, len(actions))
+	panics := make([]any, len(actions))
 
 	// Run each action in a new goroutine and organize with WaitGroup.
 	wg := &sync.WaitGroup{}
 
 	for i := range actions {
 		act := actions[i]
-		lresult, lerr := &lresults[i], &lerrs[i]
-		lpanic := &lpanics[i]
+		resultRef, errRef := &results[i], &errs[i]
+		panicRef := &panics[i]
 		wg.Add(1)
 		go func() {
-			defer wg.Done()
 			defer func() {
 				if r := recover(); r != nil {
-					chanPanics <- r
-					*lpanic = r
+					*panicRef = r
 				}
+				wg.Done()
 			}()
 
-			*lresult, *lerr = act.Run(ctx)
+			*resultRef, *errRef = act.Run(ctx)
 		}()
 	}
 
 	// Wait should set a memory barrier.
+	done := make(chan bool)
 	go func() {
 		wg.Wait()
 		close(done)
 	}()
+	<-done
 
-	select {
-	case <-chanPanics:
-		panic(lpanics)
-	case <-done:
+	panics = lo.Filter(panics, func(r any, _ int) bool { return r != nil })
+	if len(panics) > 0 {
+		panic(panics)
 	}
 
 	// Join results.
 	for i := 0; i < len(actions); i++ {
-		result, err = joinResultAndErr(result, err, lresults[i], lerrs[i])
+		result, err = joinResultAndErr(result, err, results[i], errs[i])
 	}
 
 	return

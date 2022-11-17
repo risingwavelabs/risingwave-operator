@@ -261,7 +261,7 @@ func Test_JoinInParallel_Run(t *testing.T) {
 }
 
 func Test_JoinInOrder_Run(t *testing.T) {
-	// Should work only in order. Otherwise the count actions would panic.
+	// Should work only in order. Otherwise, the count actions would panic.
 	cnt := 0
 	OrderedJoin(newSequentialCountActs(10, &cnt)...).Run(context.Background())
 }

@@ -49,25 +49,24 @@ func (act *parallelAction) Description() string {
 
 func (act *parallelAction) Run(ctx context.Context) (result ctrl.Result, err error) {
 	done := make(chan bool)
-	panics := make(chan any)
+	panicChan := make(chan any)
 
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				panics <- r
+				panicChan <- r
 			}
 		}()
 		result, err = act.inner.Run(ctx)
-		done <- true
+		close(done)
 	}()
 
 	select {
-	case msg := <-panics:
-		panic(msg)
+	case r := <-panicChan:
+		panic(r)
 	case <-done:
 		return
 	}
-
 }
 
 // Parallel wraps the action and runs it in parallel.

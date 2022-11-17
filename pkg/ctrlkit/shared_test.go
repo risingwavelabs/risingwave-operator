@@ -130,30 +130,26 @@ func Test_Shared_Run_Panic(t *testing.T) {
 }
 
 func Test_Shared_Run_Panic_2(t *testing.T) {
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Println("Second Shared Panic:", r)
-		} else {
-			t.Fail()
-		}
-	}()
-
-	x := NewAction("panic", func(ctx context.Context) (ctrl.Result, error) {
+	s := Shared(NewAction("panic", func(ctx context.Context) (ctrl.Result, error) {
 		panic("Aaa panic!!")
-	})
+	}))
 
-	s := Shared(x)
-
-	go func() {
+	runPanickingActionOnceAndReturnPanic := func(s Action) (p any) {
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Println("First Shared Panic:", r)
+				fmt.Println("Panic:", r)
+				p = r
 			} else {
 				t.Fail()
 			}
 		}()
 		s.Run(context.Background())
-	}()
+		return nil
+	}
 
-	s.Run(context.Background())
+	firstPanic := runPanickingActionOnceAndReturnPanic(s)
+	secondPanic := runPanickingActionOnceAndReturnPanic(s)
+	if firstPanic != secondPanic {
+		t.Fail()
+	}
 }

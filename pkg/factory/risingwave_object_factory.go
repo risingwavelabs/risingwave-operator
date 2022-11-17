@@ -1084,10 +1084,6 @@ func buildUpgradeStrategyForCloneSet(strategy risingwavev1alpha1.RisingWaveUpgra
 	return cloneSetUpdateStrategy
 }
 
-// func buildScaleStrategyForCloneSet(strategy risingwavev1alpha1.RisingWaveScaleStrategy) kruiseappsv1alpha1.CloneSetScaleStrategy {
-// 	return kruiseappsv1alpha1.CloneSetScaleStrategy{}
-// }
-
 func (f *RisingWaveObjectFactory) NewMetaDeployment(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Meta,

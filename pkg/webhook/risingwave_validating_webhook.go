@@ -66,7 +66,7 @@ func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 	if !isOpenKruiseEnabled {
 		if groupTemplate.UpgradeStrategy.Type == risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly ||
 			groupTemplate.UpgradeStrategy.Type == risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible {
-			fieldErrs = append(fieldErrs, field.Invalid(path.Child("upgradestrategy", "type"), groupTemplate.UpgradeStrategy.Type, "invalid upgrade strategy type"))
+			fieldErrs = append(fieldErrs, field.Invalid(path.Child("upgradeStrategy", "type"), groupTemplate.UpgradeStrategy.Type, "invalid upgrade strategy type"))
 		}
 	}
 

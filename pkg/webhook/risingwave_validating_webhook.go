@@ -359,10 +359,7 @@ func groupTemplatePartiionExistAndIsString(groupTemplate *risingwavev1alpha1.Ris
 	if groupTemplate.UpgradeStrategy.RollingUpdate.Partition == nil {
 		return false
 	}
-	if groupTemplate.UpgradeStrategy.RollingUpdate.Partition.Type == intstr.Int {
-		return false
-	}
-	return true
+	return groupTemplate.UpgradeStrategy.RollingUpdate.Partition.Type == intstr.String
 }
 
 func NewRisingWaveValidatingWebhook() webhook.CustomValidator {

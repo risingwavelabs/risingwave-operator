@@ -76,8 +76,8 @@ func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 		_, err := strconv.Atoi(strings.Replace(partitionVal, "%", "", -1))
 		if err != nil {
 			fieldErrs = append(fieldErrs,
-				field.Invalid(path.Child("UpgradeStrategy", "rollingupdate", "partition", "type"),
-					groupTemplate.UpgradeStrategy.RollingUpdate.Partition.Type,
+				field.Invalid(path.Child("upgradeStrategy", "rollingUpdate", "partition"),
+					groupTemplate.UpgradeStrategy.RollingUpdate.Partition,
 					"percentage/string unable to be converted to an integer value"))
 		}
 	}

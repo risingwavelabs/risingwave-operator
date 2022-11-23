@@ -243,7 +243,7 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 
 	// Validate the components spec.
 	//   * If the global image is empty, then the image of all groups must not be empty.
-	fieldErrs = append(fieldErrs, v.validateComponents(field.NewPath("spec", "components"), &obj.Spec.Components, &obj.Spec.Storages, obj.Spec.Global.Image != "", *obj.Spec.EnableOpenKruise)...)
+	fieldErrs = append(fieldErrs, v.validateComponents(field.NewPath("spec", "components"), &obj.Spec.Components, &obj.Spec.Storages, obj.Spec.Global.Image != "", pointer.BoolDeref(obj.Spec.EnableOpenKruise))...)
 
 	if len(fieldErrs) > 0 {
 		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, fieldErrs)

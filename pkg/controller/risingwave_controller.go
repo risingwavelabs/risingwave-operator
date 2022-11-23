@@ -286,7 +286,13 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1beta1"))
 	})
 
-	syncMetaComponent := ctrlkit.ParallelJoin(mgr.SyncMetaService(), mgr.SyncMetaDeployments(), ctrlkit.If(c.openKruiseAvailable, ctrlkit.SequentialJoin(cloneSetCRDsInstalledBarrier, mgr.SyncMetaCloneSets())))
+	syncMetaComponent := ctrlkit.ParallelJoin(
+		mgr.SyncMetaService(),
+		mgr.SyncMetaDeployments(),
+		ctrlkit.If(c.openKruiseAvailable,
+			ctrlkit.SequentialJoin(cloneSetCRDsInstalledBarrier, mgr.SyncMetaCloneSets()),
+		),
+	)
 	metaComponentReadyBarrier := ctrlkit.Sequential(
 		mgr.WaitBeforeMetaDeploymentsReady(),
 		ctrlkit.If(c.openKruiseAvailable, mgr.WaitBeforeMetaCloneSetsReady()),
@@ -314,17 +320,20 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		ctrlkit.Sequential(
 			mgr.SyncComputeService(),
 			mgr.SyncComputeStatefulSets(),
-			ctrlkit.If(c.openKruiseAvailable, ctrlkit.SequentialJoin(advancedStsCRDsInstalledBarrier, mgr.SyncComputeAdvancedStatefulSets())),
+			ctrlkit.If(c.openKruiseAvailable,
+				ctrlkit.SequentialJoin(advancedStsCRDsInstalledBarrier, mgr.SyncComputeAdvancedStatefulSets())),
 		),
 		ctrlkit.ParallelJoin(
 			mgr.SyncCompactorService(),
 			mgr.SyncCompactorDeployments(),
-			ctrlkit.If(c.openKruiseAvailable, ctrlkit.SequentialJoin(cloneSetCRDsInstalledBarrier, mgr.SyncCompactorCloneSets())),
+			ctrlkit.If(c.openKruiseAvailable,
+				ctrlkit.SequentialJoin(cloneSetCRDsInstalledBarrier, mgr.SyncCompactorCloneSets())),
 		),
 		ctrlkit.ParallelJoin(
 			mgr.SyncFrontendService(),
 			mgr.SyncFrontendDeployments(),
-			ctrlkit.If(c.openKruiseAvailable, ctrlkit.SequentialJoin(cloneSetCRDsInstalledBarrier, mgr.SyncFrontendCloneSets())),
+			ctrlkit.If(c.openKruiseAvailable,
+				ctrlkit.SequentialJoin(cloneSetCRDsInstalledBarrier, mgr.SyncFrontendCloneSets())),
 		),
 	)
 	otherOpenKruiseComponentsReadyBarrier := ctrlkit.ParallelJoin(

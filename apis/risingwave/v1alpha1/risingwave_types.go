@@ -47,12 +47,16 @@ type RisingWaveRollingUpdate struct {
 	// Absolute number is calculated from percentage by rounding up by default.
 	// It means when partition is set during pods updating, (replicas - partition value) number of pods will be updated.
 	// Default value is 0.
+	// +optional
+	// +kubebuilder:default=0
 	Partition *intstr.IntOrString `json:"partition,omitempty"`
 
 	// The maximum number of pods that can be scheduled above the desired replicas during update or specified delete.
 	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
 	// Absolute number is calculated from percentage by rounding up.
 	// Defaults to 0.
+	// +optional
+	// +kubebuilder:default=0
 	MaxSurge *intstr.IntOrString `json:"maxSurge,omitempty"`
 }
 
@@ -68,6 +72,7 @@ type RisingWaveUpgradeStrategy struct {
 	RollingUpdate *RisingWaveRollingUpdate `json:"rollingUpdate,omitempty"`
 
 	// InPlaceUpdateStrategy contains strategies for in-place update.
+	// +optional
 	InPlaceUpdateStrategy *kruisepubs.InPlaceUpdateStrategy `json:"inPlaceUpdateStrategy,omitempty"`
 }
 
@@ -575,12 +580,11 @@ type RisingWaveConditionType string
 
 // These are valid value of RisingWaveConditionType.
 const (
-	RisingWaveConditionRunning            RisingWaveConditionType = "Running"
-	RisingWaveConditionInitializing       RisingWaveConditionType = "Initializing"
-	RisingWaveConditionUpgrading          RisingWaveConditionType = "Upgrading"
-	RisingWaveConditionFailed             RisingWaveConditionType = "Failed"
-	RisingWaveConditionUnknown            RisingWaveConditionType = "Unknown"
-	RisingWaceConditionInPlaceUpdateReady RisingWaveConditionType = RisingWaveConditionType(kruisepubs.InPlaceUpdateReady)
+	RisingWaveConditionRunning      RisingWaveConditionType = "Running"
+	RisingWaveConditionInitializing RisingWaveConditionType = "Initializing"
+	RisingWaveConditionUpgrading    RisingWaveConditionType = "Upgrading"
+	RisingWaveConditionFailed       RisingWaveConditionType = "Failed"
+	RisingWaveConditionUnknown      RisingWaveConditionType = "Unknown"
 )
 
 // RisingWaveCondition indicates a condition of RisingWave.

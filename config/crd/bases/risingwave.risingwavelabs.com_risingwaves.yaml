@@ -159,6 +159,7 @@ spec:
                                       anyOf:
                                       - type: integer
                                       - type: string
+                                      default: 0
                                       description: 'The maximum number of pods that
                                         can be scheduled above the desired replicas
                                         during update or specified delete. Value can
@@ -183,6 +184,7 @@ spec:
                                       anyOf:
                                       - type: integer
                                       - type: string
+                                      default: 0
                                       description: 'Partition is the desired number
                                         of pods in old revisions. Value can be an
                                         absolute number (ex: 5) or a percentage of
@@ -336,6 +338,7 @@ spec:
                                       anyOf:
                                       - type: integer
                                       - type: string
+                                      default: 0
                                       description: 'The maximum number of pods that
                                         can be scheduled above the desired replicas
                                         during update or specified delete. Value can
@@ -360,6 +363,7 @@ spec:
                                       anyOf:
                                       - type: integer
                                       - type: string
+                                      default: 0
                                       description: 'Partition is the desired number
                                         of pods in old revisions. Value can be an
                                         absolute number (ex: 5) or a percentage of
@@ -559,6 +563,7 @@ spec:
                                       anyOf:
                                       - type: integer
                                       - type: string
+                                      default: 0
                                       description: 'The maximum number of pods that
                                         can be scheduled above the desired replicas
                                         during update or specified delete. Value can
@@ -583,6 +588,7 @@ spec:
                                       anyOf:
                                       - type: integer
                                       - type: string
+                                      default: 0
                                       description: 'Partition is the desired number
                                         of pods in old revisions. Value can be an
                                         absolute number (ex: 5) or a percentage of
@@ -738,6 +744,7 @@ spec:
                                       anyOf:
                                       - type: integer
                                       - type: string
+                                      default: 0
                                       description: 'The maximum number of pods that
                                         can be scheduled above the desired replicas
                                         during update or specified delete. Value can
@@ -762,6 +769,7 @@ spec:
                                       anyOf:
                                       - type: integer
                                       - type: string
+                                      default: 0
                                       description: 'Partition is the desired number
                                         of pods in old revisions. Value can be an
                                         absolute number (ex: 5) or a percentage of
@@ -973,6 +981,7 @@ spec:
                             anyOf:
                             - type: integer
                             - type: string
+                            default: 0
                             description: 'The maximum number of pods that can be scheduled
                               above the desired replicas during update or specified
                               delete. Value can be an absolute number (ex: 5) or a
@@ -995,6 +1004,7 @@ spec:
                             anyOf:
                             - type: integer
                             - type: string
+                            default: 0
                             description: 'Partition is the desired number of pods
                               in old revisions. Value can be an absolute number (ex:
                               5) or a percentage of desired pods (ex: 10%). Absolute

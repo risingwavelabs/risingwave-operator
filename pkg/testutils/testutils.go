@@ -62,6 +62,7 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 		UID:        uuid.NewUUID(),
 	},
 	Spec: risingwavev1alpha1.RisingWaveSpec{
+		EnableOpenKruise: pointer.Bool(false),
 		Storages: risingwavev1alpha1.RisingWaveStoragesSpec{
 			Meta: risingwavev1alpha1.RisingWaveMetaStorage{
 				Memory: pointer.Bool(true),

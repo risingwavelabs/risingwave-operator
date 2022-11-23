@@ -1084,10 +1084,6 @@ func buildUpgradeStrategyForCloneSet(strategy risingwavev1alpha1.RisingWaveUpgra
 	return cloneSetUpdateStrategy
 }
 
-// func buildScaleStrategyForCloneSet(strategy risingwavev1alpha1.RisingWaveScaleStrategy) kruiseappsv1alpha1.CloneSetScaleStrategy {
-// 	return kruiseappsv1alpha1.CloneSetScaleStrategy{}
-// }
-
 func (f *RisingWaveObjectFactory) NewMetaDeployment(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Meta,
@@ -1157,7 +1153,6 @@ func (f *RisingWaveObjectFactory) NewMetaCloneSet(group string, podTemplates map
 		Spec: kruiseappsv1alpha1.CloneSetSpec{
 			Replicas:       pointer.Int32(componentGroup.Replicas),
 			UpdateStrategy: buildUpgradeStrategyForCloneSet(componentGroup.UpgradeStrategy),
-			// ScaleStrategy:  buildScaleStrategyForCloneSet(componentGroup.ScaleStrategy),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labelsOrSelectors,
 			},
@@ -1532,7 +1527,7 @@ func (f *RisingWaveObjectFactory) NewComputeAdvancedStatefulSet(group string, po
 
 	// Readiness gate InPlaceUpdateReady required for advanced statefulset
 	podTemplate.Spec.ReadinessGates = append(podTemplate.Spec.ReadinessGates, corev1.PodReadinessGate{
-		ConditionType: corev1.PodConditionType(risingwavev1alpha1.RisingWaceConditionInPlaceUpdateReady),
+		ConditionType: kruisepubs.InPlaceUpdateReady,
 	})
 	f.setupComputeContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComputeGroupTemplate)
 

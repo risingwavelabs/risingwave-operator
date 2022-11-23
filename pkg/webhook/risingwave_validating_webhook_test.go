@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -48,6 +49,32 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		"invalid-image-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Global.Image = "1234_"
+			},
+			pass: false,
+		},
+		"invalid-upgrade-strategy-type-InPlaceIfPossible-when-openkruise-disabled": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global.RisingWaveComponentGroupTemplate.UpgradeStrategy.Type = risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible
+			},
+			pass: false,
+		},
+		"invalid-upgrade-strategy-type-InPlaceOnly-when-openkruise-disabled": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global.RisingWaveComponentGroupTemplate.UpgradeStrategy.Type = risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly
+			},
+			pass: false,
+		},
+		"invalid-partition-str-val": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global.RisingWaveComponentGroupTemplate.UpgradeStrategy = risingwavev1alpha1.RisingWaveUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
+						Partition: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "test-string",
+						},
+					},
+				}
 			},
 			pass: false,
 		},
@@ -144,6 +171,21 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.Global.UpgradeStrategy = risingwavev1alpha1.RisingWaveUpgradeStrategy{
 					Type:          risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRollingUpdate,
 					RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{},
+				}
+			},
+			pass: true,
+		},
+		"upgrade-strategy-partition-valid-string": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.EnableOpenKruise = pointer.Bool(true)
+				r.Spec.Global.UpgradeStrategy = risingwavev1alpha1.RisingWaveUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
+						Partition: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
+						},
+					},
 				}
 			},
 			pass: true,

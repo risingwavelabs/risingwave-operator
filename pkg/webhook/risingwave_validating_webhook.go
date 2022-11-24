@@ -70,7 +70,7 @@ func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 	if !isOpenKruiseEnabled {
 		if groupTemplate.UpgradeStrategy.Type == risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly ||
 			groupTemplate.UpgradeStrategy.Type == risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible {
-			fieldErrs = append(fieldErrs, field.Invalid(path.Child("upgradestrategy", "type"), groupTemplate.UpgradeStrategy.Type, "invalid upgrade strategy type"))
+			fieldErrs = append(fieldErrs, field.Invalid(path.Child("upgradeStrategy", "type"), groupTemplate.UpgradeStrategy.Type, "invalid upgrade strategy type"))
 		}
 	}
 
@@ -80,8 +80,8 @@ func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 		_, err := strconv.Atoi(strings.Replace(partitionVal, "%", "", -1))
 		if err != nil {
 			fieldErrs = append(fieldErrs,
-				field.Invalid(path.Child("UpgradeStrategy", "rollingupdate", "partition", "type"),
-					groupTemplate.UpgradeStrategy.RollingUpdate.Partition.Type,
+				field.Invalid(path.Child("upgradeStrategy", "rollingUpdate", "partition"),
+					groupTemplate.UpgradeStrategy.RollingUpdate.Partition,
 					"percentage/string unable to be converted to an integer value"))
 		}
 	}
@@ -380,10 +380,7 @@ func groupTemplatePartiionExistAndIsString(groupTemplate *risingwavev1alpha1.Ris
 	if groupTemplate.UpgradeStrategy.RollingUpdate.Partition == nil {
 		return false
 	}
-	if groupTemplate.UpgradeStrategy.RollingUpdate.Partition.Type == intstr.Int {
-		return false
-	}
-	return true
+	return groupTemplate.UpgradeStrategy.RollingUpdate.Partition.Type == intstr.String
 }
 
 func NewRisingWaveValidatingWebhook(openKruiseAvailable bool) webhook.CustomValidator {

@@ -30,14 +30,18 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/scaleview"
 )
 
-type RisingWaveValidatingWebhook struct{}
+type RisingWaveValidatingWebhook struct {
+	openKruiseAvailable bool
+}
 
 func isImageValid(image string) bool {
 	return reference.ReferenceRegexp.MatchString(image)
@@ -228,9 +232,14 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 
 	fieldErrs := field.ErrorList{}
 
+	// Validate to make sure open kruise cannot be set to true when it is disabled at operator level.
+	if !v.openKruiseAvailable && pointer.BoolDeref(obj.Spec.EnableOpenKruise, false) {
+		fieldErrs = append(fieldErrs, field.Forbidden(field.NewPath("spec", "enableOpenKruise"), "Openkruise is disabled."))
+	}
+
 	// Validate the global spec.
 	//   * If global replicas of any component is larger than 1, then the image in global must not be empty.
-	fieldErrs = append(fieldErrs, v.validateGlobal(field.NewPath("spec", "global"), &obj.Spec.Global, *obj.Spec.EnableOpenKruise)...)
+	fieldErrs = append(fieldErrs, v.validateGlobal(field.NewPath("spec", "global"), &obj.Spec.Global, pointer.BoolDeref(obj.Spec.EnableOpenKruise, false))...)
 
 	// Validate the storages spec.
 	fieldErrs = append(fieldErrs, v.validateStorages(field.NewPath("spec", "storages"), &obj.Spec.Storages)...)
@@ -243,7 +252,7 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 
 	// Validate the components spec.
 	//   * If the global image is empty, then the image of all groups must not be empty.
-	fieldErrs = append(fieldErrs, v.validateComponents(field.NewPath("spec", "components"), &obj.Spec.Components, &obj.Spec.Storages, obj.Spec.Global.Image != "", *obj.Spec.EnableOpenKruise)...)
+	fieldErrs = append(fieldErrs, v.validateComponents(field.NewPath("spec", "components"), &obj.Spec.Components, &obj.Spec.Storages, obj.Spec.Global.Image != "", pointer.BoolDeref(obj.Spec.EnableOpenKruise, false))...)
 
 	if len(fieldErrs) > 0 {
 		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, fieldErrs)
@@ -297,9 +306,21 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 			field.Forbidden(field.NewPath("spec", "storages", "object"), "object storage must be kept consistent"),
 		)
 	}
+	fieldErrs := field.ErrorList{}
+
+	// Validate to make sure enableOpenKruise cannot be set to true when openkruise is disabled at the operator level.
+	if !v.openKruiseAvailable && pointer.BoolDeref(newObj.Spec.EnableOpenKruise, false) {
+		fieldErrs = append(fieldErrs, field.Forbidden(field.NewPath("spec", "enableOpenKruise"), "Openkruise is disabled."))
+	}
+
+	// Validate and return a default risingwave object when openkruise is disabled at operator level.
+	// Condition is when openKruise is not available, new obj has open kruise disabled and old obj has open kruise enabled.
+	if !v.openKruiseAvailable && !pointer.BoolDeref(newObj.Spec.EnableOpenKruise, false) && pointer.BoolDeref(oldObj.Spec.EnableOpenKruise, false) {
+		newObj = &risingwavev1alpha1.RisingWave{}
+		v.setDefault(ctx, newObj)
+	}
 
 	// Validate the locks from scale views.
-	fieldErrs := field.ErrorList{}
 	for _, scaleView := range newObj.Status.ScaleViews {
 		oldHelper := scaleview.NewRisingWaveScaleViewHelper(oldObj, scaleView.Component)
 		newHelper := scaleview.NewRisingWaveScaleViewHelper(newObj, scaleView.Component)
@@ -365,6 +386,23 @@ func groupTemplatePartiionExistAndIsString(groupTemplate *risingwavev1alpha1.Ris
 	return true
 }
 
-func NewRisingWaveValidatingWebhook() webhook.CustomValidator {
-	return metrics.NewValidatingWebhookMetricsRecorder(&RisingWaveValidatingWebhook{})
+func NewRisingWaveValidatingWebhook(openKruiseAvailable bool) webhook.CustomValidator {
+	return metrics.NewValidatingWebhookMetricsRecorder(&RisingWaveValidatingWebhook{openKruiseAvailable: openKruiseAvailable})
+}
+
+func (m *RisingWaveValidatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWave) error {
+	setDefaultIfZero(&obj.Spec.Components.Meta.Ports.ServicePort, consts.DefaultMetaServicePort)
+	setDefaultIfZero(&obj.Spec.Components.Meta.Ports.MetricsPort, consts.DefaultMetaMetricsPort)
+	setDefaultIfZero(&obj.Spec.Components.Meta.Ports.DashboardPort, consts.DefaultMetaDashboardPort)
+
+	setDefaultIfZero(&obj.Spec.Components.Frontend.Ports.ServicePort, consts.DefaultFrontendServicePort)
+	setDefaultIfZero(&obj.Spec.Components.Frontend.Ports.MetricsPort, consts.DefaultFrontendMetricsPort)
+
+	setDefaultIfZero(&obj.Spec.Components.Compute.Ports.ServicePort, consts.DefaultComputeServicePort)
+	setDefaultIfZero(&obj.Spec.Components.Compute.Ports.MetricsPort, consts.DefaultComputeMetricsPort)
+
+	setDefaultIfZero(&obj.Spec.Components.Compactor.Ports.ServicePort, consts.DefaultCompactorServicePort)
+	setDefaultIfZero(&obj.Spec.Components.Compactor.Ports.MetricsPort, consts.DefaultCompactorMetricsPort)
+
+	return nil
 }

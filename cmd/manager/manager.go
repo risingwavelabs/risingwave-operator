@@ -94,7 +94,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = webhook.SetupWebhooksWithManager(mgr); err != nil {
+	if err = webhook.SetupWebhooksWithManager(mgr, enableOpenKruise); err != nil {
 		setupLog.Error(err, "unable to setup webhooks")
 		os.Exit(1)
 	}

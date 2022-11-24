@@ -25,7 +25,7 @@ import (
 )
 
 // SetupWebhooksWithManager set up the webhooks.
-func SetupWebhooksWithManager(mgr ctrl.Manager) error {
+func SetupWebhooksWithManager(mgr ctrl.Manager, openKruiseAvailable bool) error {
 	if err := ctrl.NewWebhookManagedBy(mgr).
 		For(&risingwavev1alpha1.RisingWavePodTemplate{}).
 		WithDefaulter(NewRisingWavePodTemplateMutatingWebhook()).
@@ -37,7 +37,7 @@ func SetupWebhooksWithManager(mgr ctrl.Manager) error {
 	if err := ctrl.NewWebhookManagedBy(mgr).
 		For(&risingwavev1alpha1.RisingWave{}).
 		WithDefaulter(NewRisingWaveMutatingWebhook()).
-		WithValidator(NewRisingWaveValidatingWebhook()).
+		WithValidator(NewRisingWaveValidatingWebhook(openKruiseAvailable)).
 		Complete(); err != nil {
 		return fmt.Errorf("unable to setup webhooks for risingwave: %w", err)
 	}

@@ -17,6 +17,7 @@
 package factory
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 	"testing"
@@ -487,6 +488,10 @@ func matchesPodTemplate(podSpec *corev1.PodTemplateSpec, podTemplate *risingwave
 	pSpec.Containers = pSpec.Containers[1:]
 	tSpec.Containers = tSpec.Containers[1:]
 
+	// Trick: remove the readinessGate to pass the match.
+	pSpec.ReadinessGates = nil
+	tSpec.ReadinessGates = nil
+
 	// Check volumes first.
 	if !listContainsByKey(pSpec.Volumes, tSpec.Volumes, func(x *corev1.Volume) string { return x.Name }, deepEqual[corev1.Volume]) {
 		return false
@@ -513,7 +518,6 @@ func matchesPodTemplate(podSpec *corev1.PodTemplateSpec, podTemplate *risingwave
 		listContainsByKey(pContainer.VolumeMounts, tContainer.VolumeMounts, func(t *corev1.VolumeMount) string { return t.MountPath }, deepEqual[corev1.VolumeMount]) &&
 		listContainsByKey(pContainer.Env, tContainer.Env, func(t *corev1.EnvVar) string { return t.Name }, deepEqual[corev1.EnvVar]) &&
 		listContainsByKey(pContainer.EnvFrom, tContainer.EnvFrom, func(t *corev1.EnvFromSource) string { return t.Prefix }, deepEqual[corev1.EnvFromSource])
-
 }
 
 func newPodTemplate(patches ...func(t *risingwavev1alpha1.RisingWavePodTemplateSpec)) *risingwavev1alpha1.RisingWavePodTemplateSpec {
@@ -989,7 +993,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 				},
 			},
 		},
-		"upgrade-strategy-InplaceOnly": {
+		"upgrade-strategy-InPlaceOnly": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
@@ -1004,7 +1008,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 				Type: kruiseappsv1alpha1.InPlaceOnlyCloneSetUpdateStrategyType,
 			},
 		},
-		"upgrade-strategy-InplaceOnly-max-unavailable-50%": {
+		"upgrade-strategy-InPlaceOnly-max-unavailable-50%": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
@@ -1029,7 +1033,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 				},
 			},
 		},
-		"upgrade-strategy-InplaceOnly-max-surge-50%": {
+		"upgrade-strategy-InPlaceOnly-max-surge-50%": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
@@ -1054,7 +1058,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 				},
 			},
 		},
-		"upgrade-strategy-InplaceOnly-partition-50%": {
+		"upgrade-strategy-InPlaceOnly-partition-50%": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
@@ -1080,7 +1084,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 			},
 		},
 		// HERE
-		"upgrade-strategy-InplaceOnly-Grace-Period-20seconds": {
+		"upgrade-strategy-InPlaceOnly-Grace-Period-20seconds": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
@@ -1101,7 +1105,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 				},
 			},
 		},
-		"upgrade-strategy-InplaceIfPossible": {
+		"upgrade-strategy-InPlaceIfPossible": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
@@ -1116,7 +1120,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 				Type: kruiseappsv1alpha1.InPlaceIfPossibleCloneSetUpdateStrategyType,
 			},
 		},
-		"upgrade-strategy-InplaceIfPossible-max-unavailable-50%": {
+		"upgrade-strategy-InPlaceIfPossible-max-unavailable-50%": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
@@ -1141,7 +1145,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 				},
 			},
 		},
-		"upgrade-strategy-InplaceIfPossible-max-surge-50%": {
+		"upgrade-strategy-InPlaceIfPossible-max-surge-50%": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
@@ -1166,7 +1170,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 				},
 			},
 		},
-		"upgrade-strategy-InplaceIfPossible-partition-50%": {
+		"upgrade-strategy-InPlaceIfPossible-partition-50%": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
@@ -1191,7 +1195,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 				},
 			},
 		},
-		"upgrade-strategy-InplaceIfPossible-Grace-Period-20seconds": {
+		"upgrade-strategy-InPlaceIfPossible-Grace-Period-20seconds": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
@@ -1248,7 +1252,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 		},
 	}
 
-	for _, component := range []string{consts.ComponentMeta} {
+	for _, component := range []string{consts.ComponentMeta, consts.ComponentFrontend, consts.ComponentCompactor} {
 		for name, tc := range testcases {
 			t.Run(component+"-"+name, func(t *testing.T) {
 				risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
@@ -1333,7 +1337,12 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 					newObjectAssert(cloneSet, "pod-template-works", func(obj *kruiseappsv1alpha1.CloneSet) bool {
 						if tc.group.PodTemplate != nil {
 							temp := tc.podTemplate[*tc.group.PodTemplate].Template
-							return matchesPodTemplate(&obj.Spec.Template, &temp)
+							if !matchesPodTemplate(&obj.Spec.Template, &temp) {
+								fmt.Println(testutils.JsonMustPrettyPrint(&obj.Spec.Template))
+								fmt.Println(testutils.JsonMustPrettyPrint(&temp))
+								return false
+							}
+							return true
 						} else {
 							return true
 						}

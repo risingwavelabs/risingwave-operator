@@ -98,31 +98,30 @@ func Test_RisingWaveManager_openKruiseAvailable(t *testing.T) {
 
 func Test_RisingWaveManager_OpenKruiseEnabled(t *testing.T) {
 	testcases := map[string]struct {
-		risingwavemanager *RisingWaveManager
-		expected          bool
+		mgr      *RisingWaveManager
+		expected bool
 	}{
 		"open-kruise-not-available": {
-			risingwavemanager: NewRisingWaveManager(nil, testutils.FakeRisingWave(), false),
-			expected:          false,
+			mgr:      NewRisingWaveManager(nil, testutils.FakeRisingWave(), false),
+			expected: false,
 		},
-		"open-kruise-avaialble-disabled": {
-			risingwavemanager: NewRisingWaveManager(nil, testutils.FakeRisingWaveOpenKruiseDisabled(), true),
-			expected:          false,
+		"open-kruise-available-disabled": {
+			mgr:      NewRisingWaveManager(nil, testutils.FakeRisingWaveOpenKruiseDisabled(), true),
+			expected: false,
 		},
-		"open-kruise-avaialble-enabled": {
-			risingwavemanager: NewRisingWaveManager(nil, testutils.FakeRisingWaveOpenKruiseEnabled(), true),
-			expected:          true,
+		"open-kruise-available-enabled": {
+			mgr:      NewRisingWaveManager(nil, testutils.FakeRisingWaveOpenKruiseEnabled(), true),
+			expected: true,
 		},
-		"open-kruise-unavaialble-enabled": {
-			risingwavemanager: NewRisingWaveManager(nil, testutils.FakeRisingWaveOpenKruiseDisabled(), false),
-			expected:          false},
+		"open-kruise-unavailable-enabled": {
+			mgr:      NewRisingWaveManager(nil, testutils.FakeRisingWaveOpenKruiseDisabled(), false),
+			expected: false},
 	}
 	for _, tc := range testcases {
-		if tc.risingwavemanager.IsOpenKruiseEnabled() != tc.expected {
+		if tc.mgr.IsOpenKruiseEnabled() != tc.expected {
 			t.Fail()
 		}
 	}
-
 }
 
 func Test_RisingWaveManager_UpdateMemoryAndGet(t *testing.T) {

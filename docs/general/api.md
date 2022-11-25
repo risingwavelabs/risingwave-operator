@@ -172,7 +172,9 @@ int32
 <th>Description</th>
 </tr>
 </thead>
-<tbody><tr><td><p>&#34;Memory&#34;</p></td>
+<tbody><tr><td><p>&#34;AliyunOSS&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Memory&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;MinIO&#34;</p></td>
 <td></td>
@@ -286,6 +288,20 @@ RisingWaveConfigurationSpec
 </td>
 <td>
 <p>The spec of configuration template for RisingWave.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableOpenKruise</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to indicate if OpenKruise should be enabled for components.
+If enabled, CloneSets will be used for meta/frontend/compactor nodes
+and Advanced StateFulSets will be used for compute nodes.</p>
 </td>
 </tr>
 </table>
@@ -2622,6 +2638,41 @@ Absolute number is calculated from percentage by rounding down.
 Defaults to 25%.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>partition</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/util/intstr#IntOrString">
+k8s.io/apimachinery/pkg/util/intstr.IntOrString
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Partition is the desired number of pods in old revisions.
+Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
+Absolute number is calculated from percentage by rounding up by default.
+It means when partition is set during pods updating, (replicas - partition value) number of pods will be updated.
+Default value is 0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxSurge</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/util/intstr#IntOrString">
+k8s.io/apimachinery/pkg/util/intstr.IntOrString
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The maximum number of pods that can be scheduled above the desired replicas during update or specified delete.
+Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
+Absolute number is calculated from percentage by rounding up.
+Defaults to 0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleView">RisingWaveScaleView
@@ -3197,6 +3248,20 @@ RisingWaveConfigurationSpec
 <p>The spec of configuration template for RisingWave.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>enableOpenKruise</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to indicate if OpenKruise should be enabled for components.
+If enabled, CloneSets will be used for meta/frontend/compactor nodes
+and Advanced StateFulSets will be used for compute nodes.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus
@@ -3521,6 +3586,18 @@ RisingWaveRollingUpdate
 <p>Rolling update config params. Present only if DeploymentStrategyType = RollingUpdate.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>inPlaceUpdateStrategy</code><br/>
+<em>
+github.com/openkruise/kruise-api/apps/pub.InPlaceUpdateStrategy
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>InPlaceUpdateStrategy contains strategies for in-place update.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategyType">RisingWaveUpgradeStrategyType
@@ -3537,7 +3614,11 @@ RisingWaveRollingUpdate
 <th>Description</th>
 </tr>
 </thead>
-<tbody><tr><td><p>&#34;Recreate&#34;</p></td>
+<tbody><tr><td><p>&#34;InPlaceIfPossible&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;InPlaceOnly&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Recreate&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;RollingUpdate&#34;</p></td>
 <td></td>

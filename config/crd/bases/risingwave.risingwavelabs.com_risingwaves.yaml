@@ -858,9 +858,9 @@ spec:
                 type: object
               enableOpenKruise:
                 default: false
-                description: Flag to dicate if Openkruise should be enabled for components.
-                  If enabled, Clonesets will be used for the meta/frontend/compactor
-                  and AdvancedStateFulSet will be used for the compute.
+                description: Flag to indicate if OpenKruise should be enabled for
+                  components. If enabled, CloneSets will be used for meta/frontend/compactor
+                  nodes and Advanced StateFulSets will be used for compute nodes.
                 type: boolean
               global:
                 description: The spec of a shared template for components and a global

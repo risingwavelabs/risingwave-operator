@@ -18,6 +18,12 @@ kubeconfig
 keda
 tolerations
 controllerutil
+kruise
+kruiseappsv
+openKruise
+kruisepubs
+clonesets
+
 
 # Scale subresource
 specpath

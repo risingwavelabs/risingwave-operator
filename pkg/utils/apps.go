@@ -67,25 +67,25 @@ func IsStatefulSetRolledOut(statefulSet *appsv1.StatefulSet) bool {
 	return true
 }
 
-func IsCloneSetRolledOut(cloneset *kruiseappsv1alpha1.CloneSet) bool {
-	if cloneset == nil {
+func IsCloneSetRolledOut(cloneSet *kruiseappsv1alpha1.CloneSet) bool {
+	if cloneSet == nil {
 		return false
 	}
-	if cloneset.Status.ObservedGeneration < cloneset.Generation {
+	if cloneSet.Status.ObservedGeneration < cloneSet.Generation {
 		return false
 	}
-	for _, cond := range cloneset.Status.Conditions {
+	for _, cond := range cloneSet.Status.Conditions {
 		if cond.Type == kruiseappsv1alpha1.CloneSetConditionFailedUpdate || cond.Type == kruiseappsv1alpha1.CloneSetConditionFailedScale {
 			return false
 		}
 	}
-	if cloneset.Spec.Replicas != nil && cloneset.Status.UpdatedReplicas < *cloneset.Spec.Replicas {
+	if cloneSet.Spec.Replicas != nil && cloneSet.Status.UpdatedReplicas < *cloneSet.Spec.Replicas {
 		return false
 	}
-	if cloneset.Status.Replicas > cloneset.Status.UpdatedReplicas {
+	if cloneSet.Status.Replicas > cloneSet.Status.UpdatedReplicas {
 		return false
 	}
-	if cloneset.Status.AvailableReplicas < cloneset.Status.UpdatedReplicas {
+	if cloneSet.Status.AvailableReplicas < cloneSet.Status.UpdatedReplicas {
 		return false
 	}
 	return true

@@ -35,7 +35,7 @@ import (
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	risingwavecontroller "github.com/risingwavelabs/risingwave-operator/pkg/controller"
-	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
+	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/webhook"
 )
 
@@ -68,9 +68,8 @@ func main() {
 	flag.StringVar(&configPath, "config-file", "/config/config.yaml", "The file path of the configuration file.")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.")
+	flag.BoolVar(&enableLeaderElection, "leader-elect", false, "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
+
 	opts := zap.Options{
 		Development: true,
 	}
@@ -99,7 +98,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = risingwavecontroller.NewRisingWaveController(mgr.GetClient(), mgr.GetEventRecorderFor("risingwave-controller"), enableOpenKruise).SetupWithManager(mgr); err != nil {
+	if err = risingwavecontroller.NewRisingWaveController(
+		mgr.GetClient(),
+		mgr.GetEventRecorderFor("risingwave-controller"),
+		enableOpenKruise,
+	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RisingWave")
 		os.Exit(1)
 	}

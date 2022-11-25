@@ -140,12 +140,6 @@ func Test_RisingWaveController_New(t *testing.T) {
 
 				// Update status
 				RisingWaveAction_UpdateRisingWaveStatusViaClient: newResultErr(ctrlkit.Continue()),
-
-				// Check Advanced STS installed crd barrier
-				RisingWaveAction_BarrierAdvancedStsCRDsInstalled: newResultErr(ctrlkit.Continue()),
-
-				// Check Cloneset CRD installed barrier
-				RisingWaveAction_BarrierCloneSetCRDsInstalled: newResultErr(ctrlkit.Continue()),
 			}, false)
 		},
 		Recorder: recorder,

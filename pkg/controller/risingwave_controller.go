@@ -91,8 +91,6 @@ const (
 	RisingWaveAction_BarrierObservedGenerationOutdated  = "BarrierObservedGenerationOutdated"
 	RisingWaveAction_SyncObservedGeneration             = "SyncObservedGeneration"
 	RisingWaveAction_BarrierPrometheusCRDsInstalled     = "BarrierPrometheusCRDsInstalled"
-	RisingWaveAction_BarrierCloneSetCRDsInstalled       = "BarrierCloneSetCRDsInstalled"
-	RisingWaveAction_BarrierAdvancedStsCRDsInstalled    = "BarrierAdvancedStatefulsetCRDsInstalled"
 )
 
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves,verbs=get;list;watch;create;update;patch;delete
@@ -112,10 +110,11 @@ const (
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 type RisingWaveController struct {
-	Client              client.Client
-	Recorder            record.EventRecorder
+	Client            client.Client
+	Recorder          record.EventRecorder
+	ActionHookFactory func() ctrlkit.ActionHook
+
 	openKruiseAvailable bool
-	ActionHookFactory   func() ctrlkit.ActionHook
 }
 
 func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit.Action) (result reconcile.Result, err error) {
@@ -257,41 +256,10 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	})
 	syncConfigs := mgr.SyncConfigConfigMap()
 
-	cloneSetCRDsInstalledBarrier := mgr.NewAction(RisingWaveAction_BarrierCloneSetCRDsInstalled, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-		crd, err := utils.GetCustomResourceDefinition(c.Client, ctx, metav1.GroupKind{
-			Group: "apps.kruise.io",
-			Kind:  "CloneSet",
-		})
-		if err != nil {
-			if apierrors.IsNotFound(err) {
-				return ctrlkit.Exit()
-			}
-			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for Cloneset", err)
-		}
-		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1alpha1"))
-	})
-
-	advancedStsCRDsInstalledBarrier := mgr.NewAction(RisingWaveAction_BarrierAdvancedStsCRDsInstalled, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-		crd, err := utils.GetCustomResourceDefinition(c.Client, ctx, metav1.GroupKind{
-			Group: "apps.kruise.io",
-			Kind:  "StatefulSet",
-		})
-		if err != nil {
-			if apierrors.IsNotFound(err) {
-				return ctrlkit.Exit()
-			}
-			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for Advanced Statefulset", err)
-		}
-
-		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1beta1"))
-	})
-
 	syncMetaComponent := ctrlkit.ParallelJoin(
 		mgr.SyncMetaService(),
 		mgr.SyncMetaDeployments(),
-		ctrlkit.If(c.openKruiseAvailable,
-			ctrlkit.SequentialJoin(cloneSetCRDsInstalledBarrier, mgr.SyncMetaCloneSets()),
-		),
+		ctrlkit.If(c.openKruiseAvailable, mgr.SyncMetaCloneSets()),
 	)
 	metaComponentReadyBarrier := ctrlkit.Sequential(
 		mgr.WaitBeforeMetaDeploymentsReady(),
@@ -320,20 +288,17 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		ctrlkit.Sequential(
 			mgr.SyncComputeService(),
 			mgr.SyncComputeStatefulSets(),
-			ctrlkit.If(c.openKruiseAvailable,
-				ctrlkit.SequentialJoin(advancedStsCRDsInstalledBarrier, mgr.SyncComputeAdvancedStatefulSets())),
+			ctrlkit.If(c.openKruiseAvailable, mgr.SyncComputeAdvancedStatefulSets()),
 		),
 		ctrlkit.ParallelJoin(
 			mgr.SyncCompactorService(),
 			mgr.SyncCompactorDeployments(),
-			ctrlkit.If(c.openKruiseAvailable,
-				ctrlkit.SequentialJoin(cloneSetCRDsInstalledBarrier, mgr.SyncCompactorCloneSets())),
+			ctrlkit.If(c.openKruiseAvailable, mgr.SyncCompactorCloneSets()),
 		),
 		ctrlkit.ParallelJoin(
 			mgr.SyncFrontendService(),
 			mgr.SyncFrontendDeployments(),
-			ctrlkit.If(c.openKruiseAvailable,
-				ctrlkit.SequentialJoin(cloneSetCRDsInstalledBarrier, mgr.SyncFrontendCloneSets())),
+			ctrlkit.If(c.openKruiseAvailable, mgr.SyncFrontendCloneSets()),
 		),
 	)
 	otherOpenKruiseComponentsReadyBarrier := ctrlkit.ParallelJoin(
@@ -441,13 +406,13 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 			),
 		}).
 		For(&risingwavev1alpha1.RisingWave{}).
+		// Can't watch an optional CRD. It will cause a panic in manager.
+		// So do not uncomment the following line.
+		// Owns(&prometheusv1.ServiceMonitor{}).
 		Owns(&appsv1.Deployment{}).
 		Owns(&appsv1.StatefulSet{}).
 		Owns(&corev1.Service{}).
 		Owns(&corev1.ConfigMap{})
-		// Can't watch an optional CRD. It will cause a panic in manager.
-		// So do not uncomment the following line.
-		// Owns(&prometheusv1.ServiceMonitor{})
 
 	if c.openKruiseAvailable {
 		newCtrl.Owns(&kruiseappsv1alpha1.CloneSet{}).

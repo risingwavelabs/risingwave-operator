@@ -548,7 +548,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncCompactorDeployments(ctx context
 func (mgr *risingWaveControllerManagerImpl) SyncCompactorCloneSets(ctx context.Context, logger logr.Logger, compactorCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
 
-	// We only want to populate groupPodTemplates for Clonesets if Open Kruise is enabled.
+	// We only want to populate groupPodTemplates for CloneSets if Open Kruise is enabled.
 	var groupPodTemplates = make(map[string]string)
 	if mgr.risingwaveManager.IsOpenKruiseEnabled() {
 		groupPodTemplates = buildGroupPodTemplateMap(risingwave.Spec.Components.Compactor.Groups, extractNameAndPodTemplateFromComponentGroup)
@@ -652,7 +652,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncFrontendDeployments(ctx context.
 func (mgr *risingWaveControllerManagerImpl) SyncFrontendCloneSets(ctx context.Context, logger logr.Logger, frontendCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
 
-	// We only want to populate groupPodTemplates for Clonesets if Open Kruise is enabled.
+	// We only want to populate groupPodTemplates for CloneSets if Open Kruise is enabled.
 	var groupPodTemplates = make(map[string]string)
 	if mgr.risingwaveManager.IsOpenKruiseEnabled() {
 		groupPodTemplates = buildGroupPodTemplateMap(risingwave.Spec.Components.Frontend.Groups, extractNameAndPodTemplateFromComponentGroup)
@@ -703,7 +703,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaDeployments(ctx context.Cont
 func (mgr *risingWaveControllerManagerImpl) SyncMetaCloneSets(ctx context.Context, logger logr.Logger, metaCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
 
-	// We only want to populate groupPodTemplates for Clonesets if Open Kruise is enabled.
+	// We only want to populate groupPodTemplates for CloneSets if Open Kruise is enabled.
 	var groupPodTemplates = make(map[string]string)
 
 	if mgr.risingwaveManager.IsOpenKruiseEnabled() {

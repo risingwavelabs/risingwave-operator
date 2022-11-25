@@ -20,6 +20,7 @@ import (
 	"context"
 	"testing"
 
+	kruisepubs "github.com/openkruise/kruise-api/apps/pub"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -41,7 +42,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 	testcases := map[string]struct {
 		patch               func(r *risingwavev1alpha1.RisingWave)
 		pass                bool
-		openKruiseAvailable *bool
+		openKruiseAvailable bool
 	}{
 		"fake-pass": {
 			patch: nil,
@@ -52,14 +53,13 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.EnableOpenKruise = pointer.Bool(true)
 			},
 			pass:                true,
-			openKruiseAvailable: pointer.Bool(true),
+			openKruiseAvailable: true,
 		},
 		"invalid-enable-openKruise-not-available": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.EnableOpenKruise = pointer.Bool(true)
 			},
-			pass:                false,
-			openKruiseAvailable: pointer.Bool(false),
+			pass: false,
 		},
 		"invalid-image-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
@@ -72,14 +72,14 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.Global.RisingWaveComponentGroupTemplate.UpgradeStrategy.Type = risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible
 			},
 			pass:                false,
-			openKruiseAvailable: pointer.Bool(true),
+			openKruiseAvailable: true,
 		},
 		"invalid-upgrade-strategy-type-InPlaceOnly-openKruise-disabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Global.RisingWaveComponentGroupTemplate.UpgradeStrategy.Type = risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly
 			},
 			pass:                false,
-			openKruiseAvailable: pointer.Bool(true),
+			openKruiseAvailable: true,
 		},
 		"invalid-partition-str-val": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
@@ -94,7 +94,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				}
 			},
 			pass:                false,
-			openKruiseAvailable: pointer.Bool(true),
+			openKruiseAvailable: true,
 		},
 		"invalid-image-in-compute-group-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
@@ -206,7 +206,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 					},
 				}
 			},
-			pass: true,
+			pass:                true,
+			openKruiseAvailable: true,
 		},
 		"upgrade-strategy-InPlaceOnly-openKruise-enabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
@@ -215,7 +216,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
 				}
 			},
-			pass: true,
+			pass:                true,
+			openKruiseAvailable: true,
 		},
 		"upgrade-strategy-InPlaceIfPossible-openKruise-enabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
@@ -224,7 +226,30 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
 				}
 			},
-			pass: true,
+			pass:                true,
+			openKruiseAvailable: true,
+		},
+		"inPlace-strategy-openKruise-disabled": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.EnableOpenKruise = pointer.Bool(false)
+				r.Spec.Global.UpgradeStrategy = risingwavev1alpha1.RisingWaveUpgradeStrategy{
+					Type:                  risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{},
+				}
+			},
+			pass:                false,
+			openKruiseAvailable: true,
+		},
+		"inPlace-strategy-Recreate-openKruise-enabled": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.EnableOpenKruise = pointer.Bool(true)
+				r.Spec.Global.UpgradeStrategy = risingwavev1alpha1.RisingWaveUpgradeStrategy{
+					Type:                  risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{},
+				}
+			},
+			pass:                false,
+			openKruiseAvailable: true,
 		},
 		"etcd-meta-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
@@ -542,8 +567,6 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 	}
 
-	webhook := NewRisingWaveValidatingWebhook(false)
-
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			risingwave := testutils.FakeRisingWave()
@@ -552,9 +575,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			}
 
 			// we let webhook take on open kruise availability specified in Test case.
-			if tc.openKruiseAvailable != nil {
-				webhook = NewRisingWaveValidatingWebhook(*tc.openKruiseAvailable)
-			}
+			webhook := NewRisingWaveValidatingWebhook(tc.openKruiseAvailable)
 
 			err := webhook.ValidateCreate(context.Background(), risingwave)
 			if tc.pass != (err == nil) {
@@ -568,7 +589,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 	testcases := map[string]struct {
 		patch               func(r *risingwavev1alpha1.RisingWave)
 		pass                bool
-		openKruiseAvailable *bool
+		openKruiseAvailable bool
 		oldObjMutation      func(r *risingwavev1alpha1.RisingWave)
 	}{
 		"storages-unchanged-pass": {
@@ -581,22 +602,20 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.EnableOpenKruise = pointer.Bool(true)
 			},
-			pass:                false,
-			openKruiseAvailable: pointer.Bool(false),
+			pass: false,
 		},
 		"enable-openKruise-when-enabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.EnableOpenKruise = pointer.Bool(true)
 			},
-			pass:                false,
-			openKruiseAvailable: pointer.Bool(false),
+			openKruiseAvailable: true,
+			pass:                true,
 		},
 		"disabled-openKruise-when-not-available": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.EnableOpenKruise = pointer.Bool(false)
 			},
-			pass:                true,
-			openKruiseAvailable: pointer.Bool(false),
+			pass: true,
 			oldObjMutation: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.EnableOpenKruise = pointer.Bool(true)
 				r.Spec.Global.UpgradeStrategy.Type = risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly
@@ -718,12 +737,10 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 		},
 	}
 
-	webhook := NewRisingWaveValidatingWebhook(false)
-
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 
-			// we want to create two copies so we can compare the old state and new state
+			// We want to create two copies, so we can compare the old state and new state
 			// when transitioning from openkruise enabled to disabled with operator disabled.
 			risingwave := testutils.FakeRisingWave()
 			oldObj := risingwave.DeepCopy()
@@ -732,10 +749,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 			}
 			tc.patch(risingwave)
 
-			// we let webhook take on open kruise availability specified in Test case.
-			if tc.openKruiseAvailable != nil {
-				webhook = NewRisingWaveValidatingWebhook(*tc.openKruiseAvailable)
-			}
+			webhook := NewRisingWaveValidatingWebhook(tc.openKruiseAvailable)
 
 			// test when operator is disabled and openKruise enabled -> disabled, risingwave should be set to default.
 			if name == "disabled-openKruise-when-not-available" {

@@ -22,6 +22,8 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
+	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
 	"golang.org/x/time/rate"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -48,22 +50,30 @@ import (
 
 const (
 	// Pre-defined actions. Import from manager package.
-	RisingWaveAction_SyncMetaService                       = manager.RisingWaveAction_SyncMetaService
-	RisingWaveAction_SyncMetaDeployments                   = manager.RisingWaveAction_SyncMetaDeployments
-	RisingWaveAction_WaitBeforeMetaServiceIsAvailable      = manager.RisingWaveAction_WaitBeforeMetaServiceIsAvailable
-	RisingWaveAction_WaitBeforeMetaDeploymentsReady        = manager.RisingWaveAction_WaitBeforeMetaDeploymentsReady
-	RisingWaveAction_SyncFrontendService                   = manager.RisingWaveAction_SyncFrontendService
-	RisingWaveAction_SyncFrontendDeployments               = manager.RisingWaveAction_SyncFrontendDeployments
-	RisingWaveAction_WaitBeforeFrontendDeploymentsReady    = manager.RisingWaveAction_WaitBeforeFrontendDeploymentsReady
-	RisingWaveAction_SyncComputeService                    = manager.RisingWaveAction_SyncComputeService
-	RisingWaveAction_SyncComputeStatefulSets               = manager.RisingWaveAction_SyncComputeStatefulSets
-	RisingWaveAction_WaitBeforeComputeStatefulSetsReady    = manager.RisingWaveAction_WaitBeforeComputeStatefulSetsReady
-	RisingWaveAction_SyncCompactorService                  = manager.RisingWaveAction_SyncCompactorService
-	RisingWaveAction_SyncCompactorDeployments              = manager.RisingWaveAction_SyncCompactorDeployments
-	RisingWaveAction_WaitBeforeCompactorDeploymentsReady   = manager.RisingWaveAction_WaitBeforeCompactorDeploymentsReady
-	RisingWaveAction_SyncConfigConfigMap                   = manager.RisingWaveAction_SyncConfigConfigMap
-	RisingWaveAction_CollectRunningStatisticsAndSyncStatus = manager.RisingWaveAction_CollectRunningStatisticsAndSyncStatus
-	RisingWaveAction_SyncServiceMonitor                    = manager.RisingWaveAction_SyncServiceMonitor
+	RisingWaveAction_SyncMetaService                            = manager.RisingWaveAction_SyncMetaService
+	RisingWaveAction_SyncMetaDeployments                        = manager.RisingWaveAction_SyncMetaDeployments
+	RisingWaveAction_SyncMetaCloneSets                          = manager.RisingWaveAction_SyncMetaCloneSets
+	RisingWaveAction_WaitBeforeMetaServiceIsAvailable           = manager.RisingWaveAction_WaitBeforeMetaServiceIsAvailable
+	RisingWaveAction_WaitBeforeMetaDeploymentsReady             = manager.RisingWaveAction_WaitBeforeMetaDeploymentsReady
+	RisingWaveAction_WaitBeforeMetaCloneSetsReady               = manager.RisingWaveAction_WaitBeforeMetaCloneSetsReady
+	RisingWaveAction_SyncFrontendService                        = manager.RisingWaveAction_SyncFrontendService
+	RisingWaveAction_SyncFrontendDeployments                    = manager.RisingWaveAction_SyncFrontendDeployments
+	RisingWaveAction_SyncFrontendCloneSets                      = manager.RisingWaveAction_SyncFrontendCloneSets
+	RisingWaveAction_WaitBeforeFrontendDeploymentsReady         = manager.RisingWaveAction_WaitBeforeFrontendDeploymentsReady
+	RisingWaveAction_WaitBeforeFrontendCloneSetsReady           = manager.RisingWaveAction_WaitBeforeFrontendCloneSetsReady
+	RisingWaveAction_SyncComputeService                         = manager.RisingWaveAction_SyncComputeService
+	RisingWaveAction_SyncComputeStatefulSets                    = manager.RisingWaveAction_SyncComputeStatefulSets
+	RisingWaveAction_SyncComputeAdvancedStatefulSets            = manager.RisingWaveAction_SyncComputeAdvancedStatefulSets
+	RisingWaveAction_WaitBeforeComputeStatefulSetsReady         = manager.RisingWaveAction_WaitBeforeComputeStatefulSetsReady
+	RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady = manager.RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady
+	RisingWaveAction_SyncCompactorService                       = manager.RisingWaveAction_SyncCompactorService
+	RisingWaveAction_SyncCompactorDeployments                   = manager.RisingWaveAction_SyncCompactorDeployments
+	RisingWaveAction_SyncCompactorCloneSets                     = manager.RisingWaveAction_SyncCompactorCloneSets
+	RisingWaveAction_WaitBeforeCompactorDeploymentsReady        = manager.RisingWaveAction_WaitBeforeCompactorDeploymentsReady
+	RisingWaveAction_WaitBeforeCompactorCloneSetsReady          = manager.RisingWaveAction_WaitBeforeCompactorCloneSetsReady
+	RisingWaveAction_SyncConfigConfigMap                        = manager.RisingWaveAction_SyncConfigConfigMap
+	RisingWaveAction_CollectRunningStatisticsAndSyncStatus      = manager.RisingWaveAction_CollectRunningStatisticsAndSyncStatus
+	RisingWaveAction_SyncServiceMonitor                         = manager.RisingWaveAction_SyncServiceMonitor
 
 	// Actions defined in controller.
 	RisingWaveAction_UpdateRisingWaveStatusViaClient    = "UpdateRisingWaveStatusViaClient"
@@ -88,6 +98,8 @@ const (
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwavepodtemplates/finalizers,verbs=update
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves/finalizers,verbs=update
+// +kubebuilder:rbac:groups=apps.kruise.io,resources=clonesets,verbs=get;list;watch;create;delete;update;patch
+// +kubebuilder:rbac:groups=apps.kruise.io,resources=statefulsets,verbs=get;list;watch;create;delete;update;patch
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;delete;
@@ -101,6 +113,8 @@ type RisingWaveController struct {
 	Client            client.Client
 	Recorder          record.EventRecorder
 	ActionHookFactory func() ctrlkit.ActionHook
+
+	openKruiseAvailable bool
 }
 
 func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit.Action) (result reconcile.Result, err error) {
@@ -146,7 +160,7 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 		return ctrlkit.NoRequeue()
 	}
 
-	risingwaveManager := object.NewRisingWaveManager(c.Client, risingwave.DeepCopy())
+	risingwaveManager := object.NewRisingWaveManager(c.Client, risingwave.DeepCopy(), c.openKruiseAvailable)
 	eventMessageStore := event.NewMessageStore()
 
 	mgr := manager.NewRisingWaveControllerManager(
@@ -241,9 +255,15 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		return ctrlkit.Continue()
 	})
 	syncConfigs := mgr.SyncConfigConfigMap()
-	syncMetaComponent := ctrlkit.ParallelJoin(mgr.SyncMetaService(), mgr.SyncMetaDeployments())
+
+	syncMetaComponent := ctrlkit.ParallelJoin(
+		mgr.SyncMetaService(),
+		mgr.SyncMetaDeployments(),
+		ctrlkit.If(c.openKruiseAvailable, mgr.SyncMetaCloneSets()),
+	)
 	metaComponentReadyBarrier := ctrlkit.Sequential(
 		mgr.WaitBeforeMetaDeploymentsReady(),
+		ctrlkit.If(c.openKruiseAvailable, mgr.WaitBeforeMetaCloneSetsReady()),
 		ctrlkit.Timeout(time.Second, mgr.WaitBeforeMetaServiceIsAvailable()),
 	)
 	prometheusCRDsInstalledBarrier := mgr.NewAction(RisingWaveAction_BarrierPrometheusCRDsInstalled, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
@@ -255,10 +275,11 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			if apierrors.IsNotFound(err) {
 				return ctrlkit.Exit()
 			}
-			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for service monitor", err)
+			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for ServiceMonitor", err)
 		}
 		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1"))
 	})
+
 	syncServiceMonitorIfPossible := ctrlkit.Sequential(
 		prometheusCRDsInstalledBarrier,
 		mgr.SyncServiceMonitor(),
@@ -267,20 +288,30 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		ctrlkit.Sequential(
 			mgr.SyncComputeService(),
 			mgr.SyncComputeStatefulSets(),
+			ctrlkit.If(c.openKruiseAvailable, mgr.SyncComputeAdvancedStatefulSets()),
 		),
 		ctrlkit.ParallelJoin(
 			mgr.SyncCompactorService(),
 			mgr.SyncCompactorDeployments(),
+			ctrlkit.If(c.openKruiseAvailable, mgr.SyncCompactorCloneSets()),
 		),
 		ctrlkit.ParallelJoin(
 			mgr.SyncFrontendService(),
 			mgr.SyncFrontendDeployments(),
+			ctrlkit.If(c.openKruiseAvailable, mgr.SyncFrontendCloneSets()),
 		),
 	)
+	otherOpenKruiseComponentsReadyBarrier := ctrlkit.ParallelJoin(
+		mgr.WaitBeforeFrontendCloneSetsReady(),
+		mgr.WaitBeforeComputeAdvancedStatefulSetsReady(),
+		mgr.WaitBeforeCompactorCloneSetsReady(),
+	)
+
 	otherComponentsReadyBarrier := ctrlkit.Join(
 		mgr.WaitBeforeFrontendDeploymentsReady(),
 		mgr.WaitBeforeComputeStatefulSetsReady(),
 		mgr.WaitBeforeCompactorDeploymentsReady(),
+		ctrlkit.If(c.openKruiseAvailable, otherOpenKruiseComponentsReadyBarrier),
 	)
 	syncAllComponents := ctrlkit.ParallelJoin(syncConfigs, syncMetaComponent, syncOtherComponents)
 	allComponentsReadyBarrier := ctrlkit.Join(metaComponentReadyBarrier, otherComponentsReadyBarrier)
@@ -292,8 +323,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		risingwaveManger.SyncObservedGeneration()
 		return ctrlkit.Continue()
 	})
-	syncRunningStatus := mgr.CollectRunningStatisticsAndSyncStatus()
-
+	syncRunningStatus := ctrlkit.IfElse(risingwaveManger.IsOpenKruiseEnabled(), mgr.CollectOpenKruiseRunningStatisticsAndSyncStatus(), mgr.CollectRunningStatisticsAndSyncStatus())
 	syncAllAndWait := ctrlkit.Sequential(
 		// Set .status.observedGeneration = .metadata.generation
 		syncObservedGeneration,
@@ -365,7 +395,7 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 		return fmt.Errorf("unable to find gvk for RisingWave: %w", err)
 	}
 
-	return ctrl.NewControllerManagedBy(mgr).
+	newCtrl := ctrl.NewControllerManagedBy(mgr).
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: 64,
 			RateLimiter: workqueue.NewMaxOfRateLimiter(
@@ -376,19 +406,26 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 			),
 		}).
 		For(&risingwavev1alpha1.RisingWave{}).
-		Owns(&appsv1.Deployment{}).
-		Owns(&appsv1.StatefulSet{}).
-		Owns(&corev1.Service{}).
-		Owns(&corev1.ConfigMap{}).
 		// Can't watch an optional CRD. It will cause a panic in manager.
 		// So do not uncomment the following line.
 		// Owns(&prometheusv1.ServiceMonitor{}).
-		Complete(metrics.NewControllerMetricsRecorder(c, "RisingWaveController", gvk))
+		Owns(&appsv1.Deployment{}).
+		Owns(&appsv1.StatefulSet{}).
+		Owns(&corev1.Service{}).
+		Owns(&corev1.ConfigMap{})
+
+	if c.openKruiseAvailable {
+		newCtrl.Owns(&kruiseappsv1alpha1.CloneSet{}).
+			Owns(&kruiseappsv1beta1.StatefulSet{})
+	}
+
+	return newCtrl.Complete(metrics.NewControllerMetricsRecorder(c, "RisingWaveController", gvk))
 }
 
-func NewRisingWaveController(client client.Client, recorder record.EventRecorder) *RisingWaveController {
+func NewRisingWaveController(client client.Client, recorder record.EventRecorder, openKruiseAvailable bool) *RisingWaveController {
 	return &RisingWaveController{
-		Client:   client,
-		Recorder: recorder,
+		Client:              client,
+		Recorder:            recorder,
+		openKruiseAvailable: openKruiseAvailable,
 	}
 }

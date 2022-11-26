@@ -2,6 +2,8 @@ bind v1 k8s.io/api/core/v1
 bind apps/v1 k8s.io/api/apps/v1
 bind monitoring.coreos.com/v1 github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1
 bind risingwave.risingwavelabs.com/v1alpha1 github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1
+bind apps.kruise.io/v1alpha1 github.com/openkruise/kruise-api/apps/v1alpha1
+bind apps.kruise.io/v1beta1 github.com/openkruise/kruise-api/apps/v1beta1
 
 alias Pod v1/Pod
 alias Service v1/Service
@@ -11,6 +13,8 @@ alias Deployment apps/v1/Deployment
 alias StatefulSet apps/v1/StatefulSet
 alias RisingWave risingwave.risingwavelabs.com/v1alpha1/RisingWave
 alias ServiceMonitor monitoring.coreos.com/v1/ServiceMonitor
+alias CloneSet apps.kruise.io/v1alpha1/CloneSet
+alias AdvancedStatefulSet apps.kruise.io/v1beta1/StatefulSet
 
 // RisingWaveControllerManager encapsulates the states and actions used by RisingWaveController.
 decl RisingWaveControllerManager for RisingWave {
@@ -76,6 +80,33 @@ decl RisingWaveControllerManager for RisingWave {
             labels/risingwave/component=compactor
             owned
         }
+
+        metaCloneSets []CloneSet {
+            labels/risingwave/name=${target.Name}
+            labels/risingwave/component=meta
+            owned
+        }
+
+         // Deployments for frontend nodes.
+        frontendCloneSets []CloneSet {
+            labels/risingwave/name=${target.Name}
+            labels/risingwave/component=frontend
+            owned
+        }
+
+        // StatefulSets for compute nodes.
+        computeAdvancedStatefulSets []AdvancedStatefulSet {
+            labels/risingwave/name=${target.Name}
+            labels/risingwave/component=compute
+            owned
+        }
+
+        // Deployments for compactor nodes.
+        compactorCloneSets []CloneSet {
+            labels/risingwave/name=${target.Name}
+            labels/risingwave/component=compactor
+            owned
+        }
     }
 
     action {
@@ -85,11 +116,17 @@ decl RisingWaveControllerManager for RisingWave {
         // SyncMetaDeployments creates or updates the deployments for meta nodes.
         SyncMetaDeployments(metaDeployments)
 
+        // SyncMetaCloneSets creates or updates the CloneSets for meta nodes.
+        SyncMetaCloneSets(metaCloneSets)
+        
         // WaitBeforeMetaServiceIsAvailable waits (aborts the workflow) before the meta service is available.
         WaitBeforeMetaServiceIsAvailable(metaService)
 
         // WaitBeforeMetaDeploymentsReady waits (aborts the workflow) before the meta deployments are ready.
         WaitBeforeMetaDeploymentsReady(metaDeployments)
+
+        // WaitBeforeMetaCloneSetsReady waits (aborts the workflow) before the meta CloneSets are ready.
+        WaitBeforeMetaCloneSetsReady(metaCloneSets)
 
         // SyncFrontendService creates or updates the service for frontend nodes.
         SyncFrontendService(frontendService)
@@ -97,8 +134,14 @@ decl RisingWaveControllerManager for RisingWave {
         // SyncFrontendDeployments creates or updates the deployments for frontend nodes.
         SyncFrontendDeployments(frontendDeployments)
 
+        // SyncFrontendCloneSets creates or updates the deployments for frontend nodes.
+        SyncFrontendCloneSets(frontendCloneSets)
+
         // WaitBeforeFrontendDeploymentsReady waits (aborts the workflow) before the frontend deployments are ready.
         WaitBeforeFrontendDeploymentsReady(frontendDeployments)
+
+        // WaitBeforeFrontendCloneSetsReady waits (aborts the workflow) before the frontend CloneSets are ready.
+        WaitBeforeFrontendCloneSetsReady(frontendCloneSets)
 
         // SyncComputeService creates or updates the service for compute nodes.
         SyncComputeService(computeService)
@@ -106,8 +149,14 @@ decl RisingWaveControllerManager for RisingWave {
         // SyncComputeStatefulSets creates or updates the statefulsets for compute nodes.
         SyncComputeStatefulSets(computeStatefulSets)
 
+        // SyncComputeAdvancedStatefulSets creates or updates the statefulsets for compute nodes.
+        SyncComputeAdvancedStatefulSets(computeAdvancedStatefulSets)
+
         // WaitBeforeComputeStatefulSetsReady waits (aborts the workflow) before the compute statefulsets are ready.
         WaitBeforeComputeStatefulSetsReady(computeStatefulSets)
+
+        // WaitBeforeComputeStatefulSetsReady waits (aborts the workflow) before the compute Advanced statefulsets are ready.
+        WaitBeforeComputeAdvancedStatefulSetsReady(computeAdvancedStatefulSets)
 
         // SyncCompactorService creates or updates the service for compactor nodes.
         SyncCompactorService(compactorService)
@@ -115,8 +164,14 @@ decl RisingWaveControllerManager for RisingWave {
         // SyncCompactorDeployments creates or updates the deployments for compactor nodes.
         SyncCompactorDeployments(compactorDeployments)
 
+        // SyncCompactorCloneSets creates or updates the deployments for compactor nodes.
+        SyncCompactorCloneSets(compactorCloneSets)
+
         // WaitBeforeCompactorDeploymentsReady waits (aborts the workflow) before the compactor deployments are ready.
         WaitBeforeCompactorDeploymentsReady(compactorDeployments)
+
+        // WaitBeforeCompactorDeploymentsReady waits (aborts the workflow) before the compactor CloneSets are ready.
+        WaitBeforeCompactorCloneSetsReady(compactorCloneSets)
 
         // SyncConfigConfigMap creates or updates the configmap for RisingWave configs.
         SyncConfigConfigMap(configConfigMap)
@@ -147,5 +202,6 @@ decl RisingWaveControllerManager for RisingWave {
     action {
         // CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
         CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
+        CollectOpenKruiseRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaCloneSets, frontendCloneSets, computeAdvancedStatefulSets, compactorCloneSets, configConfigMap)
     }
 }

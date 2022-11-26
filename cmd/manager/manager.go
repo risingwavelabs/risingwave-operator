@@ -30,9 +30,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
+	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
+
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	risingwavecontroller "github.com/risingwavelabs/risingwave-operator/pkg/controller"
-	metrics "github.com/risingwavelabs/risingwave-operator/pkg/metrics"
+	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/webhook"
 )
 
@@ -46,14 +49,16 @@ func init() {
 	utilruntime.Must(risingwavev1alpha1.AddToScheme(scheme))
 	utilruntime.Must(apiextensionsv1.AddToScheme(scheme))
 	utilruntime.Must(prometheusv1.AddToScheme(scheme))
+	utilruntime.Must(kruiseappsv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(kruiseappsv1beta1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
 var (
-	metricsAddr string
-	probeAddr   string
-	configPath  string
-
+	metricsAddr          string
+	probeAddr            string
+	configPath           string
+	enableOpenKruise     bool
 	enableLeaderElection bool
 )
 
@@ -63,17 +68,16 @@ func main() {
 	flag.StringVar(&configPath, "config-file", "/config/config.yaml", "The file path of the configuration file.")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.")
+	flag.BoolVar(&enableLeaderElection, "leader-elect", false, "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
+
 	opts := zap.Options{
 		Development: true,
 	}
+	flag.BoolVar(&enableOpenKruise, "enable-open-kruise", true, "Enabling this will allow openkruise to be available as an optional provider")
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
-
 	config := ctrl.GetConfigOrDie()
 
 	mgr, err := ctrl.NewManager(config, ctrl.Options{
@@ -89,12 +93,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = webhook.SetupWebhooksWithManager(mgr); err != nil {
+	if err = webhook.SetupWebhooksWithManager(mgr, enableOpenKruise); err != nil {
 		setupLog.Error(err, "unable to setup webhooks")
 		os.Exit(1)
 	}
 
-	if err = risingwavecontroller.NewRisingWaveController(mgr.GetClient(), mgr.GetEventRecorderFor("risingwave-controller")).SetupWithManager(mgr); err != nil {
+	if err = risingwavecontroller.NewRisingWaveController(
+		mgr.GetClient(),
+		mgr.GetEventRecorderFor("risingwave-controller"),
+		enableOpenKruise,
+	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RisingWave")
 		os.Exit(1)
 	}

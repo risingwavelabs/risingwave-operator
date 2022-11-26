@@ -18,6 +18,8 @@ package webhook
 
 import (
 	"context"
+	"strconv"
+	"strings"
 
 	"github.com/distribution/distribution/reference"
 	"github.com/samber/lo"
@@ -26,7 +28,9 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
@@ -34,13 +38,15 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/scaleview"
 )
 
-type RisingWaveValidatingWebhook struct{}
+type RisingWaveValidatingWebhook struct {
+	openKruiseAvailable bool
+}
 
 func isImageValid(image string) bool {
 	return reference.ReferenceRegexp.MatchString(image)
 }
 
-func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, groupTemplate *risingwavev1alpha1.RisingWaveComponentGroupTemplate) field.ErrorList {
+func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, groupTemplate *risingwavev1alpha1.RisingWaveComponentGroupTemplate, isOpenKruiseEnabled bool) field.ErrorList {
 	fieldErrs := field.ErrorList{}
 
 	if groupTemplate == nil {
@@ -56,6 +62,35 @@ func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 	if groupTemplate.UpgradeStrategy.Type == risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate {
 		if groupTemplate.UpgradeStrategy.RollingUpdate != nil {
 			fieldErrs = append(fieldErrs, field.Forbidden(path.Child("upgradeStrategy", "rollingUpdate"), "must be nil when type is Recreate"))
+		}
+	}
+
+	// Validate upgrade strategy type when open kruise is not enabled
+	if !isOpenKruiseEnabled {
+		if groupTemplate.UpgradeStrategy.Type == risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly ||
+			groupTemplate.UpgradeStrategy.Type == risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible {
+			fieldErrs = append(fieldErrs, field.Invalid(path.Child("upgradeStrategy", "type"), groupTemplate.UpgradeStrategy.Type, "invalid upgrade strategy type"))
+		}
+		if groupTemplate.UpgradeStrategy.InPlaceUpdateStrategy != nil {
+			fieldErrs = append(fieldErrs, field.Forbidden(path.Child("upgradeStrategy", "inPlaceUpdateStrategy"), "not allowed"))
+		}
+	} else {
+		if groupTemplate.UpgradeStrategy.Type != risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly &&
+			groupTemplate.UpgradeStrategy.Type != risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible &&
+			groupTemplate.UpgradeStrategy.InPlaceUpdateStrategy != nil {
+			fieldErrs = append(fieldErrs, field.Forbidden(path.Child("upgradeStrategy", "inPlaceUpdateStrategy"), "not allowed"))
+		}
+	}
+
+	// Validate the partition value if it exists.
+	if groupTemplatePartitionExistAndIsString(groupTemplate) {
+		partitionVal := groupTemplate.UpgradeStrategy.RollingUpdate.Partition.StrVal
+		_, err := strconv.Atoi(strings.Replace(partitionVal, "%", "", -1))
+		if err != nil {
+			fieldErrs = append(fieldErrs,
+				field.Invalid(path.Child("upgradeStrategy", "rollingUpdate", "partition"),
+					groupTemplate.UpgradeStrategy.RollingUpdate.Partition,
+					"percentage/string unable to be converted to an integer value"))
 		}
 	}
 
@@ -79,8 +114,8 @@ func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 	return fieldErrs
 }
 
-func (v *RisingWaveValidatingWebhook) validateGlobal(path *field.Path, global *risingwavev1alpha1.RisingWaveGlobalSpec) field.ErrorList {
-	fieldErrs := v.validateGroupTemplate(path, &global.RisingWaveComponentGroupTemplate)
+func (v *RisingWaveValidatingWebhook) validateGlobal(path *field.Path, global *risingwavev1alpha1.RisingWaveGlobalSpec, isOpenKruiseEnabled bool) field.ErrorList {
+	fieldErrs := v.validateGroupTemplate(path, &global.RisingWaveComponentGroupTemplate, isOpenKruiseEnabled)
 
 	if global.Replicas.Meta > 0 || global.Replicas.Frontend > 0 ||
 		global.Replicas.Compute > 0 || global.Replicas.Compactor > 0 {
@@ -144,12 +179,12 @@ func (v *RisingWaveValidatingWebhook) validateConfiguration(path *field.Path, co
 	return nil
 }
 
-func (v *RisingWaveValidatingWebhook) validateComponents(path *field.Path, components *risingwavev1alpha1.RisingWaveComponentsSpec, storages *risingwavev1alpha1.RisingWaveStoragesSpec, globalImageProvided bool) field.ErrorList {
+func (v *RisingWaveValidatingWebhook) validateComponents(path *field.Path, components *risingwavev1alpha1.RisingWaveComponentsSpec, storages *risingwavev1alpha1.RisingWaveStoragesSpec, globalImageProvided bool, openKruiseEnabled bool) field.ErrorList {
 	fieldErrs := field.ErrorList{}
 
 	metaGroupsPath := path.Child("meta", "groups")
 	for i, group := range components.Meta.Groups {
-		fieldErrs = append(fieldErrs, v.validateGroupTemplate(metaGroupsPath.Index(i), group.RisingWaveComponentGroupTemplate)...)
+		fieldErrs = append(fieldErrs, v.validateGroupTemplate(metaGroupsPath.Index(i), group.RisingWaveComponentGroupTemplate, openKruiseEnabled)...)
 		if !globalImageProvided && (group.RisingWaveComponentGroupTemplate == nil || group.Image == "") {
 			fieldErrs = append(fieldErrs, field.Required(metaGroupsPath.Index(i).Child("image"), "must be specified when there's no global image"))
 		}
@@ -157,7 +192,7 @@ func (v *RisingWaveValidatingWebhook) validateComponents(path *field.Path, compo
 
 	frontendGroupsPath := path.Child("frontend", "groups")
 	for i, group := range components.Frontend.Groups {
-		fieldErrs = append(fieldErrs, v.validateGroupTemplate(frontendGroupsPath.Index(i), group.RisingWaveComponentGroupTemplate)...)
+		fieldErrs = append(fieldErrs, v.validateGroupTemplate(frontendGroupsPath.Index(i), group.RisingWaveComponentGroupTemplate, openKruiseEnabled)...)
 		if !globalImageProvided && (group.RisingWaveComponentGroupTemplate == nil || group.Image == "") {
 			fieldErrs = append(fieldErrs, field.Required(frontendGroupsPath.Index(i).Child("image"), "must be specified when there's no global image"))
 		}
@@ -165,7 +200,7 @@ func (v *RisingWaveValidatingWebhook) validateComponents(path *field.Path, compo
 
 	compactorGroupsPath := path.Child("compactor", "groups")
 	for i, group := range components.Compactor.Groups {
-		fieldErrs = append(fieldErrs, v.validateGroupTemplate(compactorGroupsPath.Index(i), group.RisingWaveComponentGroupTemplate)...)
+		fieldErrs = append(fieldErrs, v.validateGroupTemplate(compactorGroupsPath.Index(i), group.RisingWaveComponentGroupTemplate, openKruiseEnabled)...)
 		if !globalImageProvided && (group.RisingWaveComponentGroupTemplate == nil || group.Image == "") {
 			fieldErrs = append(fieldErrs, field.Required(compactorGroupsPath.Index(i).Child("image"), "must be specified when there's no global image"))
 		}
@@ -183,7 +218,7 @@ func (v *RisingWaveValidatingWebhook) validateComponents(path *field.Path, compo
 		}
 
 		if group.RisingWaveComputeGroupTemplate != nil {
-			fieldErrs = append(fieldErrs, v.validateGroupTemplate(computeGroupsPath.Index(i), &group.RisingWaveComponentGroupTemplate)...)
+			fieldErrs = append(fieldErrs, v.validateGroupTemplate(computeGroupsPath.Index(i), &group.RisingWaveComponentGroupTemplate, openKruiseEnabled)...)
 
 			for vi, volumeMount := range group.VolumeMounts {
 				if _, pvcExists := pvClaims[volumeMount.Name]; !pvcExists {
@@ -205,9 +240,14 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 
 	fieldErrs := field.ErrorList{}
 
+	// Validate to make sure open kruise cannot be set to true when it is disabled at operator level.
+	if !v.openKruiseAvailable && pointer.BoolDeref(obj.Spec.EnableOpenKruise, false) {
+		fieldErrs = append(fieldErrs, field.Forbidden(field.NewPath("spec", "enableOpenKruise"), "OpenKruise is disabled."))
+	}
+
 	// Validate the global spec.
 	//   * If global replicas of any component is larger than 1, then the image in global must not be empty.
-	fieldErrs = append(fieldErrs, v.validateGlobal(field.NewPath("spec", "global"), &obj.Spec.Global)...)
+	fieldErrs = append(fieldErrs, v.validateGlobal(field.NewPath("spec", "global"), &obj.Spec.Global, pointer.BoolDeref(obj.Spec.EnableOpenKruise, false))...)
 
 	// Validate the storages spec.
 	fieldErrs = append(fieldErrs, v.validateStorages(field.NewPath("spec", "storages"), &obj.Spec.Storages)...)
@@ -220,7 +260,13 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 
 	// Validate the components spec.
 	//   * If the global image is empty, then the image of all groups must not be empty.
-	fieldErrs = append(fieldErrs, v.validateComponents(field.NewPath("spec", "components"), &obj.Spec.Components, &obj.Spec.Storages, obj.Spec.Global.Image != "")...)
+	fieldErrs = append(fieldErrs, v.validateComponents(
+		field.NewPath("spec", "components"),
+		&obj.Spec.Components,
+		&obj.Spec.Storages,
+		obj.Spec.Global.Image != "",
+		v.openKruiseAvailable && pointer.BoolDeref(obj.Spec.EnableOpenKruise, false),
+	)...)
 
 	if len(fieldErrs) > 0 {
 		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, fieldErrs)
@@ -275,8 +321,9 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 		)
 	}
 
-	// Validate the locks from scale views.
 	fieldErrs := field.ErrorList{}
+
+	// Validate the locks from scale views.
 	for _, scaleView := range newObj.Status.ScaleViews {
 		oldHelper := scaleview.NewRisingWaveScaleViewHelper(oldObj, scaleView.Component)
 		newHelper := scaleview.NewRisingWaveScaleViewHelper(newObj, scaleView.Component)
@@ -328,6 +375,17 @@ func (v *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj
 	return v.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWave), newObj.(*risingwavev1alpha1.RisingWave))
 }
 
-func NewRisingWaveValidatingWebhook() webhook.CustomValidator {
-	return metrics.NewValidatingWebhookMetricsRecorder(&RisingWaveValidatingWebhook{})
+// groupTemplatePartitionExistAndIsString checks if has been set inside the upgrade strategy and if it is a string.
+func groupTemplatePartitionExistAndIsString(groupTemplate *risingwavev1alpha1.RisingWaveComponentGroupTemplate) bool {
+	if groupTemplate.UpgradeStrategy.RollingUpdate == nil {
+		return false
+	}
+	if groupTemplate.UpgradeStrategy.RollingUpdate.Partition == nil {
+		return false
+	}
+	return groupTemplate.UpgradeStrategy.RollingUpdate.Partition.Type == intstr.String
+}
+
+func NewRisingWaveValidatingWebhook(openKruiseAvailable bool) webhook.CustomValidator {
+	return metrics.NewValidatingWebhookMetricsRecorder(&RisingWaveValidatingWebhook{openKruiseAvailable: openKruiseAvailable})
 }

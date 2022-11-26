@@ -23,6 +23,10 @@ import (
 	"strings"
 	"time"
 
+	kruisepubs "github.com/openkruise/kruise-api/apps/pub"
+	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
+	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
+
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/samber/lo"
 	appsv1 "k8s.io/api/apps/v1"
@@ -1051,6 +1055,39 @@ func buildUpgradeStrategyForDeployment(strategy risingwavev1alpha1.RisingWaveUpg
 	}
 }
 
+func inPlaceUpdateStrategyOrDefault(strategy *kruisepubs.InPlaceUpdateStrategy) *kruisepubs.InPlaceUpdateStrategy {
+	if strategy != nil {
+		return strategy
+	}
+	return &kruisepubs.InPlaceUpdateStrategy{}
+}
+
+func buildUpgradeStrategyForCloneSet(strategy risingwavev1alpha1.RisingWaveUpgradeStrategy) kruiseappsv1alpha1.CloneSetUpdateStrategy {
+	cloneSetUpdateStrategy := kruiseappsv1alpha1.CloneSetUpdateStrategy{}
+
+	rollingUpdateStrategy := rollingUpdateOrDefault(strategy.RollingUpdate)
+	cloneSetUpdateStrategy.MaxUnavailable = rollingUpdateStrategy.MaxUnavailable
+	cloneSetUpdateStrategy.MaxSurge = rollingUpdateStrategy.MaxSurge
+
+	cloneSetUpdateStrategy.Partition = rollingUpdateStrategy.Partition
+	if strategy.InPlaceUpdateStrategy != nil {
+		cloneSetUpdateStrategy.InPlaceUpdateStrategy = inPlaceUpdateStrategyOrDefault(strategy.InPlaceUpdateStrategy)
+	}
+
+	switch strategy.Type {
+	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate:
+		cloneSetUpdateStrategy.Type = kruiseappsv1alpha1.RecreateCloneSetUpdateStrategyType
+	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible:
+		cloneSetUpdateStrategy.Type = kruiseappsv1alpha1.InPlaceIfPossibleCloneSetUpdateStrategyType
+	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly:
+		cloneSetUpdateStrategy.Type = kruiseappsv1alpha1.InPlaceOnlyCloneSetUpdateStrategyType
+	default:
+		return kruiseappsv1alpha1.CloneSetUpdateStrategy{}
+	}
+
+	return cloneSetUpdateStrategy
+}
+
 func (f *RisingWaveObjectFactory) NewMetaDeployment(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Meta,
@@ -1088,6 +1125,50 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment(group string, podTemplates m
 	}
 
 	return mustSetControllerReference(f.risingwave, metaDeployment, f.scheme)
+}
+
+func (f *RisingWaveObjectFactory) NewMetaCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
+	componentGroup := buildComponentGroup(
+		f.risingwave.Spec.Global.Replicas.Meta,
+		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
+		group,
+		f.risingwave.Spec.Components.Meta.Groups,
+	)
+	if componentGroup == nil {
+		return nil
+	}
+
+	restartAt := f.risingwave.Spec.Components.Meta.RestartAt
+
+	// Build the pod template.
+	podTemplate := f.buildPodTemplate(consts.ComponentMeta, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+
+	// Set up the first container.
+	f.setupMetaContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
+
+	// Set readiness gate for in place update strategy.
+	podTemplate.Spec.ReadinessGates = append(podTemplate.Spec.ReadinessGates, corev1.PodReadinessGate{
+		ConditionType: kruisepubs.InPlaceUpdateReady,
+	})
+
+	// Make sure it's stable among builds.
+	keepPodSpecConsistent(&podTemplate.Spec)
+
+	// Build the CloneSet
+	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentMeta, group)
+	metaCloneSet := &kruiseappsv1alpha1.CloneSet{
+		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentMeta, group, true),
+		Spec: kruiseappsv1alpha1.CloneSetSpec{
+			Replicas:       pointer.Int32(componentGroup.Replicas),
+			UpdateStrategy: buildUpgradeStrategyForCloneSet(componentGroup.UpgradeStrategy),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labelsOrSelectors,
+			},
+			Template: podTemplate,
+		},
+	}
+
+	return mustSetControllerReference(f.risingwave, metaCloneSet, f.scheme)
 }
 
 func (f *RisingWaveObjectFactory) portsForFrontendContainer() []corev1.ContainerPort {
@@ -1158,6 +1239,46 @@ func (f *RisingWaveObjectFactory) NewFrontendDeployment(group string, podTemplat
 	}
 
 	return mustSetControllerReference(f.risingwave, frontendDeployment, f.scheme)
+}
+
+func (f *RisingWaveObjectFactory) NewFrontEndCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
+	componentGroup := buildComponentGroup(
+		f.risingwave.Spec.Global.Replicas.Frontend,
+		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
+		group,
+		f.risingwave.Spec.Components.Frontend.Groups,
+	)
+	if componentGroup == nil {
+		return nil
+	}
+
+	restartAt := f.risingwave.Spec.Components.Frontend.RestartAt
+
+	podTemplate := f.buildPodTemplate(consts.ComponentFrontend, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+
+	f.setupFrontendContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
+
+	keepPodSpecConsistent(&podTemplate.Spec)
+
+	// Set readiness gate for in place update strategy.
+	podTemplate.Spec.ReadinessGates = append(podTemplate.Spec.ReadinessGates, corev1.PodReadinessGate{
+		ConditionType: kruisepubs.InPlaceUpdateReady,
+	})
+
+	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentFrontend, group)
+	frontendCloneSet := &kruiseappsv1alpha1.CloneSet{
+		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentFrontend, group, true),
+		Spec: kruiseappsv1alpha1.CloneSetSpec{
+			Replicas:       pointer.Int32(componentGroup.Replicas),
+			UpdateStrategy: buildUpgradeStrategyForCloneSet(componentGroup.UpgradeStrategy),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labelsOrSelectors,
+			},
+			Template: podTemplate,
+		},
+	}
+
+	return mustSetControllerReference(f.risingwave, frontendCloneSet, f.scheme)
 }
 
 func (f *RisingWaveObjectFactory) portsForCompactorContainer() []corev1.ContainerPort {
@@ -1234,6 +1355,46 @@ func (f *RisingWaveObjectFactory) NewCompactorDeployment(group string, podTempla
 	return mustSetControllerReference(f.risingwave, compactorDeployment, f.scheme)
 }
 
+func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
+	componentGroup := buildComponentGroup(
+		f.risingwave.Spec.Global.Replicas.Compactor,
+		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
+		group,
+		f.risingwave.Spec.Components.Compactor.Groups,
+	)
+	if componentGroup == nil {
+		return nil
+	}
+
+	restartAt := f.risingwave.Spec.Components.Compactor.RestartAt
+
+	podTemplate := f.buildPodTemplate(consts.ComponentCompactor, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+
+	f.setupCompactorContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
+
+	// Set readiness gate for in place update strategy.
+	podTemplate.Spec.ReadinessGates = append(podTemplate.Spec.ReadinessGates, corev1.PodReadinessGate{
+		ConditionType: kruisepubs.InPlaceUpdateReady,
+	})
+
+	keepPodSpecConsistent(&podTemplate.Spec)
+	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentCompactor, group)
+	compactorCloneSet := &kruiseappsv1alpha1.CloneSet{
+		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentCompactor, group, true),
+		Spec: kruiseappsv1alpha1.CloneSetSpec{
+			Replicas:       pointer.Int32(componentGroup.Replicas),
+			UpdateStrategy: buildUpgradeStrategyForCloneSet(componentGroup.UpgradeStrategy),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labelsOrSelectors,
+			},
+			Template: podTemplate,
+		},
+	}
+
+	return mustSetControllerReference(f.risingwave, compactorCloneSet, f.scheme)
+
+}
+
 func buildUpgradeStrategyForStatefulSet(strategy risingwavev1alpha1.RisingWaveUpgradeStrategy) appsv1.StatefulSetUpdateStrategy {
 	switch strategy.Type {
 	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRollingUpdate:
@@ -1246,6 +1407,43 @@ func buildUpgradeStrategyForStatefulSet(strategy risingwavev1alpha1.RisingWaveUp
 	default:
 		return appsv1.StatefulSetUpdateStrategy{}
 	}
+}
+
+func buildUpgradeStrategyForAdvancedStatefulSet(strategy risingwavev1alpha1.RisingWaveUpgradeStrategy) kruiseappsv1beta1.StatefulSetUpdateStrategy {
+	advancedStatefulSetUpgradeStrategy := kruiseappsv1beta1.StatefulSetUpdateStrategy{}
+	advancedStatefulSetUpgradeStrategy.Type = appsv1.RollingUpdateStatefulSetStrategyType
+	advancedStatefulSetUpgradeStrategy.RollingUpdate = &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
+		MaxUnavailable: rollingUpdateOrDefault(strategy.RollingUpdate).MaxUnavailable,
+	}
+	if strategy.InPlaceUpdateStrategy != nil {
+		advancedStatefulSetUpgradeStrategy.RollingUpdate.InPlaceUpdateStrategy = strategy.InPlaceUpdateStrategy.DeepCopy()
+	}
+
+	if rollingUpdateOrDefault(strategy.RollingUpdate).Partition != nil {
+		// Change a percentage to an integer, partition only accepts int pointers for advanced stateful sets
+		if rollingUpdateOrDefault(strategy.RollingUpdate).Partition.Type != intstr.Int {
+			intValue, err := strconv.Atoi(strings.Replace((strategy.RollingUpdate).Partition.StrVal, "%", "", -1))
+			if err != nil {
+				panic(err)
+			}
+			advancedStatefulSetUpgradeStrategy.RollingUpdate.Partition = pointer.Int32(int32(intValue))
+		} else {
+			advancedStatefulSetUpgradeStrategy.RollingUpdate.Partition = pointer.Int32(rollingUpdateOrDefault(strategy.RollingUpdate).Partition.IntVal)
+		}
+	}
+
+	switch strategy.Type {
+	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate:
+		advancedStatefulSetUpgradeStrategy.RollingUpdate.PodUpdatePolicy = kruiseappsv1beta1.RecreatePodUpdateStrategyType
+	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible:
+		advancedStatefulSetUpgradeStrategy.RollingUpdate.PodUpdatePolicy = kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType
+	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly:
+		advancedStatefulSetUpgradeStrategy.RollingUpdate.PodUpdatePolicy = kruiseappsv1beta1.InPlaceOnlyPodUpdateStrategyType
+	default:
+		return kruiseappsv1beta1.StatefulSetUpdateStrategy{}
+	}
+
+	return advancedStatefulSetUpgradeStrategy
 }
 
 func (f *RisingWaveObjectFactory) portsForComputeContainer() []corev1.ContainerPort {
@@ -1334,6 +1532,54 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet(group string, podTemplat
 	}
 
 	return mustSetControllerReference(f.risingwave, computeStatefulSet, f.scheme)
+}
+
+func (f *RisingWaveObjectFactory) NewComputeAdvancedStatefulSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1beta1.StatefulSet {
+	componentGroup := buildComputeGroup(
+		f.risingwave.Spec.Global.Replicas.Compute,
+		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
+		group,
+		f.risingwave.Spec.Components.Compute.Groups,
+	)
+	if componentGroup == nil {
+		return nil
+	}
+	restartAt := f.risingwave.Spec.Components.Compute.RestartAt
+	pvcTemplates := f.risingwave.Spec.Storages.PVCTemplates
+
+	podTemplate := f.buildPodTemplate(consts.ComponentCompute, group, podTemplates, &componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+
+	// Readiness gate InPlaceUpdateReady required for advanced statefulset
+	podTemplate.Spec.ReadinessGates = append(podTemplate.Spec.ReadinessGates, corev1.PodReadinessGate{
+		ConditionType: kruisepubs.InPlaceUpdateReady,
+	})
+
+	f.setupComputeContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComputeGroupTemplate)
+
+	keepPodSpecConsistent(&podTemplate.Spec)
+
+	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentCompute, group)
+
+	computeAdvancedStatefulSet := &kruiseappsv1beta1.StatefulSet{
+		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentCompute, group, true),
+		Spec: kruiseappsv1beta1.StatefulSetSpec{
+			Replicas:       pointer.Int32(componentGroup.Replicas),
+			ServiceName:    f.componentName(consts.ComponentCompute, ""),
+			UpdateStrategy: buildUpgradeStrategyForAdvancedStatefulSet(componentGroup.UpgradeStrategy),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labelsOrSelectors,
+			},
+			Template:             podTemplate,
+			VolumeClaimTemplates: pvcTemplates,
+			PodManagementPolicy:  appsv1.ParallelPodManagement,
+			PersistentVolumeClaimRetentionPolicy: &kruiseappsv1beta1.StatefulSetPersistentVolumeClaimRetentionPolicy{
+				WhenDeleted: kruiseappsv1beta1.DeletePersistentVolumeClaimRetentionPolicyType,
+				WhenScaled:  kruiseappsv1beta1.DeletePersistentVolumeClaimRetentionPolicyType,
+			},
+		},
+	}
+	return mustSetControllerReference(f.risingwave, computeAdvancedStatefulSet, f.scheme)
+
 }
 
 func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonitor {

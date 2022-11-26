@@ -17,6 +17,7 @@
 package v1alpha1
 
 import (
+	kruisepubs "github.com/openkruise/kruise-api/apps/pub"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -26,8 +27,10 @@ import (
 type RisingWaveUpgradeStrategyType string
 
 const (
-	RisingWaveUpgradeStrategyTypeRecreate      RisingWaveUpgradeStrategyType = "Recreate"
-	RisingWaveUpgradeStrategyTypeRollingUpdate RisingWaveUpgradeStrategyType = "RollingUpdate"
+	RisingWaveUpgradeStrategyTypeRecreate          RisingWaveUpgradeStrategyType = "Recreate"
+	RisingWaveUpgradeStrategyTypeRollingUpdate     RisingWaveUpgradeStrategyType = "RollingUpdate"
+	RisingWaveUpgradeStrategyTypeInPlaceIfPossible RisingWaveUpgradeStrategyType = "InPlaceIfPossible"
+	RisingWaveUpgradeStrategyTypeInPlaceOnly       RisingWaveUpgradeStrategyType = "InPlaceOnly"
 )
 
 type RisingWaveRollingUpdate struct {
@@ -38,18 +41,39 @@ type RisingWaveRollingUpdate struct {
 	// +optional
 	// +kubebuilder:default="25%"
 	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty" protobuf:"bytes,1,opt,name=maxUnavailable"`
+
+	// Partition is the desired number of pods in old revisions.
+	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
+	// Absolute number is calculated from percentage by rounding up by default.
+	// It means when partition is set during pods updating, (replicas - partition value) number of pods will be updated.
+	// Default value is 0.
+	// +optional
+	// +kubebuilder:default=0
+	Partition *intstr.IntOrString `json:"partition,omitempty"`
+
+	// The maximum number of pods that can be scheduled above the desired replicas during update or specified delete.
+	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
+	// Absolute number is calculated from percentage by rounding up.
+	// Defaults to 0.
+	// +optional
+	// +kubebuilder:default=0
+	MaxSurge *intstr.IntOrString `json:"maxSurge,omitempty"`
 }
 
 type RisingWaveUpgradeStrategy struct {
 	// Type of upgrade. Can be "Recreate" or "RollingUpdate". Default is RollingUpdate.
 	// +optional
 	// +kubebuilder:default=RollingUpdate
-	// +kubebuilder:validation:Enum=Recreate;RollingUpdate
+	// +kubebuilder:validation:Enum=Recreate;RollingUpdate;InPlaceIfPossible;InPlaceOnly
 	Type RisingWaveUpgradeStrategyType `json:"type,omitempty"`
 
 	// Rolling update config params. Present only if DeploymentStrategyType = RollingUpdate.
 	// +optional
 	RollingUpdate *RisingWaveRollingUpdate `json:"rollingUpdate,omitempty"`
+
+	// InPlaceUpdateStrategy contains strategies for in-place update.
+	// +optional
+	InPlaceUpdateStrategy *kruisepubs.InPlaceUpdateStrategy `json:"inPlaceUpdateStrategy,omitempty"`
 }
 
 // RisingWaveComponentGroupTemplate is the common deployment template for groups of each component.
@@ -500,6 +524,13 @@ type RisingWaveSpec struct {
 
 	// The spec of configuration template for RisingWave.
 	Configuration RisingWaveConfigurationSpec `json:"configuration,omitempty"`
+
+	// Flag to indicate if OpenKruise should be enabled for components.
+	// If enabled, CloneSets will be used for meta/frontend/compactor nodes
+	// and Advanced StateFulSets will be used for compute nodes.
+	// +optional
+	// +kubebuilder:default=false
+	EnableOpenKruise *bool `json:"enableOpenKruise,omitempty"`
 }
 
 // ComponentGroupReplicasStatus are the running status of Pods in group.

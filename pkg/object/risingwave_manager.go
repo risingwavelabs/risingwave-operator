@@ -69,6 +69,8 @@ type RisingWaveManager struct {
 
 	mu                sync.RWMutex
 	mutableRisingWave *risingwavev1alpha1.RisingWave // Mutable copy of original.
+
+	openkruiseAvailable bool // Availability and administrative switch of openkruise
 }
 
 // RisingWaveAfterImage returns a copy of the mutable RisingWave.
@@ -103,16 +105,15 @@ func (mgr *RisingWaveManager) RemoveCondition(conditionType risingwavev1alpha1.R
 }
 
 func (mgr *RisingWaveManager) UpdateCondition(condition risingwavev1alpha1.RisingWaveCondition) {
-	mgr.mu.Lock()
-	defer mgr.mu.Unlock()
-
 	// Set the last transition time to now if it's a new condition or status changed.
 	lastObservedCondition := mgr.GetCondition(condition.Type)
 	if lastObservedCondition == nil || lastObservedCondition.Status != condition.Status {
 		condition.LastTransitionTime = metav1.Now()
 	}
 
-	// Add or update the condition.
+	mgr.mu.Lock()
+	defer mgr.mu.Unlock()
+
 	conditions := mgr.mutableRisingWave.Status.Conditions
 	_, curIndex, found := lo.FindIndexOf(conditions, func(cond risingwavev1alpha1.RisingWaveCondition) bool {
 		return cond.Type == condition.Type
@@ -144,12 +145,22 @@ func (mgr *RisingWaveManager) UpdateRemoteRisingWaveStatus(ctx context.Context) 
 	return mgr.client.Status().Update(ctx, mgr.mutableRisingWave)
 }
 
-func NewRisingWaveManager(client client.Client, risingwave *risingwavev1alpha1.RisingWave) *RisingWaveManager {
+func (mgr *RisingWaveManager) IsOpenKruiseAvailable() bool {
+	return mgr.openkruiseAvailable
+}
+
+func (mgr *RisingWaveManager) IsOpenKruiseEnabled() bool {
+	risingwave := mgr.RisingWaveReader.RisingWave()
+	return mgr.IsOpenKruiseAvailable() && risingwave.Spec.EnableOpenKruise != nil && *risingwave.Spec.EnableOpenKruise
+}
+
+func NewRisingWaveManager(client client.Client, risingwave *risingwavev1alpha1.RisingWave, openkruiseAvailable bool) *RisingWaveManager {
 	return &RisingWaveManager{
 		RisingWaveReader: RisingWaveReader{
 			risingwave: risingwave,
 		},
-		client:            client,
-		mutableRisingWave: risingwave.DeepCopy(),
+		client:              client,
+		mutableRisingWave:   risingwave.DeepCopy(),
+		openkruiseAvailable: openkruiseAvailable,
 	}
 }

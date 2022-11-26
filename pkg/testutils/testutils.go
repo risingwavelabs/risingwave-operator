@@ -19,6 +19,8 @@ package testutils
 import (
 	"fmt"
 
+	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
+	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -43,6 +45,8 @@ func init() {
 	_ = risingwavev1alpha1.AddToScheme(Scheme)
 	_ = apiextensionsv1.AddToScheme(Scheme)
 	_ = prometheusv1.AddToScheme(Scheme)
+	_ = kruiseappsv1alpha1.AddToScheme(Scheme)
+	_ = kruiseappsv1beta1.AddToScheme(Scheme)
 }
 
 // Fake RisingWave.
@@ -58,6 +62,7 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 		UID:        uuid.NewUUID(),
 	},
 	Spec: risingwavev1alpha1.RisingWaveSpec{
+		EnableOpenKruise: pointer.Bool(false),
 		Storages: risingwavev1alpha1.RisingWaveStoragesSpec{
 			Meta: risingwavev1alpha1.RisingWaveMetaStorage{
 				Memory: pointer.Bool(true),
@@ -187,6 +192,18 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 			},
 		},
 	},
+}
+
+func FakeRisingWaveOpenKruiseEnabled() *risingwavev1alpha1.RisingWave {
+	risingwaveCopy := fakeRisingWave.DeepCopy()
+	risingwaveCopy.Spec.EnableOpenKruise = pointer.Bool(true)
+	return risingwaveCopy
+}
+
+func FakeRisingWaveOpenKruiseDisabled() *risingwavev1alpha1.RisingWave {
+	risingwaveCopy := fakeRisingWave.DeepCopy()
+	risingwaveCopy.Spec.EnableOpenKruise = pointer.Bool(false)
+	return risingwaveCopy
 }
 
 func FakeRisingWave() *risingwavev1alpha1.RisingWave {
@@ -360,6 +377,12 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 
 func FakeRisingWaveComponentOnly() *risingwavev1alpha1.RisingWave {
 	return fakeRisingWaveComponentOnly.DeepCopy()
+}
+
+func FakeRisingWaveComponentOnlyOpenKruiseEnabled() *risingwavev1alpha1.RisingWave {
+	fakeRisingWaveComponentOnlyCopy := fakeRisingWaveComponentOnly.DeepCopy()
+	fakeRisingWaveComponentOnlyCopy.Spec.EnableOpenKruise = pointer.Bool(true)
+	return fakeRisingWaveComponentOnlyCopy.DeepCopy()
 }
 
 func DeepEqual[T any](x, y T) bool {

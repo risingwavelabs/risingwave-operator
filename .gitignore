@@ -36,3 +36,4 @@ vendor/
 
 # Own stack
 .stack
+launch.json

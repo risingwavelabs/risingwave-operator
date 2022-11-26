@@ -23,6 +23,8 @@ import (
 	"testing"
 
 	"github.com/go-logr/logr"
+	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
+	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/samber/lo"
 	appsv1 "k8s.io/api/apps/v1"
@@ -49,7 +51,16 @@ func newRisingWaveControllerManagerImplForTest(risingwave *risingwavev1alpha1.Ri
 		WithObjects(append(objects, risingwave.DeepCopy())...).
 		WithScheme(testutils.Scheme).
 		Build()
-	risingwaveManager := object.NewRisingWaveManager(fakeClient, risingwave.DeepCopy())
+	risingwaveManager := object.NewRisingWaveManager(fakeClient, risingwave.DeepCopy(), false)
+	return newRisingWaveControllerManagerImpl(fakeClient, risingwaveManager, event.NewMessageStore())
+}
+
+func newRisingWaveControllerManagerImplOpenKruiseAvailableForTest(risingwave *risingwavev1alpha1.RisingWave, objects ...client.Object) *risingWaveControllerManagerImpl {
+	fakeClient := fake.NewClientBuilder().
+		WithObjects(append(objects, risingwave.DeepCopy())...).
+		WithScheme(testutils.Scheme).
+		Build()
+	risingwaveManager := object.NewRisingWaveManager(fakeClient, risingwave.DeepCopy(), true)
 	return newRisingWaveControllerManagerImpl(fakeClient, risingwaveManager, event.NewMessageStore())
 }
 
@@ -453,6 +464,7 @@ func newGroupObjectFromGroup[T any, TP ptrAsObject[T]](namespace, base, group st
 func testRisingWaveControllerManagerImplSyncObjectGroups[T any, TL any, TP ptrAsObject[T], TLP ptrAsObjectList[TL]](
 	t *testing.T,
 	risingwave *risingwavev1alpha1.RisingWave,
+	openKruiseAvailable bool,
 	initObjs []client.Object,
 	groups []string,
 	labelSelector map[string]string,
@@ -481,7 +493,12 @@ func testRisingWaveControllerManagerImplSyncObjectGroups[T any, TL any, TP ptrAs
 					return !isObjectNil(obj)
 				},
 			)
-			managerImpl := newRisingWaveControllerManagerImplForTest(risingwave, initObjs...)
+			var managerImpl *risingWaveControllerManagerImpl
+			if !openKruiseAvailable {
+				managerImpl = newRisingWaveControllerManagerImplForTest(risingwave, initObjs...)
+			} else {
+				managerImpl = newRisingWaveControllerManagerImplOpenKruiseAvailableForTest(risingwave, initObjs...)
+			}
 			r, err := syncGroups(managerImpl, context.Background(), logr.Discard(), tc.origin)
 			if ctrlkit.NeedsRequeue(r, err) {
 				t.Fatal("sync failed", r, err)
@@ -517,7 +534,7 @@ func TestRisingWaveControllerManagerImpl_SyncMetaDeployments(t *testing.T) {
 	fakeRisingwaveComponentOnly := testutils.FakeRisingWaveComponentOnly()
 
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, fakeRisingwave, nil, []string{""},
+		t, fakeRisingwave, false, nil, []string{""},
 		map[string]string{
 			consts.LabelRisingWaveName:      fakeRisingwave.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentMeta,
@@ -533,7 +550,7 @@ func TestRisingWaveControllerManagerImpl_SyncMetaDeployments(t *testing.T) {
 		},
 	)
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, fakeRisingwaveComponentOnly, nil, []string{testutils.GetGroupName(0)},
+		t, fakeRisingwaveComponentOnly, false, nil, []string{testutils.GetGroupName(0)},
 		map[string]string{
 			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentMeta,
@@ -543,6 +560,81 @@ func TestRisingWaveControllerManagerImpl_SyncMetaDeployments(t *testing.T) {
 		},
 		func(tl *appsv1.DeploymentList) []appsv1.Deployment { return tl.Items },
 		func(t *testing.T, obj *appsv1.Deployment) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+	// enable openKruise and check for tear down
+	fakeRisingwave = testutils.FakeRisingWaveOpenKruiseEnabled()
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentMeta,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.Deployment) (ctrl.Result, error) {
+			return managerImpl.SyncMetaDeployments(ctx, logger, obj)
+		},
+		func(tl *appsv1.DeploymentList) []appsv1.Deployment { return tl.Items },
+		func(t *testing.T, obj *appsv1.Deployment) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+}
+
+func TestRisingWaveControllerManagerImpl_SyncMetaCloneSets(t *testing.T) {
+	fakeRisingwave := testutils.FakeRisingWaveOpenKruiseEnabled()
+
+	fakeRisingwaveComponentOnly := testutils.FakeRisingWaveComponentOnlyOpenKruiseEnabled()
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{""},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentMeta,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error) {
+			return managerImpl.SyncMetaCloneSets(ctx, logger, obj)
+		},
+		func(tl *kruiseappsv1alpha1.CloneSetList) []kruiseappsv1alpha1.CloneSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1alpha1.CloneSet) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwaveComponentOnly, true, nil, []string{testutils.GetGroupName(0)},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentMeta,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error) {
+			return managerImpl.SyncMetaCloneSets(ctx, logger, obj)
+		},
+		func(tl *kruiseappsv1alpha1.CloneSetList) []kruiseappsv1alpha1.CloneSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1alpha1.CloneSet) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+
+	// Disable Open Kruise and test for teardown of objects
+	fakeRisingwave = testutils.FakeRisingWave()
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentMeta,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error) {
+			return managerImpl.SyncMetaCloneSets(ctx, logger, obj)
+		},
+		func(tl *kruiseappsv1alpha1.CloneSetList) []kruiseappsv1alpha1.CloneSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1alpha1.CloneSet) {
 			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
 				t.Fatal("component labels not match")
 			}
@@ -555,7 +647,7 @@ func TestRisingWaveControllerManagerImpl_SyncFrontendDeployments(t *testing.T) {
 	fakeRisingwaveComponentOnly := testutils.FakeRisingWaveComponentOnly()
 
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, fakeRisingwave, nil, []string{""},
+		t, fakeRisingwave, false, nil, []string{""},
 		map[string]string{
 			consts.LabelRisingWaveName:      fakeRisingwave.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentFrontend,
@@ -571,7 +663,7 @@ func TestRisingWaveControllerManagerImpl_SyncFrontendDeployments(t *testing.T) {
 		},
 	)
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, fakeRisingwaveComponentOnly, nil, []string{testutils.GetGroupName(0)},
+		t, fakeRisingwaveComponentOnly, false, nil, []string{testutils.GetGroupName(0)},
 		map[string]string{
 			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentFrontend,
@@ -581,6 +673,81 @@ func TestRisingWaveControllerManagerImpl_SyncFrontendDeployments(t *testing.T) {
 		},
 		func(tl *appsv1.DeploymentList) []appsv1.Deployment { return tl.Items },
 		func(t *testing.T, obj *appsv1.Deployment) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentFrontend {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+
+	// enable openKruise and check for tear down
+	fakeRisingwave = testutils.FakeRisingWaveOpenKruiseEnabled()
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentFrontend,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.Deployment) (ctrl.Result, error) {
+			return managerImpl.SyncFrontendDeployments(ctx, logger, obj)
+		},
+		func(tl *appsv1.DeploymentList) []appsv1.Deployment { return tl.Items },
+		func(t *testing.T, obj *appsv1.Deployment) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentFrontend {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+}
+
+func TestRisingWaveControllerManagerImpl_SyncFrontendCloneSets(t *testing.T) {
+	fakeRisingwave := testutils.FakeRisingWaveOpenKruiseEnabled()
+	fakeRisingwaveComponentOnly := testutils.FakeRisingWaveComponentOnlyOpenKruiseEnabled()
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{""},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentFrontend,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error) {
+			return managerImpl.SyncFrontendCloneSets(ctx, logger, obj)
+		},
+		func(tl *kruiseappsv1alpha1.CloneSetList) []kruiseappsv1alpha1.CloneSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1alpha1.CloneSet) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentFrontend {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwaveComponentOnly, true, nil, []string{testutils.GetGroupName(0)},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentFrontend,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error) {
+			return managerImpl.SyncFrontendCloneSets(ctx, logger, obj)
+		},
+		func(tl *kruiseappsv1alpha1.CloneSetList) []kruiseappsv1alpha1.CloneSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1alpha1.CloneSet) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentFrontend {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+
+	// Disable Open Kruise and test for teardown of objects
+	fakeRisingwave = testutils.FakeRisingWave()
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentFrontend,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error) {
+			return managerImpl.SyncFrontendCloneSets(ctx, logger, obj)
+		},
+		func(tl *kruiseappsv1alpha1.CloneSetList) []kruiseappsv1alpha1.CloneSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1alpha1.CloneSet) {
 			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentFrontend {
 				t.Fatal("component labels not match")
 			}
@@ -593,7 +760,7 @@ func TestRisingWaveControllerManagerImpl_SyncCompactorDeployments(t *testing.T) 
 	fakeRisingwaveComponentOnly := testutils.FakeRisingWaveComponentOnly()
 
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, fakeRisingwave, nil, []string{""},
+		t, fakeRisingwave, false, nil, []string{""},
 		map[string]string{
 			consts.LabelRisingWaveName:      fakeRisingwave.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentCompactor,
@@ -609,7 +776,7 @@ func TestRisingWaveControllerManagerImpl_SyncCompactorDeployments(t *testing.T) 
 		},
 	)
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, fakeRisingwaveComponentOnly, nil, []string{testutils.GetGroupName(0)},
+		t, fakeRisingwaveComponentOnly, false, nil, []string{testutils.GetGroupName(0)},
 		map[string]string{
 			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentCompactor,
@@ -624,6 +791,81 @@ func TestRisingWaveControllerManagerImpl_SyncCompactorDeployments(t *testing.T) 
 			}
 		},
 	)
+
+	// enable openKruise and check for tear down
+	fakeRisingwave = testutils.FakeRisingWaveOpenKruiseEnabled()
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentCompactor,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.Deployment) (ctrl.Result, error) {
+			return managerImpl.SyncCompactorDeployments(ctx, logger, obj)
+		},
+		func(tl *appsv1.DeploymentList) []appsv1.Deployment { return tl.Items },
+		func(t *testing.T, obj *appsv1.Deployment) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentCompactor {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+}
+
+func TestRisingWaveControllerManagerImpl_SyncCompactorCloneSets(t *testing.T) {
+	fakeRisingwave := testutils.FakeRisingWaveOpenKruiseEnabled()
+	fakeRisingwaveComponentOnly := testutils.FakeRisingWaveComponentOnlyOpenKruiseEnabled()
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{""},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentCompactor,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error) {
+			return managerImpl.SyncCompactorCloneSets(ctx, logger, obj)
+		},
+		func(tl *kruiseappsv1alpha1.CloneSetList) []kruiseappsv1alpha1.CloneSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1alpha1.CloneSet) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentCompactor {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwaveComponentOnly, true, nil, []string{testutils.GetGroupName(0)},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentCompactor,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error) {
+			return managerImpl.SyncCompactorCloneSets(ctx, logger, obj)
+		},
+		func(tl *kruiseappsv1alpha1.CloneSetList) []kruiseappsv1alpha1.CloneSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1alpha1.CloneSet) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentCompactor {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+
+	// Disable Open Kruise and test for teardown of objects
+	fakeRisingwave = testutils.FakeRisingWave()
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentCompactor,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error) {
+			return managerImpl.SyncCompactorCloneSets(ctx, logger, obj)
+		},
+		func(tl *kruiseappsv1alpha1.CloneSetList) []kruiseappsv1alpha1.CloneSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1alpha1.CloneSet) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentCompactor {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
 }
 
 func TestRisingWaveControllerManagerImpl_SyncComputeStatefulSets(t *testing.T) {
@@ -631,7 +873,7 @@ func TestRisingWaveControllerManagerImpl_SyncComputeStatefulSets(t *testing.T) {
 	fakeRisingwaveComponentOnly := testutils.FakeRisingWaveComponentOnly()
 
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, fakeRisingwave, nil, []string{""},
+		t, fakeRisingwave, false, nil, []string{""},
 		map[string]string{
 			consts.LabelRisingWaveName:      fakeRisingwave.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentCompute,
@@ -647,7 +889,7 @@ func TestRisingWaveControllerManagerImpl_SyncComputeStatefulSets(t *testing.T) {
 		},
 	)
 	testRisingWaveControllerManagerImplSyncObjectGroups(
-		t, fakeRisingwaveComponentOnly, nil, []string{testutils.GetGroupName(0)},
+		t, fakeRisingwaveComponentOnly, false, nil, []string{testutils.GetGroupName(0)},
 		map[string]string{
 			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentCompute,
@@ -657,6 +899,80 @@ func TestRisingWaveControllerManagerImpl_SyncComputeStatefulSets(t *testing.T) {
 		},
 		func(tl *appsv1.StatefulSetList) []appsv1.StatefulSet { return tl.Items },
 		func(t *testing.T, obj *appsv1.StatefulSet) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentCompute {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+
+	// enable openKruise and check for tear down
+	fakeRisingwave = testutils.FakeRisingWaveOpenKruiseEnabled()
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentCompute,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.StatefulSet) (ctrl.Result, error) {
+			return managerImpl.SyncComputeStatefulSets(ctx, logger, obj)
+		},
+		func(tl *appsv1.StatefulSetList) []appsv1.StatefulSet { return tl.Items },
+		func(t *testing.T, obj *appsv1.StatefulSet) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentCompute {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+}
+
+func TestRisingWaveControllerManagerImpl_SyncComputeAdvancedStatefulSets(t *testing.T) {
+	fakeRisingwave := testutils.FakeRisingWaveOpenKruiseEnabled()
+	fakeRisingwaveComponentOnly := testutils.FakeRisingWaveComponentOnlyOpenKruiseEnabled()
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{""},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentCompute,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1beta1.StatefulSet) (ctrl.Result, error) {
+			return managerImpl.SyncComputeAdvancedStatefulSets(ctx, logger, obj)
+		},
+		func(tl *kruiseappsv1beta1.StatefulSetList) []kruiseappsv1beta1.StatefulSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1beta1.StatefulSet) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentCompute {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwaveComponentOnly, true, nil, []string{testutils.GetGroupName(0)},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentCompute,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1beta1.StatefulSet) (ctrl.Result, error) {
+			return managerImpl.SyncComputeAdvancedStatefulSets(ctx, logger, obj)
+		},
+		func(tl *kruiseappsv1beta1.StatefulSetList) []kruiseappsv1beta1.StatefulSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1beta1.StatefulSet) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentCompute {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+	// Disable Open Kruise and test for teardown of objects
+	fakeRisingwave = testutils.FakeRisingWave()
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentCompute,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1beta1.StatefulSet) (ctrl.Result, error) {
+			return managerImpl.SyncComputeAdvancedStatefulSets(ctx, logger, obj)
+		},
+		func(tl *kruiseappsv1beta1.StatefulSetList) []kruiseappsv1beta1.StatefulSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1beta1.StatefulSet) {
 			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentCompute {
 				t.Fatal("component labels not match")
 			}

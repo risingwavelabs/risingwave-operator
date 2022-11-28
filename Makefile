@@ -163,7 +163,7 @@ build-e2e-image:
 	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=true -t docker.io/risingwavelabs/risingwave-operator:dev . --load
 
 e2e-test: generate-test-yaml vendor build-e2e-image
-	e2e/e2e.sh
+	E2E_KUBERNETES_RUNTIME=kind ./test/e2e/e2e.sh
 
 e2e-plugin:
 	e2e/e2e-plugin.sh

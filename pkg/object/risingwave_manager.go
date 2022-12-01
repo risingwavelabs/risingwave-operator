@@ -154,6 +154,16 @@ func (mgr *RisingWaveManager) IsOpenKruiseEnabled() bool {
 	return mgr.IsOpenKruiseAvailable() && risingwave.Spec.EnableOpenKruise != nil && *risingwave.Spec.EnableOpenKruise
 }
 
+func (mgr *RisingWaveManager) ReleaseLock(idx []int) {
+	mgr.mu.Lock()
+	defer mgr.mu.Unlock()
+
+	scaleViews := mgr.mutableRisingWave.Status.ScaleViews
+	for _, i := range idx {
+		mgr.mutableRisingWave.Status.ScaleViews = append(scaleViews[:i], scaleViews[i+1:]...)
+	}
+}
+
 func NewRisingWaveManager(client client.Client, risingwave *risingwavev1alpha1.RisingWave, openkruiseAvailable bool) *RisingWaveManager {
 	return &RisingWaveManager{
 		RisingWaveReader: RisingWaveReader{

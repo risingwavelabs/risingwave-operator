@@ -354,10 +354,11 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 
 			if err != nil {
 				if apierrors.IsNotFound(err) {
-					l.V(1).Info("Not found, abort")
+					l.V(1).Info("Not found, Unlock")
 					lockIdx = append(lockIdx, i)
 				} else {
 					l.Error(err, "Failed to get risingwavescaleview")
+					return ctrlkit.RequeueIfErrorAndWrap("unable to get risingwavescaleview", err)
 				}
 			} else if s.Name == scaleView.Name && s.UID != scaleView.UID {
 				lockIdx = append(lockIdx, i)
@@ -457,7 +458,7 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 							Namespace: obj.Namespace,
 							Name:      obj.Spec.TargetRef.Name,
 						},
-					}
+					},
 				}
 			}),
 		)

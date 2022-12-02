@@ -154,13 +154,16 @@ func (mgr *RisingWaveManager) IsOpenKruiseEnabled() bool {
 	return mgr.IsOpenKruiseAvailable() && risingwave.Spec.EnableOpenKruise != nil && *risingwave.Spec.EnableOpenKruise
 }
 
-func (mgr *RisingWaveManager) ReleaseLock(idx []int) {
+func (mgr *RisingWaveManager) ReleaseLock(lockIdx []int) {
 	mgr.mu.Lock()
 	defer mgr.mu.Unlock()
 
 	scaleViews := mgr.mutableRisingWave.Status.ScaleViews
-	for _, i := range idx {
-		mgr.mutableRisingWave.Status.ScaleViews = append(scaleViews[:i], scaleViews[i+1:]...)
+	offset := 0
+	for _, i := range lockIdx {
+		idx := i - offset
+		mgr.mutableRisingWave.Status.ScaleViews = append(scaleViews[:idx], scaleViews[idx+1:]...)
+		offset++
 	}
 }
 

@@ -457,7 +457,8 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 							Namespace: obj.Namespace,
 							Name:      obj.Spec.TargetRef.Name,
 						},
-					}}
+					}
+				}
 			}),
 		)
 

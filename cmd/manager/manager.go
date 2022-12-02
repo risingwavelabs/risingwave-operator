@@ -73,7 +73,7 @@ func main() {
 	opts := zap.Options{
 		Development: true,
 	}
-	flag.BoolVar(&enableOpenKruise, "enable-open-kruise", true, "Enabling this will allow openkruise to be available as an optional provider")
+	flag.BoolVar(&enableOpenKruise, "enable-open-kruise", false, "Enabling this will allow openkruise to be available as an optional provider")
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 

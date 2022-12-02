@@ -341,7 +341,6 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	sharedSyncAllAndWait := ctrlkit.Shared(syncAllAndWait)
 
 	releaseScaleViewLock := mgr.NewAction(RisingWaveAction_ReleaseScaleViewLock, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-
 		risingWave := risingwaveManger.RisingWaveReader.RisingWave()
 		scaleViews := risingWave.Status.ScaleViews
 		lockIdx := make([]int, 0)

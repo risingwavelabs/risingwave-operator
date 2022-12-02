@@ -343,9 +343,9 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	releaseScaleViewLock := mgr.NewAction(RisingWaveAction_ReleaseScaleViewLock, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
 		risingWave := risingwaveManger.RisingWaveReader.RisingWave()
 		scaleViews := risingWave.Status.ScaleViews
-		lockIdx := make([]int, 0)
+		aliveScaleView := make([]risingwavev1alpha1.RisingWaveScaleViewLock, 0)
 
-		for i, s := range scaleViews {
+		for _, s := range scaleViews {
 			var scaleView risingwavev1alpha1.RisingWaveScaleView
 			err := c.Client.Get(ctx, types.NamespacedName{
 				Namespace: risingWave.Namespace,
@@ -355,17 +355,18 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			if err != nil {
 				if apierrors.IsNotFound(err) {
 					l.V(1).Info("Not found, Unlock")
-					lockIdx = append(lockIdx, i)
+					continue
 				} else {
 					l.Error(err, "Failed to get risingwavescaleview")
 					return ctrlkit.RequeueIfErrorAndWrap("unable to get risingwavescaleview", err)
 				}
 			} else if s.Name == scaleView.Name && s.UID != scaleView.UID {
-				lockIdx = append(lockIdx, i)
+				continue
 			}
+			aliveScaleView = append(aliveScaleView, s)
 		}
 
-		risingwaveManger.ReleaseLock(lockIdx)
+		risingwaveManger.KeepLock(aliveScaleView)
 		return ctrlkit.Continue()
 	})
 

@@ -357,7 +357,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 					l.Info("Not found, unlock", "scaleview", s.Name)
 					continue
 				} else {
-					l.Error(err, "Failed to get risingwavescaleview")
+					l.Error(err, "Failed to get RisingWaveScaleView", "scaleview", s.Name)
 					return ctrlkit.RequeueIfErrorAndWrap("unable to get risingwavescaleview", err)
 				}
 			} else if s.Name == scaleView.Name && s.UID != scaleView.UID {

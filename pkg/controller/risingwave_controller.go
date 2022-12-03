@@ -354,7 +354,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 
 			if err != nil {
 				if apierrors.IsNotFound(err) {
-					l.V(1).Info("Not found, Unlock")
+					l.Info("Not found, unlock", "scaleview", s.Name)
 					continue
 				} else {
 					l.Error(err, "Failed to get risingwavescaleview")

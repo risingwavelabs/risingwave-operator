@@ -361,6 +361,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 					return ctrlkit.RequeueIfErrorAndWrap("unable to get risingwavescaleview", err)
 				}
 			} else if s.Name == scaleView.Name && s.UID != scaleView.UID {
+				l.Info("Lock is outdated, unlock", "scaleview", s.Name)
 				continue
 			}
 			aliveScaleView = append(aliveScaleView, *s.DeepCopy())

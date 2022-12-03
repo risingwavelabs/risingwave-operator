@@ -29,14 +29,17 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
@@ -91,6 +94,7 @@ const (
 	RisingWaveAction_BarrierObservedGenerationOutdated  = "BarrierObservedGenerationOutdated"
 	RisingWaveAction_SyncObservedGeneration             = "SyncObservedGeneration"
 	RisingWaveAction_BarrierPrometheusCRDsInstalled     = "BarrierPrometheusCRDsInstalled"
+	RisingWaveAction_ReleaseScaleViewLock               = "ReleaseScaleViewLock"
 )
 
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves,verbs=get;list;watch;create;update;patch;delete
@@ -336,6 +340,37 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	)
 	sharedSyncAllAndWait := ctrlkit.Shared(syncAllAndWait)
 
+	releaseScaleViewLock := mgr.NewAction(RisingWaveAction_ReleaseScaleViewLock, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
+		risingWave := risingwaveManger.RisingWaveReader.RisingWave()
+		scaleViews := risingWave.Status.ScaleViews
+		aliveScaleView := make([]risingwavev1alpha1.RisingWaveScaleViewLock, 0)
+
+		for _, s := range scaleViews {
+			var scaleView risingwavev1alpha1.RisingWaveScaleView
+			err := c.Client.Get(ctx, types.NamespacedName{
+				Namespace: risingWave.Namespace,
+				Name:      s.Name,
+			}, &scaleView)
+
+			if err != nil {
+				if apierrors.IsNotFound(err) {
+					l.Info("Not found, unlock", "scaleview", s.Name)
+					continue
+				} else {
+					l.Error(err, "Failed to get RisingWaveScaleView", "scaleview", s.Name)
+					return ctrlkit.RequeueIfErrorAndWrap("unable to get risingwavescaleview", err)
+				}
+			} else if s.Name == scaleView.Name && s.UID != scaleView.UID {
+				l.Info("Lock is outdated, unlock", "scaleview", s.Name)
+				continue
+			}
+			aliveScaleView = append(aliveScaleView, *s.DeepCopy())
+		}
+
+		risingwaveManger.KeepLock(aliveScaleView)
+		return ctrlkit.Continue()
+	})
+
 	return ctrlkit.ParallelJoin(
 		// => Initializing (Running=false)
 		ctrlkit.Sequential(
@@ -386,6 +421,8 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 
 		// Always sync the service monitor if possible.
 		syncServiceMonitorIfPossible,
+
+		releaseScaleViewLock,
 	)
 }
 
@@ -412,7 +449,21 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.Deployment{}).
 		Owns(&appsv1.StatefulSet{}).
 		Owns(&corev1.Service{}).
-		Owns(&corev1.ConfigMap{})
+		Owns(&corev1.ConfigMap{}).
+		Watches(
+			&source.Kind{Type: &risingwavev1alpha1.RisingWaveScaleView{}},
+			handler.EnqueueRequestsFromMapFunc(func(object client.Object) []reconcile.Request {
+				obj := object.(*risingwavev1alpha1.RisingWaveScaleView)
+				return []reconcile.Request{
+					{
+						NamespacedName: types.NamespacedName{
+							Namespace: obj.Namespace,
+							Name:      obj.Spec.TargetRef.Name,
+						},
+					},
+				}
+			}),
+		)
 
 	if c.openKruiseAvailable {
 		newCtrl.Owns(&kruiseappsv1alpha1.CloneSet{}).

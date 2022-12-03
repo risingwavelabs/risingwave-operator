@@ -90,9 +90,7 @@ func (c *RisingWaveScaleViewController) Reconcile(ctx context.Context, request r
 	//     1. Grab or update the lock (which is recorded under the RisingWave object's status field).
 	//     2. Try sync the replicas from the object to corresponding groups of RisingWave object.
 	return ctrlkit.IgnoreExit(ctrlkit.OptimizeWorkflow(
-		ctrlkit.IfElse(isScaleViewDeleted,
-			mgr.HandleScaleViewFinalizer(),
-
+		ctrlkit.If(!isScaleViewDeleted,
 			// Use OrderedJoin to defer the execution of UpdateScaleViewStatus.
 			ctrlkit.OrderedJoin(
 				ctrlkit.Join(

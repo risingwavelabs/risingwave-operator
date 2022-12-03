@@ -24,7 +24,6 @@ import (
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
@@ -125,7 +124,6 @@ func Test_RisingWaveScaleViewMutatingWebhook_Default(t *testing.T) {
 				assert.NotEmpty(t, spec.TargetRef.UID, "uid should be set")
 				assert.NotEmpty(t, spec.ScalePolicy, "scale policy should be set")
 				assert.NotEmpty(t, spec.LabelSelector, "label selector should be set")
-				assert.True(t, controllerutil.ContainsFinalizer(obj, consts.FinalizerScaleView), "finalizer must be set")
 			}
 		})
 	}

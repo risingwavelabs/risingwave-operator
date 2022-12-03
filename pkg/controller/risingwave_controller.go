@@ -363,7 +363,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			} else if s.Name == scaleView.Name && s.UID != scaleView.UID {
 				continue
 			}
-			aliveScaleView = append(aliveScaleView, s)
+			aliveScaleView = append(aliveScaleView, *s.DeepCopy())
 		}
 
 		risingwaveManger.KeepLock(aliveScaleView)

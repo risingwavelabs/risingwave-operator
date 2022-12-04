@@ -16,7 +16,9 @@ make update
 
 ## Update Dashboard Panels
 
+We use the scripts provided by Risingwave to generate new dashboard. Please first read [README in Risingwave repo](https://raw.githubusercontent.com/risingwavelabs/risingwave/main/grafana/README.md) for toolchain details.
+
 ```shell
-# `python3 update_risingwave_dashboard.py` equals to `python3 update_risingwave_dashboard.py main risingwave-dashboard.json`
-python3 update_risingwave_dashboard.py {{commit_id or branch name}} {{output_file}}
+# use RISINGWAVE_DASHBOARD_COMMIT_ID to specify commit to use, default: "main"
+RISINGWAVE_DASHBOARD_COMMIT_ID={{commit_id}} ./generate_risingwave_dashboard.sh
 ```

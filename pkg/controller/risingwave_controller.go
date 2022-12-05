@@ -33,6 +33,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -463,6 +464,8 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 					},
 				}
 			}),
+			// Watch on only delete events.
+			builder.WithPredicates(utils.DeleteEventFilter),
 		)
 
 	if c.openKruiseAvailable {

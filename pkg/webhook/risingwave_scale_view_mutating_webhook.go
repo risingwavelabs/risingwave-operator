@@ -79,9 +79,7 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 
 	// Set the default groups.
 	if len(obj.Spec.ScalePolicy) == 0 {
-		if r, _ := helper.ReadReplicas(""); r != 0 {
-			obj.Spec.ScalePolicy = append(obj.Spec.ScalePolicy, risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{Group: ""})
-		}
+		obj.Spec.ScalePolicy = append(obj.Spec.ScalePolicy, risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{Group: ""})
 		for _, group := range helper.ListComponentGroups() {
 			obj.Spec.ScalePolicy = append(obj.Spec.ScalePolicy, risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{Group: group})
 		}

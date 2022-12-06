@@ -65,7 +65,7 @@ type RisingWaveScaleViewSpec struct {
 	TargetRef RisingWaveScaleViewTargetRef `json:"targetRef,omitempty"`
 
 	// Desired replicas.
-	Replicas int32 `json:"replicas,omitempty"`
+	Replicas *int32 `json:"replicas,omitempty"`
 
 	// Serialized label selector. Would be set by the webhook.
 	LabelSelector string `json:"labelSelector,omitempty"`

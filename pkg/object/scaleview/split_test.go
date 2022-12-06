@@ -34,7 +34,7 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 		"one": {
 			sv: risingwavev1alpha1.RisingWaveScaleView{
 				Spec: risingwavev1alpha1.RisingWaveScaleViewSpec{
-					Replicas: 10,
+					Replicas: pointer.Int32(10),
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
 							Group: "",
@@ -49,7 +49,7 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 		"two-unlimited": {
 			sv: risingwavev1alpha1.RisingWaveScaleView{
 				Spec: risingwavev1alpha1.RisingWaveScaleViewSpec{
-					Replicas: 9,
+					Replicas: pointer.Int32(9),
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
 							Group: "a",
@@ -68,7 +68,7 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 		"two-but-one-limited": {
 			sv: risingwavev1alpha1.RisingWaveScaleView{
 				Spec: risingwavev1alpha1.RisingWaveScaleViewSpec{
-					Replicas: 9,
+					Replicas: pointer.Int32(9),
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
 							Group: "a",
@@ -88,7 +88,7 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 		"three-with-priorities-1": {
 			sv: risingwavev1alpha1.RisingWaveScaleView{
 				Spec: risingwavev1alpha1.RisingWaveScaleViewSpec{
-					Replicas: 9,
+					Replicas: pointer.Int32(9),
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
 							Group:       "a",
@@ -116,7 +116,7 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 		"three-with-priorities-2": {
 			sv: risingwavev1alpha1.RisingWaveScaleView{
 				Spec: risingwavev1alpha1.RisingWaveScaleViewSpec{
-					Replicas: 9,
+					Replicas: pointer.Int32(9),
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
 							Group:    "a",
@@ -143,7 +143,7 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 		"three-with-priorities-3": {
 			sv: risingwavev1alpha1.RisingWaveScaleView{
 				Spec: risingwavev1alpha1.RisingWaveScaleViewSpec{
-					Replicas: 4,
+					Replicas: pointer.Int32(4),
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
 							Group:       "a",
@@ -171,7 +171,7 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 		"three-with-priorities-4": {
 			sv: risingwavev1alpha1.RisingWaveScaleView{
 				Spec: risingwavev1alpha1.RisingWaveScaleViewSpec{
-					Replicas: 4,
+					Replicas: pointer.Int32(4),
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
 							Group:       "a",

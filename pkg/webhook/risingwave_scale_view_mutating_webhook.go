@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
@@ -108,7 +109,7 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 			)
 		}
 	}
-	obj.Spec.Replicas = replicas
+	obj.Spec.Replicas = pointer.Int32(replicas)
 
 	if len(fieldErrs) > 0 {
 		gvk := obj.GroupVersionKind()

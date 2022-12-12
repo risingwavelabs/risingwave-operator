@@ -1,0 +1,29 @@
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: ${E2E_RISINGWAVE_NAME}
+  namespace: ${E2E_NAMESPACE}
+spec:
+  global:
+    image: ${E2E_RISINGWAVE_IMAGE}
+    imagePullPolicy: IfNotPresent
+    replicas:
+      meta: 1
+      frontend: 0
+      compute: 0
+      compactor: 0
+  storages:
+    meta:
+      memory: true
+    object:
+      memory: true
+---
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWaveScaleView
+metadata:
+  name: ${E2E_RISINGWAVE_NAME}-scaleview
+  namespace: ${E2E_NAMESPACE}
+spec:
+  targetRef:
+    component: frontend
+    name: ${E2E_RISINGWAVE_NAME}

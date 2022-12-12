@@ -51,6 +51,12 @@ function e2e::list_test_cases() {
   for f in "${functions[@]}"; do
     if [[ "${f}" =~ test::run:: ]]; then
       testcase=${f#test::run::}
+
+      # Skip tests if prefix is defined.
+      if [[ -v "E2E_TEST_CASE_PREFIX" && "${testcase}" != "${E2E_TEST_CASE_PREFIX}"* ]]; then
+        continue
+      fi
+
       testcases+=("${testcase}")
     fi
   done
@@ -204,6 +210,16 @@ function e2e::post_run() {
 function e2e::main() {
   e2e::turn_on_debug_settings_if_debug_is_true
 
+  while getopts ":p:" opt; do
+    case "${opt}" in
+    p)
+      export E2E_TEST_CASE_PREFIX=${OPTARG}
+      logging::warn "Run selected test cases with prefix \"${E2E_TEST_CASE_PREFIX}\"..."
+      ;;
+    *) ;;
+    esac
+  done
+
   # Pre-run, exit if fails.
   if ! e2e::pre_run; then
     return $?
@@ -221,4 +237,4 @@ function e2e::main() {
   return "${e2e_result}"
 }
 
-e2e::main
+e2e::main "$@"

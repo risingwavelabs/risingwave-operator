@@ -81,7 +81,6 @@ function test::risingwave::storage_support::_run_with_manifest() {
   fi
   logging::info "Started!"
 
-
   if ! test::risingwave::check_storage_status_with_simple_queries; then
     logging::error "Queries run against storage failed!"
     return 1
@@ -106,7 +105,11 @@ function test::run::risingwave::storage_support::object_minio() {
   test::risingwave::storage_support::_run_with_manifest storages/object-minio.yaml
 }
 
-# FIXME(shunjie), disabled for now
-#function test::run::risingwave::storage_support::object_aws_s3() {
-#   test::risingwave::storage_support::_run_with_manifest storages/object-aws-s3.yaml
-#}
+# Export the test case only when the required parameters exists.
+if [[ -v "E2E_AWS_ACCESS_KEY_ID" && -v "E2E_AWS_SECRET_ACCESS_KEY_ID" && -v "E2E_AWS_S3_REGION" && -v "E2E_AWS_S3_BUCKET" ]]; then
+  function test::run::risingwave::storage_support::object_aws_s3() {
+    test::risingwave::storage_support::_run_with_manifest storages/object-aws-s3.yaml
+  }
+else
+  logging::warn "Test case \"risingwave::storage_support::object_aws_s3\" is disabled due to lack of parameters!"
+fi

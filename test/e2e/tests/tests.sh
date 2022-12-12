@@ -18,3 +18,4 @@ export E2E_RISINGWAVE_NAME="${E2E_RISINGWAVE_NAME:=e2e}"
 export E2E_RISINGWAVE_IMAGE="${E2E_RISINGWAVE_IMAGE:=ghcr.io/risingwavelabs/risingwave:v0.1.13}"
 
 source "$(dirname "${BASH_SOURCE[0]}")/risingwave/tests.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/risingwavescaleview/tests.sh"

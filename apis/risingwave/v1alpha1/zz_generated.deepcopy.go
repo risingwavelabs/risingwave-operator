@@ -846,6 +846,11 @@ func (in *RisingWaveScaleViewLockGroupLock) DeepCopy() *RisingWaveScaleViewLockG
 func (in *RisingWaveScaleViewSpec) DeepCopyInto(out *RisingWaveScaleViewSpec) {
 	*out = *in
 	out.TargetRef = in.TargetRef
+	if in.Replicas != nil {
+		in, out := &in.Replicas, &out.Replicas
+		*out = new(int32)
+		**out = **in
+	}
 	if in.ScalePolicy != nil {
 		in, out := &in.ScalePolicy, &out.ScalePolicy
 		*out = make([]RisingWaveScaleViewSpecScalePolicy, len(*in))

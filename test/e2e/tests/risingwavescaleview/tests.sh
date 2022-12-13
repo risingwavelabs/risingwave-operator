@@ -95,5 +95,5 @@ function test::run::risingwavescaleview::frontend_empty() {
 }
 
 function test::run::risingwavescaleview::frontend_multiple_group() {
-  test::risingwavescaleview::manual_test_run manual/frontend-selected-group.yaml
+  test::risingwavescaleview::manual_test_run manual/frontend-multiple-group.yaml
 }

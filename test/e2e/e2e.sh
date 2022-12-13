@@ -128,15 +128,11 @@ function e2e::test::run_next() {
   }
 
   # Pre-run
-  if ! e2e::test::pre_run "${ns}" "${tc}"; then
-    return $?
-  fi
+  e2e::test::pre_run "${ns}" "${tc}" || return $?
 
   # Run
   local result=0
-  if ! e2e::test::run "${ns}" "${tc}"; then
-    result=$?
-  fi
+  e2e::test::run "${ns}" "${tc}" || result=$?
 
   # Post-run
   e2e::test::post_run "${ns}" "${tc}" || :
@@ -221,15 +217,11 @@ function e2e::main() {
   done
 
   # Pre-run, exit if fails.
-  if ! e2e::pre_run; then
-    return $?
-  fi
+  e2e::pre_run || return $?
 
   # Run tests.
   local e2e_result=0
-  if ! e2e::run; then
-    e2e_result=$?
-  fi
+  e2e::run || e2e_result=$?
 
   # Post-run with best effort.
   e2e::post_run || :

@@ -557,6 +557,24 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 				},
 			},
 		},
+		"tolerations": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					Tolerations: []corev1.Toleration{
+						{
+							Key:               "key1",
+							Operator:          "Equal",
+							Value:             "value1",
+							Effect:            "NoExecute",
+							TolerationSeconds: &[]int64{3600}[0],
+						},
+					},
+				},
+			},
+		},
 		"default-group": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
@@ -795,6 +813,9 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 					newObjectAssert(deploy, "node-selector-match", func(obj *appsv1.Deployment) bool {
 						return mapContains(obj.Spec.Template.Spec.NodeSelector, tc.group.NodeSelector)
 					}),
+					newObjectAssert(deploy, "tolerations-match", func(obj *appsv1.Deployment) bool {
+						return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
+					}),
 					newObjectAssert(deploy, "upgrade-strategy-match", func(obj *appsv1.Deployment) bool {
 						if tc.expectUpgradeStrategy == nil {
 							return equality.Semantic.DeepEqual(obj.Spec.Strategy, appsv1.DeploymentStrategy{})
@@ -836,6 +857,24 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 					Image: rand.String(20),
 					NodeSelector: map[string]string{
 						"a": "b",
+					},
+				},
+			},
+		},
+		"tolerations": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					Tolerations: []corev1.Toleration{
+						{
+							Key:               "key1",
+							Operator:          "Equal",
+							Value:             "value1",
+							Effect:            "NoExecute",
+							TolerationSeconds: &[]int64{3600}[0],
+						},
 					},
 				},
 			},
@@ -1361,6 +1400,9 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 					newObjectAssert(cloneSet, "node-selector-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
 						return mapContains(obj.Spec.Template.Spec.NodeSelector, tc.group.NodeSelector)
 					}),
+					newObjectAssert(cloneSet, "tolerations-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
+					}),
 					newObjectAssert(cloneSet, "upgrade-strategy-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
 						if tc.expectedUpgradeStrategy == nil {
 							return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, kruiseappsv1alpha1.CloneSetUpdateStrategy{})
@@ -1394,6 +1436,26 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 						Image: rand.String(20),
 						NodeSelector: map[string]string{
 							"a": "b",
+						},
+					},
+				},
+			},
+		},
+		"tolerations": {
+			group: risingwavev1alpha1.RisingWaveComputeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Image: rand.String(20),
+						Tolerations: []corev1.Toleration{
+							{
+								Key:               "key1",
+								Operator:          "Equal",
+								Value:             "value1",
+								Effect:            "NoExecute",
+								TolerationSeconds: &[]int64{3600}[0],
+							},
 						},
 					},
 				},
@@ -1636,6 +1698,9 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 				newObjectAssert(sts, "node-selector-match", func(obj *appsv1.StatefulSet) bool {
 					return mapContains(obj.Spec.Template.Spec.NodeSelector, tc.group.NodeSelector)
 				}),
+				newObjectAssert(sts, "tolerations-match", func(obj *appsv1.StatefulSet) bool {
+					return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
+				}),
 				newObjectAssert(sts, "upgrade-strategy-match", func(obj *appsv1.StatefulSet) bool {
 					if tc.expectUpgradeStrategy == nil {
 						return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, appsv1.StatefulSetUpdateStrategy{})
@@ -1671,6 +1736,26 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 						Image: rand.String(20),
 						NodeSelector: map[string]string{
 							"a": "b",
+						},
+					},
+				},
+			},
+		},
+		"tolerations": {
+			group: risingwavev1alpha1.RisingWaveComputeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Image: rand.String(20),
+						Tolerations: []corev1.Toleration{
+							{
+								Key:               "key1",
+								Operator:          "Equal",
+								Value:             "value1",
+								Effect:            "NoExecute",
+								TolerationSeconds: &[]int64{3600}[0],
+							},
 						},
 					},
 				},
@@ -2003,6 +2088,9 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 				}),
 				newObjectAssert(asts, "node-selector-match", func(obj *kruiseappsv1beta1.StatefulSet) bool {
 					return mapContains(obj.Spec.Template.Spec.NodeSelector, tc.group.NodeSelector)
+				}),
+				newObjectAssert(asts, "tolerations-match", func(obj *kruiseappsv1beta1.StatefulSet) bool {
+					return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
 				}),
 				newObjectAssert(asts, "upgrade-strategy-match", func(obj *kruiseappsv1beta1.StatefulSet) bool {
 					if tc.expectedUpgradeStrategy == nil {

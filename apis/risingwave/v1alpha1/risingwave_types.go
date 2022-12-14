@@ -113,6 +113,10 @@ type RisingWaveComponentGroupTemplate struct {
 	// and the controller will set all unrelated fields to the default value.
 	// +optional
 	PodTemplate *string `json:"podTemplate,omitempty"`
+
+	// If specified, the pod's tolerations.
+	// +optional
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 }
 
 // RisingWaveComponentGroup is the common deployment group of each component. Currently, we use

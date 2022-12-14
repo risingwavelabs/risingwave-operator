@@ -849,6 +849,9 @@ func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podT
 
 		// Set the node selector.
 		podTemplate.Spec.NodeSelector = groupTemplate.NodeSelector
+
+		// Set the tolerations.
+		podTemplate.Spec.Tolerations = append(podTemplate.Spec.Tolerations, groupTemplate.Tolerations...)
 	}
 
 	// Set config volume.

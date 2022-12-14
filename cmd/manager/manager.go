@@ -35,6 +35,7 @@ import (
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	risingwavecontroller "github.com/risingwavelabs/risingwave-operator/pkg/controller"
+	"github.com/risingwavelabs/risingwave-operator/pkg/features"
 	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/webhook"
 )
@@ -60,6 +61,7 @@ var (
 	configPath           string
 	enableOpenKruise     bool
 	enableLeaderElection bool
+	featureGates         string
 )
 
 func main() {
@@ -69,13 +71,14 @@ func main() {
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false, "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
-
+	flag.StringVar(&featureGates, "feature-gates", "", "The feature gates arguments for the operator.")
 	opts := zap.Options{
 		Development: true,
 	}
-	flag.BoolVar(&enableOpenKruise, "enable-open-kruise", false, "Enabling this will allow openkruise to be available as an optional provider")
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
+
+	featureManager := features.InitFeatureManager(featureGates)
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 	config := ctrl.GetConfigOrDie()
@@ -93,7 +96,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = webhook.SetupWebhooksWithManager(mgr, enableOpenKruise); err != nil {
+	if err = webhook.SetupWebhooksWithManager(mgr, featureManager.IsFeatureEnabled(features.EnableOpenKruiseFeature)); err != nil {
 		setupLog.Error(err, "unable to setup webhooks")
 		os.Exit(1)
 	}
@@ -101,7 +104,7 @@ func main() {
 	if err = risingwavecontroller.NewRisingWaveController(
 		mgr.GetClient(),
 		mgr.GetEventRecorderFor("risingwave-controller"),
-		enableOpenKruise,
+		featureManager.IsFeatureEnabled(features.EnableOpenKruiseFeature),
 	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RisingWave")
 		os.Exit(1)

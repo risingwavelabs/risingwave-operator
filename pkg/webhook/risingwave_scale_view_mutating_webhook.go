@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
@@ -78,9 +79,7 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 
 	// Set the default groups.
 	if len(obj.Spec.ScalePolicy) == 0 {
-		if r, _ := helper.ReadReplicas(""); r != 0 {
-			obj.Spec.ScalePolicy = append(obj.Spec.ScalePolicy, risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{Group: ""})
-		}
+		obj.Spec.ScalePolicy = append(obj.Spec.ScalePolicy, risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{Group: ""})
 		for _, group := range helper.ListComponentGroups() {
 			obj.Spec.ScalePolicy = append(obj.Spec.ScalePolicy, risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{Group: group})
 		}
@@ -108,7 +107,7 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 			)
 		}
 	}
-	obj.Spec.Replicas = replicas
+	obj.Spec.Replicas = pointer.Int32(replicas)
 
 	if len(fieldErrs) > 0 {
 		gvk := obj.GroupVersionKind()

@@ -74,7 +74,7 @@ func SplitReplicas(sv *risingwavev1alpha1.RisingWaveScaleView) map[string]int32 
 		return priorities[i] > priorities[j]
 	})
 
-	totalLeft := int(sv.Spec.Replicas)
+	totalLeft := int(pointer.Int32Deref(sv.Spec.Replicas, 0))
 	replicas := make(map[string]int32)
 
 	for _, priority := range priorities {
@@ -114,7 +114,7 @@ func SplitReplicas(sv *risingwavev1alpha1.RisingWaveScaleView) map[string]int32 
 	for _, r := range replicas {
 		sum += r
 	}
-	if sum != sv.Spec.Replicas {
+	if sum != pointer.Int32Deref(sv.Spec.Replicas, 0) {
 		panic("algorithm has bug")
 	}
 

@@ -1513,6 +1513,20 @@ Kubernetes core/v1.ServiceType
 <p>Service type of the frontend service.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>serviceMetadata</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
+RisingWavePodTemplatePartialObjectMeta
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Service metadata of the frontend service.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorage">RisingWaveMetaStorage
@@ -1985,7 +1999,7 @@ RisingWavePodTemplateSpec
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">RisingWavePodTemplatePartialObjectMeta
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplateSpec">RisingWavePodTemplateSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplateSpec">RisingWavePodTemplateSpec</a>)
 </p>
 <div>
 </div>

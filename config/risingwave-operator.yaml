@@ -8047,6 +8047,20 @@ spec:
                           to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                     type: object
+                  serviceMetadata:
+                    description: Service metadata of the frontend service.
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: Annotations of the object.
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels of the object.
+                        type: object
+                    type: object
                   serviceType:
                     default: ClusterIP
                     description: Service type of the frontend service.

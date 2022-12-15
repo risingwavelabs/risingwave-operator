@@ -190,6 +190,11 @@ func (f *RisingWaveObjectFactory) componentObjectMeta(component string, sync boo
 
 	objectMeta.Labels = mergeMap(objectMeta.Labels, f.getInheritedLabels())
 
+	if component == consts.ComponentFrontend {
+		objectMeta.Labels = mergeMap(objectMeta.Labels, f.risingwave.Spec.Global.ServiceMeta.Labels)
+		objectMeta.Annotations = mergeMap(objectMeta.Annotations, f.risingwave.Spec.Global.ServiceMeta.Annotations)
+	}
+
 	return objectMeta
 }
 

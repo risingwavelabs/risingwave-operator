@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aws-s3-credentials
+  namespace: ${E2E_NAMESPACE}
+stringData:
+  AccessKeyID: ${E2E_AWS_ACCESS_KEY_ID}
+  SecretAccessKey: ${E2E_AWS_SECRET_ACCESS_KEY_ID}
+---
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: ${E2E_RISINGWAVE_NAME}
+  namespace: ${E2E_NAMESPACE}
+spec:
+  global:
+    image: ${E2E_RISINGWAVE_IMAGE}
+    imagePullPolicy: IfNotPresent
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+      compactor: 1
+  storages:
+    meta:
+      memory: true
+    object:
+      s3:
+        region: ${E2E_AWS_S3_REGION}
+        bucket: ${E2E_AWS_S3_BUCKET}
+        secret: aws-s3-credentials

@@ -10,6 +10,16 @@ repos:
     always_run: true
     stages:
       - commit
+  - id: shellcheck
+    name: shellcheck
+    language: system
+    entry: bash
+    args:
+    - -c
+    - shopt -s globstar; shellcheck -x -e SC1091 -s bash test/**/*.sh
+    always_run: true
+    stages:
+    - commit
 - repo: https://github.com/arkbriar/pre-commit-golang
   rev: master
   hooks:

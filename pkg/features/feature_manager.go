@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 type FeatureStage string
@@ -38,7 +39,7 @@ const (
 var RisingWaveFeatureManager FeatureManager
 
 var (
-	supportedFeatureList = []Feature{
+	SupportedFeatureList = []Feature{
 		{
 			Name:          "enableOpenKruise",
 			Description:   "This feature enables open kruise as an optional provider",
@@ -90,13 +91,15 @@ func newRisingWaveFeatureManager() *FeatureManager {
 }
 
 // This functions initializes the FeatureManager with the current supported Features.
-func InitFeatureManager(featureGateString string) *FeatureManager {
+func InitFeatureManager(supportedFeatureList []Feature, featureGateString string) *FeatureManager {
 	RisingWaveFeatureManager = *newRisingWaveFeatureManager()
 	for _, supportedFeature := range supportedFeatureList {
 		supportedFeature.Enabled = supportedFeature.DefaultEnable
 		RisingWaveFeatureManager.addFeature(&supportedFeature)
 	}
-	RisingWaveFeatureManager.parseFromFeatureGateString(featureGateString)
+	if RisingWaveFeatureManager.parseFromFeatureGateString(featureGateString) != nil {
+		panic("Invalid value given to feature-gates argument")
+	}
 	return &RisingWaveFeatureManager
 }
 
@@ -109,6 +112,12 @@ func GetFeatureManager() *FeatureManager {
 // features to the featureManager.
 func (m *FeatureManager) addFeature(feature *Feature) {
 	m.featureMap[feature.Name] = feature.DeepCopy()
+}
+
+// This function returns true if the feature exists in the featureManager, else returns false
+func (m FeatureManager) IsFeatureExist(featureName FeatureName) bool {
+	_, exist := m.featureMap[featureName]
+	return exist
 }
 
 // This is a helper function that helps to set a feature to a given boolean, if feature does not exist,
@@ -211,6 +220,10 @@ func (m *FeatureManager) parseFromFeatureGateString(featureGateString string) er
 	if len(featureGateString) == 0 {
 		return nil
 	}
+	featureGateString = strings.TrimSpace(featureGateString)
+	if !unicode.IsLetter([]rune(featureGateString[0:1])[0]) {
+		return errors.New(fmt.Sprintf("Parsing error of feature gate string: %s", featureGateString))
+	}
 	featureGatesArgs := strings.Split(featureGateString, ",")
 	for _, featureString := range featureGatesArgs {
 		featureName, enabled, err := parseFeatureString(featureString)
@@ -237,9 +250,12 @@ func parseFeatureString(featureString string) (FeatureName, bool, error) {
 		return "", false, errors.New(fmt.Sprintf("Invalid feature syntax given: %s", featureString))
 	}
 	featureName := strings.TrimSpace(featureStringSplit[0])
+	if len(featureName) == 0 {
+		return "", false, errors.New(fmt.Sprintf("Invalid feature Name was given: %s", featureName))
+	}
 	enabled, err := strconv.ParseBool(strings.TrimSpace(featureStringSplit[1]))
 	if err != nil {
-		return "", false, errors.New(fmt.Sprintf("Invalid boolean value given: %s", featureString))
+		return "", false, err
 	}
 	return FeatureName(featureName), enabled, nil
 }

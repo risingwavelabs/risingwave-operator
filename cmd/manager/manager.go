@@ -78,7 +78,7 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
-	featureManager := features.InitFeatureManager(featureGates)
+	featureManager := features.InitFeatureManager(features.SupportedFeatureList, featureGates)
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 	config := ctrl.GetConfigOrDie()

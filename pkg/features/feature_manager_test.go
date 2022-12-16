@@ -371,7 +371,7 @@ func TestParseFeatureString(t *testing.T) {
 
 func TestParseFromFeatureGateString(t *testing.T) {
 
-	// Check for cases where parsing would fail first
+	// Check for cases where parsing would fail first.
 	errorTestCases := map[string]string{
 		"Invalid-commas":       "enableOpenKruise=true,,",
 		"Invalid-equals":       "enableOpenKruise==true,",

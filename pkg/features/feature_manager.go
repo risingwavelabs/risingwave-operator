@@ -84,7 +84,7 @@ type FeatureManager struct {
 }
 
 // Helper function that returns a pointer to an instance of the FeatureManager.
-func newRisingWaveFeatureManager() *FeatureManager {
+func NewRisingWaveFeatureManager() *FeatureManager {
 	return &FeatureManager{
 		featureMap: make(map[FeatureName]*Feature),
 	}
@@ -92,7 +92,7 @@ func newRisingWaveFeatureManager() *FeatureManager {
 
 // This functions initializes the FeatureManager with the current supported Features.
 func InitFeatureManager(supportedFeatureList []Feature, featureGateString string) *FeatureManager {
-	RisingWaveFeatureManager = *newRisingWaveFeatureManager()
+	RisingWaveFeatureManager = *NewRisingWaveFeatureManager()
 	for _, supportedFeature := range supportedFeatureList {
 		supportedFeature.Enabled = supportedFeature.DefaultEnable
 		RisingWaveFeatureManager.addFeature(&supportedFeature)
@@ -114,7 +114,7 @@ func (m *FeatureManager) addFeature(feature *Feature) {
 	m.featureMap[feature.Name] = feature.DeepCopy()
 }
 
-// This function returns true if the feature exists in the featureManager, else returns false
+// This function returns true if the feature exists in the featureManager, else returns false.
 func (m FeatureManager) IsFeatureExist(featureName FeatureName) bool {
 	_, exist := m.featureMap[featureName]
 	return exist
@@ -159,7 +159,7 @@ func (m *FeatureManager) DisableFeature(name FeatureName) error {
 }
 
 // This method returns the number of features in the featureManager.
-func (m FeatureManager) getNumOfFeatures() int {
+func (m *FeatureManager) GetNumOfFeatures() int {
 	return len(m.featureMap)
 }
 

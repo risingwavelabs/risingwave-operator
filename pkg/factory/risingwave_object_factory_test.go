@@ -188,7 +188,21 @@ func componentLabels(risingwave *risingwavev1alpha1.RisingWave, component string
 		labels[consts.LabelRisingWaveGroup] = *group
 	}
 
+	if component == consts.ComponentFrontend {
+		labels = mergeMap(labels, risingwave.Spec.Global.ServiceMeta.Labels)
+	}
+
 	return labels
+}
+
+func componentAnnotations(risingwave *risingwavev1alpha1.RisingWave, component string) map[string]string {
+	annotations := map[string]string{}
+
+	if component == consts.ComponentFrontend {
+		annotations = mergeMap(annotations, risingwave.Spec.Global.ServiceMeta.Annotations)
+	}
+
+	return annotations
 }
 
 func podSelector(risingwave *risingwavev1alpha1.RisingWave, component string, group *string) map[string]string {
@@ -392,6 +406,119 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 				}),
 				newObjectAssert(svc, "selector-equals", func(obj *corev1.Service) bool {
 					return hasServiceSelector(obj, podSelector(risingwave, tc.component, nil))
+				}),
+			).Assert(t)
+		})
+	}
+}
+
+func Test_RisingWaveObjectFactory_ServicesMeta(t *testing.T) {
+	testcases := map[string]struct {
+		component         string
+		globalServiceMeta risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta
+	}{
+		"random-meta-labels": {
+			component: consts.ComponentMeta,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Labels: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-meta-annotations": {
+			component: consts.ComponentMeta,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Annotations: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-frontend-labels": {
+			component: consts.ComponentFrontend,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Labels: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-frontend-annotations": {
+			component: consts.ComponentFrontend,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Annotations: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-compute-labels": {
+			component: consts.ComponentCompute,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Labels: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-compute-annotations": {
+			component: consts.ComponentCompute,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Annotations: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-compactor-labels": {
+			component: consts.ComponentCompactor,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Labels: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-compactor-annotations": {
+			component: consts.ComponentCompactor,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Annotations: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global.ServiceMeta = tc.globalServiceMeta
+			})
+
+			factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
+
+			var svc *corev1.Service
+			switch tc.component {
+			case consts.ComponentMeta:
+				svc = factory.NewMetaService()
+			case consts.ComponentFrontend:
+				svc = factory.NewFrontendService()
+			case consts.ComponentCompute:
+				svc = factory.NewComputeService()
+			case consts.ComponentCompactor:
+				svc = factory.NewCompactorService()
+			default:
+				t.Fatal("bad test")
+			}
+
+			composeAssertions(
+				newObjectAssert(svc, "service-labels-match", func(obj *corev1.Service) bool {
+					return hasLabels(obj, componentLabels(risingwave, tc.component, nil, true), true)
+				}),
+				newObjectAssert(svc, "service-annotations-match", func(obj *corev1.Service) bool {
+					return hasAnnotations(obj, componentAnnotations(risingwave, tc.component), true)
 				}),
 			).Assert(t)
 		})

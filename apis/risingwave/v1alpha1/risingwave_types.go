@@ -508,6 +508,10 @@ type RisingWaveGlobalSpec struct {
 	// +kubebuilder:default=ClusterIP
 	// +kubebuilder:validation:Enum=ClusterIP;NodePort;LoadBalancer
 	ServiceType corev1.ServiceType `json:"serviceType,omitempty"`
+
+	// Service metadata of the frontend service.
+	// +optional
+	ServiceMeta RisingWavePodTemplatePartialObjectMeta `json:"serviceMetadata,omitempty"`
 }
 
 // RisingWaveSpec is the overall spec.

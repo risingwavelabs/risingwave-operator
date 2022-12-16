@@ -188,7 +188,21 @@ func componentLabels(risingwave *risingwavev1alpha1.RisingWave, component string
 		labels[consts.LabelRisingWaveGroup] = *group
 	}
 
+	if component == consts.ComponentFrontend {
+		labels = mergeMap(labels, risingwave.Spec.Global.ServiceMeta.Labels)
+	}
+
 	return labels
+}
+
+func componentAnnotations(risingwave *risingwavev1alpha1.RisingWave, component string) map[string]string {
+	annotations := map[string]string{}
+
+	if component == consts.ComponentFrontend {
+		annotations = mergeMap(annotations, risingwave.Spec.Global.ServiceMeta.Annotations)
+	}
+
+	return annotations
 }
 
 func podSelector(risingwave *risingwavev1alpha1.RisingWave, component string, group *string) map[string]string {
@@ -398,6 +412,119 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 	}
 }
 
+func Test_RisingWaveObjectFactory_ServicesMeta(t *testing.T) {
+	testcases := map[string]struct {
+		component         string
+		globalServiceMeta risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta
+	}{
+		"random-meta-labels": {
+			component: consts.ComponentMeta,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Labels: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-meta-annotations": {
+			component: consts.ComponentMeta,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Annotations: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-frontend-labels": {
+			component: consts.ComponentFrontend,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Labels: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-frontend-annotations": {
+			component: consts.ComponentFrontend,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Annotations: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-compute-labels": {
+			component: consts.ComponentCompute,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Labels: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-compute-annotations": {
+			component: consts.ComponentCompute,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Annotations: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-compactor-labels": {
+			component: consts.ComponentCompactor,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Labels: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-compactor-annotations": {
+			component: consts.ComponentCompactor,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Annotations: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global.ServiceMeta = tc.globalServiceMeta
+			})
+
+			factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
+
+			var svc *corev1.Service
+			switch tc.component {
+			case consts.ComponentMeta:
+				svc = factory.NewMetaService()
+			case consts.ComponentFrontend:
+				svc = factory.NewFrontendService()
+			case consts.ComponentCompute:
+				svc = factory.NewComputeService()
+			case consts.ComponentCompactor:
+				svc = factory.NewCompactorService()
+			default:
+				t.Fatal("bad test")
+			}
+
+			composeAssertions(
+				newObjectAssert(svc, "service-labels-match", func(obj *corev1.Service) bool {
+					return hasLabels(obj, componentLabels(risingwave, tc.component, nil, true), true)
+				}),
+				newObjectAssert(svc, "service-annotations-match", func(obj *corev1.Service) bool {
+					return hasAnnotations(obj, componentAnnotations(risingwave, tc.component), true)
+				}),
+			).Assert(t)
+		})
+	}
+}
+
 func Test_RisingWaveObjectFactory_ConfigMaps(t *testing.T) {
 	testcases := map[string]struct {
 		configVal string
@@ -553,6 +680,24 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 					Image: rand.String(20),
 					NodeSelector: map[string]string{
 						"a": "b",
+					},
+				},
+			},
+		},
+		"tolerations": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					Tolerations: []corev1.Toleration{
+						{
+							Key:               "key1",
+							Operator:          "Equal",
+							Value:             "value1",
+							Effect:            "NoExecute",
+							TolerationSeconds: &[]int64{3600}[0],
+						},
 					},
 				},
 			},
@@ -795,6 +940,9 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 					newObjectAssert(deploy, "node-selector-match", func(obj *appsv1.Deployment) bool {
 						return mapContains(obj.Spec.Template.Spec.NodeSelector, tc.group.NodeSelector)
 					}),
+					newObjectAssert(deploy, "tolerations-match", func(obj *appsv1.Deployment) bool {
+						return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
+					}),
 					newObjectAssert(deploy, "upgrade-strategy-match", func(obj *appsv1.Deployment) bool {
 						if tc.expectUpgradeStrategy == nil {
 							return equality.Semantic.DeepEqual(obj.Spec.Strategy, appsv1.DeploymentStrategy{})
@@ -836,6 +984,24 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 					Image: rand.String(20),
 					NodeSelector: map[string]string{
 						"a": "b",
+					},
+				},
+			},
+		},
+		"tolerations": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					Tolerations: []corev1.Toleration{
+						{
+							Key:               "key1",
+							Operator:          "Equal",
+							Value:             "value1",
+							Effect:            "NoExecute",
+							TolerationSeconds: &[]int64{3600}[0],
+						},
 					},
 				},
 			},
@@ -1361,6 +1527,9 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 					newObjectAssert(cloneSet, "node-selector-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
 						return mapContains(obj.Spec.Template.Spec.NodeSelector, tc.group.NodeSelector)
 					}),
+					newObjectAssert(cloneSet, "tolerations-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
+					}),
 					newObjectAssert(cloneSet, "upgrade-strategy-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
 						if tc.expectedUpgradeStrategy == nil {
 							return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, kruiseappsv1alpha1.CloneSetUpdateStrategy{})
@@ -1394,6 +1563,26 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 						Image: rand.String(20),
 						NodeSelector: map[string]string{
 							"a": "b",
+						},
+					},
+				},
+			},
+		},
+		"tolerations": {
+			group: risingwavev1alpha1.RisingWaveComputeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Image: rand.String(20),
+						Tolerations: []corev1.Toleration{
+							{
+								Key:               "key1",
+								Operator:          "Equal",
+								Value:             "value1",
+								Effect:            "NoExecute",
+								TolerationSeconds: &[]int64{3600}[0],
+							},
 						},
 					},
 				},
@@ -1636,6 +1825,9 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 				newObjectAssert(sts, "node-selector-match", func(obj *appsv1.StatefulSet) bool {
 					return mapContains(obj.Spec.Template.Spec.NodeSelector, tc.group.NodeSelector)
 				}),
+				newObjectAssert(sts, "tolerations-match", func(obj *appsv1.StatefulSet) bool {
+					return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
+				}),
 				newObjectAssert(sts, "upgrade-strategy-match", func(obj *appsv1.StatefulSet) bool {
 					if tc.expectUpgradeStrategy == nil {
 						return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, appsv1.StatefulSetUpdateStrategy{})
@@ -1671,6 +1863,26 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 						Image: rand.String(20),
 						NodeSelector: map[string]string{
 							"a": "b",
+						},
+					},
+				},
+			},
+		},
+		"tolerations": {
+			group: risingwavev1alpha1.RisingWaveComputeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Image: rand.String(20),
+						Tolerations: []corev1.Toleration{
+							{
+								Key:               "key1",
+								Operator:          "Equal",
+								Value:             "value1",
+								Effect:            "NoExecute",
+								TolerationSeconds: &[]int64{3600}[0],
+							},
 						},
 					},
 				},
@@ -2003,6 +2215,9 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 				}),
 				newObjectAssert(asts, "node-selector-match", func(obj *kruiseappsv1beta1.StatefulSet) bool {
 					return mapContains(obj.Spec.Template.Spec.NodeSelector, tc.group.NodeSelector)
+				}),
+				newObjectAssert(asts, "tolerations-match", func(obj *kruiseappsv1beta1.StatefulSet) bool {
+					return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
 				}),
 				newObjectAssert(asts, "upgrade-strategy-match", func(obj *kruiseappsv1beta1.StatefulSet) bool {
 					if tc.expectedUpgradeStrategy == nil {

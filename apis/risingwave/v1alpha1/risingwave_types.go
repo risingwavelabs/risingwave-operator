@@ -113,6 +113,10 @@ type RisingWaveComponentGroupTemplate struct {
 	// and the controller will set all unrelated fields to the default value.
 	// +optional
 	PodTemplate *string `json:"podTemplate,omitempty"`
+
+	// If specified, the pod's tolerations.
+	// +optional
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 }
 
 // RisingWaveComponentGroup is the common deployment group of each component. Currently, we use
@@ -504,6 +508,10 @@ type RisingWaveGlobalSpec struct {
 	// +kubebuilder:default=ClusterIP
 	// +kubebuilder:validation:Enum=ClusterIP;NodePort;LoadBalancer
 	ServiceType corev1.ServiceType `json:"serviceType,omitempty"`
+
+	// Service metadata of the frontend service.
+	// +optional
+	ServiceMeta RisingWavePodTemplatePartialObjectMeta `json:"serviceMetadata,omitempty"`
 }
 
 // RisingWaveSpec is the overall spec.

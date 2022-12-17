@@ -91,13 +91,23 @@ func NewRisingWaveFeatureManager() *FeatureManager {
 }
 
 // This functions initializes the FeatureManager with the current supported Features.
+func InitFeatureManagerWithSupportedFeatures(supportedFeatureList []Feature) *FeatureManager {
+	RisingWaveFeatureManager = *NewRisingWaveFeatureManager()
+	for _, supportedFeature := range supportedFeatureList {
+		supportedFeature.Enabled = supportedFeature.DefaultEnable
+		RisingWaveFeatureManager.addFeature(&supportedFeature)
+	}
+	return &RisingWaveFeatureManager
+}
+
+// This functions initializes the FeatureManager with the current supported Features and also parses the feature gate string.
 func InitFeatureManager(supportedFeatureList []Feature, featureGateString string) *FeatureManager {
 	RisingWaveFeatureManager = *NewRisingWaveFeatureManager()
 	for _, supportedFeature := range supportedFeatureList {
 		supportedFeature.Enabled = supportedFeature.DefaultEnable
 		RisingWaveFeatureManager.addFeature(&supportedFeature)
 	}
-	if RisingWaveFeatureManager.parseFromFeatureGateString(featureGateString) != nil {
+	if RisingWaveFeatureManager.ParseFromFeatureGateString(featureGateString) != nil {
 		panic("Invalid value given to feature-gates argument")
 	}
 	return &RisingWaveFeatureManager
@@ -168,8 +178,7 @@ func (m FeatureManager) ListFeatures() []Feature {
 	var featureList = []Feature{}
 	for _, feature := range m.featureMap {
 		// make a deep copy of the feature
-		curr_feature := *feature
-		featureList = append(featureList, curr_feature)
+		featureList = append(featureList, *feature.DeepCopy())
 	}
 	return featureList
 }
@@ -180,8 +189,7 @@ func (m FeatureManager) ListEnabledFeatures() []Feature {
 	for featureName, feature := range m.featureMap {
 		if m.IsFeatureEnabled(featureName) {
 			// make a copy of the feature
-			curr_feature := *feature
-			featureList = append(featureList, curr_feature)
+			featureList = append(featureList, *feature.DeepCopy())
 		}
 	}
 	return featureList
@@ -193,8 +201,7 @@ func (m FeatureManager) ListDisabledFeatures() []Feature {
 	for featureName, feature := range m.featureMap {
 		if !m.IsFeatureEnabled(featureName) {
 			// make a deep copy of the feature
-			curr_feature := *feature
-			featureList = append(featureList, curr_feature)
+			featureList = append(featureList, *feature.DeepCopy())
 		}
 	}
 	return featureList
@@ -207,16 +214,14 @@ func (m FeatureManager) GetFeature(name FeatureName) (Feature, error) {
 		return Feature{}, errors.New(fmt.Sprintf("The following feature does not exist: %s", name))
 	}
 	// make a deep copy of the feature, every other primitive field is copied implicitly.
-	// pointer to bool has to be explicitly copied.
-	curr_feature := *m.featureMap[name]
-	return curr_feature, nil
+	return *m.featureMap[name].DeepCopy(), nil
 }
 
 // This method takes in a feature gate string that is given as a CLI argument,
 // parses the features and updates the featureManager. e.g if command line argument is
 // --feature-gates=enableOpenKruise=true,otherOption=false, it will set the feature enableOpenKruise
 // as true if and only if it exists. if a feature is not supported, it is simply ignored.
-func (m *FeatureManager) parseFromFeatureGateString(featureGateString string) error {
+func (m *FeatureManager) ParseFromFeatureGateString(featureGateString string) error {
 	if len(featureGateString) == 0 {
 		return nil
 	}
@@ -230,7 +235,6 @@ func (m *FeatureManager) parseFromFeatureGateString(featureGateString string) er
 		if err != nil {
 			return err
 		}
-		fmt.Println(fmt.Sprintf("%s %t", featureName, enabled))
 		_, featureExists := m.featureMap[featureName]
 		if !featureExists {
 			fmt.Println(fmt.Sprintf("Feature not supported: %s", featureName))
@@ -242,7 +246,7 @@ func (m *FeatureManager) parseFromFeatureGateString(featureGateString string) er
 }
 
 // This function parses a feature string into a featurename and a boolean and returns
-// an error when a feature string cannot be parsed. e.g enableOpenKruise=true will returb
+// an error when a feature string cannot be parsed. e.g enableOpenKruise=true will return
 // (enableOpenKruise, true, nil).
 func parseFeatureString(featureString string) (FeatureName, bool, error) {
 	featureStringSplit := strings.Split(featureString, "=")

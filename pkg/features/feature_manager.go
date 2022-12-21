@@ -146,11 +146,7 @@ func (m *FeatureManager) setFeatureEnable(name FeatureName, enable bool) error {
 func (m FeatureManager) IsFeatureEnabled(name FeatureName) bool {
 	// check for existence of feature in map
 	feature, featureExists := m.featureMap[name]
-	if featureExists {
-		// if feature has been actively set/unset, return enabled, else return deafult value.
-		return feature.Enabled
-	}
-	return false
+	return featureExists && feature.Enabled
 }
 
 // This metod takes in a feature name and enables it if it exists, if it does not

@@ -138,7 +138,7 @@ func (m *FeatureManager) setFeatureEnable(name FeatureName, enable bool) error {
 		m.featureMap[name].Enabled = enable
 		return nil
 	}
-	return fmt.Errorf("The following feature does not exist: %s", name)
+	return fmt.Errorf("the following feature does not exist: %s", name)
 }
 
 // This method takes in a feature name and checks if it is enabled, returns a bool, nil if it exists,
@@ -206,7 +206,7 @@ func (m FeatureManager) ListDisabledFeatures() []Feature {
 func (m FeatureManager) GetFeature(name FeatureName) (Feature, error) {
 	_, featureExists := m.featureMap[name]
 	if !featureExists {
-		return Feature{}, fmt.Errorf("The following feature does not exist: %s", name)
+		return Feature{}, fmt.Errorf("the following feature does not exist: %s", name)
 	}
 	// make a deep copy of the feature, every other primitive field is copied implicitly.
 	return *m.featureMap[name].DeepCopy(), nil
@@ -222,7 +222,7 @@ func (m *FeatureManager) ParseFromFeatureGateString(featureGateString string) er
 	}
 	featureGateString = strings.TrimSpace(featureGateString)
 	if !unicode.IsLetter([]rune(featureGateString[0:1])[0]) {
-		return fmt.Errorf("Parsing error of feature gate string: %s", featureGateString)
+		return fmt.Errorf("parsing error of feature gate string: %s", featureGateString)
 	}
 	featureGatesArgs := strings.Split(featureGateString, ",")
 	for _, featureString := range featureGatesArgs {
@@ -245,11 +245,11 @@ func (m *FeatureManager) ParseFromFeatureGateString(featureGateString string) er
 func parseFeatureString(featureString string) (FeatureName, bool, error) {
 	featureStringSplit := strings.Split(featureString, "=")
 	if len(featureStringSplit) != 2 {
-		return "", false, fmt.Errorf("Invalid feature syntax given: %s", featureString)
+		return "", false, fmt.Errorf("invalid feature syntax given: %s", featureString)
 	}
 	featureName := strings.TrimSpace(featureStringSplit[0])
 	if len(featureName) == 0 {
-		return "", false, fmt.Errorf("Invalid feature name given: %s", featureName)
+		return "", false, fmt.Errorf("invalid feature name given: %s", featureName)
 	}
 	enabled, err := strconv.ParseBool(strings.TrimSpace(featureStringSplit[1]))
 	if err != nil {

@@ -702,6 +702,16 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 				},
 			},
 		},
+		"priority": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image:    rand.String(20),
+					Priority: &[]int32{1000000}[0],
+				},
+			},
+		},
 		"priority-class-name": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
@@ -953,6 +963,13 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 					newObjectAssert(deploy, "tolerations-match", func(obj *appsv1.Deployment) bool {
 						return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
 					}),
+					newObjectAssert(deploy, "priority-match", func(obj *appsv1.Deployment) bool {
+						if tc.group.Priority != nil {
+							return *obj.Spec.Template.Spec.Priority == *tc.group.Priority
+						} else {
+							return true
+						}
+					}),
 					newObjectAssert(deploy, "priority-class-name-match", func(obj *appsv1.Deployment) bool {
 						return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName
 					}),
@@ -1016,6 +1033,16 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 							TolerationSeconds: &[]int64{3600}[0],
 						},
 					},
+				},
+			},
+		},
+		"priority": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image:    rand.String(20),
+					Priority: pointer.Int32(0),
 				},
 			},
 		},
@@ -1553,6 +1580,13 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 					newObjectAssert(cloneSet, "tolerations-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
 						return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
 					}),
+					newObjectAssert(cloneSet, "priority-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						if tc.group.Priority != nil {
+							return *obj.Spec.Template.Spec.Priority == *tc.group.Priority
+						} else {
+							return true
+						}
+					}),
 					newObjectAssert(cloneSet, "priority-class-name-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
 						return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName
 					}),
@@ -1610,6 +1644,18 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 								TolerationSeconds: &[]int64{3600}[0],
 							},
 						},
+					},
+				},
+			},
+		},
+		"priority": {
+			group: risingwavev1alpha1.RisingWaveComputeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Image:    rand.String(20),
+						Priority: &[]int32{1000000}[0],
 					},
 				},
 			},
@@ -1866,6 +1912,13 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 				newObjectAssert(sts, "tolerations-match", func(obj *appsv1.StatefulSet) bool {
 					return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
 				}),
+				newObjectAssert(sts, "priority-match", func(obj *appsv1.StatefulSet) bool {
+					if tc.group.Priority != nil {
+						return *obj.Spec.Template.Spec.Priority == *tc.group.Priority
+					} else {
+						return true
+					}
+				}),
 				newObjectAssert(sts, "priority-class-name-match", func(obj *appsv1.StatefulSet) bool {
 					return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName
 				}),
@@ -1925,6 +1978,18 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 								TolerationSeconds: &[]int64{3600}[0],
 							},
 						},
+					},
+				},
+			},
+		},
+		"priority": {
+			group: risingwavev1alpha1.RisingWaveComputeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Image:    rand.String(20),
+						Priority: &[]int32{1000000}[0],
 					},
 				},
 			},
@@ -2271,6 +2336,13 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 				}),
 				newObjectAssert(asts, "tolerations-match", func(obj *kruiseappsv1beta1.StatefulSet) bool {
 					return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
+				}),
+				newObjectAssert(asts, "priority-match", func(obj *kruiseappsv1beta1.StatefulSet) bool {
+					if tc.group.Priority != nil {
+						return *obj.Spec.Template.Spec.Priority == *tc.group.Priority
+					} else {
+						return true
+					}
 				}),
 				newObjectAssert(asts, "priority-class-name-match", func(obj *kruiseappsv1beta1.StatefulSet) bool {
 					return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName

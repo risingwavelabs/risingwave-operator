@@ -7023,6 +7023,15 @@ spec:
                                 default, there's no such template and the controller
                                 will set all unrelated fields to the default value.
                               type: string
+                            priority:
+                              description: The priority value. Various system components
+                                use this field to find the priority of the pod. When
+                                Priority Admission Controller is enabled, it prevents
+                                users from setting this field. The admission controller
+                                populates this field from PriorityClassName. The higher
+                                the value, the higher the priority.
+                              format: int32
+                              type: integer
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -7255,6 +7264,15 @@ spec:
                                 default, there's no such template and the controller
                                 will set all unrelated fields to the default value.
                               type: string
+                            priority:
+                              description: The priority value. Various system components
+                                use this field to find the priority of the pod. When
+                                Priority Admission Controller is enabled, it prevents
+                                users from setting this field. The admission controller
+                                populates this field from PriorityClassName. The higher
+                                the value, the higher the priority.
+                              format: int32
+                              type: integer
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -7533,6 +7551,15 @@ spec:
                                 default, there's no such template and the controller
                                 will set all unrelated fields to the default value.
                               type: string
+                            priority:
+                              description: The priority value. Various system components
+                                use this field to find the priority of the pod. When
+                                Priority Admission Controller is enabled, it prevents
+                                users from setting this field. The admission controller
+                                populates this field from PriorityClassName. The higher
+                                the value, the higher the priority.
+                              format: int32
+                              type: integer
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -7767,6 +7794,15 @@ spec:
                                 default, there's no such template and the controller
                                 will set all unrelated fields to the default value.
                               type: string
+                            priority:
+                              description: The priority value. Various system components
+                                use this field to find the priority of the pod. When
+                                Priority Admission Controller is enabled, it prevents
+                                users from setting this field. The admission controller
+                                populates this field from PriorityClassName. The higher
+                                the value, the higher the priority.
+                              format: int32
+                              type: integer
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -8029,6 +8065,14 @@ spec:
                       there's no such template and the controller will set all unrelated
                       fields to the default value.
                     type: string
+                  priority:
+                    description: The priority value. Various system components use
+                      this field to find the priority of the pod. When Priority Admission
+                      Controller is enabled, it prevents users from setting this field.
+                      The admission controller populates this field from PriorityClassName.
+                      The higher the value, the higher the priority.
+                    format: int32
+                    type: integer
                   priorityClassName:
                     description: If specified, indicates the pod's priority. "system-node-critical"
                       and "system-cluster-critical" are two special keywords which

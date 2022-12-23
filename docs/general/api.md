@@ -714,6 +714,22 @@ and the controller will set all unrelated fields to the default value.</p>
 </tr>
 <tr>
 <td>
+<code>priority</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The priority value. Various system components use this field to find the
+priority of the pod. When Priority Admission Controller is enabled, it
+prevents users from setting this field. The admission controller populates
+this field from PriorityClassName.
+The higher the value, the higher the priority.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>priorityClassName</code><br/>
 <em>
 string
@@ -1156,6 +1172,22 @@ and the controller will set all unrelated fields to the default value.</p>
 </tr>
 <tr>
 <td>
+<code>priority</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The priority value. Various system components use this field to find the
+priority of the pod. When Priority Admission Controller is enabled, it
+prevents users from setting this field. The admission controller populates
+this field from PriorityClassName.
+The higher the value, the higher the priority.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>priorityClassName</code><br/>
 <em>
 string
@@ -1517,6 +1549,22 @@ and the controller will set all unrelated fields to the default value.</p>
 <td>
 <em>(Optional)</em>
 <p>If specified, the pod&rsquo;s tolerations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priority</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The priority value. Various system components use this field to find the
+priority of the pod. When Priority Admission Controller is enabled, it
+prevents users from setting this field. The admission controller populates
+this field from PriorityClassName.
+The higher the value, the higher the priority.</p>
 </td>
 </tr>
 <tr>

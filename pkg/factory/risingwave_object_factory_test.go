@@ -708,7 +708,7 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 				Replicas: int32(rand.Intn(math.MaxInt32)),
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image:    rand.String(20),
-					Priority: &[]int32{1000000}[0],
+					Priority: pointer.Int32(0),
 				},
 			},
 		},
@@ -1655,7 +1655,7 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 						Image:    rand.String(20),
-						Priority: &[]int32{1000000}[0],
+						Priority: pointer.Int32(0),
 					},
 				},
 			},
@@ -1989,7 +1989,7 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 						Image:    rand.String(20),
-						Priority: &[]int32{1000000}[0],
+						Priority: pointer.Int32(0),
 					},
 				},
 			},

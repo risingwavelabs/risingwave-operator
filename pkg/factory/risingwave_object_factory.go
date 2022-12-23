@@ -860,7 +860,7 @@ func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podT
 
 		// Set the priority value.
 		if groupTemplate.Priority != nil {
-			podTemplate.Spec.Priority = groupTemplate.Priority
+			podTemplate.Spec.Priority = pointer.Int32(*groupTemplate.Priority)
 		}
 
 		// Set the PriorityClassName.

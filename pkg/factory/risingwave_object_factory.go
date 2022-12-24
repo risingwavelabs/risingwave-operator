@@ -860,6 +860,9 @@ func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podT
 
 		// Set the PriorityClassName.
 		podTemplate.Spec.PriorityClassName = groupTemplate.PriorityClassName
+
+		// Set the security context.
+		podTemplate.Spec.SecurityContext = groupTemplate.SecurityContext.DeepCopy()
 	}
 
 	// Set config volume.

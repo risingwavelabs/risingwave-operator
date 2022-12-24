@@ -863,6 +863,9 @@ func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podT
 
 		// Set the security context.
 		podTemplate.Spec.SecurityContext = groupTemplate.SecurityContext.DeepCopy()
+
+		// Set the dns config.
+		podTemplate.Spec.DNSConfig = groupTemplate.DNSConfig.DeepCopy()
 	}
 
 	// Set config volume.

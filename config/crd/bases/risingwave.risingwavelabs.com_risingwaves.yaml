@@ -68,6 +68,45 @@ spec:
                             group of each component. Currently, we use this group
                             for meta/frontend/compactor.
                           properties:
+                            dnsConfig:
+                              description: Specifies the DNS parameters of a pod.
+                                Parameters specified here will be merged to the generated
+                                DNS configuration based on DNSPolicy.
+                              properties:
+                                nameservers:
+                                  description: A list of DNS name server IP addresses.
+                                    This will be appended to the base nameservers
+                                    generated from DNSPolicy. Duplicated nameservers
+                                    will be removed.
+                                  items:
+                                    type: string
+                                  type: array
+                                options:
+                                  description: A list of DNS resolver options. This
+                                    will be merged with the base options generated
+                                    from DNSPolicy. Duplicated entries will be removed.
+                                    Resolution options given in Options will override
+                                    those that appear in the base DNSPolicy.
+                                  items:
+                                    description: PodDNSConfigOption defines DNS resolver
+                                      options of a pod.
+                                    properties:
+                                      name:
+                                        description: Required.
+                                        type: string
+                                      value:
+                                        type: string
+                                    type: object
+                                  type: array
+                                searches:
+                                  description: A list of DNS search domains for host-name
+                                    lookup. This will be appended to the base search
+                                    paths generated from DNSPolicy. Duplicated search
+                                    paths will be removed.
+                                  items:
+                                    type: string
+                                  type: array
+                              type: object
                             image:
                               description: Image for RisingWave component.
                               type: string
@@ -493,6 +532,45 @@ spec:
                           description: RisingWaveComputeGroup is the group for component
                             compute.
                           properties:
+                            dnsConfig:
+                              description: Specifies the DNS parameters of a pod.
+                                Parameters specified here will be merged to the generated
+                                DNS configuration based on DNSPolicy.
+                              properties:
+                                nameservers:
+                                  description: A list of DNS name server IP addresses.
+                                    This will be appended to the base nameservers
+                                    generated from DNSPolicy. Duplicated nameservers
+                                    will be removed.
+                                  items:
+                                    type: string
+                                  type: array
+                                options:
+                                  description: A list of DNS resolver options. This
+                                    will be merged with the base options generated
+                                    from DNSPolicy. Duplicated entries will be removed.
+                                    Resolution options given in Options will override
+                                    those that appear in the base DNSPolicy.
+                                  items:
+                                    description: PodDNSConfigOption defines DNS resolver
+                                      options of a pod.
+                                    properties:
+                                      name:
+                                        description: Required.
+                                        type: string
+                                      value:
+                                        type: string
+                                    type: object
+                                  type: array
+                                searches:
+                                  description: A list of DNS search domains for host-name
+                                    lookup. This will be appended to the base search
+                                    paths generated from DNSPolicy. Duplicated search
+                                    paths will be removed.
+                                  items:
+                                    type: string
+                                  type: array
+                              type: object
                             image:
                               description: Image for RisingWave component.
                               type: string
@@ -962,6 +1040,45 @@ spec:
                             group of each component. Currently, we use this group
                             for meta/frontend/compactor.
                           properties:
+                            dnsConfig:
+                              description: Specifies the DNS parameters of a pod.
+                                Parameters specified here will be merged to the generated
+                                DNS configuration based on DNSPolicy.
+                              properties:
+                                nameservers:
+                                  description: A list of DNS name server IP addresses.
+                                    This will be appended to the base nameservers
+                                    generated from DNSPolicy. Duplicated nameservers
+                                    will be removed.
+                                  items:
+                                    type: string
+                                  type: array
+                                options:
+                                  description: A list of DNS resolver options. This
+                                    will be merged with the base options generated
+                                    from DNSPolicy. Duplicated entries will be removed.
+                                    Resolution options given in Options will override
+                                    those that appear in the base DNSPolicy.
+                                  items:
+                                    description: PodDNSConfigOption defines DNS resolver
+                                      options of a pod.
+                                    properties:
+                                      name:
+                                        description: Required.
+                                        type: string
+                                      value:
+                                        type: string
+                                    type: object
+                                  type: array
+                                searches:
+                                  description: A list of DNS search domains for host-name
+                                    lookup. This will be appended to the base search
+                                    paths generated from DNSPolicy. Duplicated search
+                                    paths will be removed.
+                                  items:
+                                    type: string
+                                  type: array
+                              type: object
                             image:
                               description: Image for RisingWave component.
                               type: string
@@ -1388,6 +1505,45 @@ spec:
                             group of each component. Currently, we use this group
                             for meta/frontend/compactor.
                           properties:
+                            dnsConfig:
+                              description: Specifies the DNS parameters of a pod.
+                                Parameters specified here will be merged to the generated
+                                DNS configuration based on DNSPolicy.
+                              properties:
+                                nameservers:
+                                  description: A list of DNS name server IP addresses.
+                                    This will be appended to the base nameservers
+                                    generated from DNSPolicy. Duplicated nameservers
+                                    will be removed.
+                                  items:
+                                    type: string
+                                  type: array
+                                options:
+                                  description: A list of DNS resolver options. This
+                                    will be merged with the base options generated
+                                    from DNSPolicy. Duplicated entries will be removed.
+                                    Resolution options given in Options will override
+                                    those that appear in the base DNSPolicy.
+                                  items:
+                                    description: PodDNSConfigOption defines DNS resolver
+                                      options of a pod.
+                                    properties:
+                                      name:
+                                        description: Required.
+                                        type: string
+                                      value:
+                                        type: string
+                                    type: object
+                                  type: array
+                                searches:
+                                  description: A list of DNS search domains for host-name
+                                    lookup. This will be appended to the base search
+                                    paths generated from DNSPolicy. Duplicated search
+                                    paths will be removed.
+                                  items:
+                                    type: string
+                                  type: array
+                              type: object
                             image:
                               description: Image for RisingWave component.
                               type: string
@@ -1846,6 +2002,42 @@ spec:
                 description: The spec of a shared template for components and a global
                   scope of replicas.
                 properties:
+                  dnsConfig:
+                    description: Specifies the DNS parameters of a pod. Parameters
+                      specified here will be merged to the generated DNS configuration
+                      based on DNSPolicy.
+                    properties:
+                      nameservers:
+                        description: A list of DNS name server IP addresses. This
+                          will be appended to the base nameservers generated from
+                          DNSPolicy. Duplicated nameservers will be removed.
+                        items:
+                          type: string
+                        type: array
+                      options:
+                        description: A list of DNS resolver options. This will be
+                          merged with the base options generated from DNSPolicy. Duplicated
+                          entries will be removed. Resolution options given in Options
+                          will override those that appear in the base DNSPolicy.
+                        items:
+                          description: PodDNSConfigOption defines DNS resolver options
+                            of a pod.
+                          properties:
+                            name:
+                              description: Required.
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                      searches:
+                        description: A list of DNS search domains for host-name lookup.
+                          This will be appended to the base search paths generated
+                          from DNSPolicy. Duplicated search paths will be removed.
+                        items:
+                          type: string
+                        type: array
+                    type: object
                   image:
                     description: Image for RisingWave component.
                     type: string

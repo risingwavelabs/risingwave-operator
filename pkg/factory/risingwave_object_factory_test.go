@@ -755,7 +755,7 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 				Replicas: int32(rand.Intn(math.MaxInt32)),
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image:                         rand.String(20),
-					TerminationGracePeriodSeconds: &[]int64{5}[0],
+					TerminationGracePeriodSeconds: pointer.Int64(5),
 				},
 			},
 		},
@@ -1132,7 +1132,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 				Replicas: int32(rand.Intn(math.MaxInt32)),
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image:                         rand.String(20),
-					TerminationGracePeriodSeconds: &[]int64{5}[0],
+					TerminationGracePeriodSeconds: pointer.Int64(5),
 				},
 			},
 		},
@@ -1794,7 +1794,7 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 						Image:                         rand.String(20),
-						TerminationGracePeriodSeconds: &[]int64{5}[0],
+						TerminationGracePeriodSeconds: pointer.Int64(5),
 					},
 				},
 			},
@@ -2175,7 +2175,7 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 						Image:                         rand.String(20),
-						TerminationGracePeriodSeconds: &[]int64{5}[0],
+						TerminationGracePeriodSeconds: pointer.Int64(5),
 					},
 				},
 			},

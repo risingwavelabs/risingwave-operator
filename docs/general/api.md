@@ -729,6 +729,21 @@ If not specified, the pod priority will be default or zero if there is no
 default.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>securityContext</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
+Kubernetes core/v1.PodSecurityContext
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecurityContext holds pod-level security attributes and common container settings.
+Optional: Defaults to empty.  See type description for default values of each field.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta
@@ -1173,6 +1188,21 @@ default.</p>
 </tr>
 <tr>
 <td>
+<code>securityContext</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
+Kubernetes core/v1.PodSecurityContext
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecurityContext holds pod-level security attributes and common container settings.
+Optional: Defaults to empty.  See type description for default values of each field.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>volumeMounts</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">
@@ -1534,6 +1564,21 @@ highest priorities with the former being the highest priority. Any other
 name must be defined by creating a PriorityClass object with that name.
 If not specified, the pod priority will be default or zero if there is no
 default.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>securityContext</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
+Kubernetes core/v1.PodSecurityContext
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecurityContext holds pod-level security attributes and common container settings.
+Optional: Defaults to empty.  See type description for default values of each field.</p>
 </td>
 </tr>
 <tr>

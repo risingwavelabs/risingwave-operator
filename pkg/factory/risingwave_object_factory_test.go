@@ -712,6 +712,21 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 				},
 			},
 		},
+		"security-context": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					SecurityContext: &corev1.PodSecurityContext{
+						RunAsUser:           &[]int64{1000}[0],
+						RunAsGroup:          &[]int64{3000}[0],
+						FSGroup:             &[]int64{2000}[0],
+						FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
+					},
+				},
+			},
+		},
 		"default-group": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
@@ -956,6 +971,9 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 					newObjectAssert(deploy, "priority-class-name-match", func(obj *appsv1.Deployment) bool {
 						return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName
 					}),
+					newObjectAssert(deploy, "security-context-match", func(obj *appsv1.Deployment) bool {
+						return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
+					}),
 					newObjectAssert(deploy, "upgrade-strategy-match", func(obj *appsv1.Deployment) bool {
 						if tc.expectUpgradeStrategy == nil {
 							return equality.Semantic.DeepEqual(obj.Spec.Strategy, appsv1.DeploymentStrategy{})
@@ -1026,6 +1044,21 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image:             rand.String(20),
 					PriorityClassName: "high-priority",
+				},
+			},
+		},
+		"security-context": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					SecurityContext: &corev1.PodSecurityContext{
+						RunAsUser:           &[]int64{1000}[0],
+						RunAsGroup:          &[]int64{3000}[0],
+						FSGroup:             &[]int64{2000}[0],
+						FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
+					},
 				},
 			},
 		},
@@ -1556,6 +1589,9 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 					newObjectAssert(cloneSet, "priority-class-name-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
 						return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName
 					}),
+					newObjectAssert(cloneSet, "security-context-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
+					}),
 					newObjectAssert(cloneSet, "upgrade-strategy-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
 						if tc.expectedUpgradeStrategy == nil {
 							return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, kruiseappsv1alpha1.CloneSetUpdateStrategy{})
@@ -1622,6 +1658,23 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 						Image:             rand.String(20),
 						PriorityClassName: "high-priority",
+					},
+				},
+			},
+		},
+		"security-context": {
+			group: risingwavev1alpha1.RisingWaveComputeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Image: rand.String(20),
+						SecurityContext: &corev1.PodSecurityContext{
+							RunAsUser:           &[]int64{1000}[0],
+							RunAsGroup:          &[]int64{3000}[0],
+							FSGroup:             &[]int64{2000}[0],
+							FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
+						},
 					},
 				},
 			},
@@ -1869,6 +1922,9 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 				newObjectAssert(sts, "priority-class-name-match", func(obj *appsv1.StatefulSet) bool {
 					return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName
 				}),
+				newObjectAssert(sts, "security-context-match", func(obj *appsv1.StatefulSet) bool {
+					return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
+				}),
 				newObjectAssert(sts, "upgrade-strategy-match", func(obj *appsv1.StatefulSet) bool {
 					if tc.expectUpgradeStrategy == nil {
 						return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, appsv1.StatefulSetUpdateStrategy{})
@@ -1937,6 +1993,23 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 						Image:             rand.String(20),
 						PriorityClassName: "high-priority",
+					},
+				},
+			},
+		},
+		"security-context": {
+			group: risingwavev1alpha1.RisingWaveComputeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Image: rand.String(20),
+						SecurityContext: &corev1.PodSecurityContext{
+							RunAsUser:           &[]int64{1000}[0],
+							RunAsGroup:          &[]int64{3000}[0],
+							FSGroup:             &[]int64{2000}[0],
+							FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
+						},
 					},
 				},
 			},
@@ -2274,6 +2347,9 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 				}),
 				newObjectAssert(asts, "priority-class-name-match", func(obj *kruiseappsv1beta1.StatefulSet) bool {
 					return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName
+				}),
+				newObjectAssert(asts, "security-context-match", func(obj *kruiseappsv1beta1.StatefulSet) bool {
+					return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
 				}),
 				newObjectAssert(asts, "upgrade-strategy-match", func(obj *kruiseappsv1beta1.StatefulSet) bool {
 					if tc.expectedUpgradeStrategy == nil {

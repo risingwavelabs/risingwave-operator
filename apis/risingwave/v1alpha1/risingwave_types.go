@@ -126,6 +126,11 @@ type RisingWaveComponentGroupTemplate struct {
 	// default.
 	// +optional
 	PriorityClassName string `json:"priorityClassName,omitempty"`
+
+	// SecurityContext holds pod-level security attributes and common container settings.
+	// Optional: Defaults to empty.  See type description for default values of each field.
+	// +optional
+	SecurityContext *corev1.PodSecurityContext `json:"securityContext,omitempty"`
 }
 
 // RisingWaveComponentGroup is the common deployment group of each component. Currently, we use

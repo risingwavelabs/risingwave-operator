@@ -131,6 +131,12 @@ type RisingWaveComponentGroupTemplate struct {
 	// Optional: Defaults to empty.  See type description for default values of each field.
 	// +optional
 	SecurityContext *corev1.PodSecurityContext `json:"securityContext,omitempty"`
+
+	// Specifies the DNS parameters of a pod.
+	// Parameters specified here will be merged to the generated DNS
+	// configuration based on DNSPolicy.
+	// +optional
+	DNSConfig *corev1.PodDNSConfig `json:"dnsConfig,omitempty"`
 }
 
 // RisingWaveComponentGroup is the common deployment group of each component. Currently, we use

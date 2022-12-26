@@ -727,6 +727,28 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 				},
 			},
 		},
+		"dns-config": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					DNSConfig: &corev1.PodDNSConfig{
+						Nameservers: []string{"1.2.3.4"},
+						Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
+						Options: []corev1.PodDNSConfigOption{
+							{
+								Name:  "ndots",
+								Value: &[]string{"2"}[0],
+							},
+							{
+								Name: "edns0",
+							},
+						},
+					},
+				},
+			},
+		},
 		"default-group": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
@@ -974,6 +996,9 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 					newObjectAssert(deploy, "security-context-match", func(obj *appsv1.Deployment) bool {
 						return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
 					}),
+					newObjectAssert(deploy, "dns-config-match", func(obj *appsv1.Deployment) bool {
+						return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.DNSConfig)
+					}),
 					newObjectAssert(deploy, "upgrade-strategy-match", func(obj *appsv1.Deployment) bool {
 						if tc.expectUpgradeStrategy == nil {
 							return equality.Semantic.DeepEqual(obj.Spec.Strategy, appsv1.DeploymentStrategy{})
@@ -1058,6 +1083,28 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 						RunAsGroup:          &[]int64{3000}[0],
 						FSGroup:             &[]int64{2000}[0],
 						FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
+					},
+				},
+			},
+		},
+		"dns-config": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					DNSConfig: &corev1.PodDNSConfig{
+						Nameservers: []string{"1.2.3.4"},
+						Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
+						Options: []corev1.PodDNSConfigOption{
+							{
+								Name:  "ndots",
+								Value: &[]string{"2"}[0],
+							},
+							{
+								Name: "edns0",
+							},
+						},
 					},
 				},
 			},
@@ -1592,6 +1639,9 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 					newObjectAssert(cloneSet, "security-context-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
 						return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
 					}),
+					newObjectAssert(cloneSet, "dns-config-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.DNSConfig)
+					}),
 					newObjectAssert(cloneSet, "upgrade-strategy-match", func(obj *kruiseappsv1alpha1.CloneSet) bool {
 						if tc.expectedUpgradeStrategy == nil {
 							return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, kruiseappsv1alpha1.CloneSetUpdateStrategy{})
@@ -1674,6 +1724,30 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 							RunAsGroup:          &[]int64{3000}[0],
 							FSGroup:             &[]int64{2000}[0],
 							FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
+						},
+					},
+				},
+			},
+		},
+		"dns-config": {
+			group: risingwavev1alpha1.RisingWaveComputeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Image: rand.String(20),
+						DNSConfig: &corev1.PodDNSConfig{
+							Nameservers: []string{"1.2.3.4"},
+							Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
+							Options: []corev1.PodDNSConfigOption{
+								{
+									Name:  "ndots",
+									Value: &[]string{"2"}[0],
+								},
+								{
+									Name: "edns0",
+								},
+							},
 						},
 					},
 				},
@@ -1925,6 +1999,9 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 				newObjectAssert(sts, "security-context-match", func(obj *appsv1.StatefulSet) bool {
 					return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
 				}),
+				newObjectAssert(sts, "dns-config-match", func(obj *appsv1.StatefulSet) bool {
+					return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.DNSConfig)
+				}),
 				newObjectAssert(sts, "upgrade-strategy-match", func(obj *appsv1.StatefulSet) bool {
 					if tc.expectUpgradeStrategy == nil {
 						return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, appsv1.StatefulSetUpdateStrategy{})
@@ -2009,6 +2086,30 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 							RunAsGroup:          &[]int64{3000}[0],
 							FSGroup:             &[]int64{2000}[0],
 							FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
+						},
+					},
+				},
+			},
+		},
+		"dns-config": {
+			group: risingwavev1alpha1.RisingWaveComputeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Image: rand.String(20),
+						DNSConfig: &corev1.PodDNSConfig{
+							Nameservers: []string{"1.2.3.4"},
+							Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
+							Options: []corev1.PodDNSConfigOption{
+								{
+									Name:  "ndots",
+									Value: &[]string{"2"}[0],
+								},
+								{
+									Name: "edns0",
+								},
+							},
 						},
 					},
 				},
@@ -2350,6 +2451,9 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 				}),
 				newObjectAssert(asts, "security-context-match", func(obj *kruiseappsv1beta1.StatefulSet) bool {
 					return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
+				}),
+				newObjectAssert(asts, "dns-config-match", func(obj *kruiseappsv1beta1.StatefulSet) bool {
+					return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.DNSConfig)
 				}),
 				newObjectAssert(asts, "upgrade-strategy-match", func(obj *kruiseappsv1beta1.StatefulSet) bool {
 					if tc.expectedUpgradeStrategy == nil {

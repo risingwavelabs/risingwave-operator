@@ -744,6 +744,22 @@ Kubernetes core/v1.PodSecurityContext
 Optional: Defaults to empty.  See type description for default values of each field.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#poddnsconfig-v1-core">
+Kubernetes core/v1.PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the DNS parameters of a pod.
+Parameters specified here will be merged to the generated DNS
+configuration based on DNSPolicy.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta
@@ -1203,6 +1219,22 @@ Optional: Defaults to empty.  See type description for default values of each fi
 </tr>
 <tr>
 <td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#poddnsconfig-v1-core">
+Kubernetes core/v1.PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the DNS parameters of a pod.
+Parameters specified here will be merged to the generated DNS
+configuration based on DNSPolicy.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>volumeMounts</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">
@@ -1579,6 +1611,22 @@ Kubernetes core/v1.PodSecurityContext
 <em>(Optional)</em>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 Optional: Defaults to empty.  See type description for default values of each field.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#poddnsconfig-v1-core">
+Kubernetes core/v1.PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the DNS parameters of a pod.
+Parameters specified here will be merged to the generated DNS
+configuration based on DNSPolicy.</p>
 </td>
 </tr>
 <tr>

@@ -866,6 +866,11 @@ func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podT
 
 		// Set the dns config.
 		podTemplate.Spec.DNSConfig = groupTemplate.DNSConfig.DeepCopy()
+
+		// Set the termination grace period seconds.
+		if groupTemplate.TerminationGracePeriodSeconds != nil {
+			podTemplate.Spec.TerminationGracePeriodSeconds = pointer.Int64(*groupTemplate.TerminationGracePeriodSeconds)
+		}
 	}
 
 	// Set config volume.

@@ -139,6 +139,20 @@ spec:
                                 default, there's no such template and the controller
                                 will set all unrelated fields to the default value.
                               type: string
+                            podsMetadata:
+                              description: metadata of the RisingWave's Pods.
+                              properties:
+                                annotations:
+                                  additionalProperties:
+                                    type: string
+                                  description: Annotations of the object.
+                                  type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels of the object.
+                                  type: object
+                              type: object
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -617,6 +631,20 @@ spec:
                                 default, there's no such template and the controller
                                 will set all unrelated fields to the default value.
                               type: string
+                            podsMetadata:
+                              description: metadata of the RisingWave's Pods.
+                              properties:
+                                annotations:
+                                  additionalProperties:
+                                    type: string
+                                  description: Annotations of the object.
+                                  type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels of the object.
+                                  type: object
+                              type: object
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -1141,6 +1169,20 @@ spec:
                                 default, there's no such template and the controller
                                 will set all unrelated fields to the default value.
                               type: string
+                            podsMetadata:
+                              description: metadata of the RisingWave's Pods.
+                              properties:
+                                annotations:
+                                  additionalProperties:
+                                    type: string
+                                  description: Annotations of the object.
+                                  type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels of the object.
+                                  type: object
+                              type: object
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -1621,6 +1663,20 @@ spec:
                                 default, there's no such template and the controller
                                 will set all unrelated fields to the default value.
                               type: string
+                            podsMetadata:
+                              description: metadata of the RisingWave's Pods.
+                              properties:
+                                annotations:
+                                  additionalProperties:
+                                    type: string
+                                  description: Annotations of the object.
+                                  type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels of the object.
+                                  type: object
+                              type: object
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -2126,6 +2182,20 @@ spec:
                       there's no such template and the controller will set all unrelated
                       fields to the default value.
                     type: string
+                  podsMetadata:
+                    description: metadata of the RisingWave's Pods.
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: Annotations of the object.
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels of the object.
+                        type: object
+                    type: object
                   priorityClassName:
                     description: If specified, indicates the pod's priority. "system-node-critical"
                       and "system-cluster-critical" are two special keywords which

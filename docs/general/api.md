@@ -779,6 +779,20 @@ Set this value longer than the expected cleanup time for your process.
 Defaults to 30 seconds.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>podsMetadata</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
+RisingWavePodTemplatePartialObjectMeta
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>metadata of the RisingWave&rsquo;s Pods.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta
@@ -1273,6 +1287,20 @@ Defaults to 30 seconds.</p>
 </tr>
 <tr>
 <td>
+<code>podsMetadata</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
+RisingWavePodTemplatePartialObjectMeta
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>metadata of the RisingWave&rsquo;s Pods.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>volumeMounts</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">
@@ -1684,6 +1712,20 @@ The grace period is the duration in seconds after the processes running in the p
 a termination signal and the time when the processes are forcibly halted with a kill signal.
 Set this value longer than the expected cleanup time for your process.
 Defaults to 30 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podsMetadata</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
+RisingWavePodTemplatePartialObjectMeta
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>metadata of the RisingWave&rsquo;s Pods.</p>
 </td>
 </tr>
 <tr>
@@ -2200,7 +2242,7 @@ RisingWavePodTemplateSpec
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">RisingWavePodTemplatePartialObjectMeta
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplateSpec">RisingWavePodTemplateSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplateSpec">RisingWavePodTemplateSpec</a>)
 </p>
 <div>
 </div>

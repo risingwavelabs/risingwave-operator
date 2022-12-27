@@ -186,19 +186,19 @@ func componentLabels(risingwave *risingwavev1alpha1.RisingWave, component string
 	}
 	if group != nil {
 		labels[consts.LabelRisingWaveGroup] = *group
-	}
-
-	if component == consts.ComponentFrontend {
+		labels = mergeMap(labels, risingwave.Spec.Global.PodsMeta.Labels)
+	} else if component == consts.ComponentFrontend {
 		labels = mergeMap(labels, risingwave.Spec.Global.ServiceMeta.Labels)
 	}
 
 	return labels
 }
 
-func componentAnnotations(risingwave *risingwavev1alpha1.RisingWave, component string) map[string]string {
+func componentAnnotations(risingwave *risingwavev1alpha1.RisingWave, component string, group *string) map[string]string {
 	annotations := map[string]string{}
-
-	if component == consts.ComponentFrontend {
+	if group != nil {
+		annotations = mergeMap(annotations, risingwave.Spec.Global.PodsMeta.Annotations)
+	} else if component == consts.ComponentFrontend {
 		annotations = mergeMap(annotations, risingwave.Spec.Global.ServiceMeta.Annotations)
 	}
 
@@ -518,7 +518,7 @@ func Test_RisingWaveObjectFactory_ServicesMeta(t *testing.T) {
 					return hasLabels(obj, componentLabels(risingwave, tc.component, nil, true), true)
 				}),
 				newObjectAssert(svc, "service-annotations-match", func(obj *corev1.Service) bool {
-					return hasAnnotations(obj, componentAnnotations(risingwave, tc.component), true)
+					return hasAnnotations(obj, componentAnnotations(risingwave, tc.component, nil), true)
 				}),
 			).Assert(t)
 		})
@@ -672,6 +672,36 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 		restartAt             *metav1.Time
 		expectUpgradeStrategy *appsv1.DeploymentStrategy
 	}{
+		"pods-meta-labels": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Labels: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+				},
+			},
+		},
+		"pods-meta-annotations": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Annotations: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+				},
+			},
+		},
 		"node-selectors": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
@@ -953,6 +983,9 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 					newObjectAssert(deploy, "labels-equal", func(obj *appsv1.Deployment) bool {
 						return hasLabels(obj, componentLabels(risingwave, component, group, true), true)
 					}),
+					newObjectAssert(deploy, "annotations-equal", func(obj *appsv1.Deployment) bool {
+						return hasAnnotations(obj, componentAnnotations(risingwave, component, group), true)
+					}),
 					newObjectAssert(deploy, "replicas-equal", func(obj *appsv1.Deployment) bool {
 						return *obj.Spec.Replicas == tc.group.Replicas
 					}),
@@ -1040,6 +1073,36 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 		restartAt               *metav1.Time
 		expectedUpgradeStrategy *kruiseappsv1alpha1.CloneSetUpdateStrategy
 	}{
+		"pods-meta-labels": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Labels: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+				},
+			},
+		},
+		"pods-meta-annotations": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Annotations: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+				},
+			},
+		},
 		"default-group": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
@@ -1614,6 +1677,9 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 					newObjectAssert(cloneSet, "labels-equal", func(obj *kruiseappsv1alpha1.CloneSet) bool {
 						return hasLabels(obj, componentLabels(risingwave, component, group, true), true)
 					}),
+					newObjectAssert(cloneSet, "annotations-equal", func(obj *kruiseappsv1alpha1.CloneSet) bool {
+						return hasAnnotations(obj, componentAnnotations(risingwave, component, group), true)
+					}),
 					newObjectAssert(cloneSet, "replicas-equal", func(obj *kruiseappsv1alpha1.CloneSet) bool {
 						return *obj.Spec.Replicas == tc.group.Replicas
 					}),
@@ -1700,6 +1766,40 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 		restartAt             *metav1.Time
 		expectUpgradeStrategy *appsv1.StatefulSetUpdateStrategy
 	}{
+		"pods-meta-labels": {
+			group: risingwavev1alpha1.RisingWaveComputeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Image: rand.String(20),
+						PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+							Labels: map[string]string{
+								"key1": "value1",
+								"key2": "value2",
+							},
+						},
+					},
+				},
+			},
+		},
+		"pods-meta-annotations": {
+			group: risingwavev1alpha1.RisingWaveComputeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Image: rand.String(20),
+						PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+							Annotations: map[string]string{
+								"key1": "value1",
+								"key2": "value2",
+							},
+						},
+					},
+				},
+			},
+		},
 		"node-selectors": {
 			group: risingwavev1alpha1.RisingWaveComputeGroup{
 				Name:     "",
@@ -1992,6 +2092,9 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 				newObjectAssert(sts, "labels-equal", func(obj *appsv1.StatefulSet) bool {
 					return hasLabels(obj, componentLabels(risingwave, consts.ComponentCompute, group, true), true)
 				}),
+				newObjectAssert(sts, "annotations-equal", func(obj *appsv1.StatefulSet) bool {
+					return hasAnnotations(obj, componentAnnotations(risingwave, consts.ComponentCompute, group), true)
+				}),
 				newObjectAssert(sts, "replicas-equal", func(obj *appsv1.StatefulSet) bool {
 					return *obj.Spec.Replicas == tc.group.Replicas
 				}),
@@ -2081,6 +2184,40 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 		restartAt               *metav1.Time
 		expectedUpgradeStrategy *kruiseappsv1beta1.StatefulSetUpdateStrategy
 	}{
+		"pods-meta-labels": {
+			group: risingwavev1alpha1.RisingWaveComputeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Image: rand.String(20),
+						PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+							Labels: map[string]string{
+								"key1": "value1",
+								"key2": "value2",
+							},
+						},
+					},
+				},
+			},
+		},
+		"pods-meta-annotations": {
+			group: risingwavev1alpha1.RisingWaveComputeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Image: rand.String(20),
+						PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+							Annotations: map[string]string{
+								"key1": "value1",
+								"key2": "value2",
+							},
+						},
+					},
+				},
+			},
+		},
 		"node-selectors": {
 			group: risingwavev1alpha1.RisingWaveComputeGroup{
 				Name:     "",
@@ -2463,6 +2600,9 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 				}),
 				newObjectAssert(asts, "labels-equal", func(obj *kruiseappsv1beta1.StatefulSet) bool {
 					return hasLabels(obj, componentLabels(risingwave, consts.ComponentCompute, group, true), true)
+				}),
+				newObjectAssert(asts, "annotations-equal", func(obj *kruiseappsv1beta1.StatefulSet) bool {
+					return hasAnnotations(obj, componentAnnotations(risingwave, consts.ComponentCompute, group), true)
 				}),
 				newObjectAssert(asts, "replicas-equal", func(obj *kruiseappsv1beta1.StatefulSet) bool {
 					return *obj.Spec.Replicas == tc.group.Replicas

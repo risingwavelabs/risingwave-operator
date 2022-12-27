@@ -148,6 +148,10 @@ type RisingWaveComponentGroupTemplate struct {
 	// Defaults to 30 seconds.
 	// +optional
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
+
+	// metadata of the RisingWave's Pods.
+	// +optional
+	PodsMeta RisingWavePodTemplatePartialObjectMeta `json:"podsMetadata,omitempty"`
 }
 
 // RisingWaveComponentGroup is the common deployment group of each component. Currently, we use

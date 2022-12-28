@@ -19,6 +19,7 @@ package factory
 import (
 	"sort"
 
+	"github.com/samber/lo"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
@@ -33,9 +34,12 @@ func nonZeroOrDefault[T comparable](v T, defaultVal T) T {
 }
 
 func sortSlicesInContainer(container *corev1.Container) {
-	// TODO: we can have an algorithm for resolving the dependencies.
-	// DON'T SORT THE ENVIRONMENT VARIABLES AS THERE ARE DEPENDENCIES THAT MUST BE PARSED IN ORDER.
-	// sort.Sort(utils.EnvVarSlice(container.Env))
+	EnvVarSlice := utils.ToEnvVarSlice(container.Env)
+	sort.Sort(EnvVarSlice)
+	lo.ForEach(EnvVarSlice, func(p utils.EnvVarIdxPair, i int) {
+		container.Env[i] = p.EnvVar
+	})
+
 	sort.Sort(utils.VolumeMountSlice(container.VolumeMounts))
 	sort.Sort(utils.VolumeDeviceSlice(container.VolumeDevices))
 }

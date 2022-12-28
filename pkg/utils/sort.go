@@ -16,7 +16,12 @@
 
 package utils
 
-import corev1 "k8s.io/api/core/v1"
+import (
+	"strings"
+
+	"github.com/samber/lo"
+	corev1 "k8s.io/api/core/v1"
+)
 
 func swap[T any](a, b *T) {
 	t := *a
@@ -24,18 +29,46 @@ func swap[T any](a, b *T) {
 	*b = t
 }
 
-type EnvVarSlice []corev1.EnvVar
+type EnvVarIdxPair struct {
+	EnvVar corev1.EnvVar
+	Idx    int
+}
+
+type EnvVarSlice []EnvVarIdxPair
 
 func (s EnvVarSlice) Len() int {
 	return len(s)
 }
 
 func (s EnvVarSlice) Less(i, j int) bool {
-	return s[i].Name < s[j].Name
+	// If a depends on b or b depends on a, then use their input order
+	if s[i].DependsOn(s[j]) || s[j].DependsOn(s[i]) {
+		return s[i].Idx < s[j].Idx
+	}
+
+	// Otherwise, compare the name of a and b in alphabetical order
+	return s[i].EnvVar.Name < s[j].EnvVar.Name
 }
 
 func (s EnvVarSlice) Swap(i, j int) {
 	swap(&s[i], &s[j])
+}
+
+func (a EnvVarIdxPair) DependsOn(b EnvVarIdxPair) bool {
+	idx := strings.Index(a.EnvVar.Value, "$("+b.EnvVar.Name+")")
+	if idx == -1 || (idx > 0 && a.EnvVar.Value[idx-1] == '$') {
+		return false
+	}
+	return true
+}
+
+func ToEnvVarSlice(e []corev1.EnvVar) EnvVarSlice {
+	return lo.Map(e, func(env corev1.EnvVar, idx int) EnvVarIdxPair {
+		return EnvVarIdxPair{
+			env,
+			idx,
+		}
+	})
 }
 
 type VolumeMountSlice []corev1.VolumeMount

@@ -140,6 +140,100 @@ func Test_SortEnvVarSlice(t *testing.T) {
 				},
 			},
 		},
+		"env-fake-transitive": {
+			container: &corev1.Container{
+				Env: []corev1.EnvVar{
+					{
+						Name:  "ENV_C",
+						Value: "$(ENV_D)_suffix",
+					},
+					{
+						Name:  "ENV_A",
+						Value: "$(ENV_B)_suffix",
+					},
+					{
+						Name:  "ENV_B",
+						Value: "$(ENV_C)_suffix",
+					},
+				},
+			},
+			expectContainer: &corev1.Container{
+				Env: []corev1.EnvVar{
+					{
+						Name:  "ENV_A",
+						Value: "$(ENV_B)_suffix",
+					},
+					{
+						Name:  "ENV_C",
+						Value: "$(ENV_D)_suffix",
+					},
+					{
+						Name:  "ENV_B",
+						Value: "$(ENV_C)_suffix",
+					},
+				},
+			},
+		},
+		"env-input-alphabetical": {
+			container: &corev1.Container{
+				Env: []corev1.EnvVar{
+					{
+						Name:  "ENV_C",
+						Value: "$(ENV_D)_suffix",
+					},
+					{
+						Name:  "ENV_B",
+						Value: "$(ENV_C)_suffix",
+					},
+					{
+						Name:  "ENV_A",
+						Value: "$(ENV_C)_suffix",
+					},
+				},
+			},
+			expectContainer: &corev1.Container{
+				Env: []corev1.EnvVar{
+					{
+						Name:  "ENV_C",
+						Value: "$(ENV_D)_suffix",
+					},
+					{
+						Name:  "ENV_A",
+						Value: "$(ENV_C)_suffix",
+					},
+					{
+						Name:  "ENV_B",
+						Value: "$(ENV_C)_suffix",
+					},
+				},
+			},
+		},
+		"env-circular-dependencies": {
+			container: &corev1.Container{
+				Env: []corev1.EnvVar{
+					{
+						Name:  "ENV_B",
+						Value: "$(ENV_A)_suffix",
+					},
+					{
+						Name:  "ENV_A",
+						Value: "$(ENV_B)_suffix",
+					},
+				},
+			},
+			expectContainer: &corev1.Container{
+				Env: []corev1.EnvVar{
+					{
+						Name:  "ENV_B",
+						Value: "$(ENV_A)_suffix",
+					},
+					{
+						Name:  "ENV_A",
+						Value: "$(ENV_B)_suffix",
+					},
+				},
+			},
+		},
 	}
 
 	for name, tc := range testcases {

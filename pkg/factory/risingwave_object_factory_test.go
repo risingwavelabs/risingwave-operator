@@ -738,10 +738,12 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 						Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
 						Options: []corev1.PodDNSConfigOption{
 							{
+								// spellchecker: disable
 								Name:  "ndots",
 								Value: &[]string{"2"}[0],
 							},
 							{
+								// spellchecker: disable
 								Name: "edns0",
 							},
 						},

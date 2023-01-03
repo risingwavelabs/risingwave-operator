@@ -7,13 +7,11 @@ coverage:
       default:
         target: auto  # base branch coverage is target
         threshold: 0% # percent deviation allowed from target branch coverage
-        base: auto 
-        flags: 
-          - unittests
-        paths: 
-          - "pkg"
-          - "examples"
-          - "cmd"
-          - "apis"
-
-
+        base: auto
+        flags:
+        - unittests
+        paths:
+        - "pkg"
+        - "examples"
+        - "cmd"
+        - "apis"

@@ -186,7 +186,7 @@ func componentLabels(risingwave *risingwavev1alpha1.RisingWave, component string
 	}
 	if group != nil {
 		labels[consts.LabelRisingWaveGroup] = *group
-		labels = mergeMap(labels, risingwave.Spec.Global.PodsMeta.Labels)
+		labels = mergeMap(labels, risingwave.Spec.Global.Metadata.Labels)
 	} else if component == consts.ComponentFrontend {
 		labels = mergeMap(labels, risingwave.Spec.Global.ServiceMeta.Labels)
 	}
@@ -197,7 +197,7 @@ func componentLabels(risingwave *risingwavev1alpha1.RisingWave, component string
 func componentAnnotations(risingwave *risingwavev1alpha1.RisingWave, component string, group *string) map[string]string {
 	annotations := map[string]string{}
 	if group != nil {
-		annotations = mergeMap(annotations, risingwave.Spec.Global.PodsMeta.Annotations)
+		annotations = mergeMap(annotations, risingwave.Spec.Global.Metadata.Annotations)
 	} else if component == consts.ComponentFrontend {
 		annotations = mergeMap(annotations, risingwave.Spec.Global.ServiceMeta.Annotations)
 	}
@@ -678,7 +678,7 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 				Replicas: int32(rand.Intn(math.MaxInt32)),
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image: rand.String(20),
-					PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+					Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
 						Labels: map[string]string{
 							"key1": "value1",
 							"key2": "value2",
@@ -693,7 +693,7 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 				Replicas: int32(rand.Intn(math.MaxInt32)),
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image: rand.String(20),
-					PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+					Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
 						Annotations: map[string]string{
 							"key1": "value1",
 							"key2": "value2",
@@ -1079,7 +1079,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 				Replicas: int32(rand.Intn(math.MaxInt32)),
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image: rand.String(20),
-					PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+					Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
 						Labels: map[string]string{
 							"key1": "value1",
 							"key2": "value2",
@@ -1094,7 +1094,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 				Replicas: int32(rand.Intn(math.MaxInt32)),
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image: rand.String(20),
-					PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+					Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
 						Annotations: map[string]string{
 							"key1": "value1",
 							"key2": "value2",
@@ -1773,7 +1773,7 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 						Image: rand.String(20),
-						PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
 							Labels: map[string]string{
 								"key1": "value1",
 								"key2": "value2",
@@ -1790,7 +1790,7 @@ func Test_RisingWaveObjectFactory_StatefulSets(t *testing.T) {
 				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 						Image: rand.String(20),
-						PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
 							Annotations: map[string]string{
 								"key1": "value1",
 								"key2": "value2",
@@ -2191,7 +2191,7 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 						Image: rand.String(20),
-						PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
 							Labels: map[string]string{
 								"key1": "value1",
 								"key2": "value2",
@@ -2208,7 +2208,7 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 						Image: rand.String(20),
-						PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
 							Annotations: map[string]string{
 								"key1": "value1",
 								"key2": "value2",

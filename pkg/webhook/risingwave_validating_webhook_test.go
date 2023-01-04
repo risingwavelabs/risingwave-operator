@@ -484,7 +484,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
 							Labels: map[string]string{
 								"key1": "value1",
 								"key2": "value2",
@@ -499,7 +499,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						PodsMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
 							Labels: map[string]string{
 								"key1":            "value1",
 								"risingwave/key2": "value2",

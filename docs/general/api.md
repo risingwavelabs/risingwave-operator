@@ -781,7 +781,7 @@ Defaults to 30 seconds.</p>
 </tr>
 <tr>
 <td>
-<code>podsMetadata</code><br/>
+<code>metadata</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
 RisingWavePodTemplatePartialObjectMeta
@@ -1287,7 +1287,7 @@ Defaults to 30 seconds.</p>
 </tr>
 <tr>
 <td>
-<code>podsMetadata</code><br/>
+<code>metadata</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
 RisingWavePodTemplatePartialObjectMeta
@@ -1716,7 +1716,7 @@ Defaults to 30 seconds.</p>
 </tr>
 <tr>
 <td>
-<code>podsMetadata</code><br/>
+<code>metadata</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
 RisingWavePodTemplatePartialObjectMeta

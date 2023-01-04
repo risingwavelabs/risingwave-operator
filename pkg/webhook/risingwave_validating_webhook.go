@@ -95,10 +95,10 @@ func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 	}
 
 	// Validate labels of the RisingWave's Pods
-	for label := range groupTemplate.PodsMeta.Labels {
+	for label := range groupTemplate.Metadata.Labels {
 		if strings.HasPrefix(label, "risingwave/") {
 			fieldErrs = append(fieldErrs,
-				field.Invalid(path.Child("podsMetadata", "labels"), label, "Labels with the prefix 'risingwave/' are system reserved"))
+				field.Invalid(path.Child("Metadata", "labels"), label, "Labels with the prefix 'risingwave/' are system reserved"))
 		}
 	}
 

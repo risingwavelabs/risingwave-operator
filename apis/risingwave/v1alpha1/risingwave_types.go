@@ -151,7 +151,7 @@ type RisingWaveComponentGroupTemplate struct {
 
 	// metadata of the RisingWave's Pods.
 	// +optional
-	PodsMeta RisingWavePodTemplatePartialObjectMeta `json:"podsMetadata,omitempty"`
+	Metadata RisingWavePodTemplatePartialObjectMeta `json:"metadata,omitempty"`
 }
 
 // RisingWaveComponentGroup is the common deployment group of each component. Currently, we use

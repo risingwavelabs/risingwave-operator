@@ -4,22 +4,22 @@
   "dictionaryDefinitions": [
     {
       "name": "misc",
-      "path": ".cspell/misc.txt",
+      "path": "hack/cspell/dicts/misc.txt",
       "addWords": true
     },
     {
       "name": "makefile",
-      "path": ".cspell/makefile.txt",
+      "path": "hack/cspell/dicts/makefile.txt",
       "addWords": true
     },
     {
       "name": "k8s",
-      "path": ".cspell/k8s.txt",
+      "path": "hack/cspell/dicts/k8s.txt",
       "addWords": true
     },
     {
       "name": "go",
-      "path": ".cspell/go.txt",
+      "path": "hack/cspell/dicts/go.txt",
       "addWords": true
     }
   ],

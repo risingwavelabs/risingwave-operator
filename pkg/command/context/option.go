@@ -118,12 +118,7 @@ func (o *RWContext) getKubeClient() (client.Client, error) {
 
 	o.restConfig = config
 
-	c, err := client.New(config, client.Options{Scheme: scheme})
-	if err != nil {
-		return nil, err
-	}
-
-	return NewBypassClient(c), nil
+	return client.New(config, client.Options{Scheme: scheme})
 }
 
 func (o *RWContext) lazyInit() {

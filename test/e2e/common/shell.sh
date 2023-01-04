@@ -156,7 +156,7 @@ function shell::spawn() {
 
   local pid=$!
   # shellcheck disable=SC2034
-  BACKGROUND_PIDS[${pid}]="$*"
+  BACKGROUND_PIDS["${pid}"]="$*"
 
   if [[ "${TRACE_COMMAND:=false}" == "true" ]]; then
     logging::debug "$*, pid: ${pid}"

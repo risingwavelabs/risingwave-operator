@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -3362,6 +3363,99 @@ func Test_RisingWaveObjectFactory_InheritLabels(t *testing.T) {
 			}, nil)
 
 			assert.Equal(t, tc.inheritedLabels, factory.getInheritedLabels(), "inherited labels not match")
+		})
+	}
+}
+
+func containsSlice[T comparable](a, b []T) bool {
+	for i := 0; i <= len(a)-len(b); i++ {
+		match := true
+		for j, element := range b {
+			if a[i+j] != element {
+				match = false
+				break
+			}
+		}
+		if match {
+			return true
+		}
+	}
+
+	return false
+}
+
+func TestRisingWaveObjectFactory_ComputeArgs(t *testing.T) {
+	testcases := map[string]struct {
+		cpuLimit int64
+		memLimit int64
+		argsList [][]string
+	}{
+		"empty-limits": {},
+		"cpu-limit-4": {
+			cpuLimit: 4,
+			argsList: [][]string{
+				{"--parallelism", "4"},
+			},
+		},
+		"mem-limit-4g": {
+			memLimit: 4 << 30,
+			argsList: [][]string{
+				{"--total-memory-bytes", strconv.Itoa((4 << 30) - (512 << 20))},
+			},
+		},
+		"mem-limit-1g": {
+			memLimit: 1 << 30,
+			argsList: [][]string{
+				{"--total-memory-bytes", strconv.Itoa((1 << 30) - (512 << 20))},
+			},
+		},
+		"mem-limit-768m": {
+			memLimit: 768 << 20,
+			argsList: [][]string{
+				{"--total-memory-bytes", strconv.Itoa(512 << 20)},
+			},
+		},
+		"mem-limit-512m": {
+			memLimit: 512 << 20,
+			argsList: [][]string{
+				{"--total-memory-bytes", strconv.Itoa(512 << 20)},
+			},
+		},
+		"mem-limit-256m": {
+			memLimit: 256 << 20,
+			argsList: [][]string{
+				{"--total-memory-bytes", strconv.Itoa(256 << 20)},
+			},
+		},
+		"cpu-and-mem": {
+			cpuLimit: 4,
+			memLimit: 1 << 30,
+			argsList: [][]string{
+				{"--parallelism", "4"},
+				{"--total-memory-bytes", strconv.Itoa((1 << 30) - (512 << 20))},
+			},
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			factory := NewRisingWaveObjectFactory(&risingwavev1alpha1.RisingWave{
+				Spec: risingwavev1alpha1.RisingWaveSpec{
+					Storages: risingwavev1alpha1.RisingWaveStoragesSpec{
+						Object: risingwavev1alpha1.RisingWaveObjectStorage{
+							Memory: pointer.Bool(true),
+						},
+					},
+				},
+			}, nil)
+			args := factory.argsForCompute(tc.cpuLimit, tc.memLimit)
+
+			for _, expectArgs := range tc.argsList {
+				if !containsSlice(args, expectArgs) {
+					t.Fatalf("Args not expected, expects \"%s\", but is \"%s\"",
+						strings.Join(expectArgs, " "), strings.Join(args, " "))
+				}
+			}
 		})
 	}
 }

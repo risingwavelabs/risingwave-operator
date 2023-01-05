@@ -91,7 +91,7 @@ spec:
         region: ap-southeast-1
         bucket: hummock001
   global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.1.13
+    image: ghcr.io/risingwavelabs/risingwave:v0.1.15
     imagePullPolicy: IfNotPresent
     resources:
       limits:

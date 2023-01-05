@@ -132,6 +132,21 @@ func (v *RisingWaveValidatingWebhook) validateGlobal(path *field.Path, global *r
 		}
 	}
 
+	// Validate labels of the RisingWave's service type
+	if global.ServiceType != "" && global.ServiceType != corev1.ServiceTypeClusterIP && global.ServiceType != corev1.ServiceTypeNodePort &&
+		global.ServiceType != corev1.ServiceTypeLoadBalancer {
+		fieldErrs = append(fieldErrs,
+			field.Invalid(path.Child("ServiceType"), global.ServiceType, "Service type only support ClusterIP, NodePort and LoadBalancer"))
+	}
+
+	// Validate labels of the RisingWave's service metadata
+	for label := range global.ServiceMeta.Labels {
+		if strings.HasPrefix(label, "risingwave/") {
+			fieldErrs = append(fieldErrs,
+				field.Invalid(path.Child("ServiceMeta", "labels"), label, "Labels with the prefix 'risingwave/' are system reserved"))
+		}
+	}
+
 	return fieldErrs
 }
 

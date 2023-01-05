@@ -419,7 +419,8 @@ func (f *RisingWaveObjectFactory) argsForFrontend() []string {
 	return []string{
 		"frontend-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
-		"--host", fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
+		"--host", fmt.Sprintf("0.0.0.0:%d", frontendPorts.ServicePort),
+		"--client-address", fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
 		"--meta-addr", fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 	}
 }
@@ -466,7 +467,8 @@ func (f *RisingWaveObjectFactory) argsForCompactor() []string {
 	return []string{
 		"compactor-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
-		"--host", fmt.Sprintf("$(POD_IP):%d", compactorPorts.ServicePort),
+		"--host", fmt.Sprintf("0.0.0.0:%d", compactorPorts.ServicePort),
+		"--client-address", fmt.Sprintf("$(POD_IP):%d", compactorPorts.ServicePort),
 		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", compactorPorts.MetricsPort),
 		"--metrics-level=1",
 		"--state-store", f.hummockConnectionStr(),

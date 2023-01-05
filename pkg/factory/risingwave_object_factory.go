@@ -212,6 +212,9 @@ func (f *RisingWaveObjectFactory) componentGroupObjectMeta(component, group stri
 
 	objectMeta.Labels = mergeMap(objectMeta.Labels, f.getInheritedLabels())
 
+	objectMeta.Labels = mergeMap(objectMeta.Labels, f.risingwave.Spec.Global.Metadata.Labels)
+	objectMeta.Annotations = mergeMap(objectMeta.Annotations, f.risingwave.Spec.Global.Metadata.Annotations)
+
 	return objectMeta
 }
 

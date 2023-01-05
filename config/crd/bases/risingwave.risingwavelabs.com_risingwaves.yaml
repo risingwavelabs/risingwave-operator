@@ -124,6 +124,20 @@ spec:
                               items:
                                 type: string
                               type: array
+                            metadata:
+                              description: metadata of the RisingWave's Pods.
+                              properties:
+                                annotations:
+                                  additionalProperties:
+                                    type: string
+                                  description: Annotations of the object.
+                                  type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels of the object.
+                                  type: object
+                              type: object
                             name:
                               description: Name of the group.
                               minLength: 1
@@ -603,6 +617,20 @@ spec:
                               items:
                                 type: string
                               type: array
+                            metadata:
+                              description: metadata of the RisingWave's Pods.
+                              properties:
+                                annotations:
+                                  additionalProperties:
+                                    type: string
+                                  description: Annotations of the object.
+                                  type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels of the object.
+                                  type: object
+                              type: object
                             name:
                               description: Name of the group.
                               type: string
@@ -1126,6 +1154,20 @@ spec:
                               items:
                                 type: string
                               type: array
+                            metadata:
+                              description: metadata of the RisingWave's Pods.
+                              properties:
+                                annotations:
+                                  additionalProperties:
+                                    type: string
+                                  description: Annotations of the object.
+                                  type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels of the object.
+                                  type: object
+                              type: object
                             name:
                               description: Name of the group.
                               minLength: 1
@@ -1606,6 +1648,20 @@ spec:
                               items:
                                 type: string
                               type: array
+                            metadata:
+                              description: metadata of the RisingWave's Pods.
+                              properties:
+                                annotations:
+                                  additionalProperties:
+                                    type: string
+                                  description: Annotations of the object.
+                                  type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels of the object.
+                                  type: object
+                              type: object
                             name:
                               description: Name of the group.
                               minLength: 1
@@ -2115,6 +2171,20 @@ spec:
                     items:
                       type: string
                     type: array
+                  metadata:
+                    description: metadata of the RisingWave's Pods.
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: Annotations of the object.
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels of the object.
+                        type: object
+                    type: object
                   nodeSelector:
                     additionalProperties:
                       type: string

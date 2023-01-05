@@ -17,10 +17,10 @@
 package utils
 
 import (
+	"container/heap"
 	"sort"
 	"strings"
 
-	"github.com/samber/lo"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -30,37 +30,51 @@ func swap[T any](a, b *T) {
 	*b = t
 }
 
-type EnvVarIdxSlice struct {
-	EnvVarName []string
-	Idx        []int
+type EnvVarIdxPair struct {
+	EnvVarName string
+	Idx        int
 }
 
-func (s EnvVarIdxSlice) Len() int {
-	return len(s.EnvVarName)
+type EnvVarPriorityQueue []*EnvVarIdxPair
+
+func (pq *EnvVarPriorityQueue) Len() int { return len(*pq) }
+
+func (pq *EnvVarPriorityQueue) Less(i, j int) bool {
+	return (*pq)[i].EnvVarName < (*pq)[j].EnvVarName
 }
 
-func (s EnvVarIdxSlice) Less(i, j int) bool {
-	return s.EnvVarName[i] < s.EnvVarName[j]
+func (pq *EnvVarPriorityQueue) Swap(i, j int) {
+	swap((*pq)[i], (*pq)[j])
 }
 
-func (s EnvVarIdxSlice) Swap(i, j int) {
-	swap(&s.Idx[i], &s.Idx[j])
+func (pq *EnvVarPriorityQueue) Push(x any) {
+	item := x.(*EnvVarIdxPair)
+	*pq = append(*pq, item)
 }
 
-type EnvVarSlice struct {
+func (pq *EnvVarPriorityQueue) Pop() any {
+	old := *pq
+	n := len(old)
+	item := old[n-1]
+	old[n-1] = nil // avoid memory leak
+	*pq = old[0 : n-1]
+	return item
+}
+
+type EnvVarSliceByIdx struct {
 	EnvVar []corev1.EnvVar
 	Idx    []int
 }
 
-func (s EnvVarSlice) Len() int {
+func (s EnvVarSliceByIdx) Len() int {
 	return len(s.EnvVar)
 }
 
-func (s EnvVarSlice) Less(i, j int) bool {
+func (s EnvVarSliceByIdx) Less(i, j int) bool {
 	return s.Idx[i] < s.Idx[j]
 }
 
-func (s EnvVarSlice) Swap(i, j int) {
+func (s EnvVarSliceByIdx) Swap(i, j int) {
 	swap(&s.EnvVar[i], &s.EnvVar[j])
 }
 
@@ -75,23 +89,25 @@ func DependsOn(a, b corev1.EnvVar) bool {
 func TopologicalSort(e []corev1.EnvVar) {
 	inDegree := make(map[int]int)
 	graph := make(map[int][]int)
-	for i := 0; i < len(e); i++ {
+	n := len(e)
+
+	// initialize the dependency graph
+	for i := 0; i < n; i++ {
 		inDegree[i] = 0
 		graph[i] = make([]int, 0)
 	}
 
-	edges := make([][]int, 0)
-	for i := 0; i < len(e); i++ {
-		for j := i; j < len(e); j++ {
+	for i := 0; i < n; i++ {
+		for j := i; j < n; j++ {
 			// If a depends on b or b depends on a, then use their input order
 			if DependsOn(e[i], e[j]) || DependsOn(e[j], e[i]) {
+				var child, parent int
 				if i < j {
-					edges = append(edges, []int{i, j})
+					child, parent = j, i
 				} else {
-					edges = append(edges, []int{j, i})
+					child, parent = i, j
 				}
 
-				child, parent := edges[len(edges)-1][1], edges[len(edges)-1][0]
 				graph[parent] = append(graph[parent], child)
 				inDegree[child] = inDegree[child] + 1
 			}
@@ -99,39 +115,31 @@ func TopologicalSort(e []corev1.EnvVar) {
 	}
 
 	sortedOrder := make([]int, 0)
-	sources := make([]int, 0)
+	sources := make(EnvVarPriorityQueue, 0)
+	heap.Init(&sources)
+
 	for key, val := range inDegree {
 		if val == 0 {
-			sources = append(sources, key)
+			heap.Push(&sources, &EnvVarIdxPair{EnvVarName: e[key].Name, Idx: key})
 		}
 	}
 
 	for len(sources) != 0 {
-		n := len(sources)
-		sort.Sort(EnvVarIdxSlice{
-			lo.Map(sources, func(i int, _ int) string {
-				return e[i].Name
-			}),
-			sources,
-		})
+		vertex := heap.Pop(&sources).(*EnvVarIdxPair)
 
-		for i := 0; i < n; i++ {
-			vertex := sources[0]
-			sources = sources[1:]
+		sortedOrder = append(sortedOrder, vertex.Idx)
+		children := graph[vertex.Idx]
 
-			sortedOrder = append(sortedOrder, vertex)
-			children := graph[vertex]
-
-			for _, child := range children {
-				inDegree[child] = inDegree[child] - 1
-				if inDegree[child] == 0 {
-					sources = append(sources, child)
-				}
+		for _, child := range children {
+			inDegree[child] = inDegree[child] - 1
+			if inDegree[child] == 0 {
+				heap.Push(&sources, &EnvVarIdxPair{EnvVarName: e[child].Name, Idx: child})
 			}
 		}
 	}
 
-	sort.Sort(EnvVarSlice{
+	// sort env by the sorted order
+	sort.Sort(EnvVarSliceByIdx{
 		e,
 		sortedOrder,
 	})

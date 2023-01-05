@@ -9,7 +9,7 @@ spec:
     object:
       memory: true
   global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.1.13
+    image: ghcr.io/risingwavelabs/risingwave:v0.1.15
     replicas:
       meta: 1
       frontend: 1

@@ -18,6 +18,7 @@ package factory
 
 import (
 	"fmt"
+	"math"
 	"path"
 	"strconv"
 	"strings"
@@ -423,11 +424,11 @@ func (f *RisingWaveObjectFactory) argsForFrontend() []string {
 	}
 }
 
-func (f *RisingWaveObjectFactory) argsForCompute() []string {
+func (f *RisingWaveObjectFactory) argsForCompute(cpuLimit int64, memLimit int64) []string {
 	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
 	computePorts := &f.risingwave.Spec.Components.Compute.Ports
 
-	return []string{
+	args := []string{
 		"compute-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--host", fmt.Sprintf("$(POD_IP):%d", computePorts.ServicePort),
@@ -439,6 +440,23 @@ func (f *RisingWaveObjectFactory) argsForCompute() []string {
 		"--meta-address",
 		fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 	}
+
+	if cpuLimit != 0 {
+		args = append(args, "--parallelism", strconv.FormatInt(cpuLimit, 10))
+	}
+
+	if memLimit != 0 {
+		// Set to memLimit - 512M if memLimit >= 1G, or 512M when memLimit >= 512M, or just memLimit.
+		totalMemoryBytes := memLimit
+		if totalMemoryBytes >= (int64(1) << 30) {
+			totalMemoryBytes -= 512 << 20
+		} else if totalMemoryBytes >= (512 << 20) {
+			totalMemoryBytes = 512 << 20
+		}
+		args = append(args, "--total-memory-bytes", strconv.FormatInt(totalMemoryBytes, 10))
+	}
+
+	return args
 }
 
 func (f *RisingWaveObjectFactory) argsForCompactor() []string {
@@ -1492,7 +1510,10 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	basicSetupContainer(container, &template.RisingWaveComponentGroupTemplate)
 
 	container.Name = "compute"
-	container.Args = f.argsForCompute()
+
+	cpuLimit := int64(math.Floor(container.Resources.Limits.Cpu().AsApproximateFloat64()))
+	memLimit, _ := container.Resources.Limits.Memory().AsInt64()
+	container.Args = f.argsForCompute(cpuLimit, memLimit)
 	container.Ports = f.portsForComputeContainer()
 
 	for _, env := range f.envsForObjectStorage() {

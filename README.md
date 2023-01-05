@@ -60,7 +60,7 @@ Now you can deploy a RisingWave instance with in-memory storage with the followi
 arch):
 
 ```shell
-kubectl apply -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/examples/risingwave/risingwave-in-memory.yaml
+kubectl apply -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/docs/manifests/risingwave/risingwave-in-memory.yaml
 ```
 
 Check the running status of RisingWave with the following command:
@@ -87,7 +87,7 @@ Kubernetes, which runs an infinite loop so that we can attach to it.
 You can create one by following the commands below, or you can just do it yourself:
 
 ```shell
-kubectl apply -f examples/psql/psql-console.yaml
+kubectl apply -f docs/manifests/psql/psql-console.yaml
 ```
 
 And then you will find a Pod named `psql-console` running in the Kubernetes, and you can attach to it to execute
@@ -184,13 +184,13 @@ spec:
 #...
 ```
 
-Check the [examples/risingwave/risingwave-etcd-minio.yaml](examples/risingwave/risingwave-etcd-minio.yaml) for how to
+Check the [docs/manifests/risingwave/risingwave-etcd-minio.yaml](docs/manifests/risingwave/risingwave-etcd-minio.yaml) for how to
 provision a simple RisingWave with an `etcd` instance as the metadata storage.
 
 ### MinIO
 
 We support using MinIO as the object storage. Check
-the [examples/risingwave/risingwave-etcd-minio.yaml](examples/risingwave/risingwave-etcd-minio.yaml) for details. The
+the [docs/manifests/risingwave/risingwave-etcd-minio.yaml](docs/manifests/risingwave/risingwave-etcd-minio.yaml) for details. The
 YAML structure is like the following:
 
 ```yamlex
@@ -208,7 +208,7 @@ spec:
 ### S3
 
 We support using AWS S3 as the object storage. Follow the steps below and check
-the [examples/risingwave/risingwave-etcd-s3.yaml](examples/risingwave/risingwave-etcd-s3.yaml) for details:
+the [docs/manifests/risingwave/risingwave-etcd-s3.yaml](docs/manifests/risingwave/risingwave-etcd-s3.yaml) for details:
 
 First, you need to create a `Secret` with the name `s3-credentials`:
 

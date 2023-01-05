@@ -48,7 +48,7 @@ spec:
 
 ## RisingWave
 
-Here's an example [risingwave_ng.yaml](./examples/risingwave_ng.yaml). It mainly includes these parts:
+Here's an example [risingwave_ng.yaml](./manifests/risingwave_ng.yaml). It mainly includes these parts:
 
 + `global` for simplified specs, such as image, image pull policy, pod template, resources, node selector and replicas
 + `components` for advanced specs, one can

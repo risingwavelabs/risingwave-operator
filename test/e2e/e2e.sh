@@ -143,7 +143,7 @@ function e2e::test::run_next() {
 function e2e::util::_print_seconds() {
   local hour=$(($1 / 3600))
   local minute=$((($1 % 3600) / 60))
-  local second=$((($1 % 60)))
+  local second=$(($1 % 60))
 
   if ((hour > 0)); then
     printf "%dh%02dm%02ds\n" "${hour}" "${minute}" "${second}"

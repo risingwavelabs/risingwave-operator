@@ -17,6 +17,7 @@
 package utils
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/samber/lo"
@@ -29,45 +30,110 @@ func swap[T any](a, b *T) {
 	*b = t
 }
 
-type EnvVarIdxPair struct {
-	EnvVar corev1.EnvVar
-	Idx    int
+type EnvVarIdxSlice struct {
+	EnvVarName []string
+	Idx        []int
 }
 
-type EnvVarSlice []EnvVarIdxPair
+func (s EnvVarIdxSlice) Len() int {
+	return len(s.EnvVarName)
+}
+
+func (s EnvVarIdxSlice) Less(i, j int) bool {
+	return s.EnvVarName[i] < s.EnvVarName[j]
+}
+
+func (s EnvVarIdxSlice) Swap(i, j int) {
+	swap(&s.Idx[i], &s.Idx[j])
+}
+
+type EnvVarSlice struct {
+	EnvVar []corev1.EnvVar
+	Idx    []int
+}
 
 func (s EnvVarSlice) Len() int {
-	return len(s)
+	return len(s.EnvVar)
 }
 
 func (s EnvVarSlice) Less(i, j int) bool {
-	// If a depends on b or b depends on a, then use their input order
-	if s[i].DependsOn(s[j]) || s[j].DependsOn(s[i]) {
-		return s[i].Idx < s[j].Idx
-	}
-
-	// Otherwise, compare the name of a and b in alphabetical order
-	return s[i].EnvVar.Name < s[j].EnvVar.Name
+	return s.Idx[i] < s.Idx[j]
 }
 
 func (s EnvVarSlice) Swap(i, j int) {
-	swap(&s[i], &s[j])
+	swap(&s.EnvVar[i], &s.EnvVar[j])
 }
 
-func (a EnvVarIdxPair) DependsOn(b EnvVarIdxPair) bool {
-	idx := strings.Index(a.EnvVar.Value, "$("+b.EnvVar.Name+")")
-	if idx == -1 || (idx > 0 && a.EnvVar.Value[idx-1] == '$') {
+func DependsOn(a, b corev1.EnvVar) bool {
+	idx := strings.Index(a.Value, "$("+b.Name+")")
+	if idx == -1 || (idx > 0 && a.Value[idx-1] == '$') {
 		return false
 	}
 	return true
 }
 
-func ToEnvVarSlice(e []corev1.EnvVar) EnvVarSlice {
-	return lo.Map(e, func(env corev1.EnvVar, idx int) EnvVarIdxPair {
-		return EnvVarIdxPair{
-			env,
-			idx,
+func TopologicalSort(e []corev1.EnvVar) {
+	inDegree := make(map[int]int)
+	graph := make(map[int][]int)
+	for i := 0; i < len(e); i++ {
+		inDegree[i] = 0
+		graph[i] = make([]int, 0)
+	}
+
+	edges := make([][]int, 0)
+	for i := 0; i < len(e); i++ {
+		for j := i; j < len(e); j++ {
+			// If a depends on b or b depends on a, then use their input order
+			if DependsOn(e[i], e[j]) || DependsOn(e[j], e[i]) {
+				if i < j {
+					edges = append(edges, []int{i, j})
+				} else {
+					edges = append(edges, []int{j, i})
+				}
+
+				child, parent := edges[len(edges)-1][1], edges[len(edges)-1][0]
+				graph[parent] = append(graph[parent], child)
+				inDegree[child] = inDegree[child] + 1
+			}
 		}
+	}
+
+	sortedOrder := make([]int, 0)
+	sources := make([]int, 0)
+	for key, val := range inDegree {
+		if val == 0 {
+			sources = append(sources, key)
+		}
+	}
+
+	for len(sources) != 0 {
+		n := len(sources)
+		sort.Sort(EnvVarIdxSlice{
+			lo.Map(sources, func(i int, _ int) string {
+				return e[i].Name
+			}),
+			sources,
+		})
+
+		for i := 0; i < n; i++ {
+			vertex := sources[0]
+			sources = sources[1:]
+
+			sortedOrder = append(sortedOrder, vertex)
+			children := graph[vertex]
+
+			for _, child := range children {
+				inDegree[child] = inDegree[child] - 1
+				if inDegree[child] == 0 {
+					sources = append(sources, child)
+				}
+			}
+		}
+	}
+
+	sort.Sort(EnvVarSlice{
+		e,
+		sortedOrder,
 	})
 }
 

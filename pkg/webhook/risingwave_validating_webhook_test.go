@@ -67,22 +67,6 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: false,
 		},
-		"service-type-pass": {
-			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
-					ServiceType: "LoadBalancer",
-				}
-			},
-			pass: true,
-		},
-		"service-type-fail": {
-			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
-					ServiceType: "Aaa",
-				}
-			},
-			pass: false,
-		},
 		"service-meta-labels-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{

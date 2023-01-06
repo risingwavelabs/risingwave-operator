@@ -132,6 +132,14 @@ func (v *RisingWaveValidatingWebhook) validateGlobal(path *field.Path, global *r
 		}
 	}
 
+	// Validate labels of the RisingWave's service metadata
+	for label := range global.ServiceMeta.Labels {
+		if strings.HasPrefix(label, "risingwave/") {
+			fieldErrs = append(fieldErrs,
+				field.Invalid(path.Child("serviceMetadata", "labels"), label, "Labels with the prefix 'risingwave/' are system reserved"))
+		}
+	}
+
 	return fieldErrs
 }
 

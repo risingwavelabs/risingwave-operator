@@ -117,7 +117,7 @@ test: manifests generate fmt vet lint envtest ## Run tests.
 
 spellcheck:
 	@if command -v cspell > /dev/null 2>&1 ; then \
-	    cspell lint --relative --no-progress --no-summary --show-suggestions -e 'vendor/*' --gitignore **/*.go **/*.md Makefile; \
+	    cspell lint -c hack/cspell/cspell.json --relative --no-progress --no-summary --show-suggestions -e 'vendor/*' --gitignore **/*.go **/*.md Makefile; \
 	else \
 		echo "ERROR: cspell not found, install it manually! Link: https://cspell.org/docs/getting-started"; \
 		exit 1; \
@@ -160,7 +160,7 @@ run-local: manifests generate fmt vet lint install-local
 	go run cmd/manager/manager.go -zap-time-encoding rfc3339
 
 build-e2e-image:
-	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=true -t docker.io/risingwavelabs/risingwave-operator:dev . --load
+	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=true -t docker.io/risingwavelabs/risingwave-operator:dev . --load
 
 e2e-test: generate-test-yaml vendor build-e2e-image
 	E2E_KUBERNETES_RUNTIME=kind ./test/e2e/e2e.sh
@@ -169,16 +169,16 @@ e2e-plugin:
 	e2e/e2e-plugin.sh
 
 docker-cross-build: test buildx## Build docker image with the manager.
-	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=false --platform=linux/amd64,linux/arm64 -t ${IMG} . --push
+	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=false --platform=linux/amd64,linux/arm64 -t ${IMG} . --push
 
 docker-cross-build-vendor: test buildx vendor
-	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=true --platform=linux/amd64,linux/arm64 -t ${IMG} . --push
+	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=true --platform=linux/amd64,linux/arm64 -t ${IMG} . --push
 
 docker-build: test ## Build docker image with the manager.
-	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=false -t ${IMG} . --load
+	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=false -t ${IMG} . --load
 
 docker-build-vendor: vendor test
-	docker buildx build -f docker/Dockerfile --build-arg USE_VENDOR=true -t ${IMG} . --load
+	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=true -t ${IMG} . --load
 
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
@@ -237,7 +237,7 @@ TYPES_V1ALPHA1_TARGET := apis/risingwave/v1alpha1/risingwave_types.go
 TYPES_V1ALPHA1_TARGET += apis/risingwave/v1alpha1/risingwave_pod_template_types.go
 
 docs/general/api.md: gen-crd-api-reference-docs $(TYPES_V1ALPHA1_TARGET)
-	$(GEN_CRD_API_REFERENCE_DOCS) -api-dir "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/docs/general/api.md"
+	$(GEN_CRD_API_REFERENCE_DOCS) -api-dir "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1" -config "$(PWD)/hack/docs/config.json" -template-dir "$(PWD)/hack/docs/templates" -out-file "$(PWD)/docs/general/api.md"
 
 .PHONY: generate-docs
 generate-docs: docs/general/api.md

@@ -94,6 +94,14 @@ func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 		}
 	}
 
+	// Validate labels of the RisingWave's Pods
+	for label := range groupTemplate.Metadata.Labels {
+		if strings.HasPrefix(label, "risingwave/") {
+			fieldErrs = append(fieldErrs,
+				field.Invalid(path.Child("Metadata", "labels"), label, "Labels with the prefix 'risingwave/' are system reserved"))
+		}
+	}
+
 	// Validate the resources only when limits exist
 	if groupTemplate.Resources.Limits == nil {
 		return fieldErrs
@@ -121,6 +129,14 @@ func (v *RisingWaveValidatingWebhook) validateGlobal(path *field.Path, global *r
 		global.Replicas.Compute > 0 || global.Replicas.Compactor > 0 {
 		if global.Image == "" {
 			fieldErrs = append(fieldErrs, field.Required(path.Child("image"), "must be specified when there're global replicas"))
+		}
+	}
+
+	// Validate labels of the RisingWave's service metadata
+	for label := range global.ServiceMeta.Labels {
+		if strings.HasPrefix(label, "risingwave/") {
+			fieldErrs = append(fieldErrs,
+				field.Invalid(path.Child("serviceMetadata", "labels"), label, "Labels with the prefix 'risingwave/' are system reserved"))
 		}
 	}
 

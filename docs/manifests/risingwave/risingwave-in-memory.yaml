@@ -1,21 +1,7 @@
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
-kind: RisingWavePodTemplate
-metadata:
-  name: privileged
-template:
-  metadata:
-    labels:
-      risingwave/privileged: "1"
-  spec:
-    containers:
-    - name: ""
-      securityContext:
-        privileged: true
----
-apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
-  name: risingwave-privileged
+  name: risingwave-in-memory
 spec:
   storages:
     meta:
@@ -23,9 +9,8 @@ spec:
     object:
       memory: true
   global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.1.13
+    image: ghcr.io/risingwavelabs/risingwave:v0.1.15
     imagePullPolicy: IfNotPresent
-    podTemplate: privileged
     resources:
       limits:
         cpu: 1

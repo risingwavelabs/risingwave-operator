@@ -67,6 +67,32 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: false,
 		},
+		"service-meta-labels-pass": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
+					ServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Labels: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+				}
+			},
+			pass: true,
+		},
+		"service-meta-labels-fail": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
+					ServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Labels: map[string]string{
+							"key1":            "value1",
+							"risingwave/key2": "value2",
+						},
+					},
+				}
+			},
+			pass: false,
+		},
 		"invalid-upgrade-strategy-type-InPlaceIfPossible-openKruise-disabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Global.RisingWaveComponentGroupTemplate.UpgradeStrategy.Type = risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible
@@ -473,6 +499,36 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 							},
 							Requests: corev1.ResourceList{
 								"memory": resource.MustParse("1Gi"),
+							},
+						},
+					},
+				}
+			},
+			pass: false,
+		},
+		"pods-meta-labels-pass": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+							Labels: map[string]string{
+								"key1": "value1",
+								"key2": "value2",
+							},
+						},
+					},
+				}
+			},
+			pass: true,
+		},
+		"pods-meta-labels-fail": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
+					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+						Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+							Labels: map[string]string{
+								"key1":            "value1",
+								"risingwave/key2": "value2",
 							},
 						},
 					},

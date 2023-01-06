@@ -69,89 +69,29 @@ spec:
             protocol: TCP
 ---
 apiVersion: v1
-kind: Service
-metadata:
-  name: risingwave-minio
-  labels:
-    app: risingwave-minio
-spec:
-  ports:
-  - port: 9301
-    name: service
-  - port: 9400
-    name: console
-  selector:
-    app: risingwave-minio
----
-apiVersion: v1
 kind: Secret
-metadata: 
-  name: risingwave-minio-credentials
-stringData:
-  username: hummockadmin
-  password: hummockadmin
----
-apiVersion: apps/v1
-kind: StatefulSet
 metadata:
-  labels:
-    app: risingwave-minio
-  name: risingwave-minio
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: risingwave-minio
-  serviceName: risingwave-minio
-  template: 
-    metadata:
-      labels:
-        app: risingwave-minio
-    spec:
-      containers:
-      - name: minio
-        image: quay.io/minio/minio:latest
-        imagePullPolicy: IfNotPresent
-        command:
-        - /bin/sh
-        args:
-        - -c 
-        - mkdir -p /data/hummock001; /usr/bin/docker-entrypoint.sh server --address 0.0.0.0:9301 --console-address 0.0.0.0:9400 /data
-        env:
-        - name: MINIO_ROOT_USER
-          valueFrom: 
-            secretKeyRef:
-              name: risingwave-minio-credentials
-              key: username
-        - name: MINIO_ROOT_PASSWORD
-          valueFrom: 
-            secretKeyRef:
-              name: risingwave-minio-credentials
-              key: password
-        ports:
-        - name: service
-          containerPort: 9301
-          protocol: TCP
-        - name: console
-          containerPort: 9400
-          protocol: TCP
+  name: s3-credentials
+stringData:
+  AccessKeyID: your-access-key
+  SecretAccessKey: your-access-secret
 ---
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
-  name: risingwave-etcd-minio
+  name: risingwave-etcd-s3
 spec:
   storages:
     meta:
       etcd: 
         endpoint: risingwave-etcd:2388
     object:
-      minio: 
-        secret:  risingwave-minio-credentials
-        endpoint: risingwave-minio:9301
+      s3:
+        secret: s3-credentials
+        region: ap-southeast-1
         bucket: hummock001
   global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.1.13
+    image: ghcr.io/risingwavelabs/risingwave:v0.1.15
     imagePullPolicy: IfNotPresent
     resources:
       limits:

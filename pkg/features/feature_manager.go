@@ -112,7 +112,7 @@ func InitFeatureManager(supportedFeatureList []Feature, featureGateString string
 	return risingWaveFeatureManager
 }
 
-// This method returns the Feature Manager Struct. Should not be modified after intialization.
+// GetFeatureManager returns the Feature Manager Struct. Should not be modified after initialization.
 func GetFeatureManager() *FeatureManager {
 	return risingWaveFeatureManager
 }
@@ -124,7 +124,7 @@ func (m *FeatureManager) addFeature(feature *Feature) {
 }
 
 // This function returns true if the feature exists in the featureManager, else returns false.
-func (m FeatureManager) IsFeatureExist(featureName FeatureName) bool {
+func (m *FeatureManager) IsFeatureExist(featureName FeatureName) bool {
 	_, exist := m.featureMap[featureName]
 	return exist
 }
@@ -141,22 +141,22 @@ func (m *FeatureManager) setFeatureEnable(name FeatureName, enable bool) error {
 	return fmt.Errorf("the following feature does not exist: %s", name)
 }
 
-// This method takes in a feature name and checks if it is enabled, returns a bool, nil if it exists,
+// IsFeatureEnabled takes in a feature name and checks if it is enabled, returns a bool, nil if it exists,
 // and a false,error if it does not exist in the featureManager.
-func (m FeatureManager) IsFeatureEnabled(name FeatureName) bool {
+func (m *FeatureManager) IsFeatureEnabled(name FeatureName) bool {
 	// check for existence of feature in map
 	feature, featureExists := m.featureMap[name]
 	return featureExists && feature.Enabled
 }
 
-// This metod takes in a feature name and enables it if it exists, if it does not
+// EnableFeature takes in a feature name and enables it if it exists, if it does not
 // it returns an error.
 func (m *FeatureManager) EnableFeature(name FeatureName) error {
 	// check for existence of feature in map
 	return m.setFeatureEnable(name, true)
 }
 
-// This metod takes in a feature name and disables it if it exists, if it does not
+// DisableFeature takes in a feature name and disables it if it exists, if it does not
 // it returns an error.
 func (m *FeatureManager) DisableFeature(name FeatureName) error {
 	// check for existence of feature in map
@@ -168,8 +168,8 @@ func (m *FeatureManager) GetNumOfFeatures() int {
 	return len(m.featureMap)
 }
 
-// This method lists all features, returns a copy of the list of feature structs.
-func (m FeatureManager) ListFeatures() []Feature {
+// ListFeatures lists all features, returns a copy of the list of feature structs.
+func (m *FeatureManager) ListFeatures() []Feature {
 	var featureList = []Feature{}
 	for _, feature := range m.featureMap {
 		// make a deep copy of the feature
@@ -178,8 +178,8 @@ func (m FeatureManager) ListFeatures() []Feature {
 	return featureList
 }
 
-// This method lists all enabled features, returns a copy of the list of feature structs.
-func (m FeatureManager) ListEnabledFeatures() []Feature {
+// ListEnabledFeatures lists all enabled features, returns a copy of the list of feature structs.
+func (m *FeatureManager) ListEnabledFeatures() []Feature {
 	var featureList = []Feature{}
 	for _, feature := range m.featureMap {
 		if feature.Enabled {
@@ -190,8 +190,8 @@ func (m FeatureManager) ListEnabledFeatures() []Feature {
 	return featureList
 }
 
-// This method lists all disabled features, returns a copy of list of feature structs.
-func (m FeatureManager) ListDisabledFeatures() []Feature {
+// ListDisabledFeatures lists all disabled features, returns a copy of list of feature structs.
+func (m *FeatureManager) ListDisabledFeatures() []Feature {
 	var featureList = []Feature{}
 	for _, feature := range m.featureMap {
 		if !feature.Enabled {
@@ -202,8 +202,8 @@ func (m FeatureManager) ListDisabledFeatures() []Feature {
 	return featureList
 }
 
-// This method takes in a feature name and return a copy of the feature struct with all its meta information.
-func (m FeatureManager) GetFeature(name FeatureName) (Feature, error) {
+// GetFeature takes in a feature name and return a copy of the feature struct with all its meta information.
+func (m *FeatureManager) GetFeature(name FeatureName) (Feature, error) {
 	_, featureExists := m.featureMap[name]
 	if !featureExists {
 		return Feature{}, fmt.Errorf("the following feature does not exist: %s", name)
@@ -212,7 +212,7 @@ func (m FeatureManager) GetFeature(name FeatureName) (Feature, error) {
 	return *m.featureMap[name].DeepCopy(), nil
 }
 
-// This method takes in a feature gate string that is given as a CLI argument,
+// ParseFromFeatureGateString takes in a feature gate string that is given as a CLI argument,
 // parses the features and updates the featureManager. e.g if command line argument is
 // --feature-gates=enableOpenKruise=true,otherOption=false, it will set the feature enableOpenKruise
 // as true if and only if it exists. if a feature is not supported, it is simply ignored.
@@ -239,8 +239,8 @@ func (m *FeatureManager) ParseFromFeatureGateString(featureGateString string) er
 	return nil
 }
 
-// This function parses a feature string into a featurename and a boolean and returns
-// an error when a feature string cannot be parsed. e.g enableOpenKruise=true will return
+// parseFeatureString parses a feature string into a FeatureName and a boolean and returns
+// an error when a feature string cannot be parsed. e.g, enableOpenKruise=true will return
 // (enableOpenKruise, true, nil).
 func parseFeatureString(featureString string) (FeatureName, bool, error) {
 	featureStringSplit := strings.Split(featureString, "=")

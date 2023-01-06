@@ -16,7 +16,13 @@
 
 package utils
 
-import corev1 "k8s.io/api/core/v1"
+import (
+	"container/heap"
+	"sort"
+	"strings"
+
+	corev1 "k8s.io/api/core/v1"
+)
 
 func swap[T any](a, b *T) {
 	t := *a
@@ -24,18 +30,119 @@ func swap[T any](a, b *T) {
 	*b = t
 }
 
-type EnvVarSlice []corev1.EnvVar
-
-func (s EnvVarSlice) Len() int {
-	return len(s)
+type EnvVarIdxPair struct {
+	EnvVarName string
+	Idx        int
 }
 
-func (s EnvVarSlice) Less(i, j int) bool {
-	return s[i].Name < s[j].Name
+type EnvVarPriorityQueue []*EnvVarIdxPair
+
+func (pq *EnvVarPriorityQueue) Len() int { return len(*pq) }
+
+func (pq *EnvVarPriorityQueue) Less(i, j int) bool {
+	return (*pq)[i].EnvVarName < (*pq)[j].EnvVarName
 }
 
-func (s EnvVarSlice) Swap(i, j int) {
-	swap(&s[i], &s[j])
+func (pq *EnvVarPriorityQueue) Swap(i, j int) {
+	swap((*pq)[i], (*pq)[j])
+}
+
+func (pq *EnvVarPriorityQueue) Push(x any) {
+	item := x.(*EnvVarIdxPair)
+	*pq = append(*pq, item)
+}
+
+func (pq *EnvVarPriorityQueue) Pop() any {
+	old := *pq
+	n := len(old)
+	item := old[n-1]
+	old[n-1] = nil // avoid memory leak
+	*pq = old[0 : n-1]
+	return item
+}
+
+type EnvVarSliceByIdx struct {
+	EnvVar []corev1.EnvVar
+	Idx    []int
+}
+
+func (s EnvVarSliceByIdx) Len() int {
+	return len(s.EnvVar)
+}
+
+func (s EnvVarSliceByIdx) Less(i, j int) bool {
+	return s.Idx[i] < s.Idx[j]
+}
+
+func (s EnvVarSliceByIdx) Swap(i, j int) {
+	swap(&s.EnvVar[i], &s.EnvVar[j])
+}
+
+func DependsOn(a, b corev1.EnvVar) bool {
+	idx := strings.Index(a.Value, "$("+b.Name+")")
+	if idx == -1 || (idx > 0 && a.Value[idx-1] == '$') {
+		return false
+	}
+	return true
+}
+
+func TopologicalSort(e []corev1.EnvVar) {
+	inDegree := make(map[int]int)
+	graph := make(map[int][]int)
+	n := len(e)
+
+	// initialize the dependency graph
+	for i := 0; i < n; i++ {
+		inDegree[i] = 0
+		graph[i] = make([]int, 0)
+	}
+
+	for i := 0; i < n; i++ {
+		for j := i; j < n; j++ {
+			// If a depends on b or b depends on a, then use their input order
+			if DependsOn(e[i], e[j]) || DependsOn(e[j], e[i]) {
+				var child, parent int
+				if i < j {
+					child, parent = j, i
+				} else {
+					child, parent = i, j
+				}
+
+				graph[parent] = append(graph[parent], child)
+				inDegree[child] = inDegree[child] + 1
+			}
+		}
+	}
+
+	sortedOrder := make([]int, 0)
+	sources := make(EnvVarPriorityQueue, 0)
+	heap.Init(&sources)
+
+	for key, val := range inDegree {
+		if val == 0 {
+			heap.Push(&sources, &EnvVarIdxPair{EnvVarName: e[key].Name, Idx: key})
+		}
+	}
+
+	for len(sources) != 0 {
+		vertex := heap.Pop(&sources).(*EnvVarIdxPair)
+
+		sortedOrder = append(sortedOrder, vertex.Idx)
+		children := graph[vertex.Idx]
+
+		for _, child := range children {
+			inDegree[child] = inDegree[child] - 1
+			if inDegree[child] == 0 {
+				heap.Push(&sources, &EnvVarIdxPair{EnvVarName: e[child].Name, Idx: child})
+			}
+		}
+	}
+
+	// sort env by the sorted order
+	sort.Sort(EnvVarSliceByIdx{
+		e,
+		sortedOrder,
+	})
 }
 
 type VolumeMountSlice []corev1.VolumeMount

@@ -33,9 +33,7 @@ func nonZeroOrDefault[T comparable](v T, defaultVal T) T {
 }
 
 func sortSlicesInContainer(container *corev1.Container) {
-	// TODO: we can have an algorithm for resolving the dependencies.
-	// DON'T SORT THE ENVIRONMENT VARIABLES AS THERE ARE DEPENDENCIES THAT MUST BE PARSED IN ORDER.
-	// sort.Sort(utils.EnvVarSlice(container.Env))
+	utils.TopologicalSort(container.Env)
 	sort.Sort(utils.VolumeMountSlice(container.VolumeMounts))
 	sort.Sort(utils.VolumeDeviceSlice(container.VolumeDevices))
 }

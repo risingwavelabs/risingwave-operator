@@ -91,27 +91,28 @@ func (svl *ScaleViewLockManager) GrabScaleViewLockFor(sv *risingwavev1alpha1.Ris
 
 func (svl *ScaleViewLockManager) GrabOrUpdateScaleViewLockFor(sv *risingwavev1alpha1.RisingWaveScaleView) (bool, error) {
 	lock := svl.GetScaleViewLock(sv)
+
 	if lock == nil {
 		err := svl.GrabScaleViewLockFor(sv)
 		if err != nil {
 			return false, err
 		}
 		return true, nil
-	} else {
-		if lock.Generation == sv.Generation {
-			return false, nil
-		}
-
-		groupReplicas := svl.splitReplicasIntoGroups(sv)
-		lock.Generation = sv.Generation
-		lock.GroupLocks = lo.Map(sv.Spec.ScalePolicy, func(t risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy, _ int) risingwavev1alpha1.RisingWaveScaleViewLockGroupLock {
-			return risingwavev1alpha1.RisingWaveScaleViewLockGroupLock{
-				Name:     t.Group,
-				Replicas: groupReplicas[t.Group],
-			}
-		})
-		return true, nil
 	}
+
+	if lock.Generation == sv.Generation {
+		return false, nil
+	}
+
+	groupReplicas := svl.splitReplicasIntoGroups(sv)
+	lock.Generation = sv.Generation
+	lock.GroupLocks = lo.Map(sv.Spec.ScalePolicy, func(t risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy, _ int) risingwavev1alpha1.RisingWaveScaleViewLockGroupLock {
+		return risingwavev1alpha1.RisingWaveScaleViewLockGroupLock{
+			Name:     t.Group,
+			Replicas: groupReplicas[t.Group],
+		}
+	})
+	return true, nil
 }
 
 func (svl *ScaleViewLockManager) ReleaseLockFor(sv *risingwavev1alpha1.RisingWaveScaleView) bool {

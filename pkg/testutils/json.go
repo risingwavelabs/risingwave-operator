@@ -18,7 +18,7 @@ package testutils
 
 import "encoding/json"
 
-func JsonMustPrettyPrint(x interface{}) string {
+func JSONMustPrettyPrint(x interface{}) string {
 	r, err := json.MarshalIndent(x, "", "  ")
 	if err != nil {
 		panic(err)

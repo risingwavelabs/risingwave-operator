@@ -56,7 +56,7 @@ func TestOptions_Validate(t *testing.T) {
 	assert.Equal(t, o.memoryLimit.convertedQty, resource.MustParse("256Mi"))
 
 	o.group = "fake-group"
-	for k, _ := range componentSet {
+	for k := range componentSet {
 		o.component = k
 		err = o.Validate(ctx, nil, []string{})
 		ss := fmt.Sprintf("invalid risingwave group: %s for component: %s", o.group, o.component)

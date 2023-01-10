@@ -242,8 +242,6 @@ func (o *Options) updateConfig(rw *v1alpha1.RisingWave) {
 			}
 		}
 	}
-
-	return
 }
 
 func (o *Options) updateInnerGlobalResources(rw *v1alpha1.RisingWave) {

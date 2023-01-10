@@ -29,9 +29,9 @@ import (
 func split(total, n int) int {
 	if total%n == 0 {
 		return total / n
-	} else {
-		return total/n + 1
 	}
+
+	return total/n + 1
 }
 
 func canonizeScalePolicy(p risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy) risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy {

@@ -34,9 +34,9 @@ func (s *MessageStore) MessageFor(event string) string {
 
 	if msg, ok := s.messages[event]; ok {
 		return msg
-	} else {
-		return event
 	}
+
+	return event
 }
 
 func (s *MessageStore) IsMessageSet(event string) bool {

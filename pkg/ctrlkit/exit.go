@@ -34,9 +34,8 @@ func Exit() (ctrl.Result, error) {
 func ExitIf(cond bool) (ctrl.Result, error) {
 	if cond {
 		return Exit()
-	} else {
-		return NoRequeue()
 	}
+	return NoRequeue()
 }
 
 // IgnoreExit keeps the result but returns a nil when err == ErrExit.

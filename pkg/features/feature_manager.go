@@ -56,7 +56,7 @@ type Feature struct {
 	Stage         FeatureStage
 }
 
-// This method return a pointer to a deep copy of a feature struct.
+// DeepCopy returns a pointer to a deep copy of a feature struct.
 func (f *Feature) DeepCopy() *Feature {
 	return &Feature{
 		Name:          f.Name,
@@ -64,16 +64,6 @@ func (f *Feature) DeepCopy() *Feature {
 		Enabled:       f.Enabled,
 		DefaultEnable: f.DefaultEnable,
 		Stage:         f.Stage,
-	}
-}
-
-// This method returns a pointer to an instance of a Feature struct.
-func newFeature(name FeatureName, desc string, defaultEnable bool, stage FeatureStage) *Feature {
-	return &Feature{
-		Name:          name,
-		Description:   desc,
-		DefaultEnable: defaultEnable,
-		Stage:         stage,
 	}
 }
 

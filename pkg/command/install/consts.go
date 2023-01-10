@@ -23,7 +23,7 @@ const (
 
 	TemDir = "/tmp/kubectl-rw"
 
-	RisingWaveUrlTemplate = "https://github.com/risingwavelabs/risingwave-operator/releases/download/%s/risingwave-operator.yaml"
+	RisingWaveURLTemplate = "https://github.com/risingwavelabs/risingwave-operator/releases/download/%s/risingwave-operator.yaml"
 
-	CertManagerUrl = "https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml"
+	CertManagerURL = "https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml"
 )

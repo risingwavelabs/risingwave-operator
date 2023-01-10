@@ -49,7 +49,7 @@ func (r *controllerMetricsRecorder) afterReconcile(ctx context.Context, request 
 
 	if rec := recover(); rec != nil {
 		IncControllerReconcilePanicCount(namespace, r.gvk)
-		log.FromContext(ctx).Error(fmt.Errorf("%v", rec), fmt.Sprintf("Panic in reconciliation run\n"))
+		log.FromContext(ctx).Error(fmt.Errorf("%v", rec), "Panic in reconciliation run\n")
 		*result, *err = reconcile.Result{}, nil
 		return
 	}

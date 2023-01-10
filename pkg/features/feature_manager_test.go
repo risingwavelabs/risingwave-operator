@@ -380,10 +380,10 @@ func TestParseFromFeatureGateString(t *testing.T) {
 		"Invalid-enable-value": "enableOpenKruise=yes,otherFeature=true",
 		"Invalid-comma-start":  ",enableOpenKruise=true",
 	}
-	for tc_name, tc := range errorTestCases {
+	for name, tc := range errorTestCases {
 		fakeRisingWaveFeatureManager := NewRisingWaveFeatureManager()
 		if fakeRisingWaveFeatureManager.ParseFromFeatureGateString(tc) == nil {
-			t.Fatal(fmt.Sprintf("Parse error not thrown for testcase: %s", tc_name))
+			t.Fatalf("Parse error not thrown for testcase: %s", name)
 		}
 	}
 

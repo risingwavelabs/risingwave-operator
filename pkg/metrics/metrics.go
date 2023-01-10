@@ -204,9 +204,9 @@ func IncControllerReconcileRequeueCount(target types.NamespacedName, gvk schema.
 	incControllersWithLabelValues(*controllerReconcileRequeueCount, target, gvk)
 }
 
-func UpdateControllerReconcileRequeueAfter(time_ms int64, target types.NamespacedName, gvk schema.GroupVersionKind) {
+func UpdateControllerReconcileRequeueAfter(timeInMilliSecond int64, target types.NamespacedName, gvk schema.GroupVersionKind) {
 	controllerReconcileRequeueAfter.WithLabelValues(gvk.Group, gvk.Version,
-		gvk.Kind, target.Namespace, target.Name).Observe(float64(time_ms))
+		gvk.Kind, target.Namespace, target.Name).Observe(float64(timeInMilliSecond))
 }
 
 func IncControllerReconcileRequeueErrorCount(target types.NamespacedName, gvk schema.GroupVersionKind) {

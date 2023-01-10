@@ -167,18 +167,18 @@ func constructGroup(groups []group) []Group {
 }
 
 func constructResource(limit, request resource) corev1.ResourceRequirements {
-	var lCpu = limit.CPU
+	var cpuLimit = limit.CPU
 	if len(limit.CPU) == 0 {
-		lCpu = DefaultLimitCPU
+		cpuLimit = DefaultLimitCPU
 	}
 
 	var lMemory = limit.Memory
 	if len(limit.Memory) == 0 {
 		lMemory = DefaultLimitMemory
 	}
-	var rCpu = request.CPU
+	var cpuRequest = request.CPU
 	if len(request.CPU) == 0 {
-		rCpu = DefaultRequestCPU
+		cpuRequest = DefaultRequestCPU
 	}
 	var rMemory = request.Memory
 	if len(request.Memory) == 0 {
@@ -186,11 +186,11 @@ func constructResource(limit, request resource) corev1.ResourceRequirements {
 	}
 	return corev1.ResourceRequirements{
 		Limits: map[corev1.ResourceName]k8sresource.Quantity{
-			corev1.ResourceCPU:    k8sresource.MustParse(lCpu),
+			corev1.ResourceCPU:    k8sresource.MustParse(cpuLimit),
 			corev1.ResourceMemory: k8sresource.MustParse(lMemory),
 		},
 		Requests: map[corev1.ResourceName]k8sresource.Quantity{
-			corev1.ResourceCPU:    k8sresource.MustParse(rCpu),
+			corev1.ResourceCPU:    k8sresource.MustParse(cpuRequest),
 			corev1.ResourceMemory: k8sresource.MustParse(rMemory),
 		},
 	}

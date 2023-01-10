@@ -272,7 +272,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		ctrlkit.Timeout(time.Second, mgr.WaitBeforeMetaServiceIsAvailable()),
 	)
 	prometheusCRDsInstalledBarrier := mgr.NewAction(RisingWaveAction_BarrierPrometheusCRDsInstalled, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-		crd, err := utils.GetCustomResourceDefinition(c.Client, ctx, metav1.GroupKind{
+		crd, err := utils.GetCustomResourceDefinition(ctx, c.Client, metav1.GroupKind{
 			Group: "monitoring.coreos.com",
 			Kind:  "ServiceMonitor",
 		})

@@ -129,7 +129,7 @@ func (o *InstallOptions) Run(ctx *cmdcontext.RWContext, cmd *cobra.Command, args
 		}
 	}
 
-	fmt.Fprintln(o.Out, fmt.Sprintf("Install the %s risingwave-operator!", o.version))
+	fmt.Fprintf(o.Out, "Install the %s risingwave-operator!", o.version)
 	err = installOperator(ctx, o.version)
 	if err != nil {
 		return fmt.Errorf("install risingwave failed, %w", err)
@@ -310,7 +310,7 @@ func hasCertManagerCR(ctx *cmdcontext.RWContext) (bool, error) {
 // download the cert-manager.yaml
 // apply into the cluster.
 func installCertManager(ctx *cmdcontext.RWContext) error {
-	certFile, err := Download(CertManagerUrl, TemDir+"/cert-manager")
+	certFile, err := Download(CertManagerURL, TemDir+"/cert-manager")
 	if err != nil {
 		return err
 	}
@@ -327,7 +327,7 @@ func installCertManager(ctx *cmdcontext.RWContext) error {
 // apply into the cluster
 // TODO(xinyu): add the version for risingwave.yaml.
 func installOperator(ctx *cmdcontext.RWContext, version string) error {
-	url := fmt.Sprintf(RisingWaveUrlTemplate, version)
+	url := fmt.Sprintf(RisingWaveURLTemplate, version)
 	yamlFile, err := Download(url, TemDir+"/operator")
 	if err != nil {
 		return err

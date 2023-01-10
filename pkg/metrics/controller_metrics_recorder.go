@@ -31,6 +31,7 @@ type controllerMetricsRecorder struct {
 	inner reconcile.Reconciler
 }
 
+// Reconcile implements the Reconciler.
 func (r *controllerMetricsRecorder) Reconcile(ctx context.Context, request reconcile.Request) (result reconcile.Result, err error) {
 	startTime := time.Now()
 	r.beforeReconcile(request.NamespacedName)
@@ -65,6 +66,7 @@ func (r *controllerMetricsRecorder) afterReconcile(ctx context.Context, request 
 	UpdateControllerReconcileDuration(time.Since(startTime).Milliseconds(), r.gvk, r.name, namespace)
 }
 
+// NewControllerMetricsRecorder returns a new ControllerMetricsRecorder.
 func NewControllerMetricsRecorder(r reconcile.Reconciler, name string, gvk schema.GroupVersionKind) reconcile.Reconciler {
 	return &controllerMetricsRecorder{
 		name:  name,

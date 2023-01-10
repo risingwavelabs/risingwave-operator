@@ -48,6 +48,7 @@ func (r *RisingWaveReader) IsObservedGenerationOutdated() bool {
 	return r.risingwave.Status.ObservedGeneration < r.risingwave.Generation
 }
 
+// GetCondition gets the condition object by the given type. It returns nil when not found.
 func (r *RisingWaveReader) GetCondition(conditionType risingwavev1alpha1.RisingWaveConditionType) *risingwavev1alpha1.RisingWaveCondition {
 	for _, cond := range r.risingwave.Status.Conditions {
 		if cond.Type == conditionType {
@@ -57,11 +58,13 @@ func (r *RisingWaveReader) GetCondition(conditionType risingwavev1alpha1.RisingW
 	return nil
 }
 
+// DoesConditionExistAndEqual returns true if the condition is found and its value equals to the given one.
 func (r *RisingWaveReader) DoesConditionExistAndEqual(conditionType risingwavev1alpha1.RisingWaveConditionType, value bool) bool {
 	cond := r.GetCondition(conditionType)
 	return cond != nil && (cond.Status == metav1.ConditionTrue) == value
 }
 
+// RisingWaveManager is a struct to help manipulate the RisingWave object in memory. It is concurrent-safe.
 type RisingWaveManager struct {
 	RisingWaveReader
 
@@ -89,6 +92,7 @@ func (mgr *RisingWaveManager) SyncObservedGeneration() {
 	mgr.mutableRisingWave.Status.ObservedGeneration = mgr.mutableRisingWave.Generation
 }
 
+// RemoveCondition removes the condition if the condition type matches.
 func (mgr *RisingWaveManager) RemoveCondition(conditionType risingwavev1alpha1.RisingWaveConditionType) {
 	mgr.mu.Lock()
 	defer mgr.mu.Unlock()
@@ -104,6 +108,9 @@ func (mgr *RisingWaveManager) RemoveCondition(conditionType risingwavev1alpha1.R
 	}
 }
 
+// UpdateCondition updates the conditions in the mutable copy and sets the last transition time automatically
+// according to the latest conditions from the original status. It will append a new condition status when there's no such
+// condition before.
 func (mgr *RisingWaveManager) UpdateCondition(condition risingwavev1alpha1.RisingWaveCondition) {
 	// Set the last transition time to now if it's a new condition or status changed.
 	lastObservedCondition := mgr.GetCondition(condition.Type)
@@ -126,6 +133,7 @@ func (mgr *RisingWaveManager) UpdateCondition(condition risingwavev1alpha1.Risin
 	}
 }
 
+// UpdateStatus receives a function to mutate the RisingWaveStatus and runs it within a lock.
 func (mgr *RisingWaveManager) UpdateStatus(f func(*risingwavev1alpha1.RisingWaveStatus)) {
 	mgr.mu.Lock()
 	defer mgr.mu.Unlock()
@@ -133,6 +141,7 @@ func (mgr *RisingWaveManager) UpdateStatus(f func(*risingwavev1alpha1.RisingWave
 	f(&mgr.mutableRisingWave.Status)
 }
 
+// UpdateRemoteRisingWaveStatus updates the remote RisingWave object with the mutable copy.
 func (mgr *RisingWaveManager) UpdateRemoteRisingWaveStatus(ctx context.Context) error {
 	mgr.mu.RLock()
 	defer mgr.mu.RUnlock()
@@ -145,15 +154,18 @@ func (mgr *RisingWaveManager) UpdateRemoteRisingWaveStatus(ctx context.Context) 
 	return mgr.client.Status().Update(ctx, mgr.mutableRisingWave)
 }
 
+// IsOpenKruiseAvailable returns true when the OpenKruise is available.
 func (mgr *RisingWaveManager) IsOpenKruiseAvailable() bool {
 	return mgr.openkruiseAvailable
 }
 
+// IsOpenKruiseEnabled returns true when the OpenKruise is available and enabled on the target RisingWave.
 func (mgr *RisingWaveManager) IsOpenKruiseEnabled() bool {
 	risingwave := mgr.RisingWaveReader.RisingWave()
 	return mgr.IsOpenKruiseAvailable() && risingwave.Spec.EnableOpenKruise != nil && *risingwave.Spec.EnableOpenKruise
 }
 
+// KeepLock resets the current scale views record in the status with the given array.
 func (mgr *RisingWaveManager) KeepLock(aliveScaleView []risingwavev1alpha1.RisingWaveScaleViewLock) {
 	mgr.mu.Lock()
 	defer mgr.mu.Unlock()
@@ -161,6 +173,7 @@ func (mgr *RisingWaveManager) KeepLock(aliveScaleView []risingwavev1alpha1.Risin
 	mgr.mutableRisingWave.Status.ScaleViews = aliveScaleView
 }
 
+// NewRisingWaveManager creates a new RisingWaveManager with given arguments.
 func NewRisingWaveManager(client client.Client, risingwave *risingwavev1alpha1.RisingWave, openkruiseAvailable bool) *RisingWaveManager {
 	return &RisingWaveManager{
 		RisingWaveReader: RisingWaveReader{

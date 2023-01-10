@@ -21,6 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// RisingWavePodTemplatePartialObjectMeta is the spec for metadata templates.
 type RisingWavePodTemplatePartialObjectMeta struct {
 	// Labels of the object.
 	// +optional
@@ -30,6 +31,7 @@ type RisingWavePodTemplatePartialObjectMeta struct {
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
+// RisingWavePodTemplateSpec is the spec of RisingWavePodTemplate.
 type RisingWavePodTemplateSpec struct {
 	RisingWavePodTemplatePartialObjectMeta `json:"metadata,omitempty"`
 
@@ -39,6 +41,7 @@ type RisingWavePodTemplateSpec struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:shortName=rwpt,categories=all;streaming
 
+// RisingWavePodTemplate is the struct for RisingWavePodTemplate object.
 type RisingWavePodTemplate struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

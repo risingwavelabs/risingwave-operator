@@ -18,7 +18,8 @@ package testutils
 
 import "encoding/json"
 
-func JSONMustPrettyPrint(x interface{}) string {
+// JSONMustPrettyPrint serializes the given object into JSON string. It will panic with error if serialization fails.
+func JSONMustPrettyPrint(x any) string {
 	r, err := json.MarshalIndent(x, "", "  ")
 	if err != nil {
 		panic(err)

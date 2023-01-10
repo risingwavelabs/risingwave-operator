@@ -31,22 +31,27 @@ type parallelAction struct {
 	inner Action
 }
 
+// Inner implements the Decorator.
 func (act *parallelAction) Inner() Action {
 	return act.inner
 }
 
+// SetInner implements the Decorator.
 func (act *parallelAction) SetInner(inner Action) {
 	act.inner = inner
 }
 
+// Name implements the Decorator.
 func (act *parallelAction) Name() string {
 	return "Parallel"
 }
 
+// Description implements the Action.
 func (act *parallelAction) Description() string {
 	return fmt.Sprintf("Parallel(%s)", act.inner.Description())
 }
 
+// Run implements the Action.
 func (act *parallelAction) Run(ctx context.Context) (result ctrl.Result, err error) {
 	done := make(chan bool)
 	panicChan := make(chan any)

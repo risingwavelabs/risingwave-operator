@@ -26,16 +26,19 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 )
 
+// RisingWavePodTemplateMutatingWebhook is the mutating webhook for RisingWavePodTemplate.
 type RisingWavePodTemplateMutatingWebhook struct{}
 
 func (pm *RisingWavePodTemplateMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWavePodTemplate) error {
 	return nil
 }
 
+// Default implements webhook.CustomDefaulter.
 func (pm *RisingWavePodTemplateMutatingWebhook) Default(ctx context.Context, obj runtime.Object) error {
 	return pm.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWavePodTemplate))
 }
 
+// NewRisingWavePodTemplateMutatingWebhook returns a new mutating webhook for RisingWavePodTemplate.
 func NewRisingWavePodTemplateMutatingWebhook() webhook.CustomDefaulter {
 	return metrics.NewMutatingWebhookMetricsRecorder(&RisingWavePodTemplateMutatingWebhook{})
 }

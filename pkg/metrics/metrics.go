@@ -149,38 +149,44 @@ func getWebhooksWithLabelValues(metric prometheus.CounterVec, wt utils.WebhookTy
 	return int(*m.Counter.Value)
 }
 
-// Increment webhook metric
-
+// IncWebhookRequestCount increases the request count for the given webhook type and target object by 1.
 func IncWebhookRequestCount(wt utils.WebhookType, obj runtime.Object) {
 	incWebhooksWithLabelValues(*webhookRequestCount, wt, obj)
 }
 
+// IncWebhookRequestPassCount increases the request pass count for the given webhook type and target object by 1.
 func IncWebhookRequestPassCount(wt utils.WebhookType, obj runtime.Object) {
 	incWebhooksWithLabelValues(*webhookRequestPassCount, wt, obj)
 }
 
+// IncWebhookRequestRejectCount increases the request reject count for the given webhook type and target object by 1.
 func IncWebhookRequestRejectCount(wt utils.WebhookType, obj runtime.Object) {
 	incWebhooksWithLabelValues(*webhookRequestRejectCount, wt, obj)
 }
 
+// IncWebhookRequestPanicCount increases the request panic count for the given webhook type and target object by 1.
 func IncWebhookRequestPanicCount(wt utils.WebhookType, obj runtime.Object) {
 	incWebhooksWithLabelValues(*webhookRequestPanicCount, wt, obj)
 }
 
 // Get webhook metric count
 
+// GetWebhookRequestPanicCountWith gets the request panic count for the given webhook type and target object.
 func GetWebhookRequestPanicCountWith(wt utils.WebhookType, obj runtime.Object) int {
 	return getWebhooksWithLabelValues(*webhookRequestPanicCount, wt, obj)
 }
 
+// GetWebhookRequestRejectCount gets the request reject count for the given webhook type and target object.
 func GetWebhookRequestRejectCount(wt utils.WebhookType, obj runtime.Object) int {
 	return getWebhooksWithLabelValues(*webhookRequestRejectCount, wt, obj)
 }
 
+// GetWebhookRequestCount gets the request count for the given webhook type and target object.
 func GetWebhookRequestCount(wt utils.WebhookType, obj runtime.Object) int {
 	return getWebhooksWithLabelValues(*webhookRequestCount, wt, obj)
 }
 
+// GetWebhookRequestPassCount gets the request pass count for the given webhook type and target object.
 func GetWebhookRequestPassCount(wt utils.WebhookType, obj runtime.Object) int {
 	return getWebhooksWithLabelValues(*webhookRequestPassCount, wt, obj)
 }
@@ -192,27 +198,33 @@ func incControllersWithLabelValues(metric prometheus.CounterVec, target types.Na
 	metric.WithLabelValues(gvk.Group, gvk.Version, gvk.Kind, target.Namespace, target.Name).Inc()
 }
 
+// IncControllerReconcileCount increases reconcile count of the given object by 1.
 func IncControllerReconcileCount(target types.NamespacedName, gvk schema.GroupVersionKind) {
 	incControllersWithLabelValues(*controllerReconcileCount, target, gvk)
 }
 
+// IncControllerReconcilePanicCount increases reconcile panic count of the given object by 1.
 func IncControllerReconcilePanicCount(target types.NamespacedName, gvk schema.GroupVersionKind) {
 	incControllersWithLabelValues(*controllerReconcilePanicCount, target, gvk)
 }
 
+// IncControllerReconcileRequeueCount increases reconcile requeue count of the given object by 1.
 func IncControllerReconcileRequeueCount(target types.NamespacedName, gvk schema.GroupVersionKind) {
 	incControllersWithLabelValues(*controllerReconcileRequeueCount, target, gvk)
 }
 
+// UpdateControllerReconcileRequeueAfter updates reconcile requeue after histogram with the give time for the given object.
 func UpdateControllerReconcileRequeueAfter(timeInMilliSecond int64, target types.NamespacedName, gvk schema.GroupVersionKind) {
 	controllerReconcileRequeueAfter.WithLabelValues(gvk.Group, gvk.Version,
 		gvk.Kind, target.Namespace, target.Name).Observe(float64(timeInMilliSecond))
 }
 
+// IncControllerReconcileRequeueErrorCount increases reconcile error count of the given object by 1.
 func IncControllerReconcileRequeueErrorCount(target types.NamespacedName, gvk schema.GroupVersionKind) {
 	incControllersWithLabelValues(*controllerReconcileRequeueErrorCount, target, gvk)
 }
 
+// UpdateControllerReconcileDuration updates reconcile duration histogram with the give time for the given object and webhook.
 func UpdateControllerReconcileDuration(timeInMilliSeconds int64, gvk schema.GroupVersionKind, webhookName string, target types.NamespacedName) {
 	controllerReconcileDuration.WithLabelValues(webhookName, gvk.Group, gvk.Version,
 		gvk.Kind, target.Namespace, target.Name).Observe(float64(timeInMilliSeconds))

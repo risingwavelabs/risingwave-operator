@@ -38,6 +38,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/scaleview"
 )
 
+// RisingWaveValidatingWebhook is the validating webhook for RisingWaves.
 type RisingWaveValidatingWebhook struct {
 	openKruiseAvailable bool
 }
@@ -402,6 +403,8 @@ func groupTemplatePartitionExistAndIsString(groupTemplate *risingwavev1alpha1.Ri
 	return groupTemplate.UpgradeStrategy.RollingUpdate.Partition.Type == intstr.String
 }
 
+// NewRisingWaveValidatingWebhook returns a new validator for the RisingWave. The behavior differs on different values of the
+// openKruiseAvailable.
 func NewRisingWaveValidatingWebhook(openKruiseAvailable bool) webhook.CustomValidator {
 	return metrics.NewValidatingWebhookMetricsRecorder(&RisingWaveValidatingWebhook{openKruiseAvailable: openKruiseAvailable})
 }

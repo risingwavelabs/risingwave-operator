@@ -23,13 +23,18 @@ import (
 	"unicode"
 )
 
+// FeatureStage is the stage of features, e.g., alpha, beta, GA.
 type FeatureStage string
+
+// FeatureName is an alias of the string.
 type FeatureName string
 
+// Valid feature names.
 const (
 	EnableOpenKruiseFeature FeatureName = "EnableOpenKruise"
 )
 
+// Valid feature stages.
 const (
 	Alpha FeatureStage = "Alpha"
 	Beta  FeatureStage = "Beta"
@@ -38,6 +43,7 @@ const (
 var risingWaveFeatureManager *FeatureManager
 
 var (
+	// SupportedFeatureList is the global and constant supported feature list.
 	SupportedFeatureList = []Feature{
 		{
 			Name:          EnableOpenKruiseFeature,
@@ -48,6 +54,7 @@ var (
 	}
 )
 
+// Feature defines a feature and its status.
 type Feature struct {
 	Name          FeatureName
 	Description   string
@@ -67,19 +74,20 @@ func (f *Feature) DeepCopy() *Feature {
 	}
 }
 
+// FeatureManager is the manager of operator features.
 type FeatureManager struct {
 	// Feature map is an internal structure that stores a feature name and a pointer to a feature struct.
 	featureMap map[FeatureName]*Feature
 }
 
-// Helper function that returns a pointer to an instance of the FeatureManager.
+// NewRisingWaveFeatureManager is a helper function that returns a pointer to an instance of the FeatureManager.
 func NewRisingWaveFeatureManager() *FeatureManager {
 	return &FeatureManager{
 		featureMap: make(map[FeatureName]*Feature),
 	}
 }
 
-// This functions initializes the FeatureManager with the current supported Features.
+// InitFeatureManagerWithSupportedFeatures initializes the FeatureManager with the current supported Features.
 func InitFeatureManagerWithSupportedFeatures(supportedFeatureList []Feature) *FeatureManager {
 	risingWaveFeatureManager = NewRisingWaveFeatureManager()
 	for _, supportedFeature := range supportedFeatureList {
@@ -89,7 +97,7 @@ func InitFeatureManagerWithSupportedFeatures(supportedFeatureList []Feature) *Fe
 	return risingWaveFeatureManager
 }
 
-// This functions initializes the FeatureManager with the current supported Features and also parses the feature gate string.
+// InitFeatureManager initializes the FeatureManager with the current supported Features and also parses the feature gate string.
 func InitFeatureManager(supportedFeatureList []Feature, featureGateString string) *FeatureManager {
 	risingWaveFeatureManager = NewRisingWaveFeatureManager()
 	for _, supportedFeature := range supportedFeatureList {
@@ -113,7 +121,7 @@ func (m *FeatureManager) addFeature(feature *Feature) {
 	m.featureMap[feature.Name] = feature.DeepCopy()
 }
 
-// This function returns true if the feature exists in the featureManager, else returns false.
+// IsFeatureExist returns true if the feature exists in the featureManager, else returns false.
 func (m *FeatureManager) IsFeatureExist(featureName FeatureName) bool {
 	_, exist := m.featureMap[featureName]
 	return exist
@@ -153,7 +161,7 @@ func (m *FeatureManager) DisableFeature(name FeatureName) error {
 	return m.setFeatureEnable(name, false)
 }
 
-// This method returns the number of features in the featureManager.
+// GetNumOfFeatures returns the number of features in the featureManager.
 func (m *FeatureManager) GetNumOfFeatures() int {
 	return len(m.featureMap)
 }

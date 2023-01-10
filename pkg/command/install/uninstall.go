@@ -73,7 +73,7 @@ func (o *UninstallOptions) Complete(ctx *context.RWContext, cmd *cobra.Command, 
 // TODO: need record which versions installed.
 // TODO: need to ensure no instances running before uninstall. Issue: https://github.com/risingwavelabs/risingwave-operator/issues/184
 func (o *UninstallOptions) Run(ctx *context.RWContext, cmd *cobra.Command, args []string) error {
-	yamlFile, err := Download(fmt.Sprintf(RisingWaveURLTemplate, version.MinimumVersion), TemDir+"/operator")
+	yamlFile, err := Download(fmt.Sprintf(RisingWaveUrlTemplate, version.MinimumVersion), TemDir+"/operator")
 	if err != nil {
 		return err
 	}

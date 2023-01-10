@@ -20,6 +20,7 @@ package consts
 // Labels.
 // =================================================
 
+// System reserved labels.
 const (
 	LabelRisingWaveComponent  = "risingwave/component"
 	LabelRisingWaveName       = "risingwave/name"
@@ -31,6 +32,7 @@ const (
 // Annotations.
 // =================================================
 
+// System reserved annotations.
 const (
 	AnnotationRestartAt          = "risingwave/restart-at"
 	AnnotationPauseReconcile     = "risingwave.risingwavelabs.com/pause-reconcile"
@@ -41,7 +43,9 @@ const (
 // Finalizers.
 // =================================================
 
+// System reserved finalizers.
 const (
+	// FinalizerScaleView Deprecated.
 	FinalizerScaleView = "risingwavescaleview/finalizer"
 )
 
@@ -51,6 +55,7 @@ const (
 
 // Special label values of LabelRisingWaveGeneration.
 const (
+	// NoSync indicates that operator won't sync the resource after it's created.
 	NoSync = "nosync"
 )
 

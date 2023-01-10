@@ -34,18 +34,22 @@ type retryAction struct {
 	interval time.Duration
 }
 
+// Inner implements the Decorator.
 func (act *retryAction) Inner() Action {
 	return act.inner
 }
 
+// SetInner implements the Decorator.
 func (act *retryAction) SetInner(inner Action) {
 	act.inner = inner
 }
 
+// Name implements the Decorator.
 func (act *retryAction) Name() string {
 	return "Retry"
 }
 
+// Description implements the Action.
 func (act *retryAction) Description() string {
 	if act.interval == 0 {
 		return fmt.Sprintf("Retry(%s, limit=%d)", act.inner.Description(), act.limit)
@@ -54,6 +58,7 @@ func (act *retryAction) Description() string {
 	}
 }
 
+// Run implements the Action.
 func (act *retryAction) Run(ctx context.Context) (result reconcile.Result, err error) {
 	for i := 0; i < act.limit; i++ {
 		result, err = act.inner.Run(ctx)
@@ -86,6 +91,7 @@ func Retry(limit int, act Action) Action {
 	}
 }
 
+// RetryInterval wraps an action into a retryable action. It accepts a retry interval to make gaps between retires.
 func RetryInterval(limit int, interval time.Duration, act Action) Action {
 	if limit < 1 {
 		panic("limit must be positive")

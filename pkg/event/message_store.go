@@ -16,11 +16,13 @@ package event
 
 import "sync"
 
+// MessageStore stores the sending event messages.
 type MessageStore struct {
 	mu       sync.RWMutex
 	messages map[string]string
 }
 
+// SetMessage sets the event message.
 func (s *MessageStore) SetMessage(event string, message string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -28,6 +30,7 @@ func (s *MessageStore) SetMessage(event string, message string) {
 	s.messages[event] = message
 }
 
+// MessageFor gets the event message if set. It returns the event name as a default value.
 func (s *MessageStore) MessageFor(event string) string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -39,6 +42,7 @@ func (s *MessageStore) MessageFor(event string) string {
 	return event
 }
 
+// IsMessageSet checks if message set for the given event.
 func (s *MessageStore) IsMessageSet(event string) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -47,6 +51,7 @@ func (s *MessageStore) IsMessageSet(event string) bool {
 	return ok
 }
 
+// NewMessageStore returns a new MessageStore.
 func NewMessageStore() *MessageStore {
 	return &MessageStore{
 		messages: make(map[string]string),

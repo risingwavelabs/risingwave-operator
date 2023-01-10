@@ -25,6 +25,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
 
+// RisingWaveScaleViewHelper is a helper struct to help get and update the replicas in the scale view lock records.
 type RisingWaveScaleViewHelper struct {
 	risingwave *risingwavev1alpha1.RisingWave
 	component  string
@@ -139,6 +140,7 @@ func (r *RisingWaveScaleViewHelper) WriteReplicas(group string, replicas int32) 
 	return true
 }
 
+// NewRisingWaveScaleViewHelper creates a new RisingWaveScaleViewHelper.
 func NewRisingWaveScaleViewHelper(risingwave *risingwavev1alpha1.RisingWave, component string) *RisingWaveScaleViewHelper {
 	return &RisingWaveScaleViewHelper{
 		risingwave: risingwave,

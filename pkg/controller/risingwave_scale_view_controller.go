@@ -42,11 +42,13 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
+// RisingWaveScaleView controller related constants.
 const (
 	RisingWaveScaleViewSyncLockRetryLimit    = 2
 	RisingWaveScaleViewSyncLockRetryInterval = 5 * time.Millisecond
 )
 
+// RisingWaveScaleViewController is the controller for RisingWaveScaleView.
 type RisingWaveScaleViewController struct {
 	Client client.Client
 }
@@ -57,6 +59,7 @@ type RisingWaveScaleViewController struct {
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwavescaleviews/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
+// Reconcile implements the reconcile.Reconciler.
 func (c *RisingWaveScaleViewController) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	logger := log.FromContext(ctx)
 
@@ -106,6 +109,7 @@ func (c *RisingWaveScaleViewController) Reconcile(ctx context.Context, request r
 	).Run(ctx))
 }
 
+// SetupWithManager sets up the controller with give manager.
 func (c *RisingWaveScaleViewController) SetupWithManager(mgr ctrl.Manager) error {
 	gvk, err := apiutil.GVKForObject(&risingwavev1alpha1.RisingWaveScaleView{}, c.Client.Scheme())
 	if err != nil {
@@ -140,6 +144,7 @@ func (c *RisingWaveScaleViewController) SetupWithManager(mgr ctrl.Manager) error
 		Complete(metrics.NewControllerMetricsRecorder(c, "RisingWaveScaleViewController", gvk))
 }
 
+// NewRisingWaveScaleViewController creates a new RisingWaveScaleViewController.
 func NewRisingWaveScaleViewController(client client.Client) *RisingWaveScaleViewController {
 	return &RisingWaveScaleViewController{
 		Client: client,

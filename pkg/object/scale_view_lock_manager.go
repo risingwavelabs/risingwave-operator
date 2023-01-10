@@ -25,6 +25,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/object/scaleview"
 )
 
+// ScaleViewLockManager is a struct to help manage the in memory lock records under RisingWave status.
 type ScaleViewLockManager struct {
 	risingwave *risingwavev1alpha1.RisingWave
 }
@@ -39,11 +40,14 @@ func (svl *ScaleViewLockManager) getScaleViewLockIndex(sv *risingwavev1alpha1.Ri
 	return 0, nil
 }
 
+// GetScaleViewLock gets the scale view lock record from the RisingWave for the specified RisingWaveScaleView. It returns
+// nil when not found.
 func (svl *ScaleViewLockManager) GetScaleViewLock(sv *risingwavev1alpha1.RisingWaveScaleView) *risingwavev1alpha1.RisingWaveScaleViewLock {
 	_, r := svl.getScaleViewLockIndex(sv)
 	return r
 }
 
+// IsScaleViewLocked checks if the RisingWaveScaleView locks the target RisingWave.
 func (svl *ScaleViewLockManager) IsScaleViewLocked(sv *risingwavev1alpha1.RisingWaveScaleView) bool {
 	return svl.GetScaleViewLock(sv) != nil
 }
@@ -52,6 +56,8 @@ func (svl *ScaleViewLockManager) splitReplicasIntoGroups(sv *risingwavev1alpha1.
 	return scaleview.SplitReplicas(sv)
 }
 
+// GrabScaleViewLockFor grabs the lock for the specified RisingWaveScaleView by creating a new scale view record in the
+// RisingWave status. It will return error when fails to grab the lock, e.g., it's already locked or there are conflicts.
 func (svl *ScaleViewLockManager) GrabScaleViewLockFor(sv *risingwavev1alpha1.RisingWaveScaleView) error {
 	groupReplicas := svl.splitReplicasIntoGroups(sv)
 
@@ -89,6 +95,8 @@ func (svl *ScaleViewLockManager) GrabScaleViewLockFor(sv *risingwavev1alpha1.Ris
 	return nil
 }
 
+// GrabOrUpdateScaleViewLockFor creates or updates the scale view record in the RisingWave object for the specified
+// RisingWaveScaleView. It returns true when the lock is grabbed or updated. If nothing happens, it should return false, nil.
 func (svl *ScaleViewLockManager) GrabOrUpdateScaleViewLockFor(sv *risingwavev1alpha1.RisingWaveScaleView) (bool, error) {
 	lock := svl.GetScaleViewLock(sv)
 
@@ -115,6 +123,8 @@ func (svl *ScaleViewLockManager) GrabOrUpdateScaleViewLockFor(sv *risingwavev1al
 	return true, nil
 }
 
+// ReleaseLockFor releases the lock for the specified RisingWaveScaleView in memory, by removing the scale view record
+// from the status field of the RisingWave object.
 func (svl *ScaleViewLockManager) ReleaseLockFor(sv *risingwavev1alpha1.RisingWaveScaleView) bool {
 	i, lock := svl.getScaleViewLockIndex(sv)
 	if lock != nil {
@@ -124,6 +134,7 @@ func (svl *ScaleViewLockManager) ReleaseLockFor(sv *risingwavev1alpha1.RisingWav
 	return false
 }
 
+// NewScaleViewLockManager creates a new ScaleViewLockManager with the given target.
 func NewScaleViewLockManager(risingwave *risingwavev1alpha1.RisingWave) *ScaleViewLockManager {
 	return &ScaleViewLockManager{risingwave: risingwave}
 }

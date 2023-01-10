@@ -77,6 +77,7 @@ var (
 	internalAliyunOSSEndpoint = fmt.Sprintf("https://$(%s).oss-$(%s)-internal.aliyuncs.com", s3CompatibleBucketEnvName, s3CompatibleRegionEnvName)
 )
 
+// RisingWaveObjectFactory is the object factory to help create owned objects like Deployments, StatefulSets, Services, etc.
 type RisingWaveObjectFactory struct {
 	scheme     *runtime.Scheme
 	risingwave *risingwavev1alpha1.RisingWave
@@ -234,6 +235,7 @@ func (f *RisingWaveObjectFactory) podLabelsOrSelectorsForGroup(component, group 
 	}
 }
 
+// NewMetaService creates a new Service for the meta.
 func (f *RisingWaveObjectFactory) NewMetaService() *corev1.Service {
 	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
 
@@ -267,6 +269,7 @@ func (f *RisingWaveObjectFactory) NewMetaService() *corev1.Service {
 	return mustSetControllerReference(f.risingwave, metaService, f.scheme)
 }
 
+// NewFrontendService creates a new Service for the frontend.
 func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 	frontendPorts := &f.risingwave.Spec.Components.Frontend.Ports
 
@@ -294,6 +297,7 @@ func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 	return mustSetControllerReference(f.risingwave, frontendService, f.scheme)
 }
 
+// NewComputeService creates a new Service for the compute.
 func (f *RisingWaveObjectFactory) NewComputeService() *corev1.Service {
 	computePorts := &f.risingwave.Spec.Components.Compute.Ports
 
@@ -322,6 +326,7 @@ func (f *RisingWaveObjectFactory) NewComputeService() *corev1.Service {
 	return mustSetControllerReference(f.risingwave, computeService, f.scheme)
 }
 
+// NewCompactorService creates a new Service for the compactor.
 func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 	compactorPorts := &f.risingwave.Spec.Components.Compactor.Ports
 
@@ -727,6 +732,7 @@ func (f *RisingWaveObjectFactory) volumeMountForConfig() corev1.VolumeMount {
 	}
 }
 
+// NewConfigConfigMap creates a new ConfigMap with the specified string value for risingwave.toml.
 func (f *RisingWaveObjectFactory) NewConfigConfigMap(val string) *corev1.ConfigMap {
 	risingwaveConfigConfigMap := &corev1.ConfigMap{
 		ObjectMeta: f.componentObjectMeta(consts.ComponentConfig, false), // not synced
@@ -1133,6 +1139,7 @@ func buildUpgradeStrategyForCloneSet(strategy risingwavev1alpha1.RisingWaveUpgra
 	return cloneSetUpdateStrategy
 }
 
+// NewMetaDeployment creates a new Deployment for the meta component and specified group.
 func (f *RisingWaveObjectFactory) NewMetaDeployment(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Meta,
@@ -1172,6 +1179,7 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment(group string, podTemplates m
 	return mustSetControllerReference(f.risingwave, metaDeployment, f.scheme)
 }
 
+// NewMetaCloneSet creates a new CloneSet for the meta component and specified group.
 func (f *RisingWaveObjectFactory) NewMetaCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Meta,
@@ -1245,6 +1253,7 @@ func (f *RisingWaveObjectFactory) setupFrontendContainer(container *corev1.Conta
 	})
 }
 
+// NewFrontendDeployment creates a new Deployment for the frontend component and specified group.
 func (f *RisingWaveObjectFactory) NewFrontendDeployment(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
 	// TODO setup the TLS configs
 
@@ -1286,7 +1295,8 @@ func (f *RisingWaveObjectFactory) NewFrontendDeployment(group string, podTemplat
 	return mustSetControllerReference(f.risingwave, frontendDeployment, f.scheme)
 }
 
-func (f *RisingWaveObjectFactory) NewFrontEndCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
+// NewFrontendCloneSet creates a new CloneSet for the frontend component and specified group.
+func (f *RisingWaveObjectFactory) NewFrontendCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Frontend,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -1361,6 +1371,7 @@ func (f *RisingWaveObjectFactory) setupCompactorContainer(container *corev1.Cont
 	})
 }
 
+// NewCompactorDeployment creates a new Deployment for the compactor component and specified group.
 func (f *RisingWaveObjectFactory) NewCompactorDeployment(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Compactor,
@@ -1400,6 +1411,7 @@ func (f *RisingWaveObjectFactory) NewCompactorDeployment(group string, podTempla
 	return mustSetControllerReference(f.risingwave, compactorDeployment, f.scheme)
 }
 
+// NewCompactorCloneSet creates a new CloneSet for the compactor component and specified group.
 func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Compactor,
@@ -1535,6 +1547,7 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	})
 }
 
+// NewComputeStatefulSet creates a new StatefulSet for the compute component and specified group.
 func (f *RisingWaveObjectFactory) NewComputeStatefulSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.StatefulSet {
 	componentGroup := buildComputeGroup(
 		f.risingwave.Spec.Global.Replicas.Compute,
@@ -1582,6 +1595,7 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet(group string, podTemplat
 	return mustSetControllerReference(f.risingwave, computeStatefulSet, f.scheme)
 }
 
+// NewComputeAdvancedStatefulSet creates a new OpenKruise StatefulSet for the compute component and specified group.
 func (f *RisingWaveObjectFactory) NewComputeAdvancedStatefulSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1beta1.StatefulSet {
 	componentGroup := buildComputeGroup(
 		f.risingwave.Spec.Global.Replicas.Compute,
@@ -1630,6 +1644,7 @@ func (f *RisingWaveObjectFactory) NewComputeAdvancedStatefulSet(group string, po
 
 }
 
+// NewServiceMonitor creates a new ServiceMonitor.
 func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonitor {
 	const (
 		interval      = 5 * time.Second
@@ -1663,6 +1678,7 @@ func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonit
 	return mustSetControllerReference(f.risingwave, serviceMonitor, f.scheme)
 }
 
+// NewRisingWaveObjectFactory creates a new RisingWaveObjectFactory.
 func NewRisingWaveObjectFactory(risingwave *risingwavev1alpha1.RisingWave, scheme *runtime.Scheme) *RisingWaveObjectFactory {
 	return &RisingWaveObjectFactory{
 		risingwave:      risingwave,

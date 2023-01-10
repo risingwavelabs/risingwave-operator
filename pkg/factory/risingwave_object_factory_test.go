@@ -944,7 +944,7 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 		},
 	}
 
-	for _, component := range []string{consts.ComponentMeta, consts.ComponentFrontend, consts.ComponentCompactor} {
+	for _, component := range []string{consts.ComponentFrontend, consts.ComponentCompactor} {
 		for name, tc := range testcases {
 			t.Run(component+"-"+name, func(t *testing.T) {
 				risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
@@ -995,8 +995,6 @@ func Test_RisingWaveObjectFactory_Deployments(t *testing.T) {
 
 				var deploy *appsv1.Deployment
 				switch component {
-				case consts.ComponentMeta:
-					deploy = factory.NewMetaDeployment(tc.group.Name, tc.podTemplate)
 				case consts.ComponentFrontend:
 					deploy = factory.NewFrontendDeployment(tc.group.Name, tc.podTemplate)
 				case consts.ComponentCompactor:
@@ -1638,7 +1636,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 		},
 	}
 
-	for _, component := range []string{consts.ComponentMeta, consts.ComponentFrontend, consts.ComponentCompactor} {
+	for _, component := range []string{consts.ComponentFrontend, consts.ComponentCompactor} {
 		for name, tc := range testcases {
 			t.Run(component+"-"+name, func(t *testing.T) {
 				risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
@@ -1689,8 +1687,6 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 
 				var cloneSet *kruiseappsv1alpha1.CloneSet
 				switch component {
-				case consts.ComponentMeta:
-					cloneSet = factory.NewMetaCloneSet(tc.group.Name, tc.podTemplate)
 				case consts.ComponentFrontend:
 					cloneSet = factory.NewFrontEndCloneSet(tc.group.Name, tc.podTemplate)
 				case consts.ComponentCompactor:
@@ -3254,13 +3250,13 @@ func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
 			})
 
 			factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
-			deploy := factory.NewMetaDeployment("", nil)
+			deploy := factory.NewMetaStatefulSet("", nil)
 
 			composeAssertions(
-				newObjectAssert(deploy, "args-match", func(obj *appsv1.Deployment) bool {
+				newObjectAssert(deploy, "args-match", func(obj *appsv1.StatefulSet) bool {
 					return slicesContains(obj.Spec.Template.Spec.Containers[0].Args, tc.args)
 				}),
-				newObjectAssert(deploy, "env-vars-contains", func(obj *appsv1.Deployment) bool {
+				newObjectAssert(deploy, "env-vars-contains", func(obj *appsv1.StatefulSet) bool {
 					return listContainsByKey(obj.Spec.Template.Spec.Containers[0].Env, tc.envs, func(t *corev1.EnvVar) string { return t.Name }, deepEqual[corev1.EnvVar])
 				}),
 			).Assert(t)

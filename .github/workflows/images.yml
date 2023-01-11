@@ -94,7 +94,7 @@ jobs:
         file: build/Dockerfile
         push: ${{ github.event_name != 'pull_request' }}
         platforms: linux/amd64,linux/arm64
-        tags: ${{ steps.meta.outputs.tags }} ${{ steps.dockerhub-meta.outputs.tags }}
+        tags: "${{ steps.meta.outputs.tags }}\n${{ steps.dockerhub-meta.outputs.tags }}"
         labels: ${{ steps.meta.outputs.labels }}
   stop-runner:
     name: ec2-stop

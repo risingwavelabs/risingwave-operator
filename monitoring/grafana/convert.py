@@ -1,25 +1,12 @@
 #!/usr/bin/python3
 
 import json
-import requests
-import sys
 
-err_message = "Usage: python3 update_risingwave_dashboard.py {commit_id or branch name, optional, default: main} {output_file, optional, default: ./risingwave-dashboard.json}"
-if len(sys.argv) > 3: 
-    print(err_message)
-    exit(1)
+input_file = "risingwave-dashboard.json"
+output_file = "risingwave-dashboard_new.json"
 
-commit_id = "main"
-if len(sys.argv) >= 2:
-    commit_id = sys.argv[1]
-    
-output_file = "./risingwave-dashboard.json"
-if len(sys.argv) == 3:
-    output_file = sys.argv[2]
-
-url = "https://raw.githubusercontent.com/risingwavelabs/risingwave/{commit}/grafana/risingwave-dashboard.json"
-response = requests.get(url.format(commit = commit_id))
-content = response.content.decode("utf-8")
+f = open(input_file,encoding = "utf-8")
+content = f.read()
 json_data = json.loads(content)
 
 # update ["annotations"]["list"]
@@ -105,6 +92,7 @@ datasource_key = "datasource"
 targets_key = "targets"
 expr_key = "expr"
 legend_format_key = "legendFormat"
+
 # define "datasource"
 datasource_value = {
     "type": "prometheus",
@@ -115,29 +103,15 @@ def contains_str(string, target):
     return target in string and target + "_" not in string and "_" + target not in string
 
 def update_expr(target): 
+    if contains_str(target[expr_key], "$instance"):
+        # mask $instance
+        target[expr_key] = target[expr_key].replace("$instance", "XXXXXXXXXXXXXXXXX")
     if contains_str(target[expr_key], "job"):
         target[expr_key] = target[expr_key].replace("job", "risingwave_component")
     if contains_str(target[expr_key], "instance"):
         target[expr_key] = target[expr_key].replace("instance", "pod")
-    if contains_str(target[expr_key], "[$__rate_interval]"):
-        if contains_str(target[expr_key], "}[$__rate_interval]"):
-            target[expr_key] = target[expr_key].replace("}[$__rate_interval]", ", namespace=\"$namespace\", risingwave_name=\"$instance\"}[$__rate_interval]")
-            index = target[expr_key].find("[$__rate_interval]")
-            found = True
-            while found :
-                if index - 1 > 0 and target[expr_key][index - 1] != '}':
-                    target[expr_key] = target[expr_key].replace("[$__rate_interval]", "{namespace=\"$namespace\", risingwave_name=\"$instance\"}[$__rate_interval]")
-                    index = target[expr_key].find("[$__rate_interval]", index + 1)
-                # found next
-                index = target[expr_key].find("[$__rate_interval]", index + 1)
-                if index == -1:
-                    found = False
-        else:
-            target[expr_key] = target[expr_key].replace("[$__rate_interval]", "{namespace=\"$namespace\", risingwave_name=\"$instance\"}[$__rate_interval]")
-    elif contains_str(target[expr_key], ") by ("):
-        target[expr_key] = target[expr_key].replace(") by (", "{namespace=\"$namespace\", risingwave_name=\"$instance\"}) by (")
-    else:
-        target[expr_key] = target[expr_key] + "{namespace=\"$namespace\", risingwave_name=\"$instance\"}"
+    # unmask $instance
+    target[expr_key] = target[expr_key].replace("XXXXXXXXXXXXXXXXX", "$instance")
     
 def update_legend_format(target):
     if contains_str(target[legend_format_key], "{{job}}"):
@@ -145,15 +119,15 @@ def update_legend_format(target):
     if contains_str(target[legend_format_key], "{{instance}}"):
         target[legend_format_key] = target[legend_format_key].replace("{{instance}}", "{{pod}}")
 
-def update_targets(targets): 
+def update_targets(targets):
     for target in targets:
         target[datasource_key] = datasource_value
-        if expr_key in target: 
+        if expr_key in target:
             update_expr(target)
         if legend_format_key in target:
             update_legend_format(target)
         
-def update_panels(panels): 
+def update_panels(panels):
     for panel in panels:
         panel[datasource_key] = datasource_value
         if targets_key in panel:

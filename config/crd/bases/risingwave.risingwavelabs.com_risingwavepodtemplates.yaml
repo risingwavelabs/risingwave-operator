@@ -23,6 +23,8 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: RisingWavePodTemplate is the struct for RisingWavePodTemplate
+          object.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -37,8 +39,11 @@ spec:
           metadata:
             type: object
           template:
+            description: RisingWavePodTemplateSpec is the spec of RisingWavePodTemplate.
             properties:
               metadata:
+                description: RisingWavePodTemplatePartialObjectMeta is the spec for
+                  metadata templates.
                 properties:
                   annotations:
                     additionalProperties:

@@ -668,7 +668,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncFrontendCloneSets(ctx context.Co
 		groupPodTemplates,
 		frontendCloneSets,
 		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
-			return mgr.objectFactory.NewFrontEndCloneSet(group, podTemplates)
+			return mgr.objectFactory.NewFrontendCloneSet(group, podTemplates)
 		},
 	)
 }
@@ -1139,6 +1139,7 @@ func newRisingWaveControllerManagerImpl(client client.Client, risingwaveManager 
 	}
 }
 
+// NewRisingWaveControllerManagerImpl creates an object that implements the RisingWaveControllerManagerImpl.
 func NewRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager, messageStore *event.MessageStore) RisingWaveControllerManagerImpl {
 	return newRisingWaveControllerManagerImpl(client, risingwaveManager, messageStore)
 }

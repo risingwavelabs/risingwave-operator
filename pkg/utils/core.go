@@ -20,12 +20,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+// IsServiceReady returns true when services is ready.
 func IsServiceReady(svc *corev1.Service) bool {
-	if svc == nil {
-		return false
-	}
-
 	/* spellchecker: disable */
 	// FIXME(shunjie.dsj)
-	return true
+	return svc != nil
 }

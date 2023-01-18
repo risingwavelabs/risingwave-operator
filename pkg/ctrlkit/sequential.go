@@ -30,22 +30,27 @@ type sequentialGroup struct {
 	actions []Action
 }
 
+// Children implements the Group.
 func (grp *sequentialGroup) Children() []Action {
 	return grp.actions
 }
 
+// SetChildren implements the Group.
 func (grp *sequentialGroup) SetChildren(actions []Action) {
 	grp.actions = actions
 }
 
+// Name implements the Group.
 func (grp *sequentialGroup) Name() string {
 	return "Sequential"
 }
 
+// Description implements the Action.
 func (grp *sequentialGroup) Description() string {
 	return internal.DescribeGroup(grp.Name(), grp.actions...)
 }
 
+// Run implements the Action.
 func (grp *sequentialGroup) Run(ctx context.Context) (ctrl.Result, error) {
 	// Run actions one-by-one. If one action needs to requeue or requeue after, then the
 	// control flow is broken and control is returned to the outer scope.

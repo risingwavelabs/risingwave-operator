@@ -35,6 +35,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/scaleview"
 )
 
+// RisingWaveScaleViewMutatingWebhook is the mutating webhook for RisingWaveScaleViews.
 type RisingWaveScaleViewMutatingWebhook struct {
 	client client.Reader
 }
@@ -140,10 +141,12 @@ func (w *RisingWaveScaleViewMutatingWebhook) setDefault(ctx context.Context, obj
 	return nil
 }
 
+// Default implements the webhook.CustomDefaulter.
 func (w *RisingWaveScaleViewMutatingWebhook) Default(ctx context.Context, obj runtime.Object) error {
 	return w.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWaveScaleView))
 }
 
+// NewRisingWaveScaleViewMutatingWebhook returns a new mutating webhook for RisingWaveScaleViews.
 func NewRisingWaveScaleViewMutatingWebhook(client client.Reader) webhook.CustomDefaulter {
 	return metrics.NewMutatingWebhookMetricsRecorder(&RisingWaveScaleViewMutatingWebhook{client: client})
 }

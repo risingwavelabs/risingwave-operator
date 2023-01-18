@@ -148,9 +148,8 @@ func OptimizeWorkflow(workflow Action) Action {
 				innerTimeout.timeout = workflow.timeout
 			}
 			return innerTimeout
-		} else {
-			return workflow
 		}
+		return workflow
 	default:
 		return workflow
 	}

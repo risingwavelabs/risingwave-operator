@@ -24,10 +24,12 @@ import (
 
 type nopAction struct{}
 
+// Description implements the Action.
 func (act *nopAction) Description() string {
 	return "Nop"
 }
 
+// Run implements the Action.
 func (act *nopAction) Run(ctx context.Context) (ctrl.Result, error) {
 	return NoRequeue()
 }

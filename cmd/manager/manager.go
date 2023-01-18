@@ -59,7 +59,6 @@ var (
 	metricsAddr          string
 	probeAddr            string
 	configPath           string
-	enableOpenKruise     bool
 	enableLeaderElection bool
 	featureGates         string
 )

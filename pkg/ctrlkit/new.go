@@ -22,6 +22,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+// ActionFunc is an alias for func(context.Context) (ctrl.Result, error).
 type ActionFunc func(context.Context) (ctrl.Result, error)
 
 type action struct {
@@ -29,10 +30,12 @@ type action struct {
 	actionFunc  ActionFunc
 }
 
+// Description implements the Action.
 func (w *action) Description() string {
 	return w.description
 }
 
+// Run implements the Action.
 func (w *action) Run(ctx context.Context) (ctrl.Result, error) {
 	return w.actionFunc(ctx)
 }

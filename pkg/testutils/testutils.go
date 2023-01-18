@@ -194,22 +194,26 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 	},
 }
 
+// FakeRisingWaveOpenKruiseEnabled returns a new fake RisingWave with OpenKruise enabled.
 func FakeRisingWaveOpenKruiseEnabled() *risingwavev1alpha1.RisingWave {
 	risingwaveCopy := fakeRisingWave.DeepCopy()
 	risingwaveCopy.Spec.EnableOpenKruise = pointer.Bool(true)
 	return risingwaveCopy
 }
 
+// FakeRisingWaveOpenKruiseDisabled returns a new fake RisingWave with OpenKruise disabled.
 func FakeRisingWaveOpenKruiseDisabled() *risingwavev1alpha1.RisingWave {
 	risingwaveCopy := fakeRisingWave.DeepCopy()
 	risingwaveCopy.Spec.EnableOpenKruise = pointer.Bool(false)
 	return risingwaveCopy
 }
 
+// FakeRisingWave returns a new fake Risingwave.
 func FakeRisingWave() *risingwavev1alpha1.RisingWave {
 	return fakeRisingWave.DeepCopy()
 }
 
+// GetGroupName returns the group name used in the fake RisingWaves.
 func GetGroupName(index int) string {
 	return fmt.Sprintf("group-%d", index)
 }
@@ -375,20 +379,25 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 	},
 }
 
+// FakeRisingWaveComponentOnly returns a new RisingWave object copied from fakeRisingWaveComponentOnly.
 func FakeRisingWaveComponentOnly() *risingwavev1alpha1.RisingWave {
 	return fakeRisingWaveComponentOnly.DeepCopy()
 }
 
+// FakeRisingWaveComponentOnlyOpenKruiseEnabled returns a new RisingWave object with OpenKruise enabled.
 func FakeRisingWaveComponentOnlyOpenKruiseEnabled() *risingwavev1alpha1.RisingWave {
 	fakeRisingWaveComponentOnlyCopy := fakeRisingWaveComponentOnly.DeepCopy()
 	fakeRisingWaveComponentOnlyCopy.Spec.EnableOpenKruise = pointer.Bool(true)
 	return fakeRisingWaveComponentOnlyCopy.DeepCopy()
 }
 
+// DeepEqual returns true when the two objects are semantically equal.
 func DeepEqual[T any](x, y T) bool {
 	return equality.Semantic.DeepEqual(x, y)
 }
 
+// NewFakeRisingWaveScaleViewFor creates a new fake RisingWaveScaleView object for the target RisingWave and component. It applies
+// the given mutations before returning.
 func NewFakeRisingWaveScaleViewFor(risingwave *risingwavev1alpha1.RisingWave, component string, mutates ...func(*risingwavev1alpha1.RisingWave, *risingwavev1alpha1.RisingWaveScaleView)) *risingwavev1alpha1.RisingWaveScaleView {
 	r := &risingwavev1alpha1.RisingWaveScaleView{
 		TypeMeta: metav1.TypeMeta{
@@ -414,6 +423,7 @@ func NewFakeRisingWaveScaleViewFor(risingwave *risingwavev1alpha1.RisingWave, co
 	return r
 }
 
+// FakeRisingWaveWithMutate creates a new fake RisingWave and applies the mutate function. It's for test purposes.
 func FakeRisingWaveWithMutate(mutate func(wave *risingwavev1alpha1.RisingWave)) *risingwavev1alpha1.RisingWave {
 	r := FakeRisingWave()
 	mutate(r)

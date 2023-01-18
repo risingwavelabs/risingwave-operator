@@ -16,6 +16,7 @@
 
 package internal
 
+// Decorator defines the methods that an action decorator should have.
 type Decorator interface {
 	Inner() Action
 	SetInner(Action)

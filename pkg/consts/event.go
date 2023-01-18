@@ -18,6 +18,7 @@ package consts
 
 import corev1 "k8s.io/api/core/v1"
 
+// RisingWaveEventType is the struct for RisingWave events.
 type RisingWaveEventType struct {
 	Name string
 	Type string

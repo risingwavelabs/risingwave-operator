@@ -1692,7 +1692,7 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 				case consts.ComponentMeta:
 					cloneSet = factory.NewMetaCloneSet(tc.group.Name, tc.podTemplate)
 				case consts.ComponentFrontend:
-					cloneSet = factory.NewFrontEndCloneSet(tc.group.Name, tc.podTemplate)
+					cloneSet = factory.NewFrontendCloneSet(tc.group.Name, tc.podTemplate)
 				case consts.ComponentCompactor:
 					cloneSet = factory.NewCompactorCloneSet(tc.group.Name, tc.podTemplate)
 				}
@@ -1727,8 +1727,8 @@ func Test_RisingWaveObjectFactory_CloneSet(t *testing.T) {
 						if tc.group.PodTemplate != nil {
 							temp := tc.podTemplate[*tc.group.PodTemplate].Template
 							if !matchesPodTemplate(&obj.Spec.Template, &temp) {
-								fmt.Println(testutils.JsonMustPrettyPrint(&obj.Spec.Template))
-								fmt.Println(testutils.JsonMustPrettyPrint(&temp))
+								fmt.Println(testutils.JSONMustPrettyPrint(&obj.Spec.Template))
+								fmt.Println(testutils.JSONMustPrettyPrint(&temp))
 								return false
 							}
 							return true

@@ -22,6 +22,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+// Action defines the methods that an action should have.
 type Action interface {
 	Description() string
 	Run(ctx context.Context) (ctrl.Result, error)

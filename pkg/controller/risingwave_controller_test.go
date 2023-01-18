@@ -304,7 +304,7 @@ func Test_RisingWaveController_Recovery(t *testing.T) {
 	risingwaveManager := object.NewRisingWaveManager(nil, &currentRisingwave, false)
 	runningCondition := risingwaveManager.GetCondition(risingwavev1alpha1.RisingWaveConditionRunning)
 	if runningCondition == nil || runningCondition.Status != metav1.ConditionFalse {
-		t.Logf("condition: %s", testutils.JsonMustPrettyPrint(runningCondition))
+		t.Logf("condition: %s", testutils.JSONMustPrettyPrint(runningCondition))
 		t.Fatal("Running condition not false")
 	}
 

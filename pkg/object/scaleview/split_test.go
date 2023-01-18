@@ -202,7 +202,7 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			r := SplitReplicas(&tc.sv)
 			if !reflect.DeepEqual(r, tc.expected) {
-				t.Fatalf("wrong result: %s", testutils.JsonMustPrettyPrint(r))
+				t.Fatalf("wrong result: %s", testutils.JSONMustPrettyPrint(r))
 			}
 		})
 	}

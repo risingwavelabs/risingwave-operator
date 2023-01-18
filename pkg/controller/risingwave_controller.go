@@ -52,8 +52,8 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
+// Pre-defined actions. Import from manager package.
 const (
-	// Pre-defined actions. Import from manager package.
 	RisingWaveAction_SyncMetaService                            = manager.RisingWaveAction_SyncMetaService
 	RisingWaveAction_SyncMetaDeployments                        = manager.RisingWaveAction_SyncMetaDeployments
 	RisingWaveAction_SyncMetaCloneSets                          = manager.RisingWaveAction_SyncMetaCloneSets
@@ -78,8 +78,10 @@ const (
 	RisingWaveAction_SyncConfigConfigMap                        = manager.RisingWaveAction_SyncConfigConfigMap
 	RisingWaveAction_CollectRunningStatisticsAndSyncStatus      = manager.RisingWaveAction_CollectRunningStatisticsAndSyncStatus
 	RisingWaveAction_SyncServiceMonitor                         = manager.RisingWaveAction_SyncServiceMonitor
+)
 
-	// Actions defined in controller.
+// Actions defined in controller.
+const (
 	RisingWaveAction_UpdateRisingWaveStatusViaClient    = "UpdateRisingWaveStatusViaClient"
 	RisingWaveAction_BarrierFirstTimeObserved           = "BarrierFirstTimeObserved"
 	RisingWaveAction_MarkConditionInitializingAsTrue    = "MarkConditionInitializingAsTrue"
@@ -114,6 +116,7 @@ const (
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=get;list;watch;create;delete;update;patch
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
+// RisingWaveController is the controller for RisingWave.
 type RisingWaveController struct {
 	Client            client.Client
 	Recorder          record.EventRecorder
@@ -272,7 +275,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		ctrlkit.Timeout(time.Second, mgr.WaitBeforeMetaServiceIsAvailable()),
 	)
 	prometheusCRDsInstalledBarrier := mgr.NewAction(RisingWaveAction_BarrierPrometheusCRDsInstalled, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-		crd, err := utils.GetCustomResourceDefinition(c.Client, ctx, metav1.GroupKind{
+		crd, err := utils.GetCustomResourceDefinition(ctx, c.Client, metav1.GroupKind{
 			Group: "monitoring.coreos.com",
 			Kind:  "ServiceMonitor",
 		})
@@ -427,6 +430,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	)
 }
 
+// SetupWithManager sets up the controller with a given manager.
 func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 	gvk, err := apiutil.GVKForObject(&risingwavev1alpha1.RisingWave{}, c.Client.Scheme())
 	if err != nil {
@@ -476,6 +480,7 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 	return newCtrl.Complete(metrics.NewControllerMetricsRecorder(c, "RisingWaveController", gvk))
 }
 
+// NewRisingWaveController creates a new RisingWaveController.
 func NewRisingWaveController(client client.Client, recorder record.EventRecorder, openKruiseAvailable bool) *RisingWaveController {
 	return &RisingWaveController{
 		Client:              client,

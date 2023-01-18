@@ -134,18 +134,22 @@ type joinRunFunc func(ctx context.Context, actions ...Action) (ctrl.Result, erro
 
 type parallelJoinRunFunc joinRunFunc
 
+// IsParallel implements joinRunner.
 func (r joinRunFunc) IsParallel() bool {
 	return false
 }
 
+// Run implements joinRunner.
 func (r joinRunFunc) Run(ctx context.Context, actions ...Action) (ctrl.Result, error) {
 	return r(ctx, actions...)
 }
 
+// IsParallel implements joinRunner.
 func (r parallelJoinRunFunc) IsParallel() bool {
 	return true
 }
 
+// Run implements joinRunner.
 func (r parallelJoinRunFunc) Run(ctx context.Context, actions ...Action) (ctrl.Result, error) {
 	return r(ctx, actions...)
 }
@@ -163,22 +167,27 @@ type joinGroup struct {
 	runner  joinRunner
 }
 
+// Children implements the Group.
 func (grp *joinGroup) Children() []Action {
 	return grp.actions
 }
 
+// SetChildren implements the Group.
 func (grp *joinGroup) SetChildren(actions []Action) {
 	grp.actions = actions
 }
 
+// Name implements the Group.
 func (grp *joinGroup) Name() string {
 	return grp.name
 }
 
+// Description implements the Action.
 func (grp *joinGroup) Description() string {
 	return internal.DescribeGroup(grp.Name(), grp.actions...)
 }
 
+// Run implements the Action.
 func (grp *joinGroup) Run(ctx context.Context) (ctrl.Result, error) {
 	return grp.runner.Run(ctx, grp.actions...)
 }

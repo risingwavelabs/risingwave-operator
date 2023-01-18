@@ -21,6 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// ValidateOwnership validates the ownership by checking the owner references.
 func ValidateOwnership(obj, owner client.Object) bool {
 	if obj == nil || owner == nil {
 		return false

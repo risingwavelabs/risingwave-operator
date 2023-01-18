@@ -28,7 +28,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func GetCustomResourceDefinition(client client.Reader, ctx context.Context, gk metav1.GroupKind) (*apiextensionsv1.CustomResourceDefinition, error) {
+// GetCustomResourceDefinition is the helper function to get the CRD for the given group kind.
+func GetCustomResourceDefinition(ctx context.Context, client client.Reader, gk metav1.GroupKind) (*apiextensionsv1.CustomResourceDefinition, error) {
 	var crd apiextensionsv1.CustomResourceDefinition
 	err := client.Get(ctx, types.NamespacedName{Name: fmt.Sprintf("%ss.%s", strings.ToLower(gk.Kind), gk.Group)}, &crd)
 	if err != nil {
@@ -37,6 +38,7 @@ func GetCustomResourceDefinition(client client.Reader, ctx context.Context, gk m
 	return &crd, nil
 }
 
+// IsVersionServingInCustomResourceDefinition returns true when the CRD serves the given version.
 func IsVersionServingInCustomResourceDefinition(crd *apiextensionsv1.CustomResourceDefinition, version string) bool {
 	if crd == nil || version == "" {
 		return false

@@ -430,7 +430,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	)
 }
 
-// SetupWithManager sets up the controller with give manager.
+// SetupWithManager sets up the controller with a given manager.
 func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 	gvk, err := apiutil.GVKForObject(&risingwavev1alpha1.RisingWave{}, c.Client.Scheme())
 	if err != nil {

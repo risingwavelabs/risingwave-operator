@@ -109,7 +109,7 @@ func (c *RisingWaveScaleViewController) Reconcile(ctx context.Context, request r
 	).Run(ctx))
 }
 
-// SetupWithManager sets up the controller with give manager.
+// SetupWithManager sets up the controller with a given manager.
 func (c *RisingWaveScaleViewController) SetupWithManager(mgr ctrl.Manager) error {
 	gvk, err := apiutil.GVKForObject(&risingwavev1alpha1.RisingWaveScaleView{}, c.Client.Scheme())
 	if err != nil {

@@ -23,7 +23,7 @@ import (
 	"unicode"
 )
 
-// FeatureStage is the stage of features, e.g., alpha, beta, GA.
+// FeatureStage is the stage of features, e.g., alpha, beta, GA. See Valid feature stages below.
 type FeatureStage string
 
 // FeatureName is an alias of the string.

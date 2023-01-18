@@ -22,6 +22,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 )
 
+// IsDeploymentRolledOut returns true when the Deployment is rolled out.
 func IsDeploymentRolledOut(deploy *appsv1.Deployment) bool {
 	if deploy == nil {
 		return false
@@ -48,6 +49,7 @@ func IsDeploymentRolledOut(deploy *appsv1.Deployment) bool {
 	return true
 }
 
+// IsStatefulSetRolledOut returns true when the StatefulSet is rolled out.
 func IsStatefulSetRolledOut(statefulSet *appsv1.StatefulSet) bool {
 	if statefulSet == nil {
 		return false
@@ -67,6 +69,7 @@ func IsStatefulSetRolledOut(statefulSet *appsv1.StatefulSet) bool {
 	return true
 }
 
+// IsCloneSetRolledOut returns true when the OpenKruise CloneSet is rolled out.
 func IsCloneSetRolledOut(cloneSet *kruiseappsv1alpha1.CloneSet) bool {
 	if cloneSet == nil {
 		return false
@@ -91,6 +94,7 @@ func IsCloneSetRolledOut(cloneSet *kruiseappsv1alpha1.CloneSet) bool {
 	return true
 }
 
+// IsAdvancedStatefulSetRolledOut returns true when the OpenKruise StatefulSet is rolled out.
 func IsAdvancedStatefulSetRolledOut(statefulSet *kruiseappsv1beta1.StatefulSet) bool {
 	if statefulSet == nil {
 		return false

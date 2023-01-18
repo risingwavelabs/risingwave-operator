@@ -53,6 +53,7 @@ type mutatingWebhookMetricsRecorder struct {
 	inner webhook.CustomDefaulter
 }
 
+// Default implements the webhook.CustomDefaulter.
 func (r *mutatingWebhookMetricsRecorder) Default(ctx context.Context, obj runtime.Object) (err error) {
 	startTime := time.Now()
 
@@ -62,6 +63,7 @@ func (r *mutatingWebhookMetricsRecorder) Default(ctx context.Context, obj runtim
 	return r.inner.Default(ctx, obj)
 }
 
+// NewMutatingWebhookMetricsRecorder creates a new metrics recorder for the mutating webhook.
 func NewMutatingWebhookMetricsRecorder(inner webhook.CustomDefaulter) webhook.CustomDefaulter {
 	return &mutatingWebhookMetricsRecorder{
 		webhookMetricsRecorder: webhookMetricsRecorder{webhookType: utils.MutatingWebhookType},
@@ -74,6 +76,7 @@ type validatingWebhookMetricsRecorder struct {
 	inner webhook.CustomValidator
 }
 
+// ValidateCreate implements the CustomValidator.
 func (r *validatingWebhookMetricsRecorder) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
 	startTime := time.Now()
 
@@ -83,6 +86,7 @@ func (r *validatingWebhookMetricsRecorder) ValidateCreate(ctx context.Context, o
 	return r.inner.ValidateCreate(ctx, obj)
 }
 
+// ValidateUpdate implements the CustomValidator.
 func (r *validatingWebhookMetricsRecorder) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (err error) {
 	startTime := time.Now()
 
@@ -92,6 +96,7 @@ func (r *validatingWebhookMetricsRecorder) ValidateUpdate(ctx context.Context, o
 	return r.inner.ValidateUpdate(ctx, oldObj, newObj)
 }
 
+// ValidateDelete implements the CustomValidator.
 func (r *validatingWebhookMetricsRecorder) ValidateDelete(ctx context.Context, obj runtime.Object) (err error) {
 	startTime := time.Now()
 
@@ -101,6 +106,7 @@ func (r *validatingWebhookMetricsRecorder) ValidateDelete(ctx context.Context, o
 	return r.inner.ValidateDelete(ctx, obj)
 }
 
+// NewValidatingWebhookMetricsRecorder creates a new webhook recorder for validating webhook.
 func NewValidatingWebhookMetricsRecorder(inner webhook.CustomValidator) webhook.CustomValidator {
 	return &validatingWebhookMetricsRecorder{
 		webhookMetricsRecorder: webhookMetricsRecorder{webhookType: utils.ValidatingWebhookType},

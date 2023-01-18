@@ -49,6 +49,7 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) isTargetObjMatched(targetOb
 	return targetObj != nil && targetObj.UID == mgr.scaleView.Spec.TargetRef.UID
 }
 
+// UpdateScaleViewStatus implements theRisingWaveScaleViewControllerManagerImpl.
 func (mgr *risingWaveScaleViewControllerManagerImpl) UpdateScaleViewStatus(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
 	if mgr.isStatusChanged() {
 		err := mgr.client.Status().Update(ctx, mgr.scaleView)
@@ -57,6 +58,7 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) UpdateScaleViewStatus(ctx c
 	return ctrlkit.Continue()
 }
 
+// HandleScaleViewFinalizer implements theRisingWaveScaleViewControllerManagerImpl.
 func (mgr *risingWaveScaleViewControllerManagerImpl) HandleScaleViewFinalizer(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
 	if !controllerutil.RemoveFinalizer(mgr.scaleView, consts.FinalizerScaleView) {
 		return ctrlkit.Continue()
@@ -78,6 +80,7 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) HandleScaleViewFinalizer(ct
 	return ctrlkit.RequeueIfErrorAndWrap("unable to remove the finalizer", err)
 }
 
+// GrabOrUpdateScaleViewLock implements RisingWaveScaleViewControllerManagerImpl.
 func (mgr *risingWaveScaleViewControllerManagerImpl) GrabOrUpdateScaleViewLock(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
 	if !mgr.isTargetObjMatched(targetObj) {
 		if targetObj != nil {
@@ -109,6 +112,7 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) GrabOrUpdateScaleViewLock(c
 	}
 }
 
+// SyncGroupReplicasToRisingWave implementsRisingWaveScaleViewControllerManagerImpl.
 func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasToRisingWave(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
 	if !mgr.isTargetObjMatched(targetObj) {
 		if targetObj != nil {
@@ -166,6 +170,7 @@ func readRunningReplicas(obj *risingwavev1alpha1.RisingWave, component, group st
 	}
 }
 
+// SyncGroupReplicasStatusFromRisingWave implementsRisingWaveScaleViewControllerManagerImpl.
 func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasStatusFromRisingWave(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
 	if !mgr.isTargetObjMatched(targetObj) {
 		mgr.scaleView.Status.Replicas = pointer.Int32(0)
@@ -183,6 +188,7 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasStatusFrom
 	}
 }
 
+// NewRisingWaveScaleViewControllerManagerImpl creates an object that implements the RisingWaveScaleViewControllerManagerImpl.
 func NewRisingWaveScaleViewControllerManagerImpl(client client.Client, scaleView *risingwavev1alpha1.RisingWaveScaleView) RisingWaveScaleViewControllerManagerImpl {
 	return &risingWaveScaleViewControllerManagerImpl{
 		client:              client,

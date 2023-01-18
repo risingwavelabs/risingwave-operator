@@ -24,8 +24,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+// RisingWaveUpgradeStrategyType is the type of upgrade strategies used in RisingWave.
 type RisingWaveUpgradeStrategyType string
 
+// Valid values of RisingWaveUpgradeStrategyType.
 const (
 	RisingWaveUpgradeStrategyTypeRecreate          RisingWaveUpgradeStrategyType = "Recreate"
 	RisingWaveUpgradeStrategyTypeRollingUpdate     RisingWaveUpgradeStrategyType = "RollingUpdate"
@@ -33,6 +35,7 @@ const (
 	RisingWaveUpgradeStrategyTypeInPlaceOnly       RisingWaveUpgradeStrategyType = "InPlaceOnly"
 )
 
+// RisingWaveRollingUpdate is the spec to define rolling update strategies.
 type RisingWaveRollingUpdate struct {
 	// The maximum number of pods that can be unavailable during the update.
 	// Value can be an absolute number (ex: 5) or a percentage of desired pods (ex: 10%).
@@ -60,6 +63,7 @@ type RisingWaveRollingUpdate struct {
 	MaxSurge *intstr.IntOrString `json:"maxSurge,omitempty"`
 }
 
+// RisingWaveUpgradeStrategy is the spec of upgrade strategy used by RisingWave.
 type RisingWaveUpgradeStrategy struct {
 	// Type of upgrade. Can be "Recreate" or "RollingUpdate". Default is RollingUpdate.
 	// +optional
@@ -238,6 +242,7 @@ type RisingWaveComponentMetaPorts struct {
 	DashboardPort int32 `json:"dashboard,omitempty"`
 }
 
+// RisingWaveComponentMeta is the spec describes the meta component.
 type RisingWaveComponentMeta struct {
 	// The time that the Pods of frontend that should be restarted. Setting a value on this
 	// field will trigger a recreation of all Pods of this component.
@@ -257,6 +262,7 @@ type RisingWaveComponentMeta struct {
 	Groups []RisingWaveComponentGroup `json:"groups,omitempty"`
 }
 
+// RisingWaveComponentFrontend is the spec describes the frontend component.
 type RisingWaveComponentFrontend struct {
 	// The time that the Pods of frontend that should be restarted. Setting a value on this
 	// field will trigger a recreation of all Pods of this component.
@@ -276,6 +282,7 @@ type RisingWaveComponentFrontend struct {
 	Groups []RisingWaveComponentGroup `json:"groups,omitempty"`
 }
 
+// RisingWaveComponentCompute is the spec describes the compute component.
 type RisingWaveComponentCompute struct {
 	// The time that the Pods of frontend that should be restarted. Setting a value on this
 	// field will trigger a recreation of all Pods of this component.
@@ -295,6 +302,7 @@ type RisingWaveComponentCompute struct {
 	Groups []RisingWaveComputeGroup `json:"groups,omitempty"`
 }
 
+// RisingWaveComponentCompactor is the spec describes the compactor component.
 type RisingWaveComponentCompactor struct {
 	// The time that the Pods of frontend that should be restarted. Setting a value on this
 	// field will trigger a recreation of all Pods of this component.
@@ -690,6 +698,7 @@ type RisingWaveStoragesStatus struct {
 	Object RisingWaveObjectStorageStatus `json:"object"`
 }
 
+// RisingWaveScaleViewLockGroupLock is the lock record of RisingWaveScaleView.
 type RisingWaveScaleViewLockGroupLock struct {
 	// Group name.
 	Name string `json:"name"`
@@ -751,6 +760,7 @@ type RisingWaveStatus struct {
 // +kubebuilder:printcolumn:name="STORAGE(OBJECT)",type=string,JSONPath=`.status.storages.object.type`
 // +kubebuilder:printcolumn:name="AGE",type=date,JSONPath=`.metadata.creationTimestamp`
 
+// RisingWave is the struct for RisingWave object.
 type RisingWave struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

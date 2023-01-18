@@ -30,6 +30,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 )
 
+// RisingWavePodTemplateValidatingWebhook is the validating webhook for RisingWavePodTemplates.
 type RisingWavePodTemplateValidatingWebhook struct{}
 
 // ValidateCreate implements admission.CustomValidator.
@@ -61,6 +62,7 @@ func (pt *RisingWavePodTemplateValidatingWebhook) ValidateUpdate(ctx context.Con
 	return pt.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWavePodTemplate), newObj.(*risingwavev1alpha1.RisingWavePodTemplate))
 }
 
+// NewRisingWavePodTemplateValidatingWebhook returns a new validating webhook for RisingWavePodTemplates.
 func NewRisingWavePodTemplateValidatingWebhook() webhook.CustomValidator {
 	return metrics.NewValidatingWebhookMetricsRecorder(&RisingWavePodTemplateValidatingWebhook{})
 }

@@ -539,11 +539,11 @@ func TestRisingWaveControllerManagerImpl_SyncMetaDeployments(t *testing.T) {
 			consts.LabelRisingWaveName:      fakeRisingwave.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentMeta,
 		},
-		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.Deployment) (ctrl.Result, error) {
-			return managerImpl.SyncMetaDeployments(ctx, logger, obj)
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.StatefulSet) (ctrl.Result, error) {
+			return managerImpl.SyncMetaStatefulSets(ctx, logger, obj)
 		},
-		func(tl *appsv1.DeploymentList) []appsv1.Deployment { return tl.Items },
-		func(t *testing.T, obj *appsv1.Deployment) {
+		func(tl *appsv1.StatefulSetList) []appsv1.StatefulSet { return tl.Items },
+		func(t *testing.T, obj *appsv1.StatefulSet) {
 			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
 				t.Fatal("component labels not match")
 			}
@@ -555,11 +555,11 @@ func TestRisingWaveControllerManagerImpl_SyncMetaDeployments(t *testing.T) {
 			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentMeta,
 		},
-		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.Deployment) (ctrl.Result, error) {
-			return managerImpl.SyncMetaDeployments(ctx, logger, obj)
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.StatefulSet) (ctrl.Result, error) {
+			return managerImpl.SyncMetaStatefulSets(ctx, logger, obj)
 		},
-		func(tl *appsv1.DeploymentList) []appsv1.Deployment { return tl.Items },
-		func(t *testing.T, obj *appsv1.Deployment) {
+		func(tl *appsv1.StatefulSetList) []appsv1.StatefulSet { return tl.Items },
+		func(t *testing.T, obj *appsv1.StatefulSet) {
 			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
 				t.Fatal("component labels not match")
 			}
@@ -573,11 +573,11 @@ func TestRisingWaveControllerManagerImpl_SyncMetaDeployments(t *testing.T) {
 			consts.LabelRisingWaveName:      fakeRisingwave.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentMeta,
 		},
-		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.Deployment) (ctrl.Result, error) {
-			return managerImpl.SyncMetaDeployments(ctx, logger, obj)
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.StatefulSet) (ctrl.Result, error) {
+			return managerImpl.SyncMetaStatefulSets(ctx, logger, obj)
 		},
-		func(tl *appsv1.DeploymentList) []appsv1.Deployment { return tl.Items },
-		func(t *testing.T, obj *appsv1.Deployment) {
+		func(tl *appsv1.StatefulSetList) []appsv1.StatefulSet { return tl.Items },
+		func(t *testing.T, obj *appsv1.StatefulSet) {
 			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
 				t.Fatal("component labels not match")
 			}
@@ -595,11 +595,11 @@ func TestRisingWaveControllerManagerImpl_SyncMetaCloneSets(t *testing.T) {
 			consts.LabelRisingWaveName:      fakeRisingwave.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentMeta,
 		},
-		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error) {
-			return managerImpl.SyncMetaCloneSets(ctx, logger, obj)
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1beta1.StatefulSet) (ctrl.Result, error) {
+			return managerImpl.SyncMetaAdvancedStatefulSets(ctx, logger, obj)
 		},
-		func(tl *kruiseappsv1alpha1.CloneSetList) []kruiseappsv1alpha1.CloneSet { return tl.Items },
-		func(t *testing.T, obj *kruiseappsv1alpha1.CloneSet) {
+		func(tl *kruiseappsv1beta1.StatefulSetList) []kruiseappsv1beta1.StatefulSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1beta1.StatefulSet) {
 			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
 				t.Fatal("component labels not match")
 			}
@@ -611,11 +611,11 @@ func TestRisingWaveControllerManagerImpl_SyncMetaCloneSets(t *testing.T) {
 			consts.LabelRisingWaveName:      fakeRisingwaveComponentOnly.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentMeta,
 		},
-		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error) {
-			return managerImpl.SyncMetaCloneSets(ctx, logger, obj)
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1beta1.StatefulSet) (ctrl.Result, error) {
+			return managerImpl.SyncMetaAdvancedStatefulSets(ctx, logger, obj)
 		},
-		func(tl *kruiseappsv1alpha1.CloneSetList) []kruiseappsv1alpha1.CloneSet { return tl.Items },
-		func(t *testing.T, obj *kruiseappsv1alpha1.CloneSet) {
+		func(tl *kruiseappsv1beta1.StatefulSetList) []kruiseappsv1beta1.StatefulSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1beta1.StatefulSet) {
 			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
 				t.Fatal("component labels not match")
 			}
@@ -630,11 +630,11 @@ func TestRisingWaveControllerManagerImpl_SyncMetaCloneSets(t *testing.T) {
 			consts.LabelRisingWaveName:      fakeRisingwave.Name,
 			consts.LabelRisingWaveComponent: consts.ComponentMeta,
 		},
-		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error) {
-			return managerImpl.SyncMetaCloneSets(ctx, logger, obj)
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1beta1.StatefulSet) (ctrl.Result, error) {
+			return managerImpl.SyncMetaAdvancedStatefulSets(ctx, logger, obj)
 		},
-		func(tl *kruiseappsv1alpha1.CloneSetList) []kruiseappsv1alpha1.CloneSet { return tl.Items },
-		func(t *testing.T, obj *kruiseappsv1alpha1.CloneSet) {
+		func(tl *kruiseappsv1beta1.StatefulSetList) []kruiseappsv1beta1.StatefulSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1beta1.StatefulSet) {
 			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
 				t.Fatal("component labels not match")
 			}

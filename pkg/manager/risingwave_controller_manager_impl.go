@@ -147,7 +147,7 @@ func buildObjectStorageType(objectStorage *risingwavev1alpha1.RisingWaveObjectSt
 func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger,
 	frontendService *corev1.Service, metaService *corev1.Service,
 	computeService *corev1.Service, compactorService *corev1.Service,
-	metaCloneSets []kruiseappsv1alpha1.CloneSet, frontendCloneSets []kruiseappsv1alpha1.CloneSet,
+	metaAdvancedStatefulSets []kruiseappsv1beta1.StatefulSet, frontendCloneSets []kruiseappsv1alpha1.CloneSet,
 	computeStatefulSets []kruiseappsv1beta1.StatefulSet, compactorCloneSets []kruiseappsv1alpha1.CloneSet,
 	configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
@@ -168,7 +168,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
 	componentReplicas := risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
-		Meta:      buildGroupStatus(globalSpec.Replicas.Meta, componentsSpec.Meta.Groups, nameAndReplicasForComponentGroup, metaCloneSets, groupAndReadyReplicasForCloneSets),
+		Meta:      buildGroupStatus(globalSpec.Replicas.Meta, componentsSpec.Meta.Groups, nameAndReplicasForComponentGroup, metaAdvancedStatefulSets, groupAndReadyReplicasForStatefulSet),
 		Frontend:  buildGroupStatus(globalSpec.Replicas.Frontend, componentsSpec.Frontend.Groups, nameAndReplicasForComponentGroup, frontendCloneSets, groupAndReadyReplicasForCloneSets),
 		Compactor: buildGroupStatus(globalSpec.Replicas.Compactor, componentsSpec.Compactor.Groups, nameAndReplicasForComponentGroup, compactorCloneSets, groupAndReadyReplicasForCloneSets),
 		Compute:   buildGroupStatus(globalSpec.Replicas.Compute, componentsSpec.Compute.Groups, nameAndReplicasForComputeGroup, computeStatefulSets, groupAndReadyReplicasForStatefulSet),
@@ -259,7 +259,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger,
 	frontendService *corev1.Service, metaService *corev1.Service,
 	computeService *corev1.Service, compactorService *corev1.Service,
-	metaDeployments []appsv1.Deployment, frontendDeployments []appsv1.Deployment,
+	metaStatefulSets []appsv1.StatefulSet, frontendDeployments []appsv1.Deployment,
 	computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment,
 	configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
@@ -280,7 +280,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
 	componentReplicas := risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
-		Meta:      buildGroupStatus(globalSpec.Replicas.Meta, componentsSpec.Meta.Groups, nameAndReplicasForComponentGroup, metaDeployments, groupAndReadyReplicasForDeployments),
+		Meta:      buildGroupStatus(globalSpec.Replicas.Meta, componentsSpec.Meta.Groups, nameAndReplicasForComponentGroup, metaStatefulSets, groupAndReadyReplicasForStatefulSet),
 		Frontend:  buildGroupStatus(globalSpec.Replicas.Frontend, componentsSpec.Frontend.Groups, nameAndReplicasForComponentGroup, frontendDeployments, groupAndReadyReplicasForDeployments),
 		Compactor: buildGroupStatus(globalSpec.Replicas.Compactor, componentsSpec.Compactor.Groups, nameAndReplicasForComponentGroup, compactorDeployments, groupAndReadyReplicasForDeployments),
 		Compute:   buildGroupStatus(globalSpec.Replicas.Compute, componentsSpec.Compute.Groups, nameAndReplicasForComputeGroup, computeStatefulSets, groupAndReadyReplicasForStatefulSet),
@@ -668,13 +668,13 @@ func (mgr *risingWaveControllerManagerImpl) SyncFrontendCloneSets(ctx context.Co
 		groupPodTemplates,
 		frontendCloneSets,
 		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
-			return mgr.objectFactory.NewFrontEndCloneSet(group, podTemplates)
+			return mgr.objectFactory.NewFrontendCloneSet(group, podTemplates)
 		},
 	)
 }
 
-// SyncMetaDeployments implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) SyncMetaDeployments(ctx context.Context, logger logr.Logger, metaDeployments []appsv1.Deployment) (reconcile.Result, error) {
+// SyncMetaStatefulSets implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) SyncMetaStatefulSets(ctx context.Context, logger logr.Logger, metaStatefulSets []appsv1.StatefulSet) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
 	var groupPodTemplates = make(map[string]string)
 
@@ -692,15 +692,15 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaDeployments(ctx context.Cont
 		mgr, ctx, logger,
 		consts.ComponentCompactor,
 		groupPodTemplates,
-		metaDeployments,
-		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
-			return mgr.objectFactory.NewMetaDeployment(group, podTemplates)
+		metaStatefulSets,
+		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.StatefulSet {
+			return mgr.objectFactory.NewMetaStatefulSet(group, podTemplates)
 		},
 	)
 }
 
-// SyncCloneSetDeployments implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) SyncMetaCloneSets(ctx context.Context, logger logr.Logger, metaCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
+// SyncMetaAdvancedStatefulSets implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) SyncMetaAdvancedStatefulSets(ctx context.Context, logger logr.Logger, metaCloneSets []kruiseappsv1beta1.StatefulSet) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	// We only want to populate groupPodTemplates for CloneSets if Open Kruise is enabled.
@@ -720,8 +720,8 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaCloneSets(ctx context.Contex
 		consts.ComponentCompactor,
 		groupPodTemplates,
 		metaCloneSets,
-		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
-			return mgr.objectFactory.NewMetaCloneSet(group, podTemplates)
+		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1beta1.StatefulSet {
+			return mgr.objectFactory.NewMetaAdvancedStatefulSet(group, podTemplates)
 		},
 	)
 }
@@ -906,8 +906,8 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendCloneSetsReady(ctx
 	)
 }
 
-// WaitBeforeMetaDeploymentsReady implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaDeploymentsReady(ctx context.Context, logger logr.Logger, metaDeployments []appsv1.Deployment) (reconcile.Result, error) {
+// WaitBeforeMetaStatefulSetsReady implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaStatefulSetsReady(ctx context.Context, logger logr.Logger, metaStatefulSets []appsv1.StatefulSet) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	groupMap := make(map[string]int)
@@ -925,15 +925,15 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaDeploymentsReady(ctx c
 
 	return waitComponentGroupWorkloadsReady(ctx, logger,
 		consts.ComponentMeta, groupMap,
-		metaDeployments,
-		func(t *appsv1.Deployment) bool {
-			return mgr.isObjectSynced(t) && utils.IsDeploymentRolledOut(t)
+		metaStatefulSets,
+		func(t *appsv1.StatefulSet) bool {
+			return mgr.isObjectSynced(t) && utils.IsStatefulSetRolledOut(t)
 		},
 	)
 }
 
-// WaitBeforeMetaDeploymentsReady implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaCloneSetsReady(ctx context.Context, logger logr.Logger, metaCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
+// WaitBeforeMetaAdvancedStatefulSetsReady implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaAdvancedStatefulSetsReady(ctx context.Context, logger logr.Logger, metaAdvancedStatefulSets []kruiseappsv1beta1.StatefulSet) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	groupMap := make(map[string]int)
@@ -951,9 +951,9 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaCloneSetsReady(ctx con
 
 	return waitComponentGroupWorkloadsReady(ctx, logger,
 		consts.ComponentMeta, groupMap,
-		metaCloneSets,
-		func(t *kruiseappsv1alpha1.CloneSet) bool {
-			return mgr.isObjectSynced(t) && utils.IsCloneSetRolledOut(t)
+		metaAdvancedStatefulSets,
+		func(t *kruiseappsv1beta1.StatefulSet) bool {
+			return mgr.isObjectSynced(t) && utils.IsAdvancedStatefulSetRolledOut(t)
 		},
 	)
 }
@@ -1139,6 +1139,7 @@ func newRisingWaveControllerManagerImpl(client client.Client, risingwaveManager 
 	}
 }
 
+// NewRisingWaveControllerManagerImpl creates an object that implements the RisingWaveControllerManagerImpl.
 func NewRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager, messageStore *event.MessageStore) RisingWaveControllerManagerImpl {
 	return newRisingWaveControllerManagerImpl(client, risingwaveManager, messageStore)
 }

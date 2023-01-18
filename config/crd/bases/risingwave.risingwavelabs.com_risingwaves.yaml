@@ -36,6 +36,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: RisingWave is the struct for RisingWave object.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -3258,6 +3259,8 @@ spec:
                     groupLocks:
                       description: Group locks.
                       items:
+                        description: RisingWaveScaleViewLockGroupLock is the lock
+                          record of RisingWaveScaleView.
                         properties:
                           name:
                             description: Group name.

@@ -21,10 +21,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// GetNamespacedName returns the NamespacedName of the given object.
 func GetNamespacedName(obj client.Object) types.NamespacedName {
 	return types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()}
 }
 
+// IsDeleted returns true when object's deletion timestamp isn't null.
 func IsDeleted(obj client.Object) bool {
 	return obj != nil && !obj.GetDeletionTimestamp().IsZero()
 }

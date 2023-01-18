@@ -95,6 +95,7 @@ type RisingWaveScaleViewStatus struct {
 // +kubebuilder:printcolumn:name="LOCKED",type=boolean,JSONPath=`.status.locked`
 // +kubebuilder:resource:shortName=rwsv,categories=all;streaming
 
+// RisingWaveScaleView is the struct for RisingWaveScaleView.
 type RisingWaveScaleView struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -105,6 +106,7 @@ type RisingWaveScaleView struct {
 
 // +kubebuilder:object:root=true
 
+// RisingWaveScaleViewList contains a list of RisingWaveScaleViews.
 type RisingWaveScaleViewList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

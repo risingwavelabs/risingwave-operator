@@ -27,6 +27,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 )
 
+// RisingWaveMutatingWebhook is the mutating webhook for RisingWaves.
 type RisingWaveMutatingWebhook struct{}
 
 func setDefaultIfZero[T comparable](dst *T, defaultVal T) {
@@ -58,6 +59,7 @@ func (m *RisingWaveMutatingWebhook) Default(ctx context.Context, obj runtime.Obj
 	return m.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWave))
 }
 
+// NewRisingWaveMutatingWebhook returns a new mutating webhook for RisingWaves.
 func NewRisingWaveMutatingWebhook() webhook.CustomDefaulter {
 	return metrics.NewMutatingWebhookMetricsRecorder(&RisingWaveMutatingWebhook{})
 }

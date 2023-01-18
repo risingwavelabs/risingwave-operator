@@ -38,6 +38,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/object"
 )
 
+// RisingWaveScaleViewValidatingWebhook is the validating webhook for RisingWaveScaleView.
 type RisingWaveScaleViewValidatingWebhook struct {
 	client client.Reader
 }
@@ -117,6 +118,7 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateCreate(ctx context.Contex
 	return nil
 }
 
+// ValidateCreate implements the webhook.CustomValidator.
 func (w *RisingWaveScaleViewValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
 	return w.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWaveScaleView))
 }
@@ -157,6 +159,7 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateUpdate(ctx context.Contex
 	return nil
 }
 
+// ValidateUpdate implements the webhook.CustomValidator.
 func (w *RisingWaveScaleViewValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) error {
 	// Validate the new object first.
 	if err := w.validateObject(ctx, newObj.(*risingwavev1alpha1.RisingWaveScaleView)); err != nil {
@@ -166,10 +169,12 @@ func (w *RisingWaveScaleViewValidatingWebhook) ValidateUpdate(ctx context.Contex
 	return w.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWaveScaleView), newObj.(*risingwavev1alpha1.RisingWaveScaleView))
 }
 
+// ValidateDelete implements the webhook.CustomValidator.
 func (w *RisingWaveScaleViewValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
 	return nil
 }
 
+// NewRisingWaveScaleViewValidatingWebhook returns a new validator for RisingWaveScaleViews.
 func NewRisingWaveScaleViewValidatingWebhook(client client.Reader) webhook.CustomValidator {
 	return metrics.NewValidatingWebhookMetricsRecorder(&RisingWaveScaleViewValidatingWebhook{client: client})
 }

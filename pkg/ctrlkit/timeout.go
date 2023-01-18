@@ -33,22 +33,27 @@ type timeoutAction struct {
 	inner   Action
 }
 
+// Inner implements the Decorator.
 func (act *timeoutAction) Inner() Action {
 	return act.inner
 }
 
+// SetInner implements the Decorator.
 func (act *timeoutAction) SetInner(inner Action) {
 	act.inner = inner
 }
 
+// Name implements the Decorator.
 func (act *timeoutAction) Name() string {
 	return "Timeout"
 }
 
+// Description implements the Action.
 func (act *timeoutAction) Description() string {
 	return fmt.Sprintf("Timeout(%s, timeout=%s)", act.inner.Description(), act.timeout)
 }
 
+// Run implements the Action.
 func (act *timeoutAction) Run(ctx context.Context) (ctrl.Result, error) {
 	ctx, cancel := context.WithTimeout(ctx, act.timeout)
 	defer cancel()

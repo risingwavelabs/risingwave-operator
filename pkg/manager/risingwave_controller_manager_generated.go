@@ -299,54 +299,26 @@ func (s *RisingWaveControllerManagerState) GetFrontendService(ctx context.Contex
 	return &frontendService, nil
 }
 
-// GetMetaCloneSets lists metaCloneSets with the following selectors:
+// GetMetaAdvancedStatefulSets lists metaAdvancedStatefulSets with the following selectors:
 //   - labels/risingwave/component=meta
 //   - labels/risingwave/name=${target.Name}
 //   - owned
-func (s *RisingWaveControllerManagerState) GetMetaCloneSets(ctx context.Context) ([]appsv1alpha1.CloneSet, error) {
-	var metaCloneSetsList appsv1alpha1.CloneSetList
+func (s *RisingWaveControllerManagerState) GetMetaAdvancedStatefulSets(ctx context.Context) ([]appsv1beta1.StatefulSet, error) {
+	var metaAdvancedStatefulSetsList appsv1beta1.StatefulSetList
 
 	matchingLabels := map[string]string{
 		"risingwave/component": "meta",
 		"risingwave/name":      s.target.Name,
 	}
 
-	err := s.List(ctx, &metaCloneSetsList, client.InNamespace(s.target.Namespace),
+	err := s.List(ctx, &metaAdvancedStatefulSetsList, client.InNamespace(s.target.Namespace),
 		client.MatchingLabels(matchingLabels))
 	if err != nil {
-		return nil, fmt.Errorf("unable to get state 'metaCloneSets': %w", err)
+		return nil, fmt.Errorf("unable to get state 'metaAdvancedStatefulSets': %w", err)
 	}
 
-	var validated []appsv1alpha1.CloneSet
-	for _, obj := range metaCloneSetsList.Items {
-		if ctrlkit.ValidateOwnership(&obj, s.target) {
-			validated = append(validated, obj)
-		}
-	}
-
-	return validated, nil
-}
-
-// GetMetaDeployments lists metaDeployments with the following selectors:
-//   - labels/risingwave/component=meta
-//   - labels/risingwave/name=${target.Name}
-//   - owned
-func (s *RisingWaveControllerManagerState) GetMetaDeployments(ctx context.Context) ([]appsv1.Deployment, error) {
-	var metaDeploymentsList appsv1.DeploymentList
-
-	matchingLabels := map[string]string{
-		"risingwave/component": "meta",
-		"risingwave/name":      s.target.Name,
-	}
-
-	err := s.List(ctx, &metaDeploymentsList, client.InNamespace(s.target.Namespace),
-		client.MatchingLabels(matchingLabels))
-	if err != nil {
-		return nil, fmt.Errorf("unable to get state 'metaDeployments': %w", err)
-	}
-
-	var validated []appsv1.Deployment
-	for _, obj := range metaDeploymentsList.Items {
+	var validated []appsv1beta1.StatefulSet
+	for _, obj := range metaAdvancedStatefulSetsList.Items {
 		if ctrlkit.ValidateOwnership(&obj, s.target) {
 			validated = append(validated, obj)
 		}
@@ -374,6 +346,34 @@ func (s *RisingWaveControllerManagerState) GetMetaService(ctx context.Context) (
 	}
 
 	return &metaService, nil
+}
+
+// GetMetaStatefulSets lists metaStatefulSets with the following selectors:
+//   - labels/risingwave/component=meta
+//   - labels/risingwave/name=${target.Name}
+//   - owned
+func (s *RisingWaveControllerManagerState) GetMetaStatefulSets(ctx context.Context) ([]appsv1.StatefulSet, error) {
+	var metaStatefulSetsList appsv1.StatefulSetList
+
+	matchingLabels := map[string]string{
+		"risingwave/component": "meta",
+		"risingwave/name":      s.target.Name,
+	}
+
+	err := s.List(ctx, &metaStatefulSetsList, client.InNamespace(s.target.Namespace),
+		client.MatchingLabels(matchingLabels))
+	if err != nil {
+		return nil, fmt.Errorf("unable to get state 'metaStatefulSets': %w", err)
+	}
+
+	var validated []appsv1.StatefulSet
+	for _, obj := range metaStatefulSetsList.Items {
+		if ctrlkit.ValidateOwnership(&obj, s.target) {
+			validated = append(validated, obj)
+		}
+	}
+
+	return validated, nil
 }
 
 // GetServiceMonitor gets serviceMonitor with name equals to risingwave-${target.Name}.
@@ -410,31 +410,31 @@ type RisingWaveControllerManagerImpl interface {
 	// SyncMetaService creates or updates the service for meta nodes.
 	SyncMetaService(ctx context.Context, logger logr.Logger, metaService *corev1.Service) (ctrl.Result, error)
 
-	// SyncMetaDeployments creates or updates the deployments for meta nodes.
-	SyncMetaDeployments(ctx context.Context, logger logr.Logger, metaDeployments []appsv1.Deployment) (ctrl.Result, error)
+	// SyncMetaStatefulSets creates or updates the StatefulSets for meta nodes.
+	SyncMetaStatefulSets(ctx context.Context, logger logr.Logger, metaStatefulSets []appsv1.StatefulSet) (ctrl.Result, error)
 
-	// SyncMetaCloneSets creates or updates the CloneSets for meta nodes.
-	SyncMetaCloneSets(ctx context.Context, logger logr.Logger, metaCloneSets []appsv1alpha1.CloneSet) (ctrl.Result, error)
+	// SyncMetaAdvancedStatefulSets creates or updates the CloneSets for meta nodes.
+	SyncMetaAdvancedStatefulSets(ctx context.Context, logger logr.Logger, metaAdvancedStatefulSets []appsv1beta1.StatefulSet) (ctrl.Result, error)
 
 	// WaitBeforeMetaServiceIsAvailable waits (aborts the workflow) before the meta service is available.
 	WaitBeforeMetaServiceIsAvailable(ctx context.Context, logger logr.Logger, metaService *corev1.Service) (ctrl.Result, error)
 
-	// WaitBeforeMetaDeploymentsReady waits (aborts the workflow) before the meta deployments are ready.
-	WaitBeforeMetaDeploymentsReady(ctx context.Context, logger logr.Logger, metaDeployments []appsv1.Deployment) (ctrl.Result, error)
+	// WaitBeforeMetaStatefulSetsReady waits (aborts the workflow) before the meta StatefulSets are ready.
+	WaitBeforeMetaStatefulSetsReady(ctx context.Context, logger logr.Logger, metaStatefulSets []appsv1.StatefulSet) (ctrl.Result, error)
 
-	// WaitBeforeMetaCloneSetsReady waits (aborts the workflow) before the meta CloneSets are ready.
-	WaitBeforeMetaCloneSetsReady(ctx context.Context, logger logr.Logger, metaCloneSets []appsv1alpha1.CloneSet) (ctrl.Result, error)
+	// WaitBeforeMetaAdvancedStatefulSetsReady waits (aborts the workflow) before the meta advanced StatefulSets are ready.
+	WaitBeforeMetaAdvancedStatefulSetsReady(ctx context.Context, logger logr.Logger, metaAdvancedStatefulSets []appsv1beta1.StatefulSet) (ctrl.Result, error)
 
 	// SyncFrontendService creates or updates the service for frontend nodes.
 	SyncFrontendService(ctx context.Context, logger logr.Logger, frontendService *corev1.Service) (ctrl.Result, error)
 
-	// SyncFrontendDeployments creates or updates the deployments for frontend nodes.
+	// SyncFrontendDeployments creates or updates the Deployments for frontend nodes.
 	SyncFrontendDeployments(ctx context.Context, logger logr.Logger, frontendDeployments []appsv1.Deployment) (ctrl.Result, error)
 
-	// SyncFrontendCloneSets creates or updates the deployments for frontend nodes.
+	// SyncFrontendCloneSets creates or updates the Deployments for frontend nodes.
 	SyncFrontendCloneSets(ctx context.Context, logger logr.Logger, frontendCloneSets []appsv1alpha1.CloneSet) (ctrl.Result, error)
 
-	// WaitBeforeFrontendDeploymentsReady waits (aborts the workflow) before the frontend deployments are ready.
+	// WaitBeforeFrontendDeploymentsReady waits (aborts the workflow) before the frontend Deployments are ready.
 	WaitBeforeFrontendDeploymentsReady(ctx context.Context, logger logr.Logger, frontendDeployments []appsv1.Deployment) (ctrl.Result, error)
 
 	// WaitBeforeFrontendCloneSetsReady waits (aborts the workflow) before the frontend CloneSets are ready.
@@ -443,28 +443,28 @@ type RisingWaveControllerManagerImpl interface {
 	// SyncComputeService creates or updates the service for compute nodes.
 	SyncComputeService(ctx context.Context, logger logr.Logger, computeService *corev1.Service) (ctrl.Result, error)
 
-	// SyncComputeStatefulSets creates or updates the statefulsets for compute nodes.
+	// SyncComputeStatefulSets creates or updates the StatefulSets for compute nodes.
 	SyncComputeStatefulSets(ctx context.Context, logger logr.Logger, computeStatefulSets []appsv1.StatefulSet) (ctrl.Result, error)
 
-	// SyncComputeAdvancedStatefulSets creates or updates the statefulsets for compute nodes.
+	// SyncComputeAdvancedStatefulSets creates or updates the StatefulSets for compute nodes.
 	SyncComputeAdvancedStatefulSets(ctx context.Context, logger logr.Logger, computeAdvancedStatefulSets []appsv1beta1.StatefulSet) (ctrl.Result, error)
 
-	// WaitBeforeComputeStatefulSetsReady waits (aborts the workflow) before the compute statefulsets are ready.
+	// WaitBeforeComputeStatefulSetsReady waits (aborts the workflow) before the compute StatefulSets are ready.
 	WaitBeforeComputeStatefulSetsReady(ctx context.Context, logger logr.Logger, computeStatefulSets []appsv1.StatefulSet) (ctrl.Result, error)
 
-	// WaitBeforeComputeStatefulSetsReady waits (aborts the workflow) before the compute Advanced statefulsets are ready.
+	// WaitBeforeComputeStatefulSetsReady waits (aborts the workflow) before the compute advanced StatefulSets are ready.
 	WaitBeforeComputeAdvancedStatefulSetsReady(ctx context.Context, logger logr.Logger, computeAdvancedStatefulSets []appsv1beta1.StatefulSet) (ctrl.Result, error)
 
 	// SyncCompactorService creates or updates the service for compactor nodes.
 	SyncCompactorService(ctx context.Context, logger logr.Logger, compactorService *corev1.Service) (ctrl.Result, error)
 
-	// SyncCompactorDeployments creates or updates the deployments for compactor nodes.
+	// SyncCompactorDeployments creates or updates the Deployments for compactor nodes.
 	SyncCompactorDeployments(ctx context.Context, logger logr.Logger, compactorDeployments []appsv1.Deployment) (ctrl.Result, error)
 
-	// SyncCompactorCloneSets creates or updates the deployments for compactor nodes.
+	// SyncCompactorCloneSets creates or updates the Deployments for compactor nodes.
 	SyncCompactorCloneSets(ctx context.Context, logger logr.Logger, compactorCloneSets []appsv1alpha1.CloneSet) (ctrl.Result, error)
 
-	// WaitBeforeCompactorDeploymentsReady waits (aborts the workflow) before the compactor deployments are ready.
+	// WaitBeforeCompactorDeploymentsReady waits (aborts the workflow) before the compactor Deployments are ready.
 	WaitBeforeCompactorDeploymentsReady(ctx context.Context, logger logr.Logger, compactorDeployments []appsv1.Deployment) (ctrl.Result, error)
 
 	// WaitBeforeCompactorDeploymentsReady waits (aborts the workflow) before the compactor CloneSets are ready.
@@ -477,19 +477,19 @@ type RisingWaveControllerManagerImpl interface {
 	SyncServiceMonitor(ctx context.Context, logger logr.Logger, serviceMonitor *monitoringv1.ServiceMonitor) (ctrl.Result, error)
 
 	// CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
-	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaDeployments []appsv1.Deployment, frontendDeployments []appsv1.Deployment, computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
+	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaStatefulSets []appsv1.StatefulSet, frontendDeployments []appsv1.Deployment, computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 
-	CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaCloneSets []appsv1alpha1.CloneSet, frontendCloneSets []appsv1alpha1.CloneSet, computeAdvancedStatefulSets []appsv1beta1.StatefulSet, compactorCloneSets []appsv1alpha1.CloneSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
+	CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaAdvancedStatefulSets []appsv1beta1.StatefulSet, frontendCloneSets []appsv1alpha1.CloneSet, computeAdvancedStatefulSets []appsv1beta1.StatefulSet, compactorCloneSets []appsv1alpha1.CloneSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 }
 
 // Pre-defined actions in RisingWaveControllerManager.
 const (
 	RisingWaveAction_SyncMetaService                                 = "SyncMetaService"
-	RisingWaveAction_SyncMetaDeployments                             = "SyncMetaDeployments"
-	RisingWaveAction_SyncMetaCloneSets                               = "SyncMetaCloneSets"
+	RisingWaveAction_SyncMetaStatefulSets                            = "SyncMetaStatefulSets"
+	RisingWaveAction_SyncMetaAdvancedStatefulSets                    = "SyncMetaAdvancedStatefulSets"
 	RisingWaveAction_WaitBeforeMetaServiceIsAvailable                = "WaitBeforeMetaServiceIsAvailable"
-	RisingWaveAction_WaitBeforeMetaDeploymentsReady                  = "WaitBeforeMetaDeploymentsReady"
-	RisingWaveAction_WaitBeforeMetaCloneSetsReady                    = "WaitBeforeMetaCloneSetsReady"
+	RisingWaveAction_WaitBeforeMetaStatefulSetsReady                 = "WaitBeforeMetaStatefulSetsReady"
+	RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady         = "WaitBeforeMetaAdvancedStatefulSetsReady"
 	RisingWaveAction_SyncFrontendService                             = "SyncFrontendService"
 	RisingWaveAction_SyncFrontendDeployments                         = "SyncFrontendDeployments"
 	RisingWaveAction_SyncFrontendCloneSets                           = "SyncFrontendCloneSets"
@@ -556,49 +556,49 @@ func (m *RisingWaveControllerManager) SyncMetaService() ctrlkit.Action {
 	})
 }
 
-// SyncMetaDeployments generates the action of "SyncMetaDeployments".
-func (m *RisingWaveControllerManager) SyncMetaDeployments() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_SyncMetaDeployments, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_SyncMetaDeployments)
+// SyncMetaStatefulSets generates the action of "SyncMetaStatefulSets".
+func (m *RisingWaveControllerManager) SyncMetaStatefulSets() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_SyncMetaStatefulSets, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_SyncMetaStatefulSets)
 
 		// Get states.
-		metaDeployments, err := m.state.GetMetaDeployments(ctx)
+		metaStatefulSets, err := m.state.GetMetaStatefulSets(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
 		// Invoke action.
 		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncMetaDeployments, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncMetaDeployments, map[string]runtime.Object{
-				"metaDeployments": &appsv1.DeploymentList{Items: metaDeployments},
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncMetaStatefulSets, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncMetaStatefulSets, map[string]runtime.Object{
+				"metaStatefulSets": &appsv1.StatefulSetList{Items: metaStatefulSets},
 			})
 		}
 
-		return m.impl.SyncMetaDeployments(ctx, logger, metaDeployments)
+		return m.impl.SyncMetaStatefulSets(ctx, logger, metaStatefulSets)
 	})
 }
 
-// SyncMetaCloneSets generates the action of "SyncMetaCloneSets".
-func (m *RisingWaveControllerManager) SyncMetaCloneSets() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_SyncMetaCloneSets, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_SyncMetaCloneSets)
+// SyncMetaAdvancedStatefulSets generates the action of "SyncMetaAdvancedStatefulSets".
+func (m *RisingWaveControllerManager) SyncMetaAdvancedStatefulSets() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_SyncMetaAdvancedStatefulSets, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_SyncMetaAdvancedStatefulSets)
 
 		// Get states.
-		metaCloneSets, err := m.state.GetMetaCloneSets(ctx)
+		metaAdvancedStatefulSets, err := m.state.GetMetaAdvancedStatefulSets(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
 		// Invoke action.
 		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncMetaCloneSets, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncMetaCloneSets, map[string]runtime.Object{
-				"metaCloneSets": &appsv1alpha1.CloneSetList{Items: metaCloneSets},
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncMetaAdvancedStatefulSets, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncMetaAdvancedStatefulSets, map[string]runtime.Object{
+				"metaAdvancedStatefulSets": &appsv1beta1.StatefulSetList{Items: metaAdvancedStatefulSets},
 			})
 		}
 
-		return m.impl.SyncMetaCloneSets(ctx, logger, metaCloneSets)
+		return m.impl.SyncMetaAdvancedStatefulSets(ctx, logger, metaAdvancedStatefulSets)
 	})
 }
 
@@ -625,49 +625,51 @@ func (m *RisingWaveControllerManager) WaitBeforeMetaServiceIsAvailable() ctrlkit
 	})
 }
 
-// WaitBeforeMetaDeploymentsReady generates the action of "WaitBeforeMetaDeploymentsReady".
-func (m *RisingWaveControllerManager) WaitBeforeMetaDeploymentsReady() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeMetaDeploymentsReady, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeMetaDeploymentsReady)
+// WaitBeforeMetaStatefulSetsReady generates the action of "WaitBeforeMetaStatefulSetsReady".
+func (m *RisingWaveControllerManager) WaitBeforeMetaStatefulSetsReady() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeMetaStatefulSetsReady, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeMetaStatefulSetsReady)
 
 		// Get states.
-		metaDeployments, err := m.state.GetMetaDeployments(ctx)
+		metaStatefulSets, err := m.state.GetMetaStatefulSets(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
 		// Invoke action.
 		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeMetaDeploymentsReady, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeMetaDeploymentsReady, map[string]runtime.Object{
-				"metaDeployments": &appsv1.DeploymentList{Items: metaDeployments},
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeMetaStatefulSetsReady, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeMetaStatefulSetsReady, map[string]runtime.Object{
+				"metaStatefulSets": &appsv1.StatefulSetList{Items: metaStatefulSets},
 			})
 		}
 
-		return m.impl.WaitBeforeMetaDeploymentsReady(ctx, logger, metaDeployments)
+		return m.impl.WaitBeforeMetaStatefulSetsReady(ctx, logger, metaStatefulSets)
 	})
 }
 
-// WaitBeforeMetaCloneSetsReady generates the action of "WaitBeforeMetaCloneSetsReady".
-func (m *RisingWaveControllerManager) WaitBeforeMetaCloneSetsReady() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeMetaCloneSetsReady, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeMetaCloneSetsReady)
+// WaitBeforeMetaAdvancedStatefulSetsReady generates the action of "WaitBeforeMetaAdvancedStatefulSetsReady".
+func (m *RisingWaveControllerManager) WaitBeforeMetaAdvancedStatefulSetsReady() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady)
 
 		// Get states.
-		metaCloneSets, err := m.state.GetMetaCloneSets(ctx)
+		metaAdvancedStatefulSets, err := m.state.GetMetaAdvancedStatefulSets(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
 
 		// Invoke action.
 		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeMetaCloneSetsReady, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeMetaCloneSetsReady, map[string]runtime.Object{
-				"metaCloneSets": &appsv1alpha1.CloneSetList{Items: metaCloneSets},
+			defer func() {
+				m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady, result, err)
+			}()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady, map[string]runtime.Object{
+				"metaAdvancedStatefulSets": &appsv1beta1.StatefulSetList{Items: metaAdvancedStatefulSets},
 			})
 		}
 
-		return m.impl.WaitBeforeMetaCloneSetsReady(ctx, logger, metaCloneSets)
+		return m.impl.WaitBeforeMetaAdvancedStatefulSetsReady(ctx, logger, metaAdvancedStatefulSets)
 	})
 }
 
@@ -1090,7 +1092,7 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 			return ctrlkit.RequeueIfError(err)
 		}
 
-		metaDeployments, err := m.state.GetMetaDeployments(ctx)
+		metaStatefulSets, err := m.state.GetMetaStatefulSets(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
@@ -1125,7 +1127,7 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 				"metaService":          metaService,
 				"computeService":       computeService,
 				"compactorService":     compactorService,
-				"metaDeployments":      &appsv1.DeploymentList{Items: metaDeployments},
+				"metaStatefulSets":     &appsv1.StatefulSetList{Items: metaStatefulSets},
 				"frontendDeployments":  &appsv1.DeploymentList{Items: frontendDeployments},
 				"computeStatefulSets":  &appsv1.StatefulSetList{Items: computeStatefulSets},
 				"compactorDeployments": &appsv1.DeploymentList{Items: compactorDeployments},
@@ -1133,7 +1135,7 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 			})
 		}
 
-		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
+		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaStatefulSets, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
 	})
 }
 
@@ -1163,7 +1165,7 @@ func (m *RisingWaveControllerManager) CollectOpenKruiseRunningStatisticsAndSyncS
 			return ctrlkit.RequeueIfError(err)
 		}
 
-		metaCloneSets, err := m.state.GetMetaCloneSets(ctx)
+		metaAdvancedStatefulSets, err := m.state.GetMetaAdvancedStatefulSets(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
@@ -1198,7 +1200,7 @@ func (m *RisingWaveControllerManager) CollectOpenKruiseRunningStatisticsAndSyncS
 				"metaService":                 metaService,
 				"computeService":              computeService,
 				"compactorService":            compactorService,
-				"metaCloneSets":               &appsv1alpha1.CloneSetList{Items: metaCloneSets},
+				"metaAdvancedStatefulSets":    &appsv1beta1.StatefulSetList{Items: metaAdvancedStatefulSets},
 				"frontendCloneSets":           &appsv1alpha1.CloneSetList{Items: frontendCloneSets},
 				"computeAdvancedStatefulSets": &appsv1beta1.StatefulSetList{Items: computeAdvancedStatefulSets},
 				"compactorCloneSets":          &appsv1alpha1.CloneSetList{Items: compactorCloneSets},
@@ -1206,7 +1208,7 @@ func (m *RisingWaveControllerManager) CollectOpenKruiseRunningStatisticsAndSyncS
 			})
 		}
 
-		return m.impl.CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaCloneSets, frontendCloneSets, computeAdvancedStatefulSets, compactorCloneSets, configConfigMap)
+		return m.impl.CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaAdvancedStatefulSets, frontendCloneSets, computeAdvancedStatefulSets, compactorCloneSets, configConfigMap)
 	})
 }
 

@@ -38,22 +38,27 @@ type sharedAction struct {
 	panic  any
 }
 
+// Inner implements the Decorator.
 func (s *sharedAction) Inner() internal.Action {
 	return s.inner
 }
 
+// SetInner implements the Decorator.
 func (s *sharedAction) SetInner(inner internal.Action) {
 	s.inner = inner
 }
 
+// Name implements the Decorator.
 func (s *sharedAction) Name() string {
 	return "Shared"
 }
 
+// Description implements the Action.
 func (s *sharedAction) Description() string {
 	return fmt.Sprintf("%s(%s)", s.Name(), s.inner.Description())
 }
 
+// Run implements the Action.
 func (s *sharedAction) Run(ctx context.Context) (ctrl.Result, error) {
 	// Start a new goroutine to do this.
 	go s.once.Do(func() {

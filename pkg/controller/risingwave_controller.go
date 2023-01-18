@@ -55,11 +55,11 @@ import (
 // Pre-defined actions. Import from manager package.
 const (
 	RisingWaveAction_SyncMetaService                            = manager.RisingWaveAction_SyncMetaService
-	RisingWaveAction_SyncMetaDeployments                        = manager.RisingWaveAction_SyncMetaDeployments
-	RisingWaveAction_SyncMetaCloneSets                          = manager.RisingWaveAction_SyncMetaCloneSets
+	RisingWaveAction_SyncMetaStatefulSets                       = manager.RisingWaveAction_SyncMetaStatefulSets
+	RisingWaveAction_SyncMetaAdvancedStatefulSets               = manager.RisingWaveAction_SyncMetaAdvancedStatefulSets
 	RisingWaveAction_WaitBeforeMetaServiceIsAvailable           = manager.RisingWaveAction_WaitBeforeMetaServiceIsAvailable
-	RisingWaveAction_WaitBeforeMetaDeploymentsReady             = manager.RisingWaveAction_WaitBeforeMetaDeploymentsReady
-	RisingWaveAction_WaitBeforeMetaCloneSetsReady               = manager.RisingWaveAction_WaitBeforeMetaCloneSetsReady
+	RisingWaveAction_WaitBeforeMetaStatefulSetsReady            = manager.RisingWaveAction_WaitBeforeMetaStatefulSetsReady
+	RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady    = manager.RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady
 	RisingWaveAction_SyncFrontendService                        = manager.RisingWaveAction_SyncFrontendService
 	RisingWaveAction_SyncFrontendDeployments                    = manager.RisingWaveAction_SyncFrontendDeployments
 	RisingWaveAction_SyncFrontendCloneSets                      = manager.RisingWaveAction_SyncFrontendCloneSets
@@ -266,12 +266,12 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 
 	syncMetaComponent := ctrlkit.ParallelJoin(
 		mgr.SyncMetaService(),
-		mgr.SyncMetaDeployments(),
-		ctrlkit.If(c.openKruiseAvailable, mgr.SyncMetaCloneSets()),
+		mgr.SyncMetaStatefulSets(),
+		ctrlkit.If(c.openKruiseAvailable, mgr.SyncMetaAdvancedStatefulSets()),
 	)
 	metaComponentReadyBarrier := ctrlkit.Sequential(
-		mgr.WaitBeforeMetaDeploymentsReady(),
-		ctrlkit.If(c.openKruiseAvailable, mgr.WaitBeforeMetaCloneSetsReady()),
+		mgr.WaitBeforeMetaStatefulSetsReady(),
+		ctrlkit.If(c.openKruiseAvailable, mgr.WaitBeforeMetaAdvancedStatefulSetsReady()),
 		ctrlkit.Timeout(time.Second, mgr.WaitBeforeMetaServiceIsAvailable()),
 	)
 	prometheusCRDsInstalledBarrier := mgr.NewAction(RisingWaveAction_BarrierPrometheusCRDsInstalled, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {

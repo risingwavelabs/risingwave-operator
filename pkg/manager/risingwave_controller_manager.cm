@@ -53,8 +53,8 @@ decl RisingWaveControllerManager for RisingWave {
             owned
         }
 
-        // Deployments for meta nodes.
-        metaDeployments []Deployment {
+        // StatefulSets for meta nodes.
+        metaStatefulSets []StatefulSet {
             labels/risingwave/name=${target.Name}
             labels/risingwave/component=meta
             owned
@@ -81,7 +81,7 @@ decl RisingWaveControllerManager for RisingWave {
             owned
         }
 
-        metaCloneSets []CloneSet {
+        metaAdvancedStatefulSets []AdvancedStatefulSet {
             labels/risingwave/name=${target.Name}
             labels/risingwave/component=meta
             owned
@@ -113,31 +113,31 @@ decl RisingWaveControllerManager for RisingWave {
         // SyncMetaService creates or updates the service for meta nodes.
         SyncMetaService(metaService)
 
-        // SyncMetaDeployments creates or updates the deployments for meta nodes.
-        SyncMetaDeployments(metaDeployments)
+        // SyncMetaStatefulSets creates or updates the StatefulSets for meta nodes.
+        SyncMetaStatefulSets(metaStatefulSets)
 
-        // SyncMetaCloneSets creates or updates the CloneSets for meta nodes.
-        SyncMetaCloneSets(metaCloneSets)
+        // SyncMetaAdvancedStatefulSets creates or updates the CloneSets for meta nodes.
+        SyncMetaAdvancedStatefulSets(metaAdvancedStatefulSets)
         
         // WaitBeforeMetaServiceIsAvailable waits (aborts the workflow) before the meta service is available.
         WaitBeforeMetaServiceIsAvailable(metaService)
 
-        // WaitBeforeMetaDeploymentsReady waits (aborts the workflow) before the meta deployments are ready.
-        WaitBeforeMetaDeploymentsReady(metaDeployments)
+        // WaitBeforeMetaStatefulSetsReady waits (aborts the workflow) before the meta StatefulSets are ready.
+        WaitBeforeMetaStatefulSetsReady(metaStatefulSets)
 
-        // WaitBeforeMetaCloneSetsReady waits (aborts the workflow) before the meta CloneSets are ready.
-        WaitBeforeMetaCloneSetsReady(metaCloneSets)
+        // WaitBeforeMetaAdvancedStatefulSetsReady waits (aborts the workflow) before the meta advanced StatefulSets are ready.
+        WaitBeforeMetaAdvancedStatefulSetsReady(metaAdvancedStatefulSets)
 
         // SyncFrontendService creates or updates the service for frontend nodes.
         SyncFrontendService(frontendService)
 
-        // SyncFrontendDeployments creates or updates the deployments for frontend nodes.
+        // SyncFrontendDeployments creates or updates the Deployments for frontend nodes.
         SyncFrontendDeployments(frontendDeployments)
 
-        // SyncFrontendCloneSets creates or updates the deployments for frontend nodes.
+        // SyncFrontendCloneSets creates or updates the Deployments for frontend nodes.
         SyncFrontendCloneSets(frontendCloneSets)
 
-        // WaitBeforeFrontendDeploymentsReady waits (aborts the workflow) before the frontend deployments are ready.
+        // WaitBeforeFrontendDeploymentsReady waits (aborts the workflow) before the frontend Deployments are ready.
         WaitBeforeFrontendDeploymentsReady(frontendDeployments)
 
         // WaitBeforeFrontendCloneSetsReady waits (aborts the workflow) before the frontend CloneSets are ready.
@@ -146,28 +146,28 @@ decl RisingWaveControllerManager for RisingWave {
         // SyncComputeService creates or updates the service for compute nodes.
         SyncComputeService(computeService)
 
-        // SyncComputeStatefulSets creates or updates the statefulsets for compute nodes.
+        // SyncComputeStatefulSets creates or updates the StatefulSets for compute nodes.
         SyncComputeStatefulSets(computeStatefulSets)
 
-        // SyncComputeAdvancedStatefulSets creates or updates the statefulsets for compute nodes.
+        // SyncComputeAdvancedStatefulSets creates or updates the StatefulSets for compute nodes.
         SyncComputeAdvancedStatefulSets(computeAdvancedStatefulSets)
 
-        // WaitBeforeComputeStatefulSetsReady waits (aborts the workflow) before the compute statefulsets are ready.
+        // WaitBeforeComputeStatefulSetsReady waits (aborts the workflow) before the compute StatefulSets are ready.
         WaitBeforeComputeStatefulSetsReady(computeStatefulSets)
 
-        // WaitBeforeComputeStatefulSetsReady waits (aborts the workflow) before the compute Advanced statefulsets are ready.
+        // WaitBeforeComputeStatefulSetsReady waits (aborts the workflow) before the compute advanced StatefulSets are ready.
         WaitBeforeComputeAdvancedStatefulSetsReady(computeAdvancedStatefulSets)
 
         // SyncCompactorService creates or updates the service for compactor nodes.
         SyncCompactorService(compactorService)
 
-        // SyncCompactorDeployments creates or updates the deployments for compactor nodes.
+        // SyncCompactorDeployments creates or updates the Deployments for compactor nodes.
         SyncCompactorDeployments(compactorDeployments)
 
-        // SyncCompactorCloneSets creates or updates the deployments for compactor nodes.
+        // SyncCompactorCloneSets creates or updates the Deployments for compactor nodes.
         SyncCompactorCloneSets(compactorCloneSets)
 
-        // WaitBeforeCompactorDeploymentsReady waits (aborts the workflow) before the compactor deployments are ready.
+        // WaitBeforeCompactorDeploymentsReady waits (aborts the workflow) before the compactor Deployments are ready.
         WaitBeforeCompactorDeploymentsReady(compactorDeployments)
 
         // WaitBeforeCompactorDeploymentsReady waits (aborts the workflow) before the compactor CloneSets are ready.
@@ -201,7 +201,7 @@ decl RisingWaveControllerManager for RisingWave {
 
     action {
         // CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
-        CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaDeployments, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
-        CollectOpenKruiseRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaCloneSets, frontendCloneSets, computeAdvancedStatefulSets, compactorCloneSets, configConfigMap)
+        CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaStatefulSets, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
+        CollectOpenKruiseRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaAdvancedStatefulSets, frontendCloneSets, computeAdvancedStatefulSets, compactorCloneSets, configConfigMap)
     }
 }

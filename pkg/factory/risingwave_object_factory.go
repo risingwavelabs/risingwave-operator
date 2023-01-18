@@ -1139,8 +1139,8 @@ func buildUpgradeStrategyForCloneSet(strategy risingwavev1alpha1.RisingWaveUpgra
 	return cloneSetUpdateStrategy
 }
 
-// NewMetaDeployment creates a new Deployment for the meta component and specified group.
-func (f *RisingWaveObjectFactory) NewMetaDeployment(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
+// NewMetaStatefulSet creates a new StatefulSet for the meta component and specified group.
+func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.StatefulSet {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Meta,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -1162,13 +1162,13 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment(group string, podTemplates m
 	// Make sure it's stable among builds.
 	keepPodSpecConsistent(&podTemplate.Spec)
 
-	// Build the deployment.
+	// Build the StatefulSet.
 	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentMeta, group)
-	metaDeployment := &appsv1.Deployment{
+	metaSts := &appsv1.StatefulSet{
 		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentMeta, group, true),
-		Spec: appsv1.DeploymentSpec{
-			Replicas: pointer.Int32(componentGroup.Replicas),
-			Strategy: buildUpgradeStrategyForDeployment(componentGroup.UpgradeStrategy),
+		Spec: appsv1.StatefulSetSpec{
+			Replicas:       pointer.Int32(componentGroup.Replicas),
+			UpdateStrategy: buildUpgradeStrategyForStatefulSet(componentGroup.UpgradeStrategy),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labelsOrSelectors,
 			},
@@ -1176,11 +1176,11 @@ func (f *RisingWaveObjectFactory) NewMetaDeployment(group string, podTemplates m
 		},
 	}
 
-	return mustSetControllerReference(f.risingwave, metaDeployment, f.scheme)
+	return mustSetControllerReference(f.risingwave, metaSts, f.scheme)
 }
 
-// NewMetaCloneSet creates a new CloneSet for the meta component and specified group.
-func (f *RisingWaveObjectFactory) NewMetaCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
+// NewMetaAdvancedStatefulSet creates a new OpenKruise StatefulSet for the meta component and specified group.
+func (f *RisingWaveObjectFactory) NewMetaAdvancedStatefulSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1beta1.StatefulSet {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Meta,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -1209,19 +1209,25 @@ func (f *RisingWaveObjectFactory) NewMetaCloneSet(group string, podTemplates map
 
 	// Build the CloneSet
 	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentMeta, group)
-	metaCloneSet := &kruiseappsv1alpha1.CloneSet{
+	metaSts := &kruiseappsv1beta1.StatefulSet{
 		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentMeta, group, true),
-		Spec: kruiseappsv1alpha1.CloneSetSpec{
+		Spec: kruiseappsv1beta1.StatefulSetSpec{
 			Replicas:       pointer.Int32(componentGroup.Replicas),
-			UpdateStrategy: buildUpgradeStrategyForCloneSet(componentGroup.UpgradeStrategy),
+			ServiceName:    f.componentName(consts.ComponentMeta, ""),
+			UpdateStrategy: buildUpgradeStrategyForAdvancedStatefulSet(componentGroup.UpgradeStrategy),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labelsOrSelectors,
 			},
-			Template: podTemplate,
+			Template:            podTemplate,
+			PodManagementPolicy: appsv1.ParallelPodManagement,
+			PersistentVolumeClaimRetentionPolicy: &kruiseappsv1beta1.StatefulSetPersistentVolumeClaimRetentionPolicy{
+				WhenDeleted: kruiseappsv1beta1.DeletePersistentVolumeClaimRetentionPolicyType,
+				WhenScaled:  kruiseappsv1beta1.DeletePersistentVolumeClaimRetentionPolicyType,
+			},
 		},
 	}
 
-	return mustSetControllerReference(f.risingwave, metaCloneSet, f.scheme)
+	return mustSetControllerReference(f.risingwave, metaSts, f.scheme)
 }
 
 func (f *RisingWaveObjectFactory) portsForFrontendContainer() []corev1.ContainerPort {

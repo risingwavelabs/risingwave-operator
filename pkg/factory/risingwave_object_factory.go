@@ -1039,7 +1039,7 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 	container.Resources = template.Resources
 	container.StartupProbe = nil
 	container.LivenessProbe = &corev1.Probe{
-		InitialDelaySeconds: 10,
+		InitialDelaySeconds: 2,
 		PeriodSeconds:       10,
 		ProbeHandler: corev1.ProbeHandler{
 			TCPSocket: &corev1.TCPSocketAction{
@@ -1048,7 +1048,7 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 		},
 	}
 	container.ReadinessProbe = &corev1.Probe{
-		InitialDelaySeconds: 10,
+		InitialDelaySeconds: 2,
 		PeriodSeconds:       10,
 		ProbeHandler: corev1.ProbeHandler{
 			TCPSocket: &corev1.TCPSocketAction{

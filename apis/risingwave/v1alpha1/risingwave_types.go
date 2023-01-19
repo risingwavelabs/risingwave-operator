@@ -713,7 +713,11 @@ type RisingWaveScaleViewLockGroupLock struct {
 	Replicas int32 `json:"replicas,omitempty"`
 }
 
-// RisingWaveScaleViewLock is a lock for RisingWaveScaleViews.
+// RisingWaveScaleViewLock is a lock record for RisingWaveScaleViews. For example, if there's a RisingWaveScaleView
+// targets the current RisingWave, the controller will try to create a new RisingWaveScaleViewLock with the name, uid,
+// target component, generation, and the replicas of targeting groups of the RisingWaveScaleView. After the record is set,
+// the validation webhook will reject any updates on the replicas of any targeting group that doesn't equal the
+// replicas recorded, which makes it a lock similar thing.
 type RisingWaveScaleViewLock struct {
 	// Name of the owned RisingWaveScaleView object.
 	Name string `json:"name"`

@@ -2109,6 +2109,13 @@ spec:
                     type: object
                     x-kubernetes-map-type: atomic
                 type: object
+              enableDefaultServiceMonitor:
+                description: Flag to indicate if a default ServiceMonitor (from Prometheus
+                  operator) should be created by the controller. False and an empty
+                  value means the ServiceMonitor won't be created automatically. But
+                  even if it's set to true, the controller will determine if it can
+                  create the resource by checking if the CRDs are installed.
+                type: boolean
               enableOpenKruise:
                 default: false
                 description: Flag to indicate if OpenKruise should be enabled for

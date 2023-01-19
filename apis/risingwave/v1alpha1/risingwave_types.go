@@ -582,6 +582,12 @@ type RisingWaveSpec struct {
 	// +optional
 	// +kubebuilder:default=false
 	EnableOpenKruise *bool `json:"enableOpenKruise,omitempty"`
+
+	// Flag to indicate if a default ServiceMonitor (from Prometheus operator) should be created by the controller.
+	// False and an empty value means the ServiceMonitor won't be created automatically. But even if it's set to true,
+	// the controller will determine if it can create the resource by checking if the CRDs are installed.
+	// +optional
+	EnableDefaultServiceMonitor *bool `json:"enableDefaultServiceMonitor,omitempty"`
 }
 
 // ComponentGroupReplicasStatus are the running status of Pods in group.

@@ -32,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -288,9 +289,9 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1"))
 	})
 
-	syncServiceMonitorIfPossible := ctrlkit.Sequential(
-		prometheusCRDsInstalledBarrier,
-		mgr.SyncServiceMonitor(),
+	syncServiceMonitorIfPossible := ctrlkit.If(
+		pointer.BoolDeref(risingwaveManger.RisingWave().Spec.EnableDefaultServiceMonitor, false),
+		ctrlkit.Sequential(prometheusCRDsInstalledBarrier, mgr.SyncServiceMonitor()),
 	)
 	syncOtherComponents := ctrlkit.ParallelJoin(
 		ctrlkit.Sequential(

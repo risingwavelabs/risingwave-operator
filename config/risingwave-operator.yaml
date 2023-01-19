@@ -29,6 +29,8 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: RisingWavePodTemplate is the struct for RisingWavePodTemplate
+          object.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -43,8 +45,11 @@ spec:
           metadata:
             type: object
           template:
+            description: RisingWavePodTemplateSpec is the spec of RisingWavePodTemplate.
             properties:
               metadata:
+                description: RisingWavePodTemplatePartialObjectMeta is the spec for
+                  metadata templates.
                 properties:
                   annotations:
                     additionalProperties:
@@ -6959,6 +6964,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: RisingWave is the struct for RisingWave object.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -9031,6 +9037,13 @@ spec:
                     type: object
                     x-kubernetes-map-type: atomic
                 type: object
+              enableDefaultServiceMonitor:
+                description: Flag to indicate if a default ServiceMonitor (from Prometheus
+                  operator) should be created by the controller. False and an empty
+                  value means the ServiceMonitor won't be created automatically. But
+                  even if it's set to true, the controller will determine if it can
+                  create the resource by checking if the CRDs are installed.
+                type: boolean
               enableOpenKruise:
                 default: false
                 description: Flag to indicate if OpenKruise should be enabled for
@@ -10181,6 +10194,8 @@ spec:
                     groupLocks:
                       description: Group locks.
                       items:
+                        description: RisingWaveScaleViewLockGroupLock is the lock
+                          record of RisingWaveScaleView.
                         properties:
                           name:
                             description: Group name.
@@ -10287,6 +10302,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: RisingWaveScaleView is the struct for RisingWaveScaleView.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation

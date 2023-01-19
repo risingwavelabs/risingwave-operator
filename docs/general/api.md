@@ -187,6 +187,7 @@ int32
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWave">RisingWave
 </h3>
 <div>
+<p>RisingWave is the struct for RisingWave object.</p>
 </div>
 <table>
 <thead>
@@ -304,6 +305,20 @@ If enabled, CloneSets will be used for meta/frontend/compactor nodes
 and Advanced StateFulSets will be used for compute nodes.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>enableDefaultServiceMonitor</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to indicate if a default ServiceMonitor (from Prometheus operator) should be created by the controller.
+False and an empty value means the ServiceMonitor won&rsquo;t be created automatically. But even if it&rsquo;s set to true,
+the controller will determine if it can create the resource by checking if the CRDs are installed.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -372,6 +387,7 @@ Prometheus format.</p>
 (<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
 </p>
 <div>
+<p>RisingWaveComponentCompactor is the spec describes the compactor component.</p>
 </div>
 <table>
 <thead>
@@ -432,6 +448,7 @@ RisingWaveComponentCommonPorts
 (<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
 </p>
 <div>
+<p>RisingWaveComponentCompute is the spec describes the compute component.</p>
 </div>
 <table>
 <thead>
@@ -492,6 +509,7 @@ RisingWaveComponentCommonPorts
 (<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
 </p>
 <div>
+<p>RisingWaveComponentFrontend is the spec describes the frontend component.</p>
 </div>
 <table>
 <thead>
@@ -801,6 +819,7 @@ RisingWavePodTemplatePartialObjectMeta
 (<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
 </p>
 <div>
+<p>RisingWaveComponentMeta is the spec describes the meta component.</p>
 </div>
 <table>
 <thead>
@@ -2202,6 +2221,7 @@ ObjectStorageType
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplate">RisingWavePodTemplate
 </h3>
 <div>
+<p>RisingWavePodTemplate is the struct for RisingWavePodTemplate object.</p>
 </div>
 <table>
 <thead>
@@ -2245,6 +2265,7 @@ RisingWavePodTemplateSpec
 (<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplateSpec">RisingWavePodTemplateSpec</a>)
 </p>
 <div>
+<p>RisingWavePodTemplatePartialObjectMeta is the spec for metadata templates.</p>
 </div>
 <table>
 <thead>
@@ -2285,6 +2306,7 @@ map[string]string
 (<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplate">RisingWavePodTemplate</a>)
 </p>
 <div>
+<p>RisingWavePodTemplateSpec is the spec of RisingWavePodTemplate.</p>
 </div>
 <table>
 <thead>
@@ -2911,6 +2933,7 @@ This is a beta field and requires the IdentifyPodOS feature</p>
 (<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategy">RisingWaveUpgradeStrategy</a>)
 </p>
 <div>
+<p>RisingWaveRollingUpdate is the spec to define rolling update strategies.</p>
 </div>
 <table>
 <thead>
@@ -2977,6 +3000,7 @@ Defaults to 0.</p>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleView">RisingWaveScaleView
 </h3>
 <div>
+<p>RisingWaveScaleView is the struct for RisingWaveScaleView.</p>
 </div>
 <table>
 <thead>
@@ -3161,6 +3185,7 @@ int64
 (<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewLock">RisingWaveScaleViewLock</a>)
 </p>
 <div>
+<p>RisingWaveScaleViewLockGroupLock is the lock record of RisingWaveScaleView.</p>
 </div>
 <table>
 <thead>
@@ -3561,6 +3586,20 @@ If enabled, CloneSets will be used for meta/frontend/compactor nodes
 and Advanced StateFulSets will be used for compute nodes.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>enableDefaultServiceMonitor</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to indicate if a default ServiceMonitor (from Prometheus operator) should be created by the controller.
+False and an empty value means the ServiceMonitor won&rsquo;t be created automatically. But even if it&rsquo;s set to true,
+the controller will determine if it can create the resource by checking if the CRDs are installed.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus
@@ -3848,6 +3887,7 @@ string
 (<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate</a>)
 </p>
 <div>
+<p>RisingWaveUpgradeStrategy is the spec of upgrade strategy used by RisingWave.</p>
 </div>
 <table>
 <thead>
@@ -3905,6 +3945,7 @@ github.com/openkruise/kruise-api/apps/pub.InPlaceUpdateStrategy
 (<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategy">RisingWaveUpgradeStrategy</a>)
 </p>
 <div>
+<p>RisingWaveUpgradeStrategyType is the type of upgrade strategies used in RisingWave.</p>
 </div>
 <table>
 <thead>

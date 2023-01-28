@@ -1531,7 +1531,7 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 
 	container.Name = "compute"
 
-	cpuLimit := int64(math.Floor(container.Resources.Limits.Cpu().AsApproximateFloat64()))
+	cpuLimit := int64(math.Ceil(container.Resources.Limits.Cpu().AsApproximateFloat64()))
 	memLimit, _ := container.Resources.Limits.Memory().AsInt64()
 	container.Args = f.argsForCompute(cpuLimit, memLimit)
 	container.Ports = f.portsForComputeContainer()

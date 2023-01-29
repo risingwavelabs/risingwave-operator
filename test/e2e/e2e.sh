@@ -178,7 +178,7 @@ function e2e::run() {
     ((cur_cnt++))
   done
 
-  logging:info "Running test for when openkruise is enabled"
+  logging::info "Running tests for when openkruise is enabled"
   OPEN_KRUISE_ENABLED_IN_RISINGWAVE=1
   for tc in "${testcases[@]}"; do
     if e2e::test::run_next "${cur_cnt}" "${tc}"; then

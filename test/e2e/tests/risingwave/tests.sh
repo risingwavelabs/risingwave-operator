@@ -39,10 +39,10 @@ function test::risingwave::start() {
     return 1
   fi
 
-  # if [[ ${OPEN_KRUISE_ENABLED_IN_RISINGWAVE} -eq 1]] 
-  # then
-  #   test::risingwave::enable_openkruise
-  # fi
+  if [ $OPEN_KRUISE_ENABLED_IN_RISINGWAVE -eq 1 ] 
+  then
+    test::risingwave::enable_openkruise
+  fi
 
   if ! k8s::risingwave::wait_before_rollout "${E2E_RISINGWAVE_NAME}"; then
     logging::error "Timeout waiting for the rollout!"
@@ -120,12 +120,13 @@ function test::run::risingwave::openkruise_integration(){
   if ! test::risingwave::start storages/meta-memory-object-memory.yaml; then
     return 1
   fi
-  if [ 0 -eq 1] then
+  
+  if [ $OPEN_KRUISE_ENABLED_IN_RISINGWAVE -eq 1 ]; then
     if k8s::kubectl::object_exists deployments "${E2E_RISINGWAVE_NAME}-frontend"; then
       logging::error "Deployment objects still exist when openkruise enabled in risingwave"
       return 1
     fi
-    logging::info "Openkruise integration suceeded"
+    logging::info "Openkruise integration suceeded";
   else
     if k8s::kubectl::object_exists clonesets "${E2E_RISINGWAVE_NAME}-frontend"; then
       logging::error "Cloneset objects still exist when opnekruise disabled in risingwave"

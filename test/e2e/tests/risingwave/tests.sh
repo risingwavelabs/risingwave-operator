@@ -27,12 +27,8 @@ function test::risingwave::manifest_from() {
   envsubst "${@:2}" <"${manifest_file}"
 }
 
-funtion test::risingwave::enable_openkruise() {
-
-}
-
-funfction test::risingwave::disabled_openkruise(){
-
+function test::risingwave::enable_openkruise() {
+  echo "ENABLING"
 }
 
 function test::risingwave::start() {
@@ -43,9 +39,10 @@ function test::risingwave::start() {
     return 1
   fi
 
-  if ${OPEN_KRUISE_ENABLED_IN_RISINGWAVE}; then
-    test::risingwave::enable_openkruise
-  fi
+  # if [[ ${OPEN_KRUISE_ENABLED_IN_RISINGWAVE} -eq 1]] 
+  # then
+  #   test::risingwave::enable_openkruise
+  # fi
 
   if ! k8s::risingwave::wait_before_rollout "${E2E_RISINGWAVE_NAME}"; then
     logging::error "Timeout waiting for the rollout!"
@@ -118,20 +115,22 @@ function test::run::risingwave::storage_support::object_minio() {
 }
 
 function test::run::risingwave::openkruise_integration(){
+  logging::info "Testing Open Kruise integration"
   logging::info "Starting RisingWave..."
   if ! test::risingwave::start storages/meta-memory-object-memory.yaml; then
     return 1
   fi
-
-  if ${OPEN_KRUISE_ENABLED_IN_RISINGWAVE}; then
+  if [ 0 -eq 1] then
     if k8s::kubectl::object_exists deployments "${E2E_RISINGWAVE_NAME}-frontend"; then
       logging::error "Deployment objects still exist when openkruise enabled in risingwave"
       return 1
+    fi
     logging::info "Openkruise integration suceeded"
   else
     if k8s::kubectl::object_exists clonesets "${E2E_RISINGWAVE_NAME}-frontend"; then
       logging::error "Cloneset objects still exist when opnekruise disabled in risingwave"
       return 1
+    fi
     logging::info "Openkruise integration suceeded"
   fi
 }

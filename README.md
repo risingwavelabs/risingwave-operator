@@ -127,7 +127,7 @@ spec:
 
 #### LoadBalancer
 
-For EKS/GCP and some other Kubernetes provided by cloud vendors, we can expose the Service to the public network with a
+For EKS/GKE and some other Kubernetes services provided by cloud vendors, we can expose the Service to the public network with a
 load balancer on the cloud. We can simply achieve this by setting the service type to `LoadBalancer`, by setting the
 following field:
 

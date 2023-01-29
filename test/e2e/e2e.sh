@@ -60,7 +60,6 @@ function e2e::list_test_cases() {
       testcases+=("${testcase}")
     fi
   done
-
   echo -n "${testcases[*]}"
 }
 
@@ -161,6 +160,7 @@ function e2e::run() {
   local testcases
   IFS=" " read -r -a testcases <<<"$(e2e::list_test_cases)"
   local total_cnt="${#testcases[@]}"
+  OPEN_KRUISE_ENABLED_IN_RISINGWAVE=1
 
   logging::infof "Running tests, total %d...\n" "${total_cnt}"
 
@@ -169,7 +169,17 @@ function e2e::run() {
   local fail_cnt=0
   # shellcheck disable=SC2155
   local begin_ts=$(date +%s)
+  for tc in "${testcases[@]}"; do
+    if e2e::test::run_next "${cur_cnt}" "${tc}"; then
+      ((pass_cnt++))
+    else
+      ((fail_cnt++))
+    fi
+    ((cur_cnt++))
+  done
 
+  loggin::info "Running test for when openkruise is enabled"
+  OPEN_KRUISE_ENABLED_IN_RISINGWAVE=0
   for tc in "${testcases[@]}"; do
     if e2e::test::run_next "${cur_cnt}" "${tc}"; then
       ((pass_cnt++))

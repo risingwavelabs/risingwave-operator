@@ -187,10 +187,11 @@ function testenv::k8s::risingwave_operator::enable_openkruise(){
 
 function testenv::k8s::install_openkruise(){
   local HELM_NAMESPACE="${_RISINGWAVE_OPERATOR_NAMESPACE}"
+  local version=${OPENKRUISE_VERSION:-1.3.0}
   logging::info "Adding open kruise into helm charts"
   helm::helm repo add openkruise https://openkruise.github.io/charts/
   logging::info "Installing open kruise"
-  helm::helm install kruise openkruise/kruise --version 1.3.0
+  helm::helm install kruise openkruise/kruise --version ${version}
 }
 
 function testenv::k8s::risingwave::uninstall_openkruise(){

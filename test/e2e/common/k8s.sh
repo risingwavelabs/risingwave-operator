@@ -344,7 +344,7 @@ function k8s::deployment::is_rolled_out() {
 
   ((generation == observed_generation)) || return 1
   ((updated_replicas >= replicas)) || return 1
-  ((current_replicas <= current_replicas)) || return 1
+  ((current_replicas <= updated_replicas)) || return 1
   ((available_replicas >= updated_replicas)) || return 1
 }
 

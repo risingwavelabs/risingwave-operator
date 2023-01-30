@@ -180,6 +180,8 @@ function e2e::run() {
 
   logging::info "Running tests for when openkruise is enabled"
   OPEN_KRUISE_ENABLED_IN_RISINGWAVE=1
+  testenv::k8s::risingwave_operator::enable_openkruise
+
   for tc in "${testcases[@]}"; do
     if e2e::test::run_next "${cur_cnt}" "${tc}"; then
       ((pass_cnt++))

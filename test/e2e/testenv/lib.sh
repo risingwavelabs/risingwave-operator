@@ -178,11 +178,11 @@ function testenv::k8s::risingwave_operator::uninstall() {
 }
 
 function testenv::k8s::risingwave_operator::enable_openkruise(){
-  kubectl patch deployment risingwave-operator-controller-manager -n ${_RISINGWAVE_OPERATOR_NAMESPACE} --patch-file ${_RISINGWAVE_OPERATOR_ENABLE_OPENKRUISE_PATCH_FILE}
-}
-
-function testenv::k8s::risingwave_operator::disble_openkruise(){
-  kubectl patch deployment risingwave-operator-controller-manager -n ${_RISINGWAVE_OPERATOR_NAMESPACE} --patch-file ${_RISINGWAVE_OPERATOR_DISABLE_OPENKRUISE_PATCH_FILE}
+  logging::info "Enabling openkruise at operator level"
+  export KUBECTL_NAMESPACE="${_RISINGWAVE_OPERATOR_NAMESPACE}"
+  k8s::kubectl patch deployment "risingwave-operator-controller-manager" --patch-file ${_RISINGWAVE_OPERATOR_ENABLE_OPENKRUISE_PATCH_FILE}
+  k8s::deployment::wait_before_rollout "risingwave-operator-controller-manager"
+  testenv::util::network::wait_before_service_up "${_RISINGWAVE_OPERATOR_NAMESPACE}" "risingwave-operator-webhook-service"
 }
 
 function testenv::k8s::install_openkruise(){

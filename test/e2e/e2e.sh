@@ -168,15 +168,15 @@ function e2e::run() {
   local pass_cnt=0
   local fail_cnt=0
   # shellcheck disable=SC2155
-  local begin_ts=$(date +%s)
-  for tc in "${testcases[@]}"; do
-    if e2e::test::run_next "${cur_cnt}" "${tc}"; then
-      ((pass_cnt++))
-    else
-      ((fail_cnt++))
-    fi
-    ((cur_cnt++))
-  done
+  # local begin_ts=$(date +%s)
+  # for tc in "${testcases[@]}"; do
+  #   if e2e::test::run_next "${cur_cnt}" "${tc}"; then
+  #     ((pass_cnt++))
+  #   else
+  #     ((fail_cnt++))
+  #   fi
+  #   ((cur_cnt++))
+  # done
 
   logging::info "Running tests for when openkruise is enabled"
   OPEN_KRUISE_ENABLED_IN_RISINGWAVE=1

@@ -28,7 +28,7 @@ function test::risingwave::manifest_from() {
 }
 
 function test::risingwave::enable_openkruise() {
-  echo "ENABLING"
+  k8s::kubectl patch risingwave -n "${E2E_NAMESPACE}" "${E2E_RISINGWAVE_NAME}" --patch-file "${_E2E_RISINGWAVE_TEST_PATH}/manifests/storages/rw-enable-openkruise.yaml"
 }
 
 function test::risingwave::start() {

@@ -10,7 +10,7 @@ dashboard.new(
   time_from='now-1h',
   time_to='now',
   editable=true,
-  tags=['RisingWave', 'Streaming Database', 'Singularity Data']
+  tags=['RisingWave', 'Streaming Database', 'RisingWave Labs']
 ).addTemplates(
   [
     template.datasource(

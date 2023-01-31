@@ -161,7 +161,6 @@ _RISINGWAVE_OPERATOR_NAMESPACE="risingwave-operator-system"
 _RISINGWAVE_OPERATOR_TEST_IMAGE="risingwavelabs/risingwave-operator:dev"
 _RISINGWAVE_OPERATOR_MANIFEST_FOR_TEST_PATH="$(dirname "${BASH_SOURCE[0]}")/../../../config/risingwave-operator-test.yaml"
 _RISINGWAVE_OPERATOR_ENABLE_OPENKRUISE_PATCH_FILE="$(dirname "${BASH_SOURCE[0]}")/manifests/enable-openkruise.yaml"
-_RISINGWAVE_OPERATOR_DISABLE_OPENKRUISE_PATCH_FILE="$(dirname "${BASH_SOURCE[0]}")/manifests/disable-openkruise.yaml"
 
 function testenv::k8s::risingwave_operator::install() {
   testenv::k8s::load_docker_image "${_RISINGWAVE_OPERATOR_TEST_IMAGE}"

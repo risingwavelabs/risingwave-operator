@@ -226,7 +226,6 @@ function e2e::main() {
 
    # Run tests when open kruise is enabled.
   OPEN_KRUISE_ENABLED_IN_RISINGWAVE=1
-  local e2e_result=0
   e2e::run || e2e_result+=$?
 
   # Post-run with best effort.

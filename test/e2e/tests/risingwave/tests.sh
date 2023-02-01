@@ -29,11 +29,8 @@ function test::risingwave::manifest_from() {
 
 function test::risingwave::enable_openkruise() {
   logging::info "Enabling openkruise at Risingwave level"
-  shell::run k8s::kubectl patch risingwave -n "${E2E_NAMESPACE}"  "${E2E_RISINGWAVE_NAME}" --type merge -p '{"spec":{"enableOpenKruise":true}}'
-  if ! k8s::risingwave::wait_before_rollout "${E2E_RISINGWAVE_NAME}"; then
-    logging::error "Timeout waiting for the rollout!"
-    return 1
-  fi
+  ENABLE_OPEN_KRUISE="'{\"spec\":{\"enableOpenKruise\":true}}'"
+  shell::run "kubectl patch risingwave -n "${E2E_NAMESPACE}"  "${E2E_RISINGWAVE_NAME}" --type merge -p ${ENABLE_OPEN_KRUISE}"
 }
 
 function test::risingwave::start() {

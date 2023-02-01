@@ -29,7 +29,7 @@ function test::risingwave::manifest_from() {
 
 function test::risingwave::enable_openkruise() {
   logging::info "Enabling openkruise at Risingwave level"
-  k8s::kubectl patch risingwave -n "${E2E_NAMESPACE}"  "${E2E_RISINGWAVE_NAME}" --type merge -p '{"spec":{"enableOpenKruise":true}}'
+  shell::run k8s::kubectl patch risingwave -n "${E2E_NAMESPACE}"  "${E2E_RISINGWAVE_NAME}" --type merge -p '{"spec":{"enableOpenKruise":true}}'
 }
 
 function test::risingwave::start() {

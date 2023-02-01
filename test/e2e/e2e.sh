@@ -60,7 +60,6 @@ function e2e::list_test_cases() {
       testcases+=("${testcase}")
     fi
   done
-
   echo -n "${testcases[*]}"
 }
 
@@ -161,15 +160,16 @@ function e2e::run() {
   local testcases
   IFS=" " read -r -a testcases <<<"$(e2e::list_test_cases)"
   local total_cnt="${#testcases[@]}"
-
   logging::infof "Running tests, total %d...\n" "${total_cnt}"
+  if [ ${OPEN_KRUISE_ENABLED_IN_RISINGWAVE} -eq 1 ]; then
+    testenv::k8s::risingwave_operator::enable_openkruise
+  fi
 
   local cur_cnt=0
   local pass_cnt=0
   local fail_cnt=0
   # shellcheck disable=SC2155
   local begin_ts=$(date +%s)
-
   for tc in "${testcases[@]}"; do
     if e2e::test::run_next "${cur_cnt}" "${tc}"; then
       ((pass_cnt++))
@@ -220,8 +220,13 @@ function e2e::main() {
   e2e::pre_run || return $?
 
   # Run tests.
+  local OPEN_KRUISE_ENABLED_IN_RISINGWAVE=0
   local e2e_result=0
   e2e::run || e2e_result=$?
+
+   # Run tests when open kruise is enabled.
+  OPEN_KRUISE_ENABLED_IN_RISINGWAVE=1
+  e2e::run || e2e_result+=$?
 
   # Post-run with best effort.
   e2e::post_run || :

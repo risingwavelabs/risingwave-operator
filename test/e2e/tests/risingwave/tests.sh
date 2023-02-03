@@ -1,4 +1,4 @@
-# Copyright 2022 Singularity Data
+# Copyright 2023 RisingWave Labs
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,12 +27,23 @@ function test::risingwave::manifest_from() {
   envsubst "${@:2}" <"${manifest_file}"
 }
 
+function test::risingwave::enable_openkruise() {
+  logging::info "Enabling openkruise at Risingwave level"
+  ENABLE_OPEN_KRUISE="'{\"spec\":{\"enableOpenKruise\":true}}'"
+  shell::run "kubectl patch risingwave -n "${E2E_NAMESPACE}"  "${E2E_RISINGWAVE_NAME}" --type merge -p ${ENABLE_OPEN_KRUISE}"
+}
+
 function test::risingwave::start() {
   local relative_path="$1"
 
   if ! shell::run "test::risingwave::manifest_from ${relative_path} | k8s::kubectl apply -f -"; then
     logging::error "Failed to apply manifest!"
     return 1
+  fi
+
+  if [ $OPEN_KRUISE_ENABLED_IN_RISINGWAVE -eq 1 ] 
+  then
+    test::risingwave::enable_openkruise
   fi
 
   if ! k8s::risingwave::wait_before_rollout "${E2E_RISINGWAVE_NAME}"; then
@@ -104,6 +115,29 @@ function test::run::risingwave::storage_support::meta_etcd() {
 function test::run::risingwave::storage_support::object_minio() {
   test::risingwave::storage_support::_run_with_manifest storages/object-minio.yaml
 }
+
+function test::run::risingwave::openkruise_integration(){
+  logging::info "Testing Open Kruise integration"
+  logging::info "Starting RisingWave..."
+  if ! test::risingwave::start storages/meta-memory-object-memory.yaml; then
+    return 1
+  fi
+  
+  if [ $OPEN_KRUISE_ENABLED_IN_RISINGWAVE -eq 1 ]; then
+    if k8s::kubectl::object_exists deployments "${E2E_RISINGWAVE_NAME}-frontend"; then
+      logging::error "Deployment objects still exist when openkruise enabled in risingwave"
+      return 1
+    fi
+    logging::info "Openkruise integration suceeded";
+  else
+    if k8s::kubectl::object_exists clonesets "${E2E_RISINGWAVE_NAME}-frontend"; then
+      logging::error "Cloneset objects still exist when opnekruise disabled in risingwave"
+      return 1
+    fi
+    logging::info "Openkruise integration suceeded"
+  fi
+}
+
 
 # Export the test case only when the required parameters exists.
 if [[ -v "E2E_AWS_ACCESS_KEY_ID" && -v "E2E_AWS_SECRET_ACCESS_KEY_ID" && -v "E2E_AWS_S3_REGION" && -v "E2E_AWS_S3_BUCKET" ]]; then

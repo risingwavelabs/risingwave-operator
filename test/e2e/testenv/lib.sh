@@ -1,4 +1,4 @@
-# Copyright 2022 Singularity Data
+# Copyright 2023 RisingWave Labs
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -160,6 +160,7 @@ function testenv::k8s::cert_manager::_wait() {
 _RISINGWAVE_OPERATOR_NAMESPACE="risingwave-operator-system"
 _RISINGWAVE_OPERATOR_TEST_IMAGE="risingwavelabs/risingwave-operator:dev"
 _RISINGWAVE_OPERATOR_MANIFEST_FOR_TEST_PATH="$(dirname "${BASH_SOURCE[0]}")/../../../config/risingwave-operator-test.yaml"
+_RISINGWAVE_OPERATOR_ENABLE_OPENKRUISE_PATCH_FILE="$(dirname "${BASH_SOURCE[0]}")/manifests/enable-openkruise.yaml"
 
 function testenv::k8s::risingwave_operator::install() {
   testenv::k8s::load_docker_image "${_RISINGWAVE_OPERATOR_TEST_IMAGE}"
@@ -175,6 +176,28 @@ function testenv::k8s::risingwave_operator::uninstall() {
   shell::run k8s::kubectl delete -f "${_RISINGWAVE_OPERATOR_MANIFEST_FOR_TEST_PATH}"
 }
 
+function testenv::k8s::risingwave_operator::enable_openkruise(){
+  logging::info "Enabling openkruise at operator level"
+  export KUBECTL_NAMESPACE="${_RISINGWAVE_OPERATOR_NAMESPACE}"
+  k8s::kubectl patch deployment "risingwave-operator-controller-manager" --patch-file ${_RISINGWAVE_OPERATOR_ENABLE_OPENKRUISE_PATCH_FILE}
+  k8s::deployment::wait_before_rollout "risingwave-operator-controller-manager"
+  testenv::util::network::wait_before_service_up "${_RISINGWAVE_OPERATOR_NAMESPACE}" "risingwave-operator-webhook-service"
+}
+
+function testenv::k8s::install_openkruise(){
+  local HELM_NAMESPACE="${_RISINGWAVE_OPERATOR_NAMESPACE}"
+  local version=${OPENKRUISE_VERSION:-1.3.0}
+  logging::info "Adding open kruise into helm charts"
+  helm::helm repo add openkruise https://openkruise.github.io/charts/
+  logging::info "Installing open kruise"
+  helm::helm install kruise openkruise/kruise --version ${version}
+}
+
+function testenv::k8s::risingwave::uninstall_openkruise(){
+  local HELM_NAMESPACE="${_RISINGWAVE_OPERATOR_NAMESPACE}"
+  helm::helm uninstall kruise
+}
+
 function testenv::setup() {
   logging::info "Setting up test env..."
   testenv::k8s::provision || return $?
@@ -185,6 +208,7 @@ function testenv::setup() {
   logging::info "Installing risingwave-operator..."
   testenv::k8s::risingwave_operator::install || return $?
 
+  testenv::k8s::install_openkruise
   logging::info "Test env all set!"
 }
 
@@ -195,6 +219,7 @@ function testenv::teardown() {
     testenv::util::uninstall
     logging::info "Uninstalling cert-manager and risingwave-operator..."
     testenv::k8s::risingwave_operator::uninstall
+    testenv::k8s::risingwave::uninstall_openkruise
     testenv::k8s::cert_manager::uninstall
   fi
 

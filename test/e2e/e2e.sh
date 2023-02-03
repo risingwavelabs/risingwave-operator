@@ -161,7 +161,7 @@ function e2e::run() {
   IFS=" " read -r -a testcases <<<"$(e2e::list_test_cases)"
   local total_cnt="${#testcases[@]}"
   logging::infof "Running tests, total %d...\n" "${total_cnt}"
-  if [ ${OPEN_KRUISE_ENABLED_IN_RISINGWAVE} -eq 1 ]; then
+  if [ "${OPEN_KRUISE_ENABLED_IN_RISINGWAVE}" -eq 1 ]; then
     testenv::k8s::risingwave_operator::enable_openkruise
   fi
 

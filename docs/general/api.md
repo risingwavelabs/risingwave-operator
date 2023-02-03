@@ -3108,7 +3108,11 @@ RisingWaveScaleViewStatus
 (<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>)
 </p>
 <div>
-<p>RisingWaveScaleViewLock is a lock for RisingWaveScaleViews.</p>
+<p>RisingWaveScaleViewLock is a lock record for RisingWaveScaleViews. For example, if there&rsquo;s a RisingWaveScaleView
+targets the current RisingWave, the controller will try to create a new RisingWaveScaleViewLock with the name, uid,
+target component, generation and the replicas of targeting groups of the RisingWaveScaleView. After the record is set,
+the validation webhook will reject any updates on the replicas of any targeting group that doesn&rsquo;t equal to the
+replicas recorded, which makes it a lock similar thing.</p>
 </div>
 <table>
 <thead>

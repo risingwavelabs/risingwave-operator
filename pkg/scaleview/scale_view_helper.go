@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// Package scaleview provides utilities for operating in-memory RisingWave and RisingWaveScaleView objects. For the
+// detailed design of RisingWaveScaleView, please refer to the RFC-0004.
 package scaleview
 
 import (

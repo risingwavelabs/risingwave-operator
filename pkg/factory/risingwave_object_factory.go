@@ -439,7 +439,7 @@ func (f *RisingWaveObjectFactory) argsForCompute(cpuLimit int64, memLimit int64)
 	args := []string{
 		"compute-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
-		"--host", fmt.Sprintf("$(POD_IP):%d", computePorts.ServicePort),
+		"--host", fmt.Sprintf("0.0.0.0:%d", computePorts.ServicePort),
 		"--client-address", fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentCompute, ""), computePorts.ServicePort),
 		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", computePorts.MetricsPort),
 		"--metrics-level=1",

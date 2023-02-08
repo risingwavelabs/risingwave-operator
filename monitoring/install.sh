@@ -99,10 +99,11 @@ if [[ $r = true ]]; then
     # Install the `kube-prometheus-stack` with remote write
     rParams=" -r -s $s -k $k "
 fi 
-./kube-prometheus-stack/install.sh $rParams $dryParam -n $ns
+./kube-prometheus-stack/install.sh $rParams $dryParam -n $ns &
 
 # Install the `loki-distributed`
-./loki-distributed/install.sh $dryParam -n $ns
+./loki-distributed/install.sh $dryParam -n $ns &
 
 # Install the `promtail`
-./promtail/install.sh $dryParam -n $ns
+./promtail/install.sh $dryParam -n $ns & 
+wait

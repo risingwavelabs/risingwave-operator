@@ -427,6 +427,8 @@ func (f *RisingWaveObjectFactory) argsForFrontend() []string {
 		"--host", fmt.Sprintf("0.0.0.0:%d", frontendPorts.ServicePort),
 		"--client-address", fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
 		"--meta-addr", fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		"--metrics-level=1",
+		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", frontendPorts.MetricsPort),
 	}
 }
 

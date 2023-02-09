@@ -42,3 +42,6 @@ grafana:
     risingwave:
       risingwave-dashboard:
         url: https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/monitoring/grafana/risingwave-dashboard.json
+    go: 
+      go-dashboard: 
+        url: https://grafana.com/api/dashboards/6671/revisions/2/download

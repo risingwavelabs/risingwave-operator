@@ -179,21 +179,23 @@ function testenv::k8s::risingwave_operator::uninstall() {
 function testenv::k8s::risingwave_operator::enable_openkruise(){
   logging::info "Enabling openkruise at operator level"
   export KUBECTL_NAMESPACE="${_RISINGWAVE_OPERATOR_NAMESPACE}"
-  k8s::kubectl patch deployment "risingwave-operator-controller-manager" --patch-file ${_RISINGWAVE_OPERATOR_ENABLE_OPENKRUISE_PATCH_FILE}
+  k8s::kubectl patch deployment "risingwave-operator-controller-manager" --patch-file "${_RISINGWAVE_OPERATOR_ENABLE_OPENKRUISE_PATCH_FILE}"
   k8s::deployment::wait_before_rollout "risingwave-operator-controller-manager"
   testenv::util::network::wait_before_service_up "${_RISINGWAVE_OPERATOR_NAMESPACE}" "risingwave-operator-webhook-service"
 }
 
 function testenv::k8s::install_openkruise(){
+  # shellcheck disable=SC2034
   local HELM_NAMESPACE="${_RISINGWAVE_OPERATOR_NAMESPACE}"
   local version=${OPENKRUISE_VERSION:-1.3.0}
-  logging::info "Adding open kruise into helm charts"
+  logging::info "Adding OpenKruise into helm charts..."
   helm::helm repo add openkruise https://openkruise.github.io/charts/
-  logging::info "Installing open kruise"
-  helm::helm install kruise openkruise/kruise --version ${version}
+  logging::info "Installing OpenKruise..."
+  helm::helm install kruise openkruise/kruise --version "${version}"
 }
 
 function testenv::k8s::risingwave::uninstall_openkruise(){
+  # shellcheck disable=SC2034
   local HELM_NAMESPACE="${_RISINGWAVE_OPERATOR_NAMESPACE}"
   helm::helm uninstall kruise
 }

@@ -38,6 +38,7 @@ type Config struct {
 	ComputeConfig   ComponentConfig
 	CompactorConfig ComponentConfig
 	FrontendConfig  ComponentConfig
+	ConnectorConfig ComponentConfig
 }
 
 type ComponentConfig struct {
@@ -106,6 +107,11 @@ var DefaultConfig = Config{
 			defaultGroup.deepCopy(),
 		},
 	},
+	ConnectorConfig: ComponentConfig{
+		Groups: []Group{
+			defaultGroup.deepCopy(),
+		},
+	},
 }
 
 // ApplyConfigFile will construct a config by config file.
@@ -141,6 +147,9 @@ func constructConfig(c innerConfig) Config {
 		},
 		MetaConfig: ComponentConfig{
 			Groups: constructGroup(c.Meta.Groups),
+		},
+		ConnectorConfig: ComponentConfig{
+			Groups: constructGroup(c.Connector.Groups),
 		},
 	}
 	return conf

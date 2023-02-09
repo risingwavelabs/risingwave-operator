@@ -339,7 +339,7 @@ RisingWaveStatus
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">RisingWaveComponentCommonPorts
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompute">RisingWaveComponentCompute</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMetaPorts">RisingWaveComponentMetaPorts</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompute">RisingWaveComponentCompute</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentConnector">RisingWaveComponentConnector</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMetaPorts">RisingWaveComponentMetaPorts</a>)
 </p>
 <div>
 <p>RisingWaveComponentCommonPorts are the common ports that components need to listen.</p>
@@ -408,7 +408,7 @@ Kubernetes meta/v1.Time
 </td>
 <td>
 <em>(Optional)</em>
-<p>The time that the Pods of frontend that should be restarted. Setting a value on this
+<p>The time that the Pods of compactor that should be restarted. Setting a value on this
 field will trigger a recreation of all Pods of this component.</p>
 </td>
 </tr>
@@ -469,7 +469,7 @@ Kubernetes meta/v1.Time
 </td>
 <td>
 <em>(Optional)</em>
-<p>The time that the Pods of frontend that should be restarted. Setting a value on this
+<p>The time that the Pods of compute that should be restarted. Setting a value on this
 field will trigger a recreation of all Pods of this component.</p>
 </td>
 </tr>
@@ -499,6 +499,67 @@ RisingWaveComponentCommonPorts
 <td>
 <em>(Optional)</em>
 <p>Groups of Pods of compute component.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentConnector">RisingWaveComponentConnector
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
+</p>
+<div>
+<p>RisingWaveComponentConnector is the spec describes the connector component.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>restartAt</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#time-v1-meta">
+Kubernetes meta/v1.Time
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The time that the Pods of connector that should be restarted. Setting a value on this
+field will trigger a recreation of all Pods of this component.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ports</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">
+RisingWaveComponentCommonPorts
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Ports to be listened by compactor Pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>groups</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">
+[]RisingWaveComponentGroup
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Groups of Pods of compactor component.</p>
 </td>
 </tr>
 </tbody>
@@ -567,7 +628,7 @@ RisingWaveComponentCommonPorts
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">RisingWaveComponentGroup
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentConnector">RisingWaveComponentConnector</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta</a>)
 </p>
 <div>
 <p>RisingWaveComponentGroup is the common deployment group of each component. Currently, we use
@@ -1000,6 +1061,19 @@ ComponentReplicasStatus
 <p>Running status of compactor.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>connector</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.ComponentReplicasStatus">
+ComponentReplicasStatus
+</a>
+</em>
+</td>
+<td>
+<p>Running status of connector.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec
@@ -1068,6 +1142,19 @@ RisingWaveComponentCompactor
 </td>
 <td>
 <p>Compactor component.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>connector</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentConnector">
+RisingWaveComponentConnector
+</a>
+</em>
+</td>
+<td>
+<p>Connector component spec.</p>
 </td>
 </tr>
 </tbody>
@@ -1538,6 +1625,18 @@ int32
 <td>
 <em>(Optional)</em>
 <p>Replicas of compactor component. Replicas specified here is in a default group (with empty name &ldquo;).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>connector</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Replicas of connector component. Replicas specified here is in a default group (with empty name &ldquo;).</p>
 </td>
 </tr>
 </tbody>
@@ -3110,8 +3209,8 @@ RisingWaveScaleViewStatus
 <div>
 <p>RisingWaveScaleViewLock is a lock record for RisingWaveScaleViews. For example, if there&rsquo;s a RisingWaveScaleView
 targets the current RisingWave, the controller will try to create a new RisingWaveScaleViewLock with the name, uid,
-target component, generation and the replicas of targeting groups of the RisingWaveScaleView. After the record is set,
-the validation webhook will reject any updates on the replicas of any targeting group that doesn&rsquo;t equal to the
+target component, generation, and the replicas of targeting groups of the RisingWaveScaleView. After the record is set,
+the validation webhook will reject any updates on the replicas of any targeting group that doesn&rsquo;t equal the
 replicas recorded, which makes it a lock similar thing.</p>
 </div>
 <table>

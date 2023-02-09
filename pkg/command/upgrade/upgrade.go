@@ -114,6 +114,9 @@ func (o *Options) updateTag(rw *v1alpha1.RisingWave) {
 	for i := range rw.Spec.Components.Compactor.Groups {
 		rw.Spec.Components.Compactor.Groups[i].Image = image
 	}
+	for i := range rw.Spec.Components.Connector.Groups {
+		rw.Spec.Components.Connector.Groups[i].Image = image
+	}
 	for i := range rw.Spec.Components.Compute.Groups {
 		rw.Spec.Components.Compute.Groups[i].Image = image
 	}

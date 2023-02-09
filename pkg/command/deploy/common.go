@@ -23,6 +23,7 @@ type GroupReplicas struct {
 	Frontend  []ReplicaInfo
 	Compactor []ReplicaInfo
 	Meta      []ReplicaInfo
+	Connector []ReplicaInfo
 }
 
 type ReplicaInfo struct {

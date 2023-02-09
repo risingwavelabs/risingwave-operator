@@ -157,6 +157,8 @@ func (f *RisingWaveObjectFactory) componentName(component, group string) string 
 		return f.risingwave.Name + "-frontend" + groupSuffix(group)
 	case consts.ComponentCompactor:
 		return f.risingwave.Name + "-compactor" + groupSuffix(group)
+	case consts.ComponentConnector:
+		return f.risingwave.Name + "-connector" + groupSuffix(group)
 	case consts.ComponentConfig:
 		return f.risingwave.Name + "-config"
 	default:
@@ -355,6 +357,35 @@ func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 	return mustSetControllerReference(f.risingwave, compactorService, f.scheme)
 }
 
+// NewConnectorService creates a new Service for the connector.
+func (f *RisingWaveObjectFactory) NewConnectorService() *corev1.Service {
+	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+
+	connectorService := &corev1.Service{
+		ObjectMeta: f.componentObjectMeta(consts.ComponentConnector, true),
+		Spec: corev1.ServiceSpec{
+			Type:     corev1.ServiceTypeClusterIP,
+			Selector: f.podLabelsOrSelectors(consts.ComponentConnector),
+			Ports: []corev1.ServicePort{
+				{
+					Name:       consts.PortService,
+					Protocol:   corev1.ProtocolTCP,
+					Port:       connectorPorts.ServicePort,
+					TargetPort: intstr.FromString(consts.PortService),
+				},
+				{
+					Name:       consts.PortMetrics,
+					Protocol:   corev1.ProtocolTCP,
+					Port:       connectorPorts.MetricsPort,
+					TargetPort: intstr.FromString(consts.PortMetrics),
+				},
+			},
+		},
+	}
+
+	return mustSetControllerReference(f.risingwave, connectorService, f.scheme)
+}
+
 func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 	etcd := f.risingwave.Spec.Storages.Meta.Etcd
 
@@ -480,6 +511,19 @@ func (f *RisingWaveObjectFactory) argsForCompactor() []string {
 		"--metrics-level=1",
 		"--state-store", f.hummockConnectionStr(),
 		"--meta-address", fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+	}
+}
+
+func (f *RisingWaveObjectFactory) argsForConnector() []string {
+	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
+	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+
+	return []string{
+		"frontend-node",
+		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
+		"--host", fmt.Sprintf("0.0.0.0:%d", connectorPorts.ServicePort),
+		"--client-address", fmt.Sprintf("$(POD_IP):%d", connectorPorts.ServicePort),
+		"--meta-addr", fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 	}
 }
 
@@ -1458,6 +1502,121 @@ func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string, podTemplate
 
 	return mustSetControllerReference(f.risingwave, compactorCloneSet, f.scheme)
 
+}
+
+func (f *RisingWaveObjectFactory) portsForConnectorContainer() []corev1.ContainerPort {
+	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+
+	return []corev1.ContainerPort{
+		{
+			Name:          consts.PortService,
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: connectorPorts.ServicePort,
+		},
+		{
+			Name:          consts.PortMetrics,
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: connectorPorts.MetricsPort,
+		},
+	}
+}
+
+func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Container, template *risingwavev1alpha1.RisingWaveComponentGroupTemplate) {
+	basicSetupContainer(container, template)
+
+	container.Name = "connector"
+	container.Args = f.argsForConnector()
+	container.Ports = f.portsForConnectorContainer()
+
+	for _, env := range f.envsForObjectStorage() {
+		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
+	}
+
+	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
+		return a.MountPath == b.MountPath
+	})
+}
+
+// NewConnectorDeployment creates a new Deployment for the connector component and specified group.
+func (f *RisingWaveObjectFactory) NewConnectorDeployment(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
+	componentGroup := buildComponentGroup(
+		f.risingwave.Spec.Global.Replicas.Connector,
+		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
+		group,
+		f.risingwave.Spec.Components.Connector.Groups,
+	)
+	if componentGroup == nil {
+		return nil
+	}
+
+	restartAt := f.risingwave.Spec.Components.Connector.RestartAt
+
+	// Build the pod template.
+	podTemplate := f.buildPodTemplate(consts.ComponentConnector, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+
+	// Set up the first container.
+	f.setupConnectorContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
+
+	// Make sure it's stable among builds.
+	keepPodSpecConsistent(&podTemplate.Spec)
+
+	// Build the deployment.
+	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentConnector, group)
+	connectorDeployment := &appsv1.Deployment{
+		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentConnector, group, true),
+		Spec: appsv1.DeploymentSpec{
+			Replicas: pointer.Int32(componentGroup.Replicas),
+			Strategy: buildUpgradeStrategyForDeployment(componentGroup.UpgradeStrategy),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labelsOrSelectors,
+			},
+			Template: podTemplate,
+		},
+	}
+
+	return mustSetControllerReference(f.risingwave, connectorDeployment, f.scheme)
+}
+
+// NewConnectorCloneSet creates a new CloneSet for the connector component and specified group.
+func (f *RisingWaveObjectFactory) NewConnectorCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
+	componentGroup := buildComponentGroup(
+		f.risingwave.Spec.Global.Replicas.Connector,
+		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
+		group,
+		f.risingwave.Spec.Components.Connector.Groups,
+	)
+	if componentGroup == nil {
+		return nil
+	}
+
+	restartAt := f.risingwave.Spec.Components.Connector.RestartAt
+
+	podTemplate := f.buildPodTemplate(consts.ComponentConnector, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+
+	f.setupConnectorContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
+
+	// Set readiness gate for in place update strategy.
+	podTemplate.Spec.ReadinessGates = append(podTemplate.Spec.ReadinessGates, corev1.PodReadinessGate{
+		ConditionType: kruisepubs.InPlaceUpdateReady,
+	})
+
+	keepPodSpecConsistent(&podTemplate.Spec)
+	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentConnector, group)
+	connectorCloneSet := &kruiseappsv1alpha1.CloneSet{
+		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentConnector, group, true),
+		Spec: kruiseappsv1alpha1.CloneSetSpec{
+			Replicas:       pointer.Int32(componentGroup.Replicas),
+			UpdateStrategy: buildUpgradeStrategyForCloneSet(componentGroup.UpgradeStrategy),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labelsOrSelectors,
+			},
+			Template: podTemplate,
+		},
+	}
+
+	return mustSetControllerReference(f.risingwave, connectorCloneSet, f.scheme)
 }
 
 func buildUpgradeStrategyForStatefulSet(strategy risingwavev1alpha1.RisingWaveUpgradeStrategy) appsv1.StatefulSetUpdateStrategy {

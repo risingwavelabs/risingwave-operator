@@ -143,6 +143,15 @@ func resumeRisingWave(instance *v1alpha1.RisingWave) error {
 		}
 	}
 
+	for _, replicaInfo := range replicas.Connector {
+		for i, group := range instance.Spec.Components.Connector.Groups {
+			if group.Name == replicaInfo.GroupName {
+				instance.Spec.Components.Connector.Groups[i].Replicas = replicaInfo.Replicas
+				break
+			}
+		}
+	}
+
 	// delete annotation
 	delete(instance.Annotations, ReplicaAnnotation)
 

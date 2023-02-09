@@ -58,7 +58,7 @@ Accepted values for resources:
 `
 )
 
-var componentSet = sets.NewString(util.Compute, util.Compactor, util.Meta, util.Frontend)
+var componentSet = sets.NewString(util.Compute, util.Compactor, util.Meta, util.Frontend, util.Connector)
 
 type Options struct {
 	*cmdcontext.BasicOptions
@@ -139,6 +139,11 @@ func (o *Options) Validate(ctx cmdcontext.Context, cmd *cobra.Command, args []st
 
 	case util.Compute:
 		if !util.IsValidComputeGroup(o.group, rw.Spec.Components.Compute.Groups) {
+			return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
+		}
+
+	case util.Connector:
+		if !util.IsValidRWGroup(o.group, rw.Spec.Components.Connector.Groups) {
 			return fmt.Errorf("invalid risingwave group: %s for component: %s", o.group, o.component)
 		}
 	}
@@ -234,6 +239,14 @@ func (o *Options) updateConfig(rw *v1alpha1.RisingWave) {
 			}
 		}
 
+	case util.Connector:
+		for _, group := range components.Connector.Groups {
+			if group.Name == o.group {
+				o.updateComponentResources(&group.Resources)
+				break
+			}
+		}
+
 	case util.Frontend:
 		for _, group := range components.Frontend.Groups {
 			if group.Name == o.group {
@@ -258,6 +271,7 @@ func (o *Options) updateInnerGlobalResources(rw *v1alpha1.RisingWave) {
 		rw.Spec.Components.Meta.Groups,
 		rw.Spec.Components.Frontend.Groups,
 		rw.Spec.Components.Compactor.Groups,
+		rw.Spec.Components.Connector.Groups,
 	}
 
 	var addResource = func(groups []v1alpha1.RisingWaveComponentGroup) {

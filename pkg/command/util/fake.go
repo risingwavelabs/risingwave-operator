@@ -49,6 +49,7 @@ var fakeRW = &v1alpha1.RisingWave{
 				Frontend:  2,
 				Compute:   3,
 				Compactor: 4,
+				Connector: 5,
 			},
 			RisingWaveComponentGroupTemplate: v1alpha1.RisingWaveComponentGroupTemplate{
 				Image: "test.image.global",
@@ -116,6 +117,16 @@ var fakeRW = &v1alpha1.RisingWave{
 						Name: "compactor-group-1",
 						RisingWaveComponentGroupTemplate: &v1alpha1.RisingWaveComponentGroupTemplate{
 							Image: "test.image.compactor",
+						},
+					},
+				},
+			},
+			Connector: v1alpha1.RisingWaveComponentConnector{
+				Groups: []v1alpha1.RisingWaveComponentGroup{
+					{
+						Name: "connector-group-1",
+						RisingWaveComponentGroupTemplate: &v1alpha1.RisingWaveComponentGroupTemplate{
+							Image: "test.image.connector",
 						},
 					},
 				},

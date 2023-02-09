@@ -134,6 +134,13 @@ func updateReplicas(instance *v1alpha1.RisingWave, component, groupName string, 
 				break
 			}
 		}
+	case util.Connector:
+		for i, group := range instance.Spec.Components.Connector.Groups {
+			if group.Name == groupName {
+				instance.Spec.Components.Connector.Groups[i].Replicas = target
+				break
+			}
+		}
 	default:
 		return fmt.Errorf("no such component %v, will do nothing", component)
 	}

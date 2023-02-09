@@ -284,7 +284,7 @@ type RisingWaveComponentFrontend struct {
 
 // RisingWaveComponentCompute is the spec describes the compute component.
 type RisingWaveComponentCompute struct {
-	// The time that the Pods of frontend that should be restarted. Setting a value on this
+	// The time that the Pods of compute that should be restarted. Setting a value on this
 	// field will trigger a recreation of all Pods of this component.
 	// +optional
 	RestartAt *metav1.Time `json:"restartAt,omitempty"`
@@ -304,7 +304,27 @@ type RisingWaveComponentCompute struct {
 
 // RisingWaveComponentCompactor is the spec describes the compactor component.
 type RisingWaveComponentCompactor struct {
-	// The time that the Pods of frontend that should be restarted. Setting a value on this
+	// The time that the Pods of compactor that should be restarted. Setting a value on this
+	// field will trigger a recreation of all Pods of this component.
+	// +optional
+	RestartAt *metav1.Time `json:"restartAt,omitempty"`
+
+	// Ports to be listened by compactor Pods.
+	// +optional
+	Ports RisingWaveComponentCommonPorts `json:"ports,omitempty"`
+
+	// Groups of Pods of compactor component.
+	// +optional
+	// +listType=map
+	// +listMapKey=name
+	// +patchMergeKey=name
+	// +patchStrategy=merge,retainKeys
+	Groups []RisingWaveComponentGroup `json:"groups,omitempty"`
+}
+
+// RisingWaveComponentConnector is the spec describes the connector component.
+type RisingWaveComponentConnector struct {
+	// The time that the Pods of connector that should be restarted. Setting a value on this
 	// field will trigger a recreation of all Pods of this component.
 	// +optional
 	RestartAt *metav1.Time `json:"restartAt,omitempty"`
@@ -335,6 +355,9 @@ type RisingWaveComponentsSpec struct {
 
 	// Compactor component.
 	Compactor RisingWaveComponentCompactor `json:"compactor,omitempty"`
+
+	// Connector component spec.
+	Connector RisingWaveComponentConnector `json:"connector,omitempty"`
 }
 
 // RisingWaveMetaStorageEtcd is the etcd storage for the meta component.
@@ -534,6 +557,11 @@ type RisingWaveGlobalReplicas struct {
 	// +optional
 	// +kubebuilder:validation:Minimum=0
 	Compactor int32 `json:"compactor,omitempty"`
+
+	// Replicas of connector component. Replicas specified here is in a default group (with empty name '').
+	// +optional
+	// +kubebuilder:validation:Minimum=0
+	Connector int32 `json:"connector,omitempty"`
 }
 
 // RisingWaveGlobalSpec is the global spec.
@@ -630,6 +658,9 @@ type RisingWaveComponentsReplicasStatus struct {
 
 	// Running status of compactor.
 	Compactor ComponentReplicasStatus `json:"compactor"`
+
+	// Running status of connector.
+	Connector ComponentReplicasStatus `json:"connector"`
 }
 
 // RisingWaveConditionType is the condition type of RisingWave.

@@ -35,7 +35,3 @@ spec:
       groups:
       - name: default
         replicas: 1
-    connector:
-      groups:
-      - name: default
-        replicas: 1

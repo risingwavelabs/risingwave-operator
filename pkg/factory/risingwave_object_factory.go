@@ -515,15 +515,8 @@ func (f *RisingWaveObjectFactory) argsForCompactor() []string {
 }
 
 func (f *RisingWaveObjectFactory) argsForConnector() []string {
-	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
-
 	return []string{
-		"frontend-node",
-		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
-		"--host", fmt.Sprintf("0.0.0.0:%d", connectorPorts.ServicePort),
-		"--client-address", fmt.Sprintf("$(POD_IP):%d", connectorPorts.ServicePort),
-		"--meta-addr", fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		"connector-node",
 	}
 }
 
@@ -1527,6 +1520,7 @@ func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Cont
 	container.Name = "connector"
 	container.Args = f.argsForConnector()
 	container.Ports = f.portsForConnectorContainer()
+	container.Command = []string{}
 
 	for _, env := range f.envsForObjectStorage() {
 		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {

@@ -397,7 +397,7 @@ func (f *RisingWaveObjectFactory) argsForMeta() []string {
 		"meta-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", metaPorts.ServicePort),
-		"--host", "$(POD_IP)",
+		"--host", fmt.Sprintf("$(POD_NAME).%s", f.componentName(consts.ComponentMeta, "")),
 		"--dashboard-host", fmt.Sprintf("0.0.0.0:%d", metaPorts.DashboardPort),
 		"--prometheus-host", fmt.Sprintf("0.0.0.0:%d", metaPorts.MetricsPort),
 	}
@@ -1169,6 +1169,7 @@ func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string, podTemplates 
 	metaSts := &appsv1.StatefulSet{
 		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentMeta, group, true),
 		Spec: appsv1.StatefulSetSpec{
+			ServiceName:    f.componentName(consts.ComponentMeta, ""),
 			Replicas:       pointer.Int32(componentGroup.Replicas),
 			UpdateStrategy: buildUpgradeStrategyForStatefulSet(componentGroup.UpgradeStrategy),
 			Selector: &metav1.LabelSelector{

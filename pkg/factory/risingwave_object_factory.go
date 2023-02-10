@@ -1175,7 +1175,12 @@ func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string, podTemplates 
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labelsOrSelectors,
 			},
-			Template: podTemplate,
+			Template:            podTemplate,
+			PodManagementPolicy: appsv1.ParallelPodManagement,
+			PersistentVolumeClaimRetentionPolicy: &appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy{
+				WhenDeleted: appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
+				WhenScaled:  appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
+			},
 		},
 	}
 

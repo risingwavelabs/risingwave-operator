@@ -2411,8 +2411,7 @@ Cannot be updated.</p>
 <p>List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing
 pod to perform user-initiated actions such as debugging. This list cannot be specified when
 creating a pod, and it cannot be modified by updating the pod spec. In order to add an
-ephemeral container to an existing pod, use the pod&rsquo;s ephemeralcontainers subresource.
-This field is beta-level and available on clusters that haven&rsquo;t disabled the EphemeralContainers feature gate.</p>
+ephemeral container to an existing pod, use the pod&rsquo;s ephemeralcontainers subresource.</p>
 </td>
 </tr>
 <tr>
@@ -2901,6 +2900,7 @@ Some pod and container fields are restricted if this is set.</p>
 <p>If the OS field is set to windows, following fields must be unset:
 - spec.hostPID
 - spec.hostIPC
+- spec.hostUsers
 - spec.securityContext.seLinuxOptions
 - spec.securityContext.seccompProfile
 - spec.securityContext.fsGroup
@@ -2918,8 +2918,63 @@ Some pod and container fields are restricted if this is set.</p>
 - spec.containers[</em>].securityContext.allowPrivilegeEscalation
 - spec.containers[<em>].securityContext.procMount
 - spec.containers[</em>].securityContext.runAsUser
-- spec.containers[*].securityContext.runAsGroup
-This is a beta field and requires the IdentifyPodOS feature</p>
+- spec.containers[*].securityContext.runAsGroup</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Use the host&rsquo;s user namespace.
+Optional: Default to true.
+If set to true or not present, the pod will be run in the host user namespace, useful
+for when the pod needs a feature only available to the host user namespace, such as
+loading a kernel module with CAP_SYS_MODULE.
+When set to false, a new userns is created for the pod. Setting false is useful for
+mitigating container breakout vulnerabilities even allowing users to run their
+containers as root without actually having root privileges on the host.
+This field is alpha-level and is only honored by servers that enable the UserNamespacesSupport feature.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>schedulingGates</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podschedulinggate-v1-core">
+[]Kubernetes core/v1.PodSchedulingGate
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SchedulingGates is an opaque list of values that if specified will block scheduling the pod.
+More info:  <a href="https://git.k8s.io/enhancements/keps/sig-scheduling/3521-pod-scheduling-readiness">https://git.k8s.io/enhancements/keps/sig-scheduling/3521-pod-scheduling-readiness</a>.</p>
+<p>This is an alpha-level feature enabled by PodSchedulingReadiness feature gate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resourceClaims</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podresourceclaim-v1-core">
+[]Kubernetes core/v1.PodResourceClaim
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ResourceClaims defines which ResourceClaims must be allocated
+and reserved before the Pod is allowed to start. The resources
+will be made available to those containers which consume them
+by name.</p>
+<p>This is an alpha field and requires enabling the
+DynamicResourceAllocation feature gate.</p>
+<p>This field is immutable.</p>
 </td>
 </tr>
 </table>
@@ -3110,8 +3165,8 @@ RisingWaveScaleViewStatus
 <div>
 <p>RisingWaveScaleViewLock is a lock record for RisingWaveScaleViews. For example, if there&rsquo;s a RisingWaveScaleView
 targets the current RisingWave, the controller will try to create a new RisingWaveScaleViewLock with the name, uid,
-target component, generation and the replicas of targeting groups of the RisingWaveScaleView. After the record is set,
-the validation webhook will reject any updates on the replicas of any targeting group that doesn&rsquo;t equal to the
+target component, generation, and the replicas of targeting groups of the RisingWaveScaleView. After the record is set,
+the validation webhook will reject any updates on the replicas of any targeting group that doesn&rsquo;t equal the
 replicas recorded, which makes it a lock similar thing.</p>
 </div>
 <table>

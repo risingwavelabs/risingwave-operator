@@ -28,8 +28,7 @@ function test::risingwave::manifest_from() {
 
 function test::risingwave::enable_openkruise() {
   logging::info "Enabling openkruise at Risingwave level"
-  ENABLE_OPEN_KRUISE="'{\"spec\":{\"enableOpenKruise\":true}}'"
-  shell::run "kubectl patch risingwave -n ${E2E_NAMESPACE} ${E2E_RISINGWAVE_NAME} --type merge -p ${ENABLE_OPEN_KRUISE}"
+  shell::run kubectl patch risingwave -n "${E2E_NAMESPACE}" "${E2E_RISINGWAVE_NAME}" --type merge -p '{\"spec\":{\"enableOpenKruise\":true}}'
 }
 
 function test::risingwave::start() {
@@ -40,8 +39,7 @@ function test::risingwave::start() {
     return 1
   fi
 
-  if [ "$OPEN_KRUISE_ENABLED_IN_RISINGWAVE" -eq 1 ] 
-  then
+  if [ "${OPEN_KRUISE_ENABLED_IN_RISINGWAVE}" -eq 1 ]; then
     test::risingwave::enable_openkruise
   fi
 
@@ -146,25 +144,23 @@ function test::run::risingwave::storage_support::object_minio() {
   test::risingwave::storage_support::_run_with_manifest storages/object-minio.yaml
 }
 
-function test::run::risingwave::openkruise_integration(){
-  logging::info "Testing Open Kruise integration"
+function test::run::risingwave::openkruise_integration() {
   logging::info "Starting RisingWave..."
   if ! test::risingwave::start storages/meta-memory-object-memory.yaml; then
     return 1
   fi
-  
-  if [ "$OPEN_KRUISE_ENABLED_IN_RISINGWAVE" -eq 1 ]; then
+
+  if [ "${OPEN_KRUISE_ENABLED_IN_RISINGWAVE}" -eq 1 ]; then
     if k8s::kubectl::object_exists deployments "${E2E_RISINGWAVE_NAME}-frontend"; then
-      logging::error "Deployment objects still exist when openkruise enabled in risingwave"
+      logging::error "Deployment objects should not exist when OpenKruise enabled."
       return 1
     fi
-    logging::info "Openkruise integration suceeded";
+    logging::info "OpenKruise integration succeeded."
   else
-    if k8s::kubectl::object_exists clonesets "${E2E_RISINGWAVE_NAME}-frontend"; then
-      logging::error "Cloneset objects still exist when opnekruise disabled in risingwave"
+    if k8s::kubectl::object_exists cloneset "${E2E_RISINGWAVE_NAME}-frontend"; then
+      logging::error "CloneSet objects should not exist when OpenKruise disabled."
       return 1
     fi
-    logging::info "Openkruise integration suceeded"
   fi
 }
 

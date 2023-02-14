@@ -107,5 +107,5 @@ const (
 	DefaultCompactorServicePort int32 = 6660
 	DefaultCompactorMetricsPort int32 = 1260
 	DefaultConnectorServicePort int32 = 50051
-	DefaultConnectorMetricsPort int32 = 50052
+	DefaultConnectorMetricsPort int32 = 8080
 )

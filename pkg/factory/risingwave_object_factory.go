@@ -515,8 +515,10 @@ func (f *RisingWaveObjectFactory) argsForCompactor() []string {
 }
 
 func (f *RisingWaveObjectFactory) argsForConnector() []string {
+	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+
 	return []string{
-		"connector-node",
+		"-p", fmt.Sprintf("%d", connectorPorts.ServicePort),
 	}
 }
 

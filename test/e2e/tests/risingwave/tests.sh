@@ -23,14 +23,13 @@ function test::risingwave::manifest_from() {
     logging::error "${manifest_file} isn't a regular file"
     return 1
   fi
-
   envsubst "${@:2}" <"${manifest_file}"
 }
 
 function test::risingwave::enable_openkruise() {
   logging::info "Enabling openkruise at Risingwave level"
   ENABLE_OPEN_KRUISE="'{\"spec\":{\"enableOpenKruise\":true}}'"
-  shell::run "kubectl patch risingwave -n "${E2E_NAMESPACE}"  "${E2E_RISINGWAVE_NAME}" --type merge -p ${ENABLE_OPEN_KRUISE}"
+  shell::run "kubectl patch risingwave -n ${E2E_NAMESPACE} ${E2E_RISINGWAVE_NAME} --type merge -p ${ENABLE_OPEN_KRUISE}"
 }
 
 function test::risingwave::start() {
@@ -41,7 +40,7 @@ function test::risingwave::start() {
     return 1
   fi
 
-  if [ $OPEN_KRUISE_ENABLED_IN_RISINGWAVE -eq 1 ] 
+  if [ "$OPEN_KRUISE_ENABLED_IN_RISINGWAVE" -eq 1 ] 
   then
     test::risingwave::enable_openkruise
   fi
@@ -63,7 +62,38 @@ function test::risingwave::stop() {
   fi
 }
 
-function test::risingwave::check_storage_status_with_simple_queries() {
+function test::run::risingwave::multi_meta_failover() {
+  logging::info "Starting RisingWave..."
+  if ! test::risingwave::start storages/meta-etcd.yaml ; then
+    return 1
+  fi
+  logging::info "Started!"
+
+  if ! k8s::pod::meta_pod_valid_setup; then 
+    logging::error "Invalid meta setup. Aborting test"
+    return 1
+  fi
+  logging::info "Valid meta setup. Running test"
+
+  k8s::pod::delete_meat_leader_pod
+
+  if ! k8s::pod::wait_for_meta_pod_valid_setup; then 
+    logging::error "Invalid meta setup after meta crash"
+    return 1
+  fi
+
+  if ! test::risingwave::check_status_with_simple_queries; then
+    logging::error "Queries run against storage failed!"
+    return 1
+  fi
+  logging::info "Queries succeeded!"
+
+  logging::info "Stopping RisingWave..."
+  test::risingwave::stop "$1"
+  logging::info "Stopped!"
+}
+
+function test::risingwave::check_status_with_simple_queries() {
   local frontend_service_port
   frontend_service_port=$(k8s::kubectl get svc/"${E2E_RISINGWAVE_NAME}-frontend" -o jsonpath='{.spec.ports[?(@.name=="service")].port}')
 
@@ -92,7 +122,7 @@ function test::risingwave::storage_support::_run_with_manifest() {
   fi
   logging::info "Started!"
 
-  if ! test::risingwave::check_storage_status_with_simple_queries; then
+  if ! test::risingwave::check_status_with_simple_queries; then
     logging::error "Queries run against storage failed!"
     return 1
   else
@@ -123,7 +153,7 @@ function test::run::risingwave::openkruise_integration(){
     return 1
   fi
   
-  if [ $OPEN_KRUISE_ENABLED_IN_RISINGWAVE -eq 1 ]; then
+  if [ "$OPEN_KRUISE_ENABLED_IN_RISINGWAVE" -eq 1 ]; then
     if k8s::kubectl::object_exists deployments "${E2E_RISINGWAVE_NAME}-frontend"; then
       logging::error "Deployment objects still exist when openkruise enabled in risingwave"
       return 1
@@ -137,7 +167,6 @@ function test::run::risingwave::openkruise_integration(){
     logging::info "Openkruise integration suceeded"
   fi
 }
-
 
 # Export the test case only when the required parameters exists.
 if [[ -v "E2E_AWS_ACCESS_KEY_ID" && -v "E2E_AWS_SECRET_ACCESS_KEY_ID" && -v "E2E_AWS_S3_REGION" && -v "E2E_AWS_S3_BUCKET" ]]; then

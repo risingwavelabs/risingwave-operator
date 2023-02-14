@@ -203,14 +203,31 @@ function e2e::post_run() {
   testenv::teardown
 }
 
+function help() {
+  echo "RisingWave E2E test script"
+  echo ""
+  echo "Parameters:"
+  echo "  -h  print this help message"
+  echo "  -p  run only tests that match prefix. To list prefixes use -l"
+  echo "  -l  list all available tests"
+  exit 0
+}
+
 function e2e::main() {
   e2e::turn_on_debug_settings_if_debug_is_true
 
-  while getopts ":p:" opt; do
+  while getopts "hlp:" opt; do
     case "${opt}" in
     p)
       export E2E_TEST_CASE_PREFIX=${OPTARG}
       logging::warn "Run selected test cases with prefix \"${E2E_TEST_CASE_PREFIX}\"..."
+      ;;
+    h)
+      help
+      ;;
+    l)
+      for t in $(e2e::list_test_cases) ; do echo "$t"; done
+      exit 0
       ;;
     *) ;;
     esac

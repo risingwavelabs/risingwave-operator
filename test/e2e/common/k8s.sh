@@ -389,3 +389,87 @@ function k8s::deployment::wait_before_rollout() {
   logging::debug "Timeout waiting for Deployment $1 to rollout!"
   return 1
 }
+
+function k8s::pod::delete_meat_leader_pod() {
+  local meta_names
+  meta_names="$(k8s::kubectl::get pod -l risingwave/component=meta -o=jsonpath='{.items..metadata.name}')"
+  if [ -z "$meta_names" ] ; then 
+    logging::error "failed to retrieve meta nodes"
+    return 1
+  fi
+  
+  local leader=""
+  for p in $meta_names ; do 
+    local is_leader
+    is_leader=$(k8s::kubectl logs "$p" | grep "Defining leader services")
+    if [ "$is_leader" != "" ]; then 
+      if [ "$leader" != "" ]; then 
+        logging::error "Split brain detected! $p and $leader are leaders!"
+        # TODO: also abort on split-brain here
+      fi
+      leader="$p"
+    fi
+  done
+
+  k8s::kubectl delete pod "$leader" --force
+}
+
+#######################################
+# Check if meta is in a valid setup
+# Returns
+#   1 if no meta pod present, split-brain or no leader
+#######################################
+function k8s::pod::meta_pod_valid_setup() {
+  local meta_names
+  meta_names="$(k8s::kubectl::get pod -l risingwave/component=meta -o=jsonpath='{.items..metadata.name}')"
+  if [ -z "$meta_names" ] ; then 
+    logging::error "failed to retrieve meta nodes"
+    return 1
+  fi
+
+  local leader=""
+  for p in $meta_names ; do 
+    local is_leader
+    is_leader="$(k8s::kubectl logs "$p" | grep "Defining leader services")"
+    if [ "$is_leader" != "" ]; then 
+      if [ "$leader" != "" ]; then 
+        logging::error "Split brain detected! $p and $leader are leaders!"
+        # return 1 # TODO: enable abort
+      fi
+      leader="$p"
+    fi
+  done
+
+  if [ -z "$leader" ]; then 
+    logging::error "no meta leader found"
+    return 1
+  fi 
+  return 0
+}
+
+
+function k8s::pod::wait_for_meta_pod_valid_setup() {
+  local retry_count=0
+  local retry_limit=${KUBECTL_JOB_WAIT_RETRY_LIMIT:=60}
+  local retry_interval=${KUBECTL_JOB_WAIT_RETRY_INTERVAL:=5}
+  while ((retry_count < retry_limit)); do
+    ((retry_count != 0)) && sleep "${retry_interval}"
+
+    k8s::pod::meta_pod_valid_setup
+    exit_code=$?
+
+    # Condition met, return.
+    ((exit_code == 0)) && return 0
+
+    # Condition unmet, retry.
+    if ((exit_code == 1)); then
+      retry_count=$((retry_count + 1))
+      continue
+    fi
+
+    # On other errors, just return the exit code.
+    return "${exit_code}"
+  done
+  logging::error "Timeout reached. Meta still in invalid setup"
+  return 1
+}

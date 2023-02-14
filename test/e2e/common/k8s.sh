@@ -405,7 +405,7 @@ function k8s::pod::delete_meat_leader_pod() {
     if [ "$is_leader" != "" ]; then 
       if [ "$leader" != "" ]; then 
         logging::error "Split brain detected! $p and $leader are leaders!"
-        # TODO: also abort on split-brain here
+        return 1
       fi
       leader="$p"
     fi
@@ -434,7 +434,7 @@ function k8s::pod::meta_pod_valid_setup() {
     if [ "$is_leader" != "" ]; then 
       if [ "$leader" != "" ]; then 
         logging::error "Split brain detected! $p and $leader are leaders!"
-        # return 1 # TODO: enable abort
+        return 1
       fi
       leader="$p"
     fi

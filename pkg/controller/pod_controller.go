@@ -10,8 +10,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-// PodReconciler reconciles a Pod object.
-type PodReconciler struct {
+// MetaPodController reconciles a Pod object.
+type MetaPodController struct {
 	client.Client
 	// Scheme *runtime.Scheme
 }
@@ -19,98 +19,68 @@ type PodReconciler struct {
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;update;patch
 
 const (
-	podNameLabel = "added-label"
+	metaLeaderLabel = "meta-is-leader"
 )
 
+var c client.Client
+
+func (r *MetaPodController) metaIsLeader(ip string, port int) bool {
+	// TODO: send heartbeat to pod
+	// If success, then is pod leader
+	panic("unimplemented")
+}
+
 // TODO: stateful set here?
-// Reconcile handles a reconciliation request for a Pod.
-// If the Pod has the addPodNameLabelAnnotation annotation, then Reconcile
-// will make sure the podNameLabel label is present with the correct value.
-// If the annotation is absent, then Reconcile will make sure the label is too.
-func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+// Reconcile handles the pods of the meta service. Will add the leader label to the pod.
+func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
-	/*
-		Step 0: Fetch the Pod from the Kubernetes API.
-	*/
-
-	var pod corev1.Pod
-	if err := r.Get(ctx, req.NamespacedName, &pod); err != nil {
-		if apierrors.IsNotFound(err) {
-			// we'll ignore not-found errors, since they can't be fixed by an immediate
-			// requeue (we'll need to wait for a new notification), and we can get them
-			// on deleted requests.
-			return ctrl.Result{}, nil
-		}
+	// Using a typed object.
+	meta_pods := &corev1.PodList{}
+	// TODO: change to meta label here
+	if err := c.List(context.Background(), meta_pods, client.MatchingLabels{"someLabelKey": "someLabelValue"}); err != nil {
 		log.Error(err, "unable to fetch Pod")
 		return ctrl.Result{}, err
 	}
 
-	if pod.Namespace == "kube-system" {
+	if len(meta_pods.Items) == 0 {
 		return ctrl.Result{}, nil
 	}
 
-	/*
-	   Step 1: Add or remove the label.
-	*/
+	for _, pod := range meta_pods.Items {
+		podIp := pod.Status.PodIP
+		port := 5690 // TODO: what if this changes?
 
-	// TODO: How do I know meta node is leader?
-	labelShouldBePresent := true
-	labelIsPresent := pod.Labels[podNameLabel] == pod.Name
-
-	if labelShouldBePresent == labelIsPresent {
-		// The desired state and actual state of the Pod are the same.
-		// No further action is required by the operator at this moment.
-		log.Info("no update required")
-		return ctrl.Result{}, nil
-	}
-
-	if labelShouldBePresent {
-		// If the label should be set but is not, set it.
-		if pod.Labels == nil {
-			pod.Labels = make(map[string]string)
+		// change meta leader label
+		if r.metaIsLeader(podIp, port) {
+			pod.Labels[metaLeaderLabel] = "true"
+		} else {
+			pod.Labels[metaLeaderLabel] = "false"
 		}
-		pod.Labels[podNameLabel] = pod.Name
-		log.Info("adding label")
-	} else {
-		// If the label should not be set but is, remove it.
-		delete(pod.Labels, podNameLabel)
-		log.Info("removing label")
-	}
 
-	/*
-	   Step 2: Update the Pod in the Kubernetes API.
-	*/
-
-	if err := r.Update(ctx, &pod); err != nil {
-		if apierrors.IsConflict(err) {
-			// The Pod has been updated since we read it.
-			// Requeue the Pod to try to reconciliate again.
-			return ctrl.Result{Requeue: true}, nil
+		// update pod in cluster
+		if err := r.Update(ctx, &pod); err != nil {
+			if apierrors.IsConflict(err) || apierrors.IsNotFound(err) {
+				return ctrl.Result{Requeue: true}, nil
+			}
+			log.Error(err, "unable to update Pod")
+			return ctrl.Result{}, err
 		}
-		if apierrors.IsNotFound(err) {
-			// The Pod has been deleted since we read it.
-			// Requeue the Pod to try to reconciliate again.
-			return ctrl.Result{Requeue: true}, nil
-		}
-		log.Error(err, "unable to update Pod")
-		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
 }
 
-// TODO: Should be called controller and
 // SetupWithManager sets up the controller with the Manager.
-func (r *PodReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *MetaPodController) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Pod{}).
 		Complete(r)
 }
 
 // NewRisingWaveController creates a new RisingWaveController.
-func NewPodController(client client.Client) *PodReconciler {
-	return &PodReconciler{
+func NewPodController(client client.Client) *MetaPodController {
+	return &MetaPodController{
 		Client: client,
 	}
 }

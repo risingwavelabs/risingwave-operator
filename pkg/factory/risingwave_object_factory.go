@@ -1522,7 +1522,7 @@ func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Cont
 	container.Name = "connector"
 	container.Args = f.argsForConnector()
 	container.Ports = f.portsForConnectorContainer()
-	container.Command = []string{}
+	container.Command = []string{"/risingwave/bin/connector-node/assembly/target/start-service.sh"}
 
 	for _, env := range f.envsForObjectStorage() {
 		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {

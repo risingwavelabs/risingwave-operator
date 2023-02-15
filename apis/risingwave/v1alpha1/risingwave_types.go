@@ -768,8 +768,8 @@ type RisingWaveStatus struct {
 // +kubebuilder:printcolumn:name="RUNNING",type=string,JSONPath=`.status.conditions[?(@.type=="Running")].status`
 // +kubebuilder:printcolumn:name="STORAGE(META)",type=string,JSONPath=`.status.storages.meta.type`
 // +kubebuilder:printcolumn:name="STORAGE(OBJECT)",type=string,JSONPath=`.status.storages.object.type`
-// +kubebuilder:printcolumn:name="AGE",type=date,JSONPath=`.metadata.creationTimestamp`
 // +kubebuilder:printcolumn:name="VERSION",type=string,JSONPath=`.spec.global.image`
+// +kubebuilder:printcolumn:name="AGE",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // RisingWave is the struct for RisingWave object.
 type RisingWave struct {

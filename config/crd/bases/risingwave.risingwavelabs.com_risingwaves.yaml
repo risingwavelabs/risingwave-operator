@@ -30,12 +30,12 @@ spec:
     - jsonPath: .status.storages.object.type
       name: STORAGE(OBJECT)
       type: string
-    - jsonPath: .metadata.creationTimestamp
-      name: AGE
-      type: date
     - jsonPath: .spec.global.image
       name: VERSION
       type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:

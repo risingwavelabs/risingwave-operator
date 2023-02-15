@@ -33,6 +33,9 @@ spec:
     - jsonPath: .metadata.creationTimestamp
       name: AGE
       type: date
+    - jsonPath: .spec.global.image
+      name: VERSION
+      type: string
     name: v1alpha1
     schema:
       openAPIV3Schema:

@@ -28,6 +28,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
@@ -97,6 +98,14 @@ func main() {
 
 	if err = webhook.SetupWebhooksWithManager(mgr, featureManager.IsFeatureEnabled(features.EnableOpenKruiseFeature)); err != nil {
 		setupLog.Error(err, "unable to setup webhooks")
+		os.Exit(1)
+	}
+	log.Log.Info("this is a test 2")
+
+	// TODO: rename this
+	if err = risingwavecontroller.NewPodController(mgr.GetClient()).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "PodController")
+		// TODO: should not be called pod controller
 		os.Exit(1)
 	}
 

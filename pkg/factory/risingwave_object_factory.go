@@ -1687,6 +1687,11 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	basicSetupContainer(container, &template.RisingWaveComponentGroupTemplate)
 
 	container.Name = "compute"
+	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	container.Env = append(container.Env, corev1.EnvVar{
+		Name:  "RW_CONNECTOR_RPC_ENDPOINT",
+		Value: fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
+	})
 
 	cpuLimit := int64(math.Ceil(container.Resources.Limits.Cpu().AsApproximateFloat64()))
 	memLimit, _ := container.Resources.Limits.Memory().AsInt64()

@@ -83,6 +83,8 @@ protoc --go_out=. --go_opt=paths=source_relative \
 func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
+	log.Info("reconcile meta_controller") // TODO: remove line
+
 	// Using a typed object.
 	meta_pods := &corev1.PodList{}
 	if err := c.List(context.Background(), meta_pods, client.MatchingLabels{"risingwave/component": "meta"}); err != nil {
@@ -127,6 +129,7 @@ func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *MetaPodController) SetupWithManager(mgr ctrl.Manager) error {
+	log.Log.Info("setting up meta_controller with manager") // TODO: remove line
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Pod{}).
 		Complete(r)
@@ -134,6 +137,8 @@ func (r *MetaPodController) SetupWithManager(mgr ctrl.Manager) error {
 
 // NewRisingWaveController creates a new RisingWaveController.
 func NewPodController(client client.Client) *MetaPodController {
+	log.Log.Info("new meta_controller") // TODO: remove line
+
 	return &MetaPodController{
 		Client: client,
 	}

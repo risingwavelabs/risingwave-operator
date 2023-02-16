@@ -25,6 +25,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"google.golang.org/grpc"
@@ -37,25 +38,21 @@ type MetaPodController struct {
 	// Scheme *runtime.Scheme
 }
 
-// TODO: Rename this file
-
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;update;patch
 
 const (
 	metaLeaderLabel = "meta-is-leader"
 )
 
-var c client.Client
-
 // metaIsLeader sends a heartbeat to a meta node at ip:port. If meta responds it is the leader.
-func (r *MetaPodController) metaIsLeader(ip string, port uint) bool {
+func (r *MetaPodController) metaIsLeader(ctx context.Context, ip string, port uint) bool {
 	addr := fmt.Sprintf("%s:%v", ip, port)
-	log.Log.Info("metaIsLeader %s?", addr) // TODO: remove line. Debugging only
+	log := log.FromContext(ctx)
 
-	// TODO: how do I make this connection secure?
+	// TODO: Do we need to make this connection secure?
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Log.Info("did not connect: %v", err)
+		log.Info("did not connect: %v", err)
 		// TODO: retry request
 		return false
 	}
@@ -73,21 +70,27 @@ func (r *MetaPodController) metaIsLeader(ip string, port uint) bool {
 /*
 - Tutorial: https://grpc.io/docs/languages/go/quickstart/
 - Generate proto files via
-protoc --go_out=. --go_opt=paths=source_relative \
-    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
-    proto/meta.proto
+
+	protoc --go_out=. --go_opt=paths=source_relative \
+	    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+	    proto/meta.proto
 */
 
-// TODO: stateful set here?
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
 func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
-	log.Info("reconcile meta_controller") // TODO: remove line
-
 	// Using a typed object.
 	meta_pods := &corev1.PodList{}
-	if err := c.List(context.Background(), meta_pods, client.MatchingLabels{"risingwave/component": "meta"}); err != nil {
+	c, err := client.New(config.GetConfigOrDie(), client.Options{})
+	if err != nil {
+		log.Error(err, "failed to create client")
+		return ctrl.Result{}, err
+	}
+
+	if err := c.List(context.Background(),
+		meta_pods,
+		client.MatchingLabels{"risingwave/component": "meta"}); err != nil {
 		log.Error(err, "unable to fetch Pod")
 		return ctrl.Result{}, err
 	}
@@ -103,7 +106,7 @@ func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		old_label, ok := pod.Labels[metaLeaderLabel]
 
 		// change meta leader label
-		if r.metaIsLeader(podIp, port) {
+		if r.metaIsLeader(ctx, podIp, port) {
 			pod.Labels[metaLeaderLabel] = "true"
 		} else {
 			pod.Labels[metaLeaderLabel] = "false"
@@ -129,7 +132,6 @@ func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *MetaPodController) SetupWithManager(mgr ctrl.Manager) error {
-	log.Log.Info("setting up meta_controller with manager") // TODO: remove line
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Pod{}).
 		Complete(r)
@@ -137,8 +139,6 @@ func (r *MetaPodController) SetupWithManager(mgr ctrl.Manager) error {
 
 // NewRisingWaveController creates a new RisingWaveController.
 func NewPodController(client client.Client) *MetaPodController {
-	log.Log.Info("new meta_controller") // TODO: remove line
-
 	return &MetaPodController{
 		Client: client,
 	}

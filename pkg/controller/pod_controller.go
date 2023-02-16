@@ -17,6 +17,9 @@ package controller
 import (
 	"context"
 	"fmt"
+	"time"
+
+	pb "github.com/risingwavelabs/risingwave-operator/pkg/controller/proto"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -44,12 +47,10 @@ const (
 
 var c client.Client
 
+// metaIsLeader sends a heartbeat to a meta node at ip:port. If meta responds it is the leader.
 func (r *MetaPodController) metaIsLeader(ip string, port uint) bool {
-	// TODO: send heartbeat to pod
-	// If success, then is pod leader
-
 	addr := fmt.Sprintf("%s:%v", ip, port)
-	log.Log.Info("connecting against %s", addr) // TODO: remove this line
+	log.Log.Info("metaIsLeader %s?", addr) // TODO: remove line. Debugging only
 
 	// TODO: how do I make this connection secure?
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -59,15 +60,18 @@ func (r *MetaPodController) metaIsLeader(ip string, port uint) bool {
 		return false
 	}
 	defer conn.Close()
-	// pb.NewHeartbeatService()
+	c := pb.NewHeartbeatServiceClient(conn)
 
-	panic("unimplemented")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
 
+	// TODO: retry this?
+	_, err = c.Heartbeat(ctx, &pb.HeartbeatRequest{})
+	return err != nil
 }
 
 /*
-- I do NOT need to use stream, since I just send one heartbeat message
-
+- Tutorial: https://grpc.io/docs/languages/go/quickstart/
 - Generate proto files via
 protoc --go_out=. --go_opt=paths=source_relative \
     --go-grpc_out=. --go-grpc_opt=paths=source_relative \
@@ -75,14 +79,13 @@ protoc --go_out=. --go_opt=paths=source_relative \
 */
 
 // TODO: stateful set here?
-// Reconcile handles the pods of the meta service. Will add the leader label to the pod.
+// Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
 func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
 	// Using a typed object.
 	meta_pods := &corev1.PodList{}
-	// TODO: change to meta label here
-	if err := c.List(context.Background(), meta_pods, client.MatchingLabels{"someLabelKey": "someLabelValue"}); err != nil {
+	if err := c.List(context.Background(), meta_pods, client.MatchingLabels{"risingwave/component": "meta"}); err != nil {
 		log.Error(err, "unable to fetch Pod")
 		return ctrl.Result{}, err
 	}

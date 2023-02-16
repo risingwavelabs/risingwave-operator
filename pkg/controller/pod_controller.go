@@ -59,6 +59,7 @@ func (r *MetaPodController) metaIsLeader(ip string, port uint) bool {
 		return false
 	}
 	defer conn.Close()
+	// pb.NewHeartbeatService()
 
 	panic("unimplemented")
 

@@ -4,7 +4,7 @@
 // - protoc             v3.21.12
 // source: proto/meta.proto
 
-package controller
+package meta
 
 import (
 	context "context"
@@ -36,7 +36,7 @@ func NewHeartbeatServiceClient(cc grpc.ClientConnInterface) HeartbeatServiceClie
 
 func (c *heartbeatServiceClient) Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*HeartbeatResponse, error) {
 	out := new(HeartbeatResponse)
-	err := c.cc.Invoke(ctx, "/meta.HeartbeatService/Heartbeat", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.HeartbeatService/Heartbeat", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func _HeartbeatService_Heartbeat_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/meta.HeartbeatService/Heartbeat",
+		FullMethod: "/proto.HeartbeatService/Heartbeat",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(HeartbeatServiceServer).Heartbeat(ctx, req.(*HeartbeatRequest))
@@ -93,7 +93,7 @@ func _HeartbeatService_Heartbeat_Handler(srv interface{}, ctx context.Context, d
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var HeartbeatService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "meta.HeartbeatService",
+	ServiceName: "proto.HeartbeatService",
 	HandlerType: (*HeartbeatServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

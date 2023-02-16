@@ -1,13 +1,13 @@
 syntax = "proto3";
 
-package meta;
+package proto;
 
 // Communicating with meta node. Find pb definition here
 // risingwave/risingwave/proto/meta.proto
 
 option java_package = "com.risingwave.proto";
 option optimize_for = SPEED;
-option go_package = "github.com/risingwavelabs/risingwave-operator/pkg/controller";
+option go_package = "github.com/risingwavelabs/risingwave-operator/pkg/meta";
 
 service HeartbeatService {
   rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);

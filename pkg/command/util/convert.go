@@ -70,4 +70,13 @@ func convertReplicas(oldRW, newRW *v1alpha1.RisingWave) {
 		})
 	}
 
+	if rs.Connector != 0 {
+		newRW.Spec.Components.Connector.Groups = append(newRW.Spec.Components.Connector.Groups, v1alpha1.RisingWaveComponentGroup{
+			Name:     DefaultGroup,
+			Replicas: rs.Connector,
+
+			RisingWaveComponentGroupTemplate: global.RisingWaveComponentGroupTemplate.DeepCopy(),
+		})
+	}
+
 }

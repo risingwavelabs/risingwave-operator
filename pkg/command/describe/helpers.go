@@ -54,6 +54,13 @@ func (o *Options) describeSpec(rw *v1alpha1.RisingWave) {
 	}
 	o.describePorts(rw.Spec.Components.Compute.Ports)
 
+	fmt.Fprintf(o.Out, "  Connector:\n")
+	for _, group := range rw.Spec.Components.Connector.Groups {
+		fmt.Fprintf(o.Out, "    Group: %s\n", group.Name)
+		o.describeGroupSpec(*group.RisingWaveComponentGroupTemplate)
+	}
+	o.describePorts(rw.Spec.Components.Connector.Ports)
+
 	fmt.Fprintf(o.Out, "  Frontend:\n")
 	for _, group := range rw.Spec.Components.Frontend.Groups {
 		fmt.Fprintf(o.Out, "    Group: %s\n", group.Name)
@@ -119,6 +126,8 @@ func (o *Options) describeStatus(rw *v1alpha1.RisingWave) {
 	o.describeComponentReplicas(rw.Status.ComponentReplicas.Compactor)
 	fmt.Fprintf(o.Out, "    Compute:\n")
 	o.describeComponentReplicas(rw.Status.ComponentReplicas.Compute)
+	fmt.Fprintf(o.Out, "    Connector:\n")
+	o.describeComponentReplicas(rw.Status.ComponentReplicas.Connector)
 	fmt.Fprintf(o.Out, "    Frontend:\n")
 	o.describeComponentReplicas(rw.Status.ComponentReplicas.Frontend)
 	fmt.Fprintf(o.Out, "    Meta:\n")

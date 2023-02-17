@@ -297,6 +297,13 @@ func setupCompactorPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int3
 	}
 }
 
+func setupConnectorPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
+	r.Spec.Components.Connector.Ports = risingwavev1alpha1.RisingWaveComponentCommonPorts{
+		ServicePort: ports[consts.PortService],
+		MetricsPort: ports[consts.PortMetrics],
+	}
+}
+
 func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 	testcases := map[string]struct {
 		component         string
@@ -378,6 +385,24 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 				consts.PortMetrics: int32(rand.Int() & 0xffff),
 			},
 		},
+		"random-connector-ports": {
+			component:         consts.ComponentConnector,
+			globalServiceType: corev1.ServiceTypeClusterIP,
+			expectServiceType: corev1.ServiceTypeClusterIP,
+			ports: map[string]int32{
+				consts.PortService: int32(rand.Int() & 0xffff),
+				consts.PortMetrics: int32(rand.Int() & 0xffff),
+			},
+		},
+		"random-connector-ports-node-port": {
+			component:         consts.ComponentConnector,
+			globalServiceType: corev1.ServiceTypeNodePort,
+			expectServiceType: corev1.ServiceTypeClusterIP,
+			ports: map[string]int32{
+				consts.PortService: int32(rand.Int() & 0xffff),
+				consts.PortMetrics: int32(rand.Int() & 0xffff),
+			},
+		},
 	}
 
 	for name, tc := range testcases {
@@ -394,6 +419,8 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 					setupComputePorts(r, tc.ports)
 				case consts.ComponentCompactor:
 					setupCompactorPorts(r, tc.ports)
+				case consts.ComponentConnector:
+					setupConnectorPorts(r, tc.ports)
 				}
 			})
 
@@ -409,6 +436,8 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 				svc = factory.NewComputeService()
 			case consts.ComponentCompactor:
 				svc = factory.NewCompactorService()
+			case consts.ComponentConnector:
+				svc = factory.NewConnectorService()
 			default:
 				t.Fatal("bad test")
 			}
@@ -514,6 +543,24 @@ func Test_RisingWaveObjectFactory_ServicesMeta(t *testing.T) {
 				},
 			},
 		},
+		"random-connector-labels": {
+			component: consts.ComponentConnector,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Labels: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-connector-annotations": {
+			component: consts.ComponentConnector,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Annotations: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
 	}
 
 	for name, tc := range testcases {
@@ -534,6 +581,8 @@ func Test_RisingWaveObjectFactory_ServicesMeta(t *testing.T) {
 				svc = factory.NewComputeService()
 			case consts.ComponentCompactor:
 				svc = factory.NewCompactorService()
+			case consts.ComponentConnector:
+				svc = factory.NewConnectorService()
 			default:
 				t.Fatal("bad test")
 			}

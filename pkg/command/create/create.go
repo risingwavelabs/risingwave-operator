@@ -145,6 +145,7 @@ func (o *Options) createInstance() (*v1alpha1.RisingWave, error) {
 					Frontend:  c.BaseConfig.Replicas,
 					Compute:   c.BaseConfig.Replicas,
 					Compactor: c.BaseConfig.Replicas,
+					Connector: c.BaseConfig.Replicas,
 				},
 				RisingWaveComponentGroupTemplate: v1alpha1.RisingWaveComponentGroupTemplate{
 					Image:     c.BaseConfig.Image,
@@ -172,6 +173,9 @@ func (o *Options) createInstance() (*v1alpha1.RisingWave, error) {
 				},
 				Compactor: v1alpha1.RisingWaveComponentCompactor{
 					Groups: o.createComponentGroups(c.CompactorConfig),
+				},
+				Connector: v1alpha1.RisingWaveComponentConnector{
+					Groups: o.createComponentGroups(c.ConnectorConfig),
 				},
 			},
 		},

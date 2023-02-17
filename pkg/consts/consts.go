@@ -65,6 +65,7 @@ const (
 	ComponentFrontend  = "frontend"
 	ComponentCompute   = "compute"
 	ComponentCompactor = "compactor"
+	ComponentConnector = "connector"
 	ComponentConfig    = "config"
 )
 
@@ -105,4 +106,6 @@ const (
 	DefaultFrontendMetricsPort  int32 = 8080
 	DefaultCompactorServicePort int32 = 6660
 	DefaultCompactorMetricsPort int32 = 1260
+	DefaultConnectorServicePort int32 = 50051
+	DefaultConnectorMetricsPort int32 = 8080
 )

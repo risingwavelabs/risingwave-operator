@@ -77,6 +77,7 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 				Compute:   1,
 				Frontend:  1,
 				Compactor: 1,
+				Connector: 1,
 			},
 			ServiceType: corev1.ServiceTypeClusterIP,
 			RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
@@ -124,6 +125,12 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
 					ServicePort: consts.DefaultCompactorServicePort,
 					MetricsPort: consts.DefaultCompactorMetricsPort,
+				},
+			},
+			Connector: risingwavev1alpha1.RisingWaveComponentConnector{
+				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
+					ServicePort: consts.DefaultConnectorServicePort,
+					MetricsPort: consts.DefaultConnectorMetricsPort,
 				},
 			},
 		},
@@ -180,6 +187,17 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 				},
 			},
 			Compactor: risingwavev1alpha1.ComponentReplicasStatus{
+				Target:  1,
+				Running: 1,
+				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
+					{
+						Name:    "",
+						Target:  1,
+						Running: 1,
+					},
+				},
+			},
+			Connector: risingwavev1alpha1.ComponentReplicasStatus{
 				Target:  1,
 				Running: 1,
 				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
@@ -311,6 +329,18 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 					},
 				},
 			},
+			Connector: risingwavev1alpha1.RisingWaveComponentConnector{
+				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
+					ServicePort: consts.DefaultConnectorServicePort,
+					MetricsPort: consts.DefaultConnectorMetricsPort,
+				},
+				Groups: []risingwavev1alpha1.RisingWaveComponentGroup{
+					{
+						Name:     GetGroupName(0),
+						Replicas: 1,
+					},
+				},
+			},
 		},
 	},
 	Status: risingwavev1alpha1.RisingWaveStatus{
@@ -365,6 +395,17 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				},
 			},
 			Compactor: risingwavev1alpha1.ComponentReplicasStatus{
+				Target:  1,
+				Running: 1,
+				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
+					{
+						Name:    GetGroupName(0),
+						Target:  1,
+						Running: 1,
+					},
+				},
+			},
+			Connector: risingwavev1alpha1.ComponentReplicasStatus{
 				Target:  1,
 				Running: 1,
 				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{

@@ -47,6 +47,12 @@ decl RisingWaveControllerManager for RisingWave {
             owned
         }
 
+        // Service for connector nodes.
+        connectorService Service {
+            name=${target.Name}-connector
+            owned
+        }
+
         // ConfigMap for RisingWave configs.
         configConfigMap ConfigMap {
             name=${target.Name}-config
@@ -81,6 +87,13 @@ decl RisingWaveControllerManager for RisingWave {
             owned
         }
 
+        // Deployments for connector nodes.
+        connectorDeployments []Deployment {
+            labels/risingwave/name=${target.Name}
+            labels/risingwave/component=connector
+            owned
+        }
+
         metaAdvancedStatefulSets []AdvancedStatefulSet {
             labels/risingwave/name=${target.Name}
             labels/risingwave/component=meta
@@ -105,6 +118,13 @@ decl RisingWaveControllerManager for RisingWave {
         compactorCloneSets []CloneSet {
             labels/risingwave/name=${target.Name}
             labels/risingwave/component=compactor
+            owned
+        }
+
+        // Deployments for connector nodes.
+        connectorCloneSets []CloneSet {
+            labels/risingwave/name=${target.Name}
+            labels/risingwave/component=connector
             owned
         }
     }
@@ -173,6 +193,21 @@ decl RisingWaveControllerManager for RisingWave {
         // WaitBeforeCompactorDeploymentsReady waits (aborts the workflow) before the compactor CloneSets are ready.
         WaitBeforeCompactorCloneSetsReady(compactorCloneSets)
 
+        // SyncConnectorService creates or updates the service for connector nodes.
+        SyncConnectorService(connectorService)
+
+        // SyncConnectorDeployments creates or updates the Deployments for connector nodes.
+        SyncConnectorDeployments(connectorDeployments)
+
+        // SyncConnectorCloneSets creates or updates the Deployments for connector nodes.
+        SyncConnectorCloneSets(connectorCloneSets)
+
+        // WaitBeforeConnectorDeploymentsReady waits (aborts the workflow) before the connector Deployments are ready.
+        WaitBeforeConnectorDeploymentsReady(connectorDeployments)
+
+        // WaitBeforeConnectorDeploymentsReady waits (aborts the workflow) before the connector CloneSets are ready.
+        WaitBeforeConnectorCloneSetsReady(connectorCloneSets)
+
         // SyncConfigConfigMap creates or updates the configmap for RisingWave configs.
         SyncConfigConfigMap(configConfigMap)
     }
@@ -201,7 +236,7 @@ decl RisingWaveControllerManager for RisingWave {
 
     action {
         // CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
-        CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaStatefulSets, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
-        CollectOpenKruiseRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaAdvancedStatefulSets, frontendCloneSets, computeAdvancedStatefulSets, compactorCloneSets, configConfigMap)
+        CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, connectorService, metaStatefulSets, frontendDeployments, computeStatefulSets, compactorDeployments, connectorDeployments, configConfigMap)
+        CollectOpenKruiseRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, connectorService, metaAdvancedStatefulSets, frontendCloneSets, computeAdvancedStatefulSets, compactorCloneSets, connectorCloneSets, configConfigMap)
     }
 }

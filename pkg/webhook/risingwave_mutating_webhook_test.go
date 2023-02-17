@@ -60,6 +60,12 @@ func Test_RisingWaveMutatingWebhook_Default(t *testing.T) {
 						MetricsPort: consts.DefaultCompactorMetricsPort,
 					},
 				},
+				Connector: risingwavev1alpha1.RisingWaveComponentConnector{
+					Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
+						ServicePort: consts.DefaultConnectorServicePort,
+						MetricsPort: consts.DefaultConnectorMetricsPort,
+					},
+				},
 			},
 		},
 	}) {

@@ -162,6 +162,9 @@ func readRunningReplicas(obj *risingwavev1alpha1.RisingWave, component, group st
 	case consts.ComponentCompactor:
 		g, _ := lo.Find(obj.Status.ComponentReplicas.Compactor.Groups, pred)
 		return g.Running
+	case consts.ComponentConnector:
+		g, _ := lo.Find(obj.Status.ComponentReplicas.Connector.Groups, pred)
+		return g.Running
 	case consts.ComponentCompute:
 		g, _ := lo.Find(obj.Status.ComponentReplicas.Compute.Groups, pred)
 		return g.Running

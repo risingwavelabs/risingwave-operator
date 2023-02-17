@@ -30,7 +30,7 @@ spec:
     - jsonPath: .status.storages.object.type
       name: STORAGE(OBJECT)
       type: string
-    - jsonPath: .spec.global.image
+    - jsonPath: .status.version
       name: VERSION
       type: string
     - jsonPath: .metadata.creationTimestamp
@@ -3515,6 +3515,9 @@ spec:
                 - meta
                 - object
                 type: object
+              version:
+                description: Version of Global Image
+                type: string
             type: object
         type: object
     served: true

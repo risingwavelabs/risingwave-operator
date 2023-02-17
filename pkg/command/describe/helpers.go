@@ -132,6 +132,7 @@ func (o *Options) describeStatus(rw *v1alpha1.RisingWave) {
 		fmt.Fprintf(o.Out, "      Type:                  %s\n", condition.Type)
 	}
 	fmt.Fprintf(o.Out, "  Observed Generation:       %d\n", rw.Status.ObservedGeneration)
+	fmt.Fprintf(o.Out, "  Version:       			 %s\n", rw.Status.Version)
 	fmt.Fprintf(o.Out, "  Storages:\n")
 	fmt.Fprintf(o.Out, "    Meta:\n")
 	fmt.Fprintf(o.Out, "      Type:  %s\n", rw.Status.Storages.Meta.Type)

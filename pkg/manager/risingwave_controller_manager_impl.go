@@ -186,6 +186,9 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 			Type: buildObjectStorageType(objectStorage),
 		}
 
+		versions := strings.Split(globalSpec.Image, ":")
+		status.Version = versions[len(versions)-1]
+
 		// Report component replicas.
 		status.ComponentReplicas = componentReplicas
 	})
@@ -298,7 +301,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 			Type: buildObjectStorageType(objectStorage),
 		}
 
-		versions := strings.Split(mgr.risingwaveManager.RisingWave().Spec.Global.Image, ":")
+		versions := strings.Split(globalSpec.Image, ":")
 		status.Version = versions[len(versions)-1]
 
 		// Report component replicas.

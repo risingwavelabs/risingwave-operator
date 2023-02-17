@@ -18,7 +18,6 @@ package object
 
 import (
 	"context"
-	"strings"
 	"sync"
 
 	"github.com/samber/lo"
@@ -91,15 +90,6 @@ func (mgr *RisingWaveManager) SyncObservedGeneration() {
 	defer mgr.mu.Unlock()
 
 	mgr.mutableRisingWave.Status.ObservedGeneration = mgr.mutableRisingWave.Generation
-}
-
-// SyncVersion updates the Global Image Version to the current version.
-func (mgr *RisingWaveManager) SyncVersion() {
-	mgr.mu.Lock()
-	defer mgr.mu.Unlock()
-
-	versions := strings.Split(mgr.RisingWave().Spec.Global.Image, ":")
-	mgr.mutableRisingWave.Status.Version = versions[len(versions)-1]
 }
 
 // RemoveCondition removes the condition if the condition type matches.

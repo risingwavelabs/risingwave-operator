@@ -97,7 +97,6 @@ const (
 	RisingWaveAction_MarkConditionUpgradingAsFalse      = "MarkConditionUpgradingAsFalse"
 	RisingWaveAction_BarrierObservedGenerationOutdated  = "BarrierObservedGenerationOutdated"
 	RisingWaveAction_SyncObservedGeneration             = "SyncObservedGeneration"
-	RisingWaveAction_SyncVersion                        = "SyncVersion"
 	RisingWaveAction_BarrierPrometheusCRDsInstalled     = "BarrierPrometheusCRDsInstalled"
 	RisingWaveAction_ReleaseScaleViewLock               = "ReleaseScaleViewLock"
 )
@@ -333,16 +332,11 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		risingwaveManger.SyncObservedGeneration()
 		return ctrlkit.Continue()
 	})
-	syncVersion := mgr.NewAction(RisingWaveAction_SyncVersion, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-		risingwaveManger.SyncVersion()
-		return ctrlkit.Continue()
-	})
 	syncRunningStatus := ctrlkit.IfElse(risingwaveManger.IsOpenKruiseEnabled(), mgr.CollectOpenKruiseRunningStatisticsAndSyncStatus(), mgr.CollectRunningStatisticsAndSyncStatus())
 	syncAllAndWait := ctrlkit.Sequential(
 		// Set .status.observedGeneration = .metadata.generation
 		syncObservedGeneration,
-		// Set .status.version = .global.image
-		syncVersion,
+
 		// Sync ConfigMap, and then all component groups, and wait before the components are ready.
 		// If possible, also sync the service monitor.
 		syncConfigs,

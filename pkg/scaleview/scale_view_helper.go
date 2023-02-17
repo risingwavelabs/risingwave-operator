@@ -53,6 +53,8 @@ func (r *RisingWaveScaleViewHelper) getReplicasGlobalPtr() *int32 {
 		return &r.risingwave.Spec.Global.Replicas.Frontend
 	case consts.ComponentCompactor:
 		return &r.risingwave.Spec.Global.Replicas.Compactor
+	case consts.ComponentConnector:
+		return &r.risingwave.Spec.Global.Replicas.Connector
 	default:
 		panic(fmt.Sprintf("Unknown component %v", r.component))
 	}
@@ -83,6 +85,8 @@ func (r *RisingWaveScaleViewHelper) findReplicaPtrGroup(group string) (*int32, i
 		return r.findReplicaPtrComponentGroup(r.risingwave.Spec.Components.Frontend.Groups, group)
 	case consts.ComponentCompactor:
 		return r.findReplicaPtrComponentGroup(r.risingwave.Spec.Components.Compactor.Groups, group)
+	case consts.ComponentConnector:
+		return r.findReplicaPtrComponentGroup(r.risingwave.Spec.Components.Connector.Groups, group)
 	case consts.ComponentCompute:
 		return r.findReplicaPtrComputeGroup(r.risingwave.Spec.Components.Compute.Groups, group)
 	default:
@@ -109,6 +113,8 @@ func (r *RisingWaveScaleViewHelper) ListComponentGroups() []string {
 		return lo.Map(r.risingwave.Spec.Components.Compute.Groups, func(g risingwavev1alpha1.RisingWaveComputeGroup, _ int) string { return g.Name })
 	case consts.ComponentCompactor:
 		return lo.Map(r.risingwave.Spec.Components.Compactor.Groups, func(g risingwavev1alpha1.RisingWaveComponentGroup, _ int) string { return g.Name })
+	case consts.ComponentConnector:
+		return lo.Map(r.risingwave.Spec.Components.Connector.Groups, func(g risingwavev1alpha1.RisingWaveComponentGroup, _ int) string { return g.Name })
 	default:
 		panic(fmt.Sprintf("Unknown component %v", r.component))
 	}

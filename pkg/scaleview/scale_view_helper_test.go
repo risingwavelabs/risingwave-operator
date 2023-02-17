@@ -27,7 +27,7 @@ import (
 
 func TestRisingWaveScaleViewHelper_GetGroupIndex(t *testing.T) {
 	for _, component := range []string{
-		consts.ComponentFrontend, consts.ComponentMeta, consts.ComponentCompactor, consts.ComponentCompute,
+		consts.ComponentFrontend, consts.ComponentMeta, consts.ComponentCompactor, consts.ComponentCompute, consts.ComponentConnector,
 	} {
 		helper := NewRisingWaveScaleViewHelper(testutils.FakeRisingWave(), component)
 		index, ok := helper.GetGroupIndex("")
@@ -41,7 +41,7 @@ func TestRisingWaveScaleViewHelper_GetGroupIndex(t *testing.T) {
 
 func TestRisingWaveScaleViewHelper_ListComponentGroups(t *testing.T) {
 	for _, component := range []string{
-		consts.ComponentFrontend, consts.ComponentMeta, consts.ComponentCompactor, consts.ComponentCompute,
+		consts.ComponentFrontend, consts.ComponentMeta, consts.ComponentCompactor, consts.ComponentCompute, consts.ComponentConnector,
 	} {
 		helper := NewRisingWaveScaleViewHelper(testutils.FakeRisingWaveComponentOnly(), component)
 		groups := helper.ListComponentGroups()
@@ -51,7 +51,7 @@ func TestRisingWaveScaleViewHelper_ListComponentGroups(t *testing.T) {
 
 func TestRisingWaveScaleViewHelper_ReadReplicas(t *testing.T) {
 	for _, component := range []string{
-		consts.ComponentFrontend, consts.ComponentMeta, consts.ComponentCompactor, consts.ComponentCompute,
+		consts.ComponentFrontend, consts.ComponentMeta, consts.ComponentCompactor, consts.ComponentCompute, consts.ComponentConnector,
 	} {
 		helper := NewRisingWaveScaleViewHelper(testutils.FakeRisingWaveComponentOnly(), component)
 		replicas, ok := helper.ReadReplicas(testutils.GetGroupName(0))
@@ -65,7 +65,7 @@ func TestRisingWaveScaleViewHelper_ReadReplicas(t *testing.T) {
 
 func TestRisingWaveScaleViewHelper_WriteReplicas(t *testing.T) {
 	for _, component := range []string{
-		consts.ComponentFrontend, consts.ComponentMeta, consts.ComponentCompactor, consts.ComponentCompute,
+		consts.ComponentFrontend, consts.ComponentMeta, consts.ComponentCompactor, consts.ComponentCompute, consts.ComponentConnector,
 	} {
 		helper := NewRisingWaveScaleViewHelper(testutils.FakeRisingWaveComponentOnly(), component)
 

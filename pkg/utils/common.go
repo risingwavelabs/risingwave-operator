@@ -35,14 +35,15 @@ func IsDeleted(obj client.Object) bool {
 
 // GetVersionFromImage return the version from spec.global.image.
 func GetVersionFromImage(image string) string {
-	version := ""
-	versions := strings.Split(image, ":")
 	if image == "" {
-		version = "empty"
-	} else if len(versions) > 1 && versions[len(versions)-1][0] == 'v' {
-		version = versions[len(versions)-1]
-	} else {
-		version = "latest"
+		return ""
 	}
-	return version
+
+	lastRepoIdx := strings.LastIndex(image, "/")
+	lastTagIdx := strings.LastIndex(image[lastRepoIdx+1:], ":")
+	if lastTagIdx < 0 {
+		return "latest"
+	} else {
+		return image[lastRepoIdx+lastTagIdx+2:]
+	}
 }

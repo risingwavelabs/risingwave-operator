@@ -28,19 +28,23 @@ func Test_CommonGetVersionFromImage(t *testing.T) {
 	}{
 		"empty": {
 			image:   "",
-			version: "empty",
+			version: "",
 		},
 		"image-version": {
 			image:   "ghcr.io/risingwavelabs/risingwave:v0.1.16",
 			version: "v0.1.16",
 		},
 		"image-port-default": {
-			image:   "ghcr.io/risingwavelabs/risingwave:10043",
+			image:   "ghcr.io:10043/risingwavelabs/risingwave",
 			version: "latest",
 		},
-		"image-port-version": {
-			image:   "ghcr.io/risingwavelabs/risingwave:10043:v0.1.16",
-			version: "v0.1.16",
+		"host-port-repo-tag": {
+			image:   "host:port/path/to/repo:tag",
+			version: "tag",
+		},
+		"host-port-repo": {
+			image:   "host:port/path/to/repo",
+			version: "latest",
 		},
 		"image-default": {
 			image:   "ghcr.io/risingwavelabs/risingwave",

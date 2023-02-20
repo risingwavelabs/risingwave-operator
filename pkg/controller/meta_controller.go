@@ -30,9 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/status"
 )
 
 // MetaPodController reconciles a Pod object.
@@ -67,9 +65,10 @@ func (l *labelValue) String() string {
 	return "UnknownLabelCode"
 }
 
-// metaLeaderStatus sends a heartbeat to a meta node at ip:port. If meta responds it is the leader.
-func (r *MetaPodController) metaLeaderStatus(ctx context.Context, ip string, port uint) labelValue {
-	addr := fmt.Sprintf("%s:%v", ip, port)
+// Use metaMemberService instead
+// metaLeaderStatus sends a MetaMember request to a meta node at ip:port, determining if the node is a leader.
+func (r *MetaPodController) metaLeaderStatus(ctx context.Context, host string, port uint) labelValue {
+	addr := fmt.Sprintf("%s:%v", host, port)
 
 	log := log.FromContext(ctx)
 	log.Info(fmt.Sprintf("Connecting against %s", addr))
@@ -83,27 +82,25 @@ func (r *MetaPodController) metaLeaderStatus(ctx context.Context, ip string, por
 			continue
 		}
 		defer conn.Close()
-		c := pb.NewHeartbeatServiceClient(conn)
+		c := pb.NewMetaMemberServiceClient(conn)
 
 		// TODO: use timeout in this function
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 
-		_, err = c.Heartbeat(ctx, &pb.HeartbeatRequest{})
-		if err == nil {
-			// TODO: will this ever happen?
-			log.Info("no error") // TODO: remove this
-			return labelValueLeader
+		resp, err := c.Members(ctx, &pb.MembersRequest{})
+		if err != nil {
+			log.Info(fmt.Sprintf("Err: %v", err))
+			continue
 		}
 
-		log.Info(fmt.Sprintf("Err code was %v: %s", status.Code(err), err.Error())) // TODO: remove line
-		switch status.Code(err) {
-		case codes.OK:
-			return labelValueLeader
-		case codes.Unimplemented:
-			return labelValueFollower
+		for _, member := range resp.Members {
+			log.Info(fmt.Sprintf("member: %v", member))
+			if member.IsLeader && host == member.Address.Host && port == uint(member.Address.Port) {
+				return labelValueLeader
+			}
 		}
-		// TODO: retry on unavailable?
+		return labelValueFollower
 	}
 	return labelValueUnknown
 }

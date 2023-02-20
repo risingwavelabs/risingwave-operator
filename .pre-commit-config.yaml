@@ -21,7 +21,7 @@ repos:
     stages:
     - commit
 - repo: https://github.com/arkbriar/pre-commit-golang
-  rev: master
+  rev: v0.5.0
   hooks:
     - id: go-fmt
     - id: go-vet

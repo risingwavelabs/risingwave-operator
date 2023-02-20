@@ -154,6 +154,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"meta-group-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global.Replicas.Meta = 0
 				r.Spec.Components.Meta.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
 					{
 						Name:     "a",
@@ -616,6 +617,24 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 								"memory": resource.MustParse("100Mi"),
 							},
 						},
+					},
+				}
+			},
+			pass: true,
+		},
+		"multi-memory-meta-fail": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global.Replicas.Meta = 2
+			},
+			pass: false,
+		},
+		"multi-etcd-meta-pass": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Global.Replicas.Meta = 2
+				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorage{
+					Etcd: &risingwavev1alpha1.RisingWaveMetaStorageEtcd{
+						Endpoint: "etcd",
+						Secret:   "etcd-credentials",
 					},
 				}
 			},

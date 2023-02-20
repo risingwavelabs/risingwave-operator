@@ -8,7 +8,7 @@ spec:
     image: ${E2E_RISINGWAVE_IMAGE}
     imagePullPolicy: IfNotPresent
     replicas:
-      meta: 3
+      meta: 1
       frontend: 1
       compute: 1
       compactor: 1

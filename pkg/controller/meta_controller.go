@@ -23,12 +23,14 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/labels"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
@@ -41,30 +43,66 @@ type MetaPodController struct {
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;update;patch
 
 const (
-	metaLeaderLabel = "meta-is-leader"
+	metaLeaderLabel = "risingwave/meta-role"
 )
 
-// metaIsLeader sends a heartbeat to a meta node at ip:port. If meta responds it is the leader.
-func (r *MetaPodController) metaIsLeader(ctx context.Context, ip string, port uint) bool {
+type labelValue int
+
+const (
+	labelValueLeader labelValue = iota
+	labelValueFollower
+	labelValueUnknown
+)
+
+func (l *labelValue) String() string {
+	switch *l {
+	case labelValueLeader:
+		return "leader"
+	case labelValueFollower:
+		return "follower"
+	case labelValueUnknown:
+		return "unknown"
+	}
+	return "UnknownLabelCode"
+}
+
+// metaLeaderStatus sends a heartbeat to a meta node at ip:port. If meta responds it is the leader.
+func (r *MetaPodController) metaLeaderStatus(ctx context.Context, ip string, port uint) labelValue {
 	addr := fmt.Sprintf("%s:%v", ip, port)
 	log := log.FromContext(ctx)
 
-	// TODO: Do we need to make this connection secure?
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Info("did not connect: %v", err)
-		// TODO: retry request
-		return false
+	for i := 0; i < 5; i++ {
+		time.Sleep(time.Duration(i*10) * time.Millisecond)
+		// TODO: Do we need to make this connection secure?
+		conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			log.Info("Unable to connect: %s. Retrying...", err.Error())
+			continue
+		}
+		defer conn.Close()
+		c := pb.NewHeartbeatServiceClient(conn)
+
+		// TODO: use timeout in this function
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		// TODO: retry this?
+		resp, err := c.Heartbeat(ctx, &pb.HeartbeatRequest{})
+		if err != nil {
+			log.Info("Unable to send heartbeat. Retrying...") // TODO: delete this line?
+			// TODO: should we do this here?
+			continue
+		}
+		code := resp.Status.Code
+		log.Info("metaLeaderStatus: return code is %v", code) // TODO: delete line. Debug only
+		switch code {
+		case pb.Status_Code(codes.OK):
+			return labelValueLeader
+		case pb.Status_Code(codes.Unimplemented), pb.Status_Code(codes.Unavailable):
+			return labelValueFollower
+		}
 	}
-	defer conn.Close()
-	c := pb.NewHeartbeatServiceClient(conn)
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	// TODO: retry this?
-	_, err = c.Heartbeat(ctx, &pb.HeartbeatRequest{})
-	return err != nil
+	return labelValueUnknown
 }
 
 /*
@@ -76,8 +114,12 @@ func (r *MetaPodController) metaIsLeader(ctx context.Context, ip string, port ui
 	    proto/meta.proto
 */
 
+// TODO: rename r into c -> controller
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
 func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+
+	// TODO: only reconcile if the pod is actually a meta pod
+
 	log := log.FromContext(ctx)
 
 	// Using a typed object.
@@ -88,9 +130,13 @@ func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	if err := c.List(context.Background(),
-		meta_pods,
-		client.MatchingLabels{"risingwave/component": "meta"}); err != nil {
+	// TODO: filter does not work
+	labels := labels.SelectorFromSet(labels.Set{"risingwave/component": "meta"})
+	listOptions := client.ListOptions{
+		LabelSelector: labels,
+	}
+
+	if err := c.List(context.Background(), meta_pods, &listOptions); err != nil {
 		log.Error(err, "unable to fetch Pod")
 		return ctrl.Result{}, err
 	}
@@ -100,17 +146,19 @@ func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	for _, pod := range meta_pods.Items {
+		// val, ok := pod.Labels["risingwave/component"]
+		// if !ok || val != "meta" {
+		// 	continue
+		// }
+		log.Info(fmt.Sprintf("pod is %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name))
+
 		podIp := pod.Status.PodIP
 		port := uint(5690) // What if this changes?
 
-		old_label, ok := pod.Labels[metaLeaderLabel]
-
 		// change meta leader label
-		if r.metaIsLeader(ctx, podIp, port) {
-			pod.Labels[metaLeaderLabel] = "true"
-		} else {
-			pod.Labels[metaLeaderLabel] = "false"
-		}
+		old_label, ok := pod.Labels[metaLeaderLabel]
+		status := r.metaLeaderStatus(ctx, podIp, port)
+		pod.Labels[metaLeaderLabel] = status.String()
 
 		// only update if something changed
 		if ok && old_label == pod.Labels[metaLeaderLabel] {

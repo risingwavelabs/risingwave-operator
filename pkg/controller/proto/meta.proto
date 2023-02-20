@@ -9,10 +9,6 @@ option java_package = "com.risingwave.proto";
 option optimize_for = SPEED;
 option go_package = "github.com/risingwavelabs/risingwave-operator/pkg/meta";
 
-service HeartbeatService {
-  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
-}
-
 message HeartbeatRequest {
   message ExtraInfo {
     oneof info {
@@ -28,6 +24,10 @@ message HeartbeatResponse {
   Status status = 1;
 }
 
+service HeartbeatService {
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+}
+
 message Status {
   enum Code {
     UNSPECIFIED = 0;
@@ -37,4 +37,3 @@ message Status {
   Code code = 1;
   string message = 2;
 }
-

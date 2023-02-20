@@ -100,7 +100,7 @@ func main() {
 		setupLog.Error(err, "unable to setup webhooks")
 		os.Exit(1)
 	}
-	log.Log.Info("this is a test 2")
+	log.Log.Info("this is a test 4") // TODO: remove log
 
 	// TODO: rename this
 	if err = risingwavecontroller.NewPodController(mgr.GetClient()).SetupWithManager(mgr); err != nil {

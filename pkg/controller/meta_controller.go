@@ -32,6 +32,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 )
 
 // MetaPodController reconciles a Pod object.
@@ -69,7 +70,9 @@ func (l *labelValue) String() string {
 // metaLeaderStatus sends a heartbeat to a meta node at ip:port. If meta responds it is the leader.
 func (r *MetaPodController) metaLeaderStatus(ctx context.Context, ip string, port uint) labelValue {
 	addr := fmt.Sprintf("%s:%v", ip, port)
+
 	log := log.FromContext(ctx)
+	log.Info(fmt.Sprintf("Connecting against %s", addr))
 
 	for i := 0; i < 5; i++ {
 		time.Sleep(time.Duration(i*10) * time.Millisecond)
@@ -86,21 +89,21 @@ func (r *MetaPodController) metaLeaderStatus(ctx context.Context, ip string, por
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 
-		// TODO: retry this?
-		resp, err := c.Heartbeat(ctx, &pb.HeartbeatRequest{})
-		if err != nil {
-			log.Info("Unable to send heartbeat. Retrying...") // TODO: delete this line?
-			// TODO: should we do this here?
-			continue
-		}
-		code := resp.Status.Code
-		log.Info("metaLeaderStatus: return code is %v", code) // TODO: delete line. Debug only
-		switch code {
-		case pb.Status_Code(codes.OK):
+		_, err = c.Heartbeat(ctx, &pb.HeartbeatRequest{})
+		if err == nil {
+			// TODO: will this ever happen?
+			log.Info("no error") // TODO: remove this
 			return labelValueLeader
-		case pb.Status_Code(codes.Unimplemented), pb.Status_Code(codes.Unavailable):
+		}
+
+		log.Info(fmt.Sprintf("Err code was %v: %s", status.Code(err), err.Error())) // TODO: remove line
+		switch status.Code(err) {
+		case codes.OK:
+			return labelValueLeader
+		case codes.Unimplemented:
 			return labelValueFollower
 		}
+		// TODO: retry on unavailable?
 	}
 	return labelValueUnknown
 }
@@ -146,22 +149,21 @@ func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	for _, pod := range meta_pods.Items {
-		// val, ok := pod.Labels["risingwave/component"]
-		// if !ok || val != "meta" {
-		// 	continue
-		// }
 		log.Info(fmt.Sprintf("pod is %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name))
 
 		podIp := pod.Status.PodIP
+
+		// TODO: am i really talking to the correct port? yes
 		port := uint(5690) // What if this changes?
 
 		// change meta leader label
 		old_label, ok := pod.Labels[metaLeaderLabel]
-		status := r.metaLeaderStatus(ctx, podIp, port)
-		pod.Labels[metaLeaderLabel] = status.String()
+		leaderStatus := r.metaLeaderStatus(ctx, podIp, port)
+		pod.Labels[metaLeaderLabel] = leaderStatus.String()
 
 		// only update if something changed
-		if ok && old_label == pod.Labels[metaLeaderLabel] {
+		if ok && old_label == leaderStatus.String() {
+			log.Info(fmt.Sprintf("skipping update on %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name))
 			continue
 		}
 

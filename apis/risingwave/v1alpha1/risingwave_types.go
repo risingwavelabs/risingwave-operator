@@ -743,7 +743,7 @@ type RisingWaveStatus struct {
 	// when controller observes the changes on the spec and going to sync the subresources.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
-	// Version of Global Image
+	// Version of the Global Image
 	Version string `json:"version,omitempty"`
 
 	// Replica status of components.

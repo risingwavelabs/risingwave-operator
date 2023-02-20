@@ -3516,7 +3516,7 @@ spec:
                 - object
                 type: object
               version:
-                description: Version of Global Image
+                description: Version of the Global Image
                 type: string
             type: object
         type: object

@@ -50,6 +50,7 @@ type innerConfig struct {
 	Compute   componentConfig
 	Compactor componentConfig
 	Frontend  frontendConfig
+	Connector componentConfig
 }
 
 func parse(path string) (innerConfig, error) {

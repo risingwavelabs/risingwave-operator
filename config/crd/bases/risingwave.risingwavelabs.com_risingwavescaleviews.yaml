@@ -105,6 +105,7 @@ spec:
                     - frontend
                     - compute
                     - compactor
+                    - connector
                     type: string
                   name:
                     description: Name of the RisingWave object.

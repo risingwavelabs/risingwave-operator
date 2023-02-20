@@ -140,6 +140,15 @@ func stopRisingWave(instance *v1alpha1.RisingWave) error {
 		replicas.Meta = append(replicas.Meta, metaReplica)
 	}
 
+	for _, group := range instance.Spec.Components.Connector.Groups {
+		connectorReplica := ReplicaInfo{
+			GroupName: group.Name,
+			Replicas:  group.Replicas,
+		}
+		updateReplicas(instance, util.Connector, group.Name, 0)
+		replicas.Connector = append(replicas.Connector, connectorReplica)
+	}
+
 	global, err := json.Marshal(instance.Spec.Global.Replicas)
 	if err != nil {
 		return fmt.Errorf("failed to serialize replicas, %v", err)
@@ -168,5 +177,6 @@ func stopGlobal(instance *v1alpha1.RisingWave) {
 		Compactor: 0,
 		Compute:   0,
 		Frontend:  0,
+		Connector: 0,
 	}
 }

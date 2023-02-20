@@ -42,7 +42,7 @@ func TestOptions_Validate(t *testing.T) {
 		component:    "fake-component",
 	}
 	err := o.Validate(ctx, nil, []string{})
-	assert.Equal(t, err.Error(), "component should be in [compactor,compute,frontend,meta,global]")
+	assert.Equal(t, err.Error(), "component should be in [compactor,compute,connector,frontend,meta,global]")
 
 	createTestInstance(o, t)
 
@@ -56,7 +56,7 @@ func TestOptions_Validate(t *testing.T) {
 	assert.Equal(t, o.memoryLimit.convertedQty, resource.MustParse("256Mi"))
 
 	o.group = "fake-group"
-	for k, _ := range componentSet {
+	for k := range componentSet {
 		o.component = k
 		err = o.Validate(ctx, nil, []string{})
 		ss := fmt.Sprintf("invalid risingwave group: %s for component: %s", o.group, o.component)
@@ -210,6 +210,9 @@ func TestOptions_Run(t *testing.T) {
 		}, {
 			util.Frontend,
 			fakeRW.Spec.Components.Frontend.Groups,
+		}, {
+			util.Connector,
+			fakeRW.Spec.Components.Connector.Groups,
 		},
 	}
 

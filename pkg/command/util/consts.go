@@ -21,6 +21,7 @@ const (
 	Meta         = "meta"
 	Frontend     = "frontend"
 	Compactor    = "compactor"
+	Connector    = "connector"
 	Global       = "global"
 	DefaultGroup = "inner_global"
 )

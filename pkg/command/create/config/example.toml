@@ -68,3 +68,16 @@ replicas=1
         cpu="1"
         memory="100Mi"
 
+[connector]
+    [[connector.groups]]
+    replicas=3
+    name="connector-group-1"
+        [connector.groups.limit]
+        cpu="1"
+        memory="100Mi"
+    [[connector.groups]]
+    replicas=1
+    name="connector-group-2"
+        [connector.groups.limit]
+        cpu="1"
+        memory="100Mi"

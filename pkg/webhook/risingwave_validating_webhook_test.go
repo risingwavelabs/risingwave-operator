@@ -743,6 +743,12 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 						Replicas: 1,
 					},
 				}
+				r.Spec.Components.Connector.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
+					{
+						Name:     "a",
+						Replicas: 1,
+					},
+				}
 			},
 			pass: false,
 		},
@@ -785,6 +791,15 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 							RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 								Image: "ghcr.io/risingwavelabs/risingwave:latest",
 							},
+						},
+					},
+				}
+				r.Spec.Components.Connector.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
+					{
+						Name:     "a",
+						Replicas: 1,
+						RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+							Image: "ghcr.io/risingwavelabs/risingwave:latest",
 						},
 					},
 				}

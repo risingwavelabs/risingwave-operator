@@ -51,6 +51,9 @@ func (m *RisingWaveMutatingWebhook) setDefault(ctx context.Context, obj *risingw
 	setDefaultIfZero(&obj.Spec.Components.Compactor.Ports.ServicePort, consts.DefaultCompactorServicePort)
 	setDefaultIfZero(&obj.Spec.Components.Compactor.Ports.MetricsPort, consts.DefaultCompactorMetricsPort)
 
+	setDefaultIfZero(&obj.Spec.Components.Connector.Ports.ServicePort, consts.DefaultConnectorServicePort)
+	setDefaultIfZero(&obj.Spec.Components.Connector.Ports.MetricsPort, consts.DefaultConnectorMetricsPort)
+
 	return nil
 }
 

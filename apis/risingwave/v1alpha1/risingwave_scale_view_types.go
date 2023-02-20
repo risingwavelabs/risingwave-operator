@@ -27,7 +27,7 @@ type RisingWaveScaleViewTargetRef struct {
 	Name string `json:"name"`
 
 	// Component name. Must be one of meta, frontend, compute, and compactor.
-	// +kubebuilder:validation:Enum=meta;frontend;compute;compactor
+	// +kubebuilder:validation:Enum=meta;frontend;compute;compactor;connector
 	Component string `json:"component"`
 
 	// UID of the target RisingWave object. Should be set by the mutating webhook.

@@ -1108,6 +1108,11 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 	container.Name = "meta"
 	container.Args = f.argsForMeta()
 	container.Ports = f.portsForMetaContainer()
+	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	container.Env = append(container.Env, corev1.EnvVar{
+		Name:  "RW_CONNECTOR_RPC_ENDPOINT",
+		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
+	})
 
 	if f.isMetaStorageEtcd() {
 		for _, env := range f.envsForEtcd() {

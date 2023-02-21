@@ -35,13 +35,7 @@ import (
 )
 
 // Tutorial: https://grpc.io/docs/languages/go/quickstart/
-//
-// Generate proto files via
-// cd pkg/controller/proto
-// protoc --go_out=. --go_opt=paths=source_relative \
-//     --go-grpc_out=. --go-grpc_opt=paths=source_relative \
-//     --experimental_allow_proto3_optional \
-// 	   meta.proto common.proto
+// Generate proto files via make proto
 
 // MetaPodController reconciles meta pods object.
 type MetaPodController struct {
@@ -119,8 +113,6 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	log := log.FromContext(ctx)
-
-	// Using a typed object.
 	c, err := client.New(config.GetConfigOrDie(), client.Options{})
 	if err != nil {
 		log.Error(err, "failed to create client")

@@ -112,7 +112,7 @@ lint: golangci-lint
 	$(GOLANGCI-LINT) run --config .golangci.yaml --fix
 
 test: manifests generate fmt vet lint envtest ## Run tests.
-	@KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out.tmp
+	@KUBEBUƒILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out.tmp
 	@cat cover.out.tmp | grep -v "_generated.go" > cover.out && rm -f cover.out.tmp
 
 spellcheck:
@@ -131,12 +131,19 @@ buildx:
 
 ##@ Build
 
+proto: 
+	cd pkg/controller/proto ; \
+	protoc --go_out=. --go_opt=paths=source_relative \
+     	--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+     	--experimental_allow_proto3_optional \
+ 	   	meta.proto common.proto
+
 build: build-manager
 
-build-manager: generate fmt vet lint ## Build manager binary.
+build-manager: generate fmt vet lint proto ## Build manager binary.
 	go build -o bin/manager cmd/manager/manager.go
 
-build-plugin: generate fmt vet lint ## Build manager binary.
+build-plugin: generate fmt vet lint proto ## Build manager binary.
 	go build -o bin/kubectl-rw cmd/plugin/main.go
 	sudo mv bin/kubectl-rw /usr/local/bin/kubectl-rw
 
@@ -162,7 +169,7 @@ copy-local-certs:
 run-local: manifests generate fmt vet lint install-local
 	go run cmd/manager/manager.go -zap-time-encoding rfc3339
 
-build-e2e-image:
+build-e2e-image: proto
 	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=true -t docker.io/risingwavelabs/risingwave-operator:dev . --load
 
 e2e-test: generate-test-yaml vendor build-e2e-image
@@ -171,16 +178,16 @@ e2e-test: generate-test-yaml vendor build-e2e-image
 e2e-plugin:
 	e2e/e2e-plugin.sh
 
-docker-cross-build: test buildx## Build docker image with the manager.
+docker-cross-build: test buildx proto## Build docker image with the manager.
 	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=false --platform=linux/amd64,linux/arm64 -t ${IMG} . --push
 
-docker-cross-build-vendor: test buildx vendor
+docker-cross-build-vendor: test buildx vendor proto
 	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=true --platform=linux/amd64,linux/arm64 -t ${IMG} . --push
 
-docker-build: test ## Build docker image with the manager.
+docker-build: test proto ## Build docker image with the manager.
 	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=false -t ${IMG} . --load
 
-docker-build-vendor: vendor test
+docker-build-vendor: vendor test proto
 	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=true -t ${IMG} . --load
 
 docker-push: ## Push docker image with the manager.

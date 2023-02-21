@@ -260,6 +260,26 @@ func (v *RisingWaveValidatingWebhook) validateComponents(path *field.Path, compo
 	return fieldErrs
 }
 
+func (v *RisingWaveValidatingWebhook) validateMetaReplicas(obj *risingwavev1alpha1.RisingWave) field.ErrorList {
+	// When the meta storage isn't memory, there's no limitation on the replicas.
+	if !pointer.BoolDeref(obj.Spec.Storages.Meta.Memory, false) {
+		return nil
+	}
+
+	fieldErrs := field.ErrorList{}
+
+	metaReplicas := obj.Spec.Global.Replicas.Meta
+	for _, group := range obj.Spec.Components.Meta.Groups {
+		metaReplicas += group.Replicas
+	}
+
+	if metaReplicas > 1 {
+		fieldErrs = append(fieldErrs, field.Forbidden(field.NewPath("spec", "global", "replicas", " meta"), "meta with replicas over 1 isn't allowed"))
+	}
+
+	return fieldErrs
+}
+
 func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *risingwavev1alpha1.RisingWave) error {
 	gvk := obj.GroupVersionKind()
 
@@ -292,6 +312,9 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 		obj.Spec.Global.Image != "",
 		v.openKruiseAvailable && pointer.BoolDeref(obj.Spec.EnableOpenKruise, false),
 	)...)
+
+	// Validate the meta replicas.
+	fieldErrs = append(fieldErrs, v.validateMetaReplicas(obj)...)
 
 	if len(fieldErrs) > 0 {
 		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, fieldErrs)

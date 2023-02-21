@@ -16,6 +16,8 @@ ${__E2E_SOURCE_TESTS_RISINGWAVE_TESTS_SH__:=false} && return 0 || __E2E_SOURCE_T
 
 _E2E_RISINGWAVE_TEST_PATH="$(dirname "${BASH_SOURCE[0]}")"
 
+source "${_E2E_RISINGWAVE_TEST_PATH}/meta.sh"
+
 function test::risingwave::manifest_from() {
   local manifest_file="${_E2E_RISINGWAVE_TEST_PATH}/manifests/$1"
 
@@ -23,7 +25,6 @@ function test::risingwave::manifest_from() {
     logging::error "${manifest_file} isn't a regular file"
     return 1
   fi
-
   envsubst "${@:2}" <"${manifest_file}"
 }
 
@@ -61,7 +62,48 @@ function test::risingwave::stop() {
   fi
 }
 
-function test::risingwave::check_storage_status_with_simple_queries() {
+function test::run::risingwave::multi_meta() {
+  test::risingwave::storage_support::_run_with_manifest multi-meta/multi-meta.yaml
+}
+
+function test::run::risingwave::multi_meta_failover() {
+  logging::info "Starting RisingWave..."
+  if ! test::risingwave::start multi-meta/multi-meta.yaml; then
+    return 1
+  fi
+  logging::info "Started!"
+
+  # Check and see if the meta setup is valid, i.e., there must be only one meta leader.
+  if ! risingwave::utils::is_meta_setup_valid; then
+    logging::error "Invalid meta setup. Aborting test!"
+    return 1
+  fi
+
+  # Simulate the failover by deleting the leader Pod.
+  # NOTE: the leader doesn't necessarily change.
+  logging::info "Killing the leader Pod..."
+  risingwave::utils::kill_the_meta_leader_pod
+
+  # Wait before the meta come back to a valid setup.
+  if ! risingwave::utils::wait_for_meta_valid_setup; then
+    logging::error "Invalid meta setup after meta crash!"
+    return 1
+  else
+    logging::info "Failover successfully!"
+  fi
+
+  if ! test::risingwave::check_status_with_simple_queries; then
+    logging::error "Queries run against storage failed!"
+    return 1
+  fi
+  logging::info "Queries succeeded!"
+
+  logging::info "Stopping RisingWave..."
+  test::risingwave::stop multi-meta/multi-meta.yaml
+  logging::info "Stopped!"
+}
+
+function test::risingwave::check_status_with_simple_queries() {
   local frontend_service_port
   frontend_service_port=$(k8s::kubectl get svc/"${E2E_RISINGWAVE_NAME}-frontend" -o jsonpath='{.spec.ports[?(@.name=="service")].port}')
 
@@ -90,7 +132,7 @@ function test::risingwave::storage_support::_run_with_manifest() {
   fi
   logging::info "Started!"
 
-  if ! test::risingwave::check_storage_status_with_simple_queries; then
+  if ! test::risingwave::check_status_with_simple_queries; then
     logging::error "Queries run against storage failed!"
     return 1
   else
@@ -135,15 +177,15 @@ function test::run::risingwave::openkruise_integration() {
 }
 
 function test::run::risingwave::connector_test() {
-    logging::info "Starting RisingWave..."
-    if ! test::risingwave::start connector/connector-test.yaml; then
-      return 1
-    fi
-    logging::info "Started!"
+  logging::info "Starting RisingWave..."
+  if ! test::risingwave::start connector/connector-test.yaml; then
+    return 1
+  fi
+  logging::info "Started!"
 
-    logging::info "Stopping RisingWave..."
-    test::risingwave::stop connector/connector-test.yaml
-    logging::info "Stopped!"
+  logging::info "Stopping RisingWave..."
+  test::risingwave::stop connector/connector-test.yaml
+  logging::info "Stopped!"
 }
 
 # Export the test case only when the required parameters exists.

@@ -428,7 +428,7 @@ func (f *RisingWaveObjectFactory) argsForMeta() []string {
 		"meta-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", metaPorts.ServicePort),
-		"--host", "$(POD_IP)",
+		"--host", fmt.Sprintf("$(POD_NAME).%s", f.componentName(consts.ComponentMeta, "")),
 		"--dashboard-host", fmt.Sprintf("0.0.0.0:%d", metaPorts.DashboardPort),
 		"--prometheus-host", fmt.Sprintf("0.0.0.0:%d", metaPorts.MetricsPort),
 	}
@@ -457,7 +457,7 @@ func (f *RisingWaveObjectFactory) argsForFrontend() []string {
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--host", fmt.Sprintf("0.0.0.0:%d", frontendPorts.ServicePort),
 		"--client-address", fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
-		"--meta-addr", fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		"--meta-addr", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 		"--metrics-level=1",
 		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", frontendPorts.MetricsPort),
 	}
@@ -477,7 +477,7 @@ func (f *RisingWaveObjectFactory) argsForCompute(cpuLimit int64, memLimit int64)
 		"--state-store",
 		f.hummockConnectionStr(),
 		"--meta-address",
-		fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 	}
 
 	if cpuLimit != 0 {
@@ -510,7 +510,7 @@ func (f *RisingWaveObjectFactory) argsForCompactor() []string {
 		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", compactorPorts.MetricsPort),
 		"--metrics-level=1",
 		"--state-store", f.hummockConnectionStr(),
-		"--meta-address", fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		"--meta-address", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 	}
 }
 
@@ -1213,12 +1213,18 @@ func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string, podTemplates 
 	metaSts := &appsv1.StatefulSet{
 		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentMeta, group, true),
 		Spec: appsv1.StatefulSetSpec{
+			ServiceName:    f.componentName(consts.ComponentMeta, ""),
 			Replicas:       pointer.Int32(componentGroup.Replicas),
 			UpdateStrategy: buildUpgradeStrategyForStatefulSet(componentGroup.UpgradeStrategy),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labelsOrSelectors,
 			},
-			Template: podTemplate,
+			Template:            podTemplate,
+			PodManagementPolicy: appsv1.ParallelPodManagement,
+			PersistentVolumeClaimRetentionPolicy: &appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy{
+				WhenDeleted: appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
+				WhenScaled:  appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
+			},
 		},
 	}
 

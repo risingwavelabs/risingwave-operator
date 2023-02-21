@@ -17,6 +17,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	pb "github.com/risingwavelabs/risingwave-operator/pkg/controller/proto"
@@ -71,7 +72,7 @@ func (r *MetaPodController) metaLeaderStatus(ctx context.Context, host string, p
 	addr := fmt.Sprintf("%s:%v", host, port)
 
 	log := log.FromContext(ctx)
-	log.Info(fmt.Sprintf("Connecting against %s", addr))
+	log.Info(fmt.Sprintf("Connecting against %s", addr)) // TODO: remove log line
 
 	for i := 0; i < 5; i++ {
 		time.Sleep(time.Duration(i*10) * time.Millisecond)
@@ -119,28 +120,27 @@ func (r *MetaPodController) metaLeaderStatus(ctx context.Context, host string, p
 // TODO: rename r into c -> controller
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
 func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-
-	// TODO: only reconcile if the pod is actually a meta pod
+	// only reconcile when this is related to a meta pod
+	if !strings.Contains(req.Name, "meta") {
+		return ctrl.Result{}, nil
+	}
 
 	log := log.FromContext(ctx)
 
 	// Using a typed object.
-	meta_pods := &corev1.PodList{}
 	c, err := client.New(config.GetConfigOrDie(), client.Options{})
 	if err != nil {
 		log.Error(err, "failed to create client")
 		return ctrl.Result{}, err
 	}
 
-	// TODO: filter does not work
+	// get all meta pods
+	meta_pods := &corev1.PodList{}
 	labels := labels.SelectorFromSet(labels.Set{"risingwave/component": "meta"})
-	listOptions := client.ListOptions{
-		LabelSelector: labels,
-	}
-
+	listOptions := client.ListOptions{LabelSelector: labels}
 	if err := c.List(context.Background(), meta_pods, &listOptions); err != nil {
-		log.Error(err, "unable to fetch Pod")
-		return ctrl.Result{}, err
+		log.Error(err, "unable to fetch meta pods")
+		return ctrl.Result{}, err // TODO requeue this
 	}
 
 	if len(meta_pods.Items) == 0 {
@@ -151,17 +151,16 @@ func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		log.Info(fmt.Sprintf("pod is %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name))
 
 		podIp := pod.Status.PodIP
-
-		// TODO: am i really talking to the correct port? yes
 		port := uint(5690) // What if this changes?
 
-		// change meta leader label
+		// set meta label
 		old_label, ok := pod.Labels[metaLeaderLabel]
 		leaderStatus := r.metaLeaderStatus(ctx, podIp, port)
 		pod.Labels[metaLeaderLabel] = leaderStatus.String()
 
 		// only update if something changed
 		if ok && old_label == leaderStatus.String() {
+			// TODO: remove log line
 			log.Info(fmt.Sprintf("skipping update on %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name))
 			continue
 		}
@@ -172,7 +171,7 @@ func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 				return ctrl.Result{Requeue: true}, nil
 			}
 			log.Error(err, "unable to update Pod")
-			return ctrl.Result{}, err
+			return ctrl.Result{}, err // TODO: requeue
 		}
 	}
 

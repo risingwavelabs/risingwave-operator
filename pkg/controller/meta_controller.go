@@ -112,9 +112,12 @@ func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string,
 
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
 func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	requeueInterval := time.Second * time.Duration(60)
+	requeueResult := ctrl.Result{RequeueAfter: requeueInterval}
+
 	// only reconcile when this is related to a meta pod
 	if !strings.Contains(req.Name, "meta") {
-		return ctrl.Result{}, nil
+		return requeueResult, nil
 	}
 
 	log := log.FromContext(ctx)
@@ -123,7 +126,7 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 	c, err := client.New(config.GetConfigOrDie(), client.Options{})
 	if err != nil {
 		log.Error(err, "failed to create client")
-		return ctrl.Result{}, err
+		return ctrl.Result{Requeue: true}, err
 	}
 
 	// get all meta pods
@@ -136,7 +139,7 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if len(meta_pods.Items) == 0 {
-		return ctrl.Result{}, nil
+		return requeueResult, nil
 	}
 
 	hasUnknown := false
@@ -177,7 +180,7 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{Requeue: true}, nil
 	}
 
-	return ctrl.Result{}, nil
+	return requeueResult, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

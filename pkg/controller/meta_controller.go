@@ -43,10 +43,9 @@ import (
 //     --experimental_allow_proto3_optional \
 // 	   meta.proto common.proto
 
-// MetaPodController reconciles a Pod object.
+// MetaPodController reconciles meta pods object.
 type MetaPodController struct {
 	client.Client
-	// Scheme *runtime.Scheme
 }
 
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;update;patch
@@ -140,6 +139,8 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, nil
 	}
 
+	hasUnknown := false
+	hasLeader := false
 	for _, pod := range meta_pods.Items {
 		log.Info(fmt.Sprintf("pod is %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name))
 
@@ -151,6 +152,8 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		old_label, ok := pod.Labels[metaLeaderLabel]
 		leaderStatus := mpc.metaLeaderStatus(ctx, podIp, port)
 		pod.Labels[metaLeaderLabel] = leaderStatus.String()
+		hasLeader = hasLeader || leaderStatus == labelValueLeader
+		hasUnknown = hasUnknown || leaderStatus == labelValueUnknown
 
 		// only update if something changed
 		if ok && old_label == leaderStatus.String() {
@@ -167,6 +170,11 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 			log.Error(err, "unable to update Pod")
 			return ctrl.Result{Requeue: true}, err
 		}
+	}
+
+	// requeue if there currently is no leader or meta nodes are in unknown status
+	if !hasLeader || hasUnknown {
+		return ctrl.Result{Requeue: true}, nil
 	}
 
 	return ctrl.Result{}, nil

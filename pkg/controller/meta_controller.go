@@ -34,6 +34,15 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+// Tutorial: https://grpc.io/docs/languages/go/quickstart/
+//
+// Generate proto files via
+// cd pkg/controller/proto
+// protoc --go_out=. --go_opt=paths=source_relative \
+//     --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+//     --experimental_allow_proto3_optional \
+// 	   meta.proto common.proto
+
 // MetaPodController reconciles a Pod object.
 type MetaPodController struct {
 	client.Client
@@ -103,18 +112,6 @@ func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string,
 	return labelValueUnknown
 }
 
-/*
-- Tutorial: https://grpc.io/docs/languages/go/quickstart/
-- Generate proto files via
-
-	cd pkg/controller/proto
-	protoc --go_out=. --go_opt=paths=source_relative \
-	    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
-	    --experimental_allow_proto3_optional \
-		meta.proto common.proto
-*/
-
-// TODO: rename r into c -> controller
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
 func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	// only reconcile when this is related to a meta pod

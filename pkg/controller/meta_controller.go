@@ -109,9 +109,11 @@ func (r *MetaPodController) metaLeaderStatus(ctx context.Context, host string, p
 - Tutorial: https://grpc.io/docs/languages/go/quickstart/
 - Generate proto files via
 
+	cd pkg/controller/proto
 	protoc --go_out=. --go_opt=paths=source_relative \
 	    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
-	    proto/meta.proto
+	    --experimental_allow_proto3_optional \
+		meta.proto common.proto
 */
 
 // TODO: rename r into c -> controller

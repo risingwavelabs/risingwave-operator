@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	pb "github.com/risingwavelabs/risingwave-operator/pkg/controller/proto"
 
 	corev1 "k8s.io/api/core/v1"
@@ -44,32 +45,8 @@ type MetaPodController struct {
 
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;update;patch
 
-const (
-	metaLeaderLabel = "risingwave/meta-role"
-)
-
-type labelValue int
-
-const (
-	labelValueLeader labelValue = iota
-	labelValueFollower
-	labelValueUnknown
-)
-
-func (l *labelValue) String() string {
-	switch *l {
-	case labelValueLeader:
-		return "leader"
-	case labelValueFollower:
-		return "follower"
-	case labelValueUnknown:
-		return "unknown"
-	}
-	return "UnknownLabelCode"
-}
-
 // metaLeaderStatus sends a MetaMember request to a meta node at ip:port, determining if the node is a leader.
-func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string, port uint) labelValue {
+func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string, port uint) string {
 	log := log.FromContext(ctx)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
 	defer cancel()
@@ -94,12 +71,12 @@ func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string,
 
 		for _, member := range resp.Members {
 			if member.IsLeader && host == member.Address.Host && port == uint(member.Address.Port) {
-				return labelValueLeader
+				return consts.MetaRoleLeader
 			}
 		}
-		return labelValueFollower
+		return consts.MetaRoleFollower
 	}
-	return labelValueUnknown
+	return consts.MetaRoleUnknown
 }
 
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
@@ -142,14 +119,14 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		port := uint(5690)
 
 		// set meta label
-		old_label, ok := pod.Labels[metaLeaderLabel]
-		leaderStatus := mpc.metaLeaderStatus(ctx, podIp, port)
-		pod.Labels[metaLeaderLabel] = leaderStatus.String()
-		hasLeader = hasLeader || leaderStatus == labelValueLeader
-		hasUnknown = hasUnknown || leaderStatus == labelValueUnknown
+		oldRole, ok := pod.Labels[consts.LabelRisingWaveMetaRole]
+		newRole := mpc.metaLeaderStatus(ctx, podIp, port)
+		pod.Labels[consts.LabelRisingWaveMetaRole] = newRole
+		hasLeader = hasLeader || newRole == consts.MetaRoleLeader
+		hasUnknown = hasUnknown || newRole == consts.MetaRoleUnknown
 
 		// only update if something changed
-		if ok && old_label == leaderStatus.String() {
+		if ok && oldRole == newRole {
 			continue
 		}
 

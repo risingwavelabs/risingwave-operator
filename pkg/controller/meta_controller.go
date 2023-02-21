@@ -81,7 +81,6 @@ func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string,
 	defer cancel()
 
 	addr := fmt.Sprintf("%s:%v", host, port)
-	log.Info(fmt.Sprintf("Connecting against %s", addr)) // TODO: remove log line
 
 	for i := 0; i < 5; i++ {
 		time.Sleep(time.Duration(i*10) * time.Millisecond)
@@ -192,7 +191,7 @@ func (mpc *MetaPodController) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 // NewRisingWaveController creates a new RisingWaveController.
-func NewPodController(client client.Client) *MetaPodController {
+func NewMetaPodController(client client.Client) *MetaPodController {
 	return &MetaPodController{
 		Client: client,
 	}

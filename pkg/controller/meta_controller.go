@@ -160,8 +160,6 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 
 		// only update if something changed
 		if ok && old_label == leaderStatus.String() {
-			// TODO: remove log line
-			log.Info(fmt.Sprintf("skipping update on %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name))
 			continue
 		}
 

@@ -86,7 +86,7 @@ func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string,
 		time.Sleep(time.Duration(i*10) * time.Millisecond)
 		conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
-			log.Info("Unable to connect: %s. Retrying...", err.Error())
+			log.Error(err, "Unable to connect to meta pod. Retrying...")
 			continue
 		}
 		defer conn.Close()
@@ -94,12 +94,11 @@ func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string,
 
 		resp, err := c.Members(ctx, &pb.MembersRequest{})
 		if err != nil {
-			log.Info(fmt.Sprintf("Err: %v", err))
+			log.Error(err, "Sending MembersRequest failed")
 			continue
 		}
 
 		for _, member := range resp.Members {
-			log.Info(fmt.Sprintf("member: %v", member))
 			if member.IsLeader && host == member.Address.Host && port == uint(member.Address.Port) {
 				return labelValueLeader
 			}
@@ -145,8 +144,6 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 	hasUnknown := false
 	hasLeader := false
 	for _, pod := range meta_pods.Items {
-		log.Info(fmt.Sprintf("pod is %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name))
-
 		podIp := pod.Status.PodIP
 		// FIXME: Do not hardcode port here. Pass in as --arg. Follow-up PR
 		port := uint(5690)

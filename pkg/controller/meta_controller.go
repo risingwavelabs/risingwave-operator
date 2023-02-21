@@ -86,7 +86,6 @@ func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string,
 
 	for i := 0; i < 5; i++ {
 		time.Sleep(time.Duration(i*10) * time.Millisecond)
-		// TODO: Secure connection?
 		conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Info("Unable to connect: %s. Retrying...", err.Error())

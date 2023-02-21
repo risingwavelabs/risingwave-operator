@@ -47,8 +47,6 @@ type MetaPodController struct {
 // metaLeaderStatus sends a MetaMember request to a meta node at ip:port, determining if the node is a leader.
 func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string, port uint) string {
 	log := log.FromContext(ctx)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
-	defer cancel()
 
 	addr := fmt.Sprintf("%s:%v", host, port)
 
@@ -129,8 +127,11 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 
 		// set meta label
+		originalPod := pod.DeepCopy()
 		oldRole, ok := pod.Labels[consts.LabelRisingWaveMetaRole]
-		newRole := mpc.metaLeaderStatus(ctx, podIp, port)
+		timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
+		defer cancel()
+		newRole := mpc.metaLeaderStatus(timeoutCtx, podIp, port)
 		pod.Labels[consts.LabelRisingWaveMetaRole] = newRole
 		hasLeader = hasLeader || newRole == consts.MetaRoleLeader
 		hasUnknown = hasUnknown || newRole == consts.MetaRoleUnknown
@@ -141,6 +142,7 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 
 		// update pod in cluster
+		mpc.Patch(ctx, &pod, client.MergeFrom(originalPod))
 		if err := mpc.Update(ctx, &pod); err != nil {
 			if apierrors.IsConflict(err) || apierrors.IsNotFound(err) {
 				return ctrl.Result{Requeue: true}, nil

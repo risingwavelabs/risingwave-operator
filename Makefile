@@ -112,7 +112,7 @@ lint: golangci-lint
 	$(GOLANGCI-LINT) run --config .golangci.yaml --fix
 
 test: manifests generate fmt vet lint envtest ## Run tests.
-	@KUBEBUƒILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out.tmp
+	@KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out.tmp
 	@cat cover.out.tmp | grep -v "_generated.go" > cover.out && rm -f cover.out.tmp
 
 spellcheck:

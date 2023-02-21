@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"google.golang.org/grpc"
@@ -79,6 +78,20 @@ func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string,
 	return consts.MetaRoleUnknown
 }
 
+// getMetaPort returns the service port of the pod.
+func getMetaPort(pod *corev1.Pod) (uint, error) {
+	for _, container := range pod.Spec.Containers {
+		if container.Name == "meta" {
+			for _, containerPort := range container.Ports {
+				if containerPort.Name == "service" {
+					return uint(containerPort.ContainerPort), nil
+				}
+			}
+		}
+	}
+	return 0, fmt.Errorf("unable to retrieve the service port from pod %s", pod.ObjectMeta.Name)
+}
+
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
 func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	requeueInterval60s := time.Second * time.Duration(60)
@@ -90,17 +103,12 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	log := log.FromContext(ctx)
-	c, err := client.New(config.GetConfigOrDie(), client.Options{})
-	if err != nil {
-		log.Error(err, "failed to create client")
-		return ctrl.Result{Requeue: true}, err
-	}
 
 	// get all meta pods
 	metaPods := &corev1.PodList{}
 	labels := labels.SelectorFromSet(labels.Set{"risingwave/component": "meta"})
 	listOptions := client.ListOptions{LabelSelector: labels}
-	if err := c.List(context.Background(), metaPods, &listOptions); err != nil {
+	if err := mpc.Client.List(context.Background(), metaPods, &listOptions); err != nil {
 		log.Error(err, "unable to fetch meta pods")
 		return ctrl.Result{Requeue: true}, err
 	}
@@ -114,20 +122,10 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 	hasLeader := false
 	for _, pod := range metaPods.Items {
 		podIp := pod.Status.PodIP
-		port := uint(0)
-		for _, container := range pod.Spec.Containers {
-			if container.Name == "meta" {
-				for _, containerPort := range container.Ports {
-					if containerPort.Name == "service" {
-						port = uint(containerPort.ContainerPort)
-					}
-				}
-			}
-		}
-		if port == 0 {
-			e := fmt.Errorf("unable to determine service port for pod %s", pod.ObjectMeta.Name)
-			log.Error(e, "Error. Retrying...")
-			return defaultRequeueResult, e
+		port, err := getMetaPort(&pod)
+		if err != nil {
+			log.Error(err, "Error. Retrying...")
+			return defaultRequeueResult, err
 		}
 
 		// set meta label

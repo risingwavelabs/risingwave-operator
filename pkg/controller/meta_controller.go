@@ -66,17 +66,18 @@ func (l *labelValue) String() string {
 	return "UnknownLabelCode"
 }
 
-// Use metaMemberService instead
 // metaLeaderStatus sends a MetaMember request to a meta node at ip:port, determining if the node is a leader.
 func (r *MetaPodController) metaLeaderStatus(ctx context.Context, host string, port uint) labelValue {
-	addr := fmt.Sprintf("%s:%v", host, port)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
+	defer cancel()
 
+	addr := fmt.Sprintf("%s:%v", host, port)
 	log := log.FromContext(ctx)
 	log.Info(fmt.Sprintf("Connecting against %s", addr)) // TODO: remove log line
 
 	for i := 0; i < 5; i++ {
 		time.Sleep(time.Duration(i*10) * time.Millisecond)
-		// TODO: Do we need to make this connection secure?
+		// TODO: Secure connection?
 		conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Info("Unable to connect: %s. Retrying...", err.Error())
@@ -84,10 +85,6 @@ func (r *MetaPodController) metaLeaderStatus(ctx context.Context, host string, p
 		}
 		defer conn.Close()
 		c := pb.NewMetaMemberServiceClient(conn)
-
-		// TODO: use timeout in this function
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-		defer cancel()
 
 		resp, err := c.Members(ctx, &pb.MembersRequest{})
 		if err != nil {
@@ -140,7 +137,7 @@ func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	listOptions := client.ListOptions{LabelSelector: labels}
 	if err := c.List(context.Background(), meta_pods, &listOptions); err != nil {
 		log.Error(err, "unable to fetch meta pods")
-		return ctrl.Result{}, err // TODO requeue this
+		return ctrl.Result{Requeue: true}, err
 	}
 
 	if len(meta_pods.Items) == 0 {
@@ -151,7 +148,8 @@ func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		log.Info(fmt.Sprintf("pod is %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name))
 
 		podIp := pod.Status.PodIP
-		port := uint(5690) // What if this changes?
+		// FIXME: Do not hardcode port here. Pass in as --arg. Follow-up PR
+		port := uint(5690)
 
 		// set meta label
 		old_label, ok := pod.Labels[metaLeaderLabel]
@@ -171,7 +169,7 @@ func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 				return ctrl.Result{Requeue: true}, nil
 			}
 			log.Error(err, "unable to update Pod")
-			return ctrl.Result{}, err // TODO: requeue
+			return ctrl.Result{Requeue: true}, err
 		}
 	}
 

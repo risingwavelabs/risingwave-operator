@@ -187,6 +187,9 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 			Type: buildObjectStorageType(objectStorage),
 		}
 
+		// Report Version status.
+		status.Version = utils.GetVersionFromImage(mgr.risingwaveManager.RisingWave().Spec.Global.Image)
+
 		// Report component replicas.
 		status.ComponentReplicas = componentReplicas
 	})
@@ -307,6 +310,9 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 		status.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorageStatus{
 			Type: buildObjectStorageType(objectStorage),
 		}
+
+		// Report Version status.
+		status.Version = utils.GetVersionFromImage(mgr.risingwaveManager.RisingWave().Spec.Global.Image)
 
 		// Report component replicas.
 		status.ComponentReplicas = componentReplicas

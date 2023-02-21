@@ -114,9 +114,21 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 	hasLeader := false
 	for _, pod := range metaPods.Items {
 		podIp := pod.Status.PodIP
-		// FIXME: Do not hardcode port here. Pass in as --arg. Follow-up PR
-
-		port := uint(5690)
+		port := uint(0)
+		for _, container := range pod.Spec.Containers {
+			if container.Name == "meta" {
+				for _, containerPort := range container.Ports {
+					if containerPort.Name == "service" {
+						port = uint(containerPort.ContainerPort)
+					}
+				}
+			}
+		}
+		if port == 0 {
+			e := fmt.Errorf("unable to determine service port for pod %s", pod.ObjectMeta.Name)
+			log.Error(e, "Error. Retrying...")
+			return defaultRequeueResult, e
+		}
 
 		// set meta label
 		oldRole, ok := pod.Labels[consts.LabelRisingWaveMetaRole]

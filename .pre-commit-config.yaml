@@ -24,7 +24,7 @@ repos:
   rev: v0.5.0
   hooks:
     - id: go-fmt
-    - id: go-vet
+    # - id: go-vet # Disabling for now. Use go vet ./... instead
     # - id: go-lint
     - id: go-imports
       exclude: ^.*zz_generated.*.go$

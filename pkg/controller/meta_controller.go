@@ -76,11 +76,11 @@ func (l *labelValue) String() string {
 
 // metaLeaderStatus sends a MetaMember request to a meta node at ip:port, determining if the node is a leader.
 func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string, port uint) labelValue {
+	log := log.FromContext(ctx)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
 	defer cancel()
 
 	addr := fmt.Sprintf("%s:%v", host, port)
-	log := log.FromContext(ctx)
 	log.Info(fmt.Sprintf("Connecting against %s", addr)) // TODO: remove log line
 
 	for i := 0; i < 5; i++ {
@@ -112,12 +112,12 @@ func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string,
 
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
 func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	requeueInterval := time.Second * time.Duration(60)
-	requeueResult := ctrl.Result{RequeueAfter: requeueInterval}
+	requeueInterval60s := time.Second * time.Duration(60)
+	defaultRequeueResult := ctrl.Result{RequeueAfter: requeueInterval60s}
 
 	// only reconcile when this is related to a meta pod
 	if !strings.Contains(req.Name, "meta") {
-		return requeueResult, nil
+		return defaultRequeueResult, nil
 	}
 
 	log := log.FromContext(ctx)
@@ -138,8 +138,9 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{Requeue: true}, err
 	}
 
+	// Do not requeue, since we do not have any meta pods
 	if len(meta_pods.Items) == 0 {
-		return requeueResult, nil
+		return ctrl.Result{}, nil
 	}
 
 	hasUnknown := false
@@ -180,7 +181,7 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{Requeue: true}, nil
 	}
 
-	return requeueResult, nil
+	return defaultRequeueResult, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

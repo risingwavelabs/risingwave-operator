@@ -67,7 +67,7 @@ func (l *labelValue) String() string {
 }
 
 // metaLeaderStatus sends a MetaMember request to a meta node at ip:port, determining if the node is a leader.
-func (r *MetaPodController) metaLeaderStatus(ctx context.Context, host string, port uint) labelValue {
+func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string, port uint) labelValue {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
 	defer cancel()
 
@@ -116,7 +116,7 @@ func (r *MetaPodController) metaLeaderStatus(ctx context.Context, host string, p
 
 // TODO: rename r into c -> controller
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
-func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	// only reconcile when this is related to a meta pod
 	if !strings.Contains(req.Name, "meta") {
 		return ctrl.Result{}, nil
@@ -153,7 +153,7 @@ func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 		// set meta label
 		old_label, ok := pod.Labels[metaLeaderLabel]
-		leaderStatus := r.metaLeaderStatus(ctx, podIp, port)
+		leaderStatus := mpc.metaLeaderStatus(ctx, podIp, port)
 		pod.Labels[metaLeaderLabel] = leaderStatus.String()
 
 		// only update if something changed
@@ -164,7 +164,7 @@ func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 
 		// update pod in cluster
-		if err := r.Update(ctx, &pod); err != nil {
+		if err := mpc.Update(ctx, &pod); err != nil {
 			if apierrors.IsConflict(err) || apierrors.IsNotFound(err) {
 				return ctrl.Result{Requeue: true}, nil
 			}
@@ -177,10 +177,10 @@ func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *MetaPodController) SetupWithManager(mgr ctrl.Manager) error {
+func (mpc *MetaPodController) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Pod{}).
-		Complete(r)
+		Complete(mpc)
 }
 
 // NewRisingWaveController creates a new RisingWaveController.

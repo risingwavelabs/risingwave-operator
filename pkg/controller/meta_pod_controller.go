@@ -120,24 +120,25 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	// get all meta pods
-	meta_pods := &corev1.PodList{}
+	metaPods := &corev1.PodList{}
 	labels := labels.SelectorFromSet(labels.Set{"risingwave/component": "meta"})
 	listOptions := client.ListOptions{LabelSelector: labels}
-	if err := c.List(context.Background(), meta_pods, &listOptions); err != nil {
+	if err := c.List(context.Background(), metaPods, &listOptions); err != nil {
 		log.Error(err, "unable to fetch meta pods")
 		return ctrl.Result{Requeue: true}, err
 	}
 
 	// Do not requeue, since we do not have any meta pods
-	if len(meta_pods.Items) == 0 {
+	if len(metaPods.Items) == 0 {
 		return ctrl.Result{}, nil
 	}
 
 	hasUnknown := false
 	hasLeader := false
-	for _, pod := range meta_pods.Items {
+	for _, pod := range metaPods.Items {
 		podIp := pod.Status.PodIP
 		// FIXME: Do not hardcode port here. Pass in as --arg. Follow-up PR
+
 		port := uint(5690)
 
 		// set meta label

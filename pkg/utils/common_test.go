@@ -54,11 +54,22 @@ func Test_CommonGetVersionFromImage(t *testing.T) {
 			image:   "ghcr.io/risingwavelabs/risingwave:latest",
 			version: "latest",
 		},
+		"image-simplified": {
+			image:   "risingwave",
+			version: "latest",
+		},
+		"image-simplified-with-tag": {
+			image:   "risingwave:tag",
+			version: "tag",
+		},
 	}
-	for name, obj := range testcases {
-		if GetVersionFromImage(obj.image) != obj.version {
-			fmt.Printf("Test %s: Input:%s, Output: %s, Expect:%s\n", name, obj.image, GetVersionFromImage(obj.image), obj.version)
-			t.Fail()
-		}
+	for name := range testcases {
+		obj := testcases[name]
+		t.Run(name, func(t *testing.T) {
+			if GetVersionFromImage(obj.image) != obj.version {
+				fmt.Printf("Test %s: Input:%s, Output: %s, Expect:%s\n", name, obj.image, GetVersionFromImage(obj.image), obj.version)
+				t.Fail()
+			}
+		})
 	}
 }

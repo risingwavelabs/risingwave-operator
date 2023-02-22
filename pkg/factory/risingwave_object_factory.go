@@ -843,6 +843,28 @@ func mergeComponentGroupTemplates(base, overlay *risingwavev1alpha1.RisingWaveCo
 	}
 	r.NodeSelector = mergeMap(r.NodeSelector, overlay.NodeSelector)
 	r.PodTemplate = mergeValue(r.PodTemplate, overlay.PodTemplate)
+	if len(overlay.Tolerations) != 0 {
+		r.Tolerations = overlay.Tolerations
+	}
+	r.PriorityClassName = mergeValue(r.PriorityClassName, overlay.PriorityClassName)
+	if overlay.SecurityContext != nil {
+		r.SecurityContext = overlay.SecurityContext.DeepCopy()
+	}
+	if overlay.DNSConfig != nil {
+		r.DNSConfig = overlay.DNSConfig.DeepCopy()
+	}
+	if overlay.TerminationGracePeriodSeconds != nil {
+		r.TerminationGracePeriodSeconds = pointer.Int64(*overlay.TerminationGracePeriodSeconds)
+	}
+	if len(overlay.Metadata.Labels) != 0 || len(overlay.Metadata.Annotations) != 0 {
+		r.Metadata = *overlay.Metadata.DeepCopy()
+	}
+	if len(overlay.Env) != 0 {
+		r.Env = overlay.Env
+	}
+	if len(overlay.EnvFrom) != 0 {
+		r.EnvFrom = overlay.EnvFrom
+	}
 
 	return r
 }
@@ -985,7 +1007,8 @@ func buildComponentGroup(globalReplicas int32, globalTemplate *risingwavev1alpha
 	} else {
 		componentGroup = findTheFirstMatchPtr(groups, func(g *risingwavev1alpha1.RisingWaveComponentGroup) bool {
 			return g.Name == group
-		})
+		}).DeepCopy()
+
 		if componentGroup == nil {
 			return nil
 		}
@@ -1008,10 +1031,11 @@ func buildComputeGroup(globalReplicas int32, globalTemplate *risingwavev1alpha1.
 	} else {
 		componentGroup = findTheFirstMatchPtr(groups, func(g *risingwavev1alpha1.RisingWaveComputeGroup) bool {
 			return g.Name == group
-		})
+		}).DeepCopy()
 		if componentGroup == nil {
 			return nil
 		}
+
 		if componentGroup.RisingWaveComputeGroupTemplate != nil {
 			componentGroup.RisingWaveComputeGroupTemplate.RisingWaveComponentGroupTemplate = *mergeComponentGroupTemplates(globalTemplate,
 				&componentGroup.RisingWaveComputeGroupTemplate.RisingWaveComponentGroupTemplate)
@@ -1052,13 +1076,13 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 	container.Command = []string{risingwaveExecutablePath}
 
 	// Copy the template's envFrom.
-	container.EnvFrom = make([]corev1.EnvFromSource, len(template.EnvFrom))
+	container.EnvFrom = make([]corev1.EnvFromSource, 0, len(template.EnvFrom))
 	for _, envFrom := range template.EnvFrom {
 		container.EnvFrom = append(container.EnvFrom, *envFrom.DeepCopy())
 	}
 
 	// Copy the template's env.
-	container.Env = make([]corev1.EnvVar, len(template.Env))
+	container.Env = make([]corev1.EnvVar, 0, len(template.Env))
 	for _, env := range template.Env {
 		container.Env = append(container.Env, *env.DeepCopy())
 	}
@@ -1740,6 +1764,28 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	})
 }
 
+func buildPersistentVolumeClaims(claims []risingwavev1alpha1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
+	if claims == nil {
+		return nil
+	}
+
+	result := make([]corev1.PersistentVolumeClaim, 0, len(claims))
+	for _, claim := range claims {
+		claim := *claim.DeepCopy()
+		result = append(result, corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:        claim.Name,
+				Labels:      claim.Labels,
+				Annotations: claim.Annotations,
+				Finalizers:  claim.Finalizers,
+			},
+			Spec: claim.Spec,
+		})
+	}
+
+	return result
+}
+
 // NewComputeStatefulSet creates a new StatefulSet for the compute component and specified group.
 func (f *RisingWaveObjectFactory) NewComputeStatefulSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.StatefulSet {
 	componentGroup := buildComputeGroup(
@@ -1776,7 +1822,7 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet(group string, podTemplat
 				MatchLabels: labelsOrSelectors,
 			},
 			Template:             podTemplate,
-			VolumeClaimTemplates: pvcTemplates,
+			VolumeClaimTemplates: buildPersistentVolumeClaims(pvcTemplates),
 			PodManagementPolicy:  appsv1.ParallelPodManagement,
 			PersistentVolumeClaimRetentionPolicy: &appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy{
 				WhenDeleted: appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
@@ -1825,7 +1871,7 @@ func (f *RisingWaveObjectFactory) NewComputeAdvancedStatefulSet(group string, po
 				MatchLabels: labelsOrSelectors,
 			},
 			Template:             podTemplate,
-			VolumeClaimTemplates: pvcTemplates,
+			VolumeClaimTemplates: buildPersistentVolumeClaims(pvcTemplates),
 			PodManagementPolicy:  appsv1.ParallelPodManagement,
 			PersistentVolumeClaimRetentionPolicy: &kruiseappsv1beta1.StatefulSetPersistentVolumeClaimRetentionPolicy{
 				WhenDeleted: kruiseappsv1beta1.DeletePersistentVolumeClaimRetentionPolicyType,

@@ -4303,8 +4303,7 @@ spec:
                   and compactor, and PVC templates for compute.
                 properties:
                   meta:
-                    description: RisingWaveMetaStorage is the storage for the meta
-                      component.
+                    description: Storage spec for meta.
                     properties:
                       etcd:
                         description: Endpoint of the etcd service for storing the
@@ -4429,23 +4428,59 @@ spec:
                       component. PVCs declared here can be referenced in the groups
                       of compute component.
                     items:
-                      description: PersistentVolumeClaim is a user's request for and
-                        claim to a persistent volume
+                      description: PersistentVolumeClaim used by RisingWave.
                       properties:
-                        apiVersion:
-                          description: 'APIVersion defines the versioned schema of
-                            this representation of an object. Servers should convert
-                            recognized schemas to the latest internal value, and may
-                            reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-                          type: string
-                        kind:
-                          description: 'Kind is a string value representing the REST
-                            resource this object represents. Servers may infer this
-                            from the endpoint the client submits requests to. Cannot
-                            be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-                          type: string
                         metadata:
-                          description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata'
+                          description: PersistentVolumeClaimPartialObjectMeta is the
+                            metadata for PVC templates.
+                          properties:
+                            annotations:
+                              additionalProperties:
+                                type: string
+                              description: 'Annotations is an unstructured key value
+                                map stored with a resource that may be set by external
+                                tools to store and retrieve arbitrary metadata. They
+                                are not queryable and should be preserved when modifying
+                                objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                              type: object
+                            finalizers:
+                              description: Must be empty before the object is deleted
+                                from the registry. Each entry is an identifier for
+                                the responsible component that will remove the entry
+                                from the list. If the deletionTimestamp of the object
+                                is non-nil, entries in this list can only be removed.
+                                Finalizers may be processed and removed in any order.  Order
+                                is NOT enforced because it introduces significant
+                                risk of stuck finalizers. finalizers is a shared field,
+                                any actor with permission can reorder it. If the finalizer
+                                list is processed in order, then this can lead to
+                                a situation in which the component responsible for
+                                the first finalizer in the list is waiting for a signal
+                                (field value, external system, or other) produced
+                                by a component responsible for a finalizer later in
+                                the list, resulting in a deadlock. Without enforced
+                                ordering finalizers are free to order amongst themselves
+                                and are not vulnerable to ordering changes in the
+                                list.
+                              items:
+                                type: string
+                              type: array
+                            labels:
+                              additionalProperties:
+                                type: string
+                              description: 'Map of string keys and values that can
+                                be used to organize and categorize (scope and select)
+                                objects. May match selectors of replication controllers
+                                and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                              type: object
+                            name:
+                              description: 'Name must be unique within a namespace.
+                                Is required when creating resources, although some
+                                resources may allow a client to request the generation
+                                of an appropriate name automatically. Name is primarily
+                                intended for creation idempotence and configuration
+                                definition. Cannot be updated. More info: http://kubernetes.io/docs/user-guide/identifiers#names'
+                              type: string
                           type: object
                         spec:
                           description: 'spec defines the desired characteristics of
@@ -4663,100 +4698,6 @@ spec:
                             volumeName:
                               description: volumeName is the binding reference to
                                 the PersistentVolume backing this claim.
-                              type: string
-                          type: object
-                        status:
-                          description: 'status represents the current information/status
-                            of a persistent volume claim. Read-only. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims'
-                          properties:
-                            accessModes:
-                              description: 'accessModes contains the actual access
-                                modes the volume backing the PVC has. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1'
-                              items:
-                                type: string
-                              type: array
-                            allocatedResources:
-                              additionalProperties:
-                                anyOf:
-                                - type: integer
-                                - type: string
-                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                x-kubernetes-int-or-string: true
-                              description: allocatedResources is the storage resource
-                                within AllocatedResources tracks the capacity allocated
-                                to a PVC. It may be larger than the actual capacity
-                                when a volume expansion operation is requested. For
-                                storage quota, the larger value from allocatedResources
-                                and PVC.spec.resources is used. If allocatedResources
-                                is not set, PVC.spec.resources alone is used for quota
-                                calculation. If a volume expansion capacity request
-                                is lowered, allocatedResources is only lowered if
-                                there are no expansion operations in progress and
-                                if the actual volume capacity is equal or lower than
-                                the requested capacity. This is an alpha field and
-                                requires enabling RecoverVolumeExpansionFailure feature.
-                              type: object
-                            capacity:
-                              additionalProperties:
-                                anyOf:
-                                - type: integer
-                                - type: string
-                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                x-kubernetes-int-or-string: true
-                              description: capacity represents the actual resources
-                                of the underlying volume.
-                              type: object
-                            conditions:
-                              description: conditions is the current Condition of
-                                persistent volume claim. If underlying persistent
-                                volume is being resized then the Condition will be
-                                set to 'ResizeStarted'.
-                              items:
-                                description: PersistentVolumeClaimCondition contails
-                                  details about state of pvc
-                                properties:
-                                  lastProbeTime:
-                                    description: lastProbeTime is the time we probed
-                                      the condition.
-                                    format: date-time
-                                    type: string
-                                  lastTransitionTime:
-                                    description: lastTransitionTime is the time the
-                                      condition transitioned from one status to another.
-                                    format: date-time
-                                    type: string
-                                  message:
-                                    description: message is the human-readable message
-                                      indicating details about last transition.
-                                    type: string
-                                  reason:
-                                    description: reason is a unique, this should be
-                                      a short, machine understandable string that
-                                      gives the reason for condition's last transition.
-                                      If it reports "ResizeStarted" that means the
-                                      underlying persistent volume is being resized.
-                                    type: string
-                                  status:
-                                    type: string
-                                  type:
-                                    description: PersistentVolumeClaimConditionType
-                                      is a valid value of PersistentVolumeClaimCondition.Type
-                                    type: string
-                                required:
-                                - status
-                                - type
-                                type: object
-                              type: array
-                            phase:
-                              description: phase represents the current phase of PersistentVolumeClaim.
-                              type: string
-                            resizeStatus:
-                              description: resizeStatus stores status of resize operation.
-                                ResizeStatus is not set by default but when expansion
-                                is complete resizeStatus is set to empty string by
-                                resize controller or kubelet. This is an alpha field
-                                and requires enabling RecoverVolumeExpansionFailure
-                                feature.
                               type: string
                           type: object
                       type: object

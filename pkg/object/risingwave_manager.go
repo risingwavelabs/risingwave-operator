@@ -40,7 +40,7 @@ func NewRisingWaveReader(risingwave *risingwavev1alpha1.RisingWave) *RisingWaveR
 
 // RisingWave returns the RisingWave immutable reference.
 func (r *RisingWaveReader) RisingWave() *risingwavev1alpha1.RisingWave {
-	return r.risingwave
+	return r.risingwave.DeepCopy()
 }
 
 // IsObservedGenerationOutdated tells whether the observed generation is outdated.

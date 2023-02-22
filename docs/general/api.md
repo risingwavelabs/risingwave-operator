@@ -872,6 +872,40 @@ RisingWavePodTemplatePartialObjectMeta
 <p>metadata of the RisingWave&rsquo;s Pods.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>env</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envvar-v1-core">
+[]Kubernetes core/v1.EnvVar
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of environment variables to set in the container.
+Cannot be updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>envFrom</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envfromsource-v1-core">
+[]Kubernetes core/v1.EnvFromSource
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of sources to populate environment variables in the container.
+The keys defined within a source must be a C_IDENTIFIER. All invalid keys
+will be reported as an event when the container is starting. When a key exists in multiple
+sources, the value associated with the last source will take precedence.
+Values defined by an Env with a duplicate key will take precedence.
+Cannot be updated.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta
@@ -1407,6 +1441,40 @@ RisingWavePodTemplatePartialObjectMeta
 </tr>
 <tr>
 <td>
+<code>env</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envvar-v1-core">
+[]Kubernetes core/v1.EnvVar
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of environment variables to set in the container.
+Cannot be updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>envFrom</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envfromsource-v1-core">
+[]Kubernetes core/v1.EnvFromSource
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of sources to populate environment variables in the container.
+The keys defined within a source must be a C_IDENTIFIER. All invalid keys
+will be reported as an event when the container is starting. When a key exists in multiple
+sources, the value associated with the last source will take precedence.
+Values defined by an Env with a duplicate key will take precedence.
+Cannot be updated.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>volumeMounts</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">
@@ -1844,6 +1912,40 @@ RisingWavePodTemplatePartialObjectMeta
 <td>
 <em>(Optional)</em>
 <p>metadata of the RisingWave&rsquo;s Pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>env</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envvar-v1-core">
+[]Kubernetes core/v1.EnvVar
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of environment variables to set in the container.
+Cannot be updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>envFrom</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envfromsource-v1-core">
+[]Kubernetes core/v1.EnvFromSource
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of sources to populate environment variables in the container.
+The keys defined within a source must be a C_IDENTIFIER. All invalid keys
+will be reported as an event when the container is starting. When a key exists in multiple
+sources, the value associated with the last source will take precedence.
+Values defined by an Env with a duplicate key will take precedence.
+Cannot be updated.</p>
 </td>
 </tr>
 <tr>
@@ -3786,6 +3888,17 @@ int64
 <td>
 <p>Observed generation by controller. It will be updated
 when controller observes the changes on the spec and going to sync the subresources.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>version</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version of the Global Image</p>
 </td>
 </tr>
 <tr>

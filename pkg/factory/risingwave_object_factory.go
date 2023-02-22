@@ -1050,6 +1050,16 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 	container.Image = template.Image
 	container.ImagePullPolicy = template.ImagePullPolicy
 	container.Command = []string{risingwaveExecutablePath}
+
+	// Copy the template's envFrom.
+	container.EnvFrom = make([]corev1.EnvFromSource, len(template.EnvFrom))
+	copy(container.EnvFrom, template.EnvFrom)
+
+	// Copy the template's env.
+	container.Env = make([]corev1.EnvVar, len(template.Env))
+	copy(container.Env, template.Env)
+
+	// Setting the system environment variables.
 	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
 		Name: "POD_IP",
 		ValueFrom: &corev1.EnvVarSource{

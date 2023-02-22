@@ -47,12 +47,14 @@ const (
 	risingWaveConfigVolume = "risingwave-config"
 	risingWaveConfigMapKey = "risingwave.toml"
 
-	minIOEndpointEnvName = "MINIO_ENDPOINT"
-	minIOBucketEnvName   = "MINIO_BUCKET"
-	minIOUsernameEnvName = "MINIO_USERNAME"
-	minIOPasswordEnvName = "MINIO_PASSWORD"
-	etcdUsernameEnvName  = "ETCD_USERNAME"
-	etcdPasswordEnvName  = "ETCD_PASSWORD"
+	minIOEndpointEnvName      = "MINIO_ENDPOINT"
+	minIOBucketEnvName        = "MINIO_BUCKET"
+	minIOUsernameEnvName      = "MINIO_USERNAME"
+	minIOPasswordEnvName      = "MINIO_PASSWORD"
+	legacyEtcdUsernameEnvName = "ETCD_USERNAME"
+	legacyEtcdPasswordEnvName = "ETCD_PASSWORD"
+	etcdUsernameEnvName       = "RW_ETCD_USERNAME"
+	etcdPasswordEnvName       = "RW_ETCD_PASSWORD"
 
 	risingwaveExecutablePath  = "/risingwave/bin/risingwave"
 	risingwaveConfigMountPath = "/risingwave/config"
@@ -399,6 +401,26 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 	}
 
 	return []corev1.EnvVar{
+		// Keep the legacy environment variables for compatibility. Will remove them later.
+		{
+			Name: legacyEtcdUsernameEnvName,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyEtcdUsername,
+				},
+			},
+		},
+		{
+			Name: legacyEtcdPasswordEnvName,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyEtcdPassword,
+				},
+			},
+		},
+		// Environment variables for etcd auth.
 		{
 			Name: etcdUsernameEnvName,
 			ValueFrom: &corev1.EnvVarSource{

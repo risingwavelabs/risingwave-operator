@@ -47,12 +47,14 @@ const (
 	risingWaveConfigVolume = "risingwave-config"
 	risingWaveConfigMapKey = "risingwave.toml"
 
-	minIOEndpointEnvName = "MINIO_ENDPOINT"
-	minIOBucketEnvName   = "MINIO_BUCKET"
-	minIOUsernameEnvName = "MINIO_USERNAME"
-	minIOPasswordEnvName = "MINIO_PASSWORD"
-	etcdUsernameEnvName  = "ETCD_USERNAME"
-	etcdPasswordEnvName  = "ETCD_PASSWORD"
+	minIOEndpointEnvName      = "MINIO_ENDPOINT"
+	minIOBucketEnvName        = "MINIO_BUCKET"
+	minIOUsernameEnvName      = "MINIO_USERNAME"
+	minIOPasswordEnvName      = "MINIO_PASSWORD"
+	legacyEtcdUsernameEnvName = "ETCD_USERNAME"
+	legacyEtcdPasswordEnvName = "ETCD_PASSWORD"
+	etcdUsernameEnvName       = "RW_ETCD_USERNAME"
+	etcdPasswordEnvName       = "RW_ETCD_PASSWORD"
 
 	risingwaveExecutablePath  = "/risingwave/bin/risingwave"
 	risingwaveConfigMountPath = "/risingwave/config"
@@ -399,6 +401,26 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 	}
 
 	return []corev1.EnvVar{
+		// Keep the legacy environment variables for compatibility. Will remove them later.
+		{
+			Name: legacyEtcdUsernameEnvName,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyEtcdUsername,
+				},
+			},
+		},
+		{
+			Name: legacyEtcdPasswordEnvName,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyEtcdPassword,
+				},
+			},
+		},
+		// Environment variables for etcd auth.
 		{
 			Name: etcdUsernameEnvName,
 			ValueFrom: &corev1.EnvVarSource{
@@ -428,7 +450,7 @@ func (f *RisingWaveObjectFactory) argsForMeta() []string {
 		"meta-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", metaPorts.ServicePort),
-		"--host", "$(POD_IP)",
+		"--host", fmt.Sprintf("$(POD_NAME).%s", f.componentName(consts.ComponentMeta, "")),
 		"--dashboard-host", fmt.Sprintf("0.0.0.0:%d", metaPorts.DashboardPort),
 		"--prometheus-host", fmt.Sprintf("0.0.0.0:%d", metaPorts.MetricsPort),
 	}
@@ -457,7 +479,7 @@ func (f *RisingWaveObjectFactory) argsForFrontend() []string {
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--host", fmt.Sprintf("0.0.0.0:%d", frontendPorts.ServicePort),
 		"--client-address", fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
-		"--meta-addr", fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		"--meta-addr", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 		"--metrics-level=1",
 		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", frontendPorts.MetricsPort),
 	}
@@ -477,7 +499,7 @@ func (f *RisingWaveObjectFactory) argsForCompute(cpuLimit int64, memLimit int64)
 		"--state-store",
 		f.hummockConnectionStr(),
 		"--meta-address",
-		fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 	}
 
 	if cpuLimit != 0 {
@@ -510,7 +532,7 @@ func (f *RisingWaveObjectFactory) argsForCompactor() []string {
 		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", compactorPorts.MetricsPort),
 		"--metrics-level=1",
 		"--state-store", f.hummockConnectionStr(),
-		"--meta-address", fmt.Sprintf("http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		"--meta-address", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 	}
 }
 
@@ -1108,6 +1130,11 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 	container.Name = "meta"
 	container.Args = f.argsForMeta()
 	container.Ports = f.portsForMetaContainer()
+	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	container.Env = append(container.Env, corev1.EnvVar{
+		Name:  "RW_CONNECTOR_RPC_ENDPOINT",
+		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
+	})
 
 	if f.isMetaStorageEtcd() {
 		for _, env := range f.envsForEtcd() {
@@ -1208,12 +1235,18 @@ func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string, podTemplates 
 	metaSts := &appsv1.StatefulSet{
 		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentMeta, group, true),
 		Spec: appsv1.StatefulSetSpec{
+			ServiceName:    f.componentName(consts.ComponentMeta, ""),
 			Replicas:       pointer.Int32(componentGroup.Replicas),
 			UpdateStrategy: buildUpgradeStrategyForStatefulSet(componentGroup.UpgradeStrategy),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labelsOrSelectors,
 			},
-			Template: podTemplate,
+			Template:            podTemplate,
+			PodManagementPolicy: appsv1.ParallelPodManagement,
+			PersistentVolumeClaimRetentionPolicy: &appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy{
+				WhenDeleted: appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
+				WhenScaled:  appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
+			},
 		},
 	}
 

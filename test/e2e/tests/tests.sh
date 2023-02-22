@@ -16,6 +16,7 @@ ${__E2E_SOURCE_TESTS_TESTS_SH__:=false} && return 0 || __E2E_SOURCE_TESTS_TESTS_
 
 export E2E_RISINGWAVE_NAME="${E2E_RISINGWAVE_NAME:=e2e}"
 export E2E_RISINGWAVE_IMAGE="${E2E_RISINGWAVE_IMAGE:=ghcr.io/risingwavelabs/risingwave:v0.1.16}"
+export E2E_RISINGWAVE_NIGHTLY_IMAGE="${E2E_RISINGWAVE_NIGHTLY_IMAGE:=ghcr.io/risingwavelabs/risingwave:nightly-20230216}"
 
 source "$(dirname "${BASH_SOURCE[0]}")/risingwave/tests.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/risingwavescaleview/tests.sh"

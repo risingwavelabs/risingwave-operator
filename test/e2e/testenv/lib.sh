@@ -186,7 +186,7 @@ function testenv::k8s::risingwave_operator::enable_openkruise(){
 
 function testenv::k8s::install_openkruise(){
   # shellcheck disable=SC2034
-  local HELM_NAMESPACE="${_RISINGWAVE_OPERATOR_NAMESPACE}"
+  local HELM_NAMESPACE=""
   local version=${OPENKRUISE_VERSION:-1.3.0}
   logging::info "Adding OpenKruise into helm charts..."
   helm::helm repo add openkruise https://openkruise.github.io/charts/
@@ -196,7 +196,7 @@ function testenv::k8s::install_openkruise(){
 
 function testenv::k8s::risingwave::uninstall_openkruise(){
   # shellcheck disable=SC2034
-  local HELM_NAMESPACE="${_RISINGWAVE_OPERATOR_NAMESPACE}"
+  local HELM_NAMESPACE=""
   helm::helm uninstall kruise
 }
 

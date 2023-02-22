@@ -30,6 +30,9 @@ spec:
     - jsonPath: .status.storages.object.type
       name: STORAGE(OBJECT)
       type: string
+    - jsonPath: .status.version
+      name: VERSION
+      type: string
     - jsonPath: .metadata.creationTimestamp
       name: AGE
       type: date
@@ -1257,6 +1260,29 @@ spec:
                             resources:
                               description: Resources of the RisingWave component.
                               properties:
+                                claims:
+                                  description: "Claims lists the names of resources,
+                                    defined in spec.resourceClaims, that are used
+                                    by this container. \n This is an alpha field and
+                                    requires enabling the DynamicResourceAllocation
+                                    feature gate. \n This field is immutable."
+                                  items:
+                                    description: ResourceClaim references one entry
+                                      in PodSpec.ResourceClaims.
+                                    properties:
+                                      name:
+                                        description: Name must match the name of one
+                                          entry in pod.spec.resourceClaims of the
+                                          Pod where this field is used. It makes that
+                                          resource available inside a container.
+                                        type: string
+                                    required:
+                                    - name
+                                    type: object
+                                  type: array
+                                  x-kubernetes-list-map-keys:
+                                  - name
+                                  x-kubernetes-list-type: map
                                 limits:
                                   additionalProperties:
                                     anyOf:
@@ -1400,10 +1426,15 @@ spec:
                                 supplementalGroups:
                                   description: A list of groups applied to the first
                                     process run in each container, in addition to
-                                    the container's primary GID.  If unspecified,
-                                    no groups will be added to any container. Note
-                                    that this field cannot be set when spec.os.name
-                                    is windows.
+                                    the container's primary GID, the fsGroup (if specified),
+                                    and group memberships defined in the container
+                                    image for the uid of the container process. If
+                                    unspecified, no additional groups are added to
+                                    any container. Note that group memberships defined
+                                    in the container image for the uid of the container
+                                    process are still effective, even if they are
+                                    not included in this list. Note that this field
+                                    cannot be set when spec.os.name is windows.
                                   items:
                                     format: int64
                                     type: integer
@@ -4054,6 +4085,9 @@ spec:
                 - meta
                 - object
                 type: object
+              version:
+                description: Version of the Global Image
+                type: string
             type: object
         type: object
     served: true

@@ -774,6 +774,9 @@ type RisingWaveStatus struct {
 	// when controller observes the changes on the spec and going to sync the subresources.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
+	// Version of the Global Image
+	Version string `json:"version,omitempty"`
+
 	// Replica status of components.
 	ComponentReplicas RisingWaveComponentsReplicasStatus `json:"componentReplicas,omitempty"`
 
@@ -799,6 +802,7 @@ type RisingWaveStatus struct {
 // +kubebuilder:printcolumn:name="RUNNING",type=string,JSONPath=`.status.conditions[?(@.type=="Running")].status`
 // +kubebuilder:printcolumn:name="STORAGE(META)",type=string,JSONPath=`.status.storages.meta.type`
 // +kubebuilder:printcolumn:name="STORAGE(OBJECT)",type=string,JSONPath=`.status.storages.object.type`
+// +kubebuilder:printcolumn:name="VERSION",type=string,JSONPath=`.status.version`
 // +kubebuilder:printcolumn:name="AGE",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // RisingWave is the struct for RisingWave object.

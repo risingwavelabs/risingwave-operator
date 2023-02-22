@@ -114,7 +114,7 @@ function e2e::test::run() {
 
 function e2e::test::run_next() {
   local idx="$1"
-  local ns="e2e-${idx}"
+  local ns="${E2E_NAMESPACE_PREFIX:-}e2e-${idx}"
   local tc="$2"
 
   local LOGGING_TAGS=(e2e "ns/${ns}" "${tc}")
@@ -197,20 +197,55 @@ function e2e::pre_run() {
 
   shell::run docker pull "${E2E_RISINGWAVE_IMAGE}" || return $?
   testenv::k8s::load_docker_image "${E2E_RISINGWAVE_IMAGE}"
+
+  shell::run docker pull "${E2E_RISINGWAVE_NIGHTLY_IMAGE}" || return $?
+  testenv::k8s::load_docker_image "${E2E_RISINGWAVE_NIGHTLY_IMAGE}"
 }
 
 function e2e::post_run() {
   testenv::teardown
 }
 
+function help() {
+  echo "RisingWave E2E test script"
+  echo ""
+  echo "Parameters:"
+  echo "  -h  print this help message"
+  echo "  -p  run only tests that match prefix. To list prefixes use -l"
+  echo "  -l  list all available tests"
+  exit 0
+}
+
+function e2e::run_with_default() {
+  local result=0
+  local OPEN_KRUISE_ENABLED_IN_RISINGWAVE=0
+  e2e::run || result=$?
+  return ${result}
+}
+
+function e2e::run_with_open_kruise() {
+  local result=0
+  local OPEN_KRUISE_ENABLED_IN_RISINGWAVE=1
+  local E2E_NAMESPACE_PREFIX="open-kruise-"
+  e2e::run || result=$?
+  return ${result}
+}
+
 function e2e::main() {
   e2e::turn_on_debug_settings_if_debug_is_true
 
-  while getopts ":p:" opt; do
+  while getopts "hlp:" opt; do
     case "${opt}" in
     p)
       export E2E_TEST_CASE_PREFIX=${OPTARG}
       logging::warn "Run selected test cases with prefix \"${E2E_TEST_CASE_PREFIX}\"..."
+      ;;
+    h)
+      help
+      ;;
+    l)
+      for t in $(e2e::list_test_cases); do echo "$t"; done
+      exit 0
       ;;
     *) ;;
     esac
@@ -219,14 +254,17 @@ function e2e::main() {
   # Pre-run, exit if fails.
   e2e::pre_run || return $?
 
-  # Run tests.
-  local OPEN_KRUISE_ENABLED_IN_RISINGWAVE=0
-  local e2e_result=0
-  e2e::run || e2e_result=$?
+  # shellcheck disable=SC2034
+  local BACKGROUND_PIDS=()
 
-   # Run tests when open kruise is enabled.
-  OPEN_KRUISE_ENABLED_IN_RISINGWAVE=1
-  e2e::run || e2e_result+=$?
+  # Run tests.
+  shell::spawn e2e::run_with_default
+
+  # Run tests when open kruise is enabled.
+  shell::spawn e2e::run_with_open_kruise
+
+  local e2e_result=0
+  shell::wait_all || e2e_result=$?
 
   # Post-run with best effort.
   e2e::post_run || :

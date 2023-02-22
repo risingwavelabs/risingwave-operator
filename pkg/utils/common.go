@@ -17,6 +17,8 @@
 package utils
 
 import (
+	"strings"
+
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -29,4 +31,19 @@ func GetNamespacedName(obj client.Object) types.NamespacedName {
 // IsDeleted returns true when object's deletion timestamp isn't null.
 func IsDeleted(obj client.Object) bool {
 	return obj != nil && !obj.GetDeletionTimestamp().IsZero()
+}
+
+// GetVersionFromImage return the version from spec.global.image.
+func GetVersionFromImage(image string) string {
+	if image == "" {
+		return ""
+	}
+
+	lastRepoIdx := strings.LastIndex(image, "/")
+	lastTagIdx := strings.LastIndex(image[lastRepoIdx+1:], ":")
+	if lastTagIdx < 0 {
+		return "latest"
+	} else {
+		return image[lastRepoIdx+lastTagIdx+2:]
+	}
 }

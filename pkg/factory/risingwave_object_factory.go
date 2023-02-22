@@ -1053,11 +1053,15 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 
 	// Copy the template's envFrom.
 	container.EnvFrom = make([]corev1.EnvFromSource, len(template.EnvFrom))
-	copy(container.EnvFrom, template.EnvFrom)
+	for _, envFrom := range template.EnvFrom {
+		container.EnvFrom = append(container.EnvFrom, *envFrom.DeepCopy())
+	}
 
 	// Copy the template's env.
 	container.Env = make([]corev1.EnvVar, len(template.Env))
-	copy(container.Env, template.Env)
+	for _, env := range template.Env {
+		container.Env = append(container.Env, *env.DeepCopy())
+	}
 
 	// Setting the system environment variables.
 	container.Env = mergeListByKey(container.Env, corev1.EnvVar{

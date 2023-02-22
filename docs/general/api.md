@@ -3790,6 +3790,17 @@ when controller observes the changes on the spec and going to sync the subresour
 </tr>
 <tr>
 <td>
+<code>version</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version of the Global Image</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>componentReplicas</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsReplicasStatus">

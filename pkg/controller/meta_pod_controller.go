@@ -88,12 +88,12 @@ func getMetaPort(pod *corev1.Pod) (uint, error) {
 
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
 func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	requeueInterval60s := time.Second * time.Duration(60)
-	defaultRequeueResult := ctrl.Result{RequeueAfter: requeueInterval60s}
+	requeueInterval10s := time.Second * time.Duration(10)
+	defaultRequeue10sResult := ctrl.Result{RequeueAfter: requeueInterval10s}
 
 	// only reconcile when this is related to a meta pod
 	if !strings.Contains(req.Name, "meta") {
-		return defaultRequeueResult, nil
+		return defaultRequeue10sResult, nil
 	}
 
 	log := log.FromContext(ctx)
@@ -119,7 +119,7 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		port, err := getMetaPort(&pod)
 		if err != nil {
 			log.Error(err, "Error. Retrying...")
-			return defaultRequeueResult, err
+			return defaultRequeue10sResult, err
 		}
 
 		// set meta label
@@ -156,7 +156,7 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{Requeue: true}, nil
 	}
 
-	return defaultRequeueResult, nil
+	return defaultRequeue10sResult, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

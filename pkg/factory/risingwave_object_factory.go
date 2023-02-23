@@ -793,18 +793,6 @@ func findTheFirstMatchPtr[T any](list []T, predicate func(*T) bool) *T {
 	return nil
 }
 
-func mergeValue[T comparable](a, b T) T {
-	var zero T
-	if b == zero {
-		return a
-	}
-	return b
-}
-
-func mergeValueList[T any](a, b []T) []T {
-	return append(a, b...)
-}
-
 func mergeMap[K comparable, V any](a, b map[K]V) map[K]V {
 	if a == nil && b == nil {
 		return nil
@@ -821,51 +809,13 @@ func mergeMap[K comparable, V any](a, b map[K]V) map[K]V {
 	return r
 }
 
-func isResourcesEmpty(resources corev1.ResourceRequirements) bool {
-	return len(resources.Limits) == 0 && len(resources.Requests) == 0
-}
-
 func mergeComponentGroupTemplates(base, overlay *risingwavev1alpha1.RisingWaveComponentGroupTemplate) *risingwavev1alpha1.RisingWaveComponentGroupTemplate {
 	if overlay == nil {
-		return base.DeepCopy()
-	}
-	if base == nil {
-		return overlay.DeepCopy()
+		return base
 	}
 
-	r := base.DeepCopy()
-	r.Image = mergeValue(r.Image, overlay.Image)
-	r.ImagePullPolicy = mergeValue(r.ImagePullPolicy, overlay.ImagePullPolicy)
-	r.ImagePullSecrets = mergeValueList(r.ImagePullSecrets, overlay.ImagePullSecrets)
-	r.UpgradeStrategy = mergeValue(r.UpgradeStrategy, overlay.UpgradeStrategy)
-	if !isResourcesEmpty(overlay.Resources) {
-		r.Resources = overlay.Resources
-	}
-	r.NodeSelector = mergeMap(r.NodeSelector, overlay.NodeSelector)
-	r.PodTemplate = mergeValue(r.PodTemplate, overlay.PodTemplate)
-	if len(overlay.Tolerations) != 0 {
-		r.Tolerations = overlay.Tolerations
-	}
-	r.PriorityClassName = mergeValue(r.PriorityClassName, overlay.PriorityClassName)
-	if overlay.SecurityContext != nil {
-		r.SecurityContext = overlay.SecurityContext.DeepCopy()
-	}
-	if overlay.DNSConfig != nil {
-		r.DNSConfig = overlay.DNSConfig.DeepCopy()
-	}
-	if overlay.TerminationGracePeriodSeconds != nil {
-		r.TerminationGracePeriodSeconds = pointer.Int64(*overlay.TerminationGracePeriodSeconds)
-	}
-	if len(overlay.Metadata.Labels) != 0 || len(overlay.Metadata.Annotations) != 0 {
-		r.Metadata = *overlay.Metadata.DeepCopy()
-	}
-	if len(overlay.Env) != 0 {
-		r.Env = overlay.Env
-	}
-	if len(overlay.EnvFrom) != 0 {
-		r.EnvFrom = overlay.EnvFrom
-	}
-
+	r := overlay.DeepCopy()
+	setDefaultValueForFirstLevelFields(r, base.DeepCopy())
 	return r
 }
 

@@ -172,6 +172,10 @@ type RisingWaveComponentGroupTemplate struct {
 	// Cannot be updated.
 	// +optional
 	EnvFrom []corev1.EnvFromSource `json:"envFrom,omitempty"`
+
+	// If specified, the pod's scheduling constraints
+	// +optional
+	Affinity *corev1.Affinity `json:"affinity,omitempty" protobuf:"bytes,18,opt,name=affinity"`
 }
 
 // RisingWaveComponentGroup is the common deployment group of each component. Currently, we use

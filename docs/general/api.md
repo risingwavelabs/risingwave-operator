@@ -1188,6 +1188,20 @@ Values defined by an Env with a duplicate key will take precedence.
 Cannot be updated.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>affinity</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#affinity-v1-core">
+Kubernetes core/v1.Affinity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If specified, the pod&rsquo;s scheduling constraints</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta
@@ -1757,6 +1771,20 @@ Cannot be updated.</p>
 </tr>
 <tr>
 <td>
+<code>affinity</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#affinity-v1-core">
+Kubernetes core/v1.Affinity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If specified, the pod&rsquo;s scheduling constraints</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>volumeMounts</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">
@@ -2228,6 +2256,20 @@ will be reported as an event when the container is starting. When a key exists i
 sources, the value associated with the last source will take precedence.
 Values defined by an Env with a duplicate key will take precedence.
 Cannot be updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>affinity</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#affinity-v1-core">
+Kubernetes core/v1.Affinity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If specified, the pod&rsquo;s scheduling constraints</p>
 </td>
 </tr>
 <tr>

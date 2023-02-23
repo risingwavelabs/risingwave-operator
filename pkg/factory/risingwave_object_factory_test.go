@@ -670,9 +670,7 @@ func listContainsWithEquals[T any](a, b []T, equals func(x, y T) bool) bool {
 
 	for _, x := range b {
 		for _, y := range a {
-			if !equals(x, y) {
-				return false
-			} else {
+			if equals(x, y) {
 				break
 			}
 		}

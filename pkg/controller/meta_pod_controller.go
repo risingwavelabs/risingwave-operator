@@ -143,8 +143,7 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 
 		// update pod in cluster
-		mpc.Patch(ctx, &pod, client.MergeFrom(originalPod))
-		if err := mpc.Update(ctx, &pod); err != nil {
+		if err := mpc.Patch(ctx, &pod, client.MergeFrom(originalPod)); err != nil {
 			if apierrors.IsConflict(err) || apierrors.IsNotFound(err) {
 				return ctrl.Result{Requeue: true}, nil
 			}

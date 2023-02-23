@@ -30,7 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // MetaPodController reconciles meta pods object.
@@ -45,7 +44,9 @@ func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string,
 	log := log.FromContext(ctx)
 	addr := fmt.Sprintf("%s:%v", host, port)
 
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	newCtx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+	conn, err := grpc.DialContext(newCtx, addr)
 	if err != nil {
 		log.Error(err, "Unable to connect to meta pod. Retrying...")
 		return "", err

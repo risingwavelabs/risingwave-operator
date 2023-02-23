@@ -34,9 +34,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// Tutorial: https://grpc.io/docs/languages/go/quickstart/
-// Generate proto files via make proto
-
 // MetaPodController reconciles meta pods object.
 type MetaPodController struct {
 	client.Client
@@ -45,35 +42,34 @@ type MetaPodController struct {
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;update;patch
 
 // metaLeaderStatus sends a MetaMember request to a meta node at ip:port, determining if the node is a leader.
-func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string, port uint) string {
+func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string, port uint) (string, error) {
 	log := log.FromContext(ctx)
-
 	addr := fmt.Sprintf("%s:%v", host, port)
 
-	for i := 0; i < 5; i++ {
-		time.Sleep(time.Duration(i*10) * time.Millisecond)
-		conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-		if err != nil {
-			log.Error(err, "Unable to connect to meta pod. Retrying...")
-			continue
-		}
-		defer conn.Close()
-		c := pb.NewMetaMemberServiceClient(conn)
-
-		resp, err := c.Members(ctx, &pb.MembersRequest{})
-		if err != nil {
-			log.Error(err, "Sending MembersRequest failed")
-			continue
-		}
-
-		for _, member := range resp.Members {
-			if member.IsLeader && host == member.Address.Host && port == uint(member.Address.Port) {
-				return consts.MetaRoleLeader
-			}
-		}
-		return consts.MetaRoleFollower
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Error(err, "Unable to connect to meta pod. Retrying...")
+		return "", err
 	}
-	return consts.MetaRoleUnknown
+	defer conn.Close()
+	c := pb.NewMetaMemberServiceClient(conn)
+
+	resp, err := c.Members(ctx, &pb.MembersRequest{})
+	if err != nil {
+		log.Info(fmt.Sprintf("Sending MembersRequest failed. Assuming meta node is not yet ready. Error was: %s", err.Error()))
+		return consts.MetaRoleUnknown, nil
+	}
+
+	if len(resp.Members) == 0 {
+		return consts.MetaRoleUnknown, nil
+	}
+
+	for _, member := range resp.Members {
+		if member.IsLeader && host == member.Address.Host && port == uint(member.Address.Port) {
+			return consts.MetaRoleLeader, nil
+		}
+	}
+	return consts.MetaRoleFollower, nil
 }
 
 // getMetaPort returns the service port of the pod.
@@ -131,7 +127,10 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		oldRole, ok := pod.Labels[consts.LabelRisingWaveMetaRole]
 		timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
 		defer cancel()
-		newRole := mpc.metaLeaderStatus(timeoutCtx, podIp, port)
+		newRole, err := mpc.metaLeaderStatus(timeoutCtx, podIp, port)
+		if err != nil {
+			return ctrl.Result{Requeue: true}, nil
+		}
 		pod.Labels[consts.LabelRisingWaveMetaRole] = newRole
 		hasLeader = hasLeader || newRole == consts.MetaRoleLeader
 		hasUnknown = hasUnknown || newRole == consts.MetaRoleUnknown

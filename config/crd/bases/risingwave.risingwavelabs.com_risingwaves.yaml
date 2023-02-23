@@ -1646,6 +1646,9 @@ spec:
                         - name
                         x-kubernetes-list-type: map
                       ports:
+                        default:
+                          metrics: 8080
+                          service: 50051
                         description: Ports to be listened by compactor Pods.
                         properties:
                           metrics:

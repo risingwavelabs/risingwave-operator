@@ -362,6 +362,12 @@ func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 // NewConnectorService creates a new Service for the connector.
 func (f *RisingWaveObjectFactory) NewConnectorService() *corev1.Service {
 	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	if connectorPorts.ServicePort == 0 {
+		connectorPorts.ServicePort = consts.DefaultConnectorServicePort
+	}
+	if connectorPorts.MetricsPort == 0 {
+		connectorPorts.MetricsPort = consts.DefaultConnectorMetricsPort
+	}
 
 	connectorService := &corev1.Service{
 		ObjectMeta: f.componentObjectMeta(consts.ComponentConnector, true),
@@ -538,6 +544,9 @@ func (f *RisingWaveObjectFactory) argsForCompactor() []string {
 
 func (f *RisingWaveObjectFactory) argsForConnector() []string {
 	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	if connectorPorts.ServicePort == 0 {
+		connectorPorts.ServicePort = consts.DefaultConnectorServicePort
+	}
 
 	return []string{
 		"-p", fmt.Sprintf("%d", connectorPorts.ServicePort),
@@ -1131,6 +1140,9 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 	container.Args = f.argsForMeta()
 	container.Ports = f.portsForMetaContainer()
 	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	if connectorPorts.ServicePort == 0 {
+		connectorPorts.ServicePort = consts.DefaultConnectorServicePort
+	}
 	container.Env = append(container.Env, corev1.EnvVar{
 		Name:  "RW_CONNECTOR_RPC_ENDPOINT",
 		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
@@ -1534,6 +1546,12 @@ func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string, podTemplate
 
 func (f *RisingWaveObjectFactory) portsForConnectorContainer() []corev1.ContainerPort {
 	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	if connectorPorts.ServicePort == 0 {
+		connectorPorts.ServicePort = consts.DefaultConnectorServicePort
+	}
+	if connectorPorts.MetricsPort == 0 {
+		connectorPorts.MetricsPort = consts.DefaultConnectorMetricsPort
+	}
 
 	return []corev1.ContainerPort{
 		{
@@ -1721,6 +1739,9 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 
 	container.Name = "compute"
 	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	if connectorPorts.ServicePort == 0 {
+		connectorPorts.ServicePort = consts.DefaultConnectorServicePort
+	}
 	container.Env = append(container.Env, corev1.EnvVar{
 		Name:  "RW_CONNECTOR_RPC_ENDPOINT",
 		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),

@@ -331,6 +331,7 @@ type RisingWaveComponentConnector struct {
 
 	// Ports to be listened by compactor Pods.
 	// +optional
+	// +kubebuilder:default={service: 50051, metrics: 8080}
 	Ports RisingWaveComponentCommonPorts `json:"ports,omitempty"`
 
 	// Groups of Pods of compactor component.

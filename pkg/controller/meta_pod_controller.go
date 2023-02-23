@@ -77,7 +77,7 @@ func getMetaPort(pod *corev1.Pod) (uint, error) {
 	for _, container := range pod.Spec.Containers {
 		if container.Name == "meta" {
 			for _, containerPort := range container.Ports {
-				if containerPort.Name == "service" {
+				if containerPort.Name == consts.PortService {
 					return uint(containerPort.ContainerPort), nil
 				}
 			}

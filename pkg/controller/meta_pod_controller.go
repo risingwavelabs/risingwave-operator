@@ -17,7 +17,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
@@ -92,7 +91,10 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 	defaultRequeue10sResult := ctrl.Result{RequeueAfter: requeueInterval10s}
 
 	// only reconcile when this is related to a meta pod
-	if !strings.Contains(req.Name, "meta") {
+	reqPod := &corev1.Pod{}
+	mpc.Get(ctx, req.NamespacedName, reqPod)
+	rwComponent, ok := reqPod.Labels[consts.LabelRisingWaveComponent]
+	if !ok || rwComponent != consts.ComponentMeta {
 		return defaultRequeue10sResult, nil
 	}
 
@@ -100,7 +102,7 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// get all meta pods
 	metaPods := &corev1.PodList{}
-	labels := labels.SelectorFromSet(labels.Set{"risingwave/component": "meta"})
+	labels := labels.SelectorFromSet(labels.Set{consts.LabelRisingWaveComponent: consts.ComponentMeta})
 	listOptions := client.ListOptions{LabelSelector: labels}
 	if err := mpc.Client.List(context.Background(), metaPods, &listOptions); err != nil {
 		log.Error(err, "unable to fetch meta pods")

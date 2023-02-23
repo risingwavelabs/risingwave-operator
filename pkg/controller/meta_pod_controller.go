@@ -127,7 +127,7 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		// set meta label
 		originalPod := pod.DeepCopy()
 		oldRole, ok := pod.Labels[consts.LabelRisingWaveMetaRole]
-		timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
+		timeoutCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 		defer cancel()
 		newRole, err := mpc.metaLeaderStatus(timeoutCtx, podIp, port)
 		if err != nil {

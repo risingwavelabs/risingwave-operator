@@ -76,6 +76,9 @@ NAME                    RUNNING   STORAGE(META)   STORAGE(OBJECT)   AGE
 risingwave-in-memory    True      Memory          Memory            30s
 ```
 
+> If you find the `risingwave-in-memory` `RUNNING` filed is `false`, please type `kubectl get pods`. If you find some pods status is `ImagePullBackOff` rather than `Running`, the problem may result from your network.
+
+
 ### Connect & Query
 
 #### ClusterIP

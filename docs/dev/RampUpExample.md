@@ -6,8 +6,8 @@
    2. [CustomResourceDefinitions](https://book.kubebuilder.io/reference/generating-crd.html), kubebuilder
 4. Some people hope to build their own custom resources (CRD-Customize Resource Definition) like build-in resources, and then write a corresponding controller for the custom resources to launch their own declarative API. K8s provides a CRD extension method to meet the needs of users, and because this extension method is very flexible, a considerable enhancement has been made to CRD in the latest version 1.15. For users, implementing CRD extension mainly does two things:
    1. Write CRD and deploy it to the K8s cluster
-   - The function of this step is to let K8s know that there is this resource and its structural attributes. 
-   - When the user submits the definition of the custom resource (usually YAML file definition), K8s can successfully verify the resource and create a corresponding Go struct for persistence , while triggering the tuning logic of the controller.
+      - The function of this step is to let K8s know that there is this resource and its structural attributes. 
+      - When the user submits the definition of the custom resource (usually YAML file definition), K8s can successfully verify the resource and create a corresponding Go struct for persistence , while triggering the tuning logic of the controller.
 
    2. Write the Controller and deploy it to the K8s cluster. The role of this step is to implement the tuning logic.
 

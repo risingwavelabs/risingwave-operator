@@ -11,12 +11,12 @@
 
    2. Write the Controller and deploy it to the K8s cluster. The role of this step is to implement the tuning logic.
 
-5. Kubebuilder is a tool to help us simplify these two things, and now we start to introduce the protagonist.
+5. Kubebuilder is a tool to help us simplify these two things.
 
+# Basic Knowledge of K8S
+## What is the Operator
 
-# What is the Operator
-
-1. [CRD](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) is costomized resource definition. Regardless of the abstraction concepts, for k8s, all it needs to manage are pods. 
+1. [CRD](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) is costomized resource definition. Regardless of the abstraction concepts, for k8s, all it needs to manage are pods and other resources. The CRD will tell k8s how to help us to manage them.
 2. [Operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) are clients of the Kubernetes API that act as controllers for a Custom Resource.
 3. We want to define our own CRD like `risingwave` which is abstract concept consisting of services, machines and other resources. And k8s will help us to manage it. In the codebase, we define a golang struct `RisingWave` [here](/apis/risingwave/v1alpha1/risingwave_types.go)
 4. K8s use declarative API. We told k8s what we want, and then it will automatically achieve it. In practice, we define the YAML file, and then use `kubectl apply -f <YAML file>` to apply the change.
@@ -24,7 +24,21 @@
 6. After finis the `kubectl apply -f <YAML file>` according to the [instruction](/README.md). The controller will apply the change. Then you can use `kubectl get crd` to check the CRD you defined, and use `kubectl get rw` to check the status of your CRD instance.
 
 
-# Some Useful Commands
+## How Kubectl works
+ When we use `kubectl get risingwave`, we will get 
+```bash
+NAME                   RUNNING   STORAGE(META)   STORAGE(OBJECT)   AGE
+risingwave-in-memory   True      Memory          Memory            24m
+```
+1. The k8s will record some basic information about the object, and the `kubectl get` will select some of the fields and show them.
+2. We need to define the CRD `risingwave` and then generate the yaml file. Use yaml file to register the CRD into k8s.
+3. Then we can create the `risingwave` instance.
+    ```
+    kubectl apply -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/docs/manifests/risingwave/risingwave-in-memory.yaml
+    ```
+4. The operator is the plugin of the k8s. The k8s can only deal with part of the logic. For the logic cannot deal with, we should impelement them in controller. 
+
+## Some Useful Kubectl Commands
 
 `kubectl get pods`
 
@@ -69,8 +83,7 @@ risingwave-in-memory   True      Memory          Memory            24m
 
 Show the basic information of risingwave
 
-
-# Fields in the YAML file
+## Fields in the YAML file
 All the [obejct](https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/) has the following fileds
  1. ApiVersion + Kind can represent one class of Object
  2. metaData
@@ -78,9 +91,11 @@ All the [obejct](https://kubernetes.io/docs/concepts/overview/working-with-objec
     2. `namespace`: "" means default
     3. `namepace` + `name` can point to object in cluster which is the instance of Object 
  3. `spec`: defined by user
- 4. status: the operator will update it
+ 4. `status`: the operator will update it
 
-# Codebase Framework
+
+# Project specific
+## Codebase Framework
 
 - `apis/risingwave/v1alpha1`
   - `*_types.go` : define the CRD
@@ -96,25 +111,22 @@ All the [obejct](https://kubernetes.io/docs/concepts/overview/working-with-objec
   - Init a manager
   - Init a controller
   - Start the manager
-- `pkg/controller/risingwave_controller.go`: reconcile logic
+- `pkg/controller`: controller and reconcile logic
 
 
-# How Kubectl works
- When we use `kubectl get risingwave`, we will get 
-```bash
-NAME                   RUNNING   STORAGE(META)   STORAGE(OBJECT)   AGE
-risingwave-in-memory   True      Memory          Memory            24m
-```
-1. The k8s will record some basic information about the object, and the `kubectl get` will select some of the fields and show them.
-2. We need to define the CRD `risingwave` and then generate the yaml file. Use yaml file to register the CRD into k8s.
-3. Then we can create the `risingwave` instance.
-    ```
-    kubectl apply -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/docs/manifests/risingwave/risingwave-in-memory.yaml
-    ```
-4. The operator is the plugin of the k8s. The k8s can only deal with part of the logic. For the logic cannot deal with, we should impelement them in controller. 
+## Reconcile
+1. It is an infinite loop (actually implemented by event-driven + timing synchronization) that constantly compares the desired state with the actual state. If there is any discrepancy, the reconcile (tuning) logic is performed to adjust the actual state to the desired state. 
+2. The expected state is our object definition (usually a YAML file), the actual state is the current running state in the cluster (usually from the status summary of related resources inside and outside the K8s cluster). The final result of tuning is generally some kind of write operation on the controlled object, such as adding/deleting/modifying Pods.
+3. The Reconcile uses a structure concurrency method. Different actions and reconciles are performed according to different events. Although the k8s change is synchronous, it needs to be entered multiple times before it can be completed.
+4. The meaning of Reconcile is to synchronize the differences between the current status and the expected result.
+5. All things are done in the [risingwave controller](/pkg/controller/risingwave_controller.go), the most important thing is `workflow`. Better understand the code with the [blog](https://www.risingwave-labs.com/blog/one-step-towards-cloud-the-risingwave-operator/)
+6. `Join` means that all branches will go in, but `sequential` means that everything is executed sequentially. If the first step is wrong, then the subsequent ones will not be done.
 
-# How to implement
-## 1. How to define the additional print column
+
+
+
+## How to implement
+### 1. How to define the additional print column
 1. The `RUNNING`, `STORAGE(META)`, `STORAGE(OBJECT)`, `AGE` are [Additional Printer Columns](https://book.kubebuilder.io/reference/generating-crd.html#additional-printer-columns) defined by ourselves. 
 2. We get these value from yaml file then print.
 3. In the codebase, we define it [here](/apis/risingwave/v1alpha1/risingwave_types.go). We define them in comments in some specific format and the kubebuilder will parse it. We need to define `name`, `type`, and `JSONPath`. For detailed information about `JSONPath`, check [here](https://kubernetes.io/docs/reference/kubectl/jsonpath/).
@@ -131,7 +143,7 @@ risingwave-in-memory   True      Memory          Memory            24m
 ```
 
 
-## 2. Define the struct if needed
+### 2. Define the struct if needed
 
 We can use `JSONPath = .spec.XXX`, `JSONPath = .metadata.XXX` or `JSONPath = .status.XXX`. If you want to add some new field, in codebase, we need to change the struct field [here](../../apis/risingwave/v1alpha1/risingwave_types.go)
 
@@ -146,14 +158,14 @@ type RisingWave struct {
 ```
 
 
-## 3. How to register CRD into k8s
+### 3. How to register CRD into k8s
 
 We use `make manifests` and `make install-local` to create a new YAML file. The command will generate a new [YAML file](/config/crd/bases/risingwave.risingwavelabs.com_risingwaves.yaml) according to [golang file](../../apis/risingwave/v1alpha1/risingwave_types.go), and register the CRD `risingwave` into k8s. Then, the user can create `risingwave` instances in k8s.
 
 
-## 4. How to update the column
-1. Firstly, because `JSONPath` can only support some simple logic, but sometime we want some complex logic. In order to achieve the complex logic, we need to define the field as `.status.XX`. 
-2. If you use the `metaData` or `Spec`, the value should be immutable, so we will not change them. But if you define the `status`, we need some extract work to update it. 
+### 4. How to update the column
+1. Firstly, because `JSONPath` can only support some simple logic, but sometime we want some complex logic. In order to achieve the complex logic, we prefer to define the field as `.status.XX`. 
+2. You can use the `metadata`, `spec` and `status`. If we want to change them in the controller, We need some extra work to update it. 
 3. Create updating logic in controller. We need to implement the logic in controller. In codebase, we implement it [here](/pkg/manager/risingwave_controller_manager_impl.go).
 
 ```golang
@@ -189,16 +201,3 @@ mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveSta
     risingwave-in-memory   True      Memory          Memory            v0.1.16   20m
     ```
 5. When we launch the k8s, the k8s will update the name. The controller will update the `status` field, the k8s will collect the column we want and show it.
-
-
-
-## 5. Add unit test
-
-
-# Reconcile 
-1. It is an infinite loop (actually implemented by event-driven + timing synchronization) that constantly compares the desired state with the actual state. If there is any discrepancy, the reconcile (tuning) logic is performed to adjust the actual state to the desired state. 
-2. The expected state is our object definition (usually a YAML file), the actual state is the current running state in the cluster (usually from the status summary of related resources inside and outside the K8s cluster). The final result of tuning is generally some kind of write operation on the controlled object, such as adding/deleting/modifying Pods.
-3. The Reconcile uses a structure concurrency method. Different actions and reconciles are performed according to different events. Although the k8s change is synchronous, it needs to be entered multiple times before it can be completed.
-4. The meaning of Reconcile is to synchronize the differences between the current status and the expected result.
-5. All things are done in the [risingwave controller](/pkg/controller/risingwave_controller.go), the most important thing is `workflow`. Better understand the code with the [blog](https://www.risingwave-labs.com/blog/one-step-towards-cloud-the-risingwave-operator/)
-6. `Join` means that all branches will go in, but `sequential` means that everything is executed sequentially. If the first step is wrong, then the subsequent ones will not be done.

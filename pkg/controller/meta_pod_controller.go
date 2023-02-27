@@ -23,13 +23,13 @@ import (
 	pb "github.com/risingwavelabs/risingwave-operator/pkg/controller/proto"
 
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // MetaPodController reconciles meta pods object.
@@ -46,7 +46,7 @@ func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string,
 
 	newCtx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
-	conn, err := grpc.DialContext(newCtx, addr)
+	conn, err := grpc.DialContext(newCtx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Error(err, fmt.Sprintf("Unable to connect to meta pod at %s", addr))
 		return "", err
@@ -113,8 +113,8 @@ func (mpc *MetaPodController) getOtherMetPods(metaPod *corev1.Pod, ctx context.C
 
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
 func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	requeueInterval2s := time.Second * time.Duration(2)
-	defaultRequeue2sResult := ctrl.Result{RequeueAfter: requeueInterval2s}
+	defaultRequeue2sResult := ctrl.Result{RequeueAfter: time.Second * 2}
+	pendingRequeue2sResult := ctrl.Result{RequeueAfter: time.Second * 10}
 
 	// only reconcile when this is related to a meta pod
 	reqPod := &corev1.Pod{}
@@ -136,8 +136,8 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	podIP, err := getPodIP(ctx, reqPod)
 	if err != nil {
-		log.Error(err, "error when reconciling this pod")
-		return defaultRequeue2sResult, nil
+		log.Error(err, "error when reconciling this pod. Assuming that pod is pending")
+		return pendingRequeue2sResult, nil
 	}
 	podPort, err := getMetaPort(reqPod)
 	if err != nil {
@@ -167,8 +167,8 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		for _, pod := range otherMetaPods {
 			podIP, err := getPodIP(ctx, &pod)
 			if err != nil {
-				log.Error(err, "error when reconciling other meta pod %s", pod.Name)
-				return defaultRequeue2sResult, nil
+				log.Error(err, "error when reconciling other meta pod %s. Assuming that pod is pending", pod.Name)
+				return pendingRequeue2sResult, nil
 			}
 			podPort, err := getMetaPort(&pod)
 			if err != nil {
@@ -192,19 +192,14 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 				continue
 			}
 
-			// update pod in cluster
 			if err := mpc.Patch(ctx, &pod, client.MergeFrom(originalPod)); err != nil {
-				if apierrors.IsConflict(err) || apierrors.IsNotFound(err) {
-					return ctrl.Result{Requeue: true}, nil
-				}
 				log.Error(err, "unable to update Pod")
-				return ctrl.Result{Requeue: true}, err
+				continue
 			}
+			log.Info("updated meta pod", "pod", pod.Name)
 		}
-
 	}
 
-	// update requested pod at the end. We want that early requeueing leads to an update to all meta pods if needed.
 	if err := mpc.Patch(ctx, reqPod, client.MergeFrom(originalReqPod)); err != nil {
 		log.Error(err, "unable to update Pod")
 		return ctrl.Result{Requeue: true}, err

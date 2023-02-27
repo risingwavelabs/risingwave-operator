@@ -57,7 +57,7 @@ risingwaves.risingwave.risingwavelabs.com              2023-02-24T00:34:03Z
 risingwavescaleviews.risingwave.risingwavelabs.com     2023-02-24T00:34:04Z
 ```
 
-`Kubectl get risingwave`  or   `Kubectl get rw`
+`kubectl get risingwave`  or   `kubectl get rw`
 
 Show the status of risingwave CRD 
 ```bash

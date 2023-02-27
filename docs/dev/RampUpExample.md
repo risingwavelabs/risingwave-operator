@@ -70,7 +70,7 @@ risingwave-in-memory   True      Memory          Memory            24m
 Show the basic information of risingwave
 
 
-# The field in Yaml file
+# Fields in the YAML file
 All the [obejct](https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/) has the following fileds
  1. ApiVersion + Kind can represent one class of Object
  2. metaData

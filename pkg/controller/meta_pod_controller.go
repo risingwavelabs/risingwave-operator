@@ -17,6 +17,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
@@ -40,7 +41,7 @@ type MetaPodController struct {
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;update;patch
 
 // metaLeaderStatus sends a MetaMember request to a meta node at ip:port, determining if the node is a leader.
-func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string, port uint) (string, error) {
+func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string, port uint, podName string) (string, error) {
 	log := log.FromContext(ctx)
 	addr := fmt.Sprintf("%s:%v", host, port)
 
@@ -64,8 +65,9 @@ func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string,
 		return consts.MetaRoleUnknown, nil
 	}
 
+	// Assuming member.Address.Host like risingwave-meta-default-0.risingwave-meta
 	for _, member := range resp.Members {
-		if member.IsLeader && host == member.Address.Host && port == uint(member.Address.Port) {
+		if member.IsLeader && podName == strings.Split(member.Address.Host, ".")[0] && port == uint(member.Address.Port) {
 			return consts.MetaRoleLeader, nil
 		}
 	}
@@ -145,14 +147,14 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		return defaultRequeue2sResult, nil
 	}
 
-	newRole, err := mpc.metaLeaderStatus(timeoutCtx, podIP, podPort)
+	newRole, err := mpc.metaLeaderStatus(timeoutCtx, podIP, podPort, reqPod.Name)
 	if err != nil {
 		return ctrl.Result{Requeue: true}, nil
 	}
 	reqPod.Labels[consts.LabelRisingWaveMetaRole] = newRole
 
 	// only update if something changed
-	if ok && oldRole == newRole {
+	if oldRole == newRole {
 		return defaultRequeue2sResult, nil
 	}
 
@@ -186,7 +188,7 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 			oldRole, ok := pod.Labels[consts.LabelRisingWaveMetaRole]
 			timeoutCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 			defer cancel()
-			newRole, err := mpc.metaLeaderStatus(timeoutCtx, podIP, podPort)
+			newRole, err := mpc.metaLeaderStatus(timeoutCtx, podIP, podPort, pod.Name)
 			if err != nil {
 				return defaultRequeue2sResult, nil
 			}

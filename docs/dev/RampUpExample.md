@@ -41,7 +41,7 @@ risingwave-in-memory-meta-0                       1/1     Running   0           
 
 Show the status of the specific pod. It is useful when your node status is not correct. You can use it to check the detailed error.
 
-`Kubectl get crd`
+`kubectl get crd`
 
 Show currently all the CRDs types.
 ```bash

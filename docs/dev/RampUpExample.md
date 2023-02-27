@@ -196,7 +196,7 @@ mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveSta
 
 
 # Reconcile 
-1. It is an infinite loop (actually implemented by event-driven + timing synchronization) that constantly compares the desired state with the actual state, and if there is any discrepancy, the Reconcile (tuning) logic is performed to adjust the actual state to the desired state. 
+1. It is an infinite loop (actually implemented by event-driven + timing synchronization) that constantly compares the desired state with the actual state. If there is any discrepancy, the reconcile (tuning) logic is performed to adjust the actual state to the desired state. 
 2. The expected state is our object definition (usually a YAML file), the actual state is the current running state in the cluster (usually from the status summary of related resources inside and outside the K8s cluster). The final result of tuning is generally some kind of write operation on the controlled object, such as adding/deleting/modifying Pods.
 3. The Reconcile uses a structure concurrency method. Different actions and reconciles are performed according to different events. Although the k8s change is synchronous, it needs to be entered multiple times before it can be completed.
 4. The meaning of Reconcile is to synchronize the differences between the current status and the expected result.

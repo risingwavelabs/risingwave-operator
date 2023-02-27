@@ -94,6 +94,23 @@ func getPodIP(ctx context.Context, pod *corev1.Pod) (string, error) {
 	return ip, nil
 }
 
+// getOtherMetPods returns all other meta pods of the same RW instance.
+func (mpc *MetaPodController) getOtherMetPods(metaPod *corev1.Pod, ctx context.Context) ([]corev1.Pod, error) {
+	log := log.FromContext(ctx)
+
+	// get other meta pods of this RW instance
+	otherMetaPods := &corev1.PodList{}
+	labelSet := map[string]string{consts.LabelRisingWaveComponent: consts.ComponentMeta}
+	if rwInstance, ok := metaPod.ObjectMeta.Labels[consts.LabelRisingWaveName]; ok {
+		labelSet[consts.LabelRisingWaveName] = rwInstance
+	} else {
+		log.Error(fmt.Errorf("unable to retrieve risingwave name from pod"), "")
+	}
+	listOptions := client.ListOptions{LabelSelector: labels.SelectorFromSet(labelSet)}
+	err := mpc.Client.List(context.Background(), otherMetaPods, &listOptions)
+	return otherMetaPods.Items, err
+}
+
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
 func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	requeueInterval2s := time.Second * time.Duration(2)
@@ -139,65 +156,52 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		return defaultRequeue2sResult, nil
 	}
 
-	// Update other meta components only if we have a leadership change
-	if !(oldRole == consts.MetaRoleLeader || newRole == consts.MetaRoleLeader) {
-		if err := mpc.Patch(ctx, reqPod, client.MergeFrom(originalReqPod)); err != nil {
-			log.Error(err, "unable to update Pod")
-			return ctrl.Result{Requeue: true}, err
-		}
-		return defaultRequeue2sResult, nil
-	}
-
-	// get other meta pods of this RW instance
-	otherMetaPods := &corev1.PodList{}
-	labelSet := map[string]string{consts.LabelRisingWaveComponent: consts.ComponentMeta}
-	if rwInstance, ok := reqPod.ObjectMeta.Labels[consts.LabelRisingWaveName]; ok {
-		labelSet[consts.LabelRisingWaveName] = rwInstance
-	} else {
-		log.Error(fmt.Errorf("unable to retrieve risingwave name from pod"), "")
-	}
-	listOptions := client.ListOptions{LabelSelector: labels.SelectorFromSet(labelSet)}
-	if err := mpc.Client.List(context.Background(), otherMetaPods, &listOptions); err != nil {
-		log.Error(err, "unable to fetch meta pods")
-		return ctrl.Result{Requeue: true}, err
-	}
-
-	for _, pod := range otherMetaPods.Items {
-		podIP, err := getPodIP(ctx, &pod)
+	// Update other meta components only if we have a change of leadership
+	if oldRole == consts.MetaRoleLeader || newRole == consts.MetaRoleLeader {
+		otherMetaPods, err := mpc.getOtherMetPods(reqPod, ctx)
 		if err != nil {
-			log.Error(err, "error when reconciling other meta pod %s", pod.Name)
+			log.Error(err, "unable to retrieve other meta pods")
 			return defaultRequeue2sResult, nil
 		}
-		podPort, err := getMetaPort(&pod)
-		if err != nil {
-			log.Error(err, fmt.Sprintf("Error getting port from other meta pod %s", pod.Name))
-			return defaultRequeue2sResult, err
-		}
 
-		// set meta label
-		originalPod := pod.DeepCopy()
-		oldRole, ok := pod.Labels[consts.LabelRisingWaveMetaRole]
-		timeoutCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
-		defer cancel()
-		newRole, err := mpc.metaLeaderStatus(timeoutCtx, podIP, podPort)
-		if err != nil {
-			return defaultRequeue2sResult, nil
-		}
-		pod.Labels[consts.LabelRisingWaveMetaRole] = newRole
-
-		// only update if something changed
-		if ok && oldRole == newRole {
-			continue
-		}
-
-		// update pod in cluster
-		if err := mpc.Patch(ctx, &pod, client.MergeFrom(originalPod)); err != nil {
-			if apierrors.IsConflict(err) || apierrors.IsNotFound(err) {
-				return ctrl.Result{Requeue: true}, nil
+		for _, pod := range otherMetaPods {
+			podIP, err := getPodIP(ctx, &pod)
+			if err != nil {
+				log.Error(err, "error when reconciling other meta pod %s", pod.Name)
+				return defaultRequeue2sResult, nil
 			}
-			log.Error(err, "unable to update Pod")
-			return ctrl.Result{Requeue: true}, err
+			podPort, err := getMetaPort(&pod)
+			if err != nil {
+				log.Error(err, fmt.Sprintf("Error getting port from other meta pod %s", pod.Name))
+				return defaultRequeue2sResult, err
+			}
+
+			// set meta label
+			originalPod := pod.DeepCopy()
+			oldRole, ok := pod.Labels[consts.LabelRisingWaveMetaRole]
+			timeoutCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+			defer cancel()
+			newRole, err := mpc.metaLeaderStatus(timeoutCtx, podIP, podPort)
+			if err != nil {
+				return defaultRequeue2sResult, nil
+			}
+			pod.Labels[consts.LabelRisingWaveMetaRole] = newRole
+
+			// only update if something changed
+			if ok && oldRole == newRole {
+				continue
+			}
+
+			// update pod in cluster
+			if err := mpc.Patch(ctx, &pod, client.MergeFrom(originalPod)); err != nil {
+				if apierrors.IsConflict(err) || apierrors.IsNotFound(err) {
+					return ctrl.Result{Requeue: true}, nil
+				}
+				log.Error(err, "unable to update Pod")
+				return ctrl.Result{Requeue: true}, err
+			}
 		}
+
 	}
 
 	// update requested pod at the end. We want that early requeueing leads to an update to all meta pods if needed.

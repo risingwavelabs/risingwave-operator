@@ -59,7 +59,7 @@ risingwavescaleviews.risingwave.risingwavelabs.com     2023-02-24T00:34:04Z
 
 `kubectl get risingwave`  or   `kubectl get rw`
 
-Show the status of risingwave CRD 
+Show the status of RisingWave CR 
 ```bash
 NAME                   RUNNING   STORAGE(META)   STORAGE(OBJECT)   AGE
 risingwave-in-memory   True      Memory          Memory            24m

@@ -156,6 +156,11 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		return defaultRequeue2sResult, nil
 	}
 
+	if err := mpc.Patch(ctx, reqPod, client.MergeFrom(originalReqPod)); err != nil {
+		log.Error(err, "unable to update Pod")
+		return ctrl.Result{Requeue: true}, err
+	}
+
 	// Update other meta components only if we have a change of leadership
 	if oldRole == consts.MetaRoleLeader || newRole == consts.MetaRoleLeader {
 		otherMetaPods, err := mpc.getOtherMetPods(reqPod, ctx)
@@ -198,11 +203,6 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 			}
 			log.Info("updated meta pod", "pod", pod.Name)
 		}
-	}
-
-	if err := mpc.Patch(ctx, reqPod, client.MergeFrom(originalReqPod)); err != nil {
-		log.Error(err, "unable to update Pod")
-		return ctrl.Result{Requeue: true}, err
 	}
 
 	return defaultRequeue2sResult, nil

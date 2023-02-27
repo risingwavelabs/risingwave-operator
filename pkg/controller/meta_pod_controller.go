@@ -48,7 +48,7 @@ func (mpc *MetaPodController) metaLeaderStatus(ctx context.Context, host string,
 	defer cancel()
 	conn, err := grpc.DialContext(newCtx, addr)
 	if err != nil {
-		log.Error(err, "Unable to connect to meta pod. Retrying...")
+		log.Error(err, fmt.Sprintf("Unable to connect to meta pod at %s", addr))
 		return "", err
 	}
 	defer conn.Close()
@@ -83,7 +83,15 @@ func getMetaPort(pod *corev1.Pod) (uint, error) {
 			}
 		}
 	}
-	return 0, fmt.Errorf("unable to retrieve the service port from pod %s", pod.ObjectMeta.Name)
+	return 0, fmt.Errorf("unable to retrieve the service port from pod")
+}
+
+func getPodIP(ctx context.Context, pod *corev1.Pod) (string, error) {
+	ip := pod.Status.PodIP
+	if ip == "" {
+		return "", fmt.Errorf("pod IP is not yet available")
+	}
+	return ip, nil
 }
 
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
@@ -108,12 +116,18 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 	timeoutCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
-	podIP := reqPod.Status.PodIP
+
+	podIP, err := getPodIP(ctx, reqPod)
+	if err != nil {
+		log.Error(err, "error when reconciling this pod")
+		return defaultRequeue2sResult, nil
+	}
 	podPort, err := getMetaPort(reqPod)
 	if err != nil {
-		log.Error(err, "Error getting met pod port. Retrying...")
-		return defaultRequeue2sResult, err
+		log.Error(err, "error when reconciling this pod")
+		return defaultRequeue2sResult, nil
 	}
+
 	newRole, err := mpc.metaLeaderStatus(timeoutCtx, podIP, podPort)
 	if err != nil {
 		return ctrl.Result{Requeue: true}, nil
@@ -149,10 +163,14 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	for _, pod := range otherMetaPods.Items {
-		podIP := pod.Status.PodIP
+		podIP, err := getPodIP(ctx, &pod)
+		if err != nil {
+			log.Error(err, "error when reconciling other meta pod %s", pod.Name)
+			return defaultRequeue2sResult, nil
+		}
 		podPort, err := getMetaPort(&pod)
 		if err != nil {
-			log.Error(err, fmt.Sprintf("Error getting port from pod %s. Retrying...", pod.Name))
+			log.Error(err, fmt.Sprintf("Error getting port from other meta pod %s", pod.Name))
 			return defaultRequeue2sResult, err
 		}
 
@@ -204,3 +222,5 @@ func NewMetaPodController(client client.Client) *MetaPodController {
 		Client: client,
 	}
 }
+
+// Test if pod is pending, then we do not try to connect against it

@@ -140,7 +140,7 @@ proto:
 
 build: build-manager
 
-build-manager: generate fmt vet lint ## Build manager binary.
+build-manager: generate fmt vet lint vendor ## Build manager binary.
 	go build -o bin/manager cmd/manager/manager.go
 
 build-plugin: generate fmt vet lint ## Build manager binary.

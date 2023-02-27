@@ -26,7 +26,7 @@
 
 # Some Useful Commands
 
-`Kubectl get pods`
+`kubectl get pods`
 
 Show the status of pods
 ```bash

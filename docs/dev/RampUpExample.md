@@ -148,7 +148,7 @@ type RisingWave struct {
 
 ## 3. How to register CRD into k8s
 
-We use `make manifests` and `make install-local` to create a new YAML file. The command will generate new [Yaml file](/config/crd/bases/risingwave.risingwavelabs.com_risingwaves.yaml) according to [golang file](../../apis/risingwave/v1alpha1/risingwave_types.go), and regist the CRD `risingwave` into k8s. Then, the user can create the `risingwave` instance in k8s.
+We use `make manifests` and `make install-local` to create a new YAML file. The command will generate a new [YAML file](/config/crd/bases/risingwave.risingwavelabs.com_risingwaves.yaml) according to [golang file](../../apis/risingwave/v1alpha1/risingwave_types.go), and register the CRD `risingwave` into k8s. Then, the user can create `risingwave` instances in k8s.
 
 
 ## 4. How to update the column

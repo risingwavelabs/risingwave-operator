@@ -178,7 +178,7 @@ mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveSta
 })
 ```
 
-4. Currently, if we run `Kubectl get risingwave`, we will get that:
+4. Currently, if we run `kubectl get risingwave`, we will get that:
     ```bash
     NAME                   RUNNING   STORAGE(META)   STORAGE(OBJECT)   VERSION   AGE
     risingwave-in-memory   True      Memory          Memory                      20m

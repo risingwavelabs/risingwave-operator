@@ -100,7 +100,7 @@ All the [obejct](https://kubernetes.io/docs/concepts/overview/working-with-objec
 
 
 # How Kubectl works
- When we use `Kubectl get risingwave`, we will get 
+ When we use `kubectl get risingwave`, we will get 
 ```bash
 NAME                   RUNNING   STORAGE(META)   STORAGE(OBJECT)   AGE
 risingwave-in-memory   True      Memory          Memory            24m

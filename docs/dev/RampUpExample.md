@@ -77,7 +77,7 @@ All the [obejct](https://kubernetes.io/docs/concepts/overview/working-with-objec
     1. name: defined by ourselves
     2. namespace: "" means default
     3. `namepace` + `name` can point to object in cluster which is the instance of Object 
- 3. 1. spec: defined by user
+ 3. `spec`: defined by user
  4. status: the operator will update it
 
 # Codebase Framework

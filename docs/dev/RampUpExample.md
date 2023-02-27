@@ -18,7 +18,7 @@
 
 1. [CRD](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) is costomized resource definition. Regardless of the abstraction concepts, for k8s, all it needs to manage are pods. 
 2. [Operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) are clients of the Kubernetes API that act as controllers for a Custom Resource.
-3. We want to define our own CRD like `risingwave` which is abstract concept consisting of services, machines and other resources. And k8s will help us to manage it. In the codebase, we define a golang struct `RisingWave` at [here](/apis/risingwave/v1alpha1/risingwave_types.go)
+3. We want to define our own CRD like `risingwave` which is abstract concept consisting of services, machines and other resources. And k8s will help us to manage it. In the codebase, we define a golang struct `RisingWave` [here](/apis/risingwave/v1alpha1/risingwave_types.go)
 4. K8s use declarative API. We told k8s what we want, and then it will automatically achieve it. In practice, we define the YAML file, and then use `kubectl apply -f <YAML file>` to apply the change.
 5. K8s will use the controller to monitor these changes and then control the real machine. We need to implement the logic of the controller.
 6. After finis the `kubectl apply -f <YAML file>` according to the [instruction](/README.md). The controller will apply the change. Then you can use `kubectl get crd` to check the CRD you defined, and use `kubectl get rw` to check the status of your CRD instance.

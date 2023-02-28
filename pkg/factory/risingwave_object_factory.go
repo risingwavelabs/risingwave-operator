@@ -361,7 +361,7 @@ func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 
 // NewConnectorService creates a new Service for the connector.
 func (f *RisingWaveObjectFactory) NewConnectorService() *corev1.Service {
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.getConnectorPorts()
 	if connectorPorts.ServicePort == 0 {
 		connectorPorts.ServicePort = consts.DefaultConnectorServicePort
 	}
@@ -543,7 +543,7 @@ func (f *RisingWaveObjectFactory) argsForCompactor() []string {
 }
 
 func (f *RisingWaveObjectFactory) argsForConnector() []string {
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.getConnectorPorts()
 	if connectorPorts.ServicePort == 0 {
 		connectorPorts.ServicePort = consts.DefaultConnectorServicePort
 	}
@@ -1139,7 +1139,7 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 	container.Name = "meta"
 	container.Args = f.argsForMeta()
 	container.Ports = f.portsForMetaContainer()
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.getConnectorPorts()
 	if connectorPorts.ServicePort == 0 {
 		connectorPorts.ServicePort = consts.DefaultConnectorServicePort
 	}
@@ -1545,7 +1545,7 @@ func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string, podTemplate
 }
 
 func (f *RisingWaveObjectFactory) portsForConnectorContainer() []corev1.ContainerPort {
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.getConnectorPorts()
 	if connectorPorts.ServicePort == 0 {
 		connectorPorts.ServicePort = consts.DefaultConnectorServicePort
 	}
@@ -1738,7 +1738,7 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	basicSetupContainer(container, &template.RisingWaveComponentGroupTemplate)
 
 	container.Name = "compute"
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.getConnectorPorts()
 	if connectorPorts.ServicePort == 0 {
 		connectorPorts.ServicePort = consts.DefaultConnectorServicePort
 	}
@@ -1898,6 +1898,10 @@ func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonit
 	}
 
 	return mustSetControllerReference(f.risingwave, serviceMonitor, f.scheme)
+}
+
+func (f *RisingWaveObjectFactory) getConnectorPorts() *risingwavev1alpha1.RisingWaveComponentCommonPorts {
+	return f.risingwave.Spec.Components.Connector.Ports.DeepCopy()
 }
 
 // NewRisingWaveObjectFactory creates a new RisingWaveObjectFactory.

@@ -447,7 +447,7 @@ type ptrAsObjectList[T any] interface {
 	*T
 	client.ObjectList
 }
- 
+
 func newGroupObjectFromGroup[T any, TP ptrAsObject[T]](namespace, base, group string, labels map[string]string) T {
 	var t T
 	if group == "" {

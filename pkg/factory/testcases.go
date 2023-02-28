@@ -34,7 +34,7 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-func GetDeploymentTestcases() map[string]deploymentTestcase {
+func getDeploymentTestcases() map[string]deploymentTestcase {
 	return map[string]deploymentTestcase{
 		"pods-meta-labels": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
@@ -283,7 +283,7 @@ func GetDeploymentTestcases() map[string]deploymentTestcase {
 		},
 	}
 }
-func GetMetaSTSTestcases() map[string]metaSTSTestcase {
+func getMetaSTSTestcases() map[string]metaSTSTestcase {
 	return map[string]metaSTSTestcase{
 		"pods-meta-labels": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
@@ -531,7 +531,7 @@ func GetMetaSTSTestcases() map[string]metaSTSTestcase {
 	}
 }
 
-func GetSTSTestcases() map[string]stsTestcase {
+func getSTSTestcases() map[string]stsTestcase {
 	return map[string]stsTestcase{
 		"pods-meta-labels": {
 			group: risingwavev1alpha1.RisingWaveComputeGroup{
@@ -828,7 +828,7 @@ func GetSTSTestcases() map[string]stsTestcase {
 	}
 }
 
-func GetClonesetTestcases() map[string]clonesetTestcase {
+func getClonesetTestcases() map[string]clonesetTestcase {
 	return map[string]clonesetTestcase{
 		"pods-meta-labels": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
@@ -1369,7 +1369,7 @@ func GetClonesetTestcases() map[string]clonesetTestcase {
 	}
 }
 
-func GetMetaAdvancedSTSTestcases() map[string]metaAdvancedSTSTestcase {
+func getMetaAdvancedSTSTestcases() map[string]metaAdvancedSTSTestcase {
 	return map[string]metaAdvancedSTSTestcase{
 		"pods-meta-labels": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
@@ -1812,7 +1812,7 @@ func GetMetaAdvancedSTSTestcases() map[string]metaAdvancedSTSTestcase {
 	}
 }
 
-func GetAdvancedSTSTestcases() map[string]advancedSTSTestcase {
+func getAdvancedSTSTestcases() map[string]advancedSTSTestcase {
 	return map[string]advancedSTSTestcase{
 		"pods-meta-labels": {
 			group: risingwavev1alpha1.RisingWaveComputeGroup{
@@ -2201,7 +2201,7 @@ func GetAdvancedSTSTestcases() map[string]advancedSTSTestcase {
 	}
 }
 
-func GetServicesTestcases() map[string]servicesTestcase {
+func getServicesTestcases() map[string]servicesTestcase {
 	return map[string]servicesTestcase{
 		"random-meta-ports": {
 			component:         consts.ComponentMeta,
@@ -2299,7 +2299,7 @@ func GetServicesTestcases() map[string]servicesTestcase {
 
 }
 
-func GetServicesMetaTestCases() map[string]servicesMetaTestcase {
+func getServicesMetaTestCases() map[string]servicesMetaTestcase {
 	return map[string]servicesMetaTestcase{
 		"random-meta-labels": {
 			component: consts.ComponentMeta,
@@ -2394,7 +2394,7 @@ func GetServicesMetaTestCases() map[string]servicesMetaTestcase {
 	}
 }
 
-func GetObjectStoragesTestcase() map[string]objectStoragesTestcase {
+func getObjectStoragesTestcase() map[string]objectStoragesTestcase {
 	return map[string]objectStoragesTestcase{
 		"memory": {
 			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
@@ -2818,7 +2818,7 @@ func GetObjectStoragesTestcase() map[string]objectStoragesTestcase {
 
 }
 
-func GetConfigmapTestCases() map[string]configmapTestcase {
+func getConfigmapTestCases() map[string]configmapTestcase {
 	return map[string]configmapTestcase{
 		"empty-val": {
 			configVal: "",
@@ -2829,7 +2829,7 @@ func GetConfigmapTestCases() map[string]configmapTestcase {
 	}
 }
 
-func GetComputeArgsTestCases() map[string]computeArgsTestcase {
+func getComputeArgsTestCases() map[string]computeArgsTestcase {
 	return map[string]computeArgsTestcase{
 		"empty-limits": {},
 		"cpu-limit-4": {
@@ -2879,7 +2879,7 @@ func GetComputeArgsTestCases() map[string]computeArgsTestcase {
 	}
 }
 
-func GetInheritedLabelsTestCaes() map[string]inheritedLabelsTestcase {
+func getInheritedLabelsTestCaes() map[string]inheritedLabelsTestcase {
 	return map[string]inheritedLabelsTestcase{
 		"no-inherit": {
 			labels: map[string]string{
@@ -2925,7 +2925,7 @@ func GetInheritedLabelsTestCaes() map[string]inheritedLabelsTestcase {
 	}
 }
 
-func GetMetaStoragesTestCases() map[string]metaStorageTestcase {
+func getMetaStoragesTestCases() map[string]metaStorageTestcase {
 	return map[string]metaStorageTestcase{
 		"memory": {
 			metaStorage: risingwavev1alpha1.RisingWaveMetaStorage{

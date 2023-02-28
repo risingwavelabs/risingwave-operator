@@ -34,8 +34,8 @@ import (
 // predicates that can be defined in predicates.go. Predicates are functions that take in an obj and a testcase both constrained
 // by the kubeObject contraint and the testcaseType constraint defined in test_common.go
 func Test_RisingWaveObjectFactory_Services(t *testing.T) {
-	testcases := GetServicesTestcases()
-	servicesPreds := GetServicesPredicate()
+	testcases := getServicesTestcases()
+	servicesPreds := getServicesPredicate()
 	for name, tc := range testcases {
 		risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.Global.ServiceType = tc.globalServiceType
@@ -79,8 +79,8 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 }
 
 func Test_RisingWaveObjectFactory_ServicesMeta(t *testing.T) {
-	testcases := GetServicesMetaTestCases()
-	servicesPreds := GetServicesMetaPredicates()
+	testcases := getServicesMetaTestCases()
+	servicesPreds := getServicesMetaPredicates()
 	for name, tc := range testcases {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.Global.ServiceMeta = tc.globalServiceMeta
@@ -110,8 +110,8 @@ func Test_RisingWaveObjectFactory_ServicesMeta(t *testing.T) {
 }
 
 func Test_RisingWaveObjectFactory_ConfigMaps(t *testing.T) {
-	testcases := GetConfigmapTestCases()
-	configmapPreds := GetConfigmapPredicates()
+	testcases := getConfigmapTestCases()
+	configmapPreds := getConfigmapPredicates()
 	for name, tc := range testcases {
 		tc.risingwave = newTestRisingwave()
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme)
@@ -124,8 +124,8 @@ func Test_RisingWaveObjectFactory_ConfigMaps(t *testing.T) {
 }
 
 func Test_RisingWaveObjectFactory_Frontend_Deployments(t *testing.T) {
-	testcases := GetDeploymentTestcases()
-	deploymentPreds := GetFrontendDeploymentPredicates()
+	testcases := getDeploymentTestcases()
+	deploymentPreds := getFrontendDeploymentPredicates()
 	component := consts.ComponentFrontend
 	for name, tc := range testcases {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
@@ -154,8 +154,8 @@ func Test_RisingWaveObjectFactory_Frontend_Deployments(t *testing.T) {
 }
 
 func Test_RisingWaveObjectFactory_Compactor_Deployments(t *testing.T) {
-	testcases := GetDeploymentTestcases()
-	deploymentPreds := GetCompactorDeploymentPredicates()
+	testcases := getDeploymentTestcases()
+	deploymentPreds := getCompactorDeploymentPredicates()
 	component := consts.ComponentCompactor
 	for name, tc := range testcases {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
@@ -184,8 +184,8 @@ func Test_RisingWaveObjectFactory_Compactor_Deployments(t *testing.T) {
 }
 
 func Test_RisingWaveObjectFactory_Frontend_CloneSet(t *testing.T) {
-	testcases := GetClonesetTestcases()
-	clonesetPreds := GetFrontendClonesetPredicates()
+	testcases := getClonesetTestcases()
+	clonesetPreds := getFrontendClonesetPredicates()
 	component := consts.ComponentFrontend
 	for name, tc := range testcases {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
@@ -215,8 +215,8 @@ func Test_RisingWaveObjectFactory_Frontend_CloneSet(t *testing.T) {
 }
 
 func Test_RisingWaveObjectFactory_Compactor_CloneSet(t *testing.T) {
-	testcases := GetClonesetTestcases()
-	clonesetPreds := GetCompactorClonesetPredicates()
+	testcases := getClonesetTestcases()
+	clonesetPreds := getCompactorClonesetPredicates()
 	component := consts.ComponentCompactor
 	for name, tc := range testcases {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
@@ -246,8 +246,8 @@ func Test_RisingWaveObjectFactory_Compactor_CloneSet(t *testing.T) {
 }
 
 func Test_RisingWaveObjectFactory_Meta_StatefulSets(t *testing.T) {
-	testcases := GetMetaSTSTestcases()
-	stsPreds := GetMetaSTSPredicates()
+	testcases := getMetaSTSTestcases()
+	stsPreds := getMetaSTSPredicates()
 	for name, tc := range testcases {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.Storages.Meta.Memory = pointer.Bool(true)
@@ -277,8 +277,8 @@ func Test_RisingWaveObjectFactory_Meta_StatefulSets(t *testing.T) {
 }
 
 func Test_RisingWaveObjectFactory_Compute_StatefulSets(t *testing.T) {
-	testcases := GetSTSTestcases()
-	stsPreds := GetComputeSTSPredicates()
+	testcases := getSTSTestcases()
+	stsPreds := getComputeSTSPredicates()
 	for name, tc := range testcases {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.EnableOpenKruise = pointer.Bool(true)
@@ -308,8 +308,8 @@ func Test_RisingWaveObjectFactory_Compute_StatefulSets(t *testing.T) {
 }
 
 func Test_RisingWaveObjectFactory_Meta_AdvancedStatefulSets(t *testing.T) {
-	testcases := GetMetaAdvancedSTSTestcases()
-	stsPreds := GetMetaAdvancedSTSPredicates()
+	testcases := getMetaAdvancedSTSTestcases()
+	stsPreds := getMetaAdvancedSTSPredicates()
 	for name, tc := range testcases {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.Storages.Meta.Memory = pointer.Bool(true)
@@ -338,8 +338,8 @@ func Test_RisingWaveObjectFactory_Meta_AdvancedStatefulSets(t *testing.T) {
 	}
 }
 func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
-	testcases := GetAdvancedSTSTestcases()
-	astsPreds := GetAdvancedSTSPredicates()
+	testcases := getAdvancedSTSTestcases()
+	astsPreds := getAdvancedSTSPredicates()
 	for name, tc := range testcases {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.Storages.Meta.Memory = pointer.Bool(true)
@@ -366,9 +366,9 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 	}
 }
 func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
-	testcases := GetObjectStoragesTestcase()
-	deployObjectStoragePreds := GetObjectStoratesDeploymentPredicates()
-	stsObjectStoragePreds := GetObjectStoratesStatefulsetPredicates()
+	testcases := getObjectStoragesTestcase()
+	deployObjectStoragePreds := getObjectStoratesDeploymentPredicates()
+	stsObjectStoragePreds := getObjectStoratesStatefulsetPredicates()
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
@@ -391,8 +391,8 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 	}
 }
 func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
-	testcases := GetMetaStoragesTestCases()
-	metaStoragePreds := GetMetaStoragePredicates()
+	testcases := getMetaStoragesTestCases()
+	metaStoragePreds := getMetaStoragePredicates()
 	for name, tc := range testcases {
 		risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.Storages.Meta = tc.metaStorage
@@ -409,14 +409,14 @@ func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
 
 func Test_RisingWaveObjectFactory_ServiceMonitor(t *testing.T) {
 	risingwave := testutils.FakeRisingWave()
-	serviceMonitorPreds := GetServiceMonitorPredicates()
+	serviceMonitorPreds := getServiceMonitorPredicates()
 	factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
 	serviceMonitor := factory.NewServiceMonitor()
 	ComposeAssertions(serviceMonitorPreds, t).assertTest(serviceMonitor, baseTestCase{risingwave: risingwave})
 }
 
 func Test_RisingWaveObjectFactory_InheritLabels(t *testing.T) {
-	testcases := GetInheritedLabelsTestCaes()
+	testcases := getInheritedLabelsTestCaes()
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			factory := NewRisingWaveObjectFactory(&risingwavev1alpha1.RisingWave{
@@ -451,7 +451,7 @@ func containsSlice[T comparable](a, b []T) bool {
 }
 
 func TestRisingWaveObjectFactory_ComputeArgs(t *testing.T) {
-	testcases := GetComputeArgsTestCases()
+	testcases := getComputeArgsTestCases()
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			factory := NewRisingWaveObjectFactory(&risingwavev1alpha1.RisingWave{

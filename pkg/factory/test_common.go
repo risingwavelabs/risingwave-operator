@@ -102,7 +102,6 @@ type servicesMetaTestcase struct {
 }
 
 type configmapTestcase struct {
-	baseTestCase
 	risingwave *risingwavev1alpha1.RisingWave
 	configVal  string
 }
@@ -115,7 +114,6 @@ type objectStoragesTestcase struct {
 }
 
 type computeArgsTestcase struct {
-	baseTestCase
 	cpuLimit int64
 	memLimit int64
 	argsList [][]string
@@ -128,7 +126,6 @@ type inheritedLabelsTestcase struct {
 }
 
 type metaStorageTestcase struct {
-	baseTestCase
 	metaStorage risingwavev1alpha1.RisingWaveMetaStorage
 	args        []string
 	envs        []corev1.EnvVar
@@ -213,7 +210,7 @@ func hasAnnotations[T client.Object](obj T, annotations map[string]string, exact
 	return true
 }
 
-func IsServiceType(svc *corev1.Service, t corev1.ServiceType) bool {
+func isServiceType(svc *corev1.Service, t corev1.ServiceType) bool {
 	return svc.Spec.Type == t
 }
 
@@ -292,7 +289,7 @@ func componentGroupAnnotations(risingwave *risingwavev1alpha1.RisingWave, group 
 	return annotations
 }
 
-func PodSelector(risingwave *risingwavev1alpha1.RisingWave, component string, group *string) map[string]string {
+func podSelector(risingwave *risingwavev1alpha1.RisingWave, component string, group *string) map[string]string {
 	labels := map[string]string{
 		consts.LabelRisingWaveName:      risingwave.Name,
 		consts.LabelRisingWaveComponent: component,

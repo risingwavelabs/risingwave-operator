@@ -72,7 +72,7 @@ func getDeploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestcas
 		{
 			Name: "pod-template-labels-match",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestcase) bool {
-				return mapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, tc.component, &tc.group.Name))
+				return mapContains(obj.Spec.Template.Labels, podSelector(tc.risingwave, tc.component, &tc.group.Name))
 			},
 		},
 		{
@@ -189,18 +189,18 @@ func getDeploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestcas
 
 // This function returns the predicates used for to compare deployment objects for the compactor component.
 // It inherits from the base deployment predicates and further additional predicates can be added for compactor.
-func GetCompactorDeploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestcase] {
+func getCompactorDeploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestcase] {
 	return getDeploymentPredicates()
 }
 
 // This function returns the predicates used for to compare deployment objects for the Frontend component.
 // It inherits from the base deployment predicates and further additional predicates can be added for Frontend.
-func GetFrontendDeploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestcase] {
+func getFrontendDeploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestcase] {
 	return getDeploymentPredicates()
 }
 
 // This function returns the predicates used for the meta statefulset predicates.
-func GetMetaSTSPredicates() []predicate[*appsv1.StatefulSet, metaSTSTestcase] {
+func getMetaSTSPredicates() []predicate[*appsv1.StatefulSet, metaSTSTestcase] {
 	return []predicate[*appsv1.StatefulSet, metaSTSTestcase]{
 		{
 			Name: "namespace-equals",
@@ -230,7 +230,7 @@ func GetMetaSTSPredicates() []predicate[*appsv1.StatefulSet, metaSTSTestcase] {
 		{
 			Name: "pod-template-labels-match",
 			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
-				return mapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, tc.component, &tc.group.Name))
+				return mapContains(obj.Spec.Template.Labels, podSelector(tc.risingwave, tc.component, &tc.group.Name))
 			},
 		},
 		{
@@ -376,7 +376,7 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, stsTestcase] {
 		{
 			Name: "pod-template-labels-match",
 			Fn: func(obj *appsv1.StatefulSet, tc stsTestcase) bool {
-				return mapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, consts.ComponentCompute, &tc.group.Name))
+				return mapContains(obj.Spec.Template.Labels, podSelector(tc.risingwave, consts.ComponentCompute, &tc.group.Name))
 			},
 		},
 		{
@@ -506,7 +506,7 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, stsTestcase] {
 
 // This function returns the predicates used for to compare stateful objects for the compute component.
 // It inherits from the base statefulset predicates and further additional predicates can be added for compute.
-func GetComputeSTSPredicates() []predicate[*appsv1.StatefulSet, stsTestcase] {
+func getComputeSTSPredicates() []predicate[*appsv1.StatefulSet, stsTestcase] {
 	return getSTSPredicates()
 }
 
@@ -541,7 +541,7 @@ func getClonesetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, clonesetT
 		{
 			Name: "pod-template-labels-match",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc clonesetTestcase) bool {
-				return mapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, tc.component, &tc.group.Name))
+				return mapContains(obj.Spec.Template.Labels, podSelector(tc.risingwave, tc.component, &tc.group.Name))
 			},
 		},
 		{
@@ -658,18 +658,18 @@ func getClonesetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, clonesetT
 
 // This function returns the predicates used for to compare cloneset objects for the compactor component.
 // It inherits from the base cloneset predicates and further additional predicates can be added for compactor.
-func GetCompactorClonesetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, clonesetTestcase] {
+func getCompactorClonesetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, clonesetTestcase] {
 	return getClonesetPredicates()
 }
 
 // This function returns the predicates used for to compare cloneset objects for the frontend component.
 // It inherits from the base cloneset predicates and further additional predicates can be added for frontend.
-func GetFrontendClonesetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, clonesetTestcase] {
+func getFrontendClonesetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, clonesetTestcase] {
 	return getClonesetPredicates()
 }
 
 // This function returns the predicates used for the base advanced statefulset predicates.
-func GetAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, advancedSTSTestcase] {
+func getAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, advancedSTSTestcase] {
 	return []predicate[*kruiseappsv1beta1.StatefulSet, advancedSTSTestcase]{
 		{
 			Name: "namespace-equals",
@@ -699,7 +699,7 @@ func GetAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, adva
 		{
 			Name: "pod-template-labels-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc advancedSTSTestcase) bool {
-				return mapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, consts.ComponentCompute, &tc.group.Name))
+				return mapContains(obj.Spec.Template.Labels, podSelector(tc.risingwave, consts.ComponentCompute, &tc.group.Name))
 			},
 		},
 		{
@@ -829,12 +829,12 @@ func GetAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, adva
 
 // This function returns the predicates used to compare Advanced STS objects for the compute component.
 // It inherits from the base Advanced STS predicates and further additional predicates can be added for compute.
-func GetComputeAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, advancedSTSTestcase] {
-	return GetAdvancedSTSPredicates()
+func getComputeAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, advancedSTSTestcase] {
+	return getAdvancedSTSPredicates()
 }
 
 // This function returns the predicates used for the meta statefulset predicates.
-func GetMetaAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, metaAdvancedSTSTestcase] {
+func getMetaAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, metaAdvancedSTSTestcase] {
 	return []predicate[*kruiseappsv1beta1.StatefulSet, metaAdvancedSTSTestcase]{
 		{
 			Name: "namespace-equals",
@@ -864,7 +864,7 @@ func GetMetaAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, 
 		{
 			Name: "pod-template-labels-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
-				return mapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, tc.component, &tc.group.Name))
+				return mapContains(obj.Spec.Template.Labels, podSelector(tc.risingwave, tc.component, &tc.group.Name))
 			},
 		},
 		{
@@ -979,7 +979,7 @@ func GetMetaAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, 
 	}
 }
 
-func GetServicesPredicate() []predicate[*corev1.Service, servicesTestcase] {
+func getServicesPredicate() []predicate[*corev1.Service, servicesTestcase] {
 	return []predicate[*corev1.Service, servicesTestcase]{
 		{
 			Name: "controlled-by-risingwave",
@@ -1002,7 +1002,7 @@ func GetServicesPredicate() []predicate[*corev1.Service, servicesTestcase] {
 		{
 			Name: "service-type-match",
 			Fn: func(obj *corev1.Service, testcase servicesTestcase) bool {
-				return IsServiceType(obj, testcase.expectServiceType)
+				return isServiceType(obj, testcase.expectServiceType)
 			},
 		},
 		{
@@ -1014,13 +1014,13 @@ func GetServicesPredicate() []predicate[*corev1.Service, servicesTestcase] {
 		{
 			Name: "selector-equals",
 			Fn: func(obj *corev1.Service, testcase servicesTestcase) bool {
-				return hasServiceSelector(obj, PodSelector(testcase.risingwave, testcase.component, nil))
+				return hasServiceSelector(obj, podSelector(testcase.risingwave, testcase.component, nil))
 			},
 		},
 	}
 }
 
-func GetServicesMetaPredicates() []predicate[*corev1.Service, servicesMetaTestcase] {
+func getServicesMetaPredicates() []predicate[*corev1.Service, servicesMetaTestcase] {
 	return []predicate[*corev1.Service, servicesMetaTestcase]{
 		{
 			Name: "service-labels-match",
@@ -1037,7 +1037,7 @@ func GetServicesMetaPredicates() []predicate[*corev1.Service, servicesMetaTestca
 	}
 }
 
-func GetObjectStoratesDeploymentPredicates() []predicate[*appsv1.Deployment, objectStoragesTestcase] {
+func getObjectStoratesDeploymentPredicates() []predicate[*appsv1.Deployment, objectStoragesTestcase] {
 	return []predicate[*appsv1.Deployment, objectStoragesTestcase]{
 		{
 			Name: "hummock-args-match",
@@ -1054,7 +1054,7 @@ func GetObjectStoratesDeploymentPredicates() []predicate[*appsv1.Deployment, obj
 	}
 }
 
-func GetObjectStoratesStatefulsetPredicates() []predicate[*appsv1.StatefulSet, objectStoragesTestcase] {
+func getObjectStoratesStatefulsetPredicates() []predicate[*appsv1.StatefulSet, objectStoragesTestcase] {
 	return []predicate[*appsv1.StatefulSet, objectStoragesTestcase]{
 		{
 			Name: "hummock-args-match",
@@ -1071,7 +1071,7 @@ func GetObjectStoratesStatefulsetPredicates() []predicate[*appsv1.StatefulSet, o
 	}
 }
 
-func GetConfigmapPredicates() []predicate[*corev1.ConfigMap, configmapTestcase] {
+func getConfigmapPredicates() []predicate[*corev1.ConfigMap, configmapTestcase] {
 	return []predicate[*corev1.ConfigMap, configmapTestcase]{
 		{
 			Name: "controlled-by-risingwave",
@@ -1102,7 +1102,7 @@ func GetConfigmapPredicates() []predicate[*corev1.ConfigMap, configmapTestcase] 
 	}
 }
 
-func GetMetaStoragePredicates() []predicate[*appsv1.StatefulSet, metaStorageTestcase] {
+func getMetaStoragePredicates() []predicate[*appsv1.StatefulSet, metaStorageTestcase] {
 	return []predicate[*appsv1.StatefulSet, metaStorageTestcase]{
 		{
 			Name: "args-match",
@@ -1119,7 +1119,7 @@ func GetMetaStoragePredicates() []predicate[*appsv1.StatefulSet, metaStorageTest
 	}
 }
 
-func GetServiceMonitorPredicates() []predicate[*prometheusv1.ServiceMonitor, baseTestCase] {
+func getServiceMonitorPredicates() []predicate[*prometheusv1.ServiceMonitor, baseTestCase] {
 	return []predicate[*prometheusv1.ServiceMonitor, baseTestCase]{
 		{
 			Name: "owned",

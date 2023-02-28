@@ -111,6 +111,10 @@ func (f *RisingWaveObjectFactory) isObjectStorageAliyunOSS() bool {
 	return f.risingwave.Spec.Storages.Object.AliyunOSS != nil
 }
 
+func (f *RisingWaveObjectFactory) isObjectStorageHDFS() bool {
+	return f.risingwave.Spec.Storages.Object.HDFS != nil
+}
+
 func (f *RisingWaveObjectFactory) isObjectStorageMinIO() bool {
 	return f.risingwave.Spec.Storages.Object.MinIO != nil
 }
@@ -137,6 +141,9 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 		aliyunOSS := objectStorage.AliyunOSS
 		// Redirect to s3-compatible.
 		return fmt.Sprintf("hummock+s3-compatible://%s", aliyunOSS.Bucket)
+	case objectStorage.HDFS != nil:
+		hdfs := objectStorage.HDFS
+		return fmt.Sprintf("hummock+hdfs://{%s}@{%s}", hdfs.NameNode, hdfs.Root)
 	default:
 		panic("unrecognized storage type")
 	}
@@ -755,6 +762,10 @@ func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 	return envsForS3Compatible(objectStorage.AliyunOSS.Region, endpoint, objectStorage.AliyunOSS.Bucket, objectStorage.AliyunOSS.Secret)
 }
 
+func (f *RisingWaveObjectFactory) envsForHDFS() []corev1.EnvVar {
+	return []corev1.EnvVar{}
+}
+
 func (f *RisingWaveObjectFactory) envsForObjectStorage() []corev1.EnvVar {
 	switch {
 	case f.isObjectStorageMinIO():
@@ -763,6 +774,8 @@ func (f *RisingWaveObjectFactory) envsForObjectStorage() []corev1.EnvVar {
 		return f.envsForS3()
 	case f.isObjectStorageAliyunOSS():
 		return f.envsForAliyunOSS()
+	case f.isObjectStorageHDFS():
+		return f.envsForHDFS()
 	default:
 		return nil
 	}

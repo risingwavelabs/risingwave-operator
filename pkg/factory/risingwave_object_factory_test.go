@@ -73,7 +73,7 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 			t.Fatal("bad test")
 		}
 		t.Run(name+" testcase:", func(t *testing.T) {
-			ComposeAssertions(servicesPreds, t).assertTest(svc, tc)
+			composeAssertions(servicesPreds, t).assertTest(svc, tc)
 		})
 	}
 }
@@ -104,7 +104,7 @@ func Test_RisingWaveObjectFactory_ServicesMeta(t *testing.T) {
 			t.Fatal("bad test")
 		}
 		t.Run(name+" testcase:", func(t *testing.T) {
-			ComposeAssertions(servicesPreds, t).assertTest(svc, tc)
+			composeAssertions(servicesPreds, t).assertTest(svc, tc)
 		})
 	}
 }
@@ -118,7 +118,7 @@ func Test_RisingWaveObjectFactory_ConfigMaps(t *testing.T) {
 		cm := factory.NewConfigConfigMap(tc.configVal)
 
 		t.Run(name, func(t *testing.T) {
-			ComposeAssertions(configmapPreds, t).assertTest(cm, tc)
+			composeAssertions(configmapPreds, t).assertTest(cm, tc)
 		})
 	}
 }
@@ -148,7 +148,7 @@ func Test_RisingWaveObjectFactory_Frontend_Deployments(t *testing.T) {
 		deploy := factory.NewFrontendDeployment(tc.group.Name, tc.podTemplate)
 
 		t.Run(component+"-"+name+" testcase:", func(t *testing.T) {
-			ComposeAssertions(deploymentPreds, t).assertTest(deploy, tc)
+			composeAssertions(deploymentPreds, t).assertTest(deploy, tc)
 		})
 	}
 }
@@ -178,7 +178,7 @@ func Test_RisingWaveObjectFactory_Compactor_Deployments(t *testing.T) {
 		deploy := factory.NewCompactorDeployment(tc.group.Name, tc.podTemplate)
 
 		t.Run(component+"-"+name+" testcase:", func(t *testing.T) {
-			ComposeAssertions(deploymentPreds, t).assertTest(deploy, tc)
+			composeAssertions(deploymentPreds, t).assertTest(deploy, tc)
 		})
 	}
 }
@@ -209,7 +209,7 @@ func Test_RisingWaveObjectFactory_Frontend_CloneSet(t *testing.T) {
 		cloneSet := factory.NewFrontendCloneSet(tc.group.Name, tc.podTemplate)
 
 		t.Run(component+"-"+name+" testcase:", func(t *testing.T) {
-			ComposeAssertions(clonesetPreds, t).assertTest(cloneSet, tc)
+			composeAssertions(clonesetPreds, t).assertTest(cloneSet, tc)
 		})
 	}
 }
@@ -240,7 +240,7 @@ func Test_RisingWaveObjectFactory_Compactor_CloneSet(t *testing.T) {
 		cloneSet := factory.NewCompactorCloneSet(tc.group.Name, tc.podTemplate)
 
 		t.Run(component+"-"+name+" testcase:", func(t *testing.T) {
-			ComposeAssertions(clonesetPreds, t).assertTest(cloneSet, tc)
+			composeAssertions(clonesetPreds, t).assertTest(cloneSet, tc)
 		})
 	}
 }
@@ -271,7 +271,7 @@ func Test_RisingWaveObjectFactory_Meta_StatefulSets(t *testing.T) {
 		sts := factory.NewMetaStatefulSet(tc.group.Name, tc.podTemplate)
 
 		t.Run("Meta-"+name+" testcase:", func(t *testing.T) {
-			ComposeAssertions(stsPreds, t).assertTest(sts, tc)
+			composeAssertions(stsPreds, t).assertTest(sts, tc)
 		})
 	}
 }
@@ -302,7 +302,7 @@ func Test_RisingWaveObjectFactory_Compute_StatefulSets(t *testing.T) {
 		sts := factory.NewComputeStatefulSet(tc.group.Name, tc.podTemplate)
 
 		t.Run("compute-"+name+" testcase:", func(t *testing.T) {
-			ComposeAssertions(stsPreds, t).assertTest(sts, tc)
+			composeAssertions(stsPreds, t).assertTest(sts, tc)
 		})
 	}
 }
@@ -333,13 +333,13 @@ func Test_RisingWaveObjectFactory_Meta_AdvancedStatefulSets(t *testing.T) {
 		sts := factory.NewMetaAdvancedStatefulSet(tc.group.Name, tc.podTemplate)
 
 		t.Run("Meta-"+name+" testcase:", func(t *testing.T) {
-			ComposeAssertions(stsPreds, t).assertTest(sts, tc)
+			composeAssertions(stsPreds, t).assertTest(sts, tc)
 		})
 	}
 }
 func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 	testcases := getAdvancedSTSTestcases()
-	astsPreds := getAdvancedSTSPredicates()
+	astsPreds := getComputeAdvancedSTSPredicates()
 	for name, tc := range testcases {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.Storages.Meta.Memory = pointer.Bool(true)
@@ -361,7 +361,7 @@ func Test_RisingWaveObjectFactory_AdvancedStatefulSets(t *testing.T) {
 		asts := factory.NewComputeAdvancedStatefulSet(tc.group.Name, tc.podTemplate)
 
 		t.Run("compute-"+name+" testcase:", func(t *testing.T) {
-			ComposeAssertions(astsPreds, t).assertTest(asts, tc)
+			composeAssertions(astsPreds, t).assertTest(asts, tc)
 		})
 	}
 }
@@ -379,13 +379,13 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 
 			deploy := factory.NewCompactorDeployment("", nil)
 			t.Run(name+" testcase:", func(t *testing.T) {
-				ComposeAssertions(deployObjectStoragePreds, t).assertTest(deploy, tc)
+				composeAssertions(deployObjectStoragePreds, t).assertTest(deploy, tc)
 			})
 
 			sts := factory.NewComputeStatefulSet("", nil)
 
 			t.Run(name+" testcase:", func(t *testing.T) {
-				ComposeAssertions(stsObjectStoragePreds, t).assertTest(sts, tc)
+				composeAssertions(stsObjectStoragePreds, t).assertTest(sts, tc)
 			})
 		})
 	}
@@ -402,7 +402,7 @@ func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
 		sts := factory.NewMetaStatefulSet("", nil)
 
 		t.Run("compute-"+name+" testcase:", func(t *testing.T) {
-			ComposeAssertions(metaStoragePreds, t).assertTest(sts, tc)
+			composeAssertions(metaStoragePreds, t).assertTest(sts, tc)
 		})
 	}
 }
@@ -412,7 +412,7 @@ func Test_RisingWaveObjectFactory_ServiceMonitor(t *testing.T) {
 	serviceMonitorPreds := getServiceMonitorPredicates()
 	factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
 	serviceMonitor := factory.NewServiceMonitor()
-	ComposeAssertions(serviceMonitorPreds, t).assertTest(serviceMonitor, baseTestCase{risingwave: risingwave})
+	composeAssertions(serviceMonitorPreds, t).assertTest(serviceMonitor, baseTestCase{risingwave: risingwave})
 }
 
 func Test_RisingWaveObjectFactory_InheritLabels(t *testing.T) {

@@ -33,7 +33,7 @@ func (a *composedAssertion[T, K]) assertTest(Obj T, testcase K) {
 	}
 }
 
-func ComposeAssertions[T kubeObjects, K testcaseType](predicates []predicate[T, K], t *testing.T) *composedAssertion[T, K] {
+func composeAssertions[T kubeObjects, K testcaseType](predicates []predicate[T, K], t *testing.T) *composedAssertion[T, K] {
 	return &composedAssertion[T, K]{
 		predicates: predicates,
 		t:          t,

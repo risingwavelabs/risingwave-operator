@@ -40,3 +40,4 @@ fallocate
 nums
 aliyun
 aliyuncs
+hdfs

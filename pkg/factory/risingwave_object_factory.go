@@ -1880,14 +1880,14 @@ func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonit
 }
 
 func (f *RisingWaveObjectFactory) getConnectorPorts() *risingwavev1alpha1.RisingWaveComponentCommonPorts {
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.risingwave.Spec.Components.Connector.Ports.DeepCopy()
 	if connectorPorts.ServicePort == 0 {
 		connectorPorts.ServicePort = consts.DefaultConnectorServicePort
 	}
 	if connectorPorts.MetricsPort == 0 {
 		connectorPorts.MetricsPort = consts.DefaultConnectorMetricsPort
 	}
-	return &f.risingwave.Spec.Components.Connector.Ports
+	return connectorPorts
 }
 
 // NewRisingWaveObjectFactory creates a new RisingWaveObjectFactory.

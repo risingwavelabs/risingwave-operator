@@ -143,7 +143,7 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 		return fmt.Sprintf("hummock+s3-compatible://%s", aliyunOSS.Bucket)
 	case objectStorage.HDFS != nil:
 		hdfs := objectStorage.HDFS
-		return fmt.Sprintf("hummock+hdfs://{%s}@{%s}", hdfs.NameNode, hdfs.Root)
+		return fmt.Sprintf("hummock+hdfs://%s@%s", hdfs.NameNode, hdfs.Root)
 	default:
 		panic("unrecognized storage type")
 	}

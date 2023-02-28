@@ -45,9 +45,9 @@ func (mpc *MetaPodController) getMetaRole(ctx context.Context, host string, port
 	log := log.FromContext(ctx)
 	addr := fmt.Sprintf("%s:%v", host, port)
 
-	newCtx, cancel := context.WithTimeout(ctx, time.Second)
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
-	conn, err := grpc.DialContext(newCtx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Error(err, fmt.Sprintf("Unable to connect to meta pod at %s", addr))
 		return "", false
@@ -74,11 +74,14 @@ func (mpc *MetaPodController) getMetaRole(ctx context.Context, host string, port
 			log.Error(fmt.Errorf("unexpected member format %s", member.Address.Host), "")
 			return consts.MetaRoleUnknown, false
 		}
-		if member.IsLeader && podName == memberAddress && port == uint(member.Address.Port) {
-			return consts.MetaRoleLeader, true
+		if podName == memberAddress && port == uint(member.Address.Port) {
+			if member.IsLeader {
+				return consts.MetaRoleLeader, true
+			}
+			return consts.MetaRoleFollower, true
 		}
 	}
-	return consts.MetaRoleFollower, true
+	return consts.MetaRoleUnknown, true
 }
 
 // getMetaPort returns the service port of the pod. Returns true if operation was successful.
@@ -101,34 +104,41 @@ func getPodIP(pod *corev1.Pod) (string, bool) {
 	return ip, ip != ""
 }
 
-// getOtherMetPods returns all other meta pods of the same RW instance.
-func (mpc *MetaPodController) getOtherMetPods(metaPod *corev1.Pod, ctx context.Context) ([]corev1.Pod, error) {
+// getLeaderMetaPods returns all other meta pods of the same RW instance. Returns true if operation was successful.
+func (mpc *MetaPodController) getLeaderMetaPods(metaPod *corev1.Pod, ctx context.Context) ([]corev1.Pod, bool) {
 	log := log.FromContext(ctx)
 
-	// get other meta pods of this RW instance
-	otherMetaPods := &corev1.PodList{}
-	labelSet := map[string]string{consts.LabelRisingWaveComponent: consts.ComponentMeta}
-	if rwInstance, ok := metaPod.ObjectMeta.Labels[consts.LabelRisingWaveName]; ok {
-		labelSet[consts.LabelRisingWaveName] = rwInstance
-	} else {
+	rwInstance, ok := metaPod.ObjectMeta.Labels[consts.LabelRisingWaveName]
+	if !ok {
 		log.Error(fmt.Errorf("unable to retrieve risingwave name from pod"), "")
+		return []corev1.Pod{}, false
+	}
+
+	// get pods that are marked as leader from this instance
+	otherLeaderPods := &corev1.PodList{}
+	labelSet := map[string]string{
+		consts.LabelRisingWaveComponent: consts.ComponentMeta,
+		consts.LabelRisingWaveMetaRole:  consts.MetaRoleLeader,
+		consts.LabelRisingWaveName:      rwInstance,
 	}
 	listOptions := client.ListOptions{LabelSelector: labels.SelectorFromSet(labelSet)}
-	err := mpc.Client.List(context.Background(), otherMetaPods, &listOptions)
-	return otherMetaPods.Items, err
+	err := mpc.Client.List(context.Background(), otherLeaderPods, &listOptions)
+	leaders := otherLeaderPods.Items
+	if len(leaders) > 1 {
+		log.Error(fmt.Errorf("multiple pods are marked as leaders: %v", leaders), "")
+	}
+	return leaders, err != nil
 }
 
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
-func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (res ctrl.Result, e error) {
 	defaultRequeue2sResult := ctrl.Result{RequeueAfter: time.Second * 2}
-	pendingRequeue10sResult := ctrl.Result{RequeueAfter: time.Second * 10}
 
 	// only reconcile when this is related to a meta pod
 	reqPod := &corev1.Pod{}
 	mpc.Get(ctx, req.NamespacedName, reqPod)
-	rwComponent, ok := reqPod.Labels[consts.LabelRisingWaveComponent]
-	if !ok || rwComponent != consts.ComponentMeta {
-		return defaultRequeue2sResult, nil
+	if reqPod.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
+		return ctrl.Result{}, nil
 	}
 
 	log := log.FromContext(ctx)
@@ -138,15 +148,11 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 	timeoutCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	podIP, ok := getPodIP(reqPod)
-	if !ok {
-		log.Info("error when reconciling this pod. Assuming that pod is pending")
-		return pendingRequeue10sResult, nil
-	}
-	podPort, ok := getMetaPort(reqPod)
-	if !ok {
-		log.Error(fmt.Errorf("error when reconciling this pod"), "")
-		return defaultRequeue2sResult, nil
+	podIP, okPodIP := getPodIP(reqPod)
+	podPort, okMetaPort := getMetaPort(reqPod)
+	if !okPodIP || !okMetaPort {
+		log.Info("Ignoring this pod")
+		return ctrl.Result{}, nil
 	}
 
 	newRole, ok := mpc.getMetaRole(timeoutCtx, podIP, podPort, reqPod.Name)
@@ -160,32 +166,31 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		return defaultRequeue2sResult, nil
 	}
 
-	if err := mpc.Patch(ctx, reqPod, client.MergeFrom(originalReqPod)); err != nil {
-		log.Error(err, "unable to update this Pod")
-		return defaultRequeue2sResult, nil
-	}
+	// We need to defer the update, since we are updating all leader pods below
+	defer func() {
+		if err := mpc.Patch(ctx, reqPod, client.MergeFrom(originalReqPod)); err != nil {
+			log.Error(err, "unable to update this Pod")
+			res = defaultRequeue2sResult
+			e = nil
+		}
+	}()
 
 	// Update other meta components only if we have a change of leadership
-	if oldRole != consts.MetaRoleLeader && newRole != consts.MetaRoleLeader {
+	if newRole == consts.MetaRoleLeader {
 		return defaultRequeue2sResult, nil
 	}
 
-	otherMetaPods, err := mpc.getOtherMetPods(reqPod, ctx)
-	if err != nil {
-		log.Error(err, "unable to retrieve other meta pods")
+	otherMetaPods, ok := mpc.getLeaderMetaPods(reqPod, ctx)
+	if !ok {
 		return defaultRequeue2sResult, nil
 	}
 
 	for _, pod := range otherMetaPods {
-		podIP, ok := getPodIP(&pod)
-		if !ok {
-			log.Info("error when reconciling other meta pod %s. Assuming that pod is pending", pod.Name)
-			return pendingRequeue10sResult, nil
-		}
-		podPort, ok := getMetaPort(&pod)
-		if !ok {
-			log.Error(fmt.Errorf("error getting port from other meta pod %s", pod.Name), "")
-			return defaultRequeue2sResult, nil
+		podIP, okPodIP := getPodIP(&pod)
+		podPort, okMetaPort := getMetaPort(&pod)
+		if !okPodIP || !okMetaPort {
+			log.Info("Ignoring pod %s", pod.Name)
+			return ctrl.Result{}, nil
 		}
 
 		// set meta label

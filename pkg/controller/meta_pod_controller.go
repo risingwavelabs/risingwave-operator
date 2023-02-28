@@ -141,44 +141,47 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, nil
 	}
 
-	log := log.FromContext(ctx)
-
-	originalReqPod := reqPod.DeepCopy()
-	oldRole := reqPod.Labels[consts.LabelRisingWaveMetaRole]
-	timeoutCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
-
 	podIP, okPodIP := getPodIP(reqPod)
 	podPort, okMetaPort := getMetaPort(reqPod)
 	if !okPodIP || !okMetaPort {
-		log.Info("Ignoring this pod")
+		log.FromContext(ctx).Info("Ignoring this pod")
 		return ctrl.Result{}, nil
 	}
 
-	// only update if something changed
-	newRole, ok := mpc.getMetaRole(timeoutCtx, podIP, podPort, reqPod.Name)
-	if !ok || oldRole == newRole {
-		return defaultRequeue2sResult, nil
-	}
-	reqPod.Labels[consts.LabelRisingWaveMetaRole] = newRole
-
-	// We need to defer the update, since we are updating all leader pods below
-	defer func() {
-		if err := mpc.Patch(ctx, reqPod, client.MergeFrom(originalReqPod)); err != nil {
-			log.Error(err, "unable to update this Pod")
-			res = defaultRequeue2sResult
-			e = nil
-		}
-	}()
-
+	newRole, ok := mpc.reconcileThisPod(ctx, reqPod, defaultRequeue2sResult, podIP, podPort)
 	// Update other meta components only if we have a change of leadership
-	if newRole == consts.MetaRoleLeader {
+	if !ok || newRole == consts.MetaRoleLeader {
 		return defaultRequeue2sResult, nil
 	}
 
 	return mpc.reconcileOtherLeaderPods(ctx, reqPod, defaultRequeue2sResult), nil
 }
 
+// reconcileThisPod updates the current pod label. If successful returns true and the new role of the pod.
+func (mpc *MetaPodController) reconcileThisPod(ctx context.Context, reqPod *corev1.Pod, defaultResult ctrl.Result, podIP string, podPort uint) (string, bool) {
+	log := log.FromContext(ctx)
+	originalReqPod := reqPod.DeepCopy()
+	oldRole := reqPod.Labels[consts.LabelRisingWaveMetaRole]
+	timeoutCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	// only update if something changed
+	newRole, ok := mpc.getMetaRole(timeoutCtx, podIP, podPort, reqPod.Name)
+	if !ok || oldRole == newRole {
+		return "", false
+	}
+	reqPod.Labels[consts.LabelRisingWaveMetaRole] = newRole
+
+	// We need to defer the update, since we are updating all leader pods below
+	if err := mpc.Patch(ctx, reqPod, client.MergeFrom(originalReqPod)); err != nil {
+		log.Error(err, "unable to update this Pod")
+		return "", false
+	}
+
+	return newRole, true
+}
+
+// reconcileOtherLeaderPods updates the labels of all other leader pods of ths risingwave instance.
 func (mpc *MetaPodController) reconcileOtherLeaderPods(ctx context.Context, reqPod *corev1.Pod, defaultResult ctrl.Result) ctrl.Result {
 	otherLeaderPods, ok := mpc.getLeaderMetaPods(reqPod, ctx)
 	if !ok {

@@ -155,16 +155,12 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, nil
 	}
 
+	// only update if something changed
 	newRole, ok := mpc.getMetaRole(timeoutCtx, podIP, podPort, reqPod.Name)
-	if !ok {
+	if !ok || oldRole == newRole {
 		return defaultRequeue2sResult, nil
 	}
 	reqPod.Labels[consts.LabelRisingWaveMetaRole] = newRole
-
-	// only update if something changed
-	if oldRole == newRole {
-		return defaultRequeue2sResult, nil
-	}
 
 	// We need to defer the update, since we are updating all leader pods below
 	defer func() {
@@ -180,17 +176,23 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		return defaultRequeue2sResult, nil
 	}
 
-	otherMetaPods, ok := mpc.getLeaderMetaPods(reqPod, ctx)
+	return mpc.reconcileOtherLeaderPods(ctx, reqPod, defaultRequeue2sResult), nil
+}
+
+func (mpc *MetaPodController) reconcileOtherLeaderPods(ctx context.Context, reqPod *corev1.Pod, defaultResult ctrl.Result) ctrl.Result {
+	otherLeaderPods, ok := mpc.getLeaderMetaPods(reqPod, ctx)
 	if !ok {
-		return defaultRequeue2sResult, nil
+		return defaultResult
 	}
 
-	for _, pod := range otherMetaPods {
+	log := log.FromContext(ctx)
+
+	for _, pod := range otherLeaderPods {
 		podIP, okPodIP := getPodIP(&pod)
 		podPort, okMetaPort := getMetaPort(&pod)
 		if !okPodIP || !okMetaPort {
 			log.Info("Ignoring pod %s", pod.Name)
-			return ctrl.Result{}, nil
+			return ctrl.Result{}
 		}
 
 		// set meta label
@@ -200,7 +202,7 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		defer cancel()
 		newRole, ok := mpc.getMetaRole(timeoutCtx, podIP, podPort, pod.Name)
 		if !ok {
-			return defaultRequeue2sResult, nil
+			return defaultResult
 		}
 		pod.Labels[consts.LabelRisingWaveMetaRole] = newRole
 
@@ -215,8 +217,7 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 		log.Info("updated meta pod", "pod", pod.Name)
 	}
-
-	return defaultRequeue2sResult, nil
+	return defaultResult
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -232,5 +233,3 @@ func NewMetaPodController(client client.Client) *MetaPodController {
 		Client: client,
 	}
 }
-
-// Test if pod is pending, then we do not try to connect against it

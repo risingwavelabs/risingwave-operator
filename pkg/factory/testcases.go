@@ -2,12 +2,14 @@ package factory
 
 import (
 	"math"
+	"strconv"
 	"time"
 
 	kruisepubs "github.com/openkruise/kruise-api/apps/pub"
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
 	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -223,6 +225,253 @@ func GetDeploymentTestcases() map[string]deploymentTestcase {
 			expectedUpgradeStrategy: &appsv1.DeploymentStrategy{
 				Type: appsv1.RollingUpdateDeploymentStrategyType,
 				RollingUpdate: &appsv1.RollingUpdateDeployment{
+					MaxUnavailable: &intstr.IntOrString{
+						Type:   intstr.String,
+						StrVal: "50%",
+					},
+				},
+			},
+		},
+		"resources-1c1g": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					Resources: corev1.ResourceRequirements{
+						Limits: corev1.ResourceList{
+							corev1.ResourceCPU:    resource.MustParse("1"),
+							corev1.ResourceMemory: resource.MustParse("1Gi"),
+						},
+					},
+				},
+			},
+		},
+		"with-pod-template": {
+			podTemplate: map[string]risingwavev1alpha1.RisingWavePodTemplate{
+				"test": {
+					Template: *NewPodTemplate(func(t *risingwavev1alpha1.RisingWavePodTemplateSpec) {
+						t.Spec.Containers[0].SecurityContext = &corev1.SecurityContext{
+							Privileged: pointer.Bool(true),
+						}
+					}),
+				},
+			},
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image:       rand.String(20),
+					PodTemplate: pointer.String("test"),
+				},
+			},
+		},
+	}
+}
+func GetMetaStsTestcases() map[string]metaStsTestcase {
+	return map[string]metaStsTestcase{
+		"pods-meta-labels": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Labels: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+				},
+			},
+		},
+		"pods-meta-annotations": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Annotations: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+				},
+			},
+		},
+		"node-selectors": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					NodeSelector: map[string]string{
+						"a": "b",
+					},
+				},
+			},
+		},
+		"tolerations": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					Tolerations: []corev1.Toleration{
+						{
+							Key:               "key1",
+							Operator:          "Equal",
+							Value:             "value1",
+							Effect:            "NoExecute",
+							TolerationSeconds: &[]int64{3600}[0],
+						},
+					},
+				},
+			},
+		},
+		"priority-class-name": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image:             rand.String(20),
+					PriorityClassName: "high-priority",
+				},
+			},
+		},
+		"security-context": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					SecurityContext: &corev1.PodSecurityContext{
+						RunAsUser:           &[]int64{1000}[0],
+						RunAsGroup:          &[]int64{3000}[0],
+						FSGroup:             &[]int64{2000}[0],
+						FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
+					},
+				},
+			},
+		},
+		"dns-config": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					DNSConfig: &corev1.PodDNSConfig{
+						Nameservers: []string{"1.2.3.4"},
+						Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
+						Options: []corev1.PodDNSConfigOption{
+							{
+								// spellchecker: disable
+								Name:  "ndots",
+								Value: &[]string{"2"}[0],
+							},
+							{
+								// spellchecker: disable
+								Name: "edns0",
+							},
+						},
+					},
+				},
+			},
+		},
+		"termination-grace-period-seconds": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image:                         rand.String(20),
+					TerminationGracePeriodSeconds: pointer.Int64(5),
+				},
+			},
+		},
+		"default-group": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+				},
+			},
+		},
+		"with-group-name": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "test-group",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+				},
+			},
+		},
+		"with-restart-at": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+				},
+			},
+			restartAt: &metav1.Time{Time: time.Now()},
+		},
+		"image-pull-policy-always": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image:           rand.String(20),
+					ImagePullPolicy: corev1.PullAlways,
+				},
+			},
+		},
+		"image-pull-secrets": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					ImagePullSecrets: []string{
+						"a",
+					},
+				},
+			},
+		},
+		"upgrade-strategy-recreate": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+					},
+				},
+			},
+			expectedUpgradeStrategy: nil,
+		},
+		"upgrade-strategy-rolling-update-max-unavailable-50%": {
+			group: risingwavev1alpha1.RisingWaveComponentGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+					Image: rand.String(20),
+					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
+						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRollingUpdate,
+						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
+							MaxUnavailable: &intstr.IntOrString{
+								Type:   intstr.String,
+								StrVal: "50%",
+							},
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &appsv1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
 					MaxUnavailable: &intstr.IntOrString{
 						Type:   intstr.String,
 						StrVal: "50%",
@@ -1488,6 +1737,788 @@ func GetAdvancedSTSTestcases() map[string]advancedSTSTestcase {
 				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
 					PodUpdatePolicy: kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType,
 					Partition:       pointer.Int32(50),
+				},
+			},
+		},
+	}
+}
+
+func GetServicesTestcases() map[string]servicesTestcase {
+	return map[string]servicesTestcase{
+		"random-meta-ports": {
+			component:         consts.ComponentMeta,
+			globalServiceType: corev1.ServiceTypeClusterIP,
+			expectServiceType: corev1.ServiceTypeClusterIP,
+			ports: map[string]int32{
+				consts.PortService:   int32(rand.Int() & 0xffff),
+				consts.PortMetrics:   int32(rand.Int() & 0xffff),
+				consts.PortDashboard: int32(rand.Int() & 0xffff),
+			},
+		},
+		"random-meta-ports-node-port": {
+			component:         consts.ComponentMeta,
+			globalServiceType: corev1.ServiceTypeNodePort,
+			expectServiceType: corev1.ServiceTypeClusterIP,
+			ports: map[string]int32{
+				consts.PortService:   int32(rand.Int() & 0xffff),
+				consts.PortMetrics:   int32(rand.Int() & 0xffff),
+				consts.PortDashboard: int32(rand.Int() & 0xffff),
+			},
+		},
+		"random-frontend-ports": {
+			component:         consts.ComponentFrontend,
+			globalServiceType: corev1.ServiceTypeClusterIP,
+			expectServiceType: corev1.ServiceTypeClusterIP,
+			ports: map[string]int32{
+				consts.PortService: int32(rand.Int() & 0xffff),
+				consts.PortMetrics: int32(rand.Int() & 0xffff),
+			},
+		},
+		"random-frontend-ports-node-port": {
+			component:         consts.ComponentFrontend,
+			globalServiceType: corev1.ServiceTypeNodePort,
+			expectServiceType: corev1.ServiceTypeNodePort,
+			ports: map[string]int32{
+				consts.PortService: int32(rand.Int() & 0xffff),
+				consts.PortMetrics: int32(rand.Int() & 0xffff),
+			},
+		},
+		"random-compute-ports": {
+			component:         consts.ComponentCompute,
+			globalServiceType: corev1.ServiceTypeClusterIP,
+			expectServiceType: corev1.ServiceTypeClusterIP,
+			ports: map[string]int32{
+				consts.PortService: int32(rand.Int() & 0xffff),
+				consts.PortMetrics: int32(rand.Int() & 0xffff),
+			},
+		},
+		"random-compute-ports-node-port": {
+			component:         consts.ComponentCompute,
+			globalServiceType: corev1.ServiceTypeNodePort,
+			expectServiceType: corev1.ServiceTypeClusterIP,
+			ports: map[string]int32{
+				consts.PortService: int32(rand.Int() & 0xffff),
+				consts.PortMetrics: int32(rand.Int() & 0xffff),
+			},
+		},
+		"random-compactor-ports": {
+			component:         consts.ComponentCompactor,
+			globalServiceType: corev1.ServiceTypeClusterIP,
+			expectServiceType: corev1.ServiceTypeClusterIP,
+			ports: map[string]int32{
+				consts.PortService: int32(rand.Int() & 0xffff),
+				consts.PortMetrics: int32(rand.Int() & 0xffff),
+			},
+		},
+		"random-compactor-ports-node-port": {
+			component:         consts.ComponentCompactor,
+			globalServiceType: corev1.ServiceTypeNodePort,
+			expectServiceType: corev1.ServiceTypeClusterIP,
+			ports: map[string]int32{
+				consts.PortService: int32(rand.Int() & 0xffff),
+				consts.PortMetrics: int32(rand.Int() & 0xffff),
+			},
+		},
+		"random-connector-ports": {
+			component:         consts.ComponentConnector,
+			globalServiceType: corev1.ServiceTypeClusterIP,
+			expectServiceType: corev1.ServiceTypeClusterIP,
+			ports: map[string]int32{
+				consts.PortService: int32(rand.Int() & 0xffff),
+				consts.PortMetrics: int32(rand.Int() & 0xffff),
+			},
+		},
+		"random-connector-ports-node-port": {
+			component:         consts.ComponentConnector,
+			globalServiceType: corev1.ServiceTypeNodePort,
+			expectServiceType: corev1.ServiceTypeClusterIP,
+			ports: map[string]int32{
+				consts.PortService: int32(rand.Int() & 0xffff),
+				consts.PortMetrics: int32(rand.Int() & 0xffff),
+			},
+		},
+	}
+
+}
+
+func GetServicesMetaTestCases() map[string]servicesMetaTestcase {
+	return map[string]servicesMetaTestcase{
+		"random-meta-labels": {
+			component: consts.ComponentMeta,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Labels: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-meta-annotations": {
+			component: consts.ComponentMeta,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Annotations: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-frontend-labels": {
+			component: consts.ComponentFrontend,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Labels: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-frontend-annotations": {
+			component: consts.ComponentFrontend,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Annotations: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-compute-labels": {
+			component: consts.ComponentCompute,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Labels: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-compute-annotations": {
+			component: consts.ComponentCompute,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Annotations: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-compactor-labels": {
+			component: consts.ComponentCompactor,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Labels: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-compactor-annotations": {
+			component: consts.ComponentCompactor,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Annotations: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-connector-labels": {
+			component: consts.ComponentConnector,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Labels: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-connector-annotations": {
+			component: consts.ComponentConnector,
+			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+				Annotations: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+	}
+}
+
+func getObjectStoragesTestcase() map[string]objectStoragesTestcase {
+	return map[string]objectStoragesTestcase{
+		"memory": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				Memory: pointer.Bool(true),
+			},
+			hummockArg: "hummock+memory",
+		},
+		"minio": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				MinIO: &risingwavev1alpha1.RisingWaveObjectStorageMinIO{
+					Secret:   "minio-creds",
+					Endpoint: "minio-endpoint:1234",
+					Bucket:   "minio-hummock01",
+				},
+			},
+			hummockArg: "hummock+minio://$(MINIO_USERNAME):$(MINIO_PASSWORD)@minio-endpoint:1234/minio-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name: "MINIO_USERNAME",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "minio-creds",
+							},
+							Key: "username",
+						},
+					},
+				},
+				{
+					Name: "MINIO_PASSWORD",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "minio-creds",
+							},
+							Key: "password",
+						},
+					},
+				},
+			},
+		},
+		"s3": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
+					Secret: "s3-creds",
+					Bucket: "s3-hummock01",
+				},
+			},
+			hummockArg: "hummock+s3://s3-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "AWS_S3_BUCKET",
+					Value: "s3-hummock01",
+				},
+				{
+					Name: "AWS_ACCESS_KEY_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3AccessKeyID,
+						},
+					},
+				},
+				{
+					Name: "AWS_SECRET_ACCESS_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3SecretAccessKey,
+						},
+					},
+				},
+				{
+					Name: "AWS_REGION",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3Region,
+						},
+					},
+				},
+			},
+		},
+		"aliyun-oss": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				AliyunOSS: &risingwavev1alpha1.RisingWaveObjectStorageAliyunOSS{
+					Secret: "s3-creds",
+					Bucket: "s3-hummock01",
+				},
+			},
+			hummockArg: "hummock+s3-compatible://s3-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "S3_COMPATIBLE_BUCKET",
+					Value: "s3-hummock01",
+				},
+				{
+					Name:  "S3_COMPATIBLE_ENDPOINT",
+					Value: "https://$(S3_COMPATIBLE_BUCKET).oss-$(S3_COMPATIBLE_REGION).aliyuncs.com",
+				},
+				{
+					Name: "S3_COMPATIBLE_ACCESS_KEY_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3AccessKeyID,
+						},
+					},
+				},
+				{
+					Name: "S3_COMPATIBLE_SECRET_ACCESS_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3SecretAccessKey,
+						},
+					},
+				},
+				{
+					Name: "S3_COMPATIBLE_REGION",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3Region,
+						},
+					},
+				},
+			},
+		},
+		"aliyun-oss-internal": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				AliyunOSS: &risingwavev1alpha1.RisingWaveObjectStorageAliyunOSS{
+					Secret:           "s3-creds",
+					Bucket:           "s3-hummock01",
+					InternalEndpoint: true,
+				},
+			},
+			hummockArg: "hummock+s3-compatible://s3-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "S3_COMPATIBLE_BUCKET",
+					Value: "s3-hummock01",
+				},
+				{
+					Name:  "S3_COMPATIBLE_ENDPOINT",
+					Value: "https://$(S3_COMPATIBLE_BUCKET).oss-$(S3_COMPATIBLE_REGION)-internal.aliyuncs.com",
+				},
+				{
+					Name: "S3_COMPATIBLE_ACCESS_KEY_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3AccessKeyID,
+						},
+					},
+				},
+				{
+					Name: "S3_COMPATIBLE_SECRET_ACCESS_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3SecretAccessKey,
+						},
+					},
+				},
+				{
+					Name: "S3_COMPATIBLE_REGION",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3Region,
+						},
+					},
+				},
+			},
+		},
+		"aliyun-oss-with-region": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				AliyunOSS: &risingwavev1alpha1.RisingWaveObjectStorageAliyunOSS{
+					Secret: "s3-creds",
+					Bucket: "s3-hummock01",
+					Region: "cn-hangzhou",
+				},
+			},
+			hummockArg: "hummock+s3-compatible://s3-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "S3_COMPATIBLE_BUCKET",
+					Value: "s3-hummock01",
+				},
+				{
+					Name:  "S3_COMPATIBLE_ENDPOINT",
+					Value: "https://$(S3_COMPATIBLE_BUCKET).oss-$(S3_COMPATIBLE_REGION).aliyuncs.com",
+				},
+				{
+					Name: "S3_COMPATIBLE_ACCESS_KEY_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3AccessKeyID,
+						},
+					},
+				},
+				{
+					Name: "S3_COMPATIBLE_SECRET_ACCESS_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3SecretAccessKey,
+						},
+					},
+				},
+				{
+					Name:  "S3_COMPATIBLE_REGION",
+					Value: "cn-hangzhou",
+				},
+			},
+		},
+		"s3-compatible": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
+					Secret:   "s3-creds",
+					Bucket:   "s3-hummock01",
+					Endpoint: "oss-cn-hangzhou.aliyuncs.com",
+				},
+			},
+			hummockArg: "hummock+s3-compatible://s3-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "S3_COMPATIBLE_BUCKET",
+					Value: "s3-hummock01",
+				},
+				{
+					Name:  "S3_COMPATIBLE_ENDPOINT",
+					Value: "https://oss-cn-hangzhou.aliyuncs.com",
+				},
+				{
+					Name: "S3_COMPATIBLE_ACCESS_KEY_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3AccessKeyID,
+						},
+					},
+				},
+				{
+					Name: "S3_COMPATIBLE_SECRET_ACCESS_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3SecretAccessKey,
+						},
+					},
+				},
+				{
+					Name: "S3_COMPATIBLE_REGION",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3Region,
+						},
+					},
+				},
+			},
+		},
+		"s3-compatible-virtual-hosted-style": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
+					Secret:             "s3-creds",
+					Bucket:             "s3-hummock01",
+					Endpoint:           "https://oss-cn-hangzhou.aliyuncs.com",
+					VirtualHostedStyle: true,
+				},
+			},
+			hummockArg: "hummock+s3-compatible://s3-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "S3_COMPATIBLE_BUCKET",
+					Value: "s3-hummock01",
+				},
+				{
+					Name:  "S3_COMPATIBLE_ENDPOINT",
+					Value: "https://$(S3_COMPATIBLE_BUCKET).oss-cn-hangzhou.aliyuncs.com",
+				},
+				{
+					Name: "S3_COMPATIBLE_ACCESS_KEY_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3AccessKeyID,
+						},
+					},
+				},
+				{
+					Name: "S3_COMPATIBLE_SECRET_ACCESS_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3SecretAccessKey,
+						},
+					},
+				},
+				{
+					Name: "S3_COMPATIBLE_REGION",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3Region,
+						},
+					},
+				},
+			},
+		},
+		"s3-with-region": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
+					Secret: "s3-creds",
+					Bucket: "s3-hummock01",
+					Region: "ap-southeast-1",
+				},
+			},
+			hummockArg: "hummock+s3://s3-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "AWS_S3_BUCKET",
+					Value: "s3-hummock01",
+				},
+				{
+					Name: "AWS_ACCESS_KEY_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3AccessKeyID,
+						},
+					},
+				},
+				{
+					Name: "AWS_SECRET_ACCESS_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3SecretAccessKey,
+						},
+					},
+				},
+				{
+					Name:  "AWS_REGION",
+					Value: "ap-southeast-1",
+				},
+			},
+		},
+		"endpoint-with-region-variable": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
+					Bucket:   "s3-hummock01",
+					Endpoint: "s3.${REGION}.amazonaws.com",
+				},
+			},
+			hummockArg: "hummock+s3-compatible://s3-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "S3_COMPATIBLE_ENDPOINT",
+					Value: "https://s3.$(S3_COMPATIBLE_REGION).amazonaws.com",
+				},
+			},
+		},
+		"endpoint-with-bucket-variable": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
+					Bucket:   "s3-hummock01",
+					Endpoint: "${BUCKET}.s3.${REGION}.amazonaws.com",
+				},
+			},
+			hummockArg: "hummock+s3-compatible://s3-hummock01",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "S3_COMPATIBLE_ENDPOINT",
+					Value: "https://$(S3_COMPATIBLE_BUCKET).s3.$(S3_COMPATIBLE_REGION).amazonaws.com",
+				},
+			},
+		},
+	}
+
+}
+
+func GetConfigmapTestCases() map[string]configmapTestcase {
+	return map[string]configmapTestcase{
+		"empty-val": {
+			configVal: "",
+		},
+		"non-empty-val": {
+			configVal: "a",
+		},
+	}
+}
+
+func GetComputeArgsTestCases() map[string]computeArgsTestcase {
+	return map[string]computeArgsTestcase{
+		"empty-limits": {},
+		"cpu-limit-4": {
+			cpuLimit: 4,
+			argsList: [][]string{
+				{"--parallelism", "4"},
+			},
+		},
+		"mem-limit-4g": {
+			memLimit: 4 << 30,
+			argsList: [][]string{
+				{"--total-memory-bytes", strconv.Itoa((4 << 30) - (512 << 20))},
+			},
+		},
+		"mem-limit-1g": {
+			memLimit: 1 << 30,
+			argsList: [][]string{
+				{"--total-memory-bytes", strconv.Itoa((1 << 30) - (512 << 20))},
+			},
+		},
+		"mem-limit-768m": {
+			memLimit: 768 << 20,
+			argsList: [][]string{
+				{"--total-memory-bytes", strconv.Itoa(512 << 20)},
+			},
+		},
+		"mem-limit-512m": {
+			memLimit: 512 << 20,
+			argsList: [][]string{
+				{"--total-memory-bytes", strconv.Itoa(512 << 20)},
+			},
+		},
+		"mem-limit-256m": {
+			memLimit: 256 << 20,
+			argsList: [][]string{
+				{"--total-memory-bytes", strconv.Itoa(256 << 20)},
+			},
+		},
+		"cpu-and-mem": {
+			cpuLimit: 4,
+			memLimit: 1 << 30,
+			argsList: [][]string{
+				{"--parallelism", "4"},
+				{"--total-memory-bytes", strconv.Itoa((1 << 30) - (512 << 20))},
+			},
+		},
+	}
+}
+
+func GetInheritedLabelsTestCaes() map[string]inheritedLabelsTestcase {
+	return map[string]inheritedLabelsTestcase{
+		"no-inherit": {
+			labels: map[string]string{
+				"a":                               "b",
+				"risingwave.risingwavelabs.com/a": "b",
+			},
+			inheritPrefixValue: "",
+			inheritedLabels:    nil,
+		},
+		"inherit-with-one-prefix": {
+			labels: map[string]string{
+				"a":                               "b",
+				"risingwave.risingwavelabs.com/a": "b",
+			},
+			inheritPrefixValue: "risingwave.risingwavelabs.com",
+			inheritedLabels: map[string]string{
+				"risingwave.risingwavelabs.com/a": "b",
+			},
+		},
+		"inherit-with-two-prefixes": {
+			labels: map[string]string{
+				"a":                               "b",
+				"risingwave.risingwavelabs.com/a": "b",
+				"risingwave.cloud/c":              "d",
+			},
+			inheritPrefixValue: "risingwave.risingwavelabs.com,risingwave.cloud",
+			inheritedLabels: map[string]string{
+				"risingwave.risingwavelabs.com/a": "b",
+				"risingwave.cloud/c":              "d",
+			},
+		},
+		"won't-inherit-builtin-prefix": {
+			labels: map[string]string{
+				"a":                               "b",
+				"risingwave/c":                    "d",
+				"risingwave.risingwavelabs.com/a": "b",
+			},
+			inheritPrefixValue: "risingwave.risingwavelabs.com,risingwave",
+			inheritedLabels: map[string]string{
+				"risingwave.risingwavelabs.com/a": "b",
+			},
+		},
+	}
+}
+
+func GetMetaStoragesTestCases() map[string]metaStorageTestcase {
+	return map[string]metaStorageTestcase{
+		"memory": {
+			metaStorage: risingwavev1alpha1.RisingWaveMetaStorage{
+				Memory: pointer.Bool(true),
+			},
+			args: []string{
+				"--backend", "mem",
+			},
+		},
+		"etcd-no-auth": {
+			metaStorage: risingwavev1alpha1.RisingWaveMetaStorage{
+				Etcd: &risingwavev1alpha1.RisingWaveMetaStorageEtcd{
+					Endpoint: "etcd:1234",
+				},
+			},
+			args: []string{
+				"--backend", "etcd", "--etcd-endpoints", "etcd:1234",
+			},
+		},
+		"etcd-auth": {
+			metaStorage: risingwavev1alpha1.RisingWaveMetaStorage{
+				Etcd: &risingwavev1alpha1.RisingWaveMetaStorageEtcd{
+					Endpoint: "etcd:1234",
+					Secret:   "etcd-credentials",
+				},
+			},
+			args: []string{
+				"--backend", "etcd", "--etcd-endpoints", "etcd:1234", "--etcd-auth",
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name: "RW_ETCD_USERNAME",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "etcd-credentials",
+							},
+							Key: consts.SecretKeyEtcdUsername,
+						},
+					},
+				},
+				{
+					Name: "RW_ETCD_PASSWORD",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "etcd-credentials",
+							},
+							Key: consts.SecretKeyEtcdPassword,
+						},
+					},
 				},
 			},
 		},

@@ -3,6 +3,7 @@ package factory
 import (
 	"strconv"
 
+	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/samber/lo"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -11,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/utils/pointer"
+	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
@@ -19,9 +21,47 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
 
-type Testcase[T any, K any] struct {
-	name                    string
-	risingwave              *risingwavev1alpha1.RisingWave
+type risingwaveGroup interface {
+	risingwavev1alpha1.RisingWaveComputeGroup |
+		risingwavev1alpha1.RisingWaveComponentGroup
+}
+type kubeObjectsUpgradeStrategy interface {
+	*appsv1.DeploymentStrategy |
+		*appsv1.StatefulSetUpdateStrategy |
+		*kruiseappsv1alpha1.CloneSetUpdateStrategy |
+		*kruiseappsv1beta1.StatefulSetUpdateStrategy
+}
+
+type testcaseType interface {
+	baseTestCase |
+		deploymentTestcase |
+		clonesetTestcase |
+		stsTestcase |
+		advancedSTSTestcase |
+		servicesTestcase |
+		servicesMetaTestcase |
+		objectStoragesTestcase |
+		configmapTestcase |
+		computeArgsTestcase |
+		metaStorageTestcase |
+		metaStsTestcase
+}
+
+type kubeObjects interface {
+	*appsv1.Deployment |
+		*appsv1.StatefulSet |
+		*kruiseappsv1beta1.StatefulSet |
+		*kruiseappsv1alpha1.CloneSet |
+		*corev1.Service |
+		*corev1.ConfigMap |
+		*prometheusv1.ServiceMonitor
+}
+
+type baseTestCase struct {
+	risingwave *risingwavev1alpha1.RisingWave
+}
+type testcase[T risingwaveGroup, K kubeObjectsUpgradeStrategy] struct {
+	baseTestCase
 	component               string
 	podTemplate             map[string]risingwavev1alpha1.RisingWavePodTemplate
 	group                   T
@@ -29,10 +69,58 @@ type Testcase[T any, K any] struct {
 	restartAt               *metav1.Time
 }
 
-type deploymentTestcase Testcase[risingwavev1alpha1.RisingWaveComponentGroup, *appsv1.DeploymentStrategy]
-type stsTestcase Testcase[risingwavev1alpha1.RisingWaveComputeGroup, *appsv1.StatefulSetUpdateStrategy]
-type clonesetTestcase Testcase[risingwavev1alpha1.RisingWaveComponentGroup, *kruiseappsv1alpha1.CloneSetUpdateStrategy]
-type advancedSTSTestcase Testcase[risingwavev1alpha1.RisingWaveComputeGroup, *kruiseappsv1beta1.StatefulSetUpdateStrategy]
+type servicesTestcase struct {
+	baseTestCase
+	component         string
+	ports             map[string]int32
+	globalServiceType corev1.ServiceType
+	expectServiceType corev1.ServiceType
+}
+
+type servicesMetaTestcase struct {
+	baseTestCase
+	component         string
+	globalServiceMeta risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta
+}
+
+type configmapTestcase struct {
+	baseTestCase
+	risingwave *risingwavev1alpha1.RisingWave
+	configVal  string
+}
+
+type objectStoragesTestcase struct {
+	baseTestCase
+	objectStorage risingwavev1alpha1.RisingWaveObjectStorage
+	hummockArg    string
+	envs          []corev1.EnvVar
+}
+
+type computeArgsTestcase struct {
+	baseTestCase
+	cpuLimit int64
+	memLimit int64
+	argsList [][]string
+}
+
+type inheritedLabelsTestcase struct {
+	labels             map[string]string
+	inheritPrefixValue string
+	inheritedLabels    map[string]string
+}
+
+type metaStorageTestcase struct {
+	baseTestCase
+	metaStorage risingwavev1alpha1.RisingWaveMetaStorage
+	args        []string
+	envs        []corev1.EnvVar
+}
+
+type deploymentTestcase testcase[risingwavev1alpha1.RisingWaveComponentGroup, *appsv1.DeploymentStrategy]
+type metaStsTestcase testcase[risingwavev1alpha1.RisingWaveComponentGroup, *appsv1.StatefulSetUpdateStrategy]
+type stsTestcase testcase[risingwavev1alpha1.RisingWaveComputeGroup, *appsv1.StatefulSetUpdateStrategy]
+type clonesetTestcase testcase[risingwavev1alpha1.RisingWaveComponentGroup, *kruiseappsv1alpha1.CloneSetUpdateStrategy]
+type advancedSTSTestcase testcase[risingwavev1alpha1.RisingWaveComputeGroup, *kruiseappsv1beta1.StatefulSetUpdateStrategy]
 
 // type advancedSTSTestcase Testcase[risingwavev1alpha1.RisingWaveComponentGroup, *kruiseappsv1alpha1.CloneSetUpdateStrategy]
 
@@ -82,7 +170,7 @@ func MapEquals[K, V comparable](a, b map[K]V) bool {
 	}
 }
 
-func HasLabels[T client.Object](obj T, labels map[string]string, exact bool) bool {
+func hasLabels[T client.Object](obj T, labels map[string]string, exact bool) bool {
 	for k, v := range labels {
 		v1, ok := obj.GetLabels()[k]
 		if !ok || v != v1 {
@@ -198,7 +286,7 @@ func PodSelector(risingwave *risingwavev1alpha1.RisingWave, component string, gr
 	return labels
 }
 
-func ControlledBy(owner, ownee client.Object) bool {
+func controlledBy(owner, ownee client.Object) bool {
 	controllerRef, ok := lo.Find(ownee.GetOwnerReferences(), func(ref metav1.OwnerReference) bool {
 		return ref.Controller != nil && *ref.Controller
 	})
@@ -359,4 +447,19 @@ func NewPodTemplate(patches ...func(t *risingwavev1alpha1.RisingWavePodTemplateS
 	}
 
 	return t
+}
+
+func slicesContains(a, b []string) bool {
+	if len(a) < len(b) {
+		return false
+	}
+	if len(b) == 0 {
+		return true
+	}
+	for i := 0; i <= len(a)-len(b); i++ {
+		if a[i] == b[0] && slices.Equal(a[i:i+len(b)], b) {
+			return true
+		}
+	}
+	return false
 }

@@ -1,3 +1,18 @@
+/* Copyright 2023 RisingWave Labs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+ */
+
 package factory
 
 import (
@@ -21,6 +36,8 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
 
+// This file contains common functions, interfaces and types used by the object factory tests.
+// kubeObjects and testcaseType are type constraints that can be utilised or input into the predicates for test.
 type risingwaveGroup interface {
 	risingwavev1alpha1.RisingWaveComputeGroup |
 		risingwavev1alpha1.RisingWaveComponentGroup
@@ -44,7 +61,8 @@ type testcaseType interface {
 		configmapTestcase |
 		computeArgsTestcase |
 		metaStorageTestcase |
-		metaStsTestcase
+		metaSTSTestcase |
+		metaAdvancedSTSTestcase
 }
 
 type kubeObjects interface {
@@ -117,14 +135,13 @@ type metaStorageTestcase struct {
 }
 
 type deploymentTestcase testcase[risingwavev1alpha1.RisingWaveComponentGroup, *appsv1.DeploymentStrategy]
-type metaStsTestcase testcase[risingwavev1alpha1.RisingWaveComponentGroup, *appsv1.StatefulSetUpdateStrategy]
+type metaSTSTestcase testcase[risingwavev1alpha1.RisingWaveComponentGroup, *appsv1.StatefulSetUpdateStrategy]
+type metaAdvancedSTSTestcase testcase[risingwavev1alpha1.RisingWaveComponentGroup, *kruiseappsv1beta1.StatefulSetUpdateStrategy]
 type stsTestcase testcase[risingwavev1alpha1.RisingWaveComputeGroup, *appsv1.StatefulSetUpdateStrategy]
 type clonesetTestcase testcase[risingwavev1alpha1.RisingWaveComponentGroup, *kruiseappsv1alpha1.CloneSetUpdateStrategy]
 type advancedSTSTestcase testcase[risingwavev1alpha1.RisingWaveComputeGroup, *kruiseappsv1beta1.StatefulSetUpdateStrategy]
 
-// type advancedSTSTestcase Testcase[risingwavev1alpha1.RisingWaveComponentGroup, *kruiseappsv1alpha1.CloneSetUpdateStrategy]
-
-func MapContains[K, V comparable](a, b map[K]V) bool {
+func mapContains[K, V comparable](a, b map[K]V) bool {
 	if len(a) < len(b) {
 		return false
 	}
@@ -139,7 +156,7 @@ func MapContains[K, V comparable](a, b map[K]V) bool {
 	return true
 }
 
-func MapContainsWith[K comparable, V any](a, b map[K]V, equals func(a, b V) bool) bool {
+func mapContainsWith[K comparable, V any](a, b map[K]V, equals func(a, b V) bool) bool {
 	if len(a) < len(b) {
 		return false
 	}
@@ -154,7 +171,7 @@ func MapContainsWith[K comparable, V any](a, b map[K]V, equals func(a, b V) bool
 	return true
 }
 
-func MapEquals[K, V comparable](a, b map[K]V) bool {
+func mapEquals[K, V comparable](a, b map[K]V) bool {
 	if len(a) == 0 && len(b) == 0 {
 		return true
 	} else if len(a) == 0 || len(b) == 0 || len(a) != len(b) {
@@ -183,7 +200,7 @@ func hasLabels[T client.Object](obj T, labels map[string]string, exact bool) boo
 	return true
 }
 
-func HasAnnotations[T client.Object](obj T, annotations map[string]string, exact bool) bool {
+func hasAnnotations[T client.Object](obj T, annotations map[string]string, exact bool) bool {
 	for k, v := range annotations {
 		v1, ok := obj.GetAnnotations()[k]
 		if !ok || v != v1 {
@@ -200,7 +217,7 @@ func IsServiceType(svc *corev1.Service, t corev1.ServiceType) bool {
 	return svc.Spec.Type == t
 }
 
-func HasTCPServicePorts(svc *corev1.Service, ports map[string]int32) bool {
+func hasTCPServicePorts(svc *corev1.Service, ports map[string]int32) bool {
 	svcPorts := make(map[string]corev1.ServicePort)
 	for _, port := range svc.Spec.Ports {
 		svcPorts[port.Name] = port
@@ -216,11 +233,11 @@ func HasTCPServicePorts(svc *corev1.Service, ports map[string]int32) bool {
 	return true
 }
 
-func HasServiceSelector(svc *corev1.Service, selector map[string]string) bool {
+func hasServiceSelector(svc *corev1.Service, selector map[string]string) bool {
 	return equality.Semantic.DeepEqual(svc.Spec.Selector, selector)
 }
 
-func ComponentLabels(risingwave *risingwavev1alpha1.RisingWave, component string, sync bool) map[string]string {
+func componentLabels(risingwave *risingwavev1alpha1.RisingWave, component string, sync bool) map[string]string {
 	labels := map[string]string{
 		consts.LabelRisingWaveName:      risingwave.Name,
 		consts.LabelRisingWaveComponent: component,
@@ -238,7 +255,7 @@ func ComponentLabels(risingwave *risingwavev1alpha1.RisingWave, component string
 	return labels
 }
 
-func ComponentGroupLabels(risingwave *risingwavev1alpha1.RisingWave, component string, group *string, sync bool) map[string]string {
+func componentGroupLabels(risingwave *risingwavev1alpha1.RisingWave, component string, group *string, sync bool) map[string]string {
 	labels := map[string]string{
 		consts.LabelRisingWaveName:      risingwave.Name,
 		consts.LabelRisingWaveComponent: component,
@@ -257,7 +274,7 @@ func ComponentGroupLabels(risingwave *risingwavev1alpha1.RisingWave, component s
 	return labels
 }
 
-func ComponentAnnotations(risingwave *risingwavev1alpha1.RisingWave, component string) map[string]string {
+func componentAnnotations(risingwave *risingwavev1alpha1.RisingWave, component string) map[string]string {
 	annotations := map[string]string{}
 	if component == consts.ComponentFrontend {
 		annotations = mergeMap(annotations, risingwave.Spec.Global.ServiceMeta.Annotations)
@@ -266,7 +283,7 @@ func ComponentAnnotations(risingwave *risingwavev1alpha1.RisingWave, component s
 	return annotations
 }
 
-func ComponentGroupAnnotations(risingwave *risingwavev1alpha1.RisingWave, group *string) map[string]string {
+func componentGroupAnnotations(risingwave *risingwavev1alpha1.RisingWave, group *string) map[string]string {
 	annotations := map[string]string{}
 	if group != nil {
 		annotations = mergeMap(annotations, risingwave.Spec.Global.Metadata.Annotations)
@@ -296,7 +313,7 @@ func controlledBy(owner, ownee client.Object) bool {
 	return controllerRef.UID == owner.GetUID()
 }
 
-func NewTestRisingwave(patches ...func(r *risingwavev1alpha1.RisingWave)) *risingwavev1alpha1.RisingWave {
+func newTestRisingwave(patches ...func(r *risingwavev1alpha1.RisingWave)) *risingwavev1alpha1.RisingWave {
 	r := &risingwavev1alpha1.RisingWave{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       "test",
@@ -311,7 +328,7 @@ func NewTestRisingwave(patches ...func(r *risingwavev1alpha1.RisingWave)) *risin
 	return r
 }
 
-func SetupMetaPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
+func setupMetaPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
 	r.Spec.Components.Meta.Ports = risingwavev1alpha1.RisingWaveComponentMetaPorts{
 		RisingWaveComponentCommonPorts: risingwavev1alpha1.RisingWaveComponentCommonPorts{
 			ServicePort: ports[consts.PortService],
@@ -321,28 +338,28 @@ func SetupMetaPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
 	}
 }
 
-func SetupFrontendPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
+func setupFrontendPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
 	r.Spec.Components.Frontend.Ports = risingwavev1alpha1.RisingWaveComponentCommonPorts{
 		ServicePort: ports[consts.PortService],
 		MetricsPort: ports[consts.PortMetrics],
 	}
 }
 
-func SetupComputePorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
+func setupComputePorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
 	r.Spec.Components.Compute.Ports = risingwavev1alpha1.RisingWaveComponentCommonPorts{
 		ServicePort: ports[consts.PortService],
 		MetricsPort: ports[consts.PortMetrics],
 	}
 }
 
-func SetupCompactorPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
+func setupCompactorPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
 	r.Spec.Components.Compactor.Ports = risingwavev1alpha1.RisingWaveComponentCommonPorts{
 		ServicePort: ports[consts.PortService],
 		MetricsPort: ports[consts.PortMetrics],
 	}
 }
 
-func SetupConnectorPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
+func setupConnectorPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
 	r.Spec.Components.Connector.Ports = risingwavev1alpha1.RisingWaveComponentCommonPorts{
 		ServicePort: ports[consts.PortService],
 		MetricsPort: ports[consts.PortMetrics],
@@ -382,16 +399,16 @@ func listContainsByKey[T any, K comparable](a, b []T, key func(*T) K, equals fun
 		bKeys[key(&x)] = b[i]
 	}
 
-	return MapContainsWith(aKeys, bKeys, equals)
+	return mapContainsWith(aKeys, bKeys, equals)
 }
 
-func MatchesPodTemplate(podSpec *corev1.PodTemplateSpec, podTemplate *risingwavev1alpha1.RisingWavePodTemplateSpec) bool {
+func matchesPodTemplate(podSpec *corev1.PodTemplateSpec, podTemplate *risingwavev1alpha1.RisingWavePodTemplateSpec) bool {
 	if podTemplate == nil {
 		return true
 	}
 
-	if !(MapContains(podSpec.Labels, podTemplate.Labels) &&
-		MapContains(podSpec.Annotations, podTemplate.Annotations)) {
+	if !(mapContains(podSpec.Labels, podTemplate.Labels) &&
+		mapContains(podSpec.Annotations, podTemplate.Annotations)) {
 		return false
 	}
 
@@ -431,7 +448,7 @@ func MatchesPodTemplate(podSpec *corev1.PodTemplateSpec, podTemplate *risingwave
 		listContainsByKey(pContainer.EnvFrom, tContainer.EnvFrom, func(t *corev1.EnvFromSource) string { return t.Prefix }, deepEqual[corev1.EnvFromSource])
 }
 
-func NewPodTemplate(patches ...func(t *risingwavev1alpha1.RisingWavePodTemplateSpec)) *risingwavev1alpha1.RisingWavePodTemplateSpec {
+func newPodTemplate(patches ...func(t *risingwavev1alpha1.RisingWavePodTemplateSpec)) *risingwavev1alpha1.RisingWavePodTemplateSpec {
 	t := &risingwavev1alpha1.RisingWavePodTemplateSpec{
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{

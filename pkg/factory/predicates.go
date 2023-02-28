@@ -1,3 +1,18 @@
+/* Copyright 2023 RisingWave Labs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+ */
+
 package factory
 
 import (
@@ -14,15 +29,20 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 )
 
+// This file contains the predicates used to make comparisons between different kubernetes objects.
+// Predicate is a wrapper around the name of string type and a function that takes in the kube object and a testcase contrained by the
+// testcaseType that can be found in test_common.go.
+
 type predicate[T kubeObjects, k testcaseType] struct {
-	// Name of test/predicate
+	// Name of test/predicate.
 	Name string
 
 	// Predicate function thare takes in the object,test case and returns a boolean.
 	Fn func(obj T, testcase k) bool
 }
 
-func GetDeploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestcase] {
+// This function returns the base predicates used for the deployment objects.
+func getDeploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestcase] {
 	return []predicate[*appsv1.Deployment, deploymentTestcase]{
 		{
 			Name: "namespace-equals",
@@ -33,13 +53,13 @@ func GetDeploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestcas
 		{
 			Name: "labels-equal",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestcase) bool {
-				return hasLabels(obj, ComponentGroupLabels(tc.risingwave, tc.component, &tc.group.Name, true), true)
+				return hasLabels(obj, componentGroupLabels(tc.risingwave, tc.component, &tc.group.Name, true), true)
 			},
 		},
 		{
 			Name: "annotations-equal",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestcase) bool {
-				return HasAnnotations(obj, ComponentGroupAnnotations(tc.risingwave, &tc.group.Name), true)
+				return hasAnnotations(obj, componentGroupAnnotations(tc.risingwave, &tc.group.Name), true)
 			},
 		},
 		{
@@ -52,14 +72,14 @@ func GetDeploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestcas
 		{
 			Name: "pod-template-labels-match",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestcase) bool {
-				return MapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, tc.component, &tc.group.Name))
+				return mapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, tc.component, &tc.group.Name))
 			},
 		},
 		{
 			Name: "pod-template-annotations-match",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestcase) bool {
 				if tc.restartAt != nil {
-					return MapContains(obj.Spec.Template.Annotations, map[string]string{
+					return mapContains(obj.Spec.Template.Annotations, map[string]string{
 						consts.AnnotationRestartAt: tc.restartAt.In(time.UTC).Format("2006-01-02T15:04:05Z"),
 					})
 				} else {
@@ -73,7 +93,7 @@ func GetDeploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestcas
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestcase) bool {
 				if tc.group.PodTemplate != nil {
 					temp := tc.podTemplate[*tc.group.PodTemplate].Template
-					return MatchesPodTemplate(&obj.Spec.Template, &temp)
+					return matchesPodTemplate(&obj.Spec.Template, &temp)
 				} else {
 					return true
 				}
@@ -167,44 +187,57 @@ func GetDeploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestcas
 	}
 }
 
-func GetMetaStsPredicates() []predicate[*appsv1.StatefulSet, metaStsTestcase] {
-	return []predicate[*appsv1.StatefulSet, metaStsTestcase]{
+// This function returns the predicates used for to compare deployment objects for the compactor component.
+// It inherits from the base deployment predicates and further additional predicates can be added for compactor.
+func GetCompactorDeploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestcase] {
+	return getDeploymentPredicates()
+}
+
+// This function returns the predicates used for to compare deployment objects for the Frontend component.
+// It inherits from the base deployment predicates and further additional predicates can be added for Frontend.
+func GetFrontendDeploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestcase] {
+	return getDeploymentPredicates()
+}
+
+// This function returns the predicates used for the meta statefulset predicates.
+func GetMetaSTSPredicates() []predicate[*appsv1.StatefulSet, metaSTSTestcase] {
+	return []predicate[*appsv1.StatefulSet, metaSTSTestcase]{
 		{
 			Name: "namespace-equals",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				return obj.Namespace == tc.risingwave.Namespace
 			},
 		},
 		{
 			Name: "labels-equal",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
-				return hasLabels(obj, ComponentGroupLabels(tc.risingwave, tc.component, &tc.group.Name, true), true)
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
+				return hasLabels(obj, componentGroupLabels(tc.risingwave, tc.component, &tc.group.Name, true), true)
 			},
 		},
 		{
 			Name: "annotations-equal",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
-				return HasAnnotations(obj, ComponentGroupAnnotations(tc.risingwave, &tc.group.Name), true)
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
+				return hasAnnotations(obj, componentGroupAnnotations(tc.risingwave, &tc.group.Name), true)
 			},
 		},
 		{
 			Name: "replicas-equal",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				return *obj.Spec.Replicas == tc.group.Replicas
 			},
 		},
 
 		{
 			Name: "pod-template-labels-match",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
-				return MapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, tc.component, &tc.group.Name))
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
+				return mapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, tc.component, &tc.group.Name))
 			},
 		},
 		{
 			Name: "pod-template-annotations-match",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				if tc.restartAt != nil {
-					return MapContains(obj.Spec.Template.Annotations, map[string]string{
+					return mapContains(obj.Spec.Template.Annotations, map[string]string{
 						consts.AnnotationRestartAt: tc.restartAt.In(time.UTC).Format("2006-01-02T15:04:05Z"),
 					})
 				} else {
@@ -215,10 +248,10 @@ func GetMetaStsPredicates() []predicate[*appsv1.StatefulSet, metaStsTestcase] {
 		},
 		{
 			Name: "pod-template-works",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				if tc.group.PodTemplate != nil {
 					temp := tc.podTemplate[*tc.group.PodTemplate].Template
-					return MatchesPodTemplate(&obj.Spec.Template, &temp)
+					return matchesPodTemplate(&obj.Spec.Template, &temp)
 				} else {
 					return true
 				}
@@ -226,19 +259,19 @@ func GetMetaStsPredicates() []predicate[*appsv1.StatefulSet, metaStsTestcase] {
 		},
 		{
 			Name: "image-match",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				return obj.Spec.Template.Spec.Containers[0].Image == tc.group.Image
 			},
 		},
 		{
 			Name: "image-pull-policy-match",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.ImagePullPolicy
 			},
 		},
 		{
 			Name: "image-pull-secrets-match",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				for _, s := range tc.group.ImagePullSecrets {
 					if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, corev1.LocalObjectReference{Name: s}) {
 						return false
@@ -249,43 +282,43 @@ func GetMetaStsPredicates() []predicate[*appsv1.StatefulSet, metaStsTestcase] {
 		},
 		{
 			Name: "resources-match",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
 			},
 		},
 		{
 			Name: "node-selector-match",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
 			},
 		},
 		{
 			Name: "tolerations-match",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
 			},
 		},
 		{
 			Name: "priority-class-name-match",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName
 			},
 		},
 		{
 			Name: "security-context-match",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
 			},
 		},
 		{
 			Name: "dns-config-match",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.DNSConfig)
 			},
 		},
 		{
 			Name: "termination-grace-period-seconds-match",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				if tc.group.TerminationGracePeriodSeconds != nil {
 					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.TerminationGracePeriodSeconds
 				} else {
@@ -295,7 +328,7 @@ func GetMetaStsPredicates() []predicate[*appsv1.StatefulSet, metaStsTestcase] {
 		},
 		{
 			Name: "upgrade-strategy-match",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				if tc.expectedUpgradeStrategy == nil {
 					return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, appsv1.StatefulSetUpdateStrategy{})
 				} else {
@@ -304,7 +337,7 @@ func GetMetaStsPredicates() []predicate[*appsv1.StatefulSet, metaStsTestcase] {
 			},
 		}, {
 			Name: "first-container-must-have-probes",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStsTestcase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaSTSTestcase) bool {
 				container := &obj.Spec.Template.Spec.Containers[0]
 				return container.LivenessProbe != nil && container.ReadinessProbe != nil
 			},
@@ -312,7 +345,8 @@ func GetMetaStsPredicates() []predicate[*appsv1.StatefulSet, metaStsTestcase] {
 	}
 }
 
-func GetSTSPredicates() []predicate[*appsv1.StatefulSet, stsTestcase] {
+// This function returns the predicates used for the base statefulset predicates.
+func getSTSPredicates() []predicate[*appsv1.StatefulSet, stsTestcase] {
 	return []predicate[*appsv1.StatefulSet, stsTestcase]{
 		{
 			Name: "namespace-equals",
@@ -323,13 +357,13 @@ func GetSTSPredicates() []predicate[*appsv1.StatefulSet, stsTestcase] {
 		{
 			Name: "labels-equal",
 			Fn: func(obj *appsv1.StatefulSet, tc stsTestcase) bool {
-				return hasLabels(obj, ComponentGroupLabels(tc.risingwave, consts.ComponentCompute, &tc.group.Name, true), true)
+				return hasLabels(obj, componentGroupLabels(tc.risingwave, consts.ComponentCompute, &tc.group.Name, true), true)
 			},
 		},
 		{
 			Name: "annotations-equal",
 			Fn: func(obj *appsv1.StatefulSet, tc stsTestcase) bool {
-				return HasAnnotations(obj, ComponentGroupAnnotations(tc.risingwave, &tc.group.Name), true)
+				return hasAnnotations(obj, componentGroupAnnotations(tc.risingwave, &tc.group.Name), true)
 			},
 		},
 		{
@@ -342,14 +376,14 @@ func GetSTSPredicates() []predicate[*appsv1.StatefulSet, stsTestcase] {
 		{
 			Name: "pod-template-labels-match",
 			Fn: func(obj *appsv1.StatefulSet, tc stsTestcase) bool {
-				return MapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, consts.ComponentCompute, &tc.group.Name))
+				return mapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, consts.ComponentCompute, &tc.group.Name))
 			},
 		},
 		{
 			Name: "pod-template-annotations-match",
 			Fn: func(obj *appsv1.StatefulSet, tc stsTestcase) bool {
 				if tc.restartAt != nil {
-					return MapContains(obj.Spec.Template.Annotations, map[string]string{
+					return mapContains(obj.Spec.Template.Annotations, map[string]string{
 						consts.AnnotationRestartAt: tc.restartAt.In(time.UTC).Format("2006-01-02T15:04:05Z"),
 					})
 				} else {
@@ -363,7 +397,7 @@ func GetSTSPredicates() []predicate[*appsv1.StatefulSet, stsTestcase] {
 			Fn: func(obj *appsv1.StatefulSet, tc stsTestcase) bool {
 				if tc.group.PodTemplate != nil {
 					temp := tc.podTemplate[*tc.group.PodTemplate].Template
-					return MatchesPodTemplate(&obj.Spec.Template, &temp)
+					return matchesPodTemplate(&obj.Spec.Template, &temp)
 				} else {
 					return true
 				}
@@ -470,7 +504,14 @@ func GetSTSPredicates() []predicate[*appsv1.StatefulSet, stsTestcase] {
 	}
 }
 
-func GetClonesetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, clonesetTestcase] {
+// This function returns the predicates used for to compare stateful objects for the compute component.
+// It inherits from the base statefulset predicates and further additional predicates can be added for compute.
+func GetComputeSTSPredicates() []predicate[*appsv1.StatefulSet, stsTestcase] {
+	return getSTSPredicates()
+}
+
+// This function returns the base predicates used for the Cloneset objects.
+func getClonesetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, clonesetTestcase] {
 	return []predicate[*kruiseappsv1alpha1.CloneSet, clonesetTestcase]{
 		{
 			Name: "namespace-equals",
@@ -481,13 +522,13 @@ func GetClonesetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, clonesetT
 		{
 			Name: "labels-equal",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc clonesetTestcase) bool {
-				return hasLabels(obj, ComponentGroupLabels(tc.risingwave, tc.component, &tc.group.Name, true), true)
+				return hasLabels(obj, componentGroupLabels(tc.risingwave, tc.component, &tc.group.Name, true), true)
 			},
 		},
 		{
 			Name: "annotations-equal",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc clonesetTestcase) bool {
-				return HasAnnotations(obj, ComponentGroupAnnotations(tc.risingwave, &tc.group.Name), true)
+				return hasAnnotations(obj, componentGroupAnnotations(tc.risingwave, &tc.group.Name), true)
 			},
 		},
 		{
@@ -500,14 +541,14 @@ func GetClonesetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, clonesetT
 		{
 			Name: "pod-template-labels-match",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc clonesetTestcase) bool {
-				return MapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, tc.component, &tc.group.Name))
+				return mapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, tc.component, &tc.group.Name))
 			},
 		},
 		{
 			Name: "pod-template-annotations-match",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc clonesetTestcase) bool {
 				if tc.restartAt != nil {
-					return MapContains(obj.Spec.Template.Annotations, map[string]string{
+					return mapContains(obj.Spec.Template.Annotations, map[string]string{
 						consts.AnnotationRestartAt: tc.restartAt.In(time.UTC).Format("2006-01-02T15:04:05Z"),
 					})
 				} else {
@@ -521,7 +562,7 @@ func GetClonesetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, clonesetT
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc clonesetTestcase) bool {
 				if tc.group.PodTemplate != nil {
 					temp := tc.podTemplate[*tc.group.PodTemplate].Template
-					return MatchesPodTemplate(&obj.Spec.Template, &temp)
+					return matchesPodTemplate(&obj.Spec.Template, &temp)
 				} else {
 					return true
 				}
@@ -615,6 +656,19 @@ func GetClonesetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, clonesetT
 	}
 }
 
+// This function returns the predicates used for to compare cloneset objects for the compactor component.
+// It inherits from the base cloneset predicates and further additional predicates can be added for compactor.
+func GetCompactorClonesetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, clonesetTestcase] {
+	return getClonesetPredicates()
+}
+
+// This function returns the predicates used for to compare cloneset objects for the frontend component.
+// It inherits from the base cloneset predicates and further additional predicates can be added for frontend.
+func GetFrontendClonesetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, clonesetTestcase] {
+	return getClonesetPredicates()
+}
+
+// This function returns the predicates used for the base advanced statefulset predicates.
 func GetAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, advancedSTSTestcase] {
 	return []predicate[*kruiseappsv1beta1.StatefulSet, advancedSTSTestcase]{
 		{
@@ -626,13 +680,13 @@ func GetAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, adva
 		{
 			Name: "labels-equal",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc advancedSTSTestcase) bool {
-				return hasLabels(obj, ComponentGroupLabels(tc.risingwave, consts.ComponentCompute, &tc.group.Name, true), true)
+				return hasLabels(obj, componentGroupLabels(tc.risingwave, consts.ComponentCompute, &tc.group.Name, true), true)
 			},
 		},
 		{
 			Name: "annotations-equal",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc advancedSTSTestcase) bool {
-				return HasAnnotations(obj, ComponentGroupAnnotations(tc.risingwave, &tc.group.Name), true)
+				return hasAnnotations(obj, componentGroupAnnotations(tc.risingwave, &tc.group.Name), true)
 			},
 		},
 		{
@@ -645,14 +699,14 @@ func GetAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, adva
 		{
 			Name: "pod-template-labels-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc advancedSTSTestcase) bool {
-				return MapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, consts.ComponentCompute, &tc.group.Name))
+				return mapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, consts.ComponentCompute, &tc.group.Name))
 			},
 		},
 		{
 			Name: "pod-template-annotations-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc advancedSTSTestcase) bool {
 				if tc.restartAt != nil {
-					return MapContains(obj.Spec.Template.Annotations, map[string]string{
+					return mapContains(obj.Spec.Template.Annotations, map[string]string{
 						consts.AnnotationRestartAt: tc.restartAt.In(time.UTC).Format("2006-01-02T15:04:05Z"),
 					})
 				} else {
@@ -666,7 +720,7 @@ func GetAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, adva
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc advancedSTSTestcase) bool {
 				if tc.group.PodTemplate != nil {
 					temp := tc.podTemplate[*tc.group.PodTemplate].Template
-					return MatchesPodTemplate(&obj.Spec.Template, &temp)
+					return matchesPodTemplate(&obj.Spec.Template, &temp)
 				} else {
 					return true
 				}
@@ -773,6 +827,158 @@ func GetAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, adva
 	}
 }
 
+// This function returns the predicates used to compare Advanced STS objects for the compute component.
+// It inherits from the base Advanced STS predicates and further additional predicates can be added for compute.
+func GetComputeAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, advancedSTSTestcase] {
+	return GetAdvancedSTSPredicates()
+}
+
+// This function returns the predicates used for the meta statefulset predicates.
+func GetMetaAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, metaAdvancedSTSTestcase] {
+	return []predicate[*kruiseappsv1beta1.StatefulSet, metaAdvancedSTSTestcase]{
+		{
+			Name: "namespace-equals",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				return obj.Namespace == tc.risingwave.Namespace
+			},
+		},
+		{
+			Name: "labels-equal",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				return hasLabels(obj, componentGroupLabels(tc.risingwave, tc.component, &tc.group.Name, true), true)
+			},
+		},
+		{
+			Name: "annotations-equal",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				return hasAnnotations(obj, componentGroupAnnotations(tc.risingwave, &tc.group.Name), true)
+			},
+		},
+		{
+			Name: "replicas-equal",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				return *obj.Spec.Replicas == tc.group.Replicas
+			},
+		},
+
+		{
+			Name: "pod-template-labels-match",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				return mapContains(obj.Spec.Template.Labels, PodSelector(tc.risingwave, tc.component, &tc.group.Name))
+			},
+		},
+		{
+			Name: "pod-template-annotations-match",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				if tc.restartAt != nil {
+					return mapContains(obj.Spec.Template.Annotations, map[string]string{
+						consts.AnnotationRestartAt: tc.restartAt.In(time.UTC).Format("2006-01-02T15:04:05Z"),
+					})
+				} else {
+					_, ok := obj.Spec.Template.Annotations[consts.AnnotationRestartAt]
+					return !ok
+				}
+			},
+		},
+		{
+			Name: "pod-template-works",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				if tc.group.PodTemplate != nil {
+					temp := tc.podTemplate[*tc.group.PodTemplate].Template
+					return matchesPodTemplate(&obj.Spec.Template, &temp)
+				} else {
+					return true
+				}
+			},
+		},
+		{
+			Name: "image-match",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				return obj.Spec.Template.Spec.Containers[0].Image == tc.group.Image
+			},
+		},
+		{
+			Name: "image-pull-policy-match",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.ImagePullPolicy
+			},
+		},
+		{
+			Name: "image-pull-secrets-match",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				for _, s := range tc.group.ImagePullSecrets {
+					if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, corev1.LocalObjectReference{Name: s}) {
+						return false
+					}
+				}
+				return true
+			},
+		},
+		{
+			Name: "resources-match",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
+			},
+		},
+		{
+			Name: "node-selector-match",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
+			},
+		},
+		{
+			Name: "tolerations-match",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
+			},
+		},
+		{
+			Name: "priority-class-name-match",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName
+			},
+		},
+		{
+			Name: "security-context-match",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
+			},
+		},
+		{
+			Name: "dns-config-match",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.DNSConfig)
+			},
+		},
+		{
+			Name: "termination-grace-period-seconds-match",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				if tc.group.TerminationGracePeriodSeconds != nil {
+					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.TerminationGracePeriodSeconds
+				} else {
+					return true
+				}
+			},
+		},
+		{
+			Name: "upgrade-strategy-match",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				if tc.expectedUpgradeStrategy == nil {
+					return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, kruiseappsv1beta1.StatefulSetUpdateStrategy{})
+				} else {
+					return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, *tc.expectedUpgradeStrategy)
+				}
+			},
+		}, {
+			Name: "first-container-must-have-probes",
+			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestcase) bool {
+				container := &obj.Spec.Template.Spec.Containers[0]
+				return container.LivenessProbe != nil && container.ReadinessProbe != nil
+			},
+		},
+	}
+}
+
 func GetServicesPredicate() []predicate[*corev1.Service, servicesTestcase] {
 	return []predicate[*corev1.Service, servicesTestcase]{
 		{
@@ -790,7 +996,7 @@ func GetServicesPredicate() []predicate[*corev1.Service, servicesTestcase] {
 		{
 			Name: "ports-equal",
 			Fn: func(obj *corev1.Service, testcase servicesTestcase) bool {
-				return HasTCPServicePorts(obj, testcase.ports)
+				return hasTCPServicePorts(obj, testcase.ports)
 			},
 		},
 		{
@@ -802,46 +1008,30 @@ func GetServicesPredicate() []predicate[*corev1.Service, servicesTestcase] {
 		{
 			Name: "service-labels-match",
 			Fn: func(obj *corev1.Service, testcase servicesTestcase) bool {
-				return hasLabels(obj, ComponentLabels(testcase.risingwave, testcase.component, true), true)
+				return hasLabels(obj, componentLabels(testcase.risingwave, testcase.component, true), true)
 			},
 		},
 		{
 			Name: "selector-equals",
 			Fn: func(obj *corev1.Service, testcase servicesTestcase) bool {
-				return HasServiceSelector(obj, PodSelector(testcase.risingwave, testcase.component, nil))
+				return hasServiceSelector(obj, PodSelector(testcase.risingwave, testcase.component, nil))
 			},
 		},
 	}
 }
-func getBaseServicesPredicates() []predicate[*corev1.Service, servicesMetaTestcase] {
-	return []predicate[*corev1.Service, servicesMetaTestcase]{
-		{
-			Name: "service-labels-match",
-			Fn: func(obj *corev1.Service, testcase servicesMetaTestcase) bool {
-				return hasLabels(obj, ComponentLabels(testcase.risingwave, testcase.component, true), true)
-			},
-		},
-		{
-			Name: "service-annotations-match",
-			Fn: func(obj *corev1.Service, testcase servicesMetaTestcase) bool {
-				return HasAnnotations(obj, ComponentAnnotations(testcase.risingwave, testcase.component), true)
-			},
-		},
-	}
 
-}
 func GetServicesMetaPredicates() []predicate[*corev1.Service, servicesMetaTestcase] {
 	return []predicate[*corev1.Service, servicesMetaTestcase]{
 		{
 			Name: "service-labels-match",
 			Fn: func(obj *corev1.Service, testcase servicesMetaTestcase) bool {
-				return hasLabels(obj, ComponentLabels(testcase.risingwave, testcase.component, true), true)
+				return hasLabels(obj, componentLabels(testcase.risingwave, testcase.component, true), true)
 			},
 		},
 		{
 			Name: "service-annotations-match",
 			Fn: func(obj *corev1.Service, testcase servicesMetaTestcase) bool {
-				return HasAnnotations(obj, ComponentAnnotations(testcase.risingwave, testcase.component), true)
+				return hasAnnotations(obj, componentAnnotations(testcase.risingwave, testcase.component), true)
 			},
 		},
 	}
@@ -898,13 +1088,13 @@ func GetConfigmapPredicates() []predicate[*corev1.ConfigMap, configmapTestcase] 
 		{
 			Name: "configmap-labels-match",
 			Fn: func(obj *corev1.ConfigMap, tc configmapTestcase) bool {
-				return hasLabels(obj, ComponentLabels(tc.risingwave, consts.ComponentConfig, false), true)
+				return hasLabels(obj, componentLabels(tc.risingwave, consts.ComponentConfig, false), true)
 			},
 		},
 		{
 			Name: "configmap-data-match",
 			Fn: func(obj *corev1.ConfigMap, tc configmapTestcase) bool {
-				return MapEquals(obj.Data, map[string]string{
+				return mapEquals(obj.Data, map[string]string{
 					risingWaveConfigMapKey: lo.If(tc.configVal == "", "").Else(tc.configVal),
 				})
 			},

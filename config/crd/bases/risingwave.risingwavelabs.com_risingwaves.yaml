@@ -3345,7 +3345,7 @@ spec:
                         - secret
                         type: object
                       hdfs:
-                        description: HDSFS storage spec.
+                        description: HDFS storage spec.
                         properties:
                           nameNode:
                             description: Name node of the HDFS

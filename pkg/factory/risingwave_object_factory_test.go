@@ -32,7 +32,7 @@ import (
 
 // This file contains the test cases for the object factory. The tests compromises of composing assertions based on a set of
 // predicates that can be defined in predicates.go. Predicates are functions that take in an obj and a testcase both constrained
-// by the kubeObject contraint and the testcaseType constraint defined in test_common.go
+// by the kubeObject contraint and the testcaseType constraint defined in test_common.go.
 func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 	testcases := getServicesTestcases()
 	servicesPreds := getServicesPredicate()

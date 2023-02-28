@@ -23,11 +23,12 @@ import (
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
 	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	"github.com/samber/lo"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
+
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
 
 // This file contains the predicates used to make comparisons between different kubernetes objects.

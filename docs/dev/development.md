@@ -48,6 +48,8 @@ We use `CSpell` now to check the spelling of our project. Please follow the inst
 
 We recommend using the [pre-commit](https://pre-commit.com/) to identify simple issues before submission to code review. We've already written [a pre-defined config](https://github.com/risingwavelabs/risingwave-operator/blob/main/.pre-commit-config.yaml). Please follow the instructions detailed in the [pre-commit website](https://pre-commit.com/) to install the tool and pre-commit hooks.
 
+The pre-commit will run command in [configuration](/.pre-commit-config.yaml) file. Also need to install the corresponding tools like spellcheck, go-vet, go-cyclo, go-imports etc. During installing, make sure install it in correct `GOPATH`, otherwise system cannot find the command. For MacOS, it defaults to `$HOME/go`.
+
 #### psql
 
 RisingWave provides the PostgreSQL protocol wire compatibility. You can connect the RisingWave with `psql` CLI tool. Please follow the instructions described in the [PostgreSQL Downloads](https://www.postgresql.org/download/) to install. Here're some convenient commands to use if you have the same platform and software management tool.

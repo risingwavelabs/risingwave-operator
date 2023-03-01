@@ -174,6 +174,8 @@ int32
 </thead>
 <tbody><tr><td><p>&#34;AliyunOSS&#34;</p></td>
 <td></td>
+</tr><tr><td><p>&#34;HDFS&#34;</p></td>
+<td></td>
 </tr><tr><td><p>&#34;Memory&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;MinIO&#34;</p></td>
@@ -2508,6 +2510,20 @@ RisingWaveObjectStorageAliyunOSS
 <p>AliyunOSS storage spec.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>hdfs</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageHDFS">
+RisingWaveObjectStorageHDFS
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HDFS storage spec.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageAliyunOSS">RisingWaveObjectStorageAliyunOSS
@@ -2573,6 +2589,46 @@ bool
 <td>
 <p>InternalEndpoint indicates if we use the internal endpoint to access Aliyun OSS, which is
 only available in the internal network.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageHDFS">RisingWaveObjectStorageHDFS
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage</a>)
+</p>
+<div>
+<p>RisingWaveObjectStorageHDFS is the details of HDFS storage (S3 compatible) for compute and compactor components.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>nameNode</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name node of the HDFS</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>root</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Root of the HDFS</p>
 </td>
 </tr>
 </tbody>

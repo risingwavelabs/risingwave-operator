@@ -41,3 +41,4 @@ nums
 aliyun
 aliyuncs
 idempotence
+hdfs

@@ -459,7 +459,6 @@ type RisingWaveObjectStorageAliyunOSS struct {
 
 // RisingWaveObjectStorageHDFS is the details of HDFS storage (S3 compatible) for compute and compactor components.
 type RisingWaveObjectStorageHDFS struct {
-
 	// Name node of the HDFS
 	// +kubebuilder:validation:Required
 	NameNode string `json:"nameNode"`

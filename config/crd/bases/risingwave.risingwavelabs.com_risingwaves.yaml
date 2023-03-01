@@ -3347,6 +3347,19 @@ spec:
                         - bucket
                         - secret
                         type: object
+                      hdfs:
+                        description: HDFS storage spec.
+                        properties:
+                          nameNode:
+                            description: Name node of the HDFS
+                            type: string
+                          root:
+                            description: Root of the HDFS
+                            type: string
+                        required:
+                        - nameNode
+                        - root
+                        type: object
                       memory:
                         description: Memory indicates to store the data in memory.
                           It's only for test usage and strongly discouraged to be

@@ -458,6 +458,17 @@ type RisingWaveObjectStorageAliyunOSS struct {
 	InternalEndpoint bool `json:"internalEndpoint,omitempty"`
 }
 
+// RisingWaveObjectStorageHDFS is the details of HDFS storage (S3 compatible) for compute and compactor components.
+type RisingWaveObjectStorageHDFS struct {
+	// Name node of the HDFS
+	// +kubebuilder:validation:Required
+	NameNode string `json:"nameNode"`
+
+	// Root of the HDFS
+	// +kubebuilder:validation:Required
+	Root string `json:"root"`
+}
+
 // RisingWaveObjectStorage is the object storage for compute and compactor components.
 type RisingWaveObjectStorage struct {
 	// Memory indicates to store the data in memory. It's only for test usage and strongly discouraged to
@@ -476,6 +487,10 @@ type RisingWaveObjectStorage struct {
 	// AliyunOSS storage spec.
 	// +optional
 	AliyunOSS *RisingWaveObjectStorageAliyunOSS `json:"aliyunOSS,omitempty"`
+
+	// HDFS storage spec.
+	// +optional
+	HDFS *RisingWaveObjectStorageHDFS `json:"hdfs,omitempty"`
 }
 
 // RisingWaveStoragesSpec is the storages spec.
@@ -722,6 +737,7 @@ const (
 	ObjectStorageTypeMinIO     ObjectStorageType = "MinIO"
 	ObjectStorageTypeS3        ObjectStorageType = "S3"
 	ObjectStorageTypeAliyunOSS ObjectStorageType = "AliyunOSS"
+	ObjectStorageTypeHDFS      ObjectStorageType = "HDFS"
 	ObjectStorageTypeUnknown   ObjectStorageType = "Unknown"
 )
 

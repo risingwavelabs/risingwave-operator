@@ -167,7 +167,8 @@ func (v *RisingWaveValidatingWebhook) validateStorages(path *field.Path, storage
 	isObjectMinIO := storages.Object.MinIO != nil
 	isObjectS3 := storages.Object.S3 != nil
 	isObjectAliyunOSS := storages.Object.AliyunOSS != nil
-	validObjectStorageTypeCount := lo.CountBy([]bool{isObjectMemory, isObjectMinIO, isObjectS3, isObjectAliyunOSS}, func(x bool) bool { return x })
+	isObjectHDFS := storages.Object.HDFS != nil
+	validObjectStorageTypeCount := lo.CountBy([]bool{isObjectMemory, isObjectMinIO, isObjectS3, isObjectAliyunOSS, isObjectHDFS}, func(x bool) bool { return x })
 	if validObjectStorageTypeCount == 0 {
 		fieldErrs = append(fieldErrs, field.Invalid(path.Child("object"), storages.Object, "must configure the object storage"))
 	} else if validObjectStorageTypeCount > 1 {

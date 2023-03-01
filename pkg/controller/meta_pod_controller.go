@@ -150,7 +150,7 @@ func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	newRole, ok := mpc.reconcileThisPod(ctx, reqPod, defaultRequeue2sResult, podIP, podPort)
 	// Update other meta components only if we have a change of leadership
-	if !ok || newRole == consts.MetaRoleLeader {
+	if !ok || newRole != consts.MetaRoleLeader {
 		return defaultRequeue2sResult, nil
 	}
 

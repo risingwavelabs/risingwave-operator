@@ -3283,7 +3283,7 @@ func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
 			},
 			envs: []corev1.EnvVar{
 				{
-					Name: "ETCD_USERNAME",
+					Name: "RW_ETCD_USERNAME",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -3294,7 +3294,7 @@ func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
 					},
 				},
 				{
-					Name: "ETCD_PASSWORD",
+					Name: "RW_ETCD_PASSWORD",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{

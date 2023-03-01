@@ -47,12 +47,14 @@ const (
 	risingWaveConfigVolume = "risingwave-config"
 	risingWaveConfigMapKey = "risingwave.toml"
 
-	minIOEndpointEnvName = "MINIO_ENDPOINT"
-	minIOBucketEnvName   = "MINIO_BUCKET"
-	minIOUsernameEnvName = "MINIO_USERNAME"
-	minIOPasswordEnvName = "MINIO_PASSWORD"
-	etcdUsernameEnvName  = "ETCD_USERNAME"
-	etcdPasswordEnvName  = "ETCD_PASSWORD"
+	minIOEndpointEnvName      = "MINIO_ENDPOINT"
+	minIOBucketEnvName        = "MINIO_BUCKET"
+	minIOUsernameEnvName      = "MINIO_USERNAME"
+	minIOPasswordEnvName      = "MINIO_PASSWORD"
+	legacyEtcdUsernameEnvName = "ETCD_USERNAME"
+	legacyEtcdPasswordEnvName = "ETCD_PASSWORD"
+	etcdUsernameEnvName       = "RW_ETCD_USERNAME"
+	etcdPasswordEnvName       = "RW_ETCD_PASSWORD"
 
 	risingwaveExecutablePath  = "/risingwave/bin/risingwave"
 	risingwaveConfigMountPath = "/risingwave/config"
@@ -359,7 +361,7 @@ func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 
 // NewConnectorService creates a new Service for the connector.
 func (f *RisingWaveObjectFactory) NewConnectorService() *corev1.Service {
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.getConnectorPorts()
 
 	connectorService := &corev1.Service{
 		ObjectMeta: f.componentObjectMeta(consts.ComponentConnector, true),
@@ -399,6 +401,26 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 	}
 
 	return []corev1.EnvVar{
+		// Keep the legacy environment variables for compatibility. Will remove them later.
+		{
+			Name: legacyEtcdUsernameEnvName,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyEtcdUsername,
+				},
+			},
+		},
+		{
+			Name: legacyEtcdPasswordEnvName,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyEtcdPassword,
+				},
+			},
+		},
+		// Environment variables for etcd auth.
 		{
 			Name: etcdUsernameEnvName,
 			ValueFrom: &corev1.EnvVarSource{
@@ -515,7 +537,7 @@ func (f *RisingWaveObjectFactory) argsForCompactor() []string {
 }
 
 func (f *RisingWaveObjectFactory) argsForConnector() []string {
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.getConnectorPorts()
 
 	return []string{
 		"-p", fmt.Sprintf("%d", connectorPorts.ServicePort),
@@ -1096,7 +1118,7 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 	container.Name = "meta"
 	container.Args = f.argsForMeta()
 	container.Ports = f.portsForMetaContainer()
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.getConnectorPorts()
 	container.Env = append(container.Env, corev1.EnvVar{
 		Name:  "RW_CONNECTOR_RPC_ENDPOINT",
 		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
@@ -1499,7 +1521,7 @@ func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string, podTemplate
 }
 
 func (f *RisingWaveObjectFactory) portsForConnectorContainer() []corev1.ContainerPort {
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.getConnectorPorts()
 
 	return []corev1.ContainerPort{
 		{
@@ -1686,7 +1708,7 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	basicSetupContainer(container, &template.RisingWaveComponentGroupTemplate)
 
 	container.Name = "compute"
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.getConnectorPorts()
 	container.Env = append(container.Env, corev1.EnvVar{
 		Name:  "RW_CONNECTOR_RPC_ENDPOINT",
 		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
@@ -1865,6 +1887,17 @@ func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonit
 	}
 
 	return mustSetControllerReference(f.risingwave, serviceMonitor, f.scheme)
+}
+
+func (f *RisingWaveObjectFactory) getConnectorPorts() *risingwavev1alpha1.RisingWaveComponentCommonPorts {
+	connectorPorts := f.risingwave.Spec.Components.Connector.Ports.DeepCopy()
+	if connectorPorts.ServicePort == 0 {
+		connectorPorts.ServicePort = consts.DefaultConnectorServicePort
+	}
+	if connectorPorts.MetricsPort == 0 {
+		connectorPorts.MetricsPort = consts.DefaultConnectorMetricsPort
+	}
+	return connectorPorts
 }
 
 // NewRisingWaveObjectFactory creates a new RisingWaveObjectFactory.

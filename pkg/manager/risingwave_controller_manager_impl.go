@@ -660,7 +660,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncComputeStatefulSets(ctx context.
 
 	return syncComponentGroupWorkloads(
 		mgr, ctx, logger,
-		consts.ComponentCompactor,
+		consts.ComponentCompute,
 		groupPodTemplates,
 		computeStatefulSets,
 		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.StatefulSet {
@@ -686,7 +686,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncComputeAdvancedStatefulSets(ctx 
 
 	return syncComponentGroupWorkloads(
 		mgr, ctx, logger,
-		consts.ComponentCompactor,
+		consts.ComponentCompute,
 		groupPodTemplates,
 		computeStatefulSets,
 		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1beta1.StatefulSet {
@@ -713,7 +713,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncFrontendDeployments(ctx context.
 
 	return syncComponentGroupWorkloads(
 		mgr, ctx, logger,
-		consts.ComponentCompactor,
+		consts.ComponentFrontend,
 		groupPodTemplates,
 		frontendDeployments,
 		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
@@ -738,7 +738,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncFrontendCloneSets(ctx context.Co
 
 	return syncComponentGroupWorkloads(
 		mgr, ctx, logger,
-		consts.ComponentCompactor,
+		consts.ComponentFrontend,
 		groupPodTemplates,
 		frontendCloneSets,
 		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
@@ -764,7 +764,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaStatefulSets(ctx context.Con
 
 	return syncComponentGroupWorkloads(
 		mgr, ctx, logger,
-		consts.ComponentCompactor,
+		consts.ComponentMeta,
 		groupPodTemplates,
 		metaStatefulSets,
 		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.StatefulSet {
@@ -791,7 +791,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaAdvancedStatefulSets(ctx con
 
 	return syncComponentGroupWorkloads(
 		mgr, ctx, logger,
-		consts.ComponentCompactor,
+		consts.ComponentMeta,
 		groupPodTemplates,
 		metaCloneSets,
 		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1beta1.StatefulSet {

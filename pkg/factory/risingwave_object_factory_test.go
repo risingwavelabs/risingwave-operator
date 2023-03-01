@@ -663,6 +663,22 @@ func listContains[T comparable](a, b []T) bool {
 	return true
 }
 
+func listContainsWithEquals[T any](a, b []T, equals func(x, y T) bool) bool {
+	if len(b) > len(a) {
+		return false
+	}
+
+	for _, x := range b {
+		for _, y := range a {
+			if equals(x, y) {
+				break
+			}
+		}
+	}
+
+	return true
+}
+
 func listContainsByKey[T any, K comparable](a, b []T, key func(*T) K, equals func(x, y T) bool) bool {
 	aKeys, bKeys := make(map[K]T), make(map[K]T)
 	for i, x := range a {
@@ -3511,6 +3527,88 @@ func TestRisingWaveObjectFactory_ComputeArgs(t *testing.T) {
 						strings.Join(expectArgs, " "), strings.Join(args, " "))
 				}
 			}
+		})
+	}
+}
+
+func TestSettingEnvVarAndEnvFrom(t *testing.T) {
+	testcases := map[string]struct {
+		template risingwavev1alpha1.RisingWaveComponentGroupTemplate
+		envs     []corev1.EnvVar
+		envFrom  []corev1.EnvFromSource
+	}{
+		"empty": {},
+		"envs-present": {
+			template: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+				Env: []corev1.EnvVar{
+					{
+						Name:  "A",
+						Value: "A",
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "A",
+					Value: "A",
+				},
+			},
+		},
+		"envs-system-overwritten": {
+			template: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+				Env: []corev1.EnvVar{
+					{
+						Name:  "POD_IP",
+						Value: "A",
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name: "POD_IP",
+					ValueFrom: &corev1.EnvVarSource{
+						FieldRef: &corev1.ObjectFieldSelector{
+							FieldPath: "status.podIP",
+						},
+					},
+				},
+			},
+		},
+		"envs-from": {
+			template: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
+				EnvFrom: []corev1.EnvFromSource{
+					{
+						Prefix: "RW_",
+						SecretRef: &corev1.SecretEnvSource{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "A",
+							},
+						},
+					},
+				},
+			},
+			envFrom: []corev1.EnvFromSource{
+				{
+					Prefix: "RW_",
+					SecretRef: &corev1.SecretEnvSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "A",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			container := &corev1.Container{}
+			basicSetupContainer(container, &tc.template)
+
+			// Assert contain all tc.envs.
+			listContainsByKey(container.Env, tc.envs, func(e *corev1.EnvVar) string { return e.Name }, deepEqual[corev1.EnvVar])
+			// Assert contain all tc.envFrom.
+			listContainsWithEquals(container.EnvFrom, tc.envFrom, deepEqual[corev1.EnvFromSource])
 		})
 	}
 }

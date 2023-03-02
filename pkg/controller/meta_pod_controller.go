@@ -16,15 +16,19 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/samber/lo"
+
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	pb "github.com/risingwavelabs/risingwave-operator/pkg/controller/proto"
+	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
+	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -33,206 +37,208 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// MetaPodController reconciles meta pods object.
-type MetaPodController struct {
+// MetaPodRoleLabeler reconciles meta pods object.
+type MetaPodRoleLabeler struct {
 	client.Client
 }
 
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;update;patch
 
-// getMetaRole sends a MetaMember request to a meta node at ip:port, determining if the node is a leader. Returns true if operation was successful.
-func (mpc *MetaPodController) getMetaRole(ctx context.Context, host string, port uint, podName string) (string, bool) {
-	log := log.FromContext(ctx)
-	addr := fmt.Sprintf("%s:%v", host, port)
+// getMetaRole sends a gRPC request to the meta node at host:port to tell its role from the response. The endpoint is used
+// to identify the meta node. If the node isn't found in the response, an unknown will be returned.
+func (mpl *MetaPodRoleLabeler) getMetaRole(ctx context.Context, host string, port uint, endpoint string) (string, error) {
+	logger := log.FromContext(ctx)
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
-	defer cancel()
+	addr := fmt.Sprintf("%s:%v", host, port)
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Error(err, fmt.Sprintf("Unable to connect to meta pod at %s", addr))
-		return "", false
+		logger.Error(err, fmt.Sprintf("Unable to connect to meta pod at %s", addr))
+		return "", err
 	}
 	defer conn.Close()
-	c := pb.NewMetaMemberServiceClient(conn)
 
-	resp, err := c.Members(ctx, &pb.MembersRequest{})
+	metaClient := pb.NewMetaMemberServiceClient(conn)
+
+	resp, err := metaClient.Members(ctx, &pb.MembersRequest{})
 	if err != nil {
-		log.Info(fmt.Sprintf("Sending MembersRequest failed. Assuming meta node is not yet ready. Error was: %s", err.Error()))
-		return consts.MetaRoleUnknown, true
+		logger.Info("Sending MembersRequest failed. Assuming meta node is not yet ready.", "error", err)
+		return "", err
 	}
 
-	if len(resp.Members) == 0 {
-		return consts.MetaRoleUnknown, true
-	}
-
-	// Assuming member.Address.Host like risingwave-meta-default-0.risingwave-meta
 	for _, member := range resp.Members {
-		memberAddress := ""
-		if arr := strings.Split(member.Address.Host, "."); len(arr) == 2 {
-			memberAddress = arr[0]
-		} else {
-			log.Error(fmt.Errorf("unexpected member format %s", member.Address.Host), "")
-			return consts.MetaRoleUnknown, false
-		}
-		if podName == memberAddress && port == uint(member.Address.Port) {
-			if member.IsLeader {
-				return consts.MetaRoleLeader, true
-			}
-			return consts.MetaRoleFollower, true
+		if member.Address.Host == endpoint && member.Address.Port == int32(port) {
+			return lo.If(member.IsLeader, consts.MetaRoleLeader).Else(consts.MetaRoleFollower), nil
 		}
 	}
-	return consts.MetaRoleUnknown, true
+
+	return consts.MetaRoleUnknown, nil
 }
 
-// getMetaPort returns the service port of the pod. Returns true if operation was successful.
-func getMetaPort(pod *corev1.Pod) (uint, bool) {
-	for _, container := range pod.Spec.Containers {
-		if container.Name == "meta" {
-			for _, containerPort := range container.Ports {
-				if containerPort.Name == consts.PortService {
-					return uint(containerPort.ContainerPort), true
-				}
-			}
+func (mpl *MetaPodRoleLabeler) isRisingWaveMetaPod(pod *corev1.Pod) bool {
+	if pod == nil {
+		return false
+	}
+
+	if _, ok := pod.Labels[consts.LabelRisingWaveName]; !ok {
+		return false
+	}
+	if pod.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
+		return false
+	}
+
+	if utils.GetContainerFromPod(pod, "meta") == nil {
+		return false
+	}
+
+	return true
+}
+
+func (mpl *MetaPodRoleLabeler) getEndpointFromArgs(pod *corev1.Pod, args []string) string {
+	endpoint := ""
+	// Get the subsequent value of "--host" or "--advertise-addr".
+	for i := range args {
+		if i == len(args)-1 {
+			break
+		}
+
+		arg := args[i]
+		switch {
+		case arg == "--host":
+			endpoint = args[i+1]
+		case arg == "--advertise-addr":
+			endpoint = strings.Split(args[i+1], ":")[0]
+		case strings.HasPrefix(arg, "--host="):
+			endpoint = arg[len("--host="):]
+		case strings.HasPrefix(arg, "--advertise-addr="):
+			endpoint = strings.Split(arg[len("--advertise-addr="):], ":")[0]
+		}
+
+		if len(endpoint) > 0 {
+			break
 		}
 	}
-	return 0, false
+
+	if len(endpoint) == 0 {
+		return ""
+	}
+
+	endpoint = strings.ReplaceAll(endpoint, "$(POD_IP)", pod.Status.PodIP)
+	endpoint = strings.ReplaceAll(endpoint, "$(POD_NAME)", pod.Name)
+
+	return endpoint
 }
 
-// getPodIP returns the pod IP of the pod. Returns true if operation was successful.
-func getPodIP(pod *corev1.Pod) (string, bool) {
-	ip := pod.Status.PodIP
-	return ip, ip != ""
-}
-
-// getLeaderMetaPods returns all other meta pods of the same RW instance. Returns true if operation was successful.
-func (mpc *MetaPodController) getLeaderMetaPods(metaPod *corev1.Pod, ctx context.Context) ([]corev1.Pod, bool) {
-	log := log.FromContext(ctx)
-
-	rwInstance, ok := metaPod.ObjectMeta.Labels[consts.LabelRisingWaveName]
+func (mpl *MetaPodRoleLabeler) syncRoleLabelForSinglePod(ctx context.Context, pod *corev1.Pod) (string, error) {
+	// Extract information from the Pod.
+	if !mpl.isRisingWaveMetaPod(pod) {
+		return "", errors.New("not a meta pod")
+	}
+	if pod.Status.PodIP == "" {
+		return "", errors.New("not running")
+	}
+	metaContainer := utils.GetContainerFromPod(pod, "meta")
+	if metaContainer == nil {
+		return "", errors.New("meta container not found")
+	}
+	svcPort, ok := utils.GetPortFromContainer(metaContainer, consts.PortService)
 	if !ok {
-		log.Error(fmt.Errorf("unable to retrieve risingwave name from pod"), "")
-		return []corev1.Pod{}, false
+		return "", errors.New("service port not found")
+	}
+	endpoint := mpl.getEndpointFromArgs(pod, metaContainer.Args)
+	if len(endpoint) == 0 {
+		return "", errors.New("endpoint not found")
 	}
 
-	// get pods that are marked as leader from this instance
-	otherLeaderPods := &corev1.PodList{}
-	labelSet := map[string]string{
-		consts.LabelRisingWaveComponent: consts.ComponentMeta,
-		consts.LabelRisingWaveMetaRole:  consts.MetaRoleLeader,
-		consts.LabelRisingWaveName:      rwInstance,
+	logger := log.FromContext(ctx).WithValues("pod", pod.Name)
+
+	// Send a gRPC request and get the current role.
+	role, err := mpl.getMetaRole(ctx, pod.Status.PodIP, uint(svcPort), endpoint)
+	if err != nil {
+		logger.Info("Failed to get the current role from the meta Pod.", "error", err)
+		// Use an unknown role.
+		role = consts.MetaRoleUnknown
 	}
-	listOptions := client.ListOptions{LabelSelector: labels.SelectorFromSet(labelSet)}
-	err := mpc.Client.List(context.Background(), otherLeaderPods, &listOptions)
-	leaders := otherLeaderPods.Items
-	if len(leaders) > 1 {
-		log.Error(fmt.Errorf("multiple pods are marked as leaders: %v", leaders), "")
+
+	// Update the role if it changes.
+	beforeRole := pod.Labels[consts.LabelRisingWaveMetaRole]
+	if beforeRole != role {
+		originalPod := pod.DeepCopy()
+		pod.Labels[consts.LabelRisingWaveMetaRole] = role
+		err := mpl.Patch(ctx, pod, client.StrategicMergeFrom(originalPod))
+		return role, err
 	}
-	return leaders, err != nil
+
+	return role, nil
+}
+
+func (mpl *MetaPodRoleLabeler) syncRoleLabels(ctx context.Context, pod *corev1.Pod) {
+	logger := log.FromContext(ctx)
+
+	beforeRole := pod.Labels[consts.LabelRisingWaveMetaRole]
+	role, err := mpl.syncRoleLabelForSinglePod(ctx, pod)
+	if err != nil {
+		logger.Info("Failed to sync the meta role label.", "pod", pod.Name, "error", err)
+		return
+	}
+
+	if beforeRole != consts.MetaRoleLeader && role == consts.MetaRoleLeader {
+		risingwaveName := pod.Labels[consts.LabelRisingWaveName]
+		currentPod := pod.Name
+
+		var leaderPodList corev1.PodList
+		err := mpl.List(ctx, &leaderPodList, client.InNamespace(pod.Namespace), client.MatchingLabels{
+			consts.LabelRisingWaveName:      risingwaveName,
+			consts.LabelRisingWaveComponent: consts.ComponentMeta,
+			consts.LabelRisingWaveMetaRole:  consts.MetaRoleLeader,
+		})
+		if err != nil {
+			logger.Info("Failed to list leader Pods.", "pod", pod.Name, "error", err)
+		}
+
+		leaderPods := lo.Filter(leaderPodList.Items, func(item corev1.Pod, _ int) bool {
+			return item.Name != currentPod
+		})
+
+		// Do our best.
+		for _, pod := range leaderPods {
+			if _, err := mpl.syncRoleLabelForSinglePod(ctx, &pod); err != nil {
+				logger.Info("Failed to sync the meta role label.", "pod", pod.Name, "error", err)
+			}
+		}
+	}
 }
 
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
-func (mpc *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (res ctrl.Result, e error) {
-	defaultRequeue2sResult := ctrl.Result{RequeueAfter: time.Second * 2}
-
-	// only reconcile when this is related to a meta pod
-	reqPod := &corev1.Pod{}
-	mpc.Get(ctx, req.NamespacedName, reqPod)
-	if reqPod.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
-		return ctrl.Result{}, nil
+func (mpl *MetaPodRoleLabeler) Reconcile(ctx context.Context, req ctrl.Request) (res ctrl.Result, e error) {
+	var pod corev1.Pod
+	if err := mpl.Get(ctx, req.NamespacedName, &pod); err != nil {
+		return ctrlkit.RequeueIfError(client.IgnoreNotFound(err))
 	}
 
-	podIP, okPodIP := getPodIP(reqPod)
-	podPort, okMetaPort := getMetaPort(reqPod)
-	if !okPodIP || !okMetaPort {
-		log.FromContext(ctx).Info("Ignoring this pod")
-		return ctrl.Result{}, nil
+	// Ignore non-meta or non-running Pods.
+	if pod.Status.PodIP == "" || !mpl.isRisingWaveMetaPod(&pod) {
+		return ctrlkit.NoRequeue()
 	}
 
-	newRole, ok := mpc.reconcileThisPod(ctx, reqPod, defaultRequeue2sResult, podIP, podPort)
-	// Update other meta components only if we have a change of leadership
-	if !ok || newRole != consts.MetaRoleLeader {
-		return defaultRequeue2sResult, nil
-	}
+	// Sync the label for the current Pod. If the current Pod is the new leader, then
+	// aggressively sync the labels for all leader Pods.
+	mpl.syncRoleLabels(ctx, &pod)
 
-	return mpc.reconcileOtherLeaderPods(ctx, reqPod, defaultRequeue2sResult), nil
-}
-
-// reconcileThisPod updates the current pod label. If successful returns true and the new role of the pod.
-func (mpc *MetaPodController) reconcileThisPod(ctx context.Context, reqPod *corev1.Pod, defaultResult ctrl.Result, podIP string, podPort uint) (string, bool) {
-	log := log.FromContext(ctx)
-	originalReqPod := reqPod.DeepCopy()
-	oldRole := reqPod.Labels[consts.LabelRisingWaveMetaRole]
-	timeoutCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
-
-	// only update if something changed
-	newRole, ok := mpc.getMetaRole(timeoutCtx, podIP, podPort, reqPod.Name)
-	if !ok || oldRole == newRole {
-		return "", false
-	}
-	reqPod.Labels[consts.LabelRisingWaveMetaRole] = newRole
-
-	// We need to defer the update, since we are updating all leader pods below
-	if err := mpc.Patch(ctx, reqPod, client.MergeFrom(originalReqPod)); err != nil {
-		log.Error(err, "unable to update this Pod")
-		return "", false
-	}
-
-	return newRole, true
-}
-
-// reconcileOtherLeaderPods updates the labels of all other leader pods of ths risingwave instance.
-func (mpc *MetaPodController) reconcileOtherLeaderPods(ctx context.Context, reqPod *corev1.Pod, defaultResult ctrl.Result) ctrl.Result {
-	otherLeaderPods, ok := mpc.getLeaderMetaPods(reqPod, ctx)
-	if !ok {
-		return defaultResult
-	}
-
-	log := log.FromContext(ctx)
-
-	for _, pod := range otherLeaderPods {
-		podIP, okPodIP := getPodIP(&pod)
-		podPort, okMetaPort := getMetaPort(&pod)
-		if !okPodIP || !okMetaPort {
-			log.Info("Ignoring pod %s", pod.Name)
-			return ctrl.Result{}
-		}
-
-		// set meta label
-		originalPod := pod.DeepCopy()
-		oldRole := pod.Labels[consts.LabelRisingWaveMetaRole]
-		timeoutCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
-		defer cancel()
-		newRole, ok := mpc.getMetaRole(timeoutCtx, podIP, podPort, pod.Name)
-		if !ok {
-			return defaultResult
-		}
-		pod.Labels[consts.LabelRisingWaveMetaRole] = newRole
-
-		// only update if something changed
-		if oldRole == newRole {
-			continue
-		}
-
-		if err := mpc.Patch(ctx, &pod, client.MergeFrom(originalPod)); err != nil {
-			log.Error(err, "unable to update Pod")
-			continue
-		}
-		log.Info("updated meta pod", "pod", pod.Name)
-	}
-	return defaultResult
+	// Sync every 2 seconds.
+	return ctrlkit.RequeueAfter(2 * time.Second)
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (mpc *MetaPodController) SetupWithManager(mgr ctrl.Manager) error {
+func (mpl *MetaPodRoleLabeler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
+		Named("meta-pod-role-labeler").
 		For(&corev1.Pod{}).
-		Complete(mpc)
+		Complete(mpl)
 }
 
-// NewRisingWaveController creates a new RisingWaveController.
-func NewMetaPodController(client client.Client) *MetaPodController {
-	return &MetaPodController{
+// NewMetaPodRoleLabeler creates a new MetaPodRoleLabeler.
+func NewMetaPodRoleLabeler(client client.Client) *MetaPodRoleLabeler {
+	return &MetaPodRoleLabeler{
 		Client: client,
 	}
 }

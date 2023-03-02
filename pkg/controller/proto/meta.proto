@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package meta;
+
+// Communicating with meta node. Find pb definition here
+// risingwave/risingwave/proto/meta.proto
+
+option java_package = "com.risingwave.proto";
+option optimize_for = SPEED;
+option go_package = "github.com/risingwavelabs/risingwave-operator/pkg/controller";
+
+service HeartbeatService {
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+}
+
+message HeartbeatRequest {
+  message ExtraInfo {
+    oneof info {
+      uint64 hummock_gc_watermark = 1;
+    }
+  }
+  uint32 node_id = 1;
+  // Lightweight info piggybacked by heartbeat request.
+  repeated ExtraInfo info = 2;
+}
+
+message HeartbeatResponse {
+  Status status = 1;
+}
+
+message Status {
+  enum Code {
+    UNSPECIFIED = 0;
+    OK = 1;
+    UNKNOWN_WORKER = 2;
+  }
+  Code code = 1;
+  string message = 2;
+}
+

@@ -16,12 +16,16 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // MetaPodController reconciles a Pod object.
@@ -29,6 +33,8 @@ type MetaPodController struct {
 	client.Client
 	// Scheme *runtime.Scheme
 }
+
+// TODO: Rename this file
 
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;update;patch
 
@@ -38,11 +44,34 @@ const (
 
 var c client.Client
 
-func (r *MetaPodController) metaIsLeader(ip string, port int) bool {
+func (r *MetaPodController) metaIsLeader(ip string, port uint) bool {
 	// TODO: send heartbeat to pod
 	// If success, then is pod leader
+
+	addr := fmt.Sprintf("%s:%v", ip, port)
+	log.Log.Info("connecting against %s", addr) // TODO: remove this line
+
+	// TODO: how do I make this connection secure?
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Log.Info("did not connect: %v", err)
+		// TODO: retry request
+		return false
+	}
+	defer conn.Close()
+
 	panic("unimplemented")
+
 }
+
+/*
+- I do NOT need to use stream, since I just send one heartbeat message
+
+- Generate proto files via
+protoc --go_out=. --go_opt=paths=source_relative \
+    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+    proto/meta.proto
+*/
 
 // TODO: stateful set here?
 // Reconcile handles the pods of the meta service. Will add the leader label to the pod.
@@ -63,13 +92,20 @@ func (r *MetaPodController) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	for _, pod := range meta_pods.Items {
 		podIp := pod.Status.PodIP
-		port := 5690 // TODO: what if this changes?
+		port := uint(5690) // What if this changes?
+
+		old_label, ok := pod.Labels[metaLeaderLabel]
 
 		// change meta leader label
 		if r.metaIsLeader(podIp, port) {
 			pod.Labels[metaLeaderLabel] = "true"
 		} else {
 			pod.Labels[metaLeaderLabel] = "false"
+		}
+
+		// only update if something changed
+		if ok && old_label == pod.Labels[metaLeaderLabel] {
+			continue
 		}
 
 		// update pod in cluster

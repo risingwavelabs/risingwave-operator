@@ -22,7 +22,7 @@ spec:
         endpoint: cos.${REGION}.myqcloud.com
         virtualHostedStyle: true
   global:
-    image: ghcr.io/risingwavelabs/risingwave:nightly-20221107
+    image: ghcr.io/risingwavelabs/risingwave:v0.1.17
     imagePullPolicy: IfNotPresent
     resources:
       limits:

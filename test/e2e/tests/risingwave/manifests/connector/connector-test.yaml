@@ -5,7 +5,7 @@ metadata:
   namespace: ${E2E_NAMESPACE}
 spec:
   global:
-    image: ${E2E_RISINGWAVE_NIGHTLY_IMAGE}
+    image: ${E2E_RISINGWAVE_IMAGE}
     imagePullPolicy: IfNotPresent
     replicas:
       meta: 1

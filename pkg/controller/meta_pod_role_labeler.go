@@ -52,7 +52,7 @@ func (mpl *MetaPodRoleLabeler) getMetaRole(ctx context.Context, host string, por
 	addr := fmt.Sprintf("%s:%v", host, port)
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		logger.Error(err, fmt.Sprintf("Unable to connect to meta pod at %s", addr))
+		logger.Info("Unable to connect to meta pod at "+addr, "error", err)
 		return "", err
 	}
 	defer conn.Close()

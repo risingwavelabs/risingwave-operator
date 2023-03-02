@@ -485,7 +485,7 @@ func (f *RisingWaveObjectFactory) argsForFrontend() []string {
 		"frontend-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--host", fmt.Sprintf("0.0.0.0:%d", frontendPorts.ServicePort),
-		"--client-address", fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
+		"--client-address", fmt.Sprintf("$(%s):%d", consts.EnvRisingWavePodIp, frontendPorts.ServicePort),
 		"--meta-addr", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 		"--metrics-level=1",
 		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", frontendPorts.MetricsPort),
@@ -535,7 +535,7 @@ func (f *RisingWaveObjectFactory) argsForCompactor() []string {
 		"compactor-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--host", fmt.Sprintf("0.0.0.0:%d", compactorPorts.ServicePort),
-		"--client-address", fmt.Sprintf("$(POD_IP):%d", compactorPorts.ServicePort),
+		"--client-address", fmt.Sprintf("$(%s):%d", consts.EnvRisingWavePodIp, compactorPorts.ServicePort),
 		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", compactorPorts.MetricsPort),
 		"--metrics-level=1",
 		"--state-store", f.hummockConnectionStr(),
@@ -1074,31 +1074,31 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 
 	// Setting the system environment variables.
 	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-		Name: "POD_IP",
+		Name: consts.EnvRisingWavePodIp,
 		ValueFrom: &corev1.EnvVarSource{
 			FieldRef: &corev1.ObjectFieldSelector{
 				FieldPath: "status.podIP",
 			},
 		},
-	}, func(env *corev1.EnvVar) bool { return env.Name == "POD_IP" })
+	}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWavePodIp })
 	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-		Name: "POD_NAME",
+		Name: consts.EnvRisingWavePodName,
 		ValueFrom: &corev1.EnvVarSource{
 			FieldRef: &corev1.ObjectFieldSelector{
 				FieldPath: "metadata.name",
 			},
 		},
-	}, func(env *corev1.EnvVar) bool { return env.Name == "POD_NAME" })
+	}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWavePodName })
 	// Set RUST_BACKTRACE=1 by default.
 	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-		Name:  "RUST_BACKTRACE",
+		Name:  consts.EnvRisingWaveRustBacktrace,
 		Value: "full",
-	}, func(env *corev1.EnvVar) bool { return env.Name == "RUST_BACKTRACE" })
+	}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWaveRustBacktrace })
 	if cpuLimit, ok := template.Resources.Limits[corev1.ResourceCPU]; ok {
 		container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-			Name:  "RW_WORKER_THREADS",
+			Name:  consts.EnvRisingWaveWorkerThreads,
 			Value: strconv.FormatInt(cpuLimit.Value(), 10),
-		}, func(env *corev1.EnvVar) bool { return env.Name == "RW_WORKER_THREADS" })
+		}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWaveWorkerThreads })
 	}
 	container.Resources = template.Resources
 	container.StartupProbe = nil
@@ -1133,7 +1133,7 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 	container.Ports = f.portsForMetaContainer()
 	connectorPorts := f.getConnectorPorts()
 	container.Env = append(container.Env, corev1.EnvVar{
-		Name:  "RW_CONNECTOR_RPC_ENDPOINT",
+		Name:  consts.EnvRisingWaveConnectorRpcEndPoint,
 		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
 	})
 
@@ -1558,7 +1558,7 @@ func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Cont
 	container.Ports = f.portsForConnectorContainer()
 	container.Command = []string{"/risingwave/bin/connector-node/start-service.sh"}
 	container.Env = append(container.Env, corev1.EnvVar{
-		Name:  "JAVA_OPTS",
+		Name:  consts.EnvRisingWaveJavaOpts,
 		Value: "-Xmx4g",
 	})
 
@@ -1727,7 +1727,7 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	container.Name = "compute"
 	connectorPorts := f.getConnectorPorts()
 	container.Env = append(container.Env, corev1.EnvVar{
-		Name:  "RW_CONNECTOR_RPC_ENDPOINT",
+		Name:  consts.EnvRisingWaveConnectorRpcEndPoint,
 		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
 	})
 

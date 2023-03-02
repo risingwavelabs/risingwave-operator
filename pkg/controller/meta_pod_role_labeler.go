@@ -91,6 +91,7 @@ func (mpl *MetaPodRoleLabeler) isRisingWaveMetaPod(pod *corev1.Pod) bool {
 
 func (mpl *MetaPodRoleLabeler) getEndpointFromArgs(pod *corev1.Pod, args []string) string {
 	endpoint := ""
+
 	// Get the subsequent value of "--host" or "--advertise-addr".
 	for i := range args {
 		if i == len(args)-1 {

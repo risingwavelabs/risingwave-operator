@@ -1,0 +1,31 @@
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-webhdfs
+spec:
+  configuration:
+    configmap:
+      key: risingwave.toml
+      name: risingwave-webhdfs-config-template
+  storages:
+    meta:
+      memory: true
+    object:
+      webhdfs:
+        nameNode: your-name-node
+        root: your-root
+  global:
+    image: ghcr.io/risingwavelabs/risingwave:nightly-20221107
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+      compactor: 1

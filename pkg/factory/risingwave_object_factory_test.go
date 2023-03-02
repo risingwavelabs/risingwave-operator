@@ -3207,6 +3207,16 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 			hummockArg: "hummock+hdfs://name-node@root",
 			envs:       []corev1.EnvVar{},
 		},
+		"webhdfs": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				WebHDFS: &risingwavev1alpha1.RisingWaveObjectStorageHDFS{
+					NameNode: "name-node",
+					Root:     "root",
+				},
+			},
+			hummockArg: "hummock+webhdfs://name-node@root",
+			envs:       []corev1.EnvVar{},
+		},
 	}
 
 	for name, tc := range testcases {

@@ -150,7 +150,7 @@ build-local-certs:
 		-extensions san -config <(echo '[req]'; echo 'distinguished_name=req'; echo '[san]'; echo 'subjectAltName=DNS:host.docker.internal')
 
 install-local: kustomize manifests
-	$(KUSTOMIZE) build config/local | kubectl apply -f - >/dev/null
+	$(KUSTOMIZE) build config/local | kubectl apply --server-side --force-conflicts -f - >/dev/null
 
 uninstall-local: kustomize manifests
 	$(KUSTOMIZE) build config/local | kubectl delete -f - >/dev/null

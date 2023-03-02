@@ -42,3 +42,4 @@ aliyun
 aliyuncs
 idempotence
 hdfs
+webhdfs

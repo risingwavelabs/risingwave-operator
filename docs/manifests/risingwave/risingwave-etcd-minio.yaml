@@ -151,7 +151,7 @@ spec:
         endpoint: risingwave-minio:9301
         bucket: hummock001
   global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.1.16
+    image: ghcr.io/risingwavelabs/risingwave:v0.1.17
     imagePullPolicy: IfNotPresent
     resources:
       limits:

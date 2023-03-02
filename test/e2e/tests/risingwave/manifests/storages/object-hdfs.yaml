@@ -193,4 +193,4 @@ spec:
     object:
       hdfs:
         nameNode: hdfs-master
-        root: /root
+        root: /

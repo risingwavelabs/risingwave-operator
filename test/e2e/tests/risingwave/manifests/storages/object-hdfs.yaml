@@ -35,13 +35,6 @@ spec:
     - name: hdfs-master
       image: kubeguide/hadoop:latest
       imagePullPolicy: IfNotPresent
-      resources:
-        limits:
-          memory: 512Mi
-          cpu: "1"
-        requests:
-          memory: 256Mi
-          cpu: "0.2"
       ports:
         - containerPort: 9000
         - containerPort: 50070    
@@ -71,13 +64,6 @@ spec:
     - name: hadoop-datanode-1
       image: kubeguide/hadoop:latest
       imagePullPolicy: IfNotPresent
-      resources:
-        limits:
-          memory: 512Mi
-          cpu: "1"
-        requests:
-          memory: 256Mi
-          cpu: "0.2"
       ports:
         - containerPort: 9000
         - containerPort: 50070    
@@ -127,13 +113,6 @@ spec:
     - name: yarn-master
       image: kubeguide/hadoop:latest
       imagePullPolicy: IfNotPresent
-      resources:
-        limits:
-          memory: 512Mi
-          cpu: "1"
-        requests:
-          memory: 256Mi
-          cpu: "0.2"
       ports:
         - containerPort: 9000
         - containerPort: 50070    
@@ -174,13 +153,6 @@ spec:
     - name: yarn-node-1
       image: kubeguide/hadoop:latest
       imagePullPolicy: IfNotPresent
-      resources:
-        limits:
-          memory: 512Mi
-          cpu: "1"
-        requests:
-          memory: 256Mi
-          cpu: "0.2"
       ports:
         - containerPort: 8040
         - containerPort: 8041   

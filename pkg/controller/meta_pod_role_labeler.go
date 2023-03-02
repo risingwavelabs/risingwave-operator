@@ -47,13 +47,10 @@ type MetaPodRoleLabeler struct {
 // getMetaRole sends a gRPC request to the meta node at host:port to tell its role from the response. The endpoint is used
 // to identify the meta node. If the node isn't found in the response, an unknown will be returned.
 func (mpl *MetaPodRoleLabeler) getMetaRole(ctx context.Context, host string, port uint, endpoint string) (string, error) {
-	logger := log.FromContext(ctx)
-
 	addr := fmt.Sprintf("%s:%v", host, port)
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		logger.Info("Unable to connect to meta pod at "+addr, "error", err)
-		return "", err
+		return "", fmt.Errorf("unable to connect: %w", err)
 	}
 	defer conn.Close()
 
@@ -61,8 +58,7 @@ func (mpl *MetaPodRoleLabeler) getMetaRole(ctx context.Context, host string, por
 
 	resp, err := metaClient.Members(ctx, &pb.MembersRequest{})
 	if err != nil {
-		logger.Info("Sending MembersRequest failed. Assuming meta node is not yet ready.", "error", err)
-		return "", err
+		return "", fmt.Errorf("request failed: %w", err)
 	}
 
 	for _, member := range resp.Members {

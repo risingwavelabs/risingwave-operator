@@ -18,9 +18,7 @@ import (
 	"strconv"
 	"testing"
 
-	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/samber/lo"
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,114 +28,9 @@ import (
 	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
-	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
-
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
-
-// This file contains common functions, interfaces and types used by the object factory tests.
-// kubeObjects and testcaseType are type constraints that can be utilised or input into the predicates for test.
-type risingwaveGroup interface {
-	risingwavev1alpha1.RisingWaveComputeGroup |
-		risingwavev1alpha1.RisingWaveComponentGroup
-}
-type kubeObjectsUpgradeStrategy interface {
-	*appsv1.DeploymentStrategy |
-		*appsv1.StatefulSetUpdateStrategy |
-		*kruiseappsv1alpha1.CloneSetUpdateStrategy |
-		*kruiseappsv1beta1.StatefulSetUpdateStrategy
-}
-
-type testcaseType interface {
-	baseTestCase |
-		deploymentTestcase |
-		clonesetTestcase |
-		stsTestcase |
-		advancedSTSTestcase |
-		servicesTestcase |
-		servicesMetaTestcase |
-		objectStoragesTestcase |
-		configmapTestcase |
-		computeArgsTestcase |
-		metaStorageTestcase |
-		metaSTSTestcase |
-		metaAdvancedSTSTestcase
-}
-
-type kubeObjects interface {
-	*appsv1.Deployment |
-		*appsv1.StatefulSet |
-		*kruiseappsv1beta1.StatefulSet |
-		*kruiseappsv1alpha1.CloneSet |
-		*corev1.Service |
-		*corev1.ConfigMap |
-		*prometheusv1.ServiceMonitor
-}
-
-type baseTestCase struct {
-	risingwave *risingwavev1alpha1.RisingWave
-}
-type testcase[T risingwaveGroup, K kubeObjectsUpgradeStrategy] struct {
-	baseTestCase
-	component               string
-	podTemplate             map[string]risingwavev1alpha1.RisingWavePodTemplate
-	group                   T
-	expectedUpgradeStrategy K
-	restartAt               *metav1.Time
-}
-
-type servicesTestcase struct {
-	baseTestCase
-	component         string
-	ports             map[string]int32
-	globalServiceType corev1.ServiceType
-	expectServiceType corev1.ServiceType
-}
-
-type servicesMetaTestcase struct {
-	baseTestCase
-	component         string
-	globalServiceMeta risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta
-}
-
-type configmapTestcase struct {
-	risingwave *risingwavev1alpha1.RisingWave
-	configVal  string
-}
-
-type objectStoragesTestcase struct {
-	baseTestCase
-	objectStorage risingwavev1alpha1.RisingWaveObjectStorage
-	hummockArg    string
-	envs          []corev1.EnvVar
-}
-
-type computeArgsTestcase struct {
-	cpuLimit int64
-	memLimit int64
-	argsList [][]string
-}
-
-type inheritedLabelsTestcase struct {
-	labels             map[string]string
-	inheritPrefixValue string
-	inheritedLabels    map[string]string
-}
-
-type metaStorageTestcase struct {
-	metaStorage risingwavev1alpha1.RisingWaveMetaStorage
-	args        []string
-	envs        []corev1.EnvVar
-}
-
-type deploymentTestcase testcase[risingwavev1alpha1.RisingWaveComponentGroup, *appsv1.DeploymentStrategy]
-type metaSTSTestcase testcase[risingwavev1alpha1.RisingWaveComponentGroup, *appsv1.StatefulSetUpdateStrategy]
-type metaAdvancedSTSTestcase testcase[risingwavev1alpha1.RisingWaveComponentGroup, *kruiseappsv1beta1.StatefulSetUpdateStrategy]
-type stsTestcase testcase[risingwavev1alpha1.RisingWaveComputeGroup, *appsv1.StatefulSetUpdateStrategy]
-type clonesetTestcase testcase[risingwavev1alpha1.RisingWaveComponentGroup, *kruiseappsv1alpha1.CloneSetUpdateStrategy]
-type advancedSTSTestcase testcase[risingwavev1alpha1.RisingWaveComputeGroup, *kruiseappsv1beta1.StatefulSetUpdateStrategy]
 
 func mapContains[K, V comparable](a, b map[K]V) bool {
 	if len(a) < len(b) {
@@ -464,7 +357,7 @@ func newPodTemplate(patches ...func(t *risingwavev1alpha1.RisingWavePodTemplateS
 	return t
 }
 
-func slicesContains(a, b []string) bool {
+func containsStringSlice(a, b []string) bool {
 	if len(a) < len(b) {
 		return false
 	}
@@ -479,7 +372,24 @@ func slicesContains(a, b []string) bool {
 	return false
 }
 
-type composedAssertion[T kubeObjects, testcase testcaseType] struct {
+func containsSlice[T comparable](a, b []T) bool {
+	for i := 0; i <= len(a)-len(b); i++ {
+		match := true
+		for j, element := range b {
+			if a[i+j] != element {
+				match = false
+				break
+			}
+		}
+		if match {
+			return true
+		}
+	}
+
+	return false
+}
+
+type composedAssertion[T kubeObject, testcase testCaseType] struct {
 	t          *testing.T
 	predicates []predicate[T, testcase]
 }
@@ -492,7 +402,7 @@ func (a *composedAssertion[T, K]) assertTest(Obj T, testcase K) {
 	}
 }
 
-func composeAssertions[T kubeObjects, K testcaseType](predicates []predicate[T, K], t *testing.T) *composedAssertion[T, K] {
+func composeAssertions[T kubeObject, K testCaseType](predicates []predicate[T, K], t *testing.T) *composedAssertion[T, K] {
 	return &composedAssertion[T, K]{
 		predicates: predicates,
 		t:          t,

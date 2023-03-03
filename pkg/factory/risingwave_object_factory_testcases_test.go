@@ -24,6 +24,7 @@ import (
 	kruisepubs "github.com/openkruise/kruise-api/apps/pub"
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
 	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
+	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -36,8 +37,65 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
 
-func getDeploymentTestcases() map[string]deploymentTestcase {
-	return map[string]deploymentTestcase{
+type risingWaveComponentGroup interface {
+	risingwavev1alpha1.RisingWaveComputeGroup |
+		risingwavev1alpha1.RisingWaveComponentGroup
+}
+
+type kubeObjectsUpgradeStrategy interface {
+	*appsv1.DeploymentStrategy |
+		*appsv1.StatefulSetUpdateStrategy |
+		*kruiseappsv1alpha1.CloneSetUpdateStrategy |
+		*kruiseappsv1beta1.StatefulSetUpdateStrategy
+}
+
+type testCaseType interface {
+	baseTestCase |
+		deploymentTestCase |
+		cloneSetTestCase |
+		computeStatefulSetTestCase |
+		computeAdvancedSTSTestCase |
+		servicesTestCase |
+		serviceMetadataTestCase |
+		objectStoragesTestCase |
+		configMapTestCase |
+		computeArgsTestCase |
+		metaStorageTestCase |
+		metaStatefulSetTestCase |
+		metaAdvancedSTSTestCase
+}
+
+type kubeObject interface {
+	*corev1.Service |
+		*corev1.Secret |
+		*corev1.ConfigMap |
+		*corev1.Pod |
+		*corev1.PersistentVolumeClaim |
+		*corev1.PersistentVolume |
+		*appsv1.Deployment |
+		*appsv1.StatefulSet |
+		*kruiseappsv1beta1.StatefulSet |
+		*kruiseappsv1alpha1.CloneSet |
+		*prometheusv1.ServiceMonitor
+}
+
+type baseTestCase struct {
+	risingwave *risingwavev1alpha1.RisingWave
+}
+
+type testCase[T risingWaveComponentGroup, K kubeObjectsUpgradeStrategy] struct {
+	baseTestCase
+	component               string
+	podTemplate             map[string]risingwavev1alpha1.RisingWavePodTemplate
+	group                   T
+	expectedUpgradeStrategy K
+	restartAt               *metav1.Time
+}
+
+type deploymentTestCase testCase[risingwavev1alpha1.RisingWaveComponentGroup, *appsv1.DeploymentStrategy]
+
+func deploymentTestCases() map[string]deploymentTestCase {
+	return map[string]deploymentTestCase{
 		"pods-meta-labels": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
@@ -285,8 +343,11 @@ func getDeploymentTestcases() map[string]deploymentTestcase {
 		},
 	}
 }
-func getMetaSTSTestcases() map[string]metaSTSTestcase {
-	return map[string]metaSTSTestcase{
+
+type metaStatefulSetTestCase testCase[risingwavev1alpha1.RisingWaveComponentGroup, *appsv1.StatefulSetUpdateStrategy]
+
+func metaStatefulSetTestCases() map[string]metaStatefulSetTestCase {
+	return map[string]metaStatefulSetTestCase{
 		"pods-meta-labels": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
@@ -533,8 +594,10 @@ func getMetaSTSTestcases() map[string]metaSTSTestcase {
 	}
 }
 
-func getSTSTestcases() map[string]stsTestcase {
-	return map[string]stsTestcase{
+type computeStatefulSetTestCase testCase[risingwavev1alpha1.RisingWaveComputeGroup, *appsv1.StatefulSetUpdateStrategy]
+
+func computeStatefulSetTestCases() map[string]computeStatefulSetTestCase {
+	return map[string]computeStatefulSetTestCase{
 		"pods-meta-labels": {
 			group: risingwavev1alpha1.RisingWaveComputeGroup{
 				Name:     "",
@@ -830,8 +893,10 @@ func getSTSTestcases() map[string]stsTestcase {
 	}
 }
 
-func getClonesetTestcases() map[string]clonesetTestcase {
-	return map[string]clonesetTestcase{
+type cloneSetTestCase testCase[risingwavev1alpha1.RisingWaveComponentGroup, *kruiseappsv1alpha1.CloneSetUpdateStrategy]
+
+func cloneSetTestCases() map[string]cloneSetTestCase {
+	return map[string]cloneSetTestCase{
 		"pods-meta-labels": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
@@ -1371,8 +1436,10 @@ func getClonesetTestcases() map[string]clonesetTestcase {
 	}
 }
 
-func getMetaAdvancedSTSTestcases() map[string]metaAdvancedSTSTestcase {
-	return map[string]metaAdvancedSTSTestcase{
+type metaAdvancedSTSTestCase testCase[risingwavev1alpha1.RisingWaveComponentGroup, *kruiseappsv1beta1.StatefulSetUpdateStrategy]
+
+func metaAdvancedSTSTestCases() map[string]metaAdvancedSTSTestCase {
+	return map[string]metaAdvancedSTSTestCase{
 		"pods-meta-labels": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
@@ -1814,8 +1881,10 @@ func getMetaAdvancedSTSTestcases() map[string]metaAdvancedSTSTestcase {
 	}
 }
 
-func getAdvancedSTSTestcases() map[string]advancedSTSTestcase {
-	return map[string]advancedSTSTestcase{
+type computeAdvancedSTSTestCase testCase[risingwavev1alpha1.RisingWaveComputeGroup, *kruiseappsv1beta1.StatefulSetUpdateStrategy]
+
+func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
+	return map[string]computeAdvancedSTSTestCase{
 		"pods-meta-labels": {
 			group: risingwavev1alpha1.RisingWaveComputeGroup{
 				Name:     "",
@@ -2203,8 +2272,16 @@ func getAdvancedSTSTestcases() map[string]advancedSTSTestcase {
 	}
 }
 
-func getServicesTestcases() map[string]servicesTestcase {
-	return map[string]servicesTestcase{
+type servicesTestCase struct {
+	baseTestCase
+	component         string
+	ports             map[string]int32
+	globalServiceType corev1.ServiceType
+	expectServiceType corev1.ServiceType
+}
+
+func servicesTestCases() map[string]servicesTestCase {
+	return map[string]servicesTestCase{
 		"random-meta-ports": {
 			component:         consts.ComponentMeta,
 			globalServiceType: corev1.ServiceTypeClusterIP,
@@ -2301,8 +2378,14 @@ func getServicesTestcases() map[string]servicesTestcase {
 
 }
 
-func getServicesMetaTestCases() map[string]servicesMetaTestcase {
-	return map[string]servicesMetaTestcase{
+type serviceMetadataTestCase struct {
+	baseTestCase
+	component         string
+	globalServiceMeta risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta
+}
+
+func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
+	return map[string]serviceMetadataTestCase{
 		"random-meta-labels": {
 			component: consts.ComponentMeta,
 			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
@@ -2396,8 +2479,15 @@ func getServicesMetaTestCases() map[string]servicesMetaTestcase {
 	}
 }
 
-func getObjectStoragesTestcase() map[string]objectStoragesTestcase {
-	return map[string]objectStoragesTestcase{
+type objectStoragesTestCase struct {
+	baseTestCase
+	objectStorage risingwavev1alpha1.RisingWaveObjectStorage
+	hummockArg    string
+	envs          []corev1.EnvVar
+}
+
+func objectStorageTestCases() map[string]objectStoragesTestCase {
+	return map[string]objectStoragesTestCase{
 		"memory": {
 			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
 				Memory: pointer.Bool(true),
@@ -2816,12 +2906,27 @@ func getObjectStoragesTestcase() map[string]objectStoragesTestcase {
 				},
 			},
 		},
+		"hdfs": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				HDFS: &risingwavev1alpha1.RisingWaveObjectStorageHDFS{
+					NameNode: "name-node",
+					Root:     "root",
+				},
+			},
+			hummockArg: "hummock+hdfs://name-node@root",
+			envs:       []corev1.EnvVar{},
+		},
 	}
 
 }
 
-func getConfigmapTestCases() map[string]configmapTestcase {
-	return map[string]configmapTestcase{
+type configMapTestCase struct {
+	risingwave *risingwavev1alpha1.RisingWave
+	configVal  string
+}
+
+func configMapTestCases() map[string]configMapTestCase {
+	return map[string]configMapTestCase{
 		"empty-val": {
 			configVal: "",
 		},
@@ -2831,8 +2936,14 @@ func getConfigmapTestCases() map[string]configmapTestcase {
 	}
 }
 
-func getComputeArgsTestCases() map[string]computeArgsTestcase {
-	return map[string]computeArgsTestcase{
+type computeArgsTestCase struct {
+	cpuLimit int64
+	memLimit int64
+	argsList [][]string
+}
+
+func computeArgsTestCases() map[string]computeArgsTestCase {
+	return map[string]computeArgsTestCase{
 		"empty-limits": {},
 		"cpu-limit-4": {
 			cpuLimit: 4,
@@ -2881,8 +2992,14 @@ func getComputeArgsTestCases() map[string]computeArgsTestcase {
 	}
 }
 
-func getInheritedLabelsTestCaes() map[string]inheritedLabelsTestcase {
-	return map[string]inheritedLabelsTestcase{
+type inheritedLabelsTestCase struct {
+	labels             map[string]string
+	inheritPrefixValue string
+	inheritedLabels    map[string]string
+}
+
+func inheritedLabelsTestCases() map[string]inheritedLabelsTestCase {
+	return map[string]inheritedLabelsTestCase{
 		"no-inherit": {
 			labels: map[string]string{
 				"a":                               "b",
@@ -2927,8 +3044,14 @@ func getInheritedLabelsTestCaes() map[string]inheritedLabelsTestcase {
 	}
 }
 
-func getMetaStoragesTestCases() map[string]metaStorageTestcase {
-	return map[string]metaStorageTestcase{
+type metaStorageTestCase struct {
+	metaStorage risingwavev1alpha1.RisingWaveMetaStorage
+	args        []string
+	envs        []corev1.EnvVar
+}
+
+func metaStorageTestCases() map[string]metaStorageTestCase {
+	return map[string]metaStorageTestCase{
 		"memory": {
 			metaStorage: risingwavev1alpha1.RisingWaveMetaStorage{
 				Memory: pointer.Bool(true),

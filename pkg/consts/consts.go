@@ -29,6 +29,20 @@ const (
 )
 
 // =================================================
+// Envs.
+// =================================================
+
+// System reserved envs.
+const (
+	EnvRisingWavePodIp                = "POD_IP"
+	EnvRisingWavePodName              = "POD_NAME"
+	EnvRisingWaveRustBacktrace        = "RUST_BACKTRACE"
+	EnvRisingWaveWorkerThreads        = "RW_WORKER_THREADS"
+	EnvRisingWaveConnectorRpcEndPoint = "RW_CONNECTOR_RPC_ENDPOINT"
+	EnvRisingWaveJavaOpts             = "JAVA_OPTS"
+)
+
+// =================================================
 // Annotations.
 // =================================================
 

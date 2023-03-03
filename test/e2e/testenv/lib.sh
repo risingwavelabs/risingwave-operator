@@ -164,7 +164,7 @@ _RISINGWAVE_OPERATOR_ENABLE_OPENKRUISE_PATCH_FILE="$(dirname "${BASH_SOURCE[0]}"
 
 function testenv::k8s::risingwave_operator::install() {
   testenv::k8s::load_docker_image "${_RISINGWAVE_OPERATOR_TEST_IMAGE}"
-  shell::run k8s::kubectl apply -f "${_RISINGWAVE_OPERATOR_MANIFEST_FOR_TEST_PATH}"
+  shell::run k8s::kubectl apply --server-side -f "${_RISINGWAVE_OPERATOR_MANIFEST_FOR_TEST_PATH}"
 
   # shellcheck disable=SC2034
   local KUBECTL_NAMESPACE="${_RISINGWAVE_OPERATOR_NAMESPACE}"

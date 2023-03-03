@@ -464,13 +464,14 @@ func (f *RisingWaveObjectFactory) argsForMeta() []string {
 		"meta-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", metaPorts.ServicePort),
-		"--host", fmt.Sprintf("$(POD_NAME).%s", f.componentName(consts.ComponentMeta, "")),
+		"--advertise-addr", fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		"--state-store", f.hummockConnectionStr(),
 		"--dashboard-host", fmt.Sprintf("0.0.0.0:%d", metaPorts.DashboardPort),
 		"--prometheus-host", fmt.Sprintf("0.0.0.0:%d", metaPorts.MetricsPort),
 	}
 
 	switch {
-	case metaStorage.Memory != nil && *metaStorage.Memory:
+	case pointer.BoolDeref(metaStorage.Memory, false):
 		args = append(args, "--backend", "mem")
 	case metaStorage.Etcd != nil:
 		args = append(args, "--backend", "etcd", "--etcd-endpoints", metaStorage.Etcd.Endpoint)
@@ -491,8 +492,8 @@ func (f *RisingWaveObjectFactory) argsForFrontend() []string {
 	return []string{
 		"frontend-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
-		"--host", fmt.Sprintf("0.0.0.0:%d", frontendPorts.ServicePort),
-		"--client-address", fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
+		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", frontendPorts.ServicePort),
+		"--advertise-addr", fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
 		"--meta-addr", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 		"--metrics-level=1",
 		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", frontendPorts.MetricsPort),
@@ -506,14 +507,11 @@ func (f *RisingWaveObjectFactory) argsForCompute(cpuLimit int64, memLimit int64)
 	args := []string{
 		"compute-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
-		"--host", fmt.Sprintf("0.0.0.0:%d", computePorts.ServicePort),
-		"--client-address", fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentCompute, ""), computePorts.ServicePort),
+		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", computePorts.ServicePort),
+		"--advertise-addr", fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentCompute, ""), computePorts.ServicePort),
 		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", computePorts.MetricsPort),
+		"--meta-address", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 		"--metrics-level=1",
-		"--state-store",
-		f.hummockConnectionStr(),
-		"--meta-address",
-		fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 	}
 
 	if cpuLimit != 0 {
@@ -541,12 +539,11 @@ func (f *RisingWaveObjectFactory) argsForCompactor() []string {
 	return []string{
 		"compactor-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
-		"--host", fmt.Sprintf("0.0.0.0:%d", compactorPorts.ServicePort),
-		"--client-address", fmt.Sprintf("$(POD_IP):%d", compactorPorts.ServicePort),
+		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", compactorPorts.ServicePort),
+		"--advertise-addr", fmt.Sprintf("$(POD_IP):%d", compactorPorts.ServicePort),
 		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", compactorPorts.MetricsPort),
-		"--metrics-level=1",
-		"--state-store", f.hummockConnectionStr(),
 		"--meta-address", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		"--metrics-level=1",
 	}
 }
 
@@ -1087,31 +1084,31 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 
 	// Setting the system environment variables.
 	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-		Name: "POD_IP",
+		Name: consts.EnvRisingWavePodIp,
 		ValueFrom: &corev1.EnvVarSource{
 			FieldRef: &corev1.ObjectFieldSelector{
 				FieldPath: "status.podIP",
 			},
 		},
-	}, func(env *corev1.EnvVar) bool { return env.Name == "POD_IP" })
+	}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWavePodIp })
 	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-		Name: "POD_NAME",
+		Name: consts.EnvRisingWavePodName,
 		ValueFrom: &corev1.EnvVarSource{
 			FieldRef: &corev1.ObjectFieldSelector{
 				FieldPath: "metadata.name",
 			},
 		},
-	}, func(env *corev1.EnvVar) bool { return env.Name == "POD_NAME" })
+	}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWavePodName })
 	// Set RUST_BACKTRACE=1 by default.
 	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-		Name:  "RUST_BACKTRACE",
+		Name:  consts.EnvRisingWaveRustBacktrace,
 		Value: "full",
-	}, func(env *corev1.EnvVar) bool { return env.Name == "RUST_BACKTRACE" })
+	}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWaveRustBacktrace })
 	if cpuLimit, ok := template.Resources.Limits[corev1.ResourceCPU]; ok {
 		container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-			Name:  "RW_WORKER_THREADS",
+			Name:  consts.EnvRisingWaveWorkerThreads,
 			Value: strconv.FormatInt(cpuLimit.Value(), 10),
-		}, func(env *corev1.EnvVar) bool { return env.Name == "RW_WORKER_THREADS" })
+		}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWaveWorkerThreads })
 	}
 	container.Resources = template.Resources
 	container.StartupProbe = nil
@@ -1146,9 +1143,15 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 	container.Ports = f.portsForMetaContainer()
 	connectorPorts := f.getConnectorPorts()
 	container.Env = append(container.Env, corev1.EnvVar{
-		Name:  "RW_CONNECTOR_RPC_ENDPOINT",
+		Name:  consts.EnvRisingWaveConnectorRpcEndPoint,
 		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
 	})
+
+	for _, env := range f.envsForObjectStorage() {
+		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
+	}
 
 	if f.isMetaStorageEtcd() {
 		for _, env := range f.envsForEtcd() {
@@ -1454,12 +1457,6 @@ func (f *RisingWaveObjectFactory) setupCompactorContainer(container *corev1.Cont
 	container.Args = f.argsForCompactor()
 	container.Ports = f.portsForCompactorContainer()
 
-	for _, env := range f.envsForObjectStorage() {
-		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-			return a.Name == b.Name
-		})
-	}
-
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
 		return a.MountPath == b.MountPath
 	})
@@ -1570,12 +1567,10 @@ func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Cont
 	container.Args = f.argsForConnector()
 	container.Ports = f.portsForConnectorContainer()
 	container.Command = []string{"/risingwave/bin/connector-node/start-service.sh"}
-
-	for _, env := range f.envsForObjectStorage() {
-		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-			return a.Name == b.Name
-		})
-	}
+	container.Env = append(container.Env, corev1.EnvVar{
+		Name:  consts.EnvRisingWaveJavaOpts,
+		Value: "-Xmx4g",
+	})
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
 		return a.MountPath == b.MountPath
@@ -1736,7 +1731,7 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	container.Name = "compute"
 	connectorPorts := f.getConnectorPorts()
 	container.Env = append(container.Env, corev1.EnvVar{
-		Name:  "RW_CONNECTOR_RPC_ENDPOINT",
+		Name:  consts.EnvRisingWaveConnectorRpcEndPoint,
 		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
 	})
 
@@ -1744,12 +1739,6 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	memLimit, _ := container.Resources.Limits.Memory().AsInt64()
 	container.Args = f.argsForCompute(cpuLimit, memLimit)
 	container.Ports = f.portsForComputeContainer()
-
-	for _, env := range f.envsForObjectStorage() {
-		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-			return a.Name == b.Name
-		})
-	}
 
 	for _, volumeMount := range template.VolumeMounts {
 		container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, volumeMount, func(a, b *corev1.VolumeMount) bool {

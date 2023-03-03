@@ -197,9 +197,6 @@ function e2e::pre_run() {
 
   shell::run docker pull "${E2E_RISINGWAVE_IMAGE}" || return $?
   testenv::k8s::load_docker_image "${E2E_RISINGWAVE_IMAGE}"
-
-  shell::run docker pull "${E2E_RISINGWAVE_NIGHTLY_IMAGE}" || return $?
-  testenv::k8s::load_docker_image "${E2E_RISINGWAVE_NIGHTLY_IMAGE}"
 }
 
 function e2e::post_run() {

@@ -3222,23 +3222,15 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorage{
+					Memory: pointer.Bool(true),
+				}
 				r.Spec.Storages.Object = tc.objectStorage
 			})
 
 			factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
 
-			deploy := factory.NewCompactorDeployment("", nil)
-
-			composeAssertions(
-				newObjectAssert(deploy, "hummock-args-match", func(obj *appsv1.Deployment) bool {
-					return lo.Contains(obj.Spec.Template.Spec.Containers[0].Args, tc.hummockArg)
-				}),
-				newObjectAssert(deploy, "env-vars-contains", func(obj *appsv1.Deployment) bool {
-					return listContainsByKey(obj.Spec.Template.Spec.Containers[0].Env, tc.envs, func(t *corev1.EnvVar) string { return t.Name }, deepEqual[corev1.EnvVar])
-				}),
-			).Assert(t)
-
-			sts := factory.NewComputeStatefulSet("", nil)
+			sts := factory.NewMetaStatefulSet("", nil)
 
 			composeAssertions(
 				newObjectAssert(sts, "hummock-args-match", func(obj *appsv1.StatefulSet) bool {
@@ -3332,6 +3324,9 @@ func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Storages.Meta = tc.metaStorage
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
+					Memory: pointer.Bool(true),
+				}
 			})
 
 			factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)

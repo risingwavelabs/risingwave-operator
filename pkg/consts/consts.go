@@ -26,6 +26,21 @@ const (
 	LabelRisingWaveName       = "risingwave/name"
 	LabelRisingWaveGeneration = "risingwave/generation"
 	LabelRisingWaveGroup      = "risingwave/group"
+	LabelRisingWaveMetaRole   = "risingwave/meta-role"
+)
+
+// =================================================
+// Envs.
+// =================================================
+
+// System reserved envs.
+const (
+	EnvRisingWavePodIp                = "POD_IP"
+	EnvRisingWavePodName              = "POD_NAME"
+	EnvRisingWaveRustBacktrace        = "RUST_BACKTRACE"
+	EnvRisingWaveWorkerThreads        = "RW_WORKER_THREADS"
+	EnvRisingWaveConnectorRpcEndPoint = "RW_CONNECTOR_RPC_ENDPOINT"
+	EnvRisingWaveJavaOpts             = "JAVA_OPTS"
 )
 
 // =================================================
@@ -52,6 +67,13 @@ const (
 // =================================================
 // Consts.
 // =================================================
+
+// Label values of LabelRisingWaveMetaRole.
+const (
+	MetaRoleLeader   = "leader"
+	MetaRoleFollower = "follower"
+	MetaRoleUnknown  = "unknown"
+)
 
 // Special label values of LabelRisingWaveGeneration.
 const (

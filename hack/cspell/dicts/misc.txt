@@ -40,3 +40,12 @@ fallocate
 nums
 aliyun
 aliyuncs
+idempotence
+hdfs
+extendee
+Idxs
+oneof
+Oneof
+protoc
+protoimpl
+protoreflect

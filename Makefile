@@ -131,9 +131,16 @@ buildx:
 
 ##@ Build
 
+proto: 
+	cd pkg/controller/proto ; \
+	protoc --go_out=. --go_opt=paths=source_relative \
+     	--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+     	--experimental_allow_proto3_optional \
+ 	   	meta.proto common.proto
+
 build: build-manager
 
-build-manager: generate fmt vet lint ## Build manager binary.
+build-manager: generate fmt vet lint vendor ## Build manager binary.
 	go build -o bin/manager cmd/manager/manager.go
 
 build-plugin: generate fmt vet lint ## Build manager binary.
@@ -150,7 +157,7 @@ build-local-certs:
 		-extensions san -config <(echo '[req]'; echo 'distinguished_name=req'; echo '[san]'; echo 'subjectAltName=DNS:host.docker.internal')
 
 install-local: kustomize manifests
-	$(KUSTOMIZE) build config/local | kubectl apply -f - >/dev/null
+	$(KUSTOMIZE) build config/local | kubectl apply --server-side --force-conflicts -f - >/dev/null
 
 uninstall-local: kustomize manifests
 	$(KUSTOMIZE) build config/local | kubectl delete -f - >/dev/null
@@ -222,7 +229,7 @@ envtest: ## Download envtest-setup locally if necessary.
 GOLANGCI-LINT = $(shell pwd)/bin/golangci-lint
 golangci-lint: ## Download envtest-setup locally if necessary.
 # $(call get-golangci-lint)
-	$(call go-get-tool,$(GOLANGCI-LINT),github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1)
+	$(call go-get-tool,$(GOLANGCI-LINT),github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2)
 
 CTRLKIT-GEN = $(shell pwd)/bin/ctrlkit-gen
 ctrlkit-gen: ## Download ctrlkit locally if necessary.

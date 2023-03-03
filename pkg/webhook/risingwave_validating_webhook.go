@@ -18,8 +18,11 @@ package webhook
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 
 	"github.com/distribution/distribution/reference"
 	"github.com/samber/lo"
@@ -45,6 +48,15 @@ type RisingWaveValidatingWebhook struct {
 
 func isImageValid(image string) bool {
 	return reference.ReferenceRegexp.MatchString(image)
+}
+
+var systemEnv = map[string]bool{
+	consts.EnvRisingWavePodIp:                true,
+	consts.EnvRisingWavePodName:              true,
+	consts.EnvRisingWaveRustBacktrace:        true,
+	consts.EnvRisingWaveWorkerThreads:        true,
+	consts.EnvRisingWaveConnectorRpcEndPoint: true,
+	consts.EnvRisingWaveJavaOpts:             true,
 }
 
 func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, groupTemplate *risingwavev1alpha1.RisingWaveComponentGroupTemplate, isOpenKruiseEnabled bool) field.ErrorList {
@@ -100,6 +112,14 @@ func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, gr
 		if strings.HasPrefix(label, "risingwave/") {
 			fieldErrs = append(fieldErrs,
 				field.Invalid(path.Child("Metadata", "labels"), label, "Labels with the prefix 'risingwave/' are system reserved"))
+		}
+	}
+
+	// Validate env of the RisingWave's Pods
+	for _, v := range groupTemplate.Env {
+		if systemEnv[v.Name] {
+			fieldErrs = append(fieldErrs,
+				field.Invalid(path.Child("Env", "name"), v.Name, fmt.Sprintf("Env with the name %s is system reserved", v.Name)))
 		}
 	}
 
@@ -167,7 +187,8 @@ func (v *RisingWaveValidatingWebhook) validateStorages(path *field.Path, storage
 	isObjectMinIO := storages.Object.MinIO != nil
 	isObjectS3 := storages.Object.S3 != nil
 	isObjectAliyunOSS := storages.Object.AliyunOSS != nil
-	validObjectStorageTypeCount := lo.CountBy([]bool{isObjectMemory, isObjectMinIO, isObjectS3, isObjectAliyunOSS}, func(x bool) bool { return x })
+	isObjectHDFS := storages.Object.HDFS != nil
+	validObjectStorageTypeCount := lo.CountBy([]bool{isObjectMemory, isObjectMinIO, isObjectS3, isObjectAliyunOSS, isObjectHDFS}, func(x bool) bool { return x })
 	if validObjectStorageTypeCount == 0 {
 		fieldErrs = append(fieldErrs, field.Invalid(path.Child("object"), storages.Object, "must configure the object storage"))
 	} else if validObjectStorageTypeCount > 1 {

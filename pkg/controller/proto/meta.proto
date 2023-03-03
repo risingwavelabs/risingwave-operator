@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package meta;
+
+import "common.proto";
+
+option java_package = "com.risingwave.proto";
+option optimize_for = SPEED;
+option go_package = "github.com/risingwavelabs/risingwave-operator/pkg/proto";
+
+
+message MembersRequest {}
+
+message MetaMember {
+  common.HostAddress address = 1;
+  bool is_leader = 2;
+}
+
+message MembersResponse {
+  repeated MetaMember members = 1;
+}
+
+service MetaMemberService {
+  rpc Members(MembersRequest) returns (MembersResponse);
+}

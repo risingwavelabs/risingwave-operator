@@ -47,7 +47,7 @@ function k8s::risingwave_operator::install() {
   manifest_link=$(link_to_risingwave_operator_manifests "${RISINGWAVE_OPERATOR_VERSION}")
 
   echo "Installing the risingwave-operator ${RISINGWAVE_OPERATOR_VERSION}..."
-  kubectl apply -f "${manifest_link}" >/dev/null
+  kubectl apply --server-side -f "${manifest_link}" >/dev/null
 }
 
 k8s::cert_manager::install && k8s::cert_manager::wait && k8s::risingwave_operator::install

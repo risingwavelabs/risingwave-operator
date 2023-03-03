@@ -17,6 +17,8 @@
 package factory
 
 import (
+	"fmt"
+	"reflect"
 	"sort"
 
 	corev1 "k8s.io/api/core/v1"
@@ -54,5 +56,42 @@ func keepPodSpecConsistent(podSpec *corev1.PodSpec) {
 
 	for _, container := range podSpec.Containers {
 		sortSlicesInContainer(&container)
+	}
+}
+
+func setDefaultValueForField(field reflect.StructField, target, base reflect.Value) {
+	// Only consider primitive types and Map, Slice, and Ptr of these types.
+	switch field.Type.Kind() {
+	case reflect.Map, reflect.Slice:
+		if target.IsZero() || target.Len() == 0 {
+			target.Set(base)
+		}
+	case reflect.Ptr:
+		if target.IsZero() {
+			target.Set(base)
+		}
+	default:
+		if target.IsZero() {
+			target.Set(base)
+		}
+	}
+}
+
+func setDefaultValueForFirstLevelFields[T any](target, base *T) {
+	if target == nil || base == nil {
+		return
+	}
+
+	tType := reflect.TypeOf(target).Elem()
+
+	if tType.Kind() != reflect.Struct {
+		panic(fmt.Sprintf("type %s isn't a struct", tType.Name()))
+	}
+
+	targetValue, baseValue := reflect.ValueOf(target).Elem(), reflect.ValueOf(base).Elem()
+
+	// Iterate over the fields and set the default values.
+	for i := 0; i < tType.NumField(); i++ {
+		setDefaultValueForField(tType.Field(i), targetValue.Field(i), baseValue.Field(i))
 	}
 }

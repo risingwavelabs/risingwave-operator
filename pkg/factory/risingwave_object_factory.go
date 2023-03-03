@@ -111,6 +111,10 @@ func (f *RisingWaveObjectFactory) isObjectStorageAliyunOSS() bool {
 	return f.risingwave.Spec.Storages.Object.AliyunOSS != nil
 }
 
+func (f *RisingWaveObjectFactory) isObjectStorageHDFS() bool {
+	return f.risingwave.Spec.Storages.Object.HDFS != nil
+}
+
 func (f *RisingWaveObjectFactory) isObjectStorageMinIO() bool {
 	return f.risingwave.Spec.Storages.Object.MinIO != nil
 }
@@ -137,6 +141,9 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 		aliyunOSS := objectStorage.AliyunOSS
 		// Redirect to s3-compatible.
 		return fmt.Sprintf("hummock+s3-compatible://%s", aliyunOSS.Bucket)
+	case objectStorage.HDFS != nil:
+		hdfs := objectStorage.HDFS
+		return fmt.Sprintf("hummock+hdfs://%s@%s", hdfs.NameNode, hdfs.Root)
 	default:
 		panic("unrecognized storage type")
 	}
@@ -361,7 +368,7 @@ func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 
 // NewConnectorService creates a new Service for the connector.
 func (f *RisingWaveObjectFactory) NewConnectorService() *corev1.Service {
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.getConnectorPorts()
 
 	connectorService := &corev1.Service{
 		ObjectMeta: f.componentObjectMeta(consts.ComponentConnector, true),
@@ -450,13 +457,14 @@ func (f *RisingWaveObjectFactory) argsForMeta() []string {
 		"meta-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", metaPorts.ServicePort),
-		"--host", fmt.Sprintf("$(POD_NAME).%s", f.componentName(consts.ComponentMeta, "")),
+		"--advertise-addr", fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		"--state-store", f.hummockConnectionStr(),
 		"--dashboard-host", fmt.Sprintf("0.0.0.0:%d", metaPorts.DashboardPort),
 		"--prometheus-host", fmt.Sprintf("0.0.0.0:%d", metaPorts.MetricsPort),
 	}
 
 	switch {
-	case metaStorage.Memory != nil && *metaStorage.Memory:
+	case pointer.BoolDeref(metaStorage.Memory, false):
 		args = append(args, "--backend", "mem")
 	case metaStorage.Etcd != nil:
 		args = append(args, "--backend", "etcd", "--etcd-endpoints", metaStorage.Etcd.Endpoint)
@@ -477,8 +485,8 @@ func (f *RisingWaveObjectFactory) argsForFrontend() []string {
 	return []string{
 		"frontend-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
-		"--host", fmt.Sprintf("0.0.0.0:%d", frontendPorts.ServicePort),
-		"--client-address", fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
+		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", frontendPorts.ServicePort),
+		"--advertise-addr", fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
 		"--meta-addr", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 		"--metrics-level=1",
 		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", frontendPorts.MetricsPort),
@@ -492,14 +500,11 @@ func (f *RisingWaveObjectFactory) argsForCompute(cpuLimit int64, memLimit int64)
 	args := []string{
 		"compute-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
-		"--host", fmt.Sprintf("0.0.0.0:%d", computePorts.ServicePort),
-		"--client-address", fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentCompute, ""), computePorts.ServicePort),
+		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", computePorts.ServicePort),
+		"--advertise-addr", fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentCompute, ""), computePorts.ServicePort),
 		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", computePorts.MetricsPort),
+		"--meta-address", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 		"--metrics-level=1",
-		"--state-store",
-		f.hummockConnectionStr(),
-		"--meta-address",
-		fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 	}
 
 	if cpuLimit != 0 {
@@ -527,17 +532,16 @@ func (f *RisingWaveObjectFactory) argsForCompactor() []string {
 	return []string{
 		"compactor-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
-		"--host", fmt.Sprintf("0.0.0.0:%d", compactorPorts.ServicePort),
-		"--client-address", fmt.Sprintf("$(POD_IP):%d", compactorPorts.ServicePort),
+		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", compactorPorts.ServicePort),
+		"--advertise-addr", fmt.Sprintf("$(POD_IP):%d", compactorPorts.ServicePort),
 		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", compactorPorts.MetricsPort),
-		"--metrics-level=1",
-		"--state-store", f.hummockConnectionStr(),
 		"--meta-address", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		"--metrics-level=1",
 	}
 }
 
 func (f *RisingWaveObjectFactory) argsForConnector() []string {
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.getConnectorPorts()
 
 	return []string{
 		"-p", fmt.Sprintf("%d", connectorPorts.ServicePort),
@@ -755,6 +759,10 @@ func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 	return envsForS3Compatible(objectStorage.AliyunOSS.Region, endpoint, objectStorage.AliyunOSS.Bucket, objectStorage.AliyunOSS.Secret)
 }
 
+func (f *RisingWaveObjectFactory) envsForHDFS() []corev1.EnvVar {
+	return []corev1.EnvVar{}
+}
+
 func (f *RisingWaveObjectFactory) envsForObjectStorage() []corev1.EnvVar {
 	switch {
 	case f.isObjectStorageMinIO():
@@ -763,6 +771,8 @@ func (f *RisingWaveObjectFactory) envsForObjectStorage() []corev1.EnvVar {
 		return f.envsForS3()
 	case f.isObjectStorageAliyunOSS():
 		return f.envsForAliyunOSS()
+	case f.isObjectStorageHDFS():
+		return f.envsForHDFS()
 	default:
 		return nil
 	}
@@ -815,18 +825,6 @@ func findTheFirstMatchPtr[T any](list []T, predicate func(*T) bool) *T {
 	return nil
 }
 
-func mergeValue[T comparable](a, b T) T {
-	var zero T
-	if b == zero {
-		return a
-	}
-	return b
-}
-
-func mergeValueList[T any](a, b []T) []T {
-	return append(a, b...)
-}
-
 func mergeMap[K comparable, V any](a, b map[K]V) map[K]V {
 	if a == nil && b == nil {
 		return nil
@@ -843,29 +841,13 @@ func mergeMap[K comparable, V any](a, b map[K]V) map[K]V {
 	return r
 }
 
-func isResourcesEmpty(resources corev1.ResourceRequirements) bool {
-	return len(resources.Limits) == 0 && len(resources.Requests) == 0
-}
-
 func mergeComponentGroupTemplates(base, overlay *risingwavev1alpha1.RisingWaveComponentGroupTemplate) *risingwavev1alpha1.RisingWaveComponentGroupTemplate {
 	if overlay == nil {
-		return base.DeepCopy()
-	}
-	if base == nil {
-		return overlay.DeepCopy()
+		return base
 	}
 
-	r := base.DeepCopy()
-	r.Image = mergeValue(r.Image, overlay.Image)
-	r.ImagePullPolicy = mergeValue(r.ImagePullPolicy, overlay.ImagePullPolicy)
-	r.ImagePullSecrets = mergeValueList(r.ImagePullSecrets, overlay.ImagePullSecrets)
-	r.UpgradeStrategy = mergeValue(r.UpgradeStrategy, overlay.UpgradeStrategy)
-	if !isResourcesEmpty(overlay.Resources) {
-		r.Resources = overlay.Resources
-	}
-	r.NodeSelector = mergeMap(r.NodeSelector, overlay.NodeSelector)
-	r.PodTemplate = mergeValue(r.PodTemplate, overlay.PodTemplate)
-
+	r := overlay.DeepCopy()
+	setDefaultValueForFirstLevelFields(r, base.DeepCopy())
 	return r
 }
 
@@ -1007,7 +989,8 @@ func buildComponentGroup(globalReplicas int32, globalTemplate *risingwavev1alpha
 	} else {
 		componentGroup = findTheFirstMatchPtr(groups, func(g *risingwavev1alpha1.RisingWaveComponentGroup) bool {
 			return g.Name == group
-		})
+		}).DeepCopy()
+
 		if componentGroup == nil {
 			return nil
 		}
@@ -1030,10 +1013,11 @@ func buildComputeGroup(globalReplicas int32, globalTemplate *risingwavev1alpha1.
 	} else {
 		componentGroup = findTheFirstMatchPtr(groups, func(g *risingwavev1alpha1.RisingWaveComputeGroup) bool {
 			return g.Name == group
-		})
+		}).DeepCopy()
 		if componentGroup == nil {
 			return nil
 		}
+
 		if componentGroup.RisingWaveComputeGroupTemplate != nil {
 			componentGroup.RisingWaveComputeGroupTemplate.RisingWaveComponentGroupTemplate = *mergeComponentGroupTemplates(globalTemplate,
 				&componentGroup.RisingWaveComputeGroupTemplate.RisingWaveComponentGroupTemplate)
@@ -1072,32 +1056,46 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 	container.Image = template.Image
 	container.ImagePullPolicy = template.ImagePullPolicy
 	container.Command = []string{risingwaveExecutablePath}
+
+	// Copy the template's envFrom.
+	container.EnvFrom = make([]corev1.EnvFromSource, 0, len(template.EnvFrom))
+	for _, envFrom := range template.EnvFrom {
+		container.EnvFrom = append(container.EnvFrom, *envFrom.DeepCopy())
+	}
+
+	// Copy the template's env.
+	container.Env = make([]corev1.EnvVar, 0, len(template.Env))
+	for _, env := range template.Env {
+		container.Env = append(container.Env, *env.DeepCopy())
+	}
+
+	// Setting the system environment variables.
 	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-		Name: "POD_IP",
+		Name: consts.EnvRisingWavePodIp,
 		ValueFrom: &corev1.EnvVarSource{
 			FieldRef: &corev1.ObjectFieldSelector{
 				FieldPath: "status.podIP",
 			},
 		},
-	}, func(env *corev1.EnvVar) bool { return env.Name == "POD_IP" })
+	}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWavePodIp })
 	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-		Name: "POD_NAME",
+		Name: consts.EnvRisingWavePodName,
 		ValueFrom: &corev1.EnvVarSource{
 			FieldRef: &corev1.ObjectFieldSelector{
 				FieldPath: "metadata.name",
 			},
 		},
-	}, func(env *corev1.EnvVar) bool { return env.Name == "POD_NAME" })
+	}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWavePodName })
 	// Set RUST_BACKTRACE=1 by default.
 	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-		Name:  "RUST_BACKTRACE",
+		Name:  consts.EnvRisingWaveRustBacktrace,
 		Value: "full",
-	}, func(env *corev1.EnvVar) bool { return env.Name == "RUST_BACKTRACE" })
+	}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWaveRustBacktrace })
 	if cpuLimit, ok := template.Resources.Limits[corev1.ResourceCPU]; ok {
 		container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-			Name:  "RW_WORKER_THREADS",
+			Name:  consts.EnvRisingWaveWorkerThreads,
 			Value: strconv.FormatInt(cpuLimit.Value(), 10),
-		}, func(env *corev1.EnvVar) bool { return env.Name == "RW_WORKER_THREADS" })
+		}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWaveWorkerThreads })
 	}
 	container.Resources = template.Resources
 	container.StartupProbe = nil
@@ -1130,11 +1128,17 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 	container.Name = "meta"
 	container.Args = f.argsForMeta()
 	container.Ports = f.portsForMetaContainer()
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.getConnectorPorts()
 	container.Env = append(container.Env, corev1.EnvVar{
-		Name:  "RW_CONNECTOR_RPC_ENDPOINT",
+		Name:  consts.EnvRisingWaveConnectorRpcEndPoint,
 		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
 	})
+
+	for _, env := range f.envsForObjectStorage() {
+		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
+	}
 
 	if f.isMetaStorageEtcd() {
 		for _, env := range f.envsForEtcd() {
@@ -1440,12 +1444,6 @@ func (f *RisingWaveObjectFactory) setupCompactorContainer(container *corev1.Cont
 	container.Args = f.argsForCompactor()
 	container.Ports = f.portsForCompactorContainer()
 
-	for _, env := range f.envsForObjectStorage() {
-		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-			return a.Name == b.Name
-		})
-	}
-
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
 		return a.MountPath == b.MountPath
 	})
@@ -1533,7 +1531,7 @@ func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string, podTemplate
 }
 
 func (f *RisingWaveObjectFactory) portsForConnectorContainer() []corev1.ContainerPort {
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.getConnectorPorts()
 
 	return []corev1.ContainerPort{
 		{
@@ -1556,12 +1554,10 @@ func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Cont
 	container.Args = f.argsForConnector()
 	container.Ports = f.portsForConnectorContainer()
 	container.Command = []string{"/risingwave/bin/connector-node/start-service.sh"}
-
-	for _, env := range f.envsForObjectStorage() {
-		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-			return a.Name == b.Name
-		})
-	}
+	container.Env = append(container.Env, corev1.EnvVar{
+		Name:  consts.EnvRisingWaveJavaOpts,
+		Value: "-Xmx4g",
+	})
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
 		return a.MountPath == b.MountPath
@@ -1720,9 +1716,9 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	basicSetupContainer(container, &template.RisingWaveComponentGroupTemplate)
 
 	container.Name = "compute"
-	connectorPorts := &f.risingwave.Spec.Components.Connector.Ports
+	connectorPorts := f.getConnectorPorts()
 	container.Env = append(container.Env, corev1.EnvVar{
-		Name:  "RW_CONNECTOR_RPC_ENDPOINT",
+		Name:  consts.EnvRisingWaveConnectorRpcEndPoint,
 		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
 	})
 
@@ -1730,12 +1726,6 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	memLimit, _ := container.Resources.Limits.Memory().AsInt64()
 	container.Args = f.argsForCompute(cpuLimit, memLimit)
 	container.Ports = f.portsForComputeContainer()
-
-	for _, env := range f.envsForObjectStorage() {
-		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-			return a.Name == b.Name
-		})
-	}
 
 	for _, volumeMount := range template.VolumeMounts {
 		container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, volumeMount, func(a, b *corev1.VolumeMount) bool {
@@ -1746,6 +1736,28 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
 		return a.MountPath == b.MountPath
 	})
+}
+
+func buildPersistentVolumeClaims(claims []risingwavev1alpha1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
+	if claims == nil {
+		return nil
+	}
+
+	result := make([]corev1.PersistentVolumeClaim, 0, len(claims))
+	for _, claim := range claims {
+		claim := *claim.DeepCopy()
+		result = append(result, corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:        claim.Name,
+				Labels:      claim.Labels,
+				Annotations: claim.Annotations,
+				Finalizers:  claim.Finalizers,
+			},
+			Spec: claim.Spec,
+		})
+	}
+
+	return result
 }
 
 // NewComputeStatefulSet creates a new StatefulSet for the compute component and specified group.
@@ -1784,7 +1796,7 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet(group string, podTemplat
 				MatchLabels: labelsOrSelectors,
 			},
 			Template:             podTemplate,
-			VolumeClaimTemplates: pvcTemplates,
+			VolumeClaimTemplates: buildPersistentVolumeClaims(pvcTemplates),
 			PodManagementPolicy:  appsv1.ParallelPodManagement,
 			PersistentVolumeClaimRetentionPolicy: &appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy{
 				WhenDeleted: appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
@@ -1833,7 +1845,7 @@ func (f *RisingWaveObjectFactory) NewComputeAdvancedStatefulSet(group string, po
 				MatchLabels: labelsOrSelectors,
 			},
 			Template:             podTemplate,
-			VolumeClaimTemplates: pvcTemplates,
+			VolumeClaimTemplates: buildPersistentVolumeClaims(pvcTemplates),
 			PodManagementPolicy:  appsv1.ParallelPodManagement,
 			PersistentVolumeClaimRetentionPolicy: &kruiseappsv1beta1.StatefulSetPersistentVolumeClaimRetentionPolicy{
 				WhenDeleted: kruiseappsv1beta1.DeletePersistentVolumeClaimRetentionPolicyType,
@@ -1877,6 +1889,17 @@ func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonit
 	}
 
 	return mustSetControllerReference(f.risingwave, serviceMonitor, f.scheme)
+}
+
+func (f *RisingWaveObjectFactory) getConnectorPorts() *risingwavev1alpha1.RisingWaveComponentCommonPorts {
+	connectorPorts := f.risingwave.Spec.Components.Connector.Ports.DeepCopy()
+	if connectorPorts.ServicePort == 0 {
+		connectorPorts.ServicePort = consts.DefaultConnectorServicePort
+	}
+	if connectorPorts.MetricsPort == 0 {
+		connectorPorts.MetricsPort = consts.DefaultConnectorMetricsPort
+	}
+	return connectorPorts
 }
 
 // NewRisingWaveObjectFactory creates a new RisingWaveObjectFactory.

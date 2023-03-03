@@ -16,6 +16,7 @@ package factory
 
 import (
 	"strconv"
+	"testing"
 
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/samber/lo"
@@ -476,4 +477,24 @@ func slicesContains(a, b []string) bool {
 		}
 	}
 	return false
+}
+
+type composedAssertion[T kubeObjects, testcase testcaseType] struct {
+	t          *testing.T
+	predicates []predicate[T, testcase]
+}
+
+func (a *composedAssertion[T, K]) assertTest(Obj T, testcase K) {
+	for _, pred := range a.predicates {
+		if !pred.Fn(Obj, testcase) {
+			a.t.Errorf("Assertion %s failed", pred.Name)
+		}
+	}
+}
+
+func composeAssertions[T kubeObjects, K testcaseType](predicates []predicate[T, K], t *testing.T) *composedAssertion[T, K] {
+	return &composedAssertion[T, K]{
+		predicates: predicates,
+		t:          t,
+	}
 }

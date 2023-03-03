@@ -34,7 +34,7 @@ the `cert-manager` [can be found here](https://cert-manager.io/docs/installation
 Afterward, you can install the `risingwave-operator` with the following command:
 
 ```shell
-kubectl apply -f https://github.com/risingwavelabs/risingwave-operator/releases/latest/download/risingwave-operator.yaml
+kubectl apply --server-side -f https://github.com/risingwavelabs/risingwave-operator/releases/latest/download/risingwave-operator.yaml
 ```
 
 To check if the installation is successful, you can run the following commands to check if the Pods are all running.

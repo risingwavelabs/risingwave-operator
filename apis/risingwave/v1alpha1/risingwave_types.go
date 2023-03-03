@@ -156,6 +156,26 @@ type RisingWaveComponentGroupTemplate struct {
 	// metadata of the RisingWave's Pods.
 	// +optional
 	Metadata RisingWavePodTemplatePartialObjectMeta `json:"metadata,omitempty"`
+
+	// List of environment variables to set in the container.
+	// Cannot be updated.
+	// +optional
+	// +patchMergeKey=name
+	// +patchStrategy=merge
+	Env []corev1.EnvVar `json:"env,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,7,rep,name=env"`
+
+	// List of sources to populate environment variables in the container.
+	// The keys defined within a source must be a C_IDENTIFIER. All invalid keys
+	// will be reported as an event when the container is starting. When a key exists in multiple
+	// sources, the value associated with the last source will take precedence.
+	// Values defined by an Env with a duplicate key will take precedence.
+	// Cannot be updated.
+	// +optional
+	EnvFrom []corev1.EnvFromSource `json:"envFrom,omitempty"`
+
+	// If specified, the pod's scheduling constraints
+	// +optional
+	Affinity *corev1.Affinity `json:"affinity,omitempty" protobuf:"bytes,18,opt,name=affinity"`
 }
 
 // RisingWaveComponentGroup is the common deployment group of each component. Currently, we use
@@ -331,6 +351,7 @@ type RisingWaveComponentConnector struct {
 
 	// Ports to be listened by compactor Pods.
 	// +optional
+	// +kubebuilder:default={service: 50051, metrics: 8080}
 	Ports RisingWaveComponentCommonPorts `json:"ports,omitempty"`
 
 	// Groups of Pods of compactor component.
@@ -457,6 +478,17 @@ type RisingWaveObjectStorageAliyunOSS struct {
 	InternalEndpoint bool `json:"internalEndpoint,omitempty"`
 }
 
+// RisingWaveObjectStorageHDFS is the details of HDFS storage (S3 compatible) for compute and compactor components.
+type RisingWaveObjectStorageHDFS struct {
+	// Name node of the HDFS
+	// +kubebuilder:validation:Required
+	NameNode string `json:"nameNode"`
+
+	// Root of the HDFS
+	// +kubebuilder:validation:Required
+	Root string `json:"root"`
+}
+
 // RisingWaveObjectStorage is the object storage for compute and compactor components.
 type RisingWaveObjectStorage struct {
 	// Memory indicates to store the data in memory. It's only for test usage and strongly discouraged to
@@ -475,12 +507,68 @@ type RisingWaveObjectStorage struct {
 	// AliyunOSS storage spec.
 	// +optional
 	AliyunOSS *RisingWaveObjectStorageAliyunOSS `json:"aliyunOSS,omitempty"`
+
+	// HDFS storage spec.
+	// +optional
+	HDFS *RisingWaveObjectStorageHDFS `json:"hdfs,omitempty"`
+}
+
+// PersistentVolumeClaimPartialObjectMeta is the metadata for PVC templates.
+type PersistentVolumeClaimPartialObjectMeta struct {
+	// Name must be unique within a namespace. Is required when creating resources, although
+	// some resources may allow a client to request the generation of an appropriate name
+	// automatically. Name is primarily intended for creation idempotence and configuration
+	// definition.
+	// Cannot be updated.
+	// More info: http://kubernetes.io/docs/user-guide/identifiers#names
+	// +optional
+	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"`
+
+	// Map of string keys and values that can be used to organize and categorize
+	// (scope and select) objects. May match selectors of replication controllers
+	// and services.
+	// More info: http://kubernetes.io/docs/user-guide/labels
+	// +optional
+	Labels map[string]string `json:"labels,omitempty" protobuf:"bytes,11,rep,name=labels"`
+
+	// Annotations is an unstructured key value map stored with a resource that may be
+	// set by external tools to store and retrieve arbitrary metadata. They are not
+	// queryable and should be preserved when modifying objects.
+	// More info: http://kubernetes.io/docs/user-guide/annotations
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty" protobuf:"bytes,12,rep,name=annotations"`
+
+	// Must be empty before the object is deleted from the registry. Each entry
+	// is an identifier for the responsible component that will remove the entry
+	// from the list. If the deletionTimestamp of the object is non-nil, entries
+	// in this list can only be removed.
+	// Finalizers may be processed and removed in any order.  Order is NOT enforced
+	// because it introduces significant risk of stuck finalizers.
+	// finalizers is a shared field, any actor with permission can reorder it.
+	// If the finalizer list is processed in order, then this can lead to a situation
+	// in which the component responsible for the first finalizer in the list is
+	// waiting for a signal (field value, external system, or other) produced by a
+	// component responsible for a finalizer later in the list, resulting in a deadlock.
+	// Without enforced ordering finalizers are free to order amongst themselves and
+	// are not vulnerable to ordering changes in the list.
+	// +optional
+	// +patchStrategy=merge
+	Finalizers []string `json:"finalizers,omitempty" patchStrategy:"merge" protobuf:"bytes,14,rep,name=finalizers"`
+}
+
+// PersistentVolumeClaim used by RisingWave.
+type PersistentVolumeClaim struct {
+	PersistentVolumeClaimPartialObjectMeta `json:"metadata,omitempty"`
+
+	// spec defines the desired characteristics of a volume requested by a pod author.
+	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
+	// +optional
+	Spec corev1.PersistentVolumeClaimSpec `json:"spec,omitempty"`
 }
 
 // RisingWaveStoragesSpec is the storages spec.
 type RisingWaveStoragesSpec struct {
 	// Storage spec for meta.
-
 	Meta RisingWaveMetaStorage `json:"meta,omitempty"`
 
 	// Storage spec for object storage.
@@ -489,7 +577,7 @@ type RisingWaveStoragesSpec struct {
 	// The persistent volume claim templates for the compute component. PVCs declared here
 	// can be referenced in the groups of compute component.
 	// +optional
-	PVCTemplates []corev1.PersistentVolumeClaim `json:"pvcTemplates,omitempty"`
+	PVCTemplates []PersistentVolumeClaim `json:"pvcTemplates,omitempty"`
 }
 
 // RisingWaveConfigurationSpec is the configuration spec.
@@ -721,6 +809,7 @@ const (
 	ObjectStorageTypeMinIO     ObjectStorageType = "MinIO"
 	ObjectStorageTypeS3        ObjectStorageType = "S3"
 	ObjectStorageTypeAliyunOSS ObjectStorageType = "AliyunOSS"
+	ObjectStorageTypeHDFS      ObjectStorageType = "HDFS"
 	ObjectStorageTypeUnknown   ObjectStorageType = "Unknown"
 )
 

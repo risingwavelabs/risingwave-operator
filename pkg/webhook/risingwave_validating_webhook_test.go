@@ -26,7 +26,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
@@ -348,6 +347,17 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
+		"hdfs-object-storage-pass": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
+					HDFS: &risingwavev1alpha1.RisingWaveObjectStorageHDFS{
+						NameNode: "test",
+						Root:     "test",
+					},
+				}
+			},
+			pass: true,
+		},
 		"empty-object-storage-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{}
@@ -381,6 +391,15 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: false,
 		},
+		"multiple-object-storages-fail-4": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
+					MinIO: &risingwavev1alpha1.RisingWaveObjectStorageMinIO{},
+					HDFS:  &risingwavev1alpha1.RisingWaveObjectStorageHDFS{},
+				}
+			},
+			pass: false,
+		},
 		"empty-configuration-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Configuration.ConfigMap = &corev1.ConfigMapKeySelector{}
@@ -407,9 +426,9 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"pvc-mounts-match-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.PVCTemplates = []corev1.PersistentVolumeClaim{
+				r.Spec.Storages.PVCTemplates = []risingwavev1alpha1.PersistentVolumeClaim{
 					{
-						ObjectMeta: metav1.ObjectMeta{
+						PersistentVolumeClaimPartialObjectMeta: risingwavev1alpha1.PersistentVolumeClaimPartialObjectMeta{
 							Name: "pvc1",
 						},
 					},
@@ -432,9 +451,9 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"pvc-not-mounted-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.PVCTemplates = []corev1.PersistentVolumeClaim{
+				r.Spec.Storages.PVCTemplates = []risingwavev1alpha1.PersistentVolumeClaim{
 					{
-						ObjectMeta: metav1.ObjectMeta{
+						PersistentVolumeClaimPartialObjectMeta: risingwavev1alpha1.PersistentVolumeClaimPartialObjectMeta{
 							Name: "pvc1",
 						},
 					},
@@ -450,9 +469,9 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"pvc-mounts-not-match-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.PVCTemplates = []corev1.PersistentVolumeClaim{
+				r.Spec.Storages.PVCTemplates = []risingwavev1alpha1.PersistentVolumeClaim{
 					{
-						ObjectMeta: metav1.ObjectMeta{
+						PersistentVolumeClaimPartialObjectMeta: risingwavev1alpha1.PersistentVolumeClaimPartialObjectMeta{
 							Name: "pvc1",
 						},
 					},

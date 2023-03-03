@@ -15,27 +15,21 @@
 ${__E2E_SOURCE_TESTS_RISINGWAVE_META_SH__:=false} && return 0 || __E2E_SOURCE_TESTS_RISINGWAVE_META_SH__=true
 
 function risingwave::utils::kill_the_meta_leader_pod() {
-  local meta_names
-  meta_names="$(k8s::kubectl::get pod -l risingwave/component=meta -o=jsonpath='{.items..metadata.name}')"
-  if [ -z "$meta_names" ]; then
-    logging::error "failed to retrieve meta nodes"
+  local meta_leaders
+  meta_leaders="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role -o=jsonpath='{.items..metadata.name}')"
+  
+  if [ -z "$meta_leaders" ]; then
+    logging::error "No meta leader node found"
     return 1
   fi
 
-  local leader=""
-  for p in $meta_names; do
-    local is_leader
-    is_leader=$(k8s::kubectl logs "$p" | grep "Defining leader services")
-    if [ "$is_leader" != "" ]; then
-      if [ "$leader" != "" ]; then
-        logging::error "Split brain detected! $p and $leader are leaders!"
-        return 1
-      fi
-      leader="$p"
-    fi
-  done
 
-  shell::run k8s::kubectl delete pod "$leader"
+  if [ "$(echo "$meta_leaders" | wc -l)" -gt 1 ]; then
+    logging::error "More than one meta leader node found"
+    return 1
+  fi
+
+  shell::run k8s::kubectl delete pod "$meta_leaders"
 }
 
 #######################################
@@ -44,28 +38,16 @@ function risingwave::utils::kill_the_meta_leader_pod() {
 #   1 if no meta pod present, split-brain or no leader
 #######################################
 function risingwave::utils::is_meta_setup_valid() {
-  local meta_names
-  meta_names="$(k8s::kubectl::get pod -l risingwave/component=meta -o=jsonpath='{.items..metadata.name}')"
-  if [ -z "$meta_names" ]; then
-    logging::error "Failed to retrieve meta nodes!"
+  local meta_leaders 
+  meta_leaders="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role -o=jsonpath='{.items..metadata.name}')"
+  
+  if [ -z "$meta_leaders" ]; then
+    logging::error "No meta leader node found"
     return 1
   fi
 
-  local leader=""
-  for p in $meta_names; do
-    local is_leader
-    is_leader="$(k8s::kubectl logs "$p" 2>/dev/null | grep "Defining leader services" || return 0)"
-    if [ "$is_leader" != "" ]; then
-      if [ "$leader" != "" ]; then
-        logging::error "Split brain detected! $p and $leader are leaders!"
-        return 1
-      fi
-      leader="$p"
-    fi
-  done
-
-  if [ -z "$leader" ]; then
-    logging::error "No meta leader found!"
+  if [ "$(echo "$meta_leaders" | wc -l)" -gt 1 ]; then
+    logging::error "More than one meta leader node found"
     return 1
   fi
   return 0

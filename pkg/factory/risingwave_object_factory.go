@@ -1133,7 +1133,6 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 		Name:  consts.EnvRisingWaveConnectorRpcEndPoint,
 		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
 	})
-
 	for _, env := range f.envsForObjectStorage() {
 		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
 			return a.Name == b.Name
@@ -1444,6 +1443,12 @@ func (f *RisingWaveObjectFactory) setupCompactorContainer(container *corev1.Cont
 	container.Args = f.argsForCompactor()
 	container.Ports = f.portsForCompactorContainer()
 
+	for _, env := range f.envsForObjectStorage() {
+		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
+	}
+
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
 		return a.MountPath == b.MountPath
 	})
@@ -1721,6 +1726,11 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 		Name:  consts.EnvRisingWaveConnectorRpcEndPoint,
 		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
 	})
+	for _, env := range f.envsForObjectStorage() {
+		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
+	}
 
 	cpuLimit := int64(math.Ceil(container.Resources.Limits.Cpu().AsApproximateFloat64()))
 	memLimit, _ := container.Resources.Limits.Memory().AsInt64()

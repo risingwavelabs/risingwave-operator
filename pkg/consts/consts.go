@@ -26,6 +26,7 @@ const (
 	LabelRisingWaveName       = "risingwave/name"
 	LabelRisingWaveGeneration = "risingwave/generation"
 	LabelRisingWaveGroup      = "risingwave/group"
+	LabelRisingWaveMetaRole   = "risingwave/meta-role"
 )
 
 // =================================================
@@ -66,6 +67,13 @@ const (
 // =================================================
 // Consts.
 // =================================================
+
+// Label values of LabelRisingWaveMetaRole.
+const (
+	MetaRoleLeader   = "leader"
+	MetaRoleFollower = "follower"
+	MetaRoleUnknown  = "unknown"
+)
 
 // Special label values of LabelRisingWaveGeneration.
 const (

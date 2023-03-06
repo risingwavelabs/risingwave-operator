@@ -14,6 +14,43 @@
 
 ${__E2E_SOURCE_TESTS_RISINGWAVE_META_SH__:=false} && return 0 || __E2E_SOURCE_TESTS_RISINGWAVE_META_SH__=true
 
+function risingwave::utils::delete_leader_lease() {
+  local meta_leaders_pod_IPs
+  meta_leaders_pod_IPs="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..status.podIP}')"
+
+  if [ -z "$meta_leaders_pod_IPs" ]; then
+    logging::error "No meta leader node found"
+    return 1
+  fi
+
+  if [ "$(echo "$meta_leaders_pod_IPs" | wc -l)" -gt 1 ]; then
+    logging::error "More than one meta leader node found"
+    return 1
+  fi
+
+  # Iterate over the etcd election kv pairs. Delete leader lease if found, else abort the test
+  local del_lease=false
+  kubectl -n rwc-2-mytenant run del-leader-lease --image='anldisr/etcdctl' --restart='Never' --command=true -- etcdctl --endpoints=risingwave-etcd-mytenant:2379 get _ --prefix=true --write-out="json"
+  while read -r i ; do
+    if [ "$(echo "$i" | jq -r .value | base64 --decode)" = "${meta_leaders_pod_IPs}:5690" ] ; then
+      del_lease=true
+      echo "found leader lease. Deleting it"
+      # delete leader lease
+      kubectl delete pod del-leader-lease --force
+      kubectl -n rwc-2-mytenant run del-leader-lease --image='anldisr/etcdctl' --restart='Never' --command=true -- etcdctl --endpoints=risingwave-etcd-mytenant:2379 del "$(echo "$i" | jq -r .key | base64 --decode)"
+      break
+    fi
+  done < "$(kubectl logs pods/del-leader-lease | jq -c '.kvs[]')"
+
+  kubectl delete pod del-leader-lease --force
+
+  if [ "$del_lease" = false ] ; then
+    echo "Could not delete leader lease"
+    return 1
+  fi
+  return 0
+}
+
 function risingwave::utils::kill_the_meta_leader_pod() {
   local meta_leaders
   meta_leaders="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role -o=jsonpath='{.items..metadata.name}')"
@@ -22,7 +59,6 @@ function risingwave::utils::kill_the_meta_leader_pod() {
     logging::error "No meta leader node found"
     return 1
   fi
-
 
   if [ "$(echo "$meta_leaders" | wc -l)" -gt 1 ]; then
     logging::error "More than one meta leader node found"
@@ -56,7 +92,7 @@ function risingwave::utils::is_meta_setup_valid() {
 function risingwave::utils::wait_for_meta_valid_setup() {
   local retry_count=0
   local retry_limit=${KUBECTL_JOB_WAIT_RETRY_LIMIT:=60}
-  local retry_interval=${KUBECTL_JOB_WAIT_RETRY_INTERVAL:=5}
+  local retry_interval=${KUBECTL_JOB_WAIT_RETRY_INTERVAL:=1}
   while ((retry_count < retry_limit)); do
     ((retry_count != 0)) && sleep "${retry_interval}"
 

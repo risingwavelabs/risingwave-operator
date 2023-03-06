@@ -66,7 +66,8 @@ function test::run::risingwave::multi_meta() {
   test::risingwave::storage_support::_run_with_manifest multi-meta/multi-meta.yaml
 }
 
-function test::run::risingwave::multi_meta_failover() {
+function test::util::setup_multi_meta_failover() {
+  # Test if old leader exited after loosing leadership and asserts valid leader setup
   logging::info "Starting RisingWave..."
   if ! test::risingwave::start multi-meta/multi-meta.yaml; then
     return 1
@@ -76,6 +77,51 @@ function test::run::risingwave::multi_meta_failover() {
   # Check and see if the meta setup is valid, i.e., there must be only one meta leader.
   if ! risingwave::utils::is_meta_setup_valid; then
     logging::error "Invalid meta setup. Aborting test!"
+    return 1
+  fi
+  return 0
+}
+
+function test::run::risingwave::multi_meta_failover_fencing() {
+  if ! test::util::setup_multi_meta_failover; then
+    return 1
+  fi
+
+  local meta_leaders_restarts
+  meta_leaders_restarts="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..status.containerStatuses..restartCount}')"
+  local meta_leader_names
+  meta_leader_names="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..metadata.name}')"
+
+
+  if ! risingwave::utils::delete_leader_lease; then 
+    echo "Failed to delete leader lease"
+    return 1
+  fi 
+
+  if ! risingwave::utils::wait_for_meta_valid_setup; then 
+    echo "Meta not in valid setup after deleting leader lease"
+    return 1
+  fi 
+
+  local new_meta_leaders_restarts
+  new_meta_leaders_restarts="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..status.containerStatuses..restartCount}')"
+  if [ "$new_meta_leaders_restarts" -le "$meta_leaders_restarts" ]; then
+    echo "Leader did not restart"
+    return 1
+  fi
+
+  local new_meta_leader_names
+  new_meta_leader_names="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..metadata.name}')"
+  if [ "$new_meta_leader_names" == "$meta_leader_names" ]; then
+    echo "Leader did not change"
+    return 1
+  fi
+  return 0
+}
+
+# Test if there is a single leader setup after the current leader failed
+function test::run::risingwave::multi_meta_failover() {
+  if ! test::util::setup_multi_meta_failover; then
     return 1
   fi
 

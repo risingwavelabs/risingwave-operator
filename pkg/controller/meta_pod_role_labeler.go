@@ -149,7 +149,11 @@ func (mpl *MetaPodRoleLabeler) syncRoleLabelForSinglePod(ctx context.Context, po
 	logger := log.FromContext(ctx).WithValues("pod", pod.Name)
 
 	// Send a gRPC request and get the current role.
-	role, err := mpl.getMetaRole(ctx, pod.Status.PodIP, uint(svcPort), endpoint)
+	role, err := func() (string, error) {
+		ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		defer cancel()
+		return mpl.getMetaRole(ctx, pod.Status.PodIP, uint(svcPort), endpoint)
+	}()
 	if err != nil {
 		logger.Info("Failed to get the current role from the meta Pod.", "error", err)
 		// Use an unknown role.

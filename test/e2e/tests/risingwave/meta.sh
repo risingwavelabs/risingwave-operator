@@ -38,7 +38,7 @@ function risingwave::utils::delete_leader_lease() {
       k8s::kubectl exec -it etcd-0 -- env ETCDCTL_API=3 etcdctl del "$(echo "$i" | jq -r .key | base64 --decode)" --user=root:iGGUrEKBiX
       break
     fi
-  done < "$(k8s::kubectl exec -it etcd-0 -- env ETCDCTL_API=3 etcdctl get _ --prefix=true --write-out="json" --user=root:iGGUrEKBiX  | tail -1 | jq -c '.kvs[]')"
+  done < "$(k8s::kubectl exec -it etcd-0 -- env ETCDCTL_API=3 etcdctl get __meta_election_ --prefix=true --write-out="json" --user=root:iGGUrEKBiX  | tail -1 | jq -c '.kvs[]')"
 
   if [ "$del_lease" = false ] ; then
     echo "Could not delete leader lease"

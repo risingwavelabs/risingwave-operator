@@ -36,14 +36,14 @@ function risingwave::utils::delete_leader_lease() {
       del_lease=true
       echo "found leader lease. Deleting it"
       # delete leader lease
-      kubectl delete pod del-leader-lease --force
+      kubectl delete pod del-leader-lease
       kubectl -n rwc-2-mytenant run del-leader-lease --image='anldisr/etcdctl' --restart='Never' --command=true -- etcdctl --endpoints=risingwave-etcd-mytenant:2379 del "$(echo "$i" | jq -r .key | base64 --decode)"
       break
     fi
   done < "$(kubectl logs pods/del-leader-lease | jq -c '.kvs[]')"
 
-  kubectl delete pod del-leader-lease --force
-
+  kubectl delete pod del-leader-lease
+  
   if [ "$del_lease" = false ] ; then
     echo "Could not delete leader lease"
     return 1

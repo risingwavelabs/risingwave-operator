@@ -44,6 +44,7 @@ function risingwave::utils::delete_leader_lease() {
     echo "Could not delete leader lease"
     return 1
   fi
+
   return 0
 }
 

@@ -1,0 +1,22 @@
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: e2e-risingwave
+  namespace: default
+spec:
+  global:
+    image: ghcr.io/risingwavelabs/risingwave:latest
+    imagePullPolicy: Always
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+      compactor: 1
+  storages:
+    meta:
+      memory: true
+    object:
+      webhdfs:
+        nameNode: 127.0.0.1:32007
+        root: /root/hdfs/namenode
+      

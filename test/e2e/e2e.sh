@@ -229,8 +229,8 @@ function e2e::run_with_open_kruise() {
 }
 
 function e2e::main() {
-  sudo apt update
-  sudo apt install -y jq
+  sudo apt update || true 
+  sudo apt install -y jq || true 
 
   e2e::turn_on_debug_settings_if_debug_is_true
 

@@ -67,7 +67,7 @@ function test::run::risingwave::multi_meta() {
 }
 
 function test::util::setup_multi_meta_failover() {
-  # Test if old leader exited after loosing leadership and asserts valid leader setup
+  # Tests if old leader exited after loosing leadership and asserts valid leader setup
   logging::info "Starting RisingWave..."
   if ! test::risingwave::start multi-meta/multi-meta.yaml; then
     return 1

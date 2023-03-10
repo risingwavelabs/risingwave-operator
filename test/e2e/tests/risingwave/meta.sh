@@ -50,7 +50,7 @@ function risingwave::utils::delete_leader_lease() {
 
 function risingwave::utils::kill_the_meta_leader_pod() {
   local meta_leaders
-  meta_leaders="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role -o=jsonpath='{.items..metadata.name}')"
+  meta_leaders="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..metadata.name}')"
   
   if [ -z "$meta_leaders" ]; then
     logging::error "No meta leader node found"
@@ -72,7 +72,7 @@ function risingwave::utils::kill_the_meta_leader_pod() {
 #######################################
 function risingwave::utils::is_meta_setup_valid() {
   local meta_leaders 
-  meta_leaders="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role -o=jsonpath='{.items..metadata.name}')"
+  meta_leaders="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..metadata.name}')"
   
   if [ -z "$meta_leaders" ]; then
     logging::error "No meta leader node found"

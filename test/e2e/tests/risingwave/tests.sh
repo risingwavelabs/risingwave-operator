@@ -94,26 +94,26 @@ function test::run::risingwave::multi_meta_failover_fencing() {
 
 
   if ! risingwave::utils::delete_leader_lease; then 
-    echo "Failed to delete leader lease"
+    logging::error "Failed to delete leader lease"
     return 1
   fi 
 
   if ! risingwave::utils::wait_for_meta_valid_setup; then 
-    echo "Meta not in valid setup after deleting leader lease"
+    logging::error "Meta not in valid setup after deleting leader lease"
     return 1
   fi 
 
   local new_meta_leaders_restarts
   new_meta_leaders_restarts="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..status.containerStatuses..restartCount}')"
   if [ "$new_meta_leaders_restarts" -le "$meta_leaders_restarts" ]; then
-    echo "Leader did not restart"
+    logging::error "Leader did not restart"
     return 1
   fi
 
   local new_meta_leader_names
   new_meta_leader_names="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..metadata.name}')"
   if [ "$new_meta_leader_names" == "$meta_leader_names" ]; then
-    echo "Leader did not change"
+    logging::error "Leader did not change"
     return 1
   fi
   return 0

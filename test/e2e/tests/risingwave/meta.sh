@@ -33,7 +33,7 @@ function risingwave::utils::delete_leader_lease() {
   while read -r i ; do
     if [ "$(echo "$i" | jq -r .value | base64 --decode)" = "${meta_leaders_pod_IPs}:5690" ] ; then
       del_lease=true
-      echo "found leader lease. Deleting it"
+      logging::error "found leader lease. Deleting it"
       # delete leader lease
       k8s::kubectl exec -it etcd-0 -- env ETCDCTL_API=3 etcdctl del "$(echo "$i" | jq -r .key | base64 --decode)"
       break
@@ -41,7 +41,7 @@ function risingwave::utils::delete_leader_lease() {
   done < "$(k8s::kubectl exec -it etcd-0 -- env ETCDCTL_API=3 etcdctl get __meta_election_ --prefix=true --write-out="json" | tail -1 | jq -c '.kvs[]')"
 
   if [ "$del_lease" = false ] ; then
-    echo "Could not delete leader lease"
+    logging::error "Could not delete leader lease"
     return 1
   fi
 

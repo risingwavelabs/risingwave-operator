@@ -229,6 +229,9 @@ function e2e::run_with_open_kruise() {
 }
 
 function e2e::main() {
+  sudo apt update
+  sudo apt install -y jq
+
   e2e::turn_on_debug_settings_if_debug_is_true
 
   while getopts "hlp:" opt; do

@@ -680,10 +680,9 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 		}
 
 		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.Secret)
-	} else {
-		// AWS S3 mode.
-		return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.Secret)
 	}
+	// AWS S3 mode.
+	return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.Secret)
 }
 
 func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVar {

@@ -53,9 +53,8 @@ func (act *retryAction) Name() string {
 func (act *retryAction) Description() string {
 	if act.interval == 0 {
 		return fmt.Sprintf("Retry(%s, limit=%d)", act.inner.Description(), act.limit)
-	} else {
-		return fmt.Sprintf("Retry(%s, limit=%d, interval=%s)", act.inner.Description(), act.limit, act.interval.String())
 	}
+	return fmt.Sprintf("Retry(%s, limit=%d, interval=%s)", act.inner.Description(), act.limit, act.interval.String())
 }
 
 // Run implements the Action.

@@ -82,9 +82,8 @@ func optimizeJoin(workflow *joinGroup) Action {
 	if len(workflow.actions) == 1 {
 		if workflow.runner.IsParallel() {
 			return OptimizeWorkflow(Parallel(workflow.actions[0]))
-		} else {
-			return workflow.actions[0]
 		}
+		return workflow.actions[0]
 	}
 	return workflow
 }

@@ -28,6 +28,9 @@ function risingwave::utils::delete_leader_lease() {
     return 1
   fi
 
+  local meta_election_values
+  meta_election_values="$(k8s::kubectl exec -it etcd-0 -- env ETCDCTL_API=3 etcdctl get __meta_election_ --prefix=true --write-out="json" | tail -1 | jq -c '.kvs[]')"
+
   # Iterate over the etcd election kv pairs. Delete leader lease if found, else abort the test
   local del_lease=false
   while read -r i ; do
@@ -38,10 +41,12 @@ function risingwave::utils::delete_leader_lease() {
       k8s::kubectl exec -it etcd-0 -- env ETCDCTL_API=3 etcdctl del "$(echo "$i" | jq -r .key | base64 --decode)"
       break
     fi
-  done < "$(k8s::kubectl exec -it etcd-0 -- env ETCDCTL_API=3 etcdctl get __meta_election_ --prefix=true --write-out="json" | tail -1 | jq -c '.kvs[]')"
+  done < "$meta_election_values"
 
   if [ "$del_lease" = false ] ; then
-    logging::error "Could not delete leader lease"
+    logging::error "Could not delete leader lease. Retrieved, base64 encoded, election values were..."
+    logging::error "$meta_election_values"
+    logging::error "Checking against meta leader pod IP ${meta_leaders_pod_IPs}:5690"
     return 1
   fi
 

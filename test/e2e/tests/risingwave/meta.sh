@@ -37,6 +37,7 @@ function risingwave::utils::delete_leader_lease() {
     if [ "$(echo "$i" | jq -r .value | base64 --decode)" = "${meta_leaders_pod_IPs}:5690" ] ; then
       del_lease=true
       logging::error "found leader lease. Deleting it"
+      
       # delete leader lease
       k8s::kubectl exec -it etcd-0 -- env ETCDCTL_API=3 etcdctl del "$(echo "$i" | jq -r .key | base64 --decode)"
       break

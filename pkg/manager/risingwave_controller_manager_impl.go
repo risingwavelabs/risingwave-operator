@@ -136,6 +136,8 @@ func buildObjectStorageType(objectStorage *risingwavev1alpha1.RisingWaveObjectSt
 		return risingwavev1alpha1.ObjectStorageTypeMinIO
 	case objectStorage.S3 != nil:
 		return risingwavev1alpha1.ObjectStorageTypeS3
+	case objectStorage.GCS != nil:
+		return risingwavev1alpha1.ObjectStorageTypeGCS
 	case objectStorage.AliyunOSS != nil:
 		return risingwavev1alpha1.ObjectStorageTypeAliyunOSS
 	case objectStorage.HDFS != nil:

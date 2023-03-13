@@ -1,0 +1,30 @@
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-gcs
+spec:
+  storages:
+    meta:
+      memory: true
+    object:
+      GCS:
+        bucket: test-rwoperator
+        root: /
+  global:
+    env:
+    - name: GCS_TOKEN
+      value: ya29.a0AVvZVsqa4aobm7kQC8WcZ3HyhqcdmssEJeAAwgax3gyJuP7CkpEOJupJ6NtrTRhN491FCVOEHVnRHZ0PmU5MnLZCgl39BuA2FdFW7ts6PnRlGxzm26DY5Bbf52dU3bFEGXAcphvguB3gUkM4tSL1k4FyBB0JVKIaCgYKAbMSARASFQGbdwaIf2JHDOeH68_xV6Q57zz1Ng0166
+    image: ghcr.io/risingwavelabs/risingwave:latest
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+      compactor: 1

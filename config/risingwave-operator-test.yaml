@@ -17299,6 +17299,19 @@ spec:
                   object:
                     description: Storage spec for object storage.
                     properties:
+                      GCS:
+                        description: S3 storage spec.
+                        properties:
+                          bucket:
+                            description: Bucket of the GCS bucket service.
+                            type: string
+                          root:
+                            description: Working directory root of the GCS bucket
+                            type: string
+                        required:
+                        - bucket
+                        - root
+                        type: object
                       aliyunOSS:
                         description: AliyunOSS storage spec.
                         properties:
@@ -17333,7 +17346,7 @@ spec:
                             description: Name node of the HDFS
                             type: string
                           root:
-                            description: Root of the HDFS
+                            description: Working directory root of the HDFS
                             type: string
                         required:
                         - nameNode
@@ -18565,7 +18578,7 @@ spec:
         - --zap-devel=true
         command:
         - /manager
-        image: docker.io/risingwavelabs/risingwave-operator:dev
+        image: ghcr.io/risingwavelabs/risingwave-operator:v0.2.5
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:

@@ -53,7 +53,7 @@ jobs:
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
           sudo apt-get update
           sudo apt-get install helm
-          sudo apt-get install jq
+          sudo apt-get install jq -y
           mkdir -p /home/ubuntu/go/pkg/mod
           export GOCACHE=/tmp
           export GOPATH=/usr/local/go

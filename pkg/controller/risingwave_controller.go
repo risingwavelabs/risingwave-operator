@@ -154,10 +154,9 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 		if apierrors.IsNotFound(err) {
 			logger.V(1).Info("Not found, abort")
 			return ctrlkit.NoRequeue()
-		} else {
-			logger.Error(err, "Failed to get risingwave")
-			return ctrlkit.RequeueIfErrorAndWrap("unable to get risingwave", err)
 		}
+		logger.Error(err, "Failed to get risingwave")
+		return ctrlkit.RequeueIfErrorAndWrap("unable to get risingwave", err)
 	}
 
 	logger = logger.WithValues("generation", risingwave.Generation)

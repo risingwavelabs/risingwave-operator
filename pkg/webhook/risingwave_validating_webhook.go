@@ -364,10 +364,9 @@ func (v *RisingWaveValidatingWebhook) isObjectStoragesTheSame(oldObj, newObj *ri
 func pathForGroupReplicas(obj *risingwavev1alpha1.RisingWave, component, group string) *field.Path {
 	if group == "" {
 		return field.NewPath("spec", "global", "replicas", component)
-	} else {
-		index, _ := scaleview.NewRisingWaveScaleViewHelper(obj, component).GetGroupIndex(group)
-		return field.NewPath("spec", "components", component, "groups").Index(index).Child("replicas")
 	}
+	index, _ := scaleview.NewRisingWaveScaleViewHelper(obj, component).GetGroupIndex(group)
+	return field.NewPath("spec", "components", component, "groups").Index(index).Child("replicas")
 }
 
 func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWave) error {

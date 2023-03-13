@@ -1155,27 +1155,27 @@ func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj 
 
 		logger.Info(fmt.Sprintf("Create an object of %s", gvk.Kind), "object", utils.GetNamespacedName(newObj))
 		return mgr.client.Create(ctx, newObj)
-	} else {
-		gvk, err := apiutil.GVKForObject(obj, scheme)
-		if err != nil {
-			return err
-		}
-
-		// Found. Update/Sync if not synced.
-		if !mgr.isObjectSynced(obj) {
-			newObj, err := factory()
-			if err != nil {
-				return fmt.Errorf("unable to build new object: %w", err)
-			}
-			newObj = ensureTheSameObject(obj, newObj)
-			// Set the resource version for update.
-			newObj.SetResourceVersion(obj.GetResourceVersion())
-			logger.Info(fmt.Sprintf("Update the object of %s", gvk.Kind), "object", utils.GetNamespacedName(newObj),
-				"generation", mgr.risingwaveManager.RisingWave().Generation)
-			return mgr.client.Update(ctx, newObj)
-		}
-		return nil
 	}
+
+	gvk, err := apiutil.GVKForObject(obj, scheme)
+	if err != nil {
+		return err
+	}
+
+	// Found. Update/Sync if not synced.
+	if !mgr.isObjectSynced(obj) {
+		newObj, err := factory()
+		if err != nil {
+			return fmt.Errorf("unable to build new object: %w", err)
+		}
+		newObj = ensureTheSameObject(obj, newObj)
+		// Set the resource version for update.
+		newObj.SetResourceVersion(obj.GetResourceVersion())
+		logger.Info(fmt.Sprintf("Update the object of %s", gvk.Kind), "object", utils.GetNamespacedName(newObj),
+			"generation", mgr.risingwaveManager.RisingWave().Generation)
+		return mgr.client.Update(ctx, newObj)
+	}
+	return nil
 }
 
 // Helper function for compile time type assertion.
@@ -1225,10 +1225,9 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaService(ctx context.Context,
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaServiceIsAvailable(ctx context.Context, logger logr.Logger, metaService *corev1.Service) (reconcile.Result, error) {
 	if mgr.isObjectSynced(metaService) && utils.IsServiceReady(metaService) {
 		return ctrlkit.NoRequeue()
-	} else {
-		logger.Info("Meta service hasn't been ready")
-		return ctrlkit.Exit()
 	}
+	logger.Info("Meta service hasn't been ready")
+	return ctrlkit.Exit()
 }
 
 // SyncConfigConfigMap implements RisingWaveControllerManagerImpl.
@@ -1237,21 +1236,20 @@ func (mgr *risingWaveControllerManagerImpl) SyncConfigConfigMap(ctx context.Cont
 		configurationSpec := &mgr.risingwaveManager.RisingWave().Spec.Configuration
 		if configurationSpec.ConfigMap == nil {
 			return mgr.objectFactory.NewConfigConfigMap(""), nil
-		} else {
-			var cm corev1.ConfigMap
-			err := mgr.client.Get(ctx, types.NamespacedName{
-				Namespace: mgr.risingwaveManager.RisingWave().Namespace,
-				Name:      configurationSpec.ConfigMap.Name,
-			}, &cm)
-			if client.IgnoreNotFound(err) != nil {
-				return nil, fmt.Errorf("unable to get configmap %s: %w", configurationSpec.ConfigMap.Name, err)
-			}
-			val, ok := cm.Data[configurationSpec.ConfigMap.Key]
-			if !ok && (configurationSpec.ConfigMap.Optional == nil || !*configurationSpec.ConfigMap.Optional) {
-				return nil, fmt.Errorf("key not found in configmap")
-			}
-			return mgr.objectFactory.NewConfigConfigMap(val), nil
 		}
+		var cm corev1.ConfigMap
+		err := mgr.client.Get(ctx, types.NamespacedName{
+			Namespace: mgr.risingwaveManager.RisingWave().Namespace,
+			Name:      configurationSpec.ConfigMap.Name,
+		}, &cm)
+		if client.IgnoreNotFound(err) != nil {
+			return nil, fmt.Errorf("unable to get configmap %s: %w", configurationSpec.ConfigMap.Name, err)
+		}
+		val, ok := cm.Data[configurationSpec.ConfigMap.Key]
+		if !ok && (configurationSpec.ConfigMap.Optional == nil || !*configurationSpec.ConfigMap.Optional) {
+			return nil, fmt.Errorf("key not found in configmap")
+		}
+		return mgr.objectFactory.NewConfigConfigMap(val), nil
 	}, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync config configmap", err)
 }

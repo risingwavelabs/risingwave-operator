@@ -20,16 +20,14 @@ package ctrlkit
 func If(predicate bool, act Action) Action {
 	if predicate {
 		return act
-	} else {
-		return Nop
 	}
+	return Nop
 }
 
 // IfElse returns the action left if predicate is true, or the right otherwise.
 func IfElse(predicate bool, left, right Action) Action {
 	if predicate {
 		return left
-	} else {
-		return right
 	}
+	return right
 }

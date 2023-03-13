@@ -69,10 +69,9 @@ func (c *RisingWaveScaleViewController) Reconcile(ctx context.Context, request r
 		if apierrors.IsNotFound(err) {
 			logger.V(1).Info("Not found, abort")
 			return ctrlkit.NoRequeue()
-		} else {
-			logger.Error(err, "Failed to get risingwavescaleview")
-			return ctrlkit.RequeueIfErrorAndWrap("unable to get risingwavescaleview", err)
 		}
+		logger.Error(err, "Failed to get risingwavescaleview")
+		return ctrlkit.RequeueIfErrorAndWrap("unable to get risingwavescaleview", err)
 	}
 
 	logger = logger.WithValues("generation", scaleView.Generation)

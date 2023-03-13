@@ -107,9 +107,8 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) GrabOrUpdateScaleViewLock(c
 		}
 		mgr.scaleView.Status.Locked = true
 		return ctrlkit.RequeueImmediately()
-	} else {
-		return ctrlkit.Continue()
 	}
+	return ctrlkit.Continue()
 }
 
 // SyncGroupReplicasToRisingWave implementsRisingWaveScaleViewControllerManagerImpl.
@@ -179,16 +178,15 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasStatusFrom
 		mgr.scaleView.Status.Replicas = pointer.Int32(0)
 		mgr.scaleView.Status.Locked = false
 		return ctrlkit.Continue()
-	} else {
-		replicas := int32(0)
-		for _, scalePolicy := range mgr.scaleView.Spec.ScalePolicy {
-			group := scalePolicy.Group
-			runningReplicas := readRunningReplicas(targetObj, mgr.scaleView.Spec.TargetRef.Component, group)
-			replicas += runningReplicas
-		}
-		mgr.scaleView.Status.Replicas = pointer.Int32(replicas)
-		return ctrlkit.Continue()
 	}
+	replicas := int32(0)
+	for _, scalePolicy := range mgr.scaleView.Spec.ScalePolicy {
+		group := scalePolicy.Group
+		runningReplicas := readRunningReplicas(targetObj, mgr.scaleView.Spec.TargetRef.Component, group)
+		replicas += runningReplicas
+	}
+	mgr.scaleView.Status.Replicas = pointer.Int32(replicas)
+	return ctrlkit.Continue()
 }
 
 // NewRisingWaveScaleViewControllerManagerImpl creates an object that implements the RisingWaveScaleViewControllerManagerImpl.

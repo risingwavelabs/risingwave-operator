@@ -67,6 +67,7 @@ linters-settings:
       - allowTypesBefore: "*testing.T, *github.com/risingwavelabs/risingwave-operator/pkg/manager.risingWaveControllerManagerImpl"
     - name: var-naming
       disabled: true
+    - name: indent-error-flow
 
   govet:
     # Settings per analyzer.

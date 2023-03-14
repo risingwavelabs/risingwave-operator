@@ -44,9 +44,8 @@ func GetVersionFromImage(image string) string {
 	lastTagIdx := strings.LastIndex(image[lastRepoIdx+1:], ":")
 	if lastTagIdx < 0 {
 		return "latest"
-	} else {
-		return image[lastRepoIdx+lastTagIdx+2:]
 	}
+	return image[lastRepoIdx+lastTagIdx+2:]
 }
 
 // GetContainerFromPod gets a pointer to the container with the same name. Nil is returned when

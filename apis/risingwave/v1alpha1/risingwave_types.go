@@ -515,7 +515,7 @@ type RisingWaveObjectStorage struct {
 	// +optional
 	S3 *RisingWaveObjectStorageS3 `json:"s3,omitempty"`
 
-	// S3 storage spec.
+	// GCS storage spec.
 	// +optional
 	GCS *RisingWaveObjectStorageGCS `json:"GCS,omitempty"`
 

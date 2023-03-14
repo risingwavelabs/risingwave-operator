@@ -8,14 +8,14 @@ spec:
       memory: true
     object:
       GCS:
-        bucket: test-rwoperator
-        root: /
+        bucket: YOUR-BUCKET
+        root: YOUR-ROOT
   global:
     env:
-    - name: GCS_TOKEN
-      value: ya29.a0AVvZVsqa4aobm7kQC8WcZ3HyhqcdmssEJeAAwgax3gyJuP7CkpEOJupJ6NtrTRhN491FCVOEHVnRHZ0PmU5MnLZCgl39BuA2FdFW7ts6PnRlGxzm26DY5Bbf52dU3bFEGXAcphvguB3gUkM4tSL1k4FyBB0JVKIaCgYKAbMSARASFQGbdwaIf2JHDOeH68_xV6Q57zz1Ng0166
-    image: ghcr.io/risingwavelabs/risingwave:latest
-    imagePullPolicy: Always
+      - name: GCS_AUTHENTICATION_TOKEN # this should not be required on GKE clusters as the service account is automatically mounted
+        value: "base64 encoded json file from gcloud iam service-accounts keys create"
+    image: gcr.io/rwcdev/rwc/risingwave:gcs-token # use latest tag on GKE clusters
+    imagePullPolicy: IfNotPresent
     resources:
       limits:
         cpu: 1

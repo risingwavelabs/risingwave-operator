@@ -492,7 +492,7 @@ func (f *RisingWaveObjectFactory) argsForFrontend() []string {
 		"frontend-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", frontendPorts.ServicePort),
-		"--advertise-addr", fmt.Sprintf("$(POD_NAME):%d", frontendPorts.ServicePort),
+		"--advertise-addr", fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
 		"--meta-addr", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 		"--metrics-level=1",
 		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", frontendPorts.MetricsPort),
@@ -539,7 +539,7 @@ func (f *RisingWaveObjectFactory) argsForCompactor() []string {
 		"compactor-node",
 		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", compactorPorts.ServicePort),
-		"--advertise-addr", fmt.Sprintf("$(POD_NAME):%d", compactorPorts.ServicePort),
+		"--advertise-addr", fmt.Sprintf("$(POD_IP):%d", compactorPorts.ServicePort),
 		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", compactorPorts.MetricsPort),
 		"--meta-address", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 		"--metrics-level=1",
@@ -1112,7 +1112,7 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 	container.Resources = template.Resources
 	container.StartupProbe = nil
 	container.LivenessProbe = &corev1.Probe{
-		InitialDelaySeconds: 300,
+		InitialDelaySeconds: 10,
 		PeriodSeconds:       10,
 		ProbeHandler: corev1.ProbeHandler{
 			TCPSocket: &corev1.TCPSocketAction{
@@ -1121,7 +1121,7 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 		},
 	}
 	container.ReadinessProbe = &corev1.Probe{
-		InitialDelaySeconds: 300,
+		InitialDelaySeconds: 10,
 		PeriodSeconds:       10,
 		ProbeHandler: corev1.ProbeHandler{
 			TCPSocket: &corev1.TCPSocketAction{

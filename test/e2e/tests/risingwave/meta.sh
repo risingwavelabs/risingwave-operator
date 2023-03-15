@@ -32,7 +32,6 @@ function risingwave::utils::delete_leader_lease() {
   sleep 3
 
   # Iterate over the etcd election kv pairs. Delete leader lease if found, else abort the test
-  set -x # todo: undo
   local del_lease=false
   for i in $(ETCDCTL_API=3 etcdctl get __meta_election_ --prefix="true" --write-out="json" --endpoints=127.0.0.1:2388 | tail -1 | jq -c '.kvs[]'); do
     if [[ "$(echo "$i" | jq -r .value | base64 --decode)" == *"${meta_leader_pod_names}"* ]] ; then
@@ -44,7 +43,6 @@ function risingwave::utils::delete_leader_lease() {
       break
     fi
   done
-  set +x # todo: undo
   
   kill $(pgrep kubectl)
 

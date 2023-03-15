@@ -96,7 +96,11 @@ function test::run::risingwave::multi_meta_failover_fencing() {
   if ! risingwave::utils::delete_leader_lease; then 
     logging::error "Failed to delete leader lease"
     return 1
-  fi 
+  fi
+  
+  logging::info "Waiting until deleting leader lease takes effect"
+  sleep 10
+
 
   if ! risingwave::utils::wait_for_meta_valid_setup; then 
     logging::error "Meta not in valid setup after deleting leader lease"

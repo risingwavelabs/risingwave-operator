@@ -15,39 +15,41 @@
 ${__E2E_SOURCE_TESTS_RISINGWAVE_META_SH__:=false} && return 0 || __E2E_SOURCE_TESTS_RISINGWAVE_META_SH__=true
 
 function risingwave::utils::delete_leader_lease() {
-  local meta_leaders_pod_IPs
-  meta_leaders_pod_IPs="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..status.podIP}')"
+  local meta_leader_pod_names
+  meta_leader_pod_names="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..metadata.name}')"
 
-  if [ -z "$meta_leaders_pod_IPs" ]; then
+  if [ -z "$meta_leader_pod_names" ]; then
     logging::error "No meta leader node found"
     return 1
   fi
 
-  if [ "$(echo "$meta_leaders_pod_IPs" | wc -l)" -gt 1 ]; then
+  if [ "$(echo "$meta_leader_pod_names" | wc -l)" -gt 1 ]; then
     logging::error "More than one meta leader node found"
     return 1
   fi
 
-  local meta_election_values
-  meta_election_values="$(k8s::kubectl exec -it etcd-0 -- env ETCDCTL_API=3 etcdctl get __meta_election_ --prefix=true --write-out="json" | tail -1 | jq -c '.kvs[]')"
+  k8s::kubectl port-forward svc/etcd 2388 &
+  sleep 3
 
   # Iterate over the etcd election kv pairs. Delete leader lease if found, else abort the test
+  set -x # todo: undo
   local del_lease=false
-  while read -r i ; do
-    if [ "$(echo "$i" | jq -r .value | base64 --decode)" = "${meta_leaders_pod_IPs}:5690" ] ; then
+  for i in $(ETCDCTL_API=3 etcdctl get __meta_election_ --prefix="true" --write-out="json" --endpoints=127.0.0.1:2388 | tail -1 | jq -c '.kvs[]'); do
+    if [[ "$(echo "$i" | jq -r .value | base64 --decode)" == *"${meta_leader_pod_names}"* ]] ; then
       del_lease=true
       logging::error "found leader lease. Deleting it"
       
       # delete leader lease
-      k8s::kubectl exec -it etcd-0 -- env ETCDCTL_API=3 etcdctl del "$(echo "$i" | jq -r .key | base64 --decode)"
+      ETCDCTL_API=3 etcdctl del "$(echo "$i" | jq -r .key | base64 --decode)" --endpoints=127.0.0.1:2388
       break
     fi
-  done < "$meta_election_values"
+  done
+  set +x # todo: undo
+  
+  kill $(pgrep kubectl)
 
   if [ "$del_lease" = false ] ; then
-    logging::error "Could not delete leader lease. Retrieved, base64 encoded, election values were..."
-    logging::error "$meta_election_values"
-    logging::error "Checking against meta leader pod IP ${meta_leaders_pod_IPs}:5690"
+    logging::error "Could not delete leader lease. Leader pod names were ${meta_leader_pod_names}:5690"
     return 1
   fi
 

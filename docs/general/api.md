@@ -2509,7 +2509,7 @@ RisingWaveObjectStorageGCS
 </td>
 <td>
 <em>(Optional)</em>
-<p>S3 storage spec.</p>
+<p>GCS storage spec.</p>
 </td>
 </tr>
 <tr>

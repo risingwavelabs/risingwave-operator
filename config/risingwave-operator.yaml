@@ -17300,7 +17300,7 @@ spec:
                     description: Storage spec for object storage.
                     properties:
                       GCS:
-                        description: S3 storage spec.
+                        description: GCS storage spec.
                         properties:
                           bucket:
                             description: Bucket of the GCS bucket service.

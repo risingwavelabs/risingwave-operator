@@ -1,0 +1,1010 @@
+
+# Source: hdfs/templates/datanodes-netpol.yaml
+# Copyright 2020 Crown Copyright
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: my-hdfs-datanodes
+  labels:
+    
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: datanode
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: hdfs
+      app.kubernetes.io/instance: my-hdfs
+      app.kubernetes.io/component: datanode
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow clients to access client RPC and HTTP servers
+  - ports:
+    - port: http
+    - port: https
+    - port: data-xfer
+  # Allow NameNode and DataNodes to access IPC Server
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: hdfs
+          app.kubernetes.io/instance: my-hdfs
+    ports:
+    - port: ipc
+---
+# Source: hdfs/templates/namenode-netpol.yaml
+# Copyright 2020 Crown Copyright
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: my-hdfs-namenodes
+  labels:
+    
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: namenode
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: hdfs
+      app.kubernetes.io/instance: my-hdfs
+      app.kubernetes.io/component: namenode
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow clients to access client RPC and HTTP servers
+  - ports:
+    - port: http
+    - port: https
+    - port: client-rpc
+  # Allow NameNode and DataNodes to access Service and Lifeline RPC Servers
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: hdfs
+          app.kubernetes.io/instance: my-hdfs
+    ports:
+    - port: service-rpc
+    - port: lifeline-rpc
+---
+# Source: hdfs/templates/namenode-serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-hdfs-namenode
+  labels:
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: namenode
+---
+# Source: hdfs/templates/secrets.yaml
+# Copyright 2020 Crown Copyright
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-hdfs
+  labels:
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+data:
+---
+# Source: hdfs/templates/config.yaml
+# Copyright 2020 Crown Copyright
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-hdfs
+  labels:
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+data:
+  core-site.xml: |-
+    <?xml version="1.0" encoding="UTF-8"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    <configuration>
+      <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://my-hdfs-namenode-0.my-hdfs-namenodes:8020</value>
+      </property>
+    </configuration>
+
+  hdfs-site.xml: |-
+    <?xml version="1.0" encoding="UTF-8"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    <configuration>
+      <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>/data0/dfs/name</value>
+      </property>
+      <property> 
+        <name>dfs.namenode.datanode.registration.ip-hostname-check</name> 
+        <value>false</value> 
+      </property>
+      <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>/data0/dfs/data</value>
+      </property>
+      <property>
+        <name>dfs.replication</name>
+        <value>3</value>
+      </property>
+      <property>
+        <name>hadoop.security.authorization</name>
+        <value>true</value>
+      </property>
+      <property>
+        <name>net.topology.script.file.name</name>
+        <value>/scripts/resolve-rack.sh</value>
+      </property>
+      <property>
+        <name>net.topology.script.number.args</name>
+        <value>1</value>
+      </property>
+      <property>
+        <name>dfs.namenode.rpc-address</name>
+        <value>my-hdfs-namenode-0.my-hdfs-namenodes:8020</value>
+      </property>
+      <property>
+        <name>dfs.namenode.rpc-bind-host</name>
+        <value>0.0.0.0</value>
+      </property>
+      <property>
+        <name>dfs.namenode.servicerpc-address</name>
+        <value>my-hdfs-namenode-0.my-hdfs-namenodes:8021</value>
+      </property>
+      <property>
+        <name>dfs.namenode.servicerpc-bind-host</name>
+        <value>0.0.0.0</value>
+      </property>
+      <property>
+        <name>dfs.namenode.lifeline.rpc-address</name>
+        <value>my-hdfs-namenode-0.my-hdfs-namenodes:8022</value>
+      </property>
+      <property>
+        <name>dfs.namenode.lifeline.rpc-bind-host</name>
+        <value>0.0.0.0</value>
+      </property>
+      <property>
+        <name>dfs.namenode.http-address</name>
+        <value>0.0.0.0:9870</value>
+      </property>
+      <property>
+        <name>dfs.namenode.https-address</name>
+        <value>0.0.0.0:9871</value>
+      </property>
+      <property>
+        <name>dfs.datanode.http.address</name>
+        <value>0.0.0.0:9864</value>
+      </property>
+      <property>
+        <name>dfs.datanode.https.address</name>
+        <value>0.0.0.0:9865</value>
+      </property>
+      <property>
+        <name>dfs.datanode.address</name>
+        <value>0.0.0.0:9866</value>
+      </property>
+      <property>
+        <name>dfs.datanode.ipc.address</name>
+        <value>0.0.0.0:9867</value>
+      </property>
+    </configuration>
+
+  hadoop-policy.xml: |-
+    <?xml version="1.0"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    <configuration>
+      <property>
+        <name>security.client.protocol.acl</name>
+        <value>*</value>
+        <description>ACL for ClientProtocol, which is used by user code
+        via the DistributedFileSystem.
+        The ACL is a comma-separated list of user and group names. The user and
+        group list is separated by a blank. For e.g. "alice,bob users,wheel".
+        A special value of "*" means all users are allowed.</description>
+      </property>
+
+      <property>
+        <name>security.client.datanode.protocol.acl</name>
+        <value>*</value>
+        <description>ACL for ClientDatanodeProtocol, the client-to-datanode protocol
+        for block recovery.
+        The ACL is a comma-separated list of user and group names. The user and
+        group list is separated by a blank. For e.g. "alice,bob users,wheel".
+        A special value of "*" means all users are allowed.</description>
+      </property>
+
+      <property>
+        <name>security.datanode.protocol.acl</name>
+        <value>hadoop</value>
+        <description>ACL for DatanodeProtocol, which is used by datanodes to
+        communicate with the namenode.
+        The ACL is a comma-separated list of user and group names. The user and
+        group list is separated by a blank. For e.g. "alice,bob users,wheel".
+        A special value of "*" means all users are allowed.</description>
+      </property>
+
+      <property>
+        <name>security.inter.datanode.protocol.acl</name>
+        <value>hadoop</value>
+        <description>ACL for InterDatanodeProtocol, the inter-datanode protocol
+        for updating generation timestamp.
+        The ACL is a comma-separated list of user and group names. The user and
+        group list is separated by a blank. For e.g. "alice,bob users,wheel".
+        A special value of "*" means all users are allowed.</description>
+      </property>
+
+      <property>
+        <name>security.namenode.protocol.acl</name>
+        <value>hadoop</value>
+        <description>ACL for NamenodeProtocol, the protocol used by the secondary
+        namenode to communicate with the namenode.
+        The ACL is a comma-separated list of user and group names. The user and
+        group list is separated by a blank. For e.g. "alice,bob users,wheel".
+        A special value of "*" means all users are allowed.</description>
+      </property>
+
+     <property>
+        <name>security.admin.operations.protocol.acl</name>
+        <value>hadoop</value>
+        <description>ACL for AdminOperationsProtocol. Used for admin commands.
+        The ACL is a comma-separated list of user and group names. The user and
+        group list is separated by a blank. For e.g. "alice,bob users,wheel".
+        A special value of "*" means all users are allowed.</description>
+      </property>
+
+      <property>
+        <name>security.refresh.user.mappings.protocol.acl</name>
+        <value>hadoop</value>
+        <description>ACL for RefreshUserMappingsProtocol. Used to refresh
+        users mappings. The ACL is a comma-separated list of user and
+        group names. The user and group list is separated by a blank. For
+        e.g. "alice,bob users,wheel".  A special value of "*" means all
+        users are allowed.</description>
+      </property>
+
+      <property>
+        <name>security.refresh.policy.protocol.acl</name>
+        <value>hadoop</value>
+        <description>ACL for RefreshAuthorizationPolicyProtocol, used by the
+        dfsadmin and mradmin commands to refresh the security policy in-effect.
+        The ACL is a comma-separated list of user and group names. The user and
+        group list is separated by a blank. For e.g. "alice,bob users,wheel".
+        A special value of "*" means all users are allowed.</description>
+      </property>
+
+      <property>
+        <name>security.ha.service.protocol.acl</name>
+        <value>hadoop</value>
+        <description>ACL for HAService protocol used by HAAdmin to manage the
+          active and stand-by states of namenode.</description>
+      </property>
+
+      <property>
+        <name>security.zkfc.protocol.acl</name>
+        <value>hadoop</value>
+        <description>ACL for access to the ZK Failover Controller
+        </description>
+      </property>
+
+      <property>
+        <name>security.qjournal.service.protocol.acl</name>
+        <value>hadoop</value>
+        <description>ACL for QJournalProtocol, used by the NN to communicate with
+        JNs when using the QuorumJournalManager for edit logs.</description>
+      </property>
+
+      <property>
+        <name>security.interqjournal.service.protocol.acl</name>
+        <value>hadoop</value>
+        <description>ACL for InterQJournalProtocol, used by the JN to
+        communicate with other JN
+        </description>
+      </property>
+
+    </configuration>
+
+  log4j.properties: |-
+    # Define some default values that can be overridden by system properties
+    hadoop.root.logger=INFO,console
+    hadoop.log.dir=.
+    hadoop.log.file=hadoop.log
+
+    # Define the root logger to the system property "hadoop.root.logger"
+    log4j.rootLogger=${hadoop.root.logger}, EventCounter
+    # Logging Threshold
+    log4j.threshold=ALL
+
+    # Null Appender
+    log4j.appender.NullAppender=org.apache.log4j.varia.NullAppender
+
+    # Console Appender
+    log4j.appender.console=org.apache.log4j.ConsoleAppender
+    log4j.appender.console.target=System.err
+    log4j.appender.console.layout=org.apache.log4j.PatternLayout
+    log4j.appender.console.layout.ConversionPattern=%d{ISO8601} %p %c{2}: %m%n
+
+    # HDFS block state change log from block manager
+    # Uncomment the following to log normal block state change
+    # messages from BlockManager in NameNode.
+    #log4j.logger.BlockStateChange=DEBUG
+
+    # Security appender
+    hadoop.security.logger=INFO,RFAS
+    hadoop.security.log.maxfilesize=256MB
+    hadoop.security.log.maxbackupindex=20
+    log4j.category.SecurityLogger=${hadoop.security.logger}
+    hadoop.security.log.file=security.audit
+    log4j.appender.RFAS=org.apache.log4j.RollingFileAppender
+    log4j.appender.RFAS.File=${hadoop.log.dir}/${hadoop.security.log.file}
+    log4j.appender.RFAS.layout=org.apache.log4j.PatternLayout
+    log4j.appender.RFAS.layout.ConversionPattern=%d{ISO8601} %p %c: %m%n
+    log4j.appender.RFAS.MaxFileSize=${hadoop.security.log.maxfilesize}
+    log4j.appender.RFAS.MaxBackupIndex=${hadoop.security.log.maxbackupindex}
+
+    # hdfs audit logging
+    hdfs.audit.logger=INFO,RFAAUDIT
+    hdfs.audit.log.maxfilesize=256MB
+    hdfs.audit.log.maxbackupindex=20
+    log4j.logger.org.apache.hadoop.hdfs.server.namenode.FSNamesystem.audit=${hdfs.audit.logger}
+    log4j.additivity.org.apache.hadoop.hdfs.server.namenode.FSNamesystem.audit=false
+    log4j.appender.RFAAUDIT=org.apache.log4j.RollingFileAppender
+    log4j.appender.RFAAUDIT.File=${hadoop.log.dir}/hdfs-audit.log
+    log4j.appender.RFAAUDIT.layout=org.apache.log4j.PatternLayout
+    log4j.appender.RFAAUDIT.layout.ConversionPattern=%d{ISO8601} %p %c{2}: %m%n
+    log4j.appender.RFAAUDIT.MaxFileSize=${hdfs.audit.log.maxfilesize}
+    log4j.appender.RFAAUDIT.MaxBackupIndex=${hdfs.audit.log.maxbackupindex}
+
+    # NameNode metrics logging.
+    # The default is to retain two namenode-metrics.log files up to 64MB each.
+    namenode.metrics.logger=INFO,NNMETRICSRFA
+    log4j.logger.NameNodeMetricsLog=${namenode.metrics.logger}
+    log4j.additivity.NameNodeMetricsLog=false
+    log4j.appender.NNMETRICSRFA=org.apache.log4j.RollingFileAppender
+    log4j.appender.NNMETRICSRFA.File=${hadoop.log.dir}/namenode-metrics.log
+    log4j.appender.NNMETRICSRFA.layout=org.apache.log4j.PatternLayout
+    log4j.appender.NNMETRICSRFA.layout.ConversionPattern=%d{ISO8601} %m%n
+    log4j.appender.NNMETRICSRFA.MaxBackupIndex=1
+    log4j.appender.NNMETRICSRFA.MaxFileSize=64MB
+
+    # DataNode metrics logging.
+    # The default is to retain two datanode-metrics.log files up to 64MB each.
+    datanode.metrics.logger=INFO,DNMETRICSRFA
+    log4j.logger.DataNodeMetricsLog=${datanode.metrics.logger}
+    log4j.additivity.DataNodeMetricsLog=false
+    log4j.appender.DNMETRICSRFA=org.apache.log4j.RollingFileAppender
+    log4j.appender.DNMETRICSRFA.File=${hadoop.log.dir}/datanode-metrics.log
+    log4j.appender.DNMETRICSRFA.layout=org.apache.log4j.PatternLayout
+    log4j.appender.DNMETRICSRFA.layout.ConversionPattern=%d{ISO8601} %m%n
+    log4j.appender.DNMETRICSRFA.MaxBackupIndex=1
+    log4j.appender.DNMETRICSRFA.MaxFileSize=64MB
+
+    # Custom Logging levels
+    #log4j.logger.org.apache.hadoop.hdfs.server.namenode.FSNamesystem.audit=DEBUG
+
+    # AWS SDK & S3A FileSystem
+    #log4j.logger.com.amazonaws=ERROR
+    log4j.logger.com.amazonaws.http.AmazonHttpClient=ERROR
+    #log4j.logger.org.apache.hadoop.fs.s3a.S3AFileSystem=WARN
+
+    # Event Counter Appender
+    # Sends counts of logging messages at different severity levels to Hadoop Metrics.
+    log4j.appender.EventCounter=org.apache.hadoop.log.metrics.EventCounter
+
+    # Log levels of third-party libraries
+    log4j.logger.org.apache.commons.beanutils=WARN
+
+    log4j.logger.org.apache.hadoop.security.ForwardAuthentication=DEBUG
+---
+# Source: hdfs/templates/rack-awareness-script.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-hdfs-rack-awareness
+  labels:
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+data:
+  resolve-rack.sh: |
+    #!/bin/bash
+    POD_IP=$1
+
+    API_SERVER="kubernetes.default.svc"
+    TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+    NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+    CA_CERT="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+
+    POD_RESPONSE=$(curl --cacert $CA_CERT --header "Authorization: Bearer $TOKEN" https://$API_SERVER/api/v1/namespaces/$NAMESPACE/pods?fieldSelector=status.podIP%3D$POD_IP)
+    NODE_NAME=$(echo $POD_RESPONSE | jq -r '.items[0] | .spec.nodeName')
+
+    NODE_RESPONSE=$(curl --cacert $CA_CERT  --header "Authorization: Bearer $TOKEN" https://$API_SERVER/api/v1/nodes/$NODE_NAME)
+    NODE_ZONE=$(echo $NODE_RESPONSE | jq -r '.metadata.labels."topology.kubernetes.io/zone"')
+
+    if [ -z "$NODE_ZONE" ] || [[ "$NODE_ZONE" == "null" ]]; then
+      NODE_ZONE="default-rack"
+    fi
+
+    echo "/$NODE_ZONE"
+---
+# Source: hdfs/templates/rack-awareness-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: my-hdfs-namenode
+  labels:
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: namenode
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get"]
+---
+# Source: hdfs/templates/rack-awareness-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: my-hdfs-namenode
+  labels:
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: namenode
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: my-hdfs-namenode
+subjects:
+- kind: ServiceAccount
+  name: my-hdfs-namenode
+  namespace: default
+---
+# Source: hdfs/templates/rack-awareness-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: my-hdfs-namenode
+  labels:
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: namenode
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list"]
+---
+# Source: hdfs/templates/rack-awareness-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: my-hdfs-namenode
+  labels:
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: namenode
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: my-hdfs-namenode
+subjects:
+- kind: ServiceAccount
+  name: my-hdfs-namenode
+  namespace: default
+---
+# Source: hdfs/templates/datanodes-service.yaml
+# Copyright 2020 Crown Copyright
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-hdfs-datanodes
+  labels:
+    
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: datanode
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/component: datanode
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: http
+---
+# Source: hdfs/templates/namenode-service.yaml
+# Copyright 2020 Crown Copyright
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-hdfs-namenodes
+  labels:
+    
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: namenode
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/component: namenode
+  ports:
+  - name: http
+    protocol: TCP
+    port: 9870
+    targetPort: http
+  - name: client-rpc
+    protocol: TCP
+    port: 8020
+    targetPort: client-rpc
+  - name: service-rpc
+    protocol: TCP
+    port: 8021
+    targetPort: service-rpc
+  - name: lifeline-rpc
+    protocol: TCP
+    port: 8022
+    targetPort: lifeline-rpc
+---
+# Source: hdfs/templates/shell.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-hdfs-shell
+  labels:
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: shell
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hdfs
+      app.kubernetes.io/instance: my-hdfs
+      app.kubernetes.io/component: shell
+  template:
+    metadata:
+      annotations:
+        checksum/config: 5b56acbd729923285efb8424175e5bb9f081576602969693540121039f08e8f9
+        checksum/secrets: dcae6d830ce3b3e006c21a2aadf853e28160b070f91f88229b3dd3b9ce4fc8d7
+      labels:
+        helm.sh/chart: hdfs-2.0.0-alpha-0.3
+        app.kubernetes.io/name: hdfs
+        app.kubernetes.io/instance: my-hdfs
+        app.kubernetes.io/version: "3.3.3"
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: shell
+    spec:
+      containers:
+      - name: shell
+        image: gchq/hdfs:3.3.3
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/bash
+        stdin: true
+        tty: true
+        env:
+        - name: HADOOP_CONF_DIR
+          value: /etc/hadoop/conf
+        volumeMounts:
+        - name: config
+          mountPath: /etc/hadoop/conf
+          readOnly: true
+        - name: secrets
+          mountPath: /etc/hadoop/secrets
+          readOnly: true
+        resources:
+          {}
+      volumes:
+      - name: config
+        configMap:
+          name: my-hdfs
+          optional: false
+      - name: secrets
+        secret:
+          secretName: my-hdfs
+          optional: false
+---
+# Source: hdfs/templates/datanodes.yaml
+# Copyright 2020 Crown Copyright
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-hdfs-datanode
+  labels:
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: datanode
+spec:
+  podManagementPolicy: Parallel
+  replicas: 3
+  serviceName: my-hdfs-datanodes
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hdfs
+      app.kubernetes.io/instance: my-hdfs
+      app.kubernetes.io/component: datanode
+  volumeClaimTemplates:
+  - metadata:
+      name: data0
+      labels:
+        helm.sh/chart: hdfs-2.0.0-alpha-0.3
+        app.kubernetes.io/name: hdfs
+        app.kubernetes.io/instance: my-hdfs
+        app.kubernetes.io/version: "3.3.3"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: null
+  template:
+    metadata:
+      annotations:
+        checksum/config: 5b56acbd729923285efb8424175e5bb9f081576602969693540121039f08e8f9
+        checksum/secrets: dcae6d830ce3b3e006c21a2aadf853e28160b070f91f88229b3dd3b9ce4fc8d7
+      labels:
+        helm.sh/chart: hdfs-2.0.0-alpha-0.3
+        app.kubernetes.io/name: hdfs
+        app.kubernetes.io/instance: my-hdfs
+        app.kubernetes.io/version: "3.3.3"
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: datanode
+    spec:
+      initContainers:
+      - name: wait-for-namenode-startup
+        image: alpine:3.10.2
+        imagePullPolicy: IfNotPresent
+        command: [
+          "/bin/sh",
+          "-c",
+          'for i in $(seq 1 300); do nc -z -w3 my-hdfs-namenode-0.my-hdfs-namenodes:8021 && exit 0 || sleep 1; done; exit 1'
+        ]
+      containers:
+      - name: datanode
+        image: gchq/hdfs:3.3.3
+        imagePullPolicy: IfNotPresent
+        args:
+        - datanode
+        env:
+        - name: HADOOP_CONF_DIR
+          value: /etc/hadoop/conf
+        volumeMounts:
+        - name: config
+          mountPath: /etc/hadoop/conf
+          readOnly: true
+        - name: secrets
+          mountPath: /etc/hadoop/secrets
+          readOnly: true
+        - name: data0
+          mountPath: /data0
+        ports:
+        - name: http
+          containerPort: 9864
+        - name: https
+          containerPort: 9865
+        - name: data-xfer
+          containerPort: 9866
+        - name: ipc
+          containerPort: 9867
+        livenessProbe:
+          httpGet:
+            scheme: HTTP
+            port: http
+            path: /
+          initialDelaySeconds: 30
+        readinessProbe:
+          httpGet:
+            scheme: HTTP
+            port: http
+            path: /
+          initialDelaySeconds: 30
+        resources:
+          {}
+      volumes:
+      - name: config
+        configMap:
+          name: my-hdfs
+          optional: false
+      - name: secrets
+        secret:
+          secretName: my-hdfs
+          optional: false
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+---
+# Source: hdfs/templates/namenode.yaml
+# Copyright 2020 Crown Copyright
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-hdfs-namenode
+  labels:
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: namenode
+spec:
+  podManagementPolicy: Parallel
+  replicas: 1
+  serviceName: my-hdfs-namenodes
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hdfs
+      app.kubernetes.io/instance: my-hdfs
+      app.kubernetes.io/component: namenode
+  volumeClaimTemplates:
+  - metadata:
+      name: data0
+      labels:
+        helm.sh/chart: hdfs-2.0.0-alpha-0.3
+        app.kubernetes.io/name: hdfs
+        app.kubernetes.io/instance: my-hdfs
+        app.kubernetes.io/version: "3.3.3"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: null
+  template:
+    metadata:
+      annotations:
+        checksum/config: 5b56acbd729923285efb8424175e5bb9f081576602969693540121039f08e8f9
+        checksum/secrets: dcae6d830ce3b3e006c21a2aadf853e28160b070f91f88229b3dd3b9ce4fc8d7
+      labels:
+        helm.sh/chart: hdfs-2.0.0-alpha-0.3
+        app.kubernetes.io/name: hdfs
+        app.kubernetes.io/instance: my-hdfs
+        app.kubernetes.io/version: "3.3.3"
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: namenode
+    spec:
+      serviceAccountName: my-hdfs-namenode
+      containers:
+      - name: namenode
+        image: gchq/hdfs:3.3.3
+        imagePullPolicy: IfNotPresent
+        args:
+        - namenode
+        env:
+        - name: HADOOP_CONF_DIR
+          value: /etc/hadoop/conf
+        volumeMounts:
+        - name: config
+          mountPath: /etc/hadoop/conf
+          readOnly: true
+        - name: secrets
+          mountPath: /etc/hadoop/secrets
+          readOnly: true
+        - name: rack-awareness
+          mountPath: /scripts/resolve-rack.sh
+          subPath: resolve-rack.sh
+        - name: data0
+          mountPath: /data0
+        ports:
+        - name: http
+          containerPort: 9870
+        - name: https
+          containerPort: 9871
+        - name: client-rpc
+          containerPort: 8020
+        - name: service-rpc
+          containerPort: 8021
+        - name: lifeline-rpc
+          containerPort: 8022
+        livenessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - hdfs dfsadmin -fs hdfs://localhost -safemode get
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 30
+          successThreshold: 1
+          failureThreshold: 2
+        resources:
+          {}
+      volumes:
+      - name: config
+        configMap:
+          name: my-hdfs
+          optional: false
+      - name: secrets
+        secret:
+          secretName: my-hdfs
+          optional: false
+      - name: rack-awareness
+        configMap:
+          name: my-hdfs-rack-awareness
+          defaultMode: 0755
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+---
+# Source: hdfs/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-hdfs
+  labels:
+    
+    helm.sh/chart: hdfs-2.0.0-alpha-0.3
+    app.kubernetes.io/name: hdfs
+    app.kubernetes.io/instance: my-hdfs
+    app.kubernetes.io/version: "3.3.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: namenode
+  annotations:
+    traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /hdfs/(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: my-hdfs-namenodes
+            port: 
+              number: 9870

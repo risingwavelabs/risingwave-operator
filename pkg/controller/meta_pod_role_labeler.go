@@ -42,7 +42,7 @@ type MetaPodRoleLabeler struct {
 	client.Client
 }
 
-// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;update;patch
+// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;update;patch;delete
 
 // getMetaRole sends a gRPC request to the meta node at host:port to tell its role from the response. The endpoint is used
 // to identify the meta node. If the node isn't found in the response, an unknown will be returned.
@@ -50,6 +50,7 @@ func (mpl *MetaPodRoleLabeler) getMetaRole(ctx context.Context, host string, por
 	addr := fmt.Sprintf("%s:%v", host, port)
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
+		// why is this not unknown?
 		return "", fmt.Errorf("unable to connect: %w", err)
 	}
 	defer conn.Close()
@@ -58,6 +59,7 @@ func (mpl *MetaPodRoleLabeler) getMetaRole(ctx context.Context, host string, por
 
 	resp, err := metaClient.Members(ctx, &pb.MembersRequest{})
 	if err != nil {
+		// why is this not unknown?
 		return "", fmt.Errorf("request failed: %w", err)
 	}
 
@@ -187,6 +189,7 @@ func (mpl *MetaPodRoleLabeler) syncRoleLabels(ctx context.Context, pod *corev1.P
 	// TODO: rename file
 
 	// TODO: rename function
+	// TODO: can we also restart instead of deleting?
 
 	// kill pod. Lost leadership
 	if beforeRole == consts.MetaRoleLeader && role != consts.MetaRoleLeader {

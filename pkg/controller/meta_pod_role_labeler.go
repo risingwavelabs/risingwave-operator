@@ -182,6 +182,23 @@ func (mpl *MetaPodRoleLabeler) syncRoleLabels(ctx context.Context, pod *corev1.P
 		return
 	}
 
+	// TODO: Put this code in separate function.
+
+	// TODO: rename file
+
+	// TODO: rename function
+
+	// kill pod. Lost leadership
+	if beforeRole == consts.MetaRoleLeader && role != consts.MetaRoleLeader {
+		logger.Info("Lost leadership, kill pod", "pod", pod.Name)
+		err := mpl.Delete(ctx, pod)
+		if err != nil {
+			logger.Info("Failed to delete pod", "pod", pod.Name, "error", err)
+		}
+		// TODO: Do I need to reconcile the other pods here?
+		return
+	}
+
 	if beforeRole != consts.MetaRoleLeader && role == consts.MetaRoleLeader {
 		risingwaveName := pod.Labels[consts.LabelRisingWaveName]
 		currentPod := pod.Name

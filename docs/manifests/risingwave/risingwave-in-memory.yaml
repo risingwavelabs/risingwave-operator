@@ -11,13 +11,6 @@ spec:
   global:
     image: ghcr.io/risingwavelabs/risingwave:v0.1.17
     imagePullPolicy: IfNotPresent
-    resources:
-      limits:
-        cpu: 1
-        memory: 1Gi
-      requests:
-        cpu: 500m
-        memory: 500Mi
     replicas:
       meta: 1
       frontend: 1

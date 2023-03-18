@@ -2627,6 +2627,29 @@ only available in the internal network.</p>
 <tbody>
 <tr>
 <td>
+<code>useWorkloadIdentity</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>UseWorkloadIdentity indicates to use workload identity to access the GCS service. If this is enabled, secret is not required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secret</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Secret contains the credentials to access the GCS service. It must contain the following keys:
+* ServiceAccountCredentials</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>bucket</code><br/>
 <em>
 string

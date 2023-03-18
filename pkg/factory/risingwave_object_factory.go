@@ -72,6 +72,7 @@ const (
 	s3CompatibleAccessKeyEnvName         = "S3_COMPATIBLE_ACCESS_KEY_ID"
 	s3CompatibleSecretAccessKeyEnvName   = "S3_COMPATIBLE_SECRET_ACCESS_KEY"
 	s3EndpointEnvName                    = "S3_COMPATIBLE_ENDPOINT"
+	gcsServiceAccountCredentialsEnvName  = "GOOGLE_APPLICATION_CREDENTIALS"
 )
 
 var (
@@ -752,7 +753,28 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 }
 
 func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
-	return []corev1.EnvVar{}
+	// return []corev1.EnvVar{}
+
+	useWorkloadIdentity := f.risingwave.Spec.Storages.Object.GCS.UseWorkloadIdentity
+	if useWorkloadIdentity {
+		return []corev1.EnvVar{}
+	}
+
+	secret := f.risingwave.Spec.Storages.Object.GCS.Secret
+	secretRef := corev1.LocalObjectReference{
+		Name: secret,
+	}
+	return []corev1.EnvVar{
+		{
+			Name: gcsServiceAccountCredentialsEnvName,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyGCSServiceAccountCredentials,
+				},
+			},
+		},
+	}
 }
 
 func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {

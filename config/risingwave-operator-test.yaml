@@ -17308,9 +17308,20 @@ spec:
                           root:
                             description: Working directory root of the GCS bucket
                             type: string
+                          secret:
+                            description: 'Secret contains the credentials to access
+                              the GCS service. It must contain the following keys:
+                              * ServiceAccountCredentials'
+                            type: string
+                          useWorkloadIdentity:
+                            description: UseWorkloadIdentity indicates to use workload
+                              identity to access the GCS service. If this is enabled,
+                              secret is not required.
+                            type: boolean
                         required:
                         - bucket
                         - root
+                        - useWorkloadIdentity
                         type: object
                       aliyunOSS:
                         description: AliyunOSS storage spec.

@@ -458,12 +458,13 @@ type RisingWaveObjectStorageS3 struct {
 
 // RisingWaveObjectStorageGCS is the details of GCS bucket storage for compute and compactor components.
 type RisingWaveObjectStorageGCS struct {
-	// UseWorkloadIdentity indicates to use workload identity to access the GCS service. If this is enabled, secret is not required.
+	// UseWorkloadIdentity indicates to use workload identity to access the GCS service. If this is enabled, secret is not required, and ADC is used.
+	// +kubebuilder:validation:Required
 	UseWorkloadIdentity bool `json:"useWorkloadIdentity"`
 
 	// Secret contains the credentials to access the GCS service. It must contain the following keys:
 	//   * ServiceAccountCredentials
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	Secret string `json:"secret,omitempty"`
 
 	// Bucket of the GCS bucket service.

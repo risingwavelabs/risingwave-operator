@@ -1133,7 +1133,7 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 	container.Resources = template.Resources
 	container.StartupProbe = nil
 	container.LivenessProbe = &corev1.Probe{
-		InitialDelaySeconds: 10,
+		InitialDelaySeconds: 2,
 		PeriodSeconds:       10,
 		ProbeHandler: corev1.ProbeHandler{
 			TCPSocket: &corev1.TCPSocketAction{
@@ -1142,7 +1142,7 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 		},
 	}
 	container.ReadinessProbe = &corev1.Probe{
-		InitialDelaySeconds: 10,
+		InitialDelaySeconds: 2,
 		PeriodSeconds:       10,
 		ProbeHandler: corev1.ProbeHandler{
 			TCPSocket: &corev1.TCPSocketAction{
@@ -1921,6 +1921,19 @@ func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonit
 					Port:          consts.PortMetrics,
 					Interval:      prometheusv1.Duration(fmt.Sprintf("%.0fs", interval.Seconds())),
 					ScrapeTimeout: prometheusv1.Duration(fmt.Sprintf("%.0fs", scrapeTimeout.Seconds())),
+					// we need to drop some metrics which maybe will produce too many series.
+					MetricRelabelConfigs: []*prometheusv1.RelabelConfig{
+						{
+							SourceLabels: []prometheusv1.LabelName{"__name__"},
+							Action:       "drop",
+							Regex:        "batch_.+",
+						},
+						{
+							SourceLabels: []prometheusv1.LabelName{"__name__"},
+							Action:       "drop",
+							Regex:        "stream_exchange_.+",
+						},
+					},
 				},
 			},
 			Selector: metav1.LabelSelector{

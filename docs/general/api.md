@@ -2633,7 +2633,7 @@ bool
 </em>
 </td>
 <td>
-<p>UseWorkloadIdentity indicates to use workload identity to access the GCS service. If this is enabled, secret is not required.</p>
+<p>UseWorkloadIdentity indicates to use workload identity to access the GCS service. If this is enabled, secret is not required, and ADC is used.</p>
 </td>
 </tr>
 <tr>

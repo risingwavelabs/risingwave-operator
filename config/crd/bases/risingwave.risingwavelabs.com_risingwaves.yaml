@@ -10156,7 +10156,7 @@ spec:
                           useWorkloadIdentity:
                             description: UseWorkloadIdentity indicates to use workload
                               identity to access the GCS service. If this is enabled,
-                              secret is not required.
+                              secret is not required, and ADC is used.
                             type: boolean
                         required:
                         - bucket

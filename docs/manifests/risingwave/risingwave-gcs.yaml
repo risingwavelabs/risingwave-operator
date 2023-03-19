@@ -3,7 +3,7 @@ kind: Secret
 metadata:
   name: gcs-credentials
 stringData:
-  ServiceAccountCredentials: "base64 encoded service account json file contents"
+  ServiceAccountCredentials: "YOUR-CREDENTIALS" # base64 encoded service account json file contents
 ---
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
@@ -20,7 +20,7 @@ spec:
         bucket: YOUR-BUCKET
         root: YOUR-ROOT
   global:
-    image: gcr.io/rwcdev/rwc/risingwave:gcs-token # use latest tag on GKE clusters
+    image: gcr.io/rwcdev/rwc/risingwave:gcs-secret # use latest tag on GKE clusters
     imagePullPolicy: IfNotPresent
     resources:
       limits:

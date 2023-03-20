@@ -753,8 +753,6 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 }
 
 func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
-	// return []corev1.EnvVar{}
-
 	useWorkloadIdentity := f.risingwave.Spec.Storages.Object.GCS.UseWorkloadIdentity
 	if useWorkloadIdentity {
 		return []corev1.EnvVar{}

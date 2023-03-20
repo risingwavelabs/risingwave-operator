@@ -196,7 +196,7 @@ docker-push: ## Push docker image with the manager.
 ##@ Deployment
 
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	$(KUSTOMIZE) build config/crd | kubectl apply --server-side -f -
 
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/crd | kubectl delete -f -
@@ -209,7 +209,7 @@ generate-test-yaml: generate-yaml
 	$(KUSTOMIZE) build config --output config/risingwave-operator-test.yaml
 
 deploy: generate-yaml
-	kubectl apply -f config/risingwave-operator.yaml
+	kubectl apply --server-side -f config/risingwave-operator.yaml
 
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	kubectl delete -f config/risingwave-operator.yaml

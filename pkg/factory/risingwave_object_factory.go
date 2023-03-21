@@ -753,12 +753,13 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 }
 
 func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
-	useWorkloadIdentity := f.risingwave.Spec.Storages.Object.GCS.UseWorkloadIdentity
+	gcs := f.risingwave.Spec.Storages.Object.GCS
+	useWorkloadIdentity := gcs.UseWorkloadIdentity
 	if useWorkloadIdentity {
 		return []corev1.EnvVar{}
 	}
 
-	secret := f.risingwave.Spec.Storages.Object.GCS.Secret
+	secret := gcs.Secret
 	secretRef := corev1.LocalObjectReference{
 		Name: secret,
 	}

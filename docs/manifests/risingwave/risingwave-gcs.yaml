@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gcs-credentials
+stringData:
+  ServiceAccountCredentials: "YOUR-CREDENTIALS" # base64 encoded service account json file contents
+---
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-gcs
+spec:
+  storages:
+    meta:
+      memory: true
+    object:
+      GCS:
+        useWorkloadIdentity: false
+        secret: gcs-credentials  # this should not be required on GKE clusters as the service account is automatically mounted
+        bucket: YOUR-BUCKET
+        root: YOUR-ROOT
+  global:
+    image: gcr.io/rwcdev/rwc/risingwave:gcs-secret # use latest tag on GKE clusters
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+      compactor: 1

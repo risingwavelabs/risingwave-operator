@@ -72,6 +72,7 @@ const (
 	s3CompatibleAccessKeyEnvName         = "S3_COMPATIBLE_ACCESS_KEY_ID"
 	s3CompatibleSecretAccessKeyEnvName   = "S3_COMPATIBLE_SECRET_ACCESS_KEY"
 	s3EndpointEnvName                    = "S3_COMPATIBLE_ENDPOINT"
+	gcsServiceAccountCredentialsEnvName  = "GOOGLE_APPLICATION_CREDENTIALS"
 )
 
 var (
@@ -107,6 +108,10 @@ func (f *RisingWaveObjectFactory) isObjectStorageS3Compatible() bool {
 	return f.risingwave.Spec.Storages.Object.S3 != nil && len(f.risingwave.Spec.Storages.Object.S3.Endpoint) > 0
 }
 
+func (f *RisingWaveObjectFactory) isObjectStorageGCS() bool {
+	return f.risingwave.Spec.Storages.Object.GCS != nil
+}
+
 func (f *RisingWaveObjectFactory) isObjectStorageAliyunOSS() bool {
 	return f.risingwave.Spec.Storages.Object.AliyunOSS != nil
 }
@@ -137,6 +142,8 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 	case objectStorage.MinIO != nil:
 		minio := objectStorage.MinIO
 		return fmt.Sprintf("hummock+minio://$(%s):$(%s)@%s/%s", minIOUsernameEnvName, minIOPasswordEnvName, minio.Endpoint, minio.Bucket)
+	case f.isObjectStorageGCS():
+		return fmt.Sprintf("hummock+gcs://%s@%s", objectStorage.GCS.Bucket, objectStorage.GCS.Root)
 	case objectStorage.AliyunOSS != nil:
 		aliyunOSS := objectStorage.AliyunOSS
 		// Redirect to s3-compatible.
@@ -745,6 +752,30 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 	}
 }
 
+func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
+	gcs := f.risingwave.Spec.Storages.Object.GCS
+	useWorkloadIdentity := gcs.UseWorkloadIdentity
+	if useWorkloadIdentity {
+		return []corev1.EnvVar{}
+	}
+
+	secret := gcs.Secret
+	secretRef := corev1.LocalObjectReference{
+		Name: secret,
+	}
+	return []corev1.EnvVar{
+		{
+			Name: gcsServiceAccountCredentialsEnvName,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyGCSServiceAccountCredentials,
+				},
+			},
+		},
+	}
+}
+
 func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 	objectStorage := &f.risingwave.Spec.Storages.Object
 
@@ -768,6 +799,8 @@ func (f *RisingWaveObjectFactory) envsForObjectStorage() []corev1.EnvVar {
 		return f.envsForMinIO()
 	case f.isObjectStorageS3() || f.isObjectStorageS3Compatible():
 		return f.envsForS3()
+	case f.isObjectStorageGCS():
+		return f.envsForGCS()
 	case f.isObjectStorageAliyunOSS():
 		return f.envsForAliyunOSS()
 	case f.isObjectStorageHDFS():

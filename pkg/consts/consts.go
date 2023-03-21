@@ -110,6 +110,11 @@ const (
 	SecretKeyAWSS3Region          string = "Region"
 )
 
+// Credentials for GCS.
+const (
+	SecretKeyGCSServiceAccountCredentials string = "ServiceAccountCredentials"
+)
+
 // Port names of components.
 const (
 	PortService   string = "service"

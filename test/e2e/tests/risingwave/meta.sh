@@ -36,7 +36,7 @@ function risingwave::utils::delete_leader_lease() {
   for i in $(ETCDCTL_API=3 etcdctl get __meta_election_ --prefix="true" --write-out="json" --endpoints=127.0.0.1:2388 | tail -1 | jq -c '.kvs[]'); do
     if [[ "$(echo "$i" | jq -r .value | base64 --decode)" == *"${meta_leader_pod_names}"* ]] ; then
       del_lease=true
-      logging::error "found leader lease. Deleting it"
+      logging::info "found leader lease. Deleting it"
       
       # delete leader lease
       ETCDCTL_API=3 etcdctl del "$(echo "$i" | jq -r .key | base64 --decode)" --endpoints=127.0.0.1:2388

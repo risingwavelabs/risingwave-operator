@@ -92,24 +92,26 @@ function test::run::risingwave::multi_meta_failover_fencing() {
   local meta_leader_names
   meta_leader_names="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..metadata.name}')"
 
+  logging::info "leader restarted ${meta_leaders_restarts} times before experiment"
 
   if ! risingwave::utils::delete_leader_lease; then 
     logging::error "Failed to delete leader lease"
     return 1
   fi
   
-  logging::info "Waiting until deleting leader lease takes effect"
-  sleep 10
-
+  local wait_time 
+  wait_time=15
+  logging::info "Waiting ${wait_time}s until deleting leader lease takes effect"
+  sleep ${wait_time}
 
   if ! risingwave::utils::wait_for_meta_valid_setup; then 
     logging::error "Meta not in valid setup after deleting leader lease"
     return 1
   fi 
 
-  local new_meta_leaders_restarts
-  new_meta_leaders_restarts="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..status.containerStatuses..restartCount}')"
-  if [ "$new_meta_leaders_restarts" -le "$meta_leaders_restarts" ]; then
+  local old_leader_restarts
+  old_leader_restarts="$(k8s::kubectl::get pod "${meta_leader_names}" -o=jsonpath='{.items..status.containerStatuses..restartCount}')"
+  if [ "$old_leader_restarts" -le "$meta_leaders_restarts" ]; then
     logging::error "Leader did not restart"
     return 1
   fi

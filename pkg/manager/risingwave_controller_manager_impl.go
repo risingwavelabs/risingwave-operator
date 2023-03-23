@@ -772,7 +772,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaStatefulSets(ctx context.Con
 		groupPodTemplates,
 		metaStatefulSets,
 		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.StatefulSet {
-			return mgr.objectFactory.NewMetaStatefulSet(group, podTemplates)
+			return mgr.objectFactory.NewMetaStatefulSet(group, podTemplates, mgr.risingwaveManager.GetRisingWaveOperatorVersion())
 		},
 	)
 }
@@ -1175,7 +1175,15 @@ func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj 
 		newObj.SetResourceVersion(obj.GetResourceVersion())
 		logger.Info(fmt.Sprintf("Update the object of %s", gvk.Kind), "object", utils.GetNamespacedName(newObj),
 			"generation", mgr.risingwaveManager.RisingWave().Generation)
-		return mgr.client.Update(ctx, newObj)
+		if err = mgr.client.Update(ctx, newObj); err == nil {
+			return nil
+		}
+		if obj.GetLabels()["operatorVersion"] == mgr.risingwaveManager.GetRisingWaveOperatorVersion() {
+			return err
+		}
+		if err := mgr.client.Delete(ctx, obj); err != nil {
+			return err
+		}
 	}
 	return nil
 }

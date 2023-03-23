@@ -1243,7 +1243,7 @@ func buildUpgradeStrategyForCloneSet(strategy risingwavev1alpha1.RisingWaveUpgra
 }
 
 // NewMetaStatefulSet creates a new StatefulSet for the meta component and specified group.
-func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.StatefulSet {
+func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate, operatorVersion string) *appsv1.StatefulSet {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Meta,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -1265,10 +1265,14 @@ func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string, podTemplates 
 	// Make sure it's stable among builds.
 	keepPodSpecConsistent(&podTemplate.Spec)
 
+	// Setup RisingWave operator version label
+	objectMeta := f.componentGroupObjectMeta(consts.ComponentMeta, group, true)
+	objectMeta.Labels = mergeMap(objectMeta.Labels, map[string]string{"operatorVersion": operatorVersion})
+
 	// Build the StatefulSet.
 	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentMeta, group)
 	metaSts := &appsv1.StatefulSet{
-		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentMeta, group, true),
+		ObjectMeta: objectMeta,
 		Spec: appsv1.StatefulSetSpec{
 			ServiceName:    f.componentName(consts.ComponentMeta, ""),
 			Replicas:       pointer.Int32(componentGroup.Replicas),

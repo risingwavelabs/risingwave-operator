@@ -267,7 +267,7 @@ func Test_RisingWaveObjectFactory_Meta_StatefulSets(t *testing.T) {
 		tc.component = consts.ComponentMeta
 
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme)
-		sts := factory.NewMetaStatefulSet(tc.group.Name, tc.podTemplate)
+		sts := factory.NewMetaStatefulSet(tc.group.Name, tc.podTemplate, "")
 
 		t.Run(name, func(t *testing.T) {
 			composeAssertions(predicates, t).assertTest(sts, tc)
@@ -379,7 +379,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 			})
 
 			factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme)
-			sts := factory.NewMetaStatefulSet("", nil)
+			sts := factory.NewMetaStatefulSet("", nil, "")
 
 			t.Run(name, func(t *testing.T) {
 				composeAssertions(predicates, t).assertTest(sts, tc)
@@ -400,7 +400,7 @@ func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
 		})
 
 		factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
-		sts := factory.NewMetaStatefulSet("", nil)
+		sts := factory.NewMetaStatefulSet("", nil, "")
 
 		t.Run(name, func(t *testing.T) {
 			composeAssertions(predicates, t).assertTest(sts, tc)

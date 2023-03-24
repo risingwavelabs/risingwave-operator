@@ -130,8 +130,9 @@ func hasServiceSelector(svc *corev1.Service, selector map[string]string) bool {
 
 func componentLabels(risingwave *risingwavev1alpha1.RisingWave, component string, sync bool) map[string]string {
 	labels := map[string]string{
-		consts.LabelRisingWaveName:      risingwave.Name,
-		consts.LabelRisingWaveComponent: component,
+		consts.LabelRisingWaveName:            risingwave.Name,
+		consts.LabelRisingWaveComponent:       component,
+		consts.LabelRisingWaveOperatorVersion: "",
 	}
 	if sync {
 		labels[consts.LabelRisingWaveGeneration] = strconv.FormatInt(risingwave.Generation, 10)
@@ -148,8 +149,9 @@ func componentLabels(risingwave *risingwavev1alpha1.RisingWave, component string
 
 func componentGroupLabels(risingwave *risingwavev1alpha1.RisingWave, component string, group *string, sync bool) map[string]string {
 	labels := map[string]string{
-		consts.LabelRisingWaveName:      risingwave.Name,
-		consts.LabelRisingWaveComponent: component,
+		consts.LabelRisingWaveName:            risingwave.Name,
+		consts.LabelRisingWaveComponent:       component,
+		consts.LabelRisingWaveOperatorVersion: "",
 	}
 	if sync {
 		labels[consts.LabelRisingWaveGeneration] = strconv.FormatInt(risingwave.Generation, 10)

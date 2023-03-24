@@ -1086,8 +1086,9 @@ func serviceMonitorPredicates() []predicate[*prometheusv1.ServiceMonitor, baseTe
 			Name: "has-labels",
 			Fn: func(obj *prometheusv1.ServiceMonitor, tc baseTestCase) bool {
 				return hasLabels(obj, map[string]string{
-					consts.LabelRisingWaveName:       tc.risingwave.Name,
-					consts.LabelRisingWaveGeneration: strconv.FormatInt(tc.risingwave.Generation, 10),
+					consts.LabelRisingWaveName:            tc.risingwave.Name,
+					consts.LabelRisingWaveGeneration:      strconv.FormatInt(tc.risingwave.Generation, 10),
+					consts.LabelRisingWaveOperatorVersion: "",
 				}, true)
 			},
 		},

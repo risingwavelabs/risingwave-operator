@@ -111,6 +111,7 @@ func main() {
 		mgr.GetClient(),
 		mgr.GetEventRecorderFor("risingwave-controller"),
 		featureManager.IsFeatureEnabled(features.EnableOpenKruiseFeature),
+		featureManager.IsFeatureEnabled(features.EnableForceUpdate),
 		version,
 	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RisingWave")

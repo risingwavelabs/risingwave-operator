@@ -52,7 +52,7 @@ func newRisingWaveControllerManagerImplForTest(risingwave *risingwavev1alpha1.Ri
 		WithScheme(testutils.Scheme).
 		Build()
 	risingwaveManager := object.NewRisingWaveManager(fakeClient, risingwave.DeepCopy(), false)
-	return newRisingWaveControllerManagerImpl(fakeClient, risingwaveManager, event.NewMessageStore(), "")
+	return newRisingWaveControllerManagerImpl(fakeClient, risingwaveManager, event.NewMessageStore(), false, "")
 }
 
 func newRisingWaveControllerManagerImplOpenKruiseAvailableForTest(risingwave *risingwavev1alpha1.RisingWave, objects ...client.Object) *risingWaveControllerManagerImpl {
@@ -61,7 +61,7 @@ func newRisingWaveControllerManagerImplOpenKruiseAvailableForTest(risingwave *ri
 		WithScheme(testutils.Scheme).
 		Build()
 	risingwaveManager := object.NewRisingWaveManager(fakeClient, risingwave.DeepCopy(), true)
-	return newRisingWaveControllerManagerImpl(fakeClient, risingwaveManager, event.NewMessageStore(), "")
+	return newRisingWaveControllerManagerImpl(fakeClient, risingwaveManager, event.NewMessageStore(), false, "")
 }
 
 func Test_IsObjectNil(t *testing.T) {

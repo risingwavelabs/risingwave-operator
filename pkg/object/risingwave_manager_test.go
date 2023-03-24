@@ -30,7 +30,7 @@ import (
 )
 
 func Test_NewRisingWaveManager(t *testing.T) {
-	mgr := NewRisingWaveManager(nil, testutils.FakeRisingWave(), false, "")
+	mgr := NewRisingWaveManager(nil, testutils.FakeRisingWave(), false)
 
 	if mgr.risingwave == mgr.mutableRisingWave {
 		t.Fail()
@@ -51,7 +51,6 @@ func Test_RisingWaveManager_UpdateRemote(t *testing.T) {
 			Build(),
 		risingwave,
 		false,
-		"",
 	)
 
 	// Should do nothing.
@@ -86,8 +85,8 @@ func Test_RisingWaveManager_UpdateRemote(t *testing.T) {
 
 func Test_RisingWaveManager_openKruiseAvailable(t *testing.T) {
 	risingwave := testutils.FakeRisingWave()
-	mgrWithOpenKruiseUnavailable := NewRisingWaveManager(nil, risingwave, false, "")
-	mgrWithOpenKruiseAvailable := NewRisingWaveManager(nil, risingwave, true, "")
+	mgrWithOpenKruiseUnavailable := NewRisingWaveManager(nil, risingwave, false)
+	mgrWithOpenKruiseAvailable := NewRisingWaveManager(nil, risingwave, true)
 	if mgrWithOpenKruiseUnavailable.IsOpenKruiseAvailable() {
 		t.Fail()
 	}
@@ -103,19 +102,19 @@ func Test_RisingWaveManager_OpenKruiseEnabled(t *testing.T) {
 		expected bool
 	}{
 		"open-kruise-not-available": {
-			mgr:      NewRisingWaveManager(nil, testutils.FakeRisingWave(), false, ""),
+			mgr:      NewRisingWaveManager(nil, testutils.FakeRisingWave(), false),
 			expected: false,
 		},
 		"open-kruise-available-disabled": {
-			mgr:      NewRisingWaveManager(nil, testutils.FakeRisingWaveOpenKruiseDisabled(), true, ""),
+			mgr:      NewRisingWaveManager(nil, testutils.FakeRisingWaveOpenKruiseDisabled(), true),
 			expected: false,
 		},
 		"open-kruise-available-enabled": {
-			mgr:      NewRisingWaveManager(nil, testutils.FakeRisingWaveOpenKruiseEnabled(), true, ""),
+			mgr:      NewRisingWaveManager(nil, testutils.FakeRisingWaveOpenKruiseEnabled(), true),
 			expected: true,
 		},
 		"open-kruise-unavailable-enabled": {
-			mgr:      NewRisingWaveManager(nil, testutils.FakeRisingWaveOpenKruiseDisabled(), false, ""),
+			mgr:      NewRisingWaveManager(nil, testutils.FakeRisingWaveOpenKruiseDisabled(), false),
 			expected: false},
 	}
 	for _, tc := range testcases {
@@ -127,7 +126,7 @@ func Test_RisingWaveManager_OpenKruiseEnabled(t *testing.T) {
 
 func Test_RisingWaveManager_UpdateMemoryAndGet(t *testing.T) {
 	risingwave := testutils.FakeRisingWave()
-	mgr := NewRisingWaveManager(nil, risingwave, false, "")
+	mgr := NewRisingWaveManager(nil, risingwave, false)
 
 	// IsObservedGenerationOutdated
 	if !mgr.IsObservedGenerationOutdated() {

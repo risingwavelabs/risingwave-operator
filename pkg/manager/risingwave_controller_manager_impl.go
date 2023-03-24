@@ -772,7 +772,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaStatefulSets(ctx context.Con
 		groupPodTemplates,
 		metaStatefulSets,
 		func(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.StatefulSet {
-			return mgr.objectFactory.NewMetaStatefulSet(group, podTemplates, mgr.risingwaveManager.GetRisingWaveOperatorVersion())
+			return mgr.objectFactory.NewMetaStatefulSet(group, podTemplates)
 		},
 	)
 }
@@ -1178,7 +1178,7 @@ func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj 
 		if err = mgr.client.Update(ctx, newObj); err == nil {
 			return nil
 		}
-		if obj.GetLabels()["operatorVersion"] == mgr.risingwaveManager.GetRisingWaveOperatorVersion() {
+		if obj.GetLabels()[consts.LabelRisingWaveOperatorVersion] == newObj.GetLabels()[consts.LabelRisingWaveOperatorVersion] {
 			return err
 		}
 		if err := mgr.client.Delete(ctx, obj); err != nil {
@@ -1270,16 +1270,16 @@ func (mgr *risingWaveControllerManagerImpl) SyncServiceMonitor(ctx context.Conte
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync service monitor", err)
 }
 
-func newRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager, messageStore *event.MessageStore) *risingWaveControllerManagerImpl {
+func newRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager, messageStore *event.MessageStore, operatorVersion string) *risingWaveControllerManagerImpl {
 	return &risingWaveControllerManagerImpl{
 		client:            client,
 		risingwaveManager: risingwaveManager,
-		objectFactory:     factory.NewRisingWaveObjectFactory(risingwaveManager.RisingWave(), client.Scheme()),
+		objectFactory:     factory.NewRisingWaveObjectFactory(risingwaveManager.RisingWave(), client.Scheme(), operatorVersion),
 		eventMessageStore: messageStore,
 	}
 }
 
 // NewRisingWaveControllerManagerImpl creates an object that implements the RisingWaveControllerManagerImpl.
-func NewRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager, messageStore *event.MessageStore) RisingWaveControllerManagerImpl {
-	return newRisingWaveControllerManagerImpl(client, risingwaveManager, messageStore)
+func NewRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager, messageStore *event.MessageStore, operatorVersion string) RisingWaveControllerManagerImpl {
+	return newRisingWaveControllerManagerImpl(client, risingwaveManager, messageStore, operatorVersion)
 }

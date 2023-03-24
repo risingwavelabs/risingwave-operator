@@ -74,7 +74,6 @@ type RisingWaveManager struct {
 	mutableRisingWave *risingwavev1alpha1.RisingWave // Mutable copy of original.
 
 	openkruiseAvailable bool // Availability and administrative switch of openkruise
-	operatorVersion     string
 }
 
 // RisingWaveAfterImage returns a copy of the mutable RisingWave.
@@ -174,13 +173,8 @@ func (mgr *RisingWaveManager) KeepLock(aliveScaleView []risingwavev1alpha1.Risin
 	mgr.mutableRisingWave.Status.ScaleViews = aliveScaleView
 }
 
-// GetRisingWaveOperatorVersion returns the current RisingWave operator version.
-func (mgr *RisingWaveManager) GetRisingWaveOperatorVersion() string {
-	return mgr.operatorVersion
-}
-
 // NewRisingWaveManager creates a new RisingWaveManager with given arguments.
-func NewRisingWaveManager(client client.Client, risingwave *risingwavev1alpha1.RisingWave, openkruiseAvailable bool, operatorVersion string) *RisingWaveManager {
+func NewRisingWaveManager(client client.Client, risingwave *risingwavev1alpha1.RisingWave, openkruiseAvailable bool) *RisingWaveManager {
 	return &RisingWaveManager{
 		RisingWaveReader: RisingWaveReader{
 			risingwave: risingwave,
@@ -188,6 +182,5 @@ func NewRisingWaveManager(client client.Client, risingwave *risingwavev1alpha1.R
 		client:              client,
 		mutableRisingWave:   risingwave.DeepCopy(),
 		openkruiseAvailable: openkruiseAvailable,
-		operatorVersion:     operatorVersion,
 	}
 }

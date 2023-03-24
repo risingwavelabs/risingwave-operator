@@ -174,12 +174,12 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 		return ctrlkit.NoRequeue()
 	}
 
-	risingwaveManager := object.NewRisingWaveManager(c.Client, risingwave.DeepCopy(), c.openKruiseAvailable, c.operatorVersion)
+	risingwaveManager := object.NewRisingWaveManager(c.Client, risingwave.DeepCopy(), c.openKruiseAvailable)
 	eventMessageStore := event.NewMessageStore()
 
 	mgr := manager.NewRisingWaveControllerManager(
 		manager.NewRisingWaveControllerManagerState(c.Client, risingwave.DeepCopy()),
-		manager.NewRisingWaveControllerManagerImpl(c.Client, risingwaveManager, eventMessageStore),
+		manager.NewRisingWaveControllerManagerImpl(c.Client, risingwaveManager, eventMessageStore, c.operatorVersion),
 		logger,
 		c.managerOpts(risingwaveManager, eventMessageStore)...,
 	)

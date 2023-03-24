@@ -86,6 +86,7 @@ type RisingWaveObjectFactory struct {
 	risingwave *risingwavev1alpha1.RisingWave
 
 	inheritedLabels map[string]string
+	operatorVersion string
 }
 
 func mustSetControllerReference[T client.Object](owner client.Object, controlled T, scheme *runtime.Scheme) T {
@@ -187,8 +188,9 @@ func (f *RisingWaveObjectFactory) objectMeta(name string, sync bool) metav1.Obje
 		Name:      name,
 		Namespace: f.namespace(),
 		Labels: map[string]string{
-			consts.LabelRisingWaveName:       f.risingwave.Name,
-			consts.LabelRisingWaveGeneration: lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
+			consts.LabelRisingWaveName:            f.risingwave.Name,
+			consts.LabelRisingWaveGeneration:      lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
+			consts.LabelRisingWaveOperatorVersion: f.operatorVersion,
 		},
 	}
 
@@ -202,9 +204,10 @@ func (f *RisingWaveObjectFactory) componentObjectMeta(component string, sync boo
 		Name:      f.componentName(component, ""),
 		Namespace: f.namespace(),
 		Labels: map[string]string{
-			consts.LabelRisingWaveName:       f.risingwave.Name,
-			consts.LabelRisingWaveComponent:  component,
-			consts.LabelRisingWaveGeneration: lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
+			consts.LabelRisingWaveName:            f.risingwave.Name,
+			consts.LabelRisingWaveComponent:       component,
+			consts.LabelRisingWaveGeneration:      lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
+			consts.LabelRisingWaveOperatorVersion: f.operatorVersion,
 		},
 	}
 
@@ -223,10 +226,11 @@ func (f *RisingWaveObjectFactory) componentGroupObjectMeta(component, group stri
 		Name:      f.componentName(component, group),
 		Namespace: f.namespace(),
 		Labels: map[string]string{
-			consts.LabelRisingWaveName:       f.risingwave.Name,
-			consts.LabelRisingWaveComponent:  component,
-			consts.LabelRisingWaveGeneration: lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
-			consts.LabelRisingWaveGroup:      group,
+			consts.LabelRisingWaveName:            f.risingwave.Name,
+			consts.LabelRisingWaveComponent:       component,
+			consts.LabelRisingWaveGeneration:      lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
+			consts.LabelRisingWaveGroup:           group,
+			consts.LabelRisingWaveOperatorVersion: f.operatorVersion,
 		},
 	}
 
@@ -1243,7 +1247,7 @@ func buildUpgradeStrategyForCloneSet(strategy risingwavev1alpha1.RisingWaveUpgra
 }
 
 // NewMetaStatefulSet creates a new StatefulSet for the meta component and specified group.
-func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate, operatorVersion string) *appsv1.StatefulSet {
+func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.StatefulSet {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Meta,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -1265,14 +1269,10 @@ func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string, podTemplates 
 	// Make sure it's stable among builds.
 	keepPodSpecConsistent(&podTemplate.Spec)
 
-	// Setup RisingWave operator version label
-	objectMeta := f.componentGroupObjectMeta(consts.ComponentMeta, group, true)
-	objectMeta.Labels = mergeMap(objectMeta.Labels, map[string]string{"operatorVersion": operatorVersion})
-
 	// Build the StatefulSet.
 	labelsOrSelectors := f.podLabelsOrSelectorsForGroup(consts.ComponentMeta, group)
 	metaSts := &appsv1.StatefulSet{
-		ObjectMeta: objectMeta,
+		ObjectMeta: f.componentGroupObjectMeta(consts.ComponentMeta, group, true),
 		Spec: appsv1.StatefulSetSpec{
 			ServiceName:    f.componentName(consts.ComponentMeta, ""),
 			Replicas:       pointer.Int32(componentGroup.Replicas),
@@ -1962,10 +1962,11 @@ func (f *RisingWaveObjectFactory) getConnectorPorts() *risingwavev1alpha1.Rising
 }
 
 // NewRisingWaveObjectFactory creates a new RisingWaveObjectFactory.
-func NewRisingWaveObjectFactory(risingwave *risingwavev1alpha1.RisingWave, scheme *runtime.Scheme) *RisingWaveObjectFactory {
+func NewRisingWaveObjectFactory(risingwave *risingwavev1alpha1.RisingWave, scheme *runtime.Scheme, operatorVersion string) *RisingWaveObjectFactory {
 	return &RisingWaveObjectFactory{
 		risingwave:      risingwave,
 		scheme:          scheme,
 		inheritedLabels: captureInheritedLabels(risingwave),
+		operatorVersion: operatorVersion,
 	}
 }

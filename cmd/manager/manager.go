@@ -72,7 +72,6 @@ func main() {
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false, "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
 	flag.StringVar(&featureGates, "feature-gates", "", "The feature gates arguments for the operator.")
-	flag.StringVar(&version, "v", "", "The version argument for the operator.")
 	opts := zap.Options{
 		Development: true,
 	}

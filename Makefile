@@ -141,7 +141,7 @@ proto:
 build: build-manager
 
 build-manager: generate fmt vet lint vendor ## Build manager binary.
-	go build -o bin/manager cmd/manager/manager.go
+	go build -ldflags "-X main.version=v0.2.7" -o bin/manager cmd/manager/manager.go
 
 build-plugin: generate fmt vet lint ## Build manager binary.
 	go build -o bin/kubectl-rw cmd/plugin/main.go

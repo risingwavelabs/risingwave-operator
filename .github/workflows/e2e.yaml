@@ -65,7 +65,7 @@ jobs:
           cp etcd /usr/local/bin/
           cp etcdctl /usr/local/bin/
           rm -rf etcd-$ETCD_VERSION-linux-amd64
-          etcdctl --version
+          etcdctl version
 
           mkdir -p /home/ubuntu/go/pkg/mod
           export GOCACHE=/tmp

@@ -519,14 +519,7 @@ func (f *RisingWaveObjectFactory) argsForCompute(cpuLimit int64, memLimit int64)
 	}
 
 	if memLimit != 0 {
-		// Set to memLimit - 512M if memLimit >= 1G, or 512M when memLimit >= 512M, or just memLimit.
-		totalMemoryBytes := memLimit
-		if totalMemoryBytes >= (int64(1) << 30) {
-			totalMemoryBytes -= 512 << 20
-		} else if totalMemoryBytes >= (512 << 20) {
-			totalMemoryBytes = 512 << 20
-		}
-		args = append(args, "--total-memory-bytes", strconv.FormatInt(totalMemoryBytes, 10))
+		args = append(args, "--total-memory-bytes", strconv.FormatInt(memLimit, 10))
 	}
 
 	return args

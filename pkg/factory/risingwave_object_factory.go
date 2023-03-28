@@ -72,6 +72,7 @@ const (
 	s3CompatibleAccessKeyEnvName         = "S3_COMPATIBLE_ACCESS_KEY_ID"
 	s3CompatibleSecretAccessKeyEnvName   = "S3_COMPATIBLE_SECRET_ACCESS_KEY"
 	s3EndpointEnvName                    = "S3_COMPATIBLE_ENDPOINT"
+	gcsServiceAccountCredentialsEnvName  = "GOOGLE_APPLICATION_CREDENTIALS"
 )
 
 var (
@@ -107,6 +108,10 @@ func (f *RisingWaveObjectFactory) isObjectStorageS3Compatible() bool {
 	return f.risingwave.Spec.Storages.Object.S3 != nil && len(f.risingwave.Spec.Storages.Object.S3.Endpoint) > 0
 }
 
+func (f *RisingWaveObjectFactory) isObjectStorageGCS() bool {
+	return f.risingwave.Spec.Storages.Object.GCS != nil
+}
+
 func (f *RisingWaveObjectFactory) isObjectStorageAliyunOSS() bool {
 	return f.risingwave.Spec.Storages.Object.AliyunOSS != nil
 }
@@ -137,6 +142,8 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 	case objectStorage.MinIO != nil:
 		minio := objectStorage.MinIO
 		return fmt.Sprintf("hummock+minio://$(%s):$(%s)@%s/%s", minIOUsernameEnvName, minIOPasswordEnvName, minio.Endpoint, minio.Bucket)
+	case f.isObjectStorageGCS():
+		return fmt.Sprintf("hummock+gcs://%s@%s", objectStorage.GCS.Bucket, objectStorage.GCS.Root)
 	case objectStorage.AliyunOSS != nil:
 		aliyunOSS := objectStorage.AliyunOSS
 		// Redirect to s3-compatible.
@@ -512,14 +519,7 @@ func (f *RisingWaveObjectFactory) argsForCompute(cpuLimit int64, memLimit int64)
 	}
 
 	if memLimit != 0 {
-		// Set to memLimit - 512M if memLimit >= 1G, or 512M when memLimit >= 512M, or just memLimit.
-		totalMemoryBytes := memLimit
-		if totalMemoryBytes >= (int64(1) << 30) {
-			totalMemoryBytes -= 512 << 20
-		} else if totalMemoryBytes >= (512 << 20) {
-			totalMemoryBytes = 512 << 20
-		}
-		args = append(args, "--total-memory-bytes", strconv.FormatInt(totalMemoryBytes, 10))
+		args = append(args, "--total-memory-bytes", strconv.FormatInt(memLimit, 10))
 	}
 
 	return args
@@ -680,10 +680,9 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 		}
 
 		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.Secret)
-	} else {
-		// AWS S3 mode.
-		return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.Secret)
 	}
+	// AWS S3 mode.
+	return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.Secret)
 }
 
 func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVar {
@@ -746,6 +745,30 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 	}
 }
 
+func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
+	gcs := f.risingwave.Spec.Storages.Object.GCS
+	useWorkloadIdentity := gcs.UseWorkloadIdentity
+	if useWorkloadIdentity {
+		return []corev1.EnvVar{}
+	}
+
+	secret := gcs.Secret
+	secretRef := corev1.LocalObjectReference{
+		Name: secret,
+	}
+	return []corev1.EnvVar{
+		{
+			Name: gcsServiceAccountCredentialsEnvName,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyGCSServiceAccountCredentials,
+				},
+			},
+		},
+	}
+}
+
 func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 	objectStorage := &f.risingwave.Spec.Storages.Object
 
@@ -769,6 +792,8 @@ func (f *RisingWaveObjectFactory) envsForObjectStorage() []corev1.EnvVar {
 		return f.envsForMinIO()
 	case f.isObjectStorageS3() || f.isObjectStorageS3Compatible():
 		return f.envsForS3()
+	case f.isObjectStorageGCS():
+		return f.envsForGCS()
 	case f.isObjectStorageAliyunOSS():
 		return f.envsForAliyunOSS()
 	case f.isObjectStorageHDFS():
@@ -1888,6 +1913,19 @@ func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonit
 					Port:          consts.PortMetrics,
 					Interval:      prometheusv1.Duration(fmt.Sprintf("%.0fs", interval.Seconds())),
 					ScrapeTimeout: prometheusv1.Duration(fmt.Sprintf("%.0fs", scrapeTimeout.Seconds())),
+					// we need to drop some metrics which maybe will produce too many series.
+					MetricRelabelConfigs: []*prometheusv1.RelabelConfig{
+						{
+							SourceLabels: []prometheusv1.LabelName{"__name__"},
+							Action:       "drop",
+							Regex:        "batch_.+",
+						},
+						{
+							SourceLabels: []prometheusv1.LabelName{"__name__"},
+							Action:       "drop",
+							Regex:        "stream_exchange_.+",
+						},
+					},
 				},
 			},
 			Selector: metav1.LabelSelector{

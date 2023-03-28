@@ -456,6 +456,26 @@ type RisingWaveObjectStorageS3 struct {
 	VirtualHostedStyle bool `json:"virtualHostedStyle,omitempty"`
 }
 
+// RisingWaveObjectStorageGCS is the details of GCS bucket storage for compute and compactor components.
+type RisingWaveObjectStorageGCS struct {
+	// UseWorkloadIdentity indicates to use workload identity to access the GCS service. If this is enabled, secret is not required, and ADC is used.
+	// +kubebuilder:validation:Required
+	UseWorkloadIdentity bool `json:"useWorkloadIdentity"`
+
+	// Secret contains the credentials to access the GCS service. It must contain the following keys:
+	//   * ServiceAccountCredentials
+	// +kubebuilder:validation:Optional
+	Secret string `json:"secret,omitempty"`
+
+	// Bucket of the GCS bucket service.
+	// +kubebuilder:validation:Required
+	Bucket string `json:"bucket"`
+
+	// Working directory root of the GCS bucket
+	// +kubebuilder:validation:Required
+	Root string `json:"root"`
+}
+
 // RisingWaveObjectStorageAliyunOSS is the details of Aliyun OSS storage (S3 compatible) for compute and compactor components.
 type RisingWaveObjectStorageAliyunOSS struct {
 	// Secret contains the credentials to access the Aliyun OSS service. It must contain the following keys:
@@ -484,7 +504,7 @@ type RisingWaveObjectStorageHDFS struct {
 	// +kubebuilder:validation:Required
 	NameNode string `json:"nameNode"`
 
-	// Root of the HDFS
+	// Working directory root of the HDFS
 	// +kubebuilder:validation:Required
 	Root string `json:"root"`
 }
@@ -503,6 +523,10 @@ type RisingWaveObjectStorage struct {
 	// S3 storage spec.
 	// +optional
 	S3 *RisingWaveObjectStorageS3 `json:"s3,omitempty"`
+
+	// GCS storage spec.
+	// +optional
+	GCS *RisingWaveObjectStorageGCS `json:"GCS,omitempty"`
 
 	// AliyunOSS storage spec.
 	// +optional
@@ -808,6 +832,7 @@ const (
 	ObjectStorageTypeMemory    ObjectStorageType = "Memory"
 	ObjectStorageTypeMinIO     ObjectStorageType = "MinIO"
 	ObjectStorageTypeS3        ObjectStorageType = "S3"
+	ObjectStorageTypeGCS       ObjectStorageType = "GCS"
 	ObjectStorageTypeAliyunOSS ObjectStorageType = "AliyunOSS"
 	ObjectStorageTypeHDFS      ObjectStorageType = "HDFS"
 	ObjectStorageTypeUnknown   ObjectStorageType = "Unknown"

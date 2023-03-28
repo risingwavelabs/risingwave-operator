@@ -2576,6 +2576,41 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 				},
 			},
 		},
+		"gcs-workload": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				GCS: &risingwavev1alpha1.RisingWaveObjectStorageGCS{
+					UseWorkloadIdentity: true,
+					Bucket:              "gcs-bucket",
+					Root:                "gcs-root",
+				},
+			},
+			hummockArg: "hummock+gcs://gcs-bucket@gcs-root",
+			envs:       []corev1.EnvVar{},
+		},
+		"gcs-secret": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				GCS: &risingwavev1alpha1.RisingWaveObjectStorageGCS{
+					UseWorkloadIdentity: false,
+					Secret:              "gcs-creds",
+					Bucket:              "gcs-bucket",
+					Root:                "gcs-root",
+				},
+			},
+			hummockArg: "hummock+gcs://gcs-bucket@gcs-root",
+			envs: []corev1.EnvVar{
+				{
+					Name: "GOOGLE_APPLICATION_CREDENTIALS",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "gcs-creds",
+							},
+							Key: consts.SecretKeyGCSServiceAccountCredentials,
+						},
+					},
+				},
+			},
+		},
 		"aliyun-oss": {
 			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
 				AliyunOSS: &risingwavev1alpha1.RisingWaveObjectStorageAliyunOSS{
@@ -2917,7 +2952,6 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			envs:       []corev1.EnvVar{},
 		},
 	}
-
 }
 
 type configMapTestCase struct {
@@ -2954,19 +2988,19 @@ func computeArgsTestCases() map[string]computeArgsTestCase {
 		"mem-limit-4g": {
 			memLimit: 4 << 30,
 			argsList: [][]string{
-				{"--total-memory-bytes", strconv.Itoa((4 << 30) - (512 << 20))},
+				{"--total-memory-bytes", strconv.Itoa(4 << 30)},
 			},
 		},
 		"mem-limit-1g": {
 			memLimit: 1 << 30,
 			argsList: [][]string{
-				{"--total-memory-bytes", strconv.Itoa((1 << 30) - (512 << 20))},
+				{"--total-memory-bytes", strconv.Itoa(1 << 30)},
 			},
 		},
 		"mem-limit-768m": {
 			memLimit: 768 << 20,
 			argsList: [][]string{
-				{"--total-memory-bytes", strconv.Itoa(512 << 20)},
+				{"--total-memory-bytes", strconv.Itoa(768 << 20)},
 			},
 		},
 		"mem-limit-512m": {
@@ -2986,7 +3020,7 @@ func computeArgsTestCases() map[string]computeArgsTestCase {
 			memLimit: 1 << 30,
 			argsList: [][]string{
 				{"--parallelism", "4"},
-				{"--total-memory-bytes", strconv.Itoa((1 << 30) - (512 << 20))},
+				{"--total-memory-bytes", strconv.Itoa(1 << 30)},
 			},
 		},
 	}

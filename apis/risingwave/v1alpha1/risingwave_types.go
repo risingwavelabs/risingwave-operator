@@ -365,19 +365,19 @@ type RisingWaveComponentConnector struct {
 
 // RisingWaveComponentsSpec is the spec describes the components of RisingWave.
 type RisingWaveComponentsSpec struct {
-	// Meta component spec.
+	// Meta component spec.The central metadata management service. It also acts as a failure detector that periodically sends heartbeats to frontend nodes and compute nodes in the cluster.
 	Meta RisingWaveComponentMeta `json:"meta,omitempty"`
 
-	// Frontend component spec.
+	// Frontend component spec. A frontend node acts as a stateless proxy that accepts user queries through Postgres protocol. It is responsible for parsing and validating queries, optimizing query execution plans, and delivering query results.
 	Frontend RisingWaveComponentFrontend `json:"frontend,omitempty"`
 
-	// Compute component spec.
+	// Compute component spec. A computer node executes the optimized query plans and handles data ingestion and output.
 	Compute RisingWaveComponentCompute `json:"compute,omitempty"`
 
-	// Compactor component.
+	// Compactor component spec. A stateless worker node that compacts data for the storage engine.
 	Compactor RisingWaveComponentCompactor `json:"compactor,omitempty"`
 
-	// Connector component spec.
+	// Connector component spec. A connector node, which enables the communication with other systems like kinesis or pulsar.
 	Connector RisingWaveComponentConnector `json:"connector,omitempty"`
 }
 

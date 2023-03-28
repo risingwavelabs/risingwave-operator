@@ -7223,7 +7223,7 @@ spec:
                   deployment in hybrid-arch cluster.
                 properties:
                   compactor:
-                    description: Compactor component spec. A stateless worker node that compacts data for the storage engine.
+                    description: Compactor component.
                     properties:
                       groups:
                         description: Groups of Pods of compactor component.
@@ -8904,7 +8904,7 @@ spec:
                         type: string
                     type: object
                   compute:
-                    description: Compute component spec. A computer node executes the optimized query plans and handles data ingestion and output.
+                    description: Compute component spec.
                     properties:
                       groups:
                         description: Groups of Pods of compute component.
@@ -10627,7 +10627,7 @@ spec:
                         type: string
                     type: object
                   connector:
-                    description: Connector component spec. A connector node, which enables the communication with other systems like kinesis or pulsar.
+                    description: Connector component spec.
                     properties:
                       groups:
                         description: Groups of Pods of compactor component.
@@ -12311,7 +12311,7 @@ spec:
                         type: string
                     type: object
                   frontend:
-                    description: Frontend component spec. A frontend node acts as a stateless proxy that accepts user queries through Postgres protocol. It is responsible for parsing and validating queries, optimizing query execution plans, and delivering query results.
+                    description: Frontend component spec.
                     properties:
                       groups:
                         description: Groups of Pods of frontend component.
@@ -13992,7 +13992,7 @@ spec:
                         type: string
                     type: object
                   meta:
-                    description: Meta component spec. The central metadata management service. It also acts as a failure detector that periodically sends heartbeats to frontend nodes and compute nodes in the cluster.
+                    description: Meta component spec.
                     properties:
                       groups:
                         description: Groups of Pods of meta component.
@@ -17299,6 +17299,30 @@ spec:
                   object:
                     description: Storage spec for object storage.
                     properties:
+                      GCS:
+                        description: GCS storage spec.
+                        properties:
+                          bucket:
+                            description: Bucket of the GCS bucket service.
+                            type: string
+                          root:
+                            description: Working directory root of the GCS bucket
+                            type: string
+                          secret:
+                            description: 'Secret contains the credentials to access
+                              the GCS service. It must contain the following keys:
+                              * ServiceAccountCredentials'
+                            type: string
+                          useWorkloadIdentity:
+                            description: UseWorkloadIdentity indicates to use workload
+                              identity to access the GCS service. If this is enabled,
+                              secret is not required, and ADC is used.
+                            type: boolean
+                        required:
+                        - bucket
+                        - root
+                        - useWorkloadIdentity
+                        type: object
                       aliyunOSS:
                         description: AliyunOSS storage spec.
                         properties:
@@ -17333,7 +17357,7 @@ spec:
                             description: Name node of the HDFS
                             type: string
                           root:
-                            description: Root of the HDFS
+                            description: Working directory root of the HDFS
                             type: string
                         required:
                         - nameNode
@@ -18586,11 +18610,11 @@ spec:
           periodSeconds: 10
         resources:
           limits:
-            cpu: 200m
-            memory: 100Mi
+            cpu: 500m
+            memory: 500Mi
           requests:
             cpu: 100m
-            memory: 20Mi
+            memory: 100Mi
         securityContext:
           allowPrivilegeEscalation: false
         volumeMounts:

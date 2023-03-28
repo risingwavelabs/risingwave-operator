@@ -2988,19 +2988,19 @@ func computeArgsTestCases() map[string]computeArgsTestCase {
 		"mem-limit-4g": {
 			memLimit: 4 << 30,
 			argsList: [][]string{
-				{"--total-memory-bytes", strconv.Itoa((4 << 30) - (512 << 20))},
+				{"--total-memory-bytes", strconv.Itoa(4 << 30)},
 			},
 		},
 		"mem-limit-1g": {
 			memLimit: 1 << 30,
 			argsList: [][]string{
-				{"--total-memory-bytes", strconv.Itoa((1 << 30) - (512 << 20))},
+				{"--total-memory-bytes", strconv.Itoa(1 << 30)},
 			},
 		},
 		"mem-limit-768m": {
 			memLimit: 768 << 20,
 			argsList: [][]string{
-				{"--total-memory-bytes", strconv.Itoa(512 << 20)},
+				{"--total-memory-bytes", strconv.Itoa(768 << 20)},
 			},
 		},
 		"mem-limit-512m": {
@@ -3020,7 +3020,7 @@ func computeArgsTestCases() map[string]computeArgsTestCase {
 			memLimit: 1 << 30,
 			argsList: [][]string{
 				{"--parallelism", "4"},
-				{"--total-memory-bytes", strconv.Itoa((1 << 30) - (512 << 20))},
+				{"--total-memory-bytes", strconv.Itoa(1 << 30)},
 			},
 		},
 	}

@@ -1436,7 +1436,7 @@ RisingWaveComponentMeta
 </em>
 </td>
 <td>
-<p>Meta component spec.</p>
+<p>Meta component spec.The central metadata management service. It also acts as a failure detector that periodically sends heartbeats to frontend nodes and compute nodes in the cluster.</p>
 </td>
 </tr>
 <tr>
@@ -1449,7 +1449,7 @@ RisingWaveComponentFrontend
 </em>
 </td>
 <td>
-<p>Frontend component spec.</p>
+<p>Frontend component spec. A frontend node acts as a stateless proxy that accepts user queries through Postgres protocol. It is responsible for parsing and validating queries, optimizing query execution plans, and delivering query results.</p>
 </td>
 </tr>
 <tr>
@@ -1462,7 +1462,7 @@ RisingWaveComponentCompute
 </em>
 </td>
 <td>
-<p>Compute component spec.</p>
+<p>Compute component spec. A computer node executes the optimized query plans and handles data ingestion and output.</p>
 </td>
 </tr>
 <tr>
@@ -1475,7 +1475,7 @@ RisingWaveComponentCompactor
 </em>
 </td>
 <td>
-<p>Compactor component.</p>
+<p>Compactor component spec. A stateless worker node that compacts data for the storage engine.</p>
 </td>
 </tr>
 <tr>
@@ -1488,7 +1488,7 @@ RisingWaveComponentConnector
 </em>
 </td>
 <td>
-<p>Connector component spec.</p>
+<p>Connector component spec. A connector node, which enables the communication with other systems like kinesis or pulsar.</p>
 </td>
 </tr>
 </tbody>

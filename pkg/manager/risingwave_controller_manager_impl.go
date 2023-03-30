@@ -1186,6 +1186,10 @@ func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj 
 		if err := mgr.client.Delete(ctx, obj); err != nil {
 			return err
 		}
+		newObj.SetResourceVersion("")
+		if err := mgr.client.Create(ctx, newObj); err != nil {
+			return err
+		}
 	}
 	return nil
 }

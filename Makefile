@@ -167,7 +167,7 @@ copy-local-certs:
 	cp -R config/local/certs/* ${TMPDIR}/k8s-webhook-server/serving-certs
 
 run-local: manifests generate fmt vet lint install-local
-	go run cmd/manager/manager.go -zap-time-encoding rfc3339
+	go run -ldflags "-X main.version=$(shell git describe --tags)" cmd/manager/manager.go -zap-time-encoding rfc3339
 
 build-e2e-image:
 	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=true -t docker.io/risingwavelabs/risingwave-operator:dev . --load

@@ -240,6 +240,11 @@ func (mpl *MetaPodRoleLabeler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrlkit.RequeueIfError(client.IgnoreNotFound(err))
 	}
 
+	// If Pod is deleted or not running, then no need to sync.
+	if utils.IsDeleted(&pod) || !utils.IsPodRunning(&pod) {
+		return ctrlkit.NoRequeue()
+	}
+
 	// Ignore non-meta or non-running Pods.
 	if pod.Status.PodIP == "" || !mpl.isRisingWaveMetaPod(&pod) {
 		return ctrlkit.NoRequeue()

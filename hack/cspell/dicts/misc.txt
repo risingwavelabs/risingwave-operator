@@ -49,3 +49,5 @@ Oneof
 protoc
 protoimpl
 protoreflect
+golint
+nolint

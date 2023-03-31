@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
+	"github.com/risingwavelabs/risingwave-operator/pkg/factory/envs"
 
 	"github.com/distribution/distribution/reference"
 	"github.com/samber/lo"
@@ -51,12 +51,12 @@ func isImageValid(image string) bool {
 }
 
 var systemEnv = map[string]bool{
-	consts.EnvRisingWavePodIp:                true,
-	consts.EnvRisingWavePodName:              true,
-	consts.EnvRisingWaveRustBacktrace:        true,
-	consts.EnvRisingWaveWorkerThreads:        true,
-	consts.EnvRisingWaveConnectorRpcEndPoint: true,
-	consts.EnvRisingWaveJavaOpts:             true,
+	envs.PodIP:                  true,
+	envs.PodName:                true,
+	envs.RustBacktrace:          true,
+	envs.RWWorkerThreads:        true,
+	envs.RWConnectorRPCEndPoint: true,
+	envs.JavaOpts:               true,
 }
 
 func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, groupTemplate *risingwavev1alpha1.RisingWaveComponentGroupTemplate, isOpenKruiseEnabled bool) field.ErrorList {

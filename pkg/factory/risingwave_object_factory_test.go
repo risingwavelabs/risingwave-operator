@@ -17,7 +17,6 @@
 package factory
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -436,7 +435,7 @@ func Test_RisingWaveObjectFactory_InheritLabels(t *testing.T) {
 }
 
 func TestRisingWaveObjectFactory_ComputeArgs(t *testing.T) {
-	for name, tc := range computeArgsTestCases() {
+	for name, tc := range computeEnvsTestCases() {
 		t.Run(name, func(t *testing.T) {
 			factory := NewRisingWaveObjectFactory(&risingwavev1alpha1.RisingWave{
 				Spec: risingwavev1alpha1.RisingWaveSpec{
@@ -447,12 +446,11 @@ func TestRisingWaveObjectFactory_ComputeArgs(t *testing.T) {
 					},
 				},
 			}, nil, "")
-			args := factory.argsForCompute(tc.cpuLimit, tc.memLimit)
+			envs := factory.envsForComputeArgs(tc.cpuLimit, tc.memLimit)
 
-			for _, expectArgs := range tc.argsList {
-				if !containsSlice(args, expectArgs) {
-					t.Errorf("Args not expected, expects \"%s\", but is \"%s\"",
-						strings.Join(expectArgs, " "), strings.Join(args, " "))
+			for _, expectEnv := range tc.envList {
+				if !listContainsByKey(envs, []corev1.EnvVar{expectEnv}, func(t *corev1.EnvVar) string { return t.Name }, deepEqual[corev1.EnvVar]) {
+					t.Errorf("Env not found or value not expected, expects \"%s\"", testutils.JSONMustPrettyPrint(expectEnv))
 				}
 			}
 		})

@@ -24,6 +24,8 @@ import (
 	"strconv"
 	"strings"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+
 	"github.com/go-logr/logr"
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
 	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
@@ -1178,6 +1180,9 @@ func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj 
 			"generation", mgr.risingwaveManager.RisingWave().Generation)
 		if err = mgr.client.Update(ctx, newObj); err == nil {
 			return nil
+		}
+		if !apierrors.IsInvalid(err) {
+			return err
 		}
 		if !mgr.forceUpdateEnabled ||
 			obj.GetLabels()[consts.LabelRisingWaveOperatorVersion] == newObj.GetLabels()[consts.LabelRisingWaveOperatorVersion] {

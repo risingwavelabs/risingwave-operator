@@ -156,17 +156,20 @@ build-local-certs:
 		-out ${TMPDIR}/k8s-webhook-server/serving-certs/tls.crt -subj "/CN=localhost" \
 		-extensions san -config <(echo '[req]'; echo 'distinguished_name=req'; echo '[san]'; echo 'subjectAltName=DNS:host.docker.internal')
 
-install-local: kustomize manifests
+use-local-context:
+	kubectl config use docker-desktop
+
+install-local: use-local-context kustomize manifests
 	$(KUSTOMIZE) build config/local | kubectl apply --server-side --force-conflicts -f - >/dev/null
 
-uninstall-local: kustomize manifests
+uninstall-local: use-local-context kustomize manifests
 	$(KUSTOMIZE) build config/local | kubectl delete -f - >/dev/null
 
 copy-local-certs:
 	mkdir -p ${TMPDIR}/k8s-webhook-server/serving-certs
 	cp -R config/local/certs/* ${TMPDIR}/k8s-webhook-server/serving-certs
 
-run-local: manifests generate fmt vet lint install-local
+run-local: use-local-context manifests generate fmt vet lint install-local
 	go run -ldflags "-X main.version=$(shell git describe --tags)" cmd/manager/manager.go -zap-time-encoding rfc3339
 
 build-e2e-image:

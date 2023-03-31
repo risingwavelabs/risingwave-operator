@@ -530,7 +530,7 @@ func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
 			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 		},
 		{
-			Name:  envs.RWMetricLevel,
+			Name:  envs.RWMetricsLevel,
 			Value: "1",
 		},
 		{
@@ -567,7 +567,7 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 		},
 		{
-			Name:  envs.RWMetricLevel,
+			Name:  envs.RWMetricsLevel,
 			Value: "1",
 		},
 		{
@@ -623,7 +623,7 @@ func (f *RisingWaveObjectFactory) envsForCompactorArgs() []corev1.EnvVar {
 			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
 		},
 		{
-			Name:  envs.RWMetricLevel,
+			Name:  envs.RWMetricsLevel,
 			Value: "1",
 		},
 	}

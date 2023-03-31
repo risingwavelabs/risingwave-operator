@@ -124,11 +124,12 @@ const (
 
 // RisingWaveController is the controller for RisingWave.
 type RisingWaveController struct {
-	Client            client.Client
-	Recorder          record.EventRecorder
-	ActionHookFactory func() ctrlkit.ActionHook
-
+	Client              client.Client
+	Recorder            record.EventRecorder
+	ActionHookFactory   func() ctrlkit.ActionHook
+	forceUpdateEnabled  bool
 	openKruiseAvailable bool
+	operatorVersion     string
 }
 
 func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit.Action) (result reconcile.Result, err error) {
@@ -178,7 +179,7 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 
 	mgr := manager.NewRisingWaveControllerManager(
 		manager.NewRisingWaveControllerManagerState(c.Client, risingwave.DeepCopy()),
-		manager.NewRisingWaveControllerManagerImpl(c.Client, risingwaveManager, eventMessageStore),
+		manager.NewRisingWaveControllerManagerImpl(c.Client, risingwaveManager, eventMessageStore, c.forceUpdateEnabled, c.operatorVersion),
 		logger,
 		c.managerOpts(risingwaveManager, eventMessageStore)...,
 	)
@@ -493,10 +494,12 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 // NewRisingWaveController creates a new RisingWaveController.
-func NewRisingWaveController(client client.Client, recorder record.EventRecorder, openKruiseAvailable bool) *RisingWaveController {
+func NewRisingWaveController(client client.Client, recorder record.EventRecorder, openKruiseAvailable, forceUpdateEnabled bool, operatorVersion string) *RisingWaveController {
 	return &RisingWaveController{
 		Client:              client,
 		Recorder:            recorder,
 		openKruiseAvailable: openKruiseAvailable,
+		forceUpdateEnabled:  forceUpdateEnabled,
+		operatorVersion:     operatorVersion,
 	}
 }

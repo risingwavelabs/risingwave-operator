@@ -51,7 +51,7 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 			}
 		})
 
-		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme)
+		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 
 		var svc *corev1.Service
 		switch tc.component {
@@ -83,7 +83,7 @@ func Test_RisingWaveObjectFactory_ServicesMeta(t *testing.T) {
 			r.Spec.Global.ServiceMeta = tc.globalServiceMeta
 		})
 
-		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme)
+		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 
 		var svc *corev1.Service
 		switch tc.component {
@@ -112,7 +112,7 @@ func Test_RisingWaveObjectFactory_ConfigMaps(t *testing.T) {
 
 	for name, tc := range configMapTestCases() {
 		tc.risingwave = newTestRisingwave()
-		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme)
+		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 		cm := factory.NewConfigConfigMap(tc.configVal)
 
 		t.Run(name, func(t *testing.T) {
@@ -142,7 +142,7 @@ func Test_RisingWaveObjectFactory_Frontend_Deployments(t *testing.T) {
 
 		tc.component = consts.ComponentFrontend
 
-		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme)
+		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 		deploy := factory.NewFrontendDeployment(tc.group.Name, tc.podTemplate)
 
 		t.Run(name, func(t *testing.T) {
@@ -172,7 +172,7 @@ func Test_RisingWaveObjectFactory_Compactor_Deployments(t *testing.T) {
 
 		tc.component = consts.ComponentCompactor
 
-		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme)
+		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 		deploy := factory.NewCompactorDeployment(tc.group.Name, tc.podTemplate)
 
 		t.Run(name, func(t *testing.T) {
@@ -203,7 +203,7 @@ func Test_RisingWaveObjectFactory_Frontend_CloneSet(t *testing.T) {
 
 		tc.component = consts.ComponentFrontend
 
-		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme)
+		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 		cloneSet := factory.NewFrontendCloneSet(tc.group.Name, tc.podTemplate)
 
 		t.Run(name, func(t *testing.T) {
@@ -234,7 +234,7 @@ func Test_RisingWaveObjectFactory_Compactor_CloneSet(t *testing.T) {
 
 		tc.component = consts.ComponentCompactor
 
-		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme)
+		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 		cloneSet := factory.NewCompactorCloneSet(tc.group.Name, tc.podTemplate)
 
 		t.Run(name, func(t *testing.T) {
@@ -266,7 +266,7 @@ func Test_RisingWaveObjectFactory_Meta_StatefulSets(t *testing.T) {
 
 		tc.component = consts.ComponentMeta
 
-		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme)
+		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 		sts := factory.NewMetaStatefulSet(tc.group.Name, tc.podTemplate)
 
 		t.Run(name, func(t *testing.T) {
@@ -296,7 +296,7 @@ func Test_RisingWaveObjectFactory_Compute_StatefulSets(t *testing.T) {
 			}
 		})
 
-		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme)
+		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 		sts := factory.NewComputeStatefulSet(tc.group.Name, tc.podTemplate)
 
 		t.Run(name, func(t *testing.T) {
@@ -328,7 +328,7 @@ func Test_RisingWaveObjectFactory_Meta_AdvancedStatefulSets(t *testing.T) {
 
 		tc.component = consts.ComponentMeta
 
-		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme)
+		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 		sts := factory.NewMetaAdvancedStatefulSet(tc.group.Name, tc.podTemplate)
 
 		t.Run(name, func(t *testing.T) {
@@ -357,7 +357,7 @@ func Test_RisingWaveObjectFactory_Compute_AdvancedStatefulSets(t *testing.T) {
 			}
 		})
 
-		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme)
+		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 		asts := factory.NewComputeAdvancedStatefulSet(tc.group.Name, tc.podTemplate)
 
 		t.Run(name, func(t *testing.T) {
@@ -378,7 +378,7 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 				}
 			})
 
-			factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme)
+			factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 			sts := factory.NewMetaStatefulSet("", nil)
 
 			t.Run(name, func(t *testing.T) {
@@ -399,7 +399,7 @@ func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
 			}
 		})
 
-		factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
+		factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme, "")
 		sts := factory.NewMetaStatefulSet("", nil)
 
 		t.Run(name, func(t *testing.T) {
@@ -412,7 +412,7 @@ func Test_RisingWaveObjectFactory_ServiceMonitor(t *testing.T) {
 	risingwave := testutils.FakeRisingWave()
 	predicates := serviceMonitorPredicates()
 
-	factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme)
+	factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme, "")
 	serviceMonitor := factory.NewServiceMonitor()
 
 	composeAssertions(predicates, t).assertTest(serviceMonitor, baseTestCase{risingwave: risingwave})
@@ -428,7 +428,7 @@ func Test_RisingWaveObjectFactory_InheritLabels(t *testing.T) {
 						consts.AnnotationInheritLabelPrefix: tc.inheritPrefixValue,
 					},
 				},
-			}, nil)
+			}, nil, "")
 
 			assert.Equal(t, tc.inheritedLabels, factory.getInheritedLabels(), "inherited labels not match")
 		})
@@ -446,7 +446,7 @@ func TestRisingWaveObjectFactory_ComputeArgs(t *testing.T) {
 						},
 					},
 				},
-			}, nil)
+			}, nil, "")
 			args := factory.argsForCompute(tc.cpuLimit, tc.memLimit)
 
 			for _, expectArgs := range tc.argsList {

@@ -22,11 +22,12 @@ package consts
 
 // System reserved labels.
 const (
-	LabelRisingWaveComponent  = "risingwave/component"
-	LabelRisingWaveName       = "risingwave/name"
-	LabelRisingWaveGeneration = "risingwave/generation"
-	LabelRisingWaveGroup      = "risingwave/group"
-	LabelRisingWaveMetaRole   = "risingwave/meta-role"
+	LabelRisingWaveComponent       = "risingwave/component"
+	LabelRisingWaveName            = "risingwave/name"
+	LabelRisingWaveGeneration      = "risingwave/generation"
+	LabelRisingWaveGroup           = "risingwave/group"
+	LabelRisingWaveMetaRole        = "risingwave/meta-role"
+	LabelRisingWaveOperatorVersion = "risingwave/operator-version"
 )
 
 // =================================================

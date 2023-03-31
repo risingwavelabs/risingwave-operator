@@ -24,6 +24,8 @@ import (
 	"strconv"
 	"strings"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+
 	"github.com/go-logr/logr"
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
 	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
@@ -49,10 +51,11 @@ import (
 )
 
 type risingWaveControllerManagerImpl struct {
-	client            client.Client
-	risingwaveManager *object.RisingWaveManager
-	objectFactory     *factory.RisingWaveObjectFactory
-	eventMessageStore *event.MessageStore
+	client             client.Client
+	risingwaveManager  *object.RisingWaveManager
+	objectFactory      *factory.RisingWaveObjectFactory
+	eventMessageStore  *event.MessageStore
+	forceUpdateEnabled bool
 }
 
 func buildGroupStatus[T any, TP ptrAsObject[T], G any](globalReplicas int32, groups []G, nameAndReplicas func(*G) (string, int32), workloads []T, groupAndReadyReplicas func(*T) (string, int32)) risingwavev1alpha1.ComponentReplicasStatus {
@@ -1175,7 +1178,23 @@ func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj 
 		newObj.SetResourceVersion(obj.GetResourceVersion())
 		logger.Info(fmt.Sprintf("Update the object of %s", gvk.Kind), "object", utils.GetNamespacedName(newObj),
 			"generation", mgr.risingwaveManager.RisingWave().Generation)
-		return mgr.client.Update(ctx, newObj)
+		if err = mgr.client.Update(ctx, newObj); err == nil {
+			return nil
+		}
+		if !apierrors.IsInvalid(err) {
+			return err
+		}
+		if !mgr.forceUpdateEnabled ||
+			obj.GetLabels()[consts.LabelRisingWaveOperatorVersion] == newObj.GetLabels()[consts.LabelRisingWaveOperatorVersion] {
+			return err
+		}
+		if err := mgr.client.Delete(ctx, obj); err != nil {
+			return err
+		}
+		newObj.SetResourceVersion("")
+		if err := mgr.client.Create(ctx, newObj); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -1262,16 +1281,17 @@ func (mgr *risingWaveControllerManagerImpl) SyncServiceMonitor(ctx context.Conte
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync service monitor", err)
 }
 
-func newRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager, messageStore *event.MessageStore) *risingWaveControllerManagerImpl {
+func newRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager, messageStore *event.MessageStore, forceUpdateEnabled bool, operatorVersion string) *risingWaveControllerManagerImpl {
 	return &risingWaveControllerManagerImpl{
-		client:            client,
-		risingwaveManager: risingwaveManager,
-		objectFactory:     factory.NewRisingWaveObjectFactory(risingwaveManager.RisingWave(), client.Scheme()),
-		eventMessageStore: messageStore,
+		client:             client,
+		risingwaveManager:  risingwaveManager,
+		objectFactory:      factory.NewRisingWaveObjectFactory(risingwaveManager.RisingWave(), client.Scheme(), operatorVersion),
+		eventMessageStore:  messageStore,
+		forceUpdateEnabled: forceUpdateEnabled,
 	}
 }
 
 // NewRisingWaveControllerManagerImpl creates an object that implements the RisingWaveControllerManagerImpl.
-func NewRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager, messageStore *event.MessageStore) RisingWaveControllerManagerImpl {
-	return newRisingWaveControllerManagerImpl(client, risingwaveManager, messageStore)
+func NewRisingWaveControllerManagerImpl(client client.Client, risingwaveManager *object.RisingWaveManager, messageStore *event.MessageStore, forceUpdateEnabled bool, operatorVersion string) RisingWaveControllerManagerImpl {
+	return newRisingWaveControllerManagerImpl(client, risingwaveManager, messageStore, forceUpdateEnabled, operatorVersion)
 }

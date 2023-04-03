@@ -81,7 +81,7 @@ function risingwave::utils::is_meta_setup_valid() {
   meta_leaders="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..metadata.name}')"
   
   if [ -z "$meta_leaders" ]; then
-    logging::error "No meta leader node found"
+    logging::warn "No meta leader node found"
     return 1
   fi
 

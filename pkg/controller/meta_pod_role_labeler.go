@@ -68,6 +68,9 @@ func (mpl *MetaPodRoleLabeler) getMetaRole(ctx context.Context, host string, por
 		}
 	}
 
+	logger := log.FromContext(ctx)
+	logger.Info("No role recognized from the current member list!", "members", resp.Members, "address", fmt.Sprintf("%s:%d", host, port), "endpoint", endpoint)
+
 	return consts.MetaRoleUnknown, nil
 }
 
@@ -132,7 +135,7 @@ func (mpl *MetaPodRoleLabeler) getEndpointFromEnvVars(pod *corev1.Pod, envVars [
 	// Get the value of RW_ADVERTISE_ADDR.
 	for _, envVar := range envVars {
 		if envVar.Name == envs.RWAdvertiseAddr {
-			endpoint = envVar.Value
+			endpoint = strings.Split(envVar.Value, ":")[0]
 			break
 		}
 	}

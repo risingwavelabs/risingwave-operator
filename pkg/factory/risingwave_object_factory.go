@@ -1672,10 +1672,13 @@ func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Cont
 	container.Args = f.argsForConnector()
 	container.Ports = f.portsForConnectorContainer()
 	container.Command = []string{"/risingwave/bin/connector-node/start-service.sh"}
-	container.Env = append(container.Env, corev1.EnvVar{
-		Name:  envs.JavaOpts,
-		Value: "-Xmx4g",
-	})
+	memLimits := template.Resources.Limits.Memory().Value()
+	if memLimits != 0 {
+		container.Env = append(container.Env, corev1.EnvVar{
+			Name:  consts.EnvRisingWaveJavaOpts,
+			Value: fmt.Sprintf("-Xmx%d", memLimits),
+		})
+	}
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
 		return a.MountPath == b.MountPath

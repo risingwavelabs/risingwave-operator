@@ -1012,12 +1012,6 @@ func serviceMetadataPredicates() []predicate[*corev1.Service, serviceMetadataTes
 func objectStorageStatefulsetPredicates() []predicate[*appsv1.StatefulSet, objectStoragesTestCase] {
 	return []predicate[*appsv1.StatefulSet, objectStoragesTestCase]{
 		{
-			Name: "hummock-args-match",
-			Fn: func(obj *appsv1.StatefulSet, tc objectStoragesTestCase) bool {
-				return lo.Contains(obj.Spec.Template.Spec.Containers[0].Args, tc.hummockArg)
-			},
-		},
-		{
 			Name: "env-vars-contains",
 			Fn: func(obj *appsv1.StatefulSet, tc objectStoragesTestCase) bool {
 				return listContainsByKey(obj.Spec.Template.Spec.Containers[0].Env, tc.envs, func(t *corev1.EnvVar) string { return t.Name }, deepEqual[corev1.EnvVar])
@@ -1059,12 +1053,6 @@ func configMapPredicates() []predicate[*corev1.ConfigMap, configMapTestCase] {
 
 func metaStoragePredicates() []predicate[*appsv1.StatefulSet, metaStorageTestCase] {
 	return []predicate[*appsv1.StatefulSet, metaStorageTestCase]{
-		{
-			Name: "args-match",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStorageTestCase) bool {
-				return containsStringSlice(obj.Spec.Template.Spec.Containers[0].Args, tc.args)
-			},
-		},
 		{
 			Name: "env-vars-contains",
 			Fn: func(obj *appsv1.StatefulSet, tc metaStorageTestCase) bool {

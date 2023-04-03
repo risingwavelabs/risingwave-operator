@@ -2482,7 +2482,6 @@ func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
 type objectStoragesTestCase struct {
 	baseTestCase
 	objectStorage risingwavev1alpha1.RisingWaveObjectStorage
-	hummockArg    string
 	envs          []corev1.EnvVar
 }
 
@@ -2492,7 +2491,12 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
 				Memory: pointer.Bool(true),
 			},
-			hummockArg: "hummock+memory",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+memory",
+				},
+			},
 		},
 		"minio": {
 			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
@@ -2502,8 +2506,11 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 					Bucket:   "minio-hummock01",
 				},
 			},
-			hummockArg: "hummock+minio://$(MINIO_USERNAME):$(MINIO_PASSWORD)@minio-endpoint:1234/minio-hummock01",
 			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+minio://$(MINIO_USERNAME):$(MINIO_PASSWORD)@minio-endpoint:1234/minio-hummock01",
+				},
 				{
 					Name: "MINIO_USERNAME",
 					ValueFrom: &corev1.EnvVarSource{
@@ -2535,8 +2542,11 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 					Bucket: "s3-hummock01",
 				},
 			},
-			hummockArg: "hummock+s3://s3-hummock01",
 			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+s3://s3-hummock01",
+				},
 				{
 					Name:  "AWS_S3_BUCKET",
 					Value: "s3-hummock01",
@@ -2584,8 +2594,10 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 					Root:                "gcs-root",
 				},
 			},
-			hummockArg: "hummock+gcs://gcs-bucket@gcs-root",
-			envs:       []corev1.EnvVar{},
+			envs: []corev1.EnvVar{{
+				Name:  "RW_STATE_STORE",
+				Value: "hummock+gcs://gcs-bucket@gcs-root",
+			}},
 		},
 		"gcs-secret": {
 			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
@@ -2596,8 +2608,11 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 					Root:                "gcs-root",
 				},
 			},
-			hummockArg: "hummock+gcs://gcs-bucket@gcs-root",
 			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+gcs://gcs-bucket@gcs-root",
+				},
 				{
 					Name: "GOOGLE_APPLICATION_CREDENTIALS",
 					ValueFrom: &corev1.EnvVarSource{
@@ -2618,8 +2633,11 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 					Bucket: "s3-hummock01",
 				},
 			},
-			hummockArg: "hummock+s3-compatible://s3-hummock01",
 			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+s3-compatible://s3-hummock01",
+				},
 				{
 					Name:  "S3_COMPATIBLE_BUCKET",
 					Value: "s3-hummock01",
@@ -2671,8 +2689,11 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 					InternalEndpoint: true,
 				},
 			},
-			hummockArg: "hummock+s3-compatible://s3-hummock01",
 			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+s3-compatible://s3-hummock01",
+				},
 				{
 					Name:  "S3_COMPATIBLE_BUCKET",
 					Value: "s3-hummock01",
@@ -2724,8 +2745,11 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 					Region: "cn-hangzhou",
 				},
 			},
-			hummockArg: "hummock+s3-compatible://s3-hummock01",
 			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+s3-compatible://s3-hummock01",
+				},
 				{
 					Name:  "S3_COMPATIBLE_BUCKET",
 					Value: "s3-hummock01",
@@ -2770,8 +2794,11 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 					Endpoint: "oss-cn-hangzhou.aliyuncs.com",
 				},
 			},
-			hummockArg: "hummock+s3-compatible://s3-hummock01",
 			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+s3-compatible://s3-hummock01",
+				},
 				{
 					Name:  "S3_COMPATIBLE_BUCKET",
 					Value: "s3-hummock01",
@@ -2824,8 +2851,11 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 					VirtualHostedStyle: true,
 				},
 			},
-			hummockArg: "hummock+s3-compatible://s3-hummock01",
 			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+s3-compatible://s3-hummock01",
+				},
 				{
 					Name:  "S3_COMPATIBLE_BUCKET",
 					Value: "s3-hummock01",
@@ -2877,8 +2907,11 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 					Region: "ap-southeast-1",
 				},
 			},
-			hummockArg: "hummock+s3://s3-hummock01",
 			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+s3://s3-hummock01",
+				},
 				{
 					Name:  "AWS_S3_BUCKET",
 					Value: "s3-hummock01",
@@ -2918,8 +2951,11 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 					Endpoint: "s3.${REGION}.amazonaws.com",
 				},
 			},
-			hummockArg: "hummock+s3-compatible://s3-hummock01",
 			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+s3-compatible://s3-hummock01",
+				},
 				{
 					Name:  "S3_COMPATIBLE_ENDPOINT",
 					Value: "https://s3.$(S3_COMPATIBLE_REGION).amazonaws.com",
@@ -2933,8 +2969,11 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 					Endpoint: "${BUCKET}.s3.${REGION}.amazonaws.com",
 				},
 			},
-			hummockArg: "hummock+s3-compatible://s3-hummock01",
 			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+s3-compatible://s3-hummock01",
+				},
 				{
 					Name:  "S3_COMPATIBLE_ENDPOINT",
 					Value: "https://$(S3_COMPATIBLE_BUCKET).s3.$(S3_COMPATIBLE_REGION).amazonaws.com",
@@ -2948,8 +2987,10 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 					Root:     "root",
 				},
 			},
-			hummockArg: "hummock+hdfs://name-node@root",
-			envs:       []corev1.EnvVar{},
+			envs: []corev1.EnvVar{{
+				Name:  "RW_STATE_STORE",
+				Value: "hummock+hdfs://name-node@root",
+			}},
 		},
 	}
 }
@@ -2973,54 +3014,78 @@ func configMapTestCases() map[string]configMapTestCase {
 type computeArgsTestCase struct {
 	cpuLimit int64
 	memLimit int64
-	argsList [][]string
+	envList  []corev1.EnvVar
 }
 
-func computeArgsTestCases() map[string]computeArgsTestCase {
+func computeEnvsTestCases() map[string]computeArgsTestCase {
 	return map[string]computeArgsTestCase{
 		"empty-limits": {},
 		"cpu-limit-4": {
 			cpuLimit: 4,
-			argsList: [][]string{
-				{"--parallelism", "4"},
+			envList: []corev1.EnvVar{
+				{
+					Name:  "RW_PARALLELISM",
+					Value: "4",
+				},
 			},
 		},
 		"mem-limit-4g": {
 			memLimit: 4 << 30,
-			argsList: [][]string{
-				{"--total-memory-bytes", strconv.Itoa(4 << 30)},
+			envList: []corev1.EnvVar{
+				{
+					Name:  "RW_TOTAL_MEMORY_BYTES",
+					Value: strconv.Itoa(4 << 30),
+				},
 			},
 		},
 		"mem-limit-1g": {
 			memLimit: 1 << 30,
-			argsList: [][]string{
-				{"--total-memory-bytes", strconv.Itoa(1 << 30)},
+			envList: []corev1.EnvVar{
+				{
+					Name:  "RW_TOTAL_MEMORY_BYTES",
+					Value: strconv.Itoa(1 << 30),
+				},
 			},
 		},
 		"mem-limit-768m": {
 			memLimit: 768 << 20,
-			argsList: [][]string{
-				{"--total-memory-bytes", strconv.Itoa(768 << 20)},
+			envList: []corev1.EnvVar{
+				{
+					Name:  "RW_TOTAL_MEMORY_BYTES",
+					Value: strconv.Itoa(768 << 20),
+				},
 			},
 		},
 		"mem-limit-512m": {
 			memLimit: 512 << 20,
-			argsList: [][]string{
-				{"--total-memory-bytes", strconv.Itoa(512 << 20)},
+			envList: []corev1.EnvVar{
+				{
+					Name:  "RW_TOTAL_MEMORY_BYTES",
+					Value: strconv.Itoa(512 << 20),
+				},
 			},
 		},
 		"mem-limit-256m": {
 			memLimit: 256 << 20,
-			argsList: [][]string{
-				{"--total-memory-bytes", strconv.Itoa(256 << 20)},
+			envList: []corev1.EnvVar{
+				{
+					Name:  "RW_TOTAL_MEMORY_BYTES",
+					Value: strconv.Itoa(256 << 20),
+				},
 			},
 		},
 		"cpu-and-mem": {
 			cpuLimit: 4,
 			memLimit: 1 << 30,
-			argsList: [][]string{
-				{"--parallelism", "4"},
-				{"--total-memory-bytes", strconv.Itoa(1 << 30)},
+			envList: []corev1.EnvVar{
+				{
+					Name:  "RW_PARALLELISM",
+					Value: "4",
+				},
+				{
+					Name:  "RW_TOTAL_MEMORY_BYTES",
+					Value: strconv.Itoa(1 << 30),
+				},
 			},
 		},
 	}
@@ -3080,7 +3145,6 @@ func inheritedLabelsTestCases() map[string]inheritedLabelsTestCase {
 
 type metaStorageTestCase struct {
 	metaStorage risingwavev1alpha1.RisingWaveMetaStorage
-	args        []string
 	envs        []corev1.EnvVar
 }
 
@@ -3090,8 +3154,11 @@ func metaStorageTestCases() map[string]metaStorageTestCase {
 			metaStorage: risingwavev1alpha1.RisingWaveMetaStorage{
 				Memory: pointer.Bool(true),
 			},
-			args: []string{
-				"--backend", "mem",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_BACKEND",
+					Value: "mem",
+				},
 			},
 		},
 		"etcd-no-auth": {
@@ -3100,8 +3167,15 @@ func metaStorageTestCases() map[string]metaStorageTestCase {
 					Endpoint: "etcd:1234",
 				},
 			},
-			args: []string{
-				"--backend", "etcd", "--etcd-endpoints", "etcd:1234",
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_BACKEND",
+					Value: "etcd",
+				},
+				{
+					Name:  "RW_ETCD_ENDPOINTS",
+					Value: "etcd:1234",
+				},
 			},
 		},
 		"etcd-auth": {
@@ -3111,10 +3185,15 @@ func metaStorageTestCases() map[string]metaStorageTestCase {
 					Secret:   "etcd-credentials",
 				},
 			},
-			args: []string{
-				"--backend", "etcd", "--etcd-endpoints", "etcd:1234", "--etcd-auth",
-			},
 			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_BACKEND",
+					Value: "etcd",
+				},
+				{
+					Name:  "RW_ETCD_ENDPOINTS",
+					Value: "etcd:1234",
+				},
 				{
 					Name: "RW_ETCD_USERNAME",
 					ValueFrom: &corev1.EnvVarSource{

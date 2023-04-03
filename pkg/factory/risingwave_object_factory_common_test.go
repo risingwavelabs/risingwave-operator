@@ -359,6 +359,7 @@ func newPodTemplate(patches ...func(t *risingwavev1alpha1.RisingWavePodTemplateS
 	return t
 }
 
+//nolint:golint,unused
 func containsStringSlice(a, b []string) bool {
 	if len(a) < len(b) {
 		return false
@@ -374,6 +375,7 @@ func containsStringSlice(a, b []string) bool {
 	return false
 }
 
+//nolint:golint,unused
 func containsSlice[T comparable](a, b []T) bool {
 	for i := 0; i <= len(a)-len(b); i++ {
 		match := true

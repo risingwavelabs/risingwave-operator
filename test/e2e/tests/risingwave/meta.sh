@@ -86,7 +86,7 @@ function risingwave::utils::is_meta_setup_valid() {
   fi
 
   if [ "$(echo "$meta_leaders" | wc -l)" -gt 1 ]; then
-    logging::error "More than one meta leader node found"
+    logging::warn "More than one meta leader node found"
     return 1
   fi
   return 0

@@ -26,6 +26,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	pb "github.com/risingwavelabs/risingwave-operator/pkg/controller/proto"
 	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
+	"github.com/risingwavelabs/risingwave-operator/pkg/factory/envs"
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 
 	corev1 "k8s.io/api/core/v1"
@@ -125,6 +126,27 @@ func (mpl *MetaPodRoleLabeler) getEndpointFromArgs(pod *corev1.Pod, args []strin
 	return endpoint
 }
 
+func (mpl *MetaPodRoleLabeler) getEndpointFromEnvVars(pod *corev1.Pod, envVars []corev1.EnvVar) string {
+	endpoint := ""
+
+	// Get the value of RW_ADVERTISE_ADDR.
+	for _, envVar := range envVars {
+		if envVar.Name == envs.RWAdvertiseAddr {
+			endpoint = envVar.Value
+			break
+		}
+	}
+
+	if len(endpoint) == 0 {
+		return ""
+	}
+
+	endpoint = strings.ReplaceAll(endpoint, "$(POD_IP)", pod.Status.PodIP)
+	endpoint = strings.ReplaceAll(endpoint, "$(POD_NAME)", pod.Name)
+
+	return endpoint
+}
+
 func (mpl *MetaPodRoleLabeler) syncRoleLabelForSinglePod(ctx context.Context, pod *corev1.Pod) (string, error) {
 	// Extract information from the Pod.
 	if !mpl.isRisingWaveMetaPod(pod) {
@@ -143,7 +165,9 @@ func (mpl *MetaPodRoleLabeler) syncRoleLabelForSinglePod(ctx context.Context, po
 	}
 	endpoint := mpl.getEndpointFromArgs(pod, metaContainer.Args)
 	if len(endpoint) == 0 {
-		return "", errors.New("endpoint not found")
+		if endpoint = mpl.getEndpointFromEnvVars(pod, metaContainer.Env); len(endpoint) == 0 {
+			return "", errors.New("endpoint not found")
+		}
 	}
 
 	logger := log.FromContext(ctx).WithValues("pod", pod.Name)

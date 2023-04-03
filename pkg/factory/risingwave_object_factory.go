@@ -1675,7 +1675,7 @@ func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Cont
 	memLimits := template.Resources.Limits.Memory().Value()
 	if memLimits != 0 {
 		container.Env = append(container.Env, corev1.EnvVar{
-			Name:  consts.EnvRisingWaveJavaOpts,
+			Name:  envs.JavaOpts,
 			Value: fmt.Sprintf("-Xmx%d", memLimits),
 		})
 	}

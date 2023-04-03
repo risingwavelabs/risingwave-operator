@@ -34,6 +34,11 @@ func IsDeleted(obj client.Object) bool {
 	return obj != nil && !obj.GetDeletionTimestamp().IsZero()
 }
 
+// IsPodRunning returns true when Pod's phase is Running.
+func IsPodRunning(pod *corev1.Pod) bool {
+	return pod != nil && pod.Status.Phase == corev1.PodRunning
+}
+
 // GetVersionFromImage return the version from spec.global.image.
 func GetVersionFromImage(image string) string {
 	if image == "" {

@@ -31,8 +31,8 @@ func Test_CommonGetVersionFromImage(t *testing.T) {
 			version: "",
 		},
 		"image-version": {
-			image:   "ghcr.io/risingwavelabs/risingwave:v0.1.17",
-			version: "v0.1.17",
+			image:   "ghcr.io/risingwavelabs/risingwave:v0.18.0",
+			version: "v0.18.0",
 		},
 		"image-port-default": {
 			image:   "ghcr.io:10043/risingwavelabs/risingwave",

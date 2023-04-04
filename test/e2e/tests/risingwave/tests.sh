@@ -111,7 +111,7 @@ function test::run::risingwave::multi_meta_failover_fencing() {
 
   local old_leader_restarts
   old_leader_restarts="$(k8s::kubectl::get pod "${meta_leader_names}" -o=jsonpath='{.items..status.containerStatuses..restartCount}')"
-  if [ "$old_leader_restarts" -le "$meta_leaders_restarts" ]; then
+  if ((old_leader_restarts <= meta_leaders_restarts)); then
     logging::error "Leader did not restart"
     return 1
   fi

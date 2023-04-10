@@ -574,6 +574,10 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 			Name:  envs.RWConnectorRPCEndPoint,
 			Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
 		},
+		{
+			Name:  envs.RWPrometheusListenerAddr,
+			Value: fmt.Sprintf("0.0.0.0:%d", computePorts.MetricsPort),
+		},
 	}
 
 	if cpuLimit != 0 {

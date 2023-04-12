@@ -17360,6 +17360,10 @@ spec:
                         - bucket
                         - secret
                         type: object
+                      dataDirectory:
+                        description: DataDirectory is the directory to store the data
+                          in the object storage. It is an optional field.
+                        type: string
                       hdfs:
                         description: HDFS storage spec.
                         properties:

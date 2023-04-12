@@ -511,6 +511,9 @@ type RisingWaveObjectStorageHDFS struct {
 
 // RisingWaveObjectStorage is the object storage for compute and compactor components.
 type RisingWaveObjectStorage struct {
+	// DataDirectory is the directory to store the data in the object storage. It is an optional field.
+	DataDirectory string `json:"dataDirectory,omitempty"`
+
 	// Memory indicates to store the data in memory. It's only for test usage and strongly discouraged to
 	// be used in production.
 	// +optional

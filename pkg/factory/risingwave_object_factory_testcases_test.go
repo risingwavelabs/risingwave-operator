@@ -2487,6 +2487,30 @@ type objectStoragesTestCase struct {
 
 func objectStorageTestCases() map[string]objectStoragesTestCase {
 	return map[string]objectStoragesTestCase{
+		"empty_data_directory": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				DataDirectory: "",
+				Memory:        pointer.Bool(true),
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "",
+				},
+			},
+		},
+		"some_data_directory": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				DataDirectory: "1234",
+				Memory:        pointer.Bool(true),
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "1234",
+				},
+			},
+		},
 		"memory": {
 			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
 				Memory: pointer.Bool(true),

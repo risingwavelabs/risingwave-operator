@@ -2459,6 +2459,17 @@ MetaStorageType
 <tbody>
 <tr>
 <td>
+<code>dataDirectory</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>DataDirectory is the directory to store the data in the object storage. It is an optional field.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>memory</code><br/>
 <em>
 bool

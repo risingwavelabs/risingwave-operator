@@ -441,6 +441,7 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
 	metaStorage := &f.risingwave.Spec.Storages.Meta
+	objectStorage := f.risingwave.Spec.Storages.Object
 
 	connectorPorts := f.getConnectorPorts()
 	envVars := []corev1.EnvVar{
@@ -459,6 +460,10 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		{
 			Name:  envs.RWStateStore,
 			Value: f.hummockConnectionStr(),
+		},
+		{
+			Name:  envs.RWDataDirectory,
+			Value: objectStorage.DataDirectory,
 		},
 		{
 			Name:  envs.RWDashboardHost,

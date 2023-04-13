@@ -3023,8 +3023,10 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 					Root:     "root",
 				},
 			},
-			hummockArg: "hummock+webhdfs://name-node@root",
-			envs:       []corev1.EnvVar{},
+			envs: []corev1.EnvVar{{
+				Name:  "RW_STATE_STORE",
+				Value: "hummock+webhdfs://name-node@root",
+			}},
 		},
 	}
 }

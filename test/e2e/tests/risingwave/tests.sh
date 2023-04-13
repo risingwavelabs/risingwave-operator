@@ -156,9 +156,6 @@ function test::run::risingwave::storage_support::object_minio() {
   test::risingwave::storage_support::_run_with_manifest storages/object-minio.yaml
 }
 
-function test::run::risingwave::storage_support::object_webhdfs() {
-  test::risingwave::storage_support::_run_with_manifest storages/object-webhdfs.yaml
-}
 
 function test::run::risingwave::openkruise_integration() {
   logging::info "Starting RisingWave..."

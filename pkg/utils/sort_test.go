@@ -208,6 +208,101 @@ func Test_SortEnvVarSlice(t *testing.T) {
 				},
 			},
 		},
+		"env-meta": {
+			envVar: []corev1.EnvVar{
+				{
+					Name:  "POD_IP",
+					Value: "",
+				},
+				{
+					Name:  "POD_NAME",
+					Value: "",
+				},
+				{
+					Name:  "RUST_BACKTRACE",
+					Value: "full",
+				},
+				{
+					Name:  "RW_CONFIG_PATH",
+					Value: "/risingwave/config/risingwave.toml",
+				},
+				{
+					Name:  "RW_LISTEN_ADDR",
+					Value: "0.0.0.0:5690",
+				},
+				{
+					Name:  "RW_ADVERTISE_ADDR",
+					Value: "$(POD_NAME).sv-example-meta:5690",
+				},
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+memory",
+				},
+				{
+					Name:  "RW_DASHBOARD_HOST",
+					Value: "0.0.0.0:5691",
+				},
+				{
+					Name:  "RW_PROMETHEUS_HOST",
+					Value: "0.0.0.0:1250",
+				},
+				{
+					Name:  "RW_CONNECTOR_RPC_ENDPOINT",
+					Value: "sv-example-connector:50051",
+				},
+				{
+					Name:  "RW_BACKEND",
+					Value: "mem",
+				},
+			},
+
+			expectEnvVar: []corev1.EnvVar{
+				{
+					Name:  "POD_IP",
+					Value: "",
+				},
+				{
+					Name:  "POD_NAME",
+					Value: "",
+				},
+				{
+					Name:  "RUST_BACKTRACE",
+					Value: "full",
+				},
+				{
+					Name:  "RW_ADVERTISE_ADDR",
+					Value: "$(POD_NAME).sv-example-meta:5690",
+				},
+				{
+					Name:  "RW_BACKEND",
+					Value: "mem",
+				},
+				{
+					Name:  "RW_CONFIG_PATH",
+					Value: "/risingwave/config/risingwave.toml",
+				},
+				{
+					Name:  "RW_CONNECTOR_RPC_ENDPOINT",
+					Value: "sv-example-connector:50051",
+				},
+				{
+					Name:  "RW_DASHBOARD_HOST",
+					Value: "0.0.0.0:5691",
+				},
+				{
+					Name:  "RW_LISTEN_ADDR",
+					Value: "0.0.0.0:5690",
+				},
+				{
+					Name:  "RW_PROMETHEUS_HOST",
+					Value: "0.0.0.0:1250",
+				},
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+memory",
+				},
+			},
+		},
 	}
 
 	for name, tc := range testcases {

@@ -43,3 +43,12 @@ aliyuncs
 idempotence
 hdfs
 webhdfs
+extendee
+Idxs
+oneof
+Oneof
+protoc
+protoimpl
+protoreflect
+golint
+nolint

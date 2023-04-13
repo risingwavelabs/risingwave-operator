@@ -61,6 +61,7 @@ var (
 	configPath           string
 	enableLeaderElection bool
 	featureGates         string
+	version              string
 )
 
 func main() {
@@ -100,10 +101,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = risingwavecontroller.NewMetaPodRoleLabeler(mgr.GetClient()).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "meta-pod-role-labeler")
+		os.Exit(1)
+	}
+
 	if err = risingwavecontroller.NewRisingWaveController(
 		mgr.GetClient(),
 		mgr.GetEventRecorderFor("risingwave-controller"),
 		featureManager.IsFeatureEnabled(features.EnableOpenKruiseFeature),
+		featureManager.IsFeatureEnabled(features.EnableForceUpdate),
+		version,
 	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RisingWave")
 		os.Exit(1)

@@ -22,24 +22,12 @@ package consts
 
 // System reserved labels.
 const (
-	LabelRisingWaveComponent  = "risingwave/component"
-	LabelRisingWaveName       = "risingwave/name"
-	LabelRisingWaveGeneration = "risingwave/generation"
-	LabelRisingWaveGroup      = "risingwave/group"
-)
-
-// =================================================
-// Envs.
-// =================================================
-
-// System reserved envs.
-const (
-	EnvRisingWavePodIp                = "POD_IP"
-	EnvRisingWavePodName              = "POD_NAME"
-	EnvRisingWaveRustBacktrace        = "RUST_BACKTRACE"
-	EnvRisingWaveWorkerThreads        = "RW_WORKER_THREADS"
-	EnvRisingWaveConnectorRpcEndPoint = "RW_CONNECTOR_RPC_ENDPOINT"
-	EnvRisingWaveJavaOpts             = "JAVA_OPTS"
+	LabelRisingWaveComponent       = "risingwave/component"
+	LabelRisingWaveName            = "risingwave/name"
+	LabelRisingWaveGeneration      = "risingwave/generation"
+	LabelRisingWaveGroup           = "risingwave/group"
+	LabelRisingWaveMetaRole        = "risingwave/meta-role"
+	LabelRisingWaveOperatorVersion = "risingwave/operator-version"
 )
 
 // =================================================
@@ -66,6 +54,13 @@ const (
 // =================================================
 // Consts.
 // =================================================
+
+// Label values of LabelRisingWaveMetaRole.
+const (
+	MetaRoleLeader   = "leader"
+	MetaRoleFollower = "follower"
+	MetaRoleUnknown  = "unknown"
+)
 
 // Special label values of LabelRisingWaveGeneration.
 const (
@@ -100,6 +95,11 @@ const (
 	SecretKeyAWSS3AccessKeyID     string = "AccessKeyID"
 	SecretKeyAWSS3SecretAccessKey string = "SecretAccessKey"
 	SecretKeyAWSS3Region          string = "Region"
+)
+
+// Credentials for GCS.
+const (
+	SecretKeyGCSServiceAccountCredentials string = "ServiceAccountCredentials"
 )
 
 // Port names of components.

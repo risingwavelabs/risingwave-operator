@@ -59,7 +59,7 @@ function prepare_cluster() {
   esac
 
   # Override the nightly tag to keep test stable.
-  NIGHTLY_IMAGE_TAG=v0.1.17
+  NIGHTLY_IMAGE_TAG=v0.18.0
 
   echo "Using a nightly tag $NIGHTLY_IMAGE_TAG for RisingWave images..."
 

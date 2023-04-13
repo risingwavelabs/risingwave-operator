@@ -18,7 +18,6 @@ package utils
 
 import (
 	"container/heap"
-	"sort"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -64,26 +63,6 @@ func (pq *envVarPriorityQueue) Pop() any {
 	old[n-1] = nil // avoid memory leak
 	*pq = old[0 : n-1]
 	return item
-}
-
-type envVarSliceByIdx struct {
-	EnvVar []corev1.EnvVar
-	Idx    []int
-}
-
-// Len implements sort.Interface.
-func (s envVarSliceByIdx) Len() int {
-	return len(s.EnvVar)
-}
-
-// Less implements sort.Interface.
-func (s envVarSliceByIdx) Less(i, j int) bool {
-	return s.Idx[i] < s.Idx[j]
-}
-
-// Swap implements sort.Interface.
-func (s envVarSliceByIdx) Swap(i, j int) {
-	swap(&s.EnvVar[i], &s.EnvVar[j])
 }
 
 // DependsOn tells if a depends on b.
@@ -148,11 +127,13 @@ func TopologicalSort(e []corev1.EnvVar) {
 		}
 	}
 
-	// sort env by the sorted order
-	sort.Sort(envVarSliceByIdx{
-		e,
-		sortedOrder,
-	})
+	oldEnv := make([]corev1.EnvVar, n)
+	copy(oldEnv, e)
+	for idx, correctIdx := range sortedOrder {
+		if idx != correctIdx {
+			e[idx] = oldEnv[correctIdx]
+		}
+	}
 }
 
 // VolumeMountSlice is a wrapper of []corev1.VolumeMount that implements the sort.Interface.

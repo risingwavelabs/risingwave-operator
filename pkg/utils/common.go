@@ -19,6 +19,7 @@ package utils
 import (
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -33,6 +34,11 @@ func IsDeleted(obj client.Object) bool {
 	return obj != nil && !obj.GetDeletionTimestamp().IsZero()
 }
 
+// IsPodRunning returns true when Pod's phase is Running.
+func IsPodRunning(pod *corev1.Pod) bool {
+	return pod != nil && pod.Status.Phase == corev1.PodRunning
+}
+
 // GetVersionFromImage return the version from spec.global.image.
 func GetVersionFromImage(image string) string {
 	if image == "" {
@@ -43,7 +49,38 @@ func GetVersionFromImage(image string) string {
 	lastTagIdx := strings.LastIndex(image[lastRepoIdx+1:], ":")
 	if lastTagIdx < 0 {
 		return "latest"
-	} else {
-		return image[lastRepoIdx+lastTagIdx+2:]
 	}
+	return image[lastRepoIdx+lastTagIdx+2:]
+}
+
+// GetContainerFromPod gets a pointer to the container with the same name. Nil is returned when
+// the container isn't found.
+func GetContainerFromPod(pod *corev1.Pod, name string) *corev1.Container {
+	if pod == nil {
+		return nil
+	}
+
+	for _, container := range pod.Spec.Containers {
+		if container.Name == name {
+			return &container
+		}
+	}
+
+	return nil
+}
+
+// GetPortFromContainer gets the specified port from the container. If the port's not found,
+// it returns a false.
+func GetPortFromContainer(container *corev1.Container, name string) (int32, bool) {
+	if container == nil {
+		return 0, false
+	}
+
+	for _, containerPort := range container.Ports {
+		if containerPort.Name == name {
+			return containerPort.ContainerPort, true
+		}
+	}
+
+	return 0, false
 }

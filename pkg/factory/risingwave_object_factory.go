@@ -41,42 +41,21 @@ import (
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
+	"github.com/risingwavelabs/risingwave-operator/pkg/factory/envs"
 )
 
 const (
 	risingWaveConfigVolume = "risingwave-config"
 	risingWaveConfigMapKey = "risingwave.toml"
 
-	minIOEndpointEnvName      = "MINIO_ENDPOINT"
-	minIOBucketEnvName        = "MINIO_BUCKET"
-	minIOUsernameEnvName      = "MINIO_USERNAME"
-	minIOPasswordEnvName      = "MINIO_PASSWORD"
-	legacyEtcdUsernameEnvName = "ETCD_USERNAME"
-	legacyEtcdPasswordEnvName = "ETCD_PASSWORD"
-	etcdUsernameEnvName       = "RW_ETCD_USERNAME"
-	etcdPasswordEnvName       = "RW_ETCD_PASSWORD"
-
 	risingwaveExecutablePath  = "/risingwave/bin/risingwave"
 	risingwaveConfigMountPath = "/risingwave/config"
 	risingwaveConfigFileName  = "risingwave.toml"
 )
 
-const (
-	awsS3RegionEnvName                   = "AWS_REGION"
-	awsS3AccessKeyEnvName                = "AWS_ACCESS_KEY_ID"
-	awsS3SecretAccessKeyEnvName          = "AWS_SECRET_ACCESS_KEY"
-	awsS3BucketEnvName                   = "AWS_S3_BUCKET"
-	awsRustSdkEC2MetadataDisabledEnvName = "AWS_EC2_METADATA_DISABLED"
-	s3CompatibleRegionEnvName            = "S3_COMPATIBLE_REGION"
-	s3CompatibleBucketEnvName            = "S3_COMPATIBLE_BUCKET"
-	s3CompatibleAccessKeyEnvName         = "S3_COMPATIBLE_ACCESS_KEY_ID"
-	s3CompatibleSecretAccessKeyEnvName   = "S3_COMPATIBLE_SECRET_ACCESS_KEY"
-	s3EndpointEnvName                    = "S3_COMPATIBLE_ENDPOINT"
-)
-
 var (
-	aliyunOSSEndpoint         = fmt.Sprintf("https://$(%s).oss-$(%s).aliyuncs.com", s3CompatibleBucketEnvName, s3CompatibleRegionEnvName)
-	internalAliyunOSSEndpoint = fmt.Sprintf("https://$(%s).oss-$(%s)-internal.aliyuncs.com", s3CompatibleBucketEnvName, s3CompatibleRegionEnvName)
+	aliyunOSSEndpoint         = fmt.Sprintf("https://$(%s).oss-$(%s).aliyuncs.com", envs.S3CompatibleBucket, envs.S3CompatibleRegion)
+	internalAliyunOSSEndpoint = fmt.Sprintf("https://$(%s).oss-$(%s)-internal.aliyuncs.com", envs.S3CompatibleBucket, envs.S3CompatibleRegion)
 )
 
 // RisingWaveObjectFactory is the object factory to help create owned objects like Deployments, StatefulSets, Services, etc.
@@ -85,6 +64,7 @@ type RisingWaveObjectFactory struct {
 	risingwave *risingwavev1alpha1.RisingWave
 
 	inheritedLabels map[string]string
+	operatorVersion string
 }
 
 func mustSetControllerReference[T client.Object](owner client.Object, controlled T, scheme *runtime.Scheme) T {
@@ -105,6 +85,10 @@ func (f *RisingWaveObjectFactory) isObjectStorageS3() bool {
 
 func (f *RisingWaveObjectFactory) isObjectStorageS3Compatible() bool {
 	return f.risingwave.Spec.Storages.Object.S3 != nil && len(f.risingwave.Spec.Storages.Object.S3.Endpoint) > 0
+}
+
+func (f *RisingWaveObjectFactory) isObjectStorageGCS() bool {
+	return f.risingwave.Spec.Storages.Object.GCS != nil
 }
 
 func (f *RisingWaveObjectFactory) isObjectStorageAliyunOSS() bool {
@@ -140,7 +124,9 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 		return fmt.Sprintf("hummock+s3-compatible://%s", bucket)
 	case objectStorage.MinIO != nil:
 		minio := objectStorage.MinIO
-		return fmt.Sprintf("hummock+minio://$(%s):$(%s)@%s/%s", minIOUsernameEnvName, minIOPasswordEnvName, minio.Endpoint, minio.Bucket)
+		return fmt.Sprintf("hummock+minio://$(%s):$(%s)@%s/%s", envs.MinIOUsername, envs.MinIOPassword, minio.Endpoint, minio.Bucket)
+	case f.isObjectStorageGCS():
+		return fmt.Sprintf("hummock+gcs://%s@%s", objectStorage.GCS.Bucket, objectStorage.GCS.Root)
 	case objectStorage.AliyunOSS != nil:
 		aliyunOSS := objectStorage.AliyunOSS
 		// Redirect to s3-compatible.
@@ -187,8 +173,9 @@ func (f *RisingWaveObjectFactory) objectMeta(name string, sync bool) metav1.Obje
 		Name:      name,
 		Namespace: f.namespace(),
 		Labels: map[string]string{
-			consts.LabelRisingWaveName:       f.risingwave.Name,
-			consts.LabelRisingWaveGeneration: lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
+			consts.LabelRisingWaveName:            f.risingwave.Name,
+			consts.LabelRisingWaveGeneration:      lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
+			consts.LabelRisingWaveOperatorVersion: f.operatorVersion,
 		},
 	}
 
@@ -202,9 +189,10 @@ func (f *RisingWaveObjectFactory) componentObjectMeta(component string, sync boo
 		Name:      f.componentName(component, ""),
 		Namespace: f.namespace(),
 		Labels: map[string]string{
-			consts.LabelRisingWaveName:       f.risingwave.Name,
-			consts.LabelRisingWaveComponent:  component,
-			consts.LabelRisingWaveGeneration: lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
+			consts.LabelRisingWaveName:            f.risingwave.Name,
+			consts.LabelRisingWaveComponent:       component,
+			consts.LabelRisingWaveGeneration:      lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
+			consts.LabelRisingWaveOperatorVersion: f.operatorVersion,
 		},
 	}
 
@@ -223,10 +211,11 @@ func (f *RisingWaveObjectFactory) componentGroupObjectMeta(component, group stri
 		Name:      f.componentName(component, group),
 		Namespace: f.namespace(),
 		Labels: map[string]string{
-			consts.LabelRisingWaveName:       f.risingwave.Name,
-			consts.LabelRisingWaveComponent:  component,
-			consts.LabelRisingWaveGeneration: lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
-			consts.LabelRisingWaveGroup:      group,
+			consts.LabelRisingWaveName:            f.risingwave.Name,
+			consts.LabelRisingWaveComponent:       component,
+			consts.LabelRisingWaveGeneration:      lo.If(!sync, consts.NoSync).Else(strconv.FormatInt(f.risingwave.Generation, 10)),
+			consts.LabelRisingWaveGroup:           group,
+			consts.LabelRisingWaveOperatorVersion: f.operatorVersion,
 		},
 	}
 
@@ -315,7 +304,7 @@ func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 	return mustSetControllerReference(f.risingwave, frontendService, f.scheme)
 }
 
-// NewComputeService creates a new Service for the compute.
+// NewComputeService creates a new Service for the compute nodes.
 func (f *RisingWaveObjectFactory) NewComputeService() *corev1.Service {
 	computePorts := &f.risingwave.Spec.Components.Compute.Ports
 
@@ -417,7 +406,7 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 	return []corev1.EnvVar{
 		// Keep the legacy environment variables for compatibility. Will remove them later.
 		{
-			Name: legacyEtcdUsernameEnvName,
+			Name: envs.EtcdUsernameLegacy,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -426,7 +415,7 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 			},
 		},
 		{
-			Name: legacyEtcdPasswordEnvName,
+			Name: envs.EtcdPasswordLegacy,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -436,7 +425,7 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 		},
 		// Environment variables for etcd auth.
 		{
-			Name: etcdUsernameEnvName,
+			Name: envs.RWEtcdUsername,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -445,7 +434,7 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 			},
 		},
 		{
-			Name: etcdPasswordEnvName,
+			Name: envs.RWEtcdPassword,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -456,94 +445,203 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 	}
 }
 
-func (f *RisingWaveObjectFactory) argsForMeta() []string {
+func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
 	metaStorage := &f.risingwave.Spec.Storages.Meta
+	objectStorage := f.risingwave.Spec.Storages.Object
 
-	args := []string{
-		"meta-node",
-		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
-		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", metaPorts.ServicePort),
-		"--advertise-addr", fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
-		"--state-store", f.hummockConnectionStr(),
-		"--dashboard-host", fmt.Sprintf("0.0.0.0:%d", metaPorts.DashboardPort),
-		"--prometheus-host", fmt.Sprintf("0.0.0.0:%d", metaPorts.MetricsPort),
+	connectorPorts := f.getConnectorPorts()
+	envVars := []corev1.EnvVar{
+		{
+			Name:  envs.RWConfigPath,
+			Value: path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
+		},
+		{
+			Name:  envs.RWListenAddr,
+			Value: fmt.Sprintf("0.0.0.0:%d", metaPorts.ServicePort),
+		},
+		{
+			Name:  envs.RWAdvertiseAddr,
+			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		},
+		{
+			Name:  envs.RWStateStore,
+			Value: f.hummockConnectionStr(),
+		},
+		{
+			Name:  envs.RWDataDirectory,
+			Value: objectStorage.DataDirectory,
+		},
+		{
+			Name:  envs.RWDashboardHost,
+			Value: fmt.Sprintf("0.0.0.0:%d", metaPorts.DashboardPort),
+		},
+		{
+			Name:  envs.RWPrometheusHost,
+			Value: fmt.Sprintf("0.0.0.0:%d", metaPorts.MetricsPort),
+		},
+		{
+			Name:  envs.RWConnectorRPCEndPoint,
+			Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
+		},
 	}
 
 	switch {
 	case pointer.BoolDeref(metaStorage.Memory, false):
-		args = append(args, "--backend", "mem")
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  envs.RWBackend,
+			Value: "mem",
+		})
 	case metaStorage.Etcd != nil:
-		args = append(args, "--backend", "etcd", "--etcd-endpoints", metaStorage.Etcd.Endpoint)
+		envVars = append(envVars, []corev1.EnvVar{
+			{
+				Name:  envs.RWBackend,
+				Value: "etcd",
+			},
+			{
+				Name:  envs.RWEtcdEndpoints,
+				Value: metaStorage.Etcd.Endpoint,
+			},
+		}...)
 		if metaStorage.Etcd.Secret != "" {
-			args = append(args, "--etcd-auth")
+			envVars = append(envVars, corev1.EnvVar{
+				Name:  envs.RWEtcdAuth,
+				Value: "true",
+			})
 		}
 	default:
 		panic("unsupported meta storage type")
 	}
 
-	return args
+	return envVars
 }
 
-func (f *RisingWaveObjectFactory) argsForFrontend() []string {
+func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
 	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
 	frontendPorts := &f.risingwave.Spec.Components.Frontend.Ports
 
-	return []string{
-		"frontend-node",
-		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
-		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", frontendPorts.ServicePort),
-		"--advertise-addr", fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
-		"--meta-addr", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
-		"--metrics-level=1",
-		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", frontendPorts.MetricsPort),
+	return []corev1.EnvVar{
+		{
+			Name:  envs.RWListenAddr,
+			Value: fmt.Sprintf("0.0.0.0:%d", frontendPorts.ServicePort),
+		},
+		{
+			Name:  envs.RWConfigPath,
+			Value: path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
+		},
+		{
+			Name:  envs.RWAdvertiseAddr,
+			Value: fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
+		},
+		{
+			Name:  envs.RWMetaAddr,
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		},
+		{
+			Name:  envs.RWMetaAddrLegacy,
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		},
+		{
+			Name:  envs.RWMetricsLevel,
+			Value: "1",
+		},
+		{
+			Name:  envs.RWPrometheusListenerAddr,
+			Value: fmt.Sprintf("0.0.0.0:%d", frontendPorts.MetricsPort),
+		},
 	}
 }
 
-func (f *RisingWaveObjectFactory) argsForCompute(cpuLimit int64, memLimit int64) []string {
+func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit int64) []corev1.EnvVar {
 	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
 	computePorts := &f.risingwave.Spec.Components.Compute.Ports
+	connectorPorts := f.getConnectorPorts()
 
-	args := []string{
-		"compute-node",
-		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
-		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", computePorts.ServicePort),
-		"--advertise-addr", fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentCompute, ""), computePorts.ServicePort),
-		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", computePorts.MetricsPort),
-		"--meta-address", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
-		"--metrics-level=1",
+	envVars := []corev1.EnvVar{
+		{
+			Name:  envs.RWConfigPath,
+			Value: path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
+		},
+		{
+			Name:  envs.RWListenAddr,
+			Value: fmt.Sprintf("0.0.0.0:%d", computePorts.ServicePort),
+		},
+		{
+			Name:  envs.RWAdvertiseAddr,
+			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentCompute, ""), computePorts.ServicePort),
+		},
+		{
+			Name:  envs.RWMetaAddr,
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		},
+		{
+			Name:  envs.RWMetaAddrLegacy,
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		},
+		{
+			Name:  envs.RWMetricsLevel,
+			Value: "1",
+		},
+		{
+			Name:  envs.RWConnectorRPCEndPoint,
+			Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
+		},
+		{
+			Name:  envs.RWPrometheusListenerAddr,
+			Value: fmt.Sprintf("0.0.0.0:%d", computePorts.MetricsPort),
+		},
 	}
 
 	if cpuLimit != 0 {
-		args = append(args, "--parallelism", strconv.FormatInt(cpuLimit, 10))
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  envs.RWParallelism,
+			Value: strconv.FormatInt(cpuLimit, 10),
+		})
 	}
 
 	if memLimit != 0 {
-		// Set to memLimit - 512M if memLimit >= 1G, or 512M when memLimit >= 512M, or just memLimit.
-		totalMemoryBytes := memLimit
-		if totalMemoryBytes >= (int64(1) << 30) {
-			totalMemoryBytes -= 512 << 20
-		} else if totalMemoryBytes >= (512 << 20) {
-			totalMemoryBytes = 512 << 20
-		}
-		args = append(args, "--total-memory-bytes", strconv.FormatInt(totalMemoryBytes, 10))
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  envs.RWTotalMemoryBytes,
+			Value: strconv.FormatInt(memLimit, 10),
+		})
 	}
 
-	return args
+	return envVars
 }
 
-func (f *RisingWaveObjectFactory) argsForCompactor() []string {
+func (f *RisingWaveObjectFactory) envsForCompactorArgs() []corev1.EnvVar {
 	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
 	compactorPorts := &f.risingwave.Spec.Components.Compactor.Ports
 
-	return []string{
-		"compactor-node",
-		"--config-path", path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
-		"--listen-addr", fmt.Sprintf("0.0.0.0:%d", compactorPorts.ServicePort),
-		"--advertise-addr", fmt.Sprintf("$(POD_IP):%d", compactorPorts.ServicePort),
-		"--prometheus-listener-addr", fmt.Sprintf("0.0.0.0:%d", compactorPorts.MetricsPort),
-		"--meta-address", fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
-		"--metrics-level=1",
+	return []corev1.EnvVar{
+		{
+			Name:  envs.RWConfigPath,
+			Value: path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
+		},
+		{
+			Name:  envs.RWListenAddr,
+			Value: fmt.Sprintf("0.0.0.0:%d", compactorPorts.ServicePort),
+		},
+		{
+			Name:  envs.RWAdvertiseAddr,
+			Value: fmt.Sprintf("$(POD_IP):%d", compactorPorts.ServicePort),
+		},
+		{
+			Name:  envs.RWPrometheusListenerAddr,
+			Value: fmt.Sprintf("0.0.0.0:%d", compactorPorts.MetricsPort),
+		},
+		{
+			Name:  envs.RWMetaAddr,
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		},
+		{
+			Name:  envs.RWMetaAddrLegacy,
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+		},
+		{
+			Name:  envs.RWMetricsLevel,
+			Value: "1",
+		},
 	}
 }
 
@@ -584,15 +682,15 @@ func (f *RisingWaveObjectFactory) envsForMinIO() []corev1.EnvVar {
 
 	return []corev1.EnvVar{
 		{
-			Name:  minIOEndpointEnvName,
+			Name:  envs.MinIOEndpoint,
 			Value: objectStorage.MinIO.Endpoint,
 		},
 		{
-			Name:  minIOBucketEnvName,
+			Name:  envs.MinIOBucket,
 			Value: objectStorage.MinIO.Bucket,
 		},
 		{
-			Name: minIOUsernameEnvName,
+			Name: envs.MinIOUsername,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -601,7 +699,7 @@ func (f *RisingWaveObjectFactory) envsForMinIO() []corev1.EnvVar {
 			},
 		},
 		{
-			Name: minIOPasswordEnvName,
+			Name: envs.MinIOPassword,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -620,12 +718,12 @@ func envsForAWSS3(region, bucket, secret string) []corev1.EnvVar {
 	var regionEnvVar corev1.EnvVar
 	if len(region) > 0 {
 		regionEnvVar = corev1.EnvVar{
-			Name:  awsS3RegionEnvName,
+			Name:  envs.AWSRegion,
 			Value: region,
 		}
 	} else {
 		regionEnvVar = corev1.EnvVar{
-			Name: awsS3RegionEnvName,
+			Name: envs.AWSRegion,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -637,12 +735,12 @@ func envsForAWSS3(region, bucket, secret string) []corev1.EnvVar {
 
 	return []corev1.EnvVar{
 		{
-			Name:  awsS3BucketEnvName,
+			Name:  envs.AWSS3Bucket,
 			Value: bucket,
 		},
 		regionEnvVar,
 		{
-			Name: awsS3AccessKeyEnvName,
+			Name: envs.AWSAccessKeyID,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -651,7 +749,7 @@ func envsForAWSS3(region, bucket, secret string) []corev1.EnvVar {
 			},
 		},
 		{
-			Name: awsS3SecretAccessKeyEnvName,
+			Name: envs.AWSSecretAccessKey,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -671,14 +769,14 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 		endpoint := strings.TrimSpace(s3Spec.Endpoint)
 
 		// Interpret the variables.
-		endpoint = strings.ReplaceAll(endpoint, "${REGION}", fmt.Sprintf("$(%s)", s3CompatibleRegionEnvName))
-		endpoint = strings.ReplaceAll(endpoint, "${BUCKET}", fmt.Sprintf("$(%s)", s3CompatibleBucketEnvName))
+		endpoint = strings.ReplaceAll(endpoint, "${REGION}", fmt.Sprintf("$(%s)", envs.S3CompatibleRegion))
+		endpoint = strings.ReplaceAll(endpoint, "${BUCKET}", fmt.Sprintf("$(%s)", envs.S3CompatibleBucket))
 
 		if s3Spec.VirtualHostedStyle {
 			if strings.HasPrefix(endpoint, "https://") {
-				endpoint = fmt.Sprintf("https://$(%s).%s", s3CompatibleBucketEnvName, endpoint[len("https://"):])
+				endpoint = fmt.Sprintf("https://$(%s).%s", envs.S3CompatibleBucket, endpoint[len("https://"):])
 			} else {
-				endpoint = fmt.Sprintf("https://$(%s).%s", s3CompatibleBucketEnvName, endpoint)
+				endpoint = fmt.Sprintf("https://$(%s).%s", envs.S3CompatibleBucket, endpoint)
 			}
 		} else {
 			if !strings.HasPrefix(endpoint, "https://") {
@@ -687,10 +785,9 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 		}
 
 		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.Secret)
-	} else {
-		// AWS S3 mode.
-		return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.Secret)
 	}
+	// AWS S3 mode.
+	return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.Secret)
 }
 
 func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVar {
@@ -701,12 +798,12 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 	var regionEnvVar corev1.EnvVar
 	if len(region) > 0 {
 		regionEnvVar = corev1.EnvVar{
-			Name:  s3CompatibleRegionEnvName,
+			Name:  envs.S3CompatibleRegion,
 			Value: region,
 		}
 	} else {
 		regionEnvVar = corev1.EnvVar{
-			Name: s3CompatibleRegionEnvName,
+			Name: envs.S3CompatibleRegion,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -720,16 +817,17 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 		{
 			// Disable auto region loading. Refer to the original source for more information.
 			// https://github.com/awslabs/aws-sdk-rust/blob/main/sdk/aws-config/src/imds/region.rs
-			Name:  awsRustSdkEC2MetadataDisabledEnvName,
+			// cspell:disable-next-line
+			Name:  envs.AWSEC2MetadataDisabled,
 			Value: "true",
 		},
 		{
-			Name:  s3CompatibleBucketEnvName,
+			Name:  envs.S3CompatibleBucket,
 			Value: bucket,
 		},
 		regionEnvVar,
 		{
-			Name: s3CompatibleAccessKeyEnvName,
+			Name: envs.S3CompatibleAccessKeyID,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -738,7 +836,7 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 			},
 		},
 		{
-			Name: s3CompatibleSecretAccessKeyEnvName,
+			Name: envs.S3CompatibleSecretAccessKey,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -747,8 +845,32 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 			},
 		},
 		{
-			Name:  s3EndpointEnvName,
+			Name:  envs.S3CompatibleEndpoint,
 			Value: endpoint,
+		},
+	}
+}
+
+func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
+	gcs := f.risingwave.Spec.Storages.Object.GCS
+	useWorkloadIdentity := gcs.UseWorkloadIdentity
+	if useWorkloadIdentity {
+		return []corev1.EnvVar{}
+	}
+
+	secret := gcs.Secret
+	secretRef := corev1.LocalObjectReference{
+		Name: secret,
+	}
+	return []corev1.EnvVar{
+		{
+			Name: envs.GoogleApplicationCredentials,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyGCSServiceAccountCredentials,
+				},
+			},
 		},
 	}
 }
@@ -780,6 +902,8 @@ func (f *RisingWaveObjectFactory) envsForObjectStorage() []corev1.EnvVar {
 		return f.envsForMinIO()
 	case f.isObjectStorageS3() || f.isObjectStorageS3Compatible():
 		return f.envsForS3()
+	case f.isObjectStorageGCS():
+		return f.envsForGCS()
 	case f.isObjectStorageAliyunOSS():
 		return f.envsForAliyunOSS()
 	case f.isObjectStorageHDFS():
@@ -1084,31 +1208,31 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 
 	// Setting the system environment variables.
 	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-		Name: consts.EnvRisingWavePodIp,
+		Name: envs.PodIP,
 		ValueFrom: &corev1.EnvVarSource{
 			FieldRef: &corev1.ObjectFieldSelector{
 				FieldPath: "status.podIP",
 			},
 		},
-	}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWavePodIp })
+	}, func(env *corev1.EnvVar) bool { return env.Name == envs.PodIP })
 	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-		Name: consts.EnvRisingWavePodName,
+		Name: envs.PodName,
 		ValueFrom: &corev1.EnvVarSource{
 			FieldRef: &corev1.ObjectFieldSelector{
 				FieldPath: "metadata.name",
 			},
 		},
-	}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWavePodName })
+	}, func(env *corev1.EnvVar) bool { return env.Name == envs.PodName })
 	// Set RUST_BACKTRACE=1 by default.
 	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-		Name:  consts.EnvRisingWaveRustBacktrace,
+		Name:  envs.RustBacktrace,
 		Value: "full",
-	}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWaveRustBacktrace })
+	}, func(env *corev1.EnvVar) bool { return env.Name == envs.RustBacktrace })
 	if cpuLimit, ok := template.Resources.Limits[corev1.ResourceCPU]; ok {
 		container.Env = mergeListByKey(container.Env, corev1.EnvVar{
-			Name:  consts.EnvRisingWaveWorkerThreads,
+			Name:  envs.RWWorkerThreads,
 			Value: strconv.FormatInt(cpuLimit.Value(), 10),
-		}, func(env *corev1.EnvVar) bool { return env.Name == consts.EnvRisingWaveWorkerThreads })
+		}, func(env *corev1.EnvVar) bool { return env.Name == envs.RWWorkerThreads })
 	}
 	container.Resources = template.Resources
 	container.StartupProbe = nil
@@ -1139,20 +1263,15 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 	basicSetupContainer(container, template)
 
 	container.Name = "meta"
-	container.Args = f.argsForMeta()
+	container.Args = []string{"meta-node"}
 	container.Ports = f.portsForMetaContainer()
-	connectorPorts := f.getConnectorPorts()
-	container.Env = append(container.Env, corev1.EnvVar{
-		Name:  consts.EnvRisingWaveConnectorRpcEndPoint,
-		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
-	})
+	container.Env = append(container.Env, f.envsForMetaArgs()...)
 
 	for _, env := range f.envsForObjectStorage() {
 		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
 			return a.Name == b.Name
 		})
 	}
-
 	if f.isMetaStorageEtcd() {
 		for _, env := range f.envsForEtcd() {
 			container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
@@ -1342,7 +1461,8 @@ func (f *RisingWaveObjectFactory) setupFrontendContainer(container *corev1.Conta
 	basicSetupContainer(container, template)
 
 	container.Name = "frontend"
-	container.Args = f.argsForFrontend()
+	container.Args = []string{"frontend-node"}
+	container.Env = append(container.Env, f.envsForFrontendArgs()...)
 	container.Ports = f.portsForFrontendContainer()
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
@@ -1454,8 +1574,15 @@ func (f *RisingWaveObjectFactory) setupCompactorContainer(container *corev1.Cont
 	basicSetupContainer(container, template)
 
 	container.Name = "compactor"
-	container.Args = f.argsForCompactor()
+	container.Args = []string{"compactor-node"}
+	container.Env = append(container.Env, f.envsForCompactorArgs()...)
 	container.Ports = f.portsForCompactorContainer()
+
+	for _, env := range f.envsForObjectStorage() {
+		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
+	}
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
 		return a.MountPath == b.MountPath
@@ -1567,10 +1694,13 @@ func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Cont
 	container.Args = f.argsForConnector()
 	container.Ports = f.portsForConnectorContainer()
 	container.Command = []string{"/risingwave/bin/connector-node/start-service.sh"}
-	container.Env = append(container.Env, corev1.EnvVar{
-		Name:  consts.EnvRisingWaveJavaOpts,
-		Value: "-Xmx4g",
-	})
+	memLimits := template.Resources.Limits.Memory().Value()
+	if memLimits != 0 {
+		container.Env = append(container.Env, corev1.EnvVar{
+			Name:  envs.JavaOpts,
+			Value: fmt.Sprintf("-Xmx%d", memLimits),
+		})
+	}
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
 		return a.MountPath == b.MountPath
@@ -1729,16 +1859,18 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	basicSetupContainer(container, &template.RisingWaveComponentGroupTemplate)
 
 	container.Name = "compute"
-	connectorPorts := f.getConnectorPorts()
-	container.Env = append(container.Env, corev1.EnvVar{
-		Name:  consts.EnvRisingWaveConnectorRpcEndPoint,
-		Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
-	})
+	container.Args = []string{"compute-node"}
 
 	cpuLimit := int64(math.Ceil(container.Resources.Limits.Cpu().AsApproximateFloat64()))
 	memLimit, _ := container.Resources.Limits.Memory().AsInt64()
-	container.Args = f.argsForCompute(cpuLimit, memLimit)
+	container.Env = append(container.Env, f.envsForComputeArgs(cpuLimit, memLimit)...)
 	container.Ports = f.portsForComputeContainer()
+
+	for _, env := range f.envsForObjectStorage() {
+		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
+	}
 
 	for _, volumeMount := range template.VolumeMounts {
 		container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, volumeMount, func(a, b *corev1.VolumeMount) bool {
@@ -1891,6 +2023,19 @@ func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonit
 					Port:          consts.PortMetrics,
 					Interval:      prometheusv1.Duration(fmt.Sprintf("%.0fs", interval.Seconds())),
 					ScrapeTimeout: prometheusv1.Duration(fmt.Sprintf("%.0fs", scrapeTimeout.Seconds())),
+					// we need to drop some metrics which maybe will produce too many series.
+					MetricRelabelConfigs: []*prometheusv1.RelabelConfig{
+						{
+							SourceLabels: []prometheusv1.LabelName{"__name__"},
+							Action:       "drop",
+							Regex:        "batch_.+",
+						},
+						{
+							SourceLabels: []prometheusv1.LabelName{"__name__"},
+							Action:       "drop",
+							Regex:        "stream_exchange_.+",
+						},
+					},
 				},
 			},
 			Selector: metav1.LabelSelector{
@@ -1916,10 +2061,11 @@ func (f *RisingWaveObjectFactory) getConnectorPorts() *risingwavev1alpha1.Rising
 }
 
 // NewRisingWaveObjectFactory creates a new RisingWaveObjectFactory.
-func NewRisingWaveObjectFactory(risingwave *risingwavev1alpha1.RisingWave, scheme *runtime.Scheme) *RisingWaveObjectFactory {
+func NewRisingWaveObjectFactory(risingwave *risingwavev1alpha1.RisingWave, scheme *runtime.Scheme, operatorVersion string) *RisingWaveObjectFactory {
 	return &RisingWaveObjectFactory{
 		risingwave:      risingwave,
 		scheme:          scheme,
 		inheritedLabels: captureInheritedLabels(risingwave),
+		operatorVersion: operatorVersion,
 	}
 }

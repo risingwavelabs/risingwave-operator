@@ -365,19 +365,19 @@ type RisingWaveComponentConnector struct {
 
 // RisingWaveComponentsSpec is the spec describes the components of RisingWave.
 type RisingWaveComponentsSpec struct {
-	// Meta component spec.
+	// Meta component spec.The central metadata management service. It also acts as a failure detector that periodically sends heartbeats to frontend nodes and compute nodes in the cluster.
 	Meta RisingWaveComponentMeta `json:"meta,omitempty"`
 
-	// Frontend component spec.
+	// Frontend component spec. A frontend node acts as a stateless proxy that accepts user queries through Postgres protocol. It is responsible for parsing and validating queries, optimizing query execution plans, and delivering query results.
 	Frontend RisingWaveComponentFrontend `json:"frontend,omitempty"`
 
-	// Compute component spec.
+	// Compute component spec. A computer node executes the optimized query plans and handles data ingestion and output.
 	Compute RisingWaveComponentCompute `json:"compute,omitempty"`
 
-	// Compactor component.
+	// Compactor component spec. A stateless worker node that compacts data for the storage engine.
 	Compactor RisingWaveComponentCompactor `json:"compactor,omitempty"`
 
-	// Connector component spec.
+	// Connector component spec. A connector node, which enables the communication with other systems like kinesis or pulsar.
 	Connector RisingWaveComponentConnector `json:"connector,omitempty"`
 }
 
@@ -456,6 +456,26 @@ type RisingWaveObjectStorageS3 struct {
 	VirtualHostedStyle bool `json:"virtualHostedStyle,omitempty"`
 }
 
+// RisingWaveObjectStorageGCS is the details of GCS bucket storage for compute and compactor components.
+type RisingWaveObjectStorageGCS struct {
+	// UseWorkloadIdentity indicates to use workload identity to access the GCS service. If this is enabled, secret is not required, and ADC is used.
+	// +kubebuilder:validation:Required
+	UseWorkloadIdentity bool `json:"useWorkloadIdentity"`
+
+	// Secret contains the credentials to access the GCS service. It must contain the following keys:
+	//   * ServiceAccountCredentials
+	// +kubebuilder:validation:Optional
+	Secret string `json:"secret,omitempty"`
+
+	// Bucket of the GCS bucket service.
+	// +kubebuilder:validation:Required
+	Bucket string `json:"bucket"`
+
+	// Working directory root of the GCS bucket
+	// +kubebuilder:validation:Required
+	Root string `json:"root"`
+}
+
 // RisingWaveObjectStorageAliyunOSS is the details of Aliyun OSS storage (S3 compatible) for compute and compactor components.
 type RisingWaveObjectStorageAliyunOSS struct {
 	// Secret contains the credentials to access the Aliyun OSS service. It must contain the following keys:
@@ -484,13 +504,16 @@ type RisingWaveObjectStorageHDFS struct {
 	// +kubebuilder:validation:Required
 	NameNode string `json:"nameNode"`
 
-	// Root of the HDFS
+	// Working directory root of the HDFS
 	// +kubebuilder:validation:Required
 	Root string `json:"root"`
 }
 
 // RisingWaveObjectStorage is the object storage for compute and compactor components.
 type RisingWaveObjectStorage struct {
+	// DataDirectory is the directory to store the data in the object storage. It is an optional field.
+	DataDirectory string `json:"dataDirectory,omitempty"`
+
 	// Memory indicates to store the data in memory. It's only for test usage and strongly discouraged to
 	// be used in production.
 	// +optional
@@ -503,6 +526,10 @@ type RisingWaveObjectStorage struct {
 	// S3 storage spec.
 	// +optional
 	S3 *RisingWaveObjectStorageS3 `json:"s3,omitempty"`
+
+	// GCS storage spec.
+	// +optional
+	GCS *RisingWaveObjectStorageGCS `json:"GCS,omitempty"`
 
 	// AliyunOSS storage spec.
 	// +optional
@@ -812,6 +839,7 @@ const (
 	ObjectStorageTypeMemory    ObjectStorageType = "Memory"
 	ObjectStorageTypeMinIO     ObjectStorageType = "MinIO"
 	ObjectStorageTypeS3        ObjectStorageType = "S3"
+	ObjectStorageTypeGCS       ObjectStorageType = "GCS"
 	ObjectStorageTypeAliyunOSS ObjectStorageType = "AliyunOSS"
 	ObjectStorageTypeHDFS      ObjectStorageType = "HDFS"
 	ObjectStorageTypeWebHDFS   ObjectStorageType = "WebHDFS"

@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
+	"github.com/risingwavelabs/risingwave-operator/pkg/factory/envs"
 
 	"github.com/distribution/distribution/reference"
 	"github.com/samber/lo"
@@ -51,12 +51,12 @@ func isImageValid(image string) bool {
 }
 
 var systemEnv = map[string]bool{
-	consts.EnvRisingWavePodIp:                true,
-	consts.EnvRisingWavePodName:              true,
-	consts.EnvRisingWaveRustBacktrace:        true,
-	consts.EnvRisingWaveWorkerThreads:        true,
-	consts.EnvRisingWaveConnectorRpcEndPoint: true,
-	consts.EnvRisingWaveJavaOpts:             true,
+	envs.PodIP:                  true,
+	envs.PodName:                true,
+	envs.RustBacktrace:          true,
+	envs.RWWorkerThreads:        true,
+	envs.RWConnectorRPCEndPoint: true,
+	envs.JavaOpts:               true,
 }
 
 func (v *RisingWaveValidatingWebhook) validateGroupTemplate(path *field.Path, groupTemplate *risingwavev1alpha1.RisingWaveComponentGroupTemplate, isOpenKruiseEnabled bool) field.ErrorList {
@@ -186,10 +186,19 @@ func (v *RisingWaveValidatingWebhook) validateStorages(path *field.Path, storage
 	isObjectMemory := ptrValueNotZero(storages.Object.Memory)
 	isObjectMinIO := storages.Object.MinIO != nil
 	isObjectS3 := storages.Object.S3 != nil
+	isObjectGCS := storages.Object.GCS != nil
 	isObjectAliyunOSS := storages.Object.AliyunOSS != nil
 	isObjectHDFS := storages.Object.HDFS != nil
 	isObjectWebHDFS := storages.Object.WebHDFS != nil
-	validObjectStorageTypeCount := lo.CountBy([]bool{isObjectMemory, isObjectMinIO, isObjectS3, isObjectAliyunOSS, isObjectHDFS, isObjectWebHDFS}, func(x bool) bool { return x })
+
+	if isObjectGCS {
+		if (storages.Object.GCS.UseWorkloadIdentity && storages.Object.GCS.Secret != "") || (!storages.Object.GCS.UseWorkloadIdentity && storages.Object.GCS.Secret == "") {
+			fieldErrs = append(fieldErrs, field.Invalid(path.Child("object", "gcs", "secret"), storages.Object.GCS.Secret, "either secret or useWorkloadIdentity must be specified"))
+		}
+	}
+
+	validObjectStorageTypeCount := lo.CountBy([]bool{isObjectMemory, isObjectMinIO, isObjectS3, isObjectGCS, isObjectAliyunOSS, isObjectHDFS, isObjectWebHDFS}, func(x bool) bool { return x })
+
 	if validObjectStorageTypeCount == 0 {
 		fieldErrs = append(fieldErrs, field.Invalid(path.Child("object"), storages.Object, "must configure the object storage"))
 	} else if validObjectStorageTypeCount > 1 {
@@ -365,10 +374,9 @@ func (v *RisingWaveValidatingWebhook) isObjectStoragesTheSame(oldObj, newObj *ri
 func pathForGroupReplicas(obj *risingwavev1alpha1.RisingWave, component, group string) *field.Path {
 	if group == "" {
 		return field.NewPath("spec", "global", "replicas", component)
-	} else {
-		index, _ := scaleview.NewRisingWaveScaleViewHelper(obj, component).GetGroupIndex(group)
-		return field.NewPath("spec", "components", component, "groups").Index(index).Child("replicas")
 	}
+	index, _ := scaleview.NewRisingWaveScaleViewHelper(obj, component).GetGroupIndex(group)
+	return field.NewPath("spec", "components", component, "groups").Index(index).Child("replicas")
 }
 
 func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWave) error {

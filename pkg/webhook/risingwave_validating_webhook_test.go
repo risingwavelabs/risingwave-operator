@@ -336,6 +336,69 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
+		"gcs-object-storage-workload-pass": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
+					GCS: &risingwavev1alpha1.RisingWaveObjectStorageGCS{
+						UseWorkloadIdentity: true,
+						Bucket:              "gcs-bucket",
+						Root:                "gcs-root",
+					},
+				}
+			},
+			pass: true,
+		},
+		"gcs-object-storage-secret-pass": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
+					GCS: &risingwavev1alpha1.RisingWaveObjectStorageGCS{
+						UseWorkloadIdentity: false,
+						Secret:              "gcs-creds",
+						Bucket:              "gcs-bucket",
+						Root:                "gcs-root",
+					},
+				}
+			},
+			pass: true,
+		},
+		"gcs-object-storage-both-fail": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
+					GCS: &risingwavev1alpha1.RisingWaveObjectStorageGCS{
+						UseWorkloadIdentity: true,
+						Secret:              "gcs-creds",
+						Bucket:              "gcs-bucket",
+						Root:                "gcs-root",
+					},
+				}
+			},
+			pass: false,
+		},
+		"gcs-object-storage-none-fail": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
+					GCS: &risingwavev1alpha1.RisingWaveObjectStorageGCS{
+						UseWorkloadIdentity: false,
+						Bucket:              "gcs-bucket",
+						Root:                "gcs-root",
+					},
+				}
+			},
+			pass: false,
+		},
+		"gcs-object-storage-edge-fail": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
+					GCS: &risingwavev1alpha1.RisingWaveObjectStorageGCS{
+						UseWorkloadIdentity: false,
+						Secret:              "",
+						Bucket:              "gcs-bucket",
+						Root:                "gcs-root",
+					},
+				}
+			},
+			pass: false,
+		},
 		"aliyun-oss-object-storage-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{

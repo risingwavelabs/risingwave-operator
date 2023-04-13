@@ -174,6 +174,8 @@ int32
 </thead>
 <tbody><tr><td><p>&#34;AliyunOSS&#34;</p></td>
 <td></td>
+</tr><tr><td><p>&#34;GCS&#34;</p></td>
+<td></td>
 </tr><tr><td><p>&#34;HDFS&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;Memory&#34;</p></td>
@@ -1436,7 +1438,7 @@ RisingWaveComponentMeta
 </em>
 </td>
 <td>
-<p>Meta component spec.</p>
+<p>Meta component spec.The central metadata management service. It also acts as a failure detector that periodically sends heartbeats to frontend nodes and compute nodes in the cluster.</p>
 </td>
 </tr>
 <tr>
@@ -1449,7 +1451,7 @@ RisingWaveComponentFrontend
 </em>
 </td>
 <td>
-<p>Frontend component spec.</p>
+<p>Frontend component spec. A frontend node acts as a stateless proxy that accepts user queries through Postgres protocol. It is responsible for parsing and validating queries, optimizing query execution plans, and delivering query results.</p>
 </td>
 </tr>
 <tr>
@@ -1462,7 +1464,7 @@ RisingWaveComponentCompute
 </em>
 </td>
 <td>
-<p>Compute component spec.</p>
+<p>Compute component spec. A computer node executes the optimized query plans and handles data ingestion and output.</p>
 </td>
 </tr>
 <tr>
@@ -1475,7 +1477,7 @@ RisingWaveComponentCompactor
 </em>
 </td>
 <td>
-<p>Compactor component.</p>
+<p>Compactor component spec. A stateless worker node that compacts data for the storage engine.</p>
 </td>
 </tr>
 <tr>
@@ -1488,7 +1490,7 @@ RisingWaveComponentConnector
 </em>
 </td>
 <td>
-<p>Connector component spec.</p>
+<p>Connector component spec. A connector node, which enables the communication with other systems like kinesis or pulsar.</p>
 </td>
 </tr>
 </tbody>
@@ -2459,6 +2461,17 @@ MetaStorageType
 <tbody>
 <tr>
 <td>
+<code>dataDirectory</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>DataDirectory is the directory to store the data in the object storage. It is an optional field.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>memory</code><br/>
 <em>
 bool
@@ -2496,6 +2509,20 @@ RisingWaveObjectStorageS3
 <td>
 <em>(Optional)</em>
 <p>S3 storage spec.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>GCS</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageGCS">
+RisingWaveObjectStorageGCS
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>GCS storage spec.</p>
 </td>
 </tr>
 <tr>
@@ -2609,6 +2636,69 @@ only available in the internal network.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageGCS">RisingWaveObjectStorageGCS
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage</a>)
+</p>
+<div>
+<p>RisingWaveObjectStorageGCS is the details of GCS bucket storage for compute and compactor components.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>useWorkloadIdentity</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>UseWorkloadIdentity indicates to use workload identity to access the GCS service. If this is enabled, secret is not required, and ADC is used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secret</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Secret contains the credentials to access the GCS service. It must contain the following keys:
+* ServiceAccountCredentials</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bucket</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Bucket of the GCS bucket service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>root</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Working directory root of the GCS bucket</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageHDFS">RisingWaveObjectStorageHDFS
 </h3>
 <p>
@@ -2644,7 +2734,7 @@ string
 </em>
 </td>
 <td>
-<p>Root of the HDFS</p>
+<p>Working directory root of the HDFS</p>
 </td>
 </tr>
 </tbody>

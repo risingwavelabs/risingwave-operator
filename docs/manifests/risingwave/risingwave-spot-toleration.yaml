@@ -24,7 +24,7 @@ spec:
     object:
       memory: true
   global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.1.17
+    image: ghcr.io/risingwavelabs/risingwave:v0.18.0
     imagePullPolicy: IfNotPresent
     resources:
       limits:

@@ -131,10 +131,17 @@ buildx:
 
 ##@ Build
 
+proto: 
+	cd pkg/controller/proto ; \
+	protoc --go_out=. --go_opt=paths=source_relative \
+     	--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+     	--experimental_allow_proto3_optional \
+ 	   	meta.proto common.proto
+
 build: build-manager
 
-build-manager: generate fmt vet lint ## Build manager binary.
-	go build -o bin/manager cmd/manager/manager.go
+build-manager: generate fmt vet lint vendor ## Build manager binary.
+	go build -ldflags "-X main.version=$(shell git describe --tags)" -o bin/manager cmd/manager/manager.go
 
 build-plugin: generate fmt vet lint ## Build manager binary.
 	go build -o bin/kubectl-rw cmd/plugin/main.go
@@ -149,21 +156,24 @@ build-local-certs:
 		-out ${TMPDIR}/k8s-webhook-server/serving-certs/tls.crt -subj "/CN=localhost" \
 		-extensions san -config <(echo '[req]'; echo 'distinguished_name=req'; echo '[san]'; echo 'subjectAltName=DNS:host.docker.internal')
 
-install-local: kustomize manifests
+use-local-context:
+	kubectl config use docker-desktop
+
+install-local: use-local-context kustomize manifests
 	$(KUSTOMIZE) build config/local | kubectl apply --server-side --force-conflicts -f - >/dev/null
 
-uninstall-local: kustomize manifests
+uninstall-local: use-local-context kustomize manifests
 	$(KUSTOMIZE) build config/local | kubectl delete -f - >/dev/null
 
 copy-local-certs:
 	mkdir -p ${TMPDIR}/k8s-webhook-server/serving-certs
 	cp -R config/local/certs/* ${TMPDIR}/k8s-webhook-server/serving-certs
 
-run-local: manifests generate fmt vet lint install-local
-	go run cmd/manager/manager.go -zap-time-encoding rfc3339
+run-local: use-local-context manifests generate fmt vet lint install-local
+	go run -ldflags "-X main.version=$(shell git describe --tags)" cmd/manager/manager.go -zap-time-encoding rfc3339
 
 build-e2e-image:
-	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=true -t docker.io/risingwavelabs/risingwave-operator:dev . --load
+	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=true --build-arg VERSION="$(shell git describe --tags)" -t docker.io/risingwavelabs/risingwave-operator:dev . --load
 
 e2e-test: generate-test-yaml vendor build-e2e-image
 	E2E_KUBERNETES_RUNTIME=kind ./test/e2e/e2e.sh
@@ -172,16 +182,16 @@ e2e-plugin:
 	e2e/e2e-plugin.sh
 
 docker-cross-build: test buildx## Build docker image with the manager.
-	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=false --platform=linux/amd64,linux/arm64 -t ${IMG} . --push
+	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=false --build-arg VERSION="$(shell git describe --tags)" --platform=linux/amd64,linux/arm64 -t ${IMG} . --push
 
 docker-cross-build-vendor: test buildx vendor
-	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=true --platform=linux/amd64,linux/arm64 -t ${IMG} . --push
+	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=true --build-arg VERSION="$(shell git describe --tags)" --platform=linux/amd64,linux/arm64 -t ${IMG} . --push
 
 docker-build: test ## Build docker image with the manager.
-	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=false -t ${IMG} . --load
+	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=false --build-arg VERSION="$(shell git describe --tags)" -t ${IMG} . --load
 
 docker-build-vendor: vendor test
-	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=true -t ${IMG} . --load
+	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=true --build-arg VERSION="$(shell git describe --tags)" -t ${IMG} . --load
 
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
@@ -189,7 +199,7 @@ docker-push: ## Push docker image with the manager.
 ##@ Deployment
 
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	$(KUSTOMIZE) build config/crd | kubectl apply --server-side -f -
 
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/crd | kubectl delete -f -
@@ -202,7 +212,7 @@ generate-test-yaml: generate-yaml
 	$(KUSTOMIZE) build config --output config/risingwave-operator-test.yaml
 
 deploy: generate-yaml
-	kubectl apply -f config/risingwave-operator.yaml
+	kubectl apply --server-side -f config/risingwave-operator.yaml
 
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	kubectl delete -f config/risingwave-operator.yaml

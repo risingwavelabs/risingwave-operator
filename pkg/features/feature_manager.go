@@ -32,6 +32,7 @@ type FeatureName string
 // Valid feature names.
 const (
 	EnableOpenKruiseFeature FeatureName = "EnableOpenKruise"
+	EnableForceUpdate       FeatureName = "EnableForceUpdate"
 )
 
 // Valid feature stages.
@@ -48,6 +49,12 @@ var (
 		{
 			Name:          EnableOpenKruiseFeature,
 			Description:   "This feature enables open kruise as an optional provider",
+			DefaultEnable: false,
+			Stage:         Beta,
+		},
+		{
+			Name:          EnableForceUpdate,
+			Description:   "This feature enables force resolve version conflict due to operator update",
 			DefaultEnable: false,
 			Stage:         Beta,
 		},

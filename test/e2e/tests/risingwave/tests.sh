@@ -87,10 +87,21 @@ function test::run::risingwave::multi_meta_failover_fencing() {
     return 1
   fi
 
-  local old_leader_restarts
-  old_leader_restarts="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..status.containerStatuses..restartCount}')"
   local meta_leader_names
   meta_leader_names="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..metadata.name}')"
+
+  if [[ -z "${meta_leader_names}" ]]; then
+    logging::error "No meta leader found"
+    return 1
+  fi
+
+  if [[ "$(echo "${meta_leader_names}" | wc -w)" -ne 1 ]]; then
+    logging::error "More than one meta leader found"
+    return 1
+  fi
+
+  local old_leader_restarts
+  old_leader_restarts="$(k8s::kubectl::get pod "${meta_leader_names}" -o=jsonpath='{.status.containerStatuses..restartCount}')"
 
   logging::info "leader restarted ${old_leader_restarts} times before experiment"
 

@@ -76,6 +76,12 @@ const (
 )
 
 const (
+	AzureBlobEndpoint    = "AZBLOB_ENDPOINT"
+	AzureBlobAccountName = "AZBLOB_ACCOUNT_NAME"
+	AzureBlobAccountKey  = "AZBLOB_ACCOUNT_KEY"
+)
+
+const (
 	// GoogleApplicationCredentials for GCS service.
 	GoogleApplicationCredentials = "GOOGLE_APPLICATION_CREDENTIALS"
 )

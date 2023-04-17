@@ -95,6 +95,10 @@ func (f *RisingWaveObjectFactory) isObjectStorageAliyunOSS() bool {
 	return f.risingwave.Spec.Storages.Object.AliyunOSS != nil
 }
 
+func (f *RisingWaveObjectFactory) isObjectStorageAzureBlob() bool {
+	return f.risingwave.Spec.Storages.Object.AzureBlob != nil
+}
+
 func (f *RisingWaveObjectFactory) isObjectStorageHDFS() bool {
 	return f.risingwave.Spec.Storages.Object.HDFS != nil
 }
@@ -127,6 +131,10 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 		aliyunOSS := objectStorage.AliyunOSS
 		// Redirect to s3-compatible.
 		return fmt.Sprintf("hummock+s3-compatible://%s", aliyunOSS.Bucket)
+	case objectStorage.AzureBlob != nil:
+		azureBlob := objectStorage.AzureBlob
+		// Redirect to s3-compatible.
+		return fmt.Sprintf("hummock+azblob://%s@%s", azureBlob.Container, azureBlob.Root)
 	case objectStorage.HDFS != nil:
 		hdfs := objectStorage.HDFS
 		return fmt.Sprintf("hummock+hdfs://%s@%s", hdfs.NameNode, hdfs.Root)
@@ -881,6 +889,39 @@ func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 	return envsForS3Compatible(objectStorage.AliyunOSS.Region, endpoint, objectStorage.AliyunOSS.Bucket, objectStorage.AliyunOSS.Secret)
 }
 
+func (f *RisingWaveObjectFactory) envsForAzureBlob() []corev1.EnvVar {
+	objectStorage := &f.risingwave.Spec.Storages.Object
+	secretRef := corev1.LocalObjectReference{
+		Name: objectStorage.AzureBlob.Secret,
+	}
+	return []corev1.EnvVar{
+
+		{
+			Name: envs.AzureBlobAccountName,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyAzureBlobAccountName,
+				},
+			},
+		},
+		{
+			Name: envs.AzureBlobAccountKey,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  consts.SecretKeyAzureBlobAccountKey,
+				},
+			},
+		},
+		{
+			Name:  envs.AzureBlobEndpoint,
+			Value: fmt.Sprintf("https://${%s}.blob.core.windows.net", envs.AzureBlobAccountName),
+		},
+	}
+
+}
+
 func (f *RisingWaveObjectFactory) envsForHDFS() []corev1.EnvVar {
 	return []corev1.EnvVar{}
 }
@@ -895,6 +936,8 @@ func (f *RisingWaveObjectFactory) envsForObjectStorage() []corev1.EnvVar {
 		return f.envsForGCS()
 	case f.isObjectStorageAliyunOSS():
 		return f.envsForAliyunOSS()
+	case f.isObjectStorageAzureBlob():
+		return f.envsForAzureBlob()
 	case f.isObjectStorageHDFS():
 		return f.envsForHDFS()
 	default:

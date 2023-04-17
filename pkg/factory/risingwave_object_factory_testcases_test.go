@@ -3004,6 +3004,47 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 				},
 			},
 		},
+		"azure-blob": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				AzureBlob: &risingwavev1alpha1.RisingWaveObjectStorageAzureBlob{
+					Secret:    "azure-blob-creds",
+					Container: "azure-blob-hummock01",
+					Root:      "/azure-blob-root",
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+azblob://azure-blob-hummock01@/azure-blob-root",
+				},
+				{
+					Name: "AZBLOB_ACCOUNT_NAME",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "azure-blob-creds",
+							},
+							Key: consts.SecretKeyAzureBlobAccountName,
+						},
+					},
+				},
+				{
+					Name: "AZBLOB_ACCOUNT_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "azure-blob-creds",
+							},
+							Key: consts.SecretKeyAzureBlobAccountKey,
+						},
+					},
+				},
+				{
+					Name:  "AZBLOB_ENDPOINT",
+					Value: "https://${AZBLOB_ACCOUNT_NAME}.blob.core.windows.net",
+				},
+			},
+		},
 		"hdfs": {
 			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
 				HDFS: &risingwavev1alpha1.RisingWaveObjectStorageHDFS{

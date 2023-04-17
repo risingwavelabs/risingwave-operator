@@ -410,6 +410,18 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
+		"azure-blob-object-storage-pass": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
+					AzureBlob: &risingwavev1alpha1.RisingWaveObjectStorageAzureBlob{
+						Secret:    "azure-blob-creds",
+						Container: "hummock",
+						Root:      "azure-blob-root",
+					},
+				}
+			},
+			pass: true,
+		},
 		"hdfs-object-storage-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
@@ -459,6 +471,15 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
 					MinIO: &risingwavev1alpha1.RisingWaveObjectStorageMinIO{},
 					HDFS:  &risingwavev1alpha1.RisingWaveObjectStorageHDFS{},
+				}
+			},
+			pass: false,
+		},
+		"multiple-object-storages-fail-5": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
+					MinIO:     &risingwavev1alpha1.RisingWaveObjectStorageMinIO{},
+					AzureBlob: &risingwavev1alpha1.RisingWaveObjectStorageAzureBlob{},
 				}
 			},
 			pass: false,

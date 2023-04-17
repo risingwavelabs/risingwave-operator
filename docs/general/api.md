@@ -174,6 +174,8 @@ int32
 </thead>
 <tbody><tr><td><p>&#34;AliyunOSS&#34;</p></td>
 <td></td>
+</tr><tr><td><p>&#34;AzureBlob&#34;</p></td>
+<td></td>
 </tr><tr><td><p>&#34;GCS&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;HDFS&#34;</p></td>
@@ -2539,6 +2541,20 @@ RisingWaveObjectStorageAliyunOSS
 </tr>
 <tr>
 <td>
+<code>azureBlob</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageAzureBlob">
+RisingWaveObjectStorageAzureBlob
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Azure Blob storage spec.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>hdfs</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageHDFS">
@@ -2616,6 +2632,59 @@ bool
 <td>
 <p>InternalEndpoint indicates if we use the internal endpoint to access Aliyun OSS, which is
 only available in the internal network.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageAzureBlob">RisingWaveObjectStorageAzureBlob
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage</a>)
+</p>
+<div>
+<p>RisingWaveObjectStorageAzureBlob is the details of Azure blob storage (S3 compatible) for compute and compactor components.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secret</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Secret contains the credentials to access the Azure Blob service. It must contain the following keys:
+* AccessKeyID
+* SecretAccessKey</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>container</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Container of the Azure Blob service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>root</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Working directory root of the Azure Blob service.</p>
 </td>
 </tr>
 </tbody>

@@ -9,7 +9,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.3
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: risingwavepodtemplates.risingwave.risingwavelabs.com
 spec:
@@ -7154,7 +7154,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: risingwave-operator-system/risingwave-operator-serving-cert
-    controller-gen.kubebuilder.io/version: v0.11.3
+    controller-gen.kubebuilder.io/version: v0.9.2
   name: risingwaves.risingwave.risingwavelabs.com
 spec:
   conversion:
@@ -17360,6 +17360,26 @@ spec:
                         - bucket
                         - secret
                         type: object
+                      azureBlob:
+                        description: Azure Blob storage spec.
+                        properties:
+                          container:
+                            description: Container of the Azure Blob service.
+                            type: string
+                          root:
+                            description: Working directory root of the Azure Blob
+                              service.
+                            type: string
+                          secret:
+                            description: 'Secret contains the credentials to access
+                              the Azure Blob service. It must contain the following
+                              keys: * AccessKeyID * SecretAccessKey'
+                            type: string
+                        required:
+                        - container
+                        - root
+                        - secret
+                        type: object
                       dataDirectory:
                         description: DataDirectory is the directory to store the data
                           in the object storage. It is an optional field.
@@ -18074,7 +18094,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.3
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: risingwavescaleviews.risingwave.risingwavelabs.com
 spec:

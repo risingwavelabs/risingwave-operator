@@ -87,12 +87,12 @@ function test::run::risingwave::multi_meta_failover_fencing() {
     return 1
   fi
 
-  local meta_leaders_restarts
-  meta_leaders_restarts="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..status.containerStatuses..restartCount}')"
+  local old_leader_restarts
+  old_leader_restarts="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..status.containerStatuses..restartCount}')"
   local meta_leader_names
   meta_leader_names="$(k8s::kubectl::get pod -l risingwave/component=meta -l risingwave/meta-role=leader -o=jsonpath='{.items..metadata.name}')"
 
-  logging::info "leader restarted ${meta_leaders_restarts} times before experiment"
+  logging::info "leader restarted ${old_leader_restarts} times before experiment"
 
   if ! risingwave::utils::delete_leader_lease; then 
     logging::error "Failed to delete leader lease"
@@ -109,10 +109,10 @@ function test::run::risingwave::multi_meta_failover_fencing() {
     return 1
   fi 
 
-  local old_leader_restarts
-  old_leader_restarts="$(k8s::kubectl::get pod "${meta_leader_names}" -o=jsonpath='{.items..status.containerStatuses..restartCount}')"
-  if ((old_leader_restarts <= meta_leaders_restarts)); then
-    logging::error "Leader did not restart"
+  local meta_leaders_restarts
+  meta_leaders_restarts="$(k8s::kubectl::get pod "${meta_leader_names}" -o=jsonpath='{.status.containerStatuses..restartCount}')"
+  if ((old_leader_restarts >= meta_leaders_restarts)); then
+    logging::error "Leader did not restart, restart count after is ${meta_leaders_restarts} and before is ${old_leader_restarts}"
     return 1
   fi
 
@@ -159,7 +159,7 @@ function test::risingwave::check_status_with_simple_queries() {
   local frontend_service_port
   frontend_service_port=$(k8s::kubectl get svc/"${E2E_RISINGWAVE_NAME}-frontend" -o jsonpath='{.spec.ports[?(@.name=="service")].port}')
 
-  testenv::util::psql -h "${E2E_RISINGWAVE_NAME}-frontend.${E2E_NAMESPACE}" -p "${frontend_service_port}" -d dev -U root <<EOF
+  testenv::util::psql -X -v ON_ERROR_STOP=1 -h "${E2E_RISINGWAVE_NAME}-frontend.${E2E_NAMESPACE}" -p "${frontend_service_port}" -d dev -U root <<EOF
 /* create a table */
 create table t1(v1 int);
 

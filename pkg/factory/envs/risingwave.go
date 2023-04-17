@@ -75,6 +75,7 @@ const (
 	S3CompatibleEndpoint        = "S3_COMPATIBLE_ENDPOINT"
 )
 
+// Azure blob.
 const (
 	AzureBlobEndpoint    = "AZBLOB_ENDPOINT"
 	AzureBlobAccountName = "AZBLOB_ACCOUNT_NAME"

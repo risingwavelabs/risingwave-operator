@@ -69,10 +69,10 @@ function testenv::util::psql() {
   # shellcheck disable=SC2034
   local KUBECTL_NAMESPACE="${_UTIL_NAMESPACE}"
 
-  if [[ -z "${PSQL_SCRIPT_FILE}" ]]; then
-    k8s::kubectl exec psql -c psql -- psql "$@" < "${PSQL_SCRIPT_FILE}"
+  if [[ -n "${PSQL_SCRIPT_FILE}" ]]; then
+    shell::run k8s::kubectl exec psql -c psql -- psql "$@" < "${PSQL_SCRIPT_FILE}"
   else
-    k8s::kubectl exec psql -c psql -- psql "$@"
+    shell::run k8s::kubectl exec psql -c psql -- psql "$@"
   fi
 }
 

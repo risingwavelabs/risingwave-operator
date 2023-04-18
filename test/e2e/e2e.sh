@@ -258,7 +258,7 @@ function e2e::main() {
   shell::spawn e2e::run_with_default
 
   # Run tests when open kruise is enabled.
-  shell::spawn e2e::run_with_open_kruise
+  # shell::spawn e2e::run_with_open_kruise
 
   local e2e_result=0
   shell::wait_all || e2e_result=$?

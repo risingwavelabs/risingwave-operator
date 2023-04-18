@@ -564,6 +564,10 @@ type RisingWaveObjectStorage struct {
 	// HDFS storage spec.
 	// +optional
 	HDFS *RisingWaveObjectStorageHDFS `json:"hdfs,omitempty"`
+
+	// WebHDFS storage spec.
+	// +optional
+	WebHDFS *RisingWaveObjectStorageHDFS `json:"webhdfs,omitempty"`
 }
 
 // PersistentVolumeClaimPartialObjectMeta is the metadata for PVC templates.
@@ -865,6 +869,7 @@ const (
 	ObjectStorageTypeAliyunOSS ObjectStorageType = "AliyunOSS"
 	ObjectStorageTypeAzureBlob ObjectStorageType = "AzureBlob"
 	ObjectStorageTypeHDFS      ObjectStorageType = "HDFS"
+	ObjectStorageTypeWebHDFS   ObjectStorageType = "WebHDFS"
 	ObjectStorageTypeUnknown   ObjectStorageType = "Unknown"
 )
 

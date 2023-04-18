@@ -68,8 +68,23 @@ func (pq *envVarPriorityQueue) Pop() any {
 // DependsOn tells if a depends on b.
 func DependsOn(a, b corev1.EnvVar) bool {
 	idx := strings.Index(a.Value, "$("+b.Name+")")
-	if idx == -1 || (idx > 0 && a.Value[idx-1] == '$') {
+	if idx == -1 {
 		return false
+	}
+	if idx >= 0 {
+		// Count continuous '$' before the index.
+		count := 0
+		for i := idx - 1; i >= 0; i-- {
+			if a.Value[i] == '$' {
+				count++
+			} else {
+				break
+			}
+		}
+		// If count is odd, then it's escaped.
+		if count%2 == 1 {
+			return false
+		}
 	}
 	return true
 }
@@ -80,7 +95,7 @@ func TopologicalSort(e []corev1.EnvVar) {
 	graph := make(map[int][]int)
 	n := len(e)
 
-	// initialize the dependency graph
+	// Initialize the dependency graph
 	for i := 0; i < n; i++ {
 		inDegree[i] = 0
 		graph[i] = make([]int, 0)
@@ -88,17 +103,12 @@ func TopologicalSort(e []corev1.EnvVar) {
 
 	for i := 0; i < n; i++ {
 		for j := i; j < n; j++ {
-			// If a depends on b or b depends on a, then use their input order
-			if DependsOn(e[i], e[j]) || DependsOn(e[j], e[i]) {
-				var child, parent int
-				if i < j {
-					child, parent = j, i
-				} else {
-					child, parent = i, j
-				}
-
-				graph[parent] = append(graph[parent], child)
-				inDegree[child] = inDegree[child] + 1
+			if DependsOn(e[i], e[j]) {
+				graph[j] = append(graph[j], i)
+				inDegree[i] = inDegree[i] + 1
+			} else if DependsOn(e[j], e[i]) {
+				graph[i] = append(graph[i], j)
+				inDegree[j] = inDegree[j] + 1
 			}
 		}
 	}

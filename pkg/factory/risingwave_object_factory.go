@@ -103,6 +103,10 @@ func (f *RisingWaveObjectFactory) isObjectStorageHDFS() bool {
 	return f.risingwave.Spec.Storages.Object.HDFS != nil
 }
 
+func (f *RisingWaveObjectFactory) isObjectStorageWebHDFS() bool {
+	return f.risingwave.Spec.Storages.Object.WebHDFS != nil
+}
+
 func (f *RisingWaveObjectFactory) isObjectStorageMinIO() bool {
 	return f.risingwave.Spec.Storages.Object.MinIO != nil
 }
@@ -138,6 +142,9 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 	case objectStorage.HDFS != nil:
 		hdfs := objectStorage.HDFS
 		return fmt.Sprintf("hummock+hdfs://%s@%s", hdfs.NameNode, hdfs.Root)
+	case objectStorage.WebHDFS != nil:
+		webhdfs := objectStorage.WebHDFS
+		return fmt.Sprintf("hummock+webhdfs://%s@%s", webhdfs.NameNode, webhdfs.Root)
 	default:
 		panic("unrecognized storage type")
 	}
@@ -926,6 +933,10 @@ func (f *RisingWaveObjectFactory) envsForHDFS() []corev1.EnvVar {
 	return []corev1.EnvVar{}
 }
 
+func (f *RisingWaveObjectFactory) envsForWebHDFS() []corev1.EnvVar {
+	return []corev1.EnvVar{}
+}
+
 func (f *RisingWaveObjectFactory) envsForObjectStorage() []corev1.EnvVar {
 	switch {
 	case f.isObjectStorageMinIO():
@@ -940,6 +951,8 @@ func (f *RisingWaveObjectFactory) envsForObjectStorage() []corev1.EnvVar {
 		return f.envsForAzureBlob()
 	case f.isObjectStorageHDFS():
 		return f.envsForHDFS()
+	case f.isObjectStorageWebHDFS():
+		return f.envsForWebHDFS()
 	default:
 		return nil
 	}

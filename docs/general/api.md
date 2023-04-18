@@ -2673,7 +2673,7 @@ string
 </em>
 </td>
 <td>
-<p>Container of the Azure Blob service.</p>
+<p>Container Name of the Azure Blob service.</p>
 </td>
 </tr>
 <tr>
@@ -2685,6 +2685,18 @@ string
 </td>
 <td>
 <p>Working directory root of the Azure Blob service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>endpoint</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Endpoint of the Azure Blob service.
+e.g. <a href="https://yufantest.blob.core.windows.net">https://yufantest.blob.core.windows.net</a></p>
 </td>
 </tr>
 </tbody>

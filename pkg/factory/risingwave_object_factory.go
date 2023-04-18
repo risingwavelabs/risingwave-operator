@@ -916,7 +916,7 @@ func (f *RisingWaveObjectFactory) envsForAzureBlob() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.AzureBlobEndpoint,
-			Value: fmt.Sprintf("https://${%s}.blob.core.windows.net", envs.AzureBlobAccountName),
+			Value: objectStorage.AzureBlob.Endpoint,
 		},
 	}
 

@@ -3010,6 +3010,7 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 					Secret:    "azure-blob-creds",
 					Container: "azure-blob-hummock01",
 					Root:      "/azure-blob-root",
+					Endpoint:  "https://accountName.blob.core.windows.net",
 				},
 			},
 			envs: []corev1.EnvVar{
@@ -3041,7 +3042,7 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 				},
 				{
 					Name:  "AZBLOB_ENDPOINT",
-					Value: "https://${AZBLOB_ACCOUNT_NAME}.blob.core.windows.net",
+					Value: "https://accountName.blob.core.windows.net",
 				},
 			},
 		},

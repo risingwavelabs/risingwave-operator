@@ -10204,7 +10204,12 @@ spec:
                         description: Azure Blob storage spec.
                         properties:
                           container:
-                            description: Container of the Azure Blob service.
+                            description: Container Name of the Azure Blob service.
+                            type: string
+                          endpoint:
+                            description: Endpoint of the Azure Blob service. e.g.
+                              https://yufantest.blob.core.windows.net
+                            pattern: ^(?:https://)?(?:[^/.\s]+\.)*(?:[^/\s]+)*$
                             type: string
                           root:
                             description: Working directory root of the Azure Blob
@@ -10217,6 +10222,7 @@ spec:
                             type: string
                         required:
                         - container
+                        - endpoint
                         - root
                         - secret
                         type: object

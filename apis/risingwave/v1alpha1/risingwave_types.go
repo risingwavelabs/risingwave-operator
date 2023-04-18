@@ -506,13 +506,18 @@ type RisingWaveObjectStorageAzureBlob struct {
 	// +kubebuilder:validation:Required
 	Secret string `json:"secret"`
 
-	// Container of the Azure Blob service.
+	// Container Name of the Azure Blob service.
 	// +kubebuilder:validation:Required
 	Container string `json:"container"`
 
 	// Working directory root of the Azure Blob service.
 	// +kubebuilder:validation:Required
 	Root string `json:"root"`
+
+	// Endpoint of the Azure Blob service.
+	// e.g. https://yufantest.blob.core.windows.net
+	// +kubebuilder:validation:Pattern="^(?:https://)?(?:[^/.\\s]+\\.)*(?:[^/\\s]+)*$"
+	Endpoint string `json:"endpoint"`
 }
 
 // RisingWaveObjectStorageHDFS is the details of HDFS storage (S3 compatible) for compute and compactor components.

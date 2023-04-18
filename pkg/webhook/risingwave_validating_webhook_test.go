@@ -417,6 +417,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 						Secret:    "azure-blob-creds",
 						Container: "hummock",
 						Root:      "azure-blob-root",
+						Endpoint:  "https://accountName.blob.core.windows.net",
 					},
 				}
 			},

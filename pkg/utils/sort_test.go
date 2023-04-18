@@ -99,11 +99,11 @@ func Test_SortEnvVarSlice(t *testing.T) {
 		"env-dependencies-escaped": {
 			envVar: []corev1.EnvVar{
 				{
-					Name:  "ENV_C",
-					Value: "$$(ENV_A)_$(ENV_B)_suffix",
+					Name:  "ENV_A",
+					Value: "$$(ENV_C)_$(ENV_B)_suffix",
 				},
 				{
-					Name:  "ENV_A",
+					Name:  "ENV_C",
 					Value: "$(ENV_B)_suffix",
 				},
 				{
@@ -113,16 +113,38 @@ func Test_SortEnvVarSlice(t *testing.T) {
 			},
 			expectEnvVar: []corev1.EnvVar{
 				{
+					Name:  "ENV_B",
+					Value: "valueB",
+				},
+				{
 					Name:  "ENV_A",
-					Value: "$(ENV_B)_suffix",
+					Value: "$$(ENV_C)_$(ENV_B)_suffix",
 				},
 				{
 					Name:  "ENV_C",
-					Value: "$$(ENV_A)_$(ENV_B)_suffix",
+					Value: "$(ENV_B)_suffix",
+				},
+			},
+		},
+		"env-dependencies-unescaped": {
+			envVar: []corev1.EnvVar{
+				{
+					Name:  "ENV_A",
+					Value: "$$$(ENV_B)_suffix",
 				},
 				{
 					Name:  "ENV_B",
 					Value: "valueB",
+				},
+			},
+			expectEnvVar: []corev1.EnvVar{
+				{
+					Name:  "ENV_B",
+					Value: "valueB",
+				},
+				{
+					Name:  "ENV_A",
+					Value: "$$$(ENV_B)_suffix",
 				},
 			},
 		},
@@ -143,16 +165,16 @@ func Test_SortEnvVarSlice(t *testing.T) {
 			},
 			expectEnvVar: []corev1.EnvVar{
 				{
-					Name:  "ENV_A",
-					Value: "$(ENV_B)_suffix",
-				},
-				{
 					Name:  "ENV_C",
 					Value: "$(ENV_D)_suffix",
 				},
 				{
 					Name:  "ENV_B",
 					Value: "$(ENV_C)_suffix",
+				},
+				{
+					Name:  "ENV_A",
+					Value: "$(ENV_B)_suffix",
 				},
 			},
 		},
@@ -199,12 +221,12 @@ func Test_SortEnvVarSlice(t *testing.T) {
 			},
 			expectEnvVar: []corev1.EnvVar{
 				{
-					Name:  "ENV_B",
-					Value: "$(ENV_A)_suffix",
-				},
-				{
 					Name:  "ENV_A",
 					Value: "$(ENV_B)_suffix",
+				},
+				{
+					Name:  "ENV_B",
+					Value: "$(ENV_A)_suffix",
 				},
 			},
 		},
@@ -300,6 +322,124 @@ func Test_SortEnvVarSlice(t *testing.T) {
 				{
 					Name:  "RW_STATE_STORE",
 					Value: "hummock+memory",
+				},
+			},
+		},
+		"env-meta-1": {
+			envVar: []corev1.EnvVar{
+				{
+					Name: "MINIO_BUCKET",
+				},
+				{
+					Name: "MINIO_ENDPOINT",
+				},
+				{
+					Name: "POD_IP",
+				},
+				{
+					Name: "POD_NAME",
+				},
+				{
+					Name: "RUST_BACKTRACE",
+				},
+				{
+					Name:  "RW_ADVERTISE_ADDR",
+					Value: "$(POD_NAME).risingwave-etcd-minio-meta:5690",
+				},
+				{
+					Name: "RW_BACKEND",
+				},
+				{
+					Name: "RW_CONFIG_PATH",
+				},
+				{
+					Name: "RW_CONNECTOR_RPC_ENDPOINT",
+				},
+				{
+					Name: "RW_DASHBOARD_HOST",
+				},
+				{
+					Name: "RW_DATA_DIRECTORY",
+				},
+				{
+					Name: "RW_ETCD_ENDPOINTS",
+				},
+				{
+					Name: "RW_LISTEN_ADDR",
+				},
+				{
+					Name: "RW_PROMETHEUS_HOST",
+				},
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+minio://$(MINIO_USERNAME):$(MINIO_PASSWORD)@risingwave-minio:9301/hummock001",
+				},
+				{
+					Name: "MINIO_PASSWORD",
+				},
+				{
+					Name: "MINIO_USERNAME",
+				},
+				{
+					Name: "RW_WORKER_THREADS",
+				},
+			},
+			expectEnvVar: []corev1.EnvVar{
+				{
+					Name: "MINIO_BUCKET",
+				},
+				{
+					Name: "MINIO_ENDPOINT",
+				},
+				{
+					Name: "MINIO_PASSWORD",
+				},
+				{
+					Name: "MINIO_USERNAME",
+				},
+				{
+					Name: "POD_IP",
+				},
+				{
+					Name: "POD_NAME",
+				},
+				{
+					Name: "RUST_BACKTRACE",
+				},
+				{
+					Name:  "RW_ADVERTISE_ADDR",
+					Value: "$(POD_NAME).risingwave-etcd-minio-meta:5690",
+				},
+				{
+					Name: "RW_BACKEND",
+				},
+				{
+					Name: "RW_CONFIG_PATH",
+				},
+				{
+					Name: "RW_CONNECTOR_RPC_ENDPOINT",
+				},
+				{
+					Name: "RW_DASHBOARD_HOST",
+				},
+				{
+					Name: "RW_DATA_DIRECTORY",
+				},
+				{
+					Name: "RW_ETCD_ENDPOINTS",
+				},
+				{
+					Name: "RW_LISTEN_ADDR",
+				},
+				{
+					Name: "RW_PROMETHEUS_HOST",
+				},
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+minio://$(MINIO_USERNAME):$(MINIO_PASSWORD)@risingwave-minio:9301/hummock001",
+				},
+				{
+					Name: "RW_WORKER_THREADS",
 				},
 			},
 		},

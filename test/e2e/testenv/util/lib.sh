@@ -69,7 +69,11 @@ function testenv::util::psql() {
   # shellcheck disable=SC2034
   local KUBECTL_NAMESPACE="${_UTIL_NAMESPACE}"
 
-  k8s::kubectl exec psql -c psql -- psql "$@"
+  if [[ -z "${PSQL_SCRIPT_FILE}" ]]; then
+    k8s::kubectl exec psql -c psql -- psql "$@" < "${PSQL_SCRIPT_FILE}"
+  else
+    k8s::kubectl exec psql -c psql -- psql "$@"
+  fi
 }
 
 function testenv::util::network::test_connectivity() {

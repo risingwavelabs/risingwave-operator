@@ -10312,7 +10312,7 @@ spec:
                             description: Name node of the HDFS
                             type: string
                           root:
-                            description: Root of the HDFS
+                            description: Working directory root of the HDFS
                             type: string
                         required:
                         - nameNode

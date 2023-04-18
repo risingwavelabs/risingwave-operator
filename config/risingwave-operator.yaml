@@ -17439,6 +17439,19 @@ spec:
                         - bucket
                         - secret
                         type: object
+                      webhdfs:
+                        description: WebHDFS storage spec.
+                        properties:
+                          nameNode:
+                            description: Name node of the HDFS
+                            type: string
+                          root:
+                            description: Root of the HDFS
+                            type: string
+                        required:
+                        - nameNode
+                        - root
+                        type: object
                     type: object
                   pvcTemplates:
                     description: The persistent volume claim templates for the compute

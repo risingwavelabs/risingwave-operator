@@ -186,6 +186,8 @@ int32
 <td></td>
 </tr><tr><td><p>&#34;Unknown&#34;</p></td>
 <td></td>
+</tr><tr><td><p>&#34;WebHDFS&#34;</p></td>
+<td></td>
 </tr></tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.PersistentVolumeClaim">PersistentVolumeClaim
@@ -2549,6 +2551,20 @@ RisingWaveObjectStorageHDFS
 <td>
 <em>(Optional)</em>
 <p>HDFS storage spec.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webhdfs</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageHDFS">
+RisingWaveObjectStorageHDFS
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>WebHDFS storage spec.</p>
 </td>
 </tr>
 </tbody>

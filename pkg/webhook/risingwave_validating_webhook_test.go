@@ -421,6 +421,17 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
+		"webhdfs-object-storage-pass": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
+					WebHDFS: &risingwavev1alpha1.RisingWaveObjectStorageHDFS{
+						NameNode: "test",
+						Root:     "test",
+					},
+				}
+			},
+			pass: true,
+		},
 		"empty-object-storage-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{}
@@ -459,6 +470,15 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
 					MinIO: &risingwavev1alpha1.RisingWaveObjectStorageMinIO{},
 					HDFS:  &risingwavev1alpha1.RisingWaveObjectStorageHDFS{},
+				}
+			},
+			pass: false,
+		},
+		"multiple-object-storages-fail-5": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
+					HDFS:    &risingwavev1alpha1.RisingWaveObjectStorageHDFS{},
+					WebHDFS: &risingwavev1alpha1.RisingWaveObjectStorageHDFS{},
 				}
 			},
 			pass: false,

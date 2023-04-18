@@ -189,6 +189,7 @@ func (v *RisingWaveValidatingWebhook) validateStorages(path *field.Path, storage
 	isObjectGCS := storages.Object.GCS != nil
 	isObjectAliyunOSS := storages.Object.AliyunOSS != nil
 	isObjectHDFS := storages.Object.HDFS != nil
+	isObjectWebHDFS := storages.Object.WebHDFS != nil
 
 	if isObjectGCS {
 		if (storages.Object.GCS.UseWorkloadIdentity && storages.Object.GCS.Secret != "") || (!storages.Object.GCS.UseWorkloadIdentity && storages.Object.GCS.Secret == "") {
@@ -196,7 +197,8 @@ func (v *RisingWaveValidatingWebhook) validateStorages(path *field.Path, storage
 		}
 	}
 
-	validObjectStorageTypeCount := lo.CountBy([]bool{isObjectMemory, isObjectMinIO, isObjectS3, isObjectGCS, isObjectAliyunOSS, isObjectHDFS}, func(x bool) bool { return x })
+	validObjectStorageTypeCount := lo.CountBy([]bool{isObjectMemory, isObjectMinIO, isObjectS3, isObjectGCS, isObjectAliyunOSS, isObjectHDFS, isObjectWebHDFS}, func(x bool) bool { return x })
+
 	if validObjectStorageTypeCount == 0 {
 		fieldErrs = append(fieldErrs, field.Invalid(path.Child("object"), storages.Object, "must configure the object storage"))
 	} else if validObjectStorageTypeCount > 1 {

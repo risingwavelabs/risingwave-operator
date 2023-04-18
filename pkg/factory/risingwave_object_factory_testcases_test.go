@@ -3016,6 +3016,18 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 				Value: "hummock+hdfs://name-node@root",
 			}},
 		},
+		"webhdfs": {
+			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+				WebHDFS: &risingwavev1alpha1.RisingWaveObjectStorageHDFS{
+					NameNode: "name-node",
+					Root:     "root",
+				},
+			},
+			envs: []corev1.EnvVar{{
+				Name:  "RW_STATE_STORE",
+				Value: "hummock+webhdfs://name-node@root",
+			}},
+		},
 	}
 }
 

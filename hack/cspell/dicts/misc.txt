@@ -42,6 +42,7 @@ aliyun
 aliyuncs
 idempotence
 hdfs
+webhdfs
 extendee
 Idxs
 oneof

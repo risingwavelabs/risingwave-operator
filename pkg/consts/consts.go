@@ -97,6 +97,12 @@ const (
 	SecretKeyAWSS3Region          string = "Region"
 )
 
+// Credential keys for Azure Blob.
+const (
+	SecretKeyAzureBlobAccountName string = "AccountName"
+	SecretKeyAzureBlobAccountKey  string = "AccountKey"
+)
+
 // Credentials for GCS.
 const (
 	SecretKeyGCSServiceAccountCredentials string = "ServiceAccountCredentials"

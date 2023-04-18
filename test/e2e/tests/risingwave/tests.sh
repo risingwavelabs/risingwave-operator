@@ -259,3 +259,12 @@ if [[ -v "E2E_AWS_ACCESS_KEY_ID" && -v "E2E_AWS_SECRET_ACCESS_KEY_ID" && -v "E2E
 else
   logging::warn "Test case \"risingwave::storage_support::object_aws_s3\" is disabled due to lack of parameters!"
 fi
+
+
+if [[ -v "E2E_AZURE_ACCOUNTNAME" && -v "E2E_AZURE_ACCOUNTKEY" && -v "E2E_AZURE_ENDPOINT" && -v "E2E_AZURE_CONTAINER" ]]; then
+  function test::run::risingwave::storage_support::object_azure_blob() {
+    test::risingwave::storage_support::_run_with_manifest storages/object-azure-blob.yaml
+  }
+else
+  logging::warn "Test case \"risingwave::storage_support::object_azure_blob\" is disabled due to lack of parameters!"
+fi

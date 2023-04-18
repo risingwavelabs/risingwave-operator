@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Secret
+metadata: 
+  name: risingwave-azure-blob-credentials
+stringData:
+  AccountName: your-azure-account-name
+  AccountKey: your-azure-account-key
+---
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-in-memory-azure-blob
+spec:
+  storages:
+    meta:
+      memory: true
+    object:
+      azureBlob: 
+        secret:  risingwave-azure-blob-credentials
+        container: your-azure-container-name
+        root: risingwave
+        endpoint: https://your-azure-account-name.blob.core.windows.net
+  global:
+    image: ghcr.io/risingwavelabs/risingwave:git-5cd14918233990d28b48a153fa8d11115089c148
+    imagePullPolicy: IfNotPresent
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+      compactor: 1

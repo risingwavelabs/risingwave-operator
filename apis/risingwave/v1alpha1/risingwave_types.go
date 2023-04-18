@@ -498,6 +498,28 @@ type RisingWaveObjectStorageAliyunOSS struct {
 	InternalEndpoint bool `json:"internalEndpoint,omitempty"`
 }
 
+// RisingWaveObjectStorageAzureBlob is the details of Azure blob storage (S3 compatible) for compute and compactor components.
+type RisingWaveObjectStorageAzureBlob struct {
+	// Secret contains the credentials to access the Azure Blob service. It must contain the following keys:
+	//   * AccessKeyID
+	//   * SecretAccessKey
+	// +kubebuilder:validation:Required
+	Secret string `json:"secret"`
+
+	// Container Name of the Azure Blob service.
+	// +kubebuilder:validation:Required
+	Container string `json:"container"`
+
+	// Working directory root of the Azure Blob service.
+	// +kubebuilder:validation:Required
+	Root string `json:"root"`
+
+	// Endpoint of the Azure Blob service.
+	// e.g. https://yufantest.blob.core.windows.net
+	// +kubebuilder:validation:Pattern="^(?:https://)?(?:[^/.\\s]+\\.)*(?:[^/\\s]+)*$"
+	Endpoint string `json:"endpoint"`
+}
+
 // RisingWaveObjectStorageHDFS is the details of HDFS storage (S3 compatible) for compute and compactor components.
 type RisingWaveObjectStorageHDFS struct {
 	// Name node of the HDFS
@@ -534,6 +556,10 @@ type RisingWaveObjectStorage struct {
 	// AliyunOSS storage spec.
 	// +optional
 	AliyunOSS *RisingWaveObjectStorageAliyunOSS `json:"aliyunOSS,omitempty"`
+
+	// Azure Blob storage spec.
+	// +optional
+	AzureBlob *RisingWaveObjectStorageAzureBlob `json:"azureBlob,omitempty"`
 
 	// HDFS storage spec.
 	// +optional
@@ -841,6 +867,7 @@ const (
 	ObjectStorageTypeS3        ObjectStorageType = "S3"
 	ObjectStorageTypeGCS       ObjectStorageType = "GCS"
 	ObjectStorageTypeAliyunOSS ObjectStorageType = "AliyunOSS"
+	ObjectStorageTypeAzureBlob ObjectStorageType = "AzureBlob"
 	ObjectStorageTypeHDFS      ObjectStorageType = "HDFS"
 	ObjectStorageTypeWebHDFS   ObjectStorageType = "WebHDFS"
 	ObjectStorageTypeUnknown   ObjectStorageType = "Unknown"

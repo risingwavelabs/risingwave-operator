@@ -170,13 +170,6 @@ func (o *Options) describeRisingwaveVerbose(rw *v1alpha1.RisingWave) error {
 		fmt.Fprintf(o.Out, "  ConfigMap: %s\n", rw.Spec.Configuration.ConfigMap.String())
 	}
 
-	// security
-	fmt.Fprintf(o.Out, "  Security:\n")
-	if rw.Spec.Security.TLS != nil {
-		fmt.Fprintf(o.Out, "    Enabled: %t\n", rw.Spec.Security.TLS.Enabled)
-		fmt.Fprintf(o.Out, "    Secret: %s\n", rw.Spec.Security.TLS.Secret)
-	}
-
 	// storage
 	fmt.Fprintf(o.Out, "  Storages:\n")
 	fmt.Fprintf(o.Out, "    Meta:\n")

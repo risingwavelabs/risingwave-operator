@@ -557,19 +557,6 @@ of Pods, e.g., deployment in hybrid-arch cluster.</p>
 </tr>
 <tr>
 <td>
-<code>security</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecuritySpec">
-RisingWaveSecuritySpec
-</a>
-</em>
-</td>
-<td>
-<p>The spec of security configurations, such as TLS config.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>configuration</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveConfigurationSpec">
@@ -4284,38 +4271,6 @@ k8s.io/apimachinery/pkg/types.UID
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecuritySpec">RisingWaveSecuritySpec
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
-</p>
-<div>
-<p>RisingWaveSecuritySpec is the security spec.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>tls</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfig">
-RisingWaveTLSConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>TLS config of RisingWave.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec
 </h3>
 <p>
@@ -4371,19 +4326,6 @@ RisingWaveComponentsSpec
 <p>The spec of ports and some controllers (such as <code>restartAt</code>) of each component,
 as well as an advanced concept called <code>group</code> to override the global template and create groups
 of Pods, e.g., deployment in hybrid-arch cluster.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>security</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecuritySpec">
-RisingWaveSecuritySpec
-</a>
-</em>
-</td>
-<td>
-<p>The spec of security configurations, such as TLS config.</p>
 </td>
 </tr>
 <tr>
@@ -4619,103 +4561,6 @@ RisingWaveObjectStorageStatus
 </em>
 </td>
 <td>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfig">RisingWaveTLSConfig
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecuritySpec">RisingWaveSecuritySpec</a>)
-</p>
-<div>
-<p>RisingWaveTLSConfig is the TLS config of RisingWave.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>enabled</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Enabled indicates if TLS is enabled on RisingWave.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>secret</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfigSecret">
-RisingWaveTLSConfigSecret
-</a>
-</em>
-</td>
-<td>
-<p>Secret contains the TLS config. If TLS is enabled, the secret
-must be provided.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfigSecret">RisingWaveTLSConfigSecret
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfig">RisingWaveTLSConfig</a>)
-</p>
-<div>
-<p>RisingWaveTLSConfigSecret is the secret reference that contains the key and cert for TLS.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Name of the secret.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>key</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The key of the TLS key. A default value of &ldquo;tls.key&rdquo; will be used if not specified.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>cert</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The key of the TLS cert. A default value of &ldquo;tls.crt&rdquo; will be used if not specified.</p>
 </td>
 </tr>
 </tbody>

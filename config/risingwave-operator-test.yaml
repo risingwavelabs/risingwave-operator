@@ -17245,35 +17245,6 @@ spec:
                         type: string
                     type: object
                 type: object
-              security:
-                description: The spec of security configurations, such as TLS config.
-                properties:
-                  tls:
-                    description: TLS config of RisingWave.
-                    properties:
-                      enabled:
-                        description: Enabled indicates if TLS is enabled on RisingWave.
-                        type: boolean
-                      secret:
-                        description: Secret contains the TLS config. If TLS is enabled,
-                          the secret must be provided.
-                        properties:
-                          cert:
-                            default: tls.crt
-                            description: The key of the TLS cert. A default value
-                              of "tls.crt" will be used if not specified.
-                            type: string
-                          key:
-                            default: tls.key
-                            description: The key of the TLS key. A default value of
-                              "tls.key" will be used if not specified.
-                            type: string
-                          name:
-                            description: Name of the secret.
-                            type: string
-                        type: object
-                    type: object
-                type: object
               storages:
                 description: The spec of meta storage, object storage for compute
                   and compactor, and PVC templates for compute.

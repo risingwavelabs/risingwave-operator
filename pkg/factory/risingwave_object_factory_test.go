@@ -34,7 +34,7 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 
 	for name, tc := range servicesTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
-			r.Spec.Global.ServiceType = tc.globalServiceType
+			r.Spec.FrontendServiceType = tc.globalServiceType
 
 			switch tc.component {
 			case consts.ComponentMeta:
@@ -79,7 +79,7 @@ func Test_RisingWaveObjectFactory_ServicesMeta(t *testing.T) {
 
 	for name, tc := range serviceMetadataTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
-			r.Spec.Global.ServiceMeta = tc.globalServiceMeta
+			r.Spec.AdditionalFrontendServiceMetadata = tc.globalServiceMeta
 		})
 
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")

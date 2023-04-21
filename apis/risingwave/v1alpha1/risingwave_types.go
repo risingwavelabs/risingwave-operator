@@ -722,6 +722,18 @@ type RisingWaveSpec struct {
 	// the controller will determine if it can create the resource by checking if the CRDs are installed.
 	// +optional
 	EnableDefaultServiceMonitor *bool `json:"enableDefaultServiceMonitor,omitempty"`
+
+	// -----------------------------------v1alpha2 features ------------------------------------------ //
+
+	// FrontendServiceType determines the service type of the frontend service. Defaults to ClusterIP.
+	// +optional
+	// +kubebuilder:default=ClusterIP
+	// +kubebuilder:validation:Enum=ClusterIP;NodePort;LoadBalancer
+	FrontendServiceType corev1.ServiceType `json:"frontendServiceType,omitempty"`
+
+	// AdditionalFrontendServiceMetadata tells the operator to add the specified metadata onto the frontend Service.
+	// Note that the system reserved labels and annotations are not valid and will be rejected by the webhook.
+	AdditionalFrontendServiceMetadata RisingWavePodTemplatePartialObjectMeta `json:"additionalFrontendServiceMetadata,omitempty"`
 }
 
 // ComponentGroupReplicasStatus are the running status of Pods in group.

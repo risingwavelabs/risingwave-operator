@@ -1,0 +1,41 @@
+// Copyright 2023 RisingWave Labs
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package v1alpha1
+
+// ConvertFrontendService converts v1alpha1 service type and service meta.
+func ConvertFrontendService(obj *RisingWave) {
+	if obj.Spec.Global.ServiceType != "ClusterIP" {
+		obj.Spec.FrontendServiceType = obj.Spec.Global.ServiceType
+	}
+
+	if obj.Spec.Global.ServiceMeta.Labels != nil {
+		obj.Spec.AdditionalFrontendServiceMetadata.Labels = make(map[string]string)
+		for key, value := range obj.Spec.Global.ServiceMeta.Labels {
+			obj.Spec.AdditionalFrontendServiceMetadata.Labels[key] = value
+		}
+	}
+
+	if obj.Spec.Global.ServiceMeta.Annotations != nil {
+		obj.Spec.AdditionalFrontendServiceMetadata.Annotations = make(map[string]string)
+		for key, value := range obj.Spec.Global.ServiceMeta.Annotations {
+			obj.Spec.AdditionalFrontendServiceMetadata.Annotations[key] = value
+		}
+	}
+}
+
+// ConvertToV1alpha2Features converts v1alpha1 features to v1alpha2 features.
+func ConvertToV1alpha2Features(obj *RisingWave) {
+	ConvertFrontendService(obj)
+}

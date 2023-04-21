@@ -208,10 +208,6 @@ func (v *RisingWaveValidatingWebhook) validateStorages(path *field.Path, storage
 	return fieldErrs
 }
 
-func (v *RisingWaveValidatingWebhook) validateSecurity(path *field.Path, security *risingwavev1alpha1.RisingWaveSecuritySpec) field.ErrorList {
-	return nil
-}
-
 func (v *RisingWaveValidatingWebhook) validateConfiguration(path *field.Path, configuration *risingwavev1alpha1.RisingWaveConfigurationSpec) field.ErrorList {
 	if configuration.ConfigMap != nil {
 		if configuration.ConfigMap.Name == "" {
@@ -327,9 +323,6 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 
 	// Validate the storages spec.
 	fieldErrs = append(fieldErrs, v.validateStorages(field.NewPath("spec", "storages"), &obj.Spec.Storages)...)
-
-	// Validate the security spec.
-	fieldErrs = append(fieldErrs, v.validateSecurity(field.NewPath("spec", "security"), &obj.Spec.Security)...)
 
 	// Validate the configuration spec.
 	fieldErrs = append(fieldErrs, v.validateConfiguration(field.NewPath("spec", "configuration"), &obj.Spec.Configuration)...)

@@ -645,42 +645,6 @@ type RisingWaveConfigurationSpec struct {
 	ConfigMap *corev1.ConfigMapKeySelector `json:"configmap,omitempty"`
 }
 
-// RisingWaveTLSConfigSecret is the secret reference that contains the key and cert for TLS.
-type RisingWaveTLSConfigSecret struct {
-	// Name of the secret.
-	// +optional
-	Name string `json:"name,omitempty"`
-
-	// The key of the TLS key. A default value of "tls.key" will be used if not specified.
-	// +optional
-	// +kubebuilder:default=tls.key
-	Key string `json:"key,omitempty"`
-
-	// The key of the TLS cert. A default value of "tls.crt" will be used if not specified.
-	// +optional
-	// +kubebuilder:default=tls.crt
-	Cert string `json:"cert,omitempty"`
-}
-
-// RisingWaveTLSConfig is the TLS config of RisingWave.
-type RisingWaveTLSConfig struct {
-	// Enabled indicates if TLS is enabled on RisingWave.
-	Enabled bool `json:"enabled,omitempty"`
-
-	// Secret contains the TLS config. If TLS is enabled, the secret
-	// must be provided.
-	// +optional.
-	Secret RisingWaveTLSConfigSecret `json:"secret,omitempty"`
-}
-
-// RisingWaveSecuritySpec is the security spec.
-type RisingWaveSecuritySpec struct {
-	// TLS config of RisingWave.
-	// +optional
-	// +patchStrategy=retainKeys
-	TLS *RisingWaveTLSConfig `json:"tls,omitempty"`
-}
-
 // RisingWaveGlobalReplicas are the replicas of each component, declared in global scope.
 type RisingWaveGlobalReplicas struct {
 	// Replicas of meta component. Replicas specified here is in a default group (with empty name '').
@@ -742,9 +706,6 @@ type RisingWaveSpec struct {
 	// as well as an advanced concept called `group` to override the global template and create groups
 	// of Pods, e.g., deployment in hybrid-arch cluster.
 	Components RisingWaveComponentsSpec `json:"components,omitempty"`
-
-	// The spec of security configurations, such as TLS config.
-	Security RisingWaveSecuritySpec `json:"security,omitempty"`
 
 	// The spec of configuration template for RisingWave.
 	Configuration RisingWaveConfigurationSpec `json:"configuration,omitempty"`

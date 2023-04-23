@@ -108,7 +108,7 @@ make docker-build
 # Build a image and tag with "risingwave/risingwave-operator:latest"
 REGISTRY=risingwave make docker-build
 
-# Build a image and tag with "risingwave/risingwave-operator:nightly"
+# Build a image and tag with "ghcr.io/risingwavelabs/risingwave-operator:nightly"
 TAG=nightly make docker-build
 ```
 

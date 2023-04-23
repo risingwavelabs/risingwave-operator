@@ -38,10 +38,10 @@ IMAGE_TAG_BASE ?= risingwavelabs.com/risingwave-operator
 # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)
 BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 
-REGISTRY ?= ghcr.io/risingwavelabs/risingwave-operator
+REGISTRY ?= ghcr.io/risingwavelabs
 TAG ?= latest
 # Image URL to use all building/pushing image targets
-IMG ?= $(REGISTRY):$(TAG)
+IMG ?= $(REGISTRY)/risingwave-operator:$(TAG)
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= crd:crdVersions=v1 

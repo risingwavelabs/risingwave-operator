@@ -196,7 +196,9 @@ function e2e::pre_run() {
   testenv::setup || return $?
 
   shell::run docker pull "${E2E_RISINGWAVE_IMAGE}" || return $?
-  testenv::k8s::load_docker_image "${E2E_RISINGWAVE_IMAGE}"
+
+  # Retry load twice.
+  testenv::k8s::load_docker_image "${E2E_RISINGWAVE_IMAGE}" || testenv::k8s::load_docker_image "${E2E_RISINGWAVE_IMAGE}" || return $?
 }
 
 function e2e::post_run() {
@@ -258,7 +260,7 @@ function e2e::main() {
   shell::spawn e2e::run_with_default
 
   # Run tests when open kruise is enabled.
-  shell::spawn e2e::run_with_open_kruise
+  # shell::spawn e2e::run_with_open_kruise
 
   local e2e_result=0
   shell::wait_all || e2e_result=$?

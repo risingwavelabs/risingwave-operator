@@ -170,22 +170,9 @@ function test::risingwave::check_status_with_simple_queries() {
   local frontend_service_port
   frontend_service_port=$(k8s::kubectl get svc/"${E2E_RISINGWAVE_NAME}-frontend" -o jsonpath='{.spec.ports[?(@.name=="service")].port}')
 
-  testenv::util::psql -X -v ON_ERROR_STOP=1 -h "${E2E_RISINGWAVE_NAME}-frontend.${E2E_NAMESPACE}" -p "${frontend_service_port}" -d dev -U root <<EOF
-/* create a table */
-create table t1(v1 int);
-
-/* create a materialized view based on the previous table */
-create materialized view mv1 as select sum(v1) as sum_v1 from t1;
-
-/* insert some data into the source table */
-insert into t1 values (1), (2), (3);
-
-/* (optional) ensure the materialized view has been updated */
-flush;
-
-/* the materialized view should reflect the changes in source table */
-select * from mv1;
-EOF
+  # shellcheck disable=SC2034
+  local PSQL_SCRIPT_FILE="${_E2E_RISINGWAVE_TEST_PATH}/query.sql"
+  testenv::util::psql -X -v ON_ERROR_STOP=1 -h "${E2E_RISINGWAVE_NAME}-frontend.${E2E_NAMESPACE}" -p "${frontend_service_port}" -d dev -U root
 }
 
 function test::risingwave::storage_support::_run_with_manifest() {

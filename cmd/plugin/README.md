@@ -1,1 +1,0 @@
-For readme please view [the plugin docs](../../docs/plugin/plugin.md).

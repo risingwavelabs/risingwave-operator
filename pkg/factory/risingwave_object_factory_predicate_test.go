@@ -94,12 +94,6 @@ func deploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestCase] 
 			},
 		},
 		{
-			Name: "image-match",
-			Fn: func(obj *appsv1.Deployment, tc deploymentTestCase) bool {
-				return obj.Spec.Template.Spec.Containers[0].Image == tc.group.Image
-			},
-		},
-		{
 			Name: "image-pull-policy-match",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestCase) bool {
 				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.ImagePullPolicy
@@ -248,12 +242,6 @@ func metaStatefulSetPredicates() []predicate[*appsv1.StatefulSet, metaStatefulSe
 			},
 		},
 		{
-			Name: "image-match",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStatefulSetTestCase) bool {
-				return obj.Spec.Template.Spec.Containers[0].Image == tc.group.Image
-			},
-		},
-		{
 			Name: "image-pull-policy-match",
 			Fn: func(obj *appsv1.StatefulSet, tc metaStatefulSetTestCase) bool {
 				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.ImagePullPolicy
@@ -387,12 +375,6 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 					return matchesPodTemplate(&obj.Spec.Template, &temp)
 				}
 				return true
-			},
-		},
-		{
-			Name: "image-match",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
-				return obj.Spec.Template.Spec.Containers[0].Image == tc.group.Image
 			},
 		},
 		{
@@ -551,12 +533,6 @@ func getCloneSetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, cloneSetT
 			},
 		},
 		{
-			Name: "image-match",
-			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc cloneSetTestCase) bool {
-				return obj.Spec.Template.Spec.Containers[0].Image == tc.group.Image
-			},
-		},
-		{
 			Name: "image-pull-policy-match",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc cloneSetTestCase) bool {
 				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.ImagePullPolicy
@@ -702,12 +678,6 @@ func getAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, comp
 					return matchesPodTemplate(&obj.Spec.Template, &temp)
 				}
 				return true
-			},
-		},
-		{
-			Name: "image-match",
-			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
-				return obj.Spec.Template.Spec.Containers[0].Image == tc.group.Image
 			},
 		},
 		{
@@ -863,12 +833,6 @@ func metaAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, met
 					return matchesPodTemplate(&obj.Spec.Template, &temp)
 				}
 				return true
-			},
-		},
-		{
-			Name: "image-match",
-			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestCase) bool {
-				return obj.Spec.Template.Spec.Containers[0].Image == tc.group.Image
 			},
 		},
 		{

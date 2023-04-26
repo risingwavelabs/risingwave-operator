@@ -202,11 +202,11 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | kubectl delete -f -
 
 generate-yaml: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default --output config/risingwave-operator.yaml
+	@cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	@$(KUSTOMIZE) build config/default --output config/risingwave-operator.yaml
 
 generate-test-yaml: generate-yaml
-	$(KUSTOMIZE) build config --output config/risingwave-operator-test.yaml
+	@$(KUSTOMIZE) build config --output config/risingwave-operator-test.yaml
 
 deploy: generate-yaml
 	kubectl apply --server-side -f config/risingwave-operator.yaml
@@ -247,7 +247,7 @@ TYPES_V1ALPHA1_TARGET := apis/risingwave/v1alpha1/risingwave_types.go
 TYPES_V1ALPHA1_TARGET += apis/risingwave/v1alpha1/risingwave_pod_template_types.go
 
 docs/general/api.md: gen-crd-api-reference-docs $(TYPES_V1ALPHA1_TARGET)
-	$(GEN_CRD_API_REFERENCE_DOCS) -api-dir "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1" -config "$(PWD)/hack/docs/config.json" -template-dir "$(PWD)/hack/docs/templates" -out-file "$(PWD)/docs/general/api.md"
+	@$(GEN_CRD_API_REFERENCE_DOCS) -api-dir "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1" -config "$(PWD)/hack/docs/config.json" -template-dir "$(PWD)/hack/docs/templates" -out-file "$(PWD)/docs/general/api.md"
 
 .PHONY: generate-docs
 generate-docs: docs/general/api.md

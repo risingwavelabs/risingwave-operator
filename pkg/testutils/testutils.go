@@ -71,6 +71,7 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 				Memory: pointer.Bool(true),
 			},
 		},
+		Image: "ghcr.io/risingwavelabs/risingwave:latest",
 		Global: risingwavev1alpha1.RisingWaveGlobalSpec{
 			Replicas: risingwavev1alpha1.RisingWaveGlobalReplicas{
 				Meta:      1,
@@ -81,7 +82,6 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 			},
 			ServiceType: corev1.ServiceTypeClusterIP,
 			RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-				Image:           "ghcr.io/risingwavelabs/risingwave:latest",
 				ImagePullPolicy: corev1.PullIfNotPresent,
 				NodeSelector: map[string]string{
 					"kubernetes.io/os":   "linux",
@@ -256,10 +256,10 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				Memory: pointer.Bool(true),
 			},
 		},
+		Image: "ghcr.io/risingwavelabs/risingwave:latest",
 		Global: risingwavev1alpha1.RisingWaveGlobalSpec{
 			ServiceType: corev1.ServiceTypeClusterIP,
 			RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-				Image:           "ghcr.io/risingwavelabs/risingwave:latest",
 				ImagePullPolicy: corev1.PullIfNotPresent,
 				NodeSelector: map[string]string{
 					"kubernetes.io/os":   "linux",

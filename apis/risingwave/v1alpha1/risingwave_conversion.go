@@ -14,21 +14,24 @@
 
 package v1alpha1
 
+import (
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
+)
+
 // ConvertFrontendService converts v1alpha1 service type and service meta.
 func ConvertFrontendService(obj *RisingWave) {
-	if obj.Spec.Global.ServiceType != "ClusterIP" {
+	if obj.Spec.Global.ServiceType != corev1.ServiceTypeClusterIP {
 		obj.Spec.FrontendServiceType = obj.Spec.Global.ServiceType
 	}
 
-	if obj.Spec.Global.ServiceMeta.Labels != nil {
+	if !equality.Semantic.DeepEqual(obj.Spec.Global.ServiceMeta, RisingWavePodTemplatePartialObjectMeta{}) {
 		obj.Spec.AdditionalFrontendServiceMetadata.Labels = make(map[string]string)
+		obj.Spec.AdditionalFrontendServiceMetadata.Annotations = make(map[string]string)
+
 		for key, value := range obj.Spec.Global.ServiceMeta.Labels {
 			obj.Spec.AdditionalFrontendServiceMetadata.Labels[key] = value
 		}
-	}
-
-	if obj.Spec.Global.ServiceMeta.Annotations != nil {
-		obj.Spec.AdditionalFrontendServiceMetadata.Annotations = make(map[string]string)
 		for key, value := range obj.Spec.Global.ServiceMeta.Annotations {
 			obj.Spec.AdditionalFrontendServiceMetadata.Annotations[key] = value
 		}

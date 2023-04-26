@@ -381,195 +381,6 @@ type RisingWaveComponentsSpec struct {
 	Connector RisingWaveComponentConnector `json:"connector,omitempty"`
 }
 
-// RisingWaveMetaStorageEtcd is the etcd storage for the meta component.
-type RisingWaveMetaStorageEtcd struct {
-	// Endpoint of etcd. It must be provided.
-	Endpoint string `json:"endpoint"`
-
-	// Secret contains the credentials of access the etcd, it must contain the following keys:
-	//   * username
-	//   * password
-	// But it is an optional field. Empty value indicates etcd is available without authentication.
-	// +optional
-	Secret string `json:"secret,omitempty"`
-}
-
-// RisingWaveMetaStorage is the storage for the meta component.
-type RisingWaveMetaStorage struct {
-	// Memory indicates to store the metadata in memory. It is only for test usage and strongly
-	// discouraged to be set in production. If one is using the memory storage for meta,
-	// replicas will not work because they are not going to share the same metadata and any kinds
-	// exit of the process will cause a permanent loss of the data.
-	// +optional
-	Memory *bool `json:"memory,omitempty"`
-
-	// Endpoint of the etcd service for storing the metadata.
-	// +optional
-	Etcd *RisingWaveMetaStorageEtcd `json:"etcd,omitempty"`
-}
-
-// RisingWaveObjectStorageMinIO is the details of MinIO storage for compute and compactor components.
-type RisingWaveObjectStorageMinIO struct {
-	// Secret contains the credentials to access the MinIO service. It must contain the following keys:
-	//   * username
-	//   * password
-	// +kubebuilder:validation:Required
-	Secret string `json:"secret"`
-
-	// Endpoint of the MinIO service.
-	// +kubebuilder:validation:Required
-	Endpoint string `json:"endpoint"`
-
-	// Bucket of the MinIO service.
-	// +kubebuilder:validation:Required
-	Bucket string `json:"bucket"`
-}
-
-// RisingWaveObjectStorageS3 is the details of AWS S3 storage for compute and compactor components.
-type RisingWaveObjectStorageS3 struct {
-	// Secret contains the credentials to access the AWS S3 service. It must contain the following keys:
-	//   * AccessKeyID
-	//   * SecretAccessKey
-	//   * Region (optional if region is specified in the field.)
-	// +kubebuilder:validation:Required
-	Secret string `json:"secret"`
-
-	// Bucket of the AWS S3 service.
-	// +kubebuilder:validation:Required
-	Bucket string `json:"bucket"`
-
-	// Region of AWS S3 service. It is an optional field that overrides the `Region` key from the secret.
-	// Specifying the region here makes a guarantee that it won't be changed anymore.
-	Region string `json:"region,omitempty"`
-
-	// Endpoint of the AWS (or other vendor's S3-compatible) service. Leave it empty when using AWS S3 service.
-	// You can reference the `REGION` and `BUCKET` variables in the endpoint with `${BUCKET}` and `${REGION}`, e.g.,
-	//   s3.${REGION}.amazonaws.com
-	//   ${BUCKET}.s3.${REGION}.amazonaws.com
-	// +optional
-	// +kubebuilder:validation:Pattern="^(?:https://)?(?:[^/.\\s]+\\.)*(?:[^/\\s]+)*$"
-	Endpoint string `json:"endpoint,omitempty"`
-
-	// VirtualHostedStyle indicates to use a virtual hosted endpoint when endpoint is specified. The operator automatically
-	// adds the bucket prefix for you if this is enabled. Be careful about doubly using the style by specifying an endpoint
-	// of virtual hosted style as well as enabling this.
-	VirtualHostedStyle bool `json:"virtualHostedStyle,omitempty"`
-}
-
-// RisingWaveObjectStorageGCS is the details of GCS bucket storage for compute and compactor components.
-type RisingWaveObjectStorageGCS struct {
-	// UseWorkloadIdentity indicates to use workload identity to access the GCS service. If this is enabled, secret is not required, and ADC is used.
-	// +kubebuilder:validation:Required
-	UseWorkloadIdentity bool `json:"useWorkloadIdentity"`
-
-	// Secret contains the credentials to access the GCS service. It must contain the following keys:
-	//   * ServiceAccountCredentials
-	// +kubebuilder:validation:Optional
-	Secret string `json:"secret,omitempty"`
-
-	// Bucket of the GCS bucket service.
-	// +kubebuilder:validation:Required
-	Bucket string `json:"bucket"`
-
-	// Working directory root of the GCS bucket
-	// +kubebuilder:validation:Required
-	Root string `json:"root"`
-}
-
-// RisingWaveObjectStorageAliyunOSS is the details of Aliyun OSS storage (S3 compatible) for compute and compactor components.
-type RisingWaveObjectStorageAliyunOSS struct {
-	// Secret contains the credentials to access the Aliyun OSS service. It must contain the following keys:
-	//   * AccessKeyID
-	//   * SecretAccessKey
-	//   * Region (optional if region is specified in the field.)
-	// +kubebuilder:validation:Required
-	Secret string `json:"secret"`
-
-	// Region of Aliyun OSS service. It is an optional field that overrides the `Region` key from the secret.
-	// Specifying the region here makes a guarantee that it won't be changed anymore.
-	Region string `json:"region,omitempty"`
-
-	// Bucket of the Aliyun OSS service.
-	// +kubebuilder:validation:Required
-	Bucket string `json:"bucket"`
-
-	// InternalEndpoint indicates if we use the internal endpoint to access Aliyun OSS, which is
-	// only available in the internal network.
-	InternalEndpoint bool `json:"internalEndpoint,omitempty"`
-}
-
-// RisingWaveObjectStorageAzureBlob is the details of Azure blob storage (S3 compatible) for compute and compactor components.
-type RisingWaveObjectStorageAzureBlob struct {
-	// Secret contains the credentials to access the Azure Blob service. It must contain the following keys:
-	//   * AccessKeyID
-	//   * SecretAccessKey
-	// +kubebuilder:validation:Required
-	Secret string `json:"secret"`
-
-	// Container Name of the Azure Blob service.
-	// +kubebuilder:validation:Required
-	Container string `json:"container"`
-
-	// Working directory root of the Azure Blob service.
-	// +kubebuilder:validation:Required
-	Root string `json:"root"`
-
-	// Endpoint of the Azure Blob service.
-	// e.g. https://yufantest.blob.core.windows.net
-	// +kubebuilder:validation:Pattern="^(?:https://)?(?:[^/.\\s]+\\.)*(?:[^/\\s]+)*$"
-	Endpoint string `json:"endpoint"`
-}
-
-// RisingWaveObjectStorageHDFS is the details of HDFS storage (S3 compatible) for compute and compactor components.
-type RisingWaveObjectStorageHDFS struct {
-	// Name node of the HDFS
-	// +kubebuilder:validation:Required
-	NameNode string `json:"nameNode"`
-
-	// Working directory root of the HDFS
-	// +kubebuilder:validation:Required
-	Root string `json:"root"`
-}
-
-// RisingWaveObjectStorage is the object storage for compute and compactor components.
-type RisingWaveObjectStorage struct {
-	// DataDirectory is the directory to store the data in the object storage. It is an optional field.
-	DataDirectory string `json:"dataDirectory,omitempty"`
-
-	// Memory indicates to store the data in memory. It's only for test usage and strongly discouraged to
-	// be used in production.
-	// +optional
-	Memory *bool `json:"memory,omitempty"`
-
-	// MinIO storage spec.
-	// +optional
-	MinIO *RisingWaveObjectStorageMinIO `json:"minio,omitempty"`
-
-	// S3 storage spec.
-	// +optional
-	S3 *RisingWaveObjectStorageS3 `json:"s3,omitempty"`
-
-	// GCS storage spec.
-	// +optional
-	GCS *RisingWaveObjectStorageGCS `json:"GCS,omitempty"`
-
-	// AliyunOSS storage spec.
-	// +optional
-	AliyunOSS *RisingWaveObjectStorageAliyunOSS `json:"aliyunOSS,omitempty"`
-
-	// Azure Blob storage spec.
-	// +optional
-	AzureBlob *RisingWaveObjectStorageAzureBlob `json:"azureBlob,omitempty"`
-
-	// HDFS storage spec.
-	// +optional
-	HDFS *RisingWaveObjectStorageHDFS `json:"hdfs,omitempty"`
-
-	// WebHDFS storage spec.
-	// +optional
-	WebHDFS *RisingWaveObjectStorageHDFS `json:"webhdfs,omitempty"`
-}
-
 // PersistentVolumeClaimPartialObjectMeta is the metadata for PVC templates.
 type PersistentVolumeClaimPartialObjectMeta struct {
 	// Name must be unique within a namespace. Is required when creating resources, although
@@ -626,10 +437,10 @@ type PersistentVolumeClaim struct {
 // RisingWaveStoragesSpec is the storages spec.
 type RisingWaveStoragesSpec struct {
 	// Storage spec for meta.
-	Meta RisingWaveMetaStorage `json:"meta,omitempty"`
+	Meta RisingWaveMetaStoreBackend `json:"meta,omitempty"`
 
 	// Storage spec for object storage.
-	Object RisingWaveObjectStorage `json:"object,omitempty"`
+	Object RisingWaveStateStoreBackend `json:"object,omitempty"`
 
 	// The persistent volume claim templates for the compute component. PVCs declared here
 	// can be referenced in the groups of compute component.
@@ -738,6 +549,16 @@ type RisingWaveSpec struct {
 	// AdditionalFrontendServiceMetadata tells the operator to add the specified metadata onto the frontend Service.
 	// Note that the system reserved labels and annotations are not valid and will be rejected by the webhook.
 	AdditionalFrontendServiceMetadata RisingWavePodTemplatePartialObjectMeta `json:"additionalFrontendServiceMetadata,omitempty"`
+
+	// MetaStore determines which backend the meta store will use and the parameters for it. Defaults to memory.
+	// But keep in mind that memory backend is not recommended in production.
+	// +kubebuilder:default={memory: true}
+	MetaStore RisingWaveMetaStoreBackend `json:"metaStore,omitempty"`
+
+	// StateStore determines which backend the state store will use and the parameters for it. Defaults to memory.
+	// But keep in mind that memory backend is not recommended in production.
+	// +kubebuilder:default={memory: true}
+	StateStore RisingWaveStateStoreBackend `json:"stateStore,omitempty"`
 }
 
 // ComponentGroupReplicasStatus are the running status of Pods in group.
@@ -819,46 +640,10 @@ type RisingWaveCondition struct {
 	Message string `json:"message,omitempty"`
 }
 
-// MetaStorageType is the type name of meta storage.
-type MetaStorageType string
-
-// These are valid values of MetaStorageType.
-const (
-	MetaStorageTypeMemory  MetaStorageType = "Memory"
-	MetaStorageTypeEtcd    MetaStorageType = "Etcd"
-	MetaStorageTypeUnknown MetaStorageType = "Unknown"
-)
-
-// RisingWaveMetaStorageStatus is the status of meta storage.
-type RisingWaveMetaStorageStatus struct {
-	Type MetaStorageType `json:"type"`
-}
-
-// ObjectStorageType is the type name of object storage.
-type ObjectStorageType string
-
-// These are valid values of ObjectStorageType.
-const (
-	ObjectStorageTypeMemory    ObjectStorageType = "Memory"
-	ObjectStorageTypeMinIO     ObjectStorageType = "MinIO"
-	ObjectStorageTypeS3        ObjectStorageType = "S3"
-	ObjectStorageTypeGCS       ObjectStorageType = "GCS"
-	ObjectStorageTypeAliyunOSS ObjectStorageType = "AliyunOSS"
-	ObjectStorageTypeAzureBlob ObjectStorageType = "AzureBlob"
-	ObjectStorageTypeHDFS      ObjectStorageType = "HDFS"
-	ObjectStorageTypeWebHDFS   ObjectStorageType = "WebHDFS"
-	ObjectStorageTypeUnknown   ObjectStorageType = "Unknown"
-)
-
-// RisingWaveObjectStorageStatus is the status of object storage.
-type RisingWaveObjectStorageStatus struct {
-	Type ObjectStorageType `json:"type"`
-}
-
 // RisingWaveStoragesStatus is the status of external storages.
 type RisingWaveStoragesStatus struct {
-	Meta   RisingWaveMetaStorageStatus   `json:"meta"`
-	Object RisingWaveObjectStorageStatus `json:"object"`
+	Meta   RisingWaveMetaStoreStatus  `json:"meta"`
+	Object RisingWaveStateStoreStatus `json:"object"`
 }
 
 // RisingWaveScaleViewLockGroupLock is the lock record of RisingWaveScaleView.
@@ -920,14 +705,22 @@ type RisingWaveStatus struct {
 	// +listType=map
 	// +listMapKey=name
 	ScaleViews []RisingWaveScaleViewLock `json:"scaleViews,omitempty"`
+
+	// -----------------------------------v1alpha2 features ------------------------------------------ //
+
+	// Status of the meta store.
+	MetaStore RisingWaveMetaStoreStatus `json:"metaStore,omitempty"`
+
+	// Status of the state store.
+	StateStore RisingWaveStateStoreStatus `json:"stateStore,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=rw,categories=all;streaming
 // +kubebuilder:printcolumn:name="RUNNING",type=string,JSONPath=`.status.conditions[?(@.type=="Running")].status`
-// +kubebuilder:printcolumn:name="STORAGE(META)",type=string,JSONPath=`.status.storages.meta.type`
-// +kubebuilder:printcolumn:name="STORAGE(OBJECT)",type=string,JSONPath=`.status.storages.object.type`
+// +kubebuilder:printcolumn:name="STORAGE(META)",type=string,JSONPath=`.status.metaStore.backend`
+// +kubebuilder:printcolumn:name="STORAGE(OBJECT)",type=string,JSONPath=`.status.stateStore.backend`
 // +kubebuilder:printcolumn:name="VERSION",type=string,JSONPath=`.status.version`
 // +kubebuilder:printcolumn:name="AGE",type=date,JSONPath=`.metadata.creationTimestamp`
 

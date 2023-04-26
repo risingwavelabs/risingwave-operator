@@ -136,8 +136,8 @@ All the [obejct](https://kubernetes.io/docs/concepts/overview/working-with-objec
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=rw,categories=all;streaming
 // +kubebuilder:printcolumn:name="RUNNING",type=string,JSONPath=`.status.conditions[?(@.type=="Running")].status`
-// +kubebuilder:printcolumn:name="STORAGE(META)",type=string,JSONPath=`.status.storages.meta.type`
-// +kubebuilder:printcolumn:name="STORAGE(OBJECT)",type=string,JSONPath=`.status.storages.object.type`
+// +kubebuilder:printcolumn:name="STORAGE(META)",type=string,JSONPath=`.status.metaStore.backend`
+// +kubebuilder:printcolumn:name="STORAGE(OBJECT)",type=string,JSONPath=`.status.stateStore.backend`
 // +kubebuilder:printcolumn:name="VERSION",type=string,JSONPath=`.status.version`
 // +kubebuilder:printcolumn:name="AGE",type=date,JSONPath=`.metadata.creationTimestamp`
 ```
@@ -171,15 +171,15 @@ We use `make manifests` and `make install-local` to create a new YAML file. The 
 ```golang
 mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
     // Report meta storage status.
-    metaStorage := &risingwave.Spec.Storages.Meta
-    status.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorageStatus{
+    metaStorage := &risingwave.Spec.metaStore
+    status.metaStore = risingwavev1alpha1.RisingWaveMetaStoreStatus{
         Type: buildMetaStorageType(metaStorage),
     }
 
     // Report object storage status.
-    objectStorage := &risingwave.Spec.Storages.Object
-    status.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorageStatus{
-        Type: buildObjectStorageType(objectStorage),
+    stateStorage := &risingwave.Spec.stateStore
+    status.metaStore = risingwavev1alpha1.RisingWaveStateStoreStatus{
+        Type: buildStateStorageType(stateStorage),
     }
 
     // Report Version status.

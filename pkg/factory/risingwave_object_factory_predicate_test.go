@@ -973,11 +973,11 @@ func serviceMetadataPredicates() []predicate[*corev1.Service, serviceMetadataTes
 	}
 }
 
-func objectStorageStatefulsetPredicates() []predicate[*appsv1.StatefulSet, objectStoragesTestCase] {
-	return []predicate[*appsv1.StatefulSet, objectStoragesTestCase]{
+func stateStorageStatefulsetPredicates() []predicate[*appsv1.StatefulSet, stateStoragesTestCase] {
+	return []predicate[*appsv1.StatefulSet, stateStoragesTestCase]{
 		{
 			Name: "env-vars-contains",
-			Fn: func(obj *appsv1.StatefulSet, tc objectStoragesTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc stateStoragesTestCase) bool {
 				return listContainsByKey(obj.Spec.Template.Spec.Containers[0].Env, tc.envs, func(t *corev1.EnvVar) string { return t.Name }, deepEqual[corev1.EnvVar])
 			},
 		},

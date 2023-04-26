@@ -64,10 +64,10 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 	Spec: risingwavev1alpha1.RisingWaveSpec{
 		EnableOpenKruise: pointer.Bool(false),
 		Storages: risingwavev1alpha1.RisingWaveStoragesSpec{
-			Meta: risingwavev1alpha1.RisingWaveMetaStorage{
+			Meta: risingwavev1alpha1.RisingWaveMetaStoreBackend{
 				Memory: pointer.Bool(true),
 			},
-			Object: risingwavev1alpha1.RisingWaveObjectStorage{
+			Object: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				Memory: pointer.Bool(true),
 			},
 		},
@@ -138,11 +138,11 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 	Status: risingwavev1alpha1.RisingWaveStatus{
 		ObservedGeneration: 1,
 		Storages: risingwavev1alpha1.RisingWaveStoragesStatus{
-			Meta: risingwavev1alpha1.RisingWaveMetaStorageStatus{
-				Type: risingwavev1alpha1.MetaStorageTypeMemory,
+			Meta: risingwavev1alpha1.RisingWaveMetaStoreStatus{
+				Backend: risingwavev1alpha1.RisingWaveMetaStoreBackendTypeMemory,
 			},
-			Object: risingwavev1alpha1.RisingWaveObjectStorageStatus{
-				Type: risingwavev1alpha1.ObjectStorageTypeMemory,
+			Object: risingwavev1alpha1.RisingWaveStateStoreStatus{
+				Backend: risingwavev1alpha1.RisingWaveStateStoreBackendTypeMemory,
 			},
 		},
 		Conditions: []risingwavev1alpha1.RisingWaveCondition{
@@ -249,10 +249,10 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 	},
 	Spec: risingwavev1alpha1.RisingWaveSpec{
 		Storages: risingwavev1alpha1.RisingWaveStoragesSpec{
-			Meta: risingwavev1alpha1.RisingWaveMetaStorage{
+			Meta: risingwavev1alpha1.RisingWaveMetaStoreBackend{
 				Memory: pointer.Bool(true),
 			},
-			Object: risingwavev1alpha1.RisingWaveObjectStorage{
+			Object: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				Memory: pointer.Bool(true),
 			},
 		},
@@ -346,11 +346,11 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 	Status: risingwavev1alpha1.RisingWaveStatus{
 		ObservedGeneration: 1,
 		Storages: risingwavev1alpha1.RisingWaveStoragesStatus{
-			Meta: risingwavev1alpha1.RisingWaveMetaStorageStatus{
-				Type: risingwavev1alpha1.MetaStorageTypeMemory,
+			Meta: risingwavev1alpha1.RisingWaveMetaStoreStatus{
+				Backend: risingwavev1alpha1.RisingWaveMetaStoreBackendTypeMemory,
 			},
-			Object: risingwavev1alpha1.RisingWaveObjectStorageStatus{
-				Type: risingwavev1alpha1.ObjectStorageTypeMemory,
+			Object: risingwavev1alpha1.RisingWaveStateStoreStatus{
+				Backend: risingwavev1alpha1.RisingWaveStateStoreBackendTypeMemory,
 			},
 		},
 		Conditions: []risingwavev1alpha1.RisingWaveCondition{

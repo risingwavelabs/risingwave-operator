@@ -47,8 +47,20 @@ func ConvertGlobalImage(obj *v1alpha1.RisingWave) {
 	}
 }
 
+// ConvertStorages converts v1alpha1 storages.
+func ConvertStorages(obj *v1alpha1.RisingWave) {
+	if !equality.Semantic.DeepEqual(obj.Spec.Storages, v1alpha1.RisingWaveStoragesSpec{}) ||
+		!equality.Semantic.DeepEqual(obj.Status.Storages, v1alpha1.RisingWaveStoragesStatus{}) {
+		obj.Spec.MetaStore = *obj.Spec.Storages.Meta.DeepCopy()
+		obj.Spec.StateStore = *obj.Spec.Storages.Object.DeepCopy()
+		obj.Status.MetaStore = *obj.Status.Storages.Meta.DeepCopy()
+		obj.Status.StateStore = *obj.Status.Storages.Object.DeepCopy()
+	}
+}
+
 // ConvertToV1alpha2Features converts v1alpha1 features to v1alpha2 features.
 func ConvertToV1alpha2Features(obj *v1alpha1.RisingWave) {
 	ConvertFrontendService(obj)
 	ConvertGlobalImage(obj)
+	ConvertStorages(obj)
 }

@@ -279,8 +279,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"etcd-meta-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorage{
-					Etcd: &risingwavev1alpha1.RisingWaveMetaStorageEtcd{
+				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStoreBackend{
+					Etcd: &risingwavev1alpha1.RisingWaveMetaStoreBackendEtcd{
 						Endpoint: "etcd",
 					},
 				}
@@ -289,24 +289,24 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"empty-meta-storage-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorage{}
+				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStoreBackend{}
 			},
 			pass: false,
 		},
 		"meta-storage-with-default-values-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorage{
+				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStoreBackend{
 					Memory: pointer.Bool(false),
-					Etcd:   &risingwavev1alpha1.RisingWaveMetaStorageEtcd{},
+					Etcd:   &risingwavev1alpha1.RisingWaveMetaStoreBackendEtcd{},
 				}
 			},
 			pass: false,
 		},
 		"multiple-meta-storages-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorage{
+				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStoreBackend{
 					Memory: pointer.Bool(true),
-					Etcd: &risingwavev1alpha1.RisingWaveMetaStorageEtcd{
+					Etcd: &risingwavev1alpha1.RisingWaveMetaStoreBackendEtcd{
 						Endpoint: "etcd",
 					},
 				}
@@ -315,8 +315,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"minio-object-storage-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					MinIO: &risingwavev1alpha1.RisingWaveObjectStorageMinIO{
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					MinIO: &risingwavev1alpha1.RisingWaveStateStoreBackendMinIO{
 						Secret:   "minio-creds",
 						Endpoint: "minio",
 						Bucket:   "hummock",
@@ -327,8 +327,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"s3-object-storage-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 						Secret: "s3-creds",
 						Bucket: "hummock",
 					},
@@ -338,8 +338,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"gcs-object-storage-workload-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					GCS: &risingwavev1alpha1.RisingWaveObjectStorageGCS{
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 						UseWorkloadIdentity: true,
 						Bucket:              "gcs-bucket",
 						Root:                "gcs-root",
@@ -350,8 +350,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"gcs-object-storage-secret-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					GCS: &risingwavev1alpha1.RisingWaveObjectStorageGCS{
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 						UseWorkloadIdentity: false,
 						Secret:              "gcs-creds",
 						Bucket:              "gcs-bucket",
@@ -363,8 +363,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"gcs-object-storage-both-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					GCS: &risingwavev1alpha1.RisingWaveObjectStorageGCS{
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 						UseWorkloadIdentity: true,
 						Secret:              "gcs-creds",
 						Bucket:              "gcs-bucket",
@@ -376,8 +376,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"gcs-object-storage-none-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					GCS: &risingwavev1alpha1.RisingWaveObjectStorageGCS{
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 						UseWorkloadIdentity: false,
 						Bucket:              "gcs-bucket",
 						Root:                "gcs-root",
@@ -388,8 +388,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"gcs-object-storage-edge-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					GCS: &risingwavev1alpha1.RisingWaveObjectStorageGCS{
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 						UseWorkloadIdentity: false,
 						Secret:              "",
 						Bucket:              "gcs-bucket",
@@ -401,8 +401,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"aliyun-oss-object-storage-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					AliyunOSS: &risingwavev1alpha1.RisingWaveObjectStorageAliyunOSS{
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
 						Secret: "aliyun-oss-creds",
 						Bucket: "hummock",
 					},
@@ -412,8 +412,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"azure-blob-object-storage-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					AzureBlob: &risingwavev1alpha1.RisingWaveObjectStorageAzureBlob{
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
 						Secret:    "azure-blob-creds",
 						Container: "hummock",
 						Root:      "azure-blob-root",
@@ -425,8 +425,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"hdfs-object-storage-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					HDFS: &risingwavev1alpha1.RisingWaveObjectStorageHDFS{
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					HDFS: &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{
 						NameNode: "test",
 						Root:     "test",
 					},
@@ -436,8 +436,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"webhdfs-object-storage-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					WebHDFS: &risingwavev1alpha1.RisingWaveObjectStorageHDFS{
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					WebHDFS: &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{
 						NameNode: "test",
 						Root:     "test",
 					},
@@ -447,60 +447,60 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"empty-object-storage-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{}
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{}
 			},
 			pass: false,
 		},
 		"multiple-object-storages-fail-1": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					Memory: pointer.Bool(true),
-					MinIO:  &risingwavev1alpha1.RisingWaveObjectStorageMinIO{},
+					MinIO:  &risingwavev1alpha1.RisingWaveStateStoreBackendMinIO{},
 				}
 			},
 			pass: false,
 		},
 		"multiple-object-storages-fail-2": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					Memory: pointer.Bool(true),
-					S3:     &risingwavev1alpha1.RisingWaveObjectStorageS3{},
+					S3:     &risingwavev1alpha1.RisingWaveStateStoreBackendS3{},
 				}
 			},
 			pass: false,
 		},
 		"multiple-object-storages-fail-3": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					MinIO: &risingwavev1alpha1.RisingWaveObjectStorageMinIO{},
-					S3:    &risingwavev1alpha1.RisingWaveObjectStorageS3{},
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					MinIO: &risingwavev1alpha1.RisingWaveStateStoreBackendMinIO{},
+					S3:    &risingwavev1alpha1.RisingWaveStateStoreBackendS3{},
 				}
 			},
 			pass: false,
 		},
 		"multiple-object-storages-fail-4": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					MinIO: &risingwavev1alpha1.RisingWaveObjectStorageMinIO{},
-					HDFS:  &risingwavev1alpha1.RisingWaveObjectStorageHDFS{},
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					MinIO: &risingwavev1alpha1.RisingWaveStateStoreBackendMinIO{},
+					HDFS:  &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{},
 				}
 			},
 			pass: false,
 		},
 		"multiple-object-storages-fail-5": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					MinIO:     &risingwavev1alpha1.RisingWaveObjectStorageMinIO{},
-					AzureBlob: &risingwavev1alpha1.RisingWaveObjectStorageAzureBlob{},
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					MinIO:     &risingwavev1alpha1.RisingWaveStateStoreBackendMinIO{},
+					AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{},
 				}
 			},
 			pass: false,
 		},
 		"multiple-object-storages-fail-6": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					HDFS:    &risingwavev1alpha1.RisingWaveObjectStorageHDFS{},
-					WebHDFS: &risingwavev1alpha1.RisingWaveObjectStorageHDFS{},
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					HDFS:    &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{},
+					WebHDFS: &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{},
 				}
 			},
 			pass: false,
@@ -755,8 +755,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		"multi-etcd-meta-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Global.Replicas.Meta = 2
-				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorage{
-					Etcd: &risingwavev1alpha1.RisingWaveMetaStorageEtcd{
+				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStoreBackend{
+					Etcd: &risingwavev1alpha1.RisingWaveMetaStoreBackendEtcd{
 						Endpoint: "etcd",
 						Secret:   "etcd-credentials",
 					},
@@ -822,14 +822,14 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 		},
 		"illegal-changes-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorage{}
+				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStoreBackend{}
 			},
 			pass: false,
 		},
 		"meta-storage-changed-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStorage{
-					Etcd: &risingwavev1alpha1.RisingWaveMetaStorageEtcd{
+				r.Spec.Storages.Meta = risingwavev1alpha1.RisingWaveMetaStoreBackend{
+					Etcd: &risingwavev1alpha1.RisingWaveMetaStoreBackendEtcd{
 						Endpoint: "etcd",
 					},
 				}
@@ -838,16 +838,16 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 		},
 		"object-storage-changed-fail-1": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					MinIO: &risingwavev1alpha1.RisingWaveObjectStorageMinIO{},
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					MinIO: &risingwavev1alpha1.RisingWaveStateStoreBackendMinIO{},
 				}
 			},
 			pass: false,
 		},
 		"object-storage-changed-fail-2": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveObjectStorage{
-					S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{},
+				r.Spec.Storages.Object = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{},
 				}
 			},
 			pass: false,

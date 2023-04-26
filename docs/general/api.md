@@ -134,64 +134,6 @@ int32
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.MetaStorageType">MetaStorageType
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorageStatus">RisingWaveMetaStorageStatus</a>)
-</p>
-<div>
-<p>MetaStorageType is the type name of meta storage.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Value</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr><td><p>&#34;Etcd&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;Memory&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;Unknown&#34;</p></td>
-<td></td>
-</tr></tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.ObjectStorageType">ObjectStorageType
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageStatus">RisingWaveObjectStorageStatus</a>)
-</p>
-<div>
-<p>ObjectStorageType is the type name of object storage.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Value</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr><td><p>&#34;AliyunOSS&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;AzureBlob&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;GCS&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;HDFS&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;Memory&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;MinIO&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;S3&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;Unknown&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;WebHDFS&#34;</p></td>
-<td></td>
-</tr></tbody>
-</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.PersistentVolumeClaim">PersistentVolumeClaim
 </h3>
 <p>
@@ -634,6 +576,34 @@ RisingWavePodTemplatePartialObjectMeta
 <td>
 <p>AdditionalFrontendServiceMetadata tells the operator to add the specified metadata onto the frontend Service.
 Note that the system reserved labels and annotations are not valid and will be rejected by the webhook.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metaStore</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackend">
+RisingWaveMetaStoreBackend
+</a>
+</em>
+</td>
+<td>
+<p>MetaStore determines which backend the meta store will use and the parameters for it. Defaults to memory.
+But keep in mind that memory backend is not recommended in production.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>stateStore</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">
+RisingWaveStateStoreBackend
+</a>
+</em>
+</td>
+<td>
+<p>StateStore determines which backend the state store will use and the parameters for it. Defaults to memory.
+But keep in mind that memory backend is not recommended in production.</p>
 </td>
 </tr>
 </table>
@@ -2351,13 +2321,14 @@ RisingWavePodTemplatePartialObjectMeta
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorage">RisingWaveMetaStorage
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackend">RisingWaveMetaStoreBackend
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec</a>)
 </p>
 <div>
-<p>RisingWaveMetaStorage is the storage for the meta component.</p>
+<p>RisingWaveMetaStoreBackend is the collection of parameters for the meta store that RisingWave uses. Note that one
+and only one of the first-level fields could be set.</p>
 </div>
 <table>
 <thead>
@@ -2386,8 +2357,8 @@ exit of the process will cause a permanent loss of the data.</p>
 <td>
 <code>etcd</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorageEtcd">
-RisingWaveMetaStorageEtcd
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackendEtcd">
+RisingWaveMetaStoreBackendEtcd
 </a>
 </em>
 </td>
@@ -2398,13 +2369,13 @@ RisingWaveMetaStorageEtcd
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorageEtcd">RisingWaveMetaStorageEtcd
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackendEtcd">RisingWaveMetaStoreBackendEtcd
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorage">RisingWaveMetaStorage</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackend">RisingWaveMetaStoreBackend</a>)
 </p>
 <div>
-<p>RisingWaveMetaStorageEtcd is the etcd storage for the meta component.</p>
+<p>RisingWaveMetaStoreBackendEtcd is the collection of parameters for the etcd backend meta store.</p>
 </div>
 <table>
 <thead>
@@ -2442,43 +2413,36 @@ But it is an optional field. Empty value indicates etcd is available without aut
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorageStatus">RisingWaveMetaStorageStatus
-</h3>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackendType">RisingWaveMetaStoreBackendType
+(<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesStatus">RisingWaveStoragesStatus</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreStatus">RisingWaveMetaStoreStatus</a>)
 </p>
 <div>
-<p>RisingWaveMetaStorageStatus is the status of meta storage.</p>
+<p>RisingWaveMetaStoreBackendType is the type for the meta store backends.</p>
 </div>
 <table>
 <thead>
 <tr>
-<th>Field</th>
+<th>Value</th>
 <th>Description</th>
 </tr>
 </thead>
-<tbody>
-<tr>
-<td>
-<code>type</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.MetaStorageType">
-MetaStorageType
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
+<tbody><tr><td><p>&#34;Etcd&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Memory&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Unknown&#34;</p></td>
+<td></td>
+</tr></tbody>
 </table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreStatus">RisingWaveMetaStoreStatus
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesStatus">RisingWaveStoragesStatus</a>)
 </p>
 <div>
-<p>RisingWaveObjectStorage is the object storage for compute and compactor components.</p>
+<p>RisingWaveMetaStoreStatus is the status of the meta store.</p>
 </div>
 <table>
 <thead>
@@ -2490,525 +2454,15 @@ MetaStorageType
 <tbody>
 <tr>
 <td>
-<code>dataDirectory</code><br/>
+<code>backend</code><br/>
 <em>
-string
-</em>
-</td>
-<td>
-<p>DataDirectory is the directory to store the data in the object storage. It is an optional field.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>memory</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Memory indicates to store the data in memory. It&rsquo;s only for test usage and strongly discouraged to
-be used in production.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>minio</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageMinIO">
-RisingWaveObjectStorageMinIO
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackendType">
+RisingWaveMetaStoreBackendType
 </a>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>MinIO storage spec.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>s3</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageS3">
-RisingWaveObjectStorageS3
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>S3 storage spec.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>GCS</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageGCS">
-RisingWaveObjectStorageGCS
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>GCS storage spec.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>aliyunOSS</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageAliyunOSS">
-RisingWaveObjectStorageAliyunOSS
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>AliyunOSS storage spec.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>azureBlob</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageAzureBlob">
-RisingWaveObjectStorageAzureBlob
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Azure Blob storage spec.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>hdfs</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageHDFS">
-RisingWaveObjectStorageHDFS
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>HDFS storage spec.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>webhdfs</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageHDFS">
-RisingWaveObjectStorageHDFS
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>WebHDFS storage spec.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageAliyunOSS">RisingWaveObjectStorageAliyunOSS
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage</a>)
-</p>
-<div>
-<p>RisingWaveObjectStorageAliyunOSS is the details of Aliyun OSS storage (S3 compatible) for compute and compactor components.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>secret</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Secret contains the credentials to access the Aliyun OSS service. It must contain the following keys:
-* AccessKeyID
-* SecretAccessKey
-* Region (optional if region is specified in the field.)</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>region</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Region of Aliyun OSS service. It is an optional field that overrides the <code>Region</code> key from the secret.
-Specifying the region here makes a guarantee that it won&rsquo;t be changed anymore.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>bucket</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Bucket of the Aliyun OSS service.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>internalEndpoint</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>InternalEndpoint indicates if we use the internal endpoint to access Aliyun OSS, which is
-only available in the internal network.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageAzureBlob">RisingWaveObjectStorageAzureBlob
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage</a>)
-</p>
-<div>
-<p>RisingWaveObjectStorageAzureBlob is the details of Azure blob storage (S3 compatible) for compute and compactor components.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>secret</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Secret contains the credentials to access the Azure Blob service. It must contain the following keys:
-* AccessKeyID
-* SecretAccessKey</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>container</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Container Name of the Azure Blob service.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>root</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Working directory root of the Azure Blob service.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>endpoint</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Endpoint of the Azure Blob service.
-e.g. <a href="https://yufantest.blob.core.windows.net">https://yufantest.blob.core.windows.net</a></p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageGCS">RisingWaveObjectStorageGCS
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage</a>)
-</p>
-<div>
-<p>RisingWaveObjectStorageGCS is the details of GCS bucket storage for compute and compactor components.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>useWorkloadIdentity</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>UseWorkloadIdentity indicates to use workload identity to access the GCS service. If this is enabled, secret is not required, and ADC is used.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>secret</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Secret contains the credentials to access the GCS service. It must contain the following keys:
-* ServiceAccountCredentials</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>bucket</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Bucket of the GCS bucket service.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>root</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Working directory root of the GCS bucket</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageHDFS">RisingWaveObjectStorageHDFS
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage</a>)
-</p>
-<div>
-<p>RisingWaveObjectStorageHDFS is the details of HDFS storage (S3 compatible) for compute and compactor components.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>nameNode</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Name node of the HDFS</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>root</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Working directory root of the HDFS</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageMinIO">RisingWaveObjectStorageMinIO
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage</a>)
-</p>
-<div>
-<p>RisingWaveObjectStorageMinIO is the details of MinIO storage for compute and compactor components.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>secret</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Secret contains the credentials to access the MinIO service. It must contain the following keys:
-* username
-* password</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>endpoint</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Endpoint of the MinIO service.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>bucket</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Bucket of the MinIO service.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageS3">RisingWaveObjectStorageS3
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">RisingWaveObjectStorage</a>)
-</p>
-<div>
-<p>RisingWaveObjectStorageS3 is the details of AWS S3 storage for compute and compactor components.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>secret</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Secret contains the credentials to access the AWS S3 service. It must contain the following keys:
-* AccessKeyID
-* SecretAccessKey
-* Region (optional if region is specified in the field.)</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>bucket</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Bucket of the AWS S3 service.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>region</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Region of AWS S3 service. It is an optional field that overrides the <code>Region</code> key from the secret.
-Specifying the region here makes a guarantee that it won&rsquo;t be changed anymore.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>endpoint</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Endpoint of the AWS (or other vendor&rsquo;s S3-compatible) service. Leave it empty when using AWS S3 service.
-You can reference the <code>REGION</code> and <code>BUCKET</code> variables in the endpoint with <code>${BUCKET}</code> and <code>${REGION}</code>, e.g.,
-s3.${REGION}.amazonaws.com
-${BUCKET}.s3.${REGION}.amazonaws.com</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>virtualHostedStyle</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>VirtualHostedStyle indicates to use a virtual hosted endpoint when endpoint is specified. The operator automatically
-adds the bucket prefix for you if this is enabled. Be careful about doubly using the style by specifying an endpoint
-of virtual hosted style as well as enabling this.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageStatus">RisingWaveObjectStorageStatus
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesStatus">RisingWaveStoragesStatus</a>)
-</p>
-<div>
-<p>RisingWaveObjectStorageStatus is the status of object storage.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>type</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.ObjectStorageType">
-ObjectStorageType
-</a>
-</em>
-</td>
-<td>
+<p>Backend type of the meta store.</p>
 </td>
 </tr>
 </tbody>
@@ -4449,6 +3903,612 @@ RisingWavePodTemplatePartialObjectMeta
 Note that the system reserved labels and annotations are not valid and will be rejected by the webhook.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>metaStore</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackend">
+RisingWaveMetaStoreBackend
+</a>
+</em>
+</td>
+<td>
+<p>MetaStore determines which backend the meta store will use and the parameters for it. Defaults to memory.
+But keep in mind that memory backend is not recommended in production.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>stateStore</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">
+RisingWaveStateStoreBackend
+</a>
+</em>
+</td>
+<td>
+<p>StateStore determines which backend the state store will use and the parameters for it. Defaults to memory.
+But keep in mind that memory backend is not recommended in production.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">RisingWaveStateStoreBackend
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec</a>)
+</p>
+<div>
+<p>RisingWaveStateStoreBackend is the collection of parameters for the state store that RisingWave uses. Note that one
+and only one of the first-level fields could be set.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>dataDirectory</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>DataDirectory is the directory to store the data in the object storage. It is an optional field.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>memory</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Memory indicates to store the data in memory. It&rsquo;s only for test usage and strongly discouraged to
+be used in production.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>minio</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendMinIO">
+RisingWaveStateStoreBackendMinIO
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MinIO storage spec.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>s3</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendS3">
+RisingWaveStateStoreBackendS3
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>S3 storage spec.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>GCS</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendGCS">
+RisingWaveStateStoreBackendGCS
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>GCS storage spec.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>aliyunOSS</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAliyunOSS">
+RisingWaveStateStoreBackendAliyunOSS
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AliyunOSS storage spec.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>azureBlob</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAzureBlob">
+RisingWaveStateStoreBackendAzureBlob
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Azure Blob storage spec.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hdfs</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendHDFS">
+RisingWaveStateStoreBackendHDFS
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HDFS storage spec.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webhdfs</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendHDFS">
+RisingWaveStateStoreBackendHDFS
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>WebHDFS storage spec.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAliyunOSS">RisingWaveStateStoreBackendAliyunOSS
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">RisingWaveStateStoreBackend</a>)
+</p>
+<div>
+<p>RisingWaveStateStoreBackendAliyunOSS is the details of Aliyun OSS storage (S3 compatible) for compute and compactor components.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secret</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Secret contains the credentials to access the Aliyun OSS service. It must contain the following keys:
+* AccessKeyID
+* SecretAccessKey
+* Region (optional if region is specified in the field.)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region of Aliyun OSS service. It is an optional field that overrides the <code>Region</code> key from the secret.
+Specifying the region here makes a guarantee that it won&rsquo;t be changed anymore.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bucket</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Bucket of the Aliyun OSS service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>internalEndpoint</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>InternalEndpoint indicates if we use the internal endpoint to access Aliyun OSS, which is
+only available in the internal network.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAzureBlob">RisingWaveStateStoreBackendAzureBlob
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">RisingWaveStateStoreBackend</a>)
+</p>
+<div>
+<p>RisingWaveStateStoreBackendAzureBlob is the details of Azure blob storage (S3 compatible) for compute and compactor components.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secret</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Secret contains the credentials to access the Azure Blob service. It must contain the following keys:
+* AccessKeyID
+* SecretAccessKey</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>container</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Container Name of the Azure Blob service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>root</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Working directory root of the Azure Blob service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>endpoint</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Endpoint of the Azure Blob service.
+e.g. <a href="https://yufantest.blob.core.windows.net">https://yufantest.blob.core.windows.net</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendGCS">RisingWaveStateStoreBackendGCS
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">RisingWaveStateStoreBackend</a>)
+</p>
+<div>
+<p>RisingWaveStateStoreBackendGCS is the collection of parameters for the GCS backend state store.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>useWorkloadIdentity</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>UseWorkloadIdentity indicates to use workload identity to access the GCS service. If this is enabled, secret is not required, and ADC is used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secret</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Secret contains the credentials to access the GCS service. It must contain the following keys:
+* ServiceAccountCredentials</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bucket</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Bucket of the GCS bucket service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>root</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Working directory root of the GCS bucket</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendHDFS">RisingWaveStateStoreBackendHDFS
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">RisingWaveStateStoreBackend</a>)
+</p>
+<div>
+<p>RisingWaveStateStoreBackendHDFS is the details of HDFS storage (S3 compatible) for compute and compactor components.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>nameNode</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name node of the HDFS</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>root</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Working directory root of the HDFS</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendMinIO">RisingWaveStateStoreBackendMinIO
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">RisingWaveStateStoreBackend</a>)
+</p>
+<div>
+<p>RisingWaveStateStoreBackendMinIO is the collection of parameters for the MinIO backend state store.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secret</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Secret contains the credentials to access the MinIO service. It must contain the following keys:
+* username
+* password</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>endpoint</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Endpoint of the MinIO service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bucket</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Bucket of the MinIO service.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendS3">RisingWaveStateStoreBackendS3
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">RisingWaveStateStoreBackend</a>)
+</p>
+<div>
+<p>RisingWaveStateStoreBackendS3 is the collection of parameters for the S3 backend state store.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secret</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Secret contains the credentials to access the AWS S3 service. It must contain the following keys:
+* AccessKeyID
+* SecretAccessKey
+* Region (optional if region is specified in the field.)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bucket</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Bucket of the AWS S3 service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region of AWS S3 service. It is an optional field that overrides the <code>Region</code> key from the secret.
+Specifying the region here makes a guarantee that it won&rsquo;t be changed anymore.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>endpoint</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Endpoint of the AWS (or other vendor&rsquo;s S3-compatible) service. Leave it empty when using AWS S3 service.
+You can reference the <code>REGION</code> and <code>BUCKET</code> variables in the endpoint with <code>${BUCKET}</code> and <code>${REGION}</code>, e.g.,
+s3.${REGION}.amazonaws.com
+${BUCKET}.s3.${REGION}.amazonaws.com</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>virtualHostedStyle</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>VirtualHostedStyle indicates to use a virtual hosted endpoint when endpoint is specified. The operator automatically
+adds the bucket prefix for you if this is enabled. Be careful about doubly using the style by specifying an endpoint
+of virtual hosted style as well as enabling this.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendType">RisingWaveStateStoreBackendType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreStatus">RisingWaveStateStoreStatus</a>)
+</p>
+<div>
+<p>RisingWaveStateStoreBackendType is the type for the state store backends.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;AliyunOSS&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;AzureBlob&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;GCS&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;HDFS&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Memory&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;MinIO&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;S3&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Unknown&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;WebHDFS&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreStatus">RisingWaveStateStoreStatus
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesStatus">RisingWaveStoragesStatus</a>)
+</p>
+<div>
+<p>RisingWaveStateStoreStatus is the status of the state store.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>backend</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendType">
+RisingWaveStateStoreBackendType
+</a>
+</em>
+</td>
+<td>
+<p>Backend type of the state store.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus
@@ -4542,6 +4602,32 @@ RisingWaveStoragesStatus
 <p>Scale view locks.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>metaStore</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreStatus">
+RisingWaveMetaStoreStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status of the meta store.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>stateStore</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreStatus">
+RisingWaveStateStoreStatus
+</a>
+</em>
+</td>
+<td>
+<p>Status of the state store.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec
@@ -4564,8 +4650,8 @@ RisingWaveStoragesStatus
 <td>
 <code>meta</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorage">
-RisingWaveMetaStorage
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackend">
+RisingWaveMetaStoreBackend
 </a>
 </em>
 </td>
@@ -4577,8 +4663,8 @@ RisingWaveMetaStorage
 <td>
 <code>object</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorage">
-RisingWaveObjectStorage
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">
+RisingWaveStateStoreBackend
 </a>
 </em>
 </td>
@@ -4623,8 +4709,8 @@ can be referenced in the groups of compute component.</p>
 <td>
 <code>meta</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStorageStatus">
-RisingWaveMetaStorageStatus
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreStatus">
+RisingWaveMetaStoreStatus
 </a>
 </em>
 </td>
@@ -4635,8 +4721,8 @@ RisingWaveMetaStorageStatus
 <td>
 <code>object</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveObjectStorageStatus">
-RisingWaveObjectStorageStatus
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreStatus">
+RisingWaveStateStoreStatus
 </a>
 </em>
 </td>

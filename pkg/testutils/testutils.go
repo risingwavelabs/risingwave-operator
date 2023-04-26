@@ -63,13 +63,11 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 	},
 	Spec: risingwavev1alpha1.RisingWaveSpec{
 		EnableOpenKruise: pointer.Bool(false),
-		Storages: risingwavev1alpha1.RisingWaveStoragesSpec{
-			Meta: risingwavev1alpha1.RisingWaveMetaStoreBackend{
-				Memory: pointer.Bool(true),
-			},
-			Object: risingwavev1alpha1.RisingWaveStateStoreBackend{
-				Memory: pointer.Bool(true),
-			},
+		MetaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+			Memory: pointer.Bool(true),
+		},
+		StateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			Memory: pointer.Bool(true),
 		},
 		Image: "ghcr.io/risingwavelabs/risingwave:latest",
 		Global: risingwavev1alpha1.RisingWaveGlobalSpec{
@@ -137,13 +135,11 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 	},
 	Status: risingwavev1alpha1.RisingWaveStatus{
 		ObservedGeneration: 1,
-		Storages: risingwavev1alpha1.RisingWaveStoragesStatus{
-			Meta: risingwavev1alpha1.RisingWaveMetaStoreStatus{
-				Backend: risingwavev1alpha1.RisingWaveMetaStoreBackendTypeMemory,
-			},
-			Object: risingwavev1alpha1.RisingWaveStateStoreStatus{
-				Backend: risingwavev1alpha1.RisingWaveStateStoreBackendTypeMemory,
-			},
+		MetaStore: risingwavev1alpha1.RisingWaveMetaStoreStatus{
+			Backend: risingwavev1alpha1.RisingWaveMetaStoreBackendTypeMemory,
+		},
+		StateStore: risingwavev1alpha1.RisingWaveStateStoreStatus{
+			Backend: risingwavev1alpha1.RisingWaveStateStoreBackendTypeMemory,
 		},
 		Conditions: []risingwavev1alpha1.RisingWaveCondition{
 			{
@@ -248,13 +244,11 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 		UID:        uuid.NewUUID(),
 	},
 	Spec: risingwavev1alpha1.RisingWaveSpec{
-		Storages: risingwavev1alpha1.RisingWaveStoragesSpec{
-			Meta: risingwavev1alpha1.RisingWaveMetaStoreBackend{
-				Memory: pointer.Bool(true),
-			},
-			Object: risingwavev1alpha1.RisingWaveStateStoreBackend{
-				Memory: pointer.Bool(true),
-			},
+		MetaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+			Memory: pointer.Bool(true),
+		},
+		StateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			Memory: pointer.Bool(true),
 		},
 		Image: "ghcr.io/risingwavelabs/risingwave:latest",
 		Global: risingwavev1alpha1.RisingWaveGlobalSpec{
@@ -345,13 +339,11 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 	},
 	Status: risingwavev1alpha1.RisingWaveStatus{
 		ObservedGeneration: 1,
-		Storages: risingwavev1alpha1.RisingWaveStoragesStatus{
-			Meta: risingwavev1alpha1.RisingWaveMetaStoreStatus{
-				Backend: risingwavev1alpha1.RisingWaveMetaStoreBackendTypeMemory,
-			},
-			Object: risingwavev1alpha1.RisingWaveStateStoreStatus{
-				Backend: risingwavev1alpha1.RisingWaveStateStoreBackendTypeMemory,
-			},
+		MetaStore: risingwavev1alpha1.RisingWaveMetaStoreStatus{
+			Backend: risingwavev1alpha1.RisingWaveMetaStoreBackendTypeMemory,
+		},
+		StateStore: risingwavev1alpha1.RisingWaveStateStoreStatus{
+			Backend: risingwavev1alpha1.RisingWaveStateStoreBackendTypeMemory,
 		},
 		Conditions: []risingwavev1alpha1.RisingWaveCondition{
 			{

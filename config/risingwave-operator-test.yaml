@@ -17271,6 +17271,9 @@ spec:
                         type: string
                     type: object
                 type: object
+              image:
+                description: Image for RisingWave component.
+                type: string
               storages:
                 description: The spec of meta storage, object storage for compute
                   and compactor, and PVC templates for compute.

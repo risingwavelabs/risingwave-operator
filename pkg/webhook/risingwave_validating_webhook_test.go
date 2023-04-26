@@ -852,15 +852,15 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 			},
 			pass: false,
 		},
-		"empty-global-image-fail": {
+		"empty-image-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global.Image = ""
+				r.Spec.Image = ""
 			},
 			pass: false,
 		},
-		"empty-global-image-and-empty-component-images-fail": {
+		"empty-image-and-empty-component-images-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global.Image = ""
+				r.Spec.Image = ""
 				r.Spec.Global.Replicas = risingwavev1alpha1.RisingWaveGlobalReplicas{}
 				r.Spec.Components.Meta.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
 					{

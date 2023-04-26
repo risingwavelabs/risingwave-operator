@@ -725,6 +725,10 @@ type RisingWaveSpec struct {
 
 	// -----------------------------------v1alpha2 features ------------------------------------------ //
 
+	// Image for RisingWave component.
+	// +optional
+	Image string `json:"image,omitempty"`
+
 	// FrontendServiceType determines the service type of the frontend service. Defaults to ClusterIP.
 	// +optional
 	// +kubebuilder:default=ClusterIP

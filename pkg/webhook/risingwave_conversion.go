@@ -40,7 +40,15 @@ func ConvertFrontendService(obj *v1alpha1.RisingWave) {
 	}
 }
 
+// ConvertGlobalImage converts v1alpha1 global image.
+func ConvertGlobalImage(obj *v1alpha1.RisingWave) {
+	if obj.Spec.Global.Image != "" {
+		obj.Spec.Image = obj.Spec.Global.Image
+	}
+}
+
 // ConvertToV1alpha2Features converts v1alpha1 features to v1alpha2 features.
 func ConvertToV1alpha2Features(obj *v1alpha1.RisingWave) {
 	ConvertFrontendService(obj)
+	ConvertGlobalImage(obj)
 }

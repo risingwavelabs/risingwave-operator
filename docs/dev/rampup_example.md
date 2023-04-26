@@ -183,7 +183,7 @@ mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveSta
     }
 
     // Report Version status.
-    status.Version = utils.GetVersionFromImage(mgr.risingwaveManager.RisingWave().Spec.Global.Image)
+    status.Version = utils.GetVersionFromImage(mgr.risingwaveManager.RisingWave().Spec.Image)
 
     // Report component replicas.
     status.ComponentReplicas = componentReplicas

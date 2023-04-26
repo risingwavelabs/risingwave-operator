@@ -39,7 +39,7 @@ func IsPodRunning(pod *corev1.Pod) bool {
 	return pod != nil && pod.Status.Phase == corev1.PodRunning
 }
 
-// GetVersionFromImage return the version from spec.global.image.
+// GetVersionFromImage return the version from spec.image.
 func GetVersionFromImage(image string) string {
 	if image == "" {
 		return ""

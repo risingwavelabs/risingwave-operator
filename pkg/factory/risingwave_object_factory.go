@@ -1232,8 +1232,8 @@ func (f *RisingWaveObjectFactory) portsForMetaContainer() []corev1.ContainerPort
 	}
 }
 
-func basicSetupContainer(container *corev1.Container, template *risingwavev1alpha1.RisingWaveComponentGroupTemplate) {
-	container.Image = template.Image
+func basicSetupContainer(container *corev1.Container, template *risingwavev1alpha1.RisingWaveComponentGroupTemplate, image string) {
+	container.Image = image
 	container.ImagePullPolicy = template.ImagePullPolicy
 	container.Command = []string{risingwaveExecutablePath}
 
@@ -1303,7 +1303,7 @@ func basicSetupContainer(container *corev1.Container, template *risingwavev1alph
 }
 
 func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container, template *risingwavev1alpha1.RisingWaveComponentGroupTemplate) {
-	basicSetupContainer(container, template)
+	basicSetupContainer(container, template, f.risingwave.Spec.Image)
 
 	container.Name = "meta"
 	container.Args = []string{"meta-node"}
@@ -1501,7 +1501,7 @@ func (f *RisingWaveObjectFactory) portsForFrontendContainer() []corev1.Container
 }
 
 func (f *RisingWaveObjectFactory) setupFrontendContainer(container *corev1.Container, template *risingwavev1alpha1.RisingWaveComponentGroupTemplate) {
-	basicSetupContainer(container, template)
+	basicSetupContainer(container, template, f.risingwave.Spec.Image)
 
 	container.Name = "frontend"
 	container.Args = []string{"frontend-node"}
@@ -1614,7 +1614,7 @@ func (f *RisingWaveObjectFactory) portsForCompactorContainer() []corev1.Containe
 }
 
 func (f *RisingWaveObjectFactory) setupCompactorContainer(container *corev1.Container, template *risingwavev1alpha1.RisingWaveComponentGroupTemplate) {
-	basicSetupContainer(container, template)
+	basicSetupContainer(container, template, f.risingwave.Spec.Image)
 
 	container.Name = "compactor"
 	container.Args = []string{"compactor-node"}
@@ -1731,7 +1731,7 @@ func (f *RisingWaveObjectFactory) portsForConnectorContainer() []corev1.Containe
 }
 
 func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Container, template *risingwavev1alpha1.RisingWaveComponentGroupTemplate) {
-	basicSetupContainer(container, template)
+	basicSetupContainer(container, template, f.risingwave.Spec.Image)
 
 	container.Name = "connector"
 	container.Args = f.argsForConnector()
@@ -1899,7 +1899,7 @@ func (f *RisingWaveObjectFactory) portsForComputeContainer() []corev1.ContainerP
 }
 
 func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Container, template *risingwavev1alpha1.RisingWaveComputeGroupTemplate) {
-	basicSetupContainer(container, &template.RisingWaveComponentGroupTemplate)
+	basicSetupContainer(container, &template.RisingWaveComponentGroupTemplate, f.risingwave.Spec.Image)
 
 	container.Name = "compute"
 	container.Args = []string{"compute-node"}

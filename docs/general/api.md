@@ -598,6 +598,18 @@ the controller will determine if it can create the resource by checking if the C
 </tr>
 <tr>
 <td>
+<code>image</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Image for RisingWave component.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>frontendServiceType</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#servicetype-v1-core">
@@ -4395,6 +4407,18 @@ bool
 <p>Flag to indicate if a default ServiceMonitor (from Prometheus operator) should be created by the controller.
 False and an empty value means the ServiceMonitor won&rsquo;t be created automatically. But even if it&rsquo;s set to true,
 the controller will determine if it can create the resource by checking if the CRDs are installed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>image</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Image for RisingWave component.</p>
 </td>
 </tr>
 <tr>

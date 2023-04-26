@@ -207,8 +207,8 @@ func (f *RisingWaveObjectFactory) componentObjectMeta(component string, sync boo
 	objectMeta.Labels = mergeMap(objectMeta.Labels, f.getInheritedLabels())
 
 	if component == consts.ComponentFrontend {
-		objectMeta.Labels = mergeMap(objectMeta.Labels, f.risingwave.Spec.Global.ServiceMeta.Labels)
-		objectMeta.Annotations = mergeMap(objectMeta.Annotations, f.risingwave.Spec.Global.ServiceMeta.Annotations)
+		objectMeta.Labels = mergeMap(objectMeta.Labels, f.risingwave.Spec.AdditionalFrontendServiceMetadata.Labels)
+		objectMeta.Annotations = mergeMap(objectMeta.Annotations, f.risingwave.Spec.AdditionalFrontendServiceMetadata.Annotations)
 	}
 
 	return objectMeta
@@ -291,7 +291,7 @@ func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 	frontendService := &corev1.Service{
 		ObjectMeta: f.componentObjectMeta(consts.ComponentFrontend, true),
 		Spec: corev1.ServiceSpec{
-			Type:     f.risingwave.Spec.Global.ServiceType,
+			Type:     f.risingwave.Spec.FrontendServiceType,
 			Selector: f.podLabelsOrSelectors(consts.ComponentFrontend),
 			Ports: []corev1.ServicePort{
 				{

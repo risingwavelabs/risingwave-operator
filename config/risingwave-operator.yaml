@@ -7216,6 +7216,23 @@ spec:
           spec:
             description: RisingWaveSpec is the overall spec.
             properties:
+              additionalFrontendServiceMetadata:
+                description: AdditionalFrontendServiceMetadata tells the operator
+                  to add the specified metadata onto the frontend Service. Note that
+                  the system reserved labels and annotations are not valid and will
+                  be rejected by the webhook.
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: Annotations of the object.
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: Labels of the object.
+                    type: object
+                type: object
               components:
                 description: The spec of ports and some controllers (such as `restartAt`)
                   of each component, as well as an advanced concept called `group`
@@ -15727,6 +15744,15 @@ spec:
                   components. If enabled, CloneSets will be used for meta/frontend/compactor
                   nodes and Advanced StateFulSets will be used for compute nodes.
                 type: boolean
+              frontendServiceType:
+                default: ClusterIP
+                description: FrontendServiceType determines the service type of the
+                  frontend service. Defaults to ClusterIP.
+                enum:
+                - ClusterIP
+                - NodePort
+                - LoadBalancer
+                type: string
               global:
                 description: The spec of a shared template for components and a global
                   scope of replicas.

@@ -596,6 +596,34 @@ False and an empty value means the ServiceMonitor won&rsquo;t be created automat
 the controller will determine if it can create the resource by checking if the CRDs are installed.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>frontendServiceType</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#servicetype-v1-core">
+Kubernetes core/v1.ServiceType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FrontendServiceType determines the service type of the frontend service. Defaults to ClusterIP.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalFrontendServiceMetadata</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
+RisingWavePodTemplatePartialObjectMeta
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalFrontendServiceMetadata tells the operator to add the specified metadata onto the frontend Service.
+Note that the system reserved labels and annotations are not valid and will be rejected by the webhook.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -3017,7 +3045,7 @@ RisingWavePodTemplateSpec
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">RisingWavePodTemplatePartialObjectMeta
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplateSpec">RisingWavePodTemplateSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplateSpec">RisingWavePodTemplateSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
 </p>
 <div>
 <p>RisingWavePodTemplatePartialObjectMeta is the spec for metadata templates.</p>
@@ -4367,6 +4395,34 @@ bool
 <p>Flag to indicate if a default ServiceMonitor (from Prometheus operator) should be created by the controller.
 False and an empty value means the ServiceMonitor won&rsquo;t be created automatically. But even if it&rsquo;s set to true,
 the controller will determine if it can create the resource by checking if the CRDs are installed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>frontendServiceType</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#servicetype-v1-core">
+Kubernetes core/v1.ServiceType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FrontendServiceType determines the service type of the frontend service. Defaults to ClusterIP.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalFrontendServiceMetadata</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
+RisingWavePodTemplatePartialObjectMeta
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalFrontendServiceMetadata tells the operator to add the specified metadata onto the frontend Service.
+Note that the system reserved labels and annotations are not valid and will be rejected by the webhook.</p>
 </td>
 </tr>
 </tbody>

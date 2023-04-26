@@ -141,7 +141,7 @@ func componentLabels(risingwave *risingwavev1alpha1.RisingWave, component string
 	}
 
 	if component == consts.ComponentFrontend {
-		labels = mergeMap(labels, risingwave.Spec.Global.ServiceMeta.Labels)
+		labels = mergeMap(labels, risingwave.Spec.AdditionalFrontendServiceMetadata.Labels)
 	}
 
 	return labels
@@ -170,7 +170,7 @@ func componentGroupLabels(risingwave *risingwavev1alpha1.RisingWave, component s
 func componentAnnotations(risingwave *risingwavev1alpha1.RisingWave, component string) map[string]string {
 	annotations := map[string]string{}
 	if component == consts.ComponentFrontend {
-		annotations = mergeMap(annotations, risingwave.Spec.Global.ServiceMeta.Annotations)
+		annotations = mergeMap(annotations, risingwave.Spec.AdditionalFrontendServiceMetadata.Annotations)
 	}
 
 	return annotations

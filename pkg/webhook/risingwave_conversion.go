@@ -12,20 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package webhook
 
 import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
+
+	"github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 // ConvertFrontendService converts v1alpha1 service type and service meta.
-func ConvertFrontendService(obj *RisingWave) {
+func ConvertFrontendService(obj *v1alpha1.RisingWave) {
 	if obj.Spec.Global.ServiceType != corev1.ServiceTypeClusterIP {
 		obj.Spec.FrontendServiceType = obj.Spec.Global.ServiceType
 	}
 
-	if !equality.Semantic.DeepEqual(obj.Spec.Global.ServiceMeta, RisingWavePodTemplatePartialObjectMeta{}) {
+	if !equality.Semantic.DeepEqual(obj.Spec.Global.ServiceMeta, v1alpha1.RisingWavePodTemplatePartialObjectMeta{}) {
 		obj.Spec.AdditionalFrontendServiceMetadata.Labels = make(map[string]string)
 		obj.Spec.AdditionalFrontendServiceMetadata.Annotations = make(map[string]string)
 
@@ -39,6 +41,6 @@ func ConvertFrontendService(obj *RisingWave) {
 }
 
 // ConvertToV1alpha2Features converts v1alpha1 features to v1alpha2 features.
-func ConvertToV1alpha2Features(obj *RisingWave) {
+func ConvertToV1alpha2Features(obj *v1alpha1.RisingWave) {
 	ConvertFrontendService(obj)
 }

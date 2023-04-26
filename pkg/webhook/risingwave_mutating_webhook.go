@@ -59,7 +59,7 @@ func (m *RisingWaveMutatingWebhook) setDefault(ctx context.Context, obj *risingw
 
 // Default implements admission.CustomDefaulter.
 func (m *RisingWaveMutatingWebhook) Default(ctx context.Context, obj runtime.Object) error {
-	risingwavev1alpha1.ConvertToV1alpha2Features(obj.(*risingwavev1alpha1.RisingWave))
+	ConvertToV1alpha2Features(obj.(*risingwavev1alpha1.RisingWave))
 	return m.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWave))
 }
 

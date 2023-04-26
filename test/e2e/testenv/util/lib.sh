@@ -70,9 +70,9 @@ function testenv::util::psql() {
   local KUBECTL_NAMESPACE="${_UTIL_NAMESPACE}"
 
   if [[ -n "${PSQL_SCRIPT_FILE}" ]]; then
-    shell::run k8s::kubectl exec psql -c psql -- psql "$@" < "${PSQL_SCRIPT_FILE}"
+    k8s::kubectl exec psql -c psql -- psql "$@" < "${PSQL_SCRIPT_FILE}"
   else
-    shell::run k8s::kubectl exec psql -c psql -- psql "$@"
+    k8s::kubectl exec psql -c psql -- psql "$@"
   fi
 }
 

@@ -7,6 +7,7 @@ VERSION ?= 0.1.1
 
 # Get go version number. e.g. 1.19
 GO_VERSION := $(shell echo `go version | sed 's|.*\(1\.[0-9][0-9]\).*$$|\1|'`)
+OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 # CHANNELS define the bundle channels used in the bundle.
 # Add a new line here if you would like to change its default config. (E.g CHANNELS = "candidate,fast,stable")
@@ -141,11 +142,7 @@ proto:
 build: build-manager
 
 build-manager: generate fmt vet lint vendor ## Build manager binary.
-	go build -ldflags "-X main.version=$(shell git describe --tags)" -o bin/manager cmd/manager/manager.go
-
-build-plugin: generate fmt vet lint ## Build manager binary.
-	go build -o bin/kubectl-rw cmd/plugin/main.go
-	sudo mv bin/kubectl-rw /usr/local/bin/kubectl-rw
+	go build -ldflags "-X main.version=$(shell git describe --tags)" -o bin/$(OS)/manager cmd/manager/manager.go
 
 # Helper target for generating new local certs used in development. Use install-local instead
 # if you also use Docker for Desktop as your development environment.
@@ -214,32 +211,32 @@ deploy: generate-yaml
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	kubectl delete -f config/risingwave-operator.yaml
 
-CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
+CONTROLLER_GEN = $(shell pwd)/bin/$(OS)/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
 	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.9.2)
 
-KUSTOMIZE = $(shell pwd)/bin/kustomize
+KUSTOMIZE = $(shell pwd)/bin/$(OS)/kustomize
 kustomize: ## Download kustomize locally if necessary.
 	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.5.5)
 
-ENVTEST = $(shell pwd)/bin/setup-envtest
+ENVTEST = $(shell pwd)/bin/$(OS)/setup-envtest
 envtest: ## Download envtest-setup locally if necessary.
 	$(call go-get-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
 
-GOLANGCI-LINT = $(shell pwd)/bin/golangci-lint
+GOLANGCI-LINT = $(shell pwd)/bin/$(OS)/golangci-lint
 golangci-lint: ## Download envtest-setup locally if necessary.
 # $(call get-golangci-lint)
 	$(call go-get-tool,$(GOLANGCI-LINT),github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2)
 
-CTRLKIT-GEN = $(shell pwd)/bin/ctrlkit-gen
+CTRLKIT-GEN = $(shell pwd)/bin/$(OS)/ctrlkit-gen
 ctrlkit-gen: ## Download ctrlkit locally if necessary.
 	$(call go-get-tool,$(CTRLKIT-GEN),github.com/arkbriar/ctrlkit/ctrlkit/cmd/ctrlkit-gen@latest)
 
-GOIMPORTS-REVISER = $(shell pwd)/bin/goimports-reviser
+GOIMPORTS-REVISER = $(shell pwd)/bin/$(OS)/goimports-reviser
 goimports-reviser: ## Download goimports-reviser locally if necessary.
 	$(call go-get-tool,$(GOIMPORTS-REVISER),github.com/incu6us/goimports-reviser/v2@v2.5.1)
 
-GEN_CRD_API_REFERENCE_DOCS = $(shell pwd)/bin/gen-crd-api-reference-docs
+GEN_CRD_API_REFERENCE_DOCS = $(shell pwd)/bin/$(OS)/gen-crd-api-reference-docs
 gen-crd-api-reference-docs: ## Download gen-crd-api-reference-docs locally if necessary
 	$(call go-get-tool,$(GEN_CRD_API_REFERENCE_DOCS),github.com/arkbriar/gen-crd-api-reference-docs@cd878bb3)
 
@@ -267,7 +264,7 @@ define go-get-tool
 @[ -f $(1) ] || { \
 set -e ;\
 echo "Downloading $(2)" ;\
-GOBIN=$(PROJECT_DIR)/bin go install $(2); \
+GOBIN=$(PROJECT_DIR)/bin/$(OS) go install $(2); \
 }
 endef
 
@@ -326,3 +323,8 @@ catalog-build: opm ## Build a catalog image.
 .PHONY: catalog-push
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
+
+CI_RUNNER_IMAGE := public.ecr.aws/w6q9k3j5/rw-operator-ci-runner:$(shell date +'%Y%m%d')
+
+build-ci-runner-image:
+	docker buildx build --platform linux/amd64,linux/arm64 -f ci/runner/Dockerfile -t $(CI_RUNNER_IMAGE) . --push

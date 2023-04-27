@@ -6,11 +6,11 @@ set -euo pipefail
 mkdir -p ci/run && env | grep "BUILDKITE\|CI\|AWS" >ci/run/env.list
 
 # Get environment variables from the command line
-env_args=()
+env_args=""
 while getopts ":e:" opt; do
   case ${opt} in
   e)
-    [[ -v "${OPTARG}" ]] && env_args+=("-e" "${OPTARG}")
+    [[ -v "${OPTARG}" ]] && env_args+="-e ${OPTARG} "
     ;;
   \?)
     echo "Invalid option: $OPTARG" 1>&2
@@ -26,9 +26,9 @@ done
 # Get the arguments after the options
 shift $((OPTIND - 1))
 
-# shellcheck disable=SC2068
+# shellcheck disable=SC2086
 docker run --rm --userns=host --privileged --network host \
-  ${env_args[@]} --env-file ci/run/env.list \
+  ${env_args} --env-file ci/run/env.list \
   -v "$(pwd):/workspace" -w /workspace \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --entrypoint bash \

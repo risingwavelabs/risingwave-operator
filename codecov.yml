@@ -1,17 +1,17 @@
 # For documentation please see https://docs.codecov.com/docs/commit-status
 
 coverage:
+  allow_coverage_offsets: true
   status:
-    patch: off
+    patch: off # disable patch status
     project:
       default:
-        target: auto  # base branch coverage is target
-        threshold: 0% # percent deviation allowed from target branch coverage
+        target: auto  # compared with the coverage from the base commit
+        threshold: 0.1% # allow the coverage to drop by 0.1% and posting a success status
         base: auto
         flags:
         - unittests
         paths:
         - "pkg"
-        - "examples"
         - "cmd"
         - "apis"

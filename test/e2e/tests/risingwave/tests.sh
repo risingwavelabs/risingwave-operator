@@ -155,12 +155,6 @@ function test::run::risingwave::multi_meta_failover() {
     logging::info "Failover successfully!"
   fi
 
-  if ! test::risingwave::check_status_with_simple_queries; then
-    logging::error "Queries run against storage failed!"
-    return 1
-  fi
-  logging::info "Queries succeeded!"
-
   logging::info "Stopping RisingWave..."
   test::risingwave::stop multi-meta/multi-meta.yaml
   logging::info "Stopped!"

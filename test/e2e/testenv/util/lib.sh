@@ -66,13 +66,10 @@ function testenv::util::uninstall() {
 }
 
 function testenv::util::psql() {
-  # shellcheck disable=SC2034
-  local KUBECTL_NAMESPACE="${_UTIL_NAMESPACE}"
-
   if [[ -n "${PSQL_SCRIPT_FILE}" ]]; then
-    shell::run k8s::kubectl exec psql -c psql -- psql "$@" < "${PSQL_SCRIPT_FILE}"
+    kubectl -n "${_UTIL_NAMESPACE}" exec -i psql -c psql -- psql "$@" < "${PSQL_SCRIPT_FILE}"
   else
-    shell::run k8s::kubectl exec psql -c psql -- psql "$@"
+    kubectl -n "${_UTIL_NAMESPACE}" exec -i psql -c psql -- psql "$@"
   fi
 }
 

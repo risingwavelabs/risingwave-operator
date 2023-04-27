@@ -13,7 +13,7 @@ RUN apt-get update && \
     curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash && \
     curl -Os https://uploader.codecov.io/latest/linux/codecov && chmod +x codecov && mv codecov /usr/local/bin/codecov
 
-RUN apt-get install -y gettext-base
+RUN apt-get install -y gettext-base jq etcd-client
 
 WORKDIR /workspace
 

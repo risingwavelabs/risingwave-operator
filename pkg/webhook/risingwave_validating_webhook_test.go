@@ -353,9 +353,11 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 						UseWorkloadIdentity: false,
-						Secret:              "gcs-creds",
 						Bucket:              "gcs-bucket",
 						Root:                "gcs-root",
+						RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
+							SecretName: "gcs-creds",
+						},
 					},
 				}
 			},
@@ -366,9 +368,11 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 						UseWorkloadIdentity: true,
-						Secret:              "gcs-creds",
 						Bucket:              "gcs-bucket",
 						Root:                "gcs-root",
+						RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
+							SecretName: "gcs-creds",
+						},
 					},
 				}
 			},

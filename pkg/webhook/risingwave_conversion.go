@@ -56,6 +56,29 @@ func ConvertStorages(obj *v1alpha1.RisingWave) {
 		obj.Status.MetaStore = *obj.Status.Storages.Meta.DeepCopy()
 		obj.Status.StateStore = *obj.Status.Storages.Object.DeepCopy()
 	}
+
+	metaStorage := &obj.Spec.MetaStore
+	if metaStorage.Etcd != nil && metaStorage.Etcd.Secret != "" {
+		if metaStorage.Etcd.RisingWaveEtcdCredentials == nil {
+			metaStorage.Etcd.RisingWaveEtcdCredentials = &v1alpha1.RisingWaveEtcdCredentials{}
+		}
+		metaStorage.Etcd.RisingWaveEtcdCredentials.SecretName = metaStorage.Etcd.Secret
+	}
+
+	stateStorage := &obj.Spec.StateStore
+	switch {
+	case stateStorage.MinIO != nil && stateStorage.MinIO.Secret != "":
+		stateStorage.MinIO.RisingWaveMinIOCredentials.SecretName = stateStorage.MinIO.Secret
+	case stateStorage.S3 != nil && stateStorage.S3.Secret != "":
+		stateStorage.S3.RisingWaveS3Credentials.SecretName = stateStorage.S3.Secret
+	case stateStorage.GCS != nil && stateStorage.GCS.Secret != "":
+		stateStorage.GCS.RisingWaveGCSCredentials.SecretName = stateStorage.GCS.Secret
+	case stateStorage.AliyunOSS != nil && stateStorage.AliyunOSS.Secret != "":
+		stateStorage.AliyunOSS.RisingWaveS3Credentials.SecretName = stateStorage.AliyunOSS.Secret
+	case stateStorage.AzureBlob != nil && stateStorage.AzureBlob.Secret != "":
+		stateStorage.AzureBlob.RisingWaveAzureBlobCredentials.SecretName = stateStorage.AzureBlob.Secret
+	default:
+	}
 }
 
 // ConvertToV1alpha2Features converts v1alpha1 features to v1alpha2 features.

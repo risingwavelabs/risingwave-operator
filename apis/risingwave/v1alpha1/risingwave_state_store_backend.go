@@ -36,8 +36,27 @@ type RisingWaveStateStoreStatus struct {
 	Backend RisingWaveStateStoreBackendType `json:"backend,omitempty"`
 }
 
+// RisingWaveMinIOCredentials is the reference and keys selector to the MinIO access credentials stored in a local secret.
+type RisingWaveMinIOCredentials struct {
+	// The name of the secret in the pod's namespace to select from.
+	SecretName string `json:"secretName"`
+
+	// UsernameKeyRef is the key of the secret to be the username. Must be a valid secret key.
+	// Defaults to "username".
+	// +kubebuilder:default=username
+	UsernameKeyRef *string `json:"usernameKeyRef,omitempty"`
+
+	// PasswordKeyRef is the key of the secret to be the password. Must be a valid secret key.
+	// Defaults to "password".
+	// +kubebuilder:default=password
+	PasswordKeyRef *string `json:"passwordKeyRef,omitempty"`
+}
+
 // RisingWaveStateStoreBackendMinIO is the collection of parameters for the MinIO backend state store.
 type RisingWaveStateStoreBackendMinIO struct {
+	// RisingWaveMinIOCredentials is the credentials provider from a Secret.
+	RisingWaveMinIOCredentials `json:"credentials"`
+
 	// Secret contains the credentials to access the MinIO service. It must contain the following keys:
 	//   * username
 	//   * password
@@ -53,8 +72,27 @@ type RisingWaveStateStoreBackendMinIO struct {
 	Bucket string `json:"bucket"`
 }
 
+// RisingWaveS3Credentials is the reference and keys selector to the AWS access credentials stored in a local secret.
+type RisingWaveS3Credentials struct {
+	// The name of the secret in the pod's namespace to select from.
+	SecretName string `json:"secretName"`
+
+	// AccessKeyRef is the key of the secret to be the access key. Must be a valid secret key.
+	// Defaults to "AccessKeyID".
+	// +kubebuilder:default=AccessKeyID
+	AccessKeyRef *string `json:"accessKeyRef,omitempty"`
+
+	// SecretAccessKeyRef is the key of the secret to be the secret access key. Must be a valid secret key.
+	// Defaults to "SecretAccessKey".
+	// +kubebuilder:default=SecretAccessKey
+	SecretAccessKeyRef *string `json:"secretAccessKeyRef,omitempty"`
+}
+
 // RisingWaveStateStoreBackendS3 is the collection of parameters for the S3 backend state store.
 type RisingWaveStateStoreBackendS3 struct {
+	// RisingWaveS3Credentials is the credentials provider from a Secret.
+	RisingWaveS3Credentials `json:"credentials"`
+
 	// Secret contains the credentials to access the AWS S3 service. It must contain the following keys:
 	//   * AccessKeyID
 	//   * SecretAccessKey
@@ -84,8 +122,24 @@ type RisingWaveStateStoreBackendS3 struct {
 	VirtualHostedStyle bool `json:"virtualHostedStyle,omitempty"`
 }
 
+// RisingWaveGCSCredentials is the reference and keys selector to the GCS access credentials stored in a local secret.
+type RisingWaveGCSCredentials struct {
+	// The name of the secret in the pod's namespace to select from.
+	// +optional
+	SecretName string `json:"secretName,omitempty"`
+
+	// ServiceAccountCredentialsKeyRef is the key of the secret to be the service account credentials. Must be a valid secret key.
+	// Defaults to "ServiceAccountCredentials".
+	// +kubebuilder:default=ServiceAccountCredentials
+	// +optional
+	ServiceAccountCredentialsKeyRef *string `json:"serviceAccountCredentialsKeyRef,omitempty"`
+}
+
 // RisingWaveStateStoreBackendGCS is the collection of parameters for the GCS backend state store.
 type RisingWaveStateStoreBackendGCS struct {
+	// RisingWaveGCSCredentials is the credentials provider from a Secret.
+	RisingWaveGCSCredentials `json:"credentials,omitempty"`
+
 	// UseWorkloadIdentity indicates to use workload identity to access the GCS service. If this is enabled, secret is not required, and ADC is used.
 	// +kubebuilder:validation:Required
 	UseWorkloadIdentity bool `json:"useWorkloadIdentity"`
@@ -106,6 +160,9 @@ type RisingWaveStateStoreBackendGCS struct {
 
 // RisingWaveStateStoreBackendAliyunOSS is the details of Aliyun OSS storage (S3 compatible) for compute and compactor components.
 type RisingWaveStateStoreBackendAliyunOSS struct {
+	// RisingWaveS3Credentials is the credentials provider from a Secret.
+	RisingWaveS3Credentials `json:"credentials"`
+
 	// Secret contains the credentials to access the Aliyun OSS service. It must contain the following keys:
 	//   * AccessKeyID
 	//   * SecretAccessKey
@@ -126,8 +183,27 @@ type RisingWaveStateStoreBackendAliyunOSS struct {
 	InternalEndpoint bool `json:"internalEndpoint,omitempty"`
 }
 
+// RisingWaveAzureBlobCredentials is the reference and keys selector to the AzureBlob access credentials stored in a local secret.
+type RisingWaveAzureBlobCredentials struct {
+	// The name of the secret in the pod's namespace to select from.
+	SecretName string `json:"secretName"`
+
+	// AccountNameKeyRef is the key of the secret to be the account name. Must be a valid secret key.
+	// Defaults to "AccountName".
+	// +kubebuilder:default=AccountName
+	AccountNameRef *string `json:"accountNameRef,omitempty"`
+
+	// AccountKeyRef is the key of the secret to be the secret account key. Must be a valid secret key.
+	// Defaults to "AccountKey".
+	// +kubebuilder:default=AccountKey
+	AccountKeyRef *string `json:"AccountKeyRef,omitempty"`
+}
+
 // RisingWaveStateStoreBackendAzureBlob is the details of Azure blob storage (S3 compatible) for compute and compactor components.
 type RisingWaveStateStoreBackendAzureBlob struct {
+	// RisingWaveAzureBlobCredentials is the credentials provider from a Secret.
+	RisingWaveAzureBlobCredentials `json:"credentials"`
+
 	// Secret contains the credentials to access the Azure Blob service. It must contain the following keys:
 	//   * AccessKeyID
 	//   * SecretAccessKey

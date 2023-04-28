@@ -400,15 +400,15 @@ func (f *RisingWaveObjectFactory) NewConnectorService() *corev1.Service {
 }
 
 func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
-	etcd := f.risingwave.Spec.MetaStore.Etcd
+	credentials := f.risingwave.Spec.MetaStore.Etcd.RisingWaveEtcdCredentials
 
 	// Empty secret indicates no authentication.
-	if etcd.Secret == "" {
+	if credentials == nil || credentials.SecretName == "" {
 		return []corev1.EnvVar{}
 	}
 
 	secretRef := corev1.LocalObjectReference{
-		Name: etcd.Secret,
+		Name: credentials.SecretName,
 	}
 
 	return []corev1.EnvVar{
@@ -418,7 +418,7 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyEtcdUsername,
+					Key:                  *credentials.UsernameKeyRef,
 				},
 			},
 		},
@@ -427,7 +427,7 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyEtcdPassword,
+					Key:                  *credentials.PasswordKeyRef,
 				},
 			},
 		},
@@ -437,7 +437,7 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyEtcdUsername,
+					Key:                  *credentials.UsernameKeyRef,
 				},
 			},
 		},
@@ -446,7 +446,7 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyEtcdPassword,
+					Key:                  *credentials.PasswordKeyRef,
 				},
 			},
 		},
@@ -511,7 +511,8 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 				Value: metaStorage.Etcd.Endpoint,
 			},
 		}...)
-		if metaStorage.Etcd.Secret != "" {
+		credentials := f.risingwave.Spec.MetaStore.Etcd.RisingWaveEtcdCredentials
+		if credentials != nil && credentials.SecretName != "" {
 			envVars = append(envVars, corev1.EnvVar{
 				Name:  envs.RWEtcdAuth,
 				Value: "true",
@@ -683,9 +684,10 @@ func mergeListByKey[T any](list []T, val T, keyPred func(*T) bool) []T {
 
 func (f *RisingWaveObjectFactory) envsForMinIO() []corev1.EnvVar {
 	stateStorage := &f.risingwave.Spec.StateStore
+	credentials := &stateStorage.MinIO.RisingWaveMinIOCredentials
 
 	secretRef := corev1.LocalObjectReference{
-		Name: stateStorage.MinIO.Secret,
+		Name: credentials.SecretName,
 	}
 
 	return []corev1.EnvVar{
@@ -702,7 +704,7 @@ func (f *RisingWaveObjectFactory) envsForMinIO() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyMinIOUsername,
+					Key:                  *credentials.UsernameKeyRef,
 				},
 			},
 		},
@@ -711,16 +713,16 @@ func (f *RisingWaveObjectFactory) envsForMinIO() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyMinIOPassword,
+					Key:                  *credentials.PasswordKeyRef,
 				},
 			},
 		},
 	}
 }
 
-func envsForAWSS3(region, bucket, secret string) []corev1.EnvVar {
+func envsForAWSS3(region, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials) []corev1.EnvVar {
 	secretRef := corev1.LocalObjectReference{
-		Name: secret,
+		Name: credentials.SecretName,
 	}
 
 	var regionEnvVar corev1.EnvVar
@@ -752,7 +754,7 @@ func envsForAWSS3(region, bucket, secret string) []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyAWSS3AccessKeyID,
+					Key:                  *credentials.AccessKeyRef,
 				},
 			},
 		},
@@ -761,7 +763,7 @@ func envsForAWSS3(region, bucket, secret string) []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyAWSS3SecretAccessKey,
+					Key:                  *credentials.SecretAccessKeyRef,
 				},
 			},
 		},
@@ -792,15 +794,15 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 			}
 		}
 
-		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.Secret)
+		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials)
 	}
 	// AWS S3 mode.
-	return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.Secret)
+	return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials)
 }
 
-func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVar {
+func envsForS3Compatible(region, endpoint, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials) []corev1.EnvVar {
 	secretRef := corev1.LocalObjectReference{
-		Name: secret,
+		Name: credentials.SecretName,
 	}
 
 	var regionEnvVar corev1.EnvVar
@@ -839,7 +841,7 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyAWSS3AccessKeyID,
+					Key:                  *credentials.AccessKeyRef,
 				},
 			},
 		},
@@ -848,7 +850,7 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyAWSS3SecretAccessKey,
+					Key:                  *credentials.SecretAccessKeyRef,
 				},
 			},
 		},
@@ -866,9 +868,9 @@ func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
 		return []corev1.EnvVar{}
 	}
 
-	secret := gcs.Secret
+	credentials := gcs.RisingWaveGCSCredentials
 	secretRef := corev1.LocalObjectReference{
-		Name: secret,
+		Name: credentials.SecretName,
 	}
 	return []corev1.EnvVar{
 		{
@@ -876,7 +878,7 @@ func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyGCSServiceAccountCredentials,
+					Key:                  *credentials.ServiceAccountCredentialsKeyRef,
 				},
 			},
 		},
@@ -893,13 +895,14 @@ func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 		endpoint = aliyunOSSEndpoint
 	}
 
-	return envsForS3Compatible(stateStorage.AliyunOSS.Region, endpoint, stateStorage.AliyunOSS.Bucket, stateStorage.AliyunOSS.Secret)
+	return envsForS3Compatible(stateStorage.AliyunOSS.Region, endpoint, stateStorage.AliyunOSS.Bucket, stateStorage.AliyunOSS.RisingWaveS3Credentials)
 }
 
 func (f *RisingWaveObjectFactory) envsForAzureBlob() []corev1.EnvVar {
 	stateStorage := &f.risingwave.Spec.StateStore
+	credentials := stateStorage.AzureBlob.RisingWaveAzureBlobCredentials
 	secretRef := corev1.LocalObjectReference{
-		Name: stateStorage.AzureBlob.Secret,
+		Name: credentials.SecretName,
 	}
 	return []corev1.EnvVar{
 
@@ -908,7 +911,7 @@ func (f *RisingWaveObjectFactory) envsForAzureBlob() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyAzureBlobAccountName,
+					Key:                  *credentials.AccountNameRef,
 				},
 			},
 		},
@@ -917,7 +920,7 @@ func (f *RisingWaveObjectFactory) envsForAzureBlob() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyAzureBlobAccountKey,
+					Key:                  *credentials.AccountKeyRef,
 				},
 			},
 		},

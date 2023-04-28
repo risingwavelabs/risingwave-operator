@@ -30,8 +30,29 @@ type RisingWaveMetaStoreStatus struct {
 	Backend RisingWaveMetaStoreBackendType `json:"backend,omitempty"`
 }
 
+// RisingWaveEtcdCredentials is the reference and keys selector to the etcd access credentials stored in a local secret.
+type RisingWaveEtcdCredentials struct {
+	// The name of the secret in the pod's namespace to select from.
+	SecretName string `json:"secretName"`
+
+	// UsernameKeyRef is the key of the secret to be the username. Must be a valid secret key.
+	// Defaults to "username".
+	// +kubebuilder:default=username
+	UsernameKeyRef *string `json:"usernameKeyRef,omitempty"`
+
+	// PasswordKeyRef is the key of the secret to be the password. Must be a valid secret key.
+	// Defaults to "password".
+	// +kubebuilder:default=password
+	PasswordKeyRef *string `json:"passwordKeyRef,omitempty"`
+}
+
 // RisingWaveMetaStoreBackendEtcd is the collection of parameters for the etcd backend meta store.
 type RisingWaveMetaStoreBackendEtcd struct {
+	// RisingWaveEtcdCredentials is the credentials provider from a Secret. It could be optional to mean that
+	// the etcd service could be accessed without authentication.
+	// +optional
+	*RisingWaveEtcdCredentials `json:"credentials,omitempty"`
+
 	// Endpoint of etcd. It must be provided.
 	Endpoint string `json:"endpoint"`
 

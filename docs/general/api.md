@@ -623,6 +623,59 @@ RisingWaveStatus
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveAzureBlobCredentials">RisingWaveAzureBlobCredentials
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAzureBlob">RisingWaveStateStoreBackendAzureBlob</a>)
+</p>
+<div>
+<p>RisingWaveAzureBlobCredentials is the reference and keys selector to the AzureBlob access credentials stored in a local secret.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The name of the secret in the pod&rsquo;s namespace to select from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>accountNameRef</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>AccountNameKeyRef is the key of the secret to be the account name. Must be a valid secret key.
+Defaults to &ldquo;AccountName&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>AccountKeyRef</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>AccountKeyRef is the key of the secret to be the secret account key. Must be a valid secret key.
+Defaults to &ldquo;AccountKey&rdquo;.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">RisingWaveComponentCommonPorts
 </h3>
 <p>
@@ -1946,6 +1999,102 @@ It&rsquo;s an optional field and can be left out. If not specified, a default co
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveEtcdCredentials">RisingWaveEtcdCredentials
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackendEtcd">RisingWaveMetaStoreBackendEtcd</a>)
+</p>
+<div>
+<p>RisingWaveEtcdCredentials is the reference and keys selector to the etcd access credentials stored in a local secret.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The name of the secret in the pod&rsquo;s namespace to select from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>usernameKeyRef</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>UsernameKeyRef is the key of the secret to be the username. Must be a valid secret key.
+Defaults to &ldquo;username&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>passwordKeyRef</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>PasswordKeyRef is the key of the secret to be the password. Must be a valid secret key.
+Defaults to &ldquo;password&rdquo;.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveGCSCredentials">RisingWaveGCSCredentials
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendGCS">RisingWaveStateStoreBackendGCS</a>)
+</p>
+<div>
+<p>RisingWaveGCSCredentials is the reference and keys selector to the GCS access credentials stored in a local secret.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the secret in the pod&rsquo;s namespace to select from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceAccountCredentialsKeyRef</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ServiceAccountCredentialsKeyRef is the key of the secret to be the service account credentials. Must be a valid secret key.
+Defaults to &ldquo;ServiceAccountCredentials&rdquo;.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalReplicas">RisingWaveGlobalReplicas
 </h3>
 <p>
@@ -2387,6 +2536,21 @@ RisingWaveMetaStoreBackendEtcd
 <tbody>
 <tr>
 <td>
+<code>credentials</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveEtcdCredentials">
+RisingWaveEtcdCredentials
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RisingWaveEtcdCredentials is the credentials provider from a Secret. It could be optional to mean that
+the etcd service could be accessed without authentication.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>endpoint</code><br/>
 <em>
 string
@@ -2463,6 +2627,59 @@ RisingWaveMetaStoreBackendType
 </td>
 <td>
 <p>Backend type of the meta store.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMinIOCredentials">RisingWaveMinIOCredentials
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendMinIO">RisingWaveStateStoreBackendMinIO</a>)
+</p>
+<div>
+<p>RisingWaveMinIOCredentials is the reference and keys selector to the MinIO access credentials stored in a local secret.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The name of the secret in the pod&rsquo;s namespace to select from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>usernameKeyRef</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>UsernameKeyRef is the key of the secret to be the username. Must be a valid secret key.
+Defaults to &ldquo;username&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>passwordKeyRef</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>PasswordKeyRef is the key of the secret to be the password. Must be a valid secret key.
+Defaults to &ldquo;password&rdquo;.</p>
 </td>
 </tr>
 </tbody>
@@ -3301,6 +3518,59 @@ Defaults to 0.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveS3Credentials">RisingWaveS3Credentials
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAliyunOSS">RisingWaveStateStoreBackendAliyunOSS</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendS3">RisingWaveStateStoreBackendS3</a>)
+</p>
+<div>
+<p>RisingWaveS3Credentials is the reference and keys selector to the AWS access credentials stored in a local secret.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The name of the secret in the pod&rsquo;s namespace to select from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>accessKeyRef</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>AccessKeyRef is the key of the secret to be the access key. Must be a valid secret key.
+Defaults to &ldquo;AccessKeyID&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secretAccessKeyRef</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SecretAccessKeyRef is the key of the secret to be the secret access key. Must be a valid secret key.
+Defaults to &ldquo;SecretAccessKey&rdquo;.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleView">RisingWaveScaleView
 </h3>
 <div>
@@ -4092,6 +4362,19 @@ RisingWaveStateStoreBackendHDFS
 <tbody>
 <tr>
 <td>
+<code>credentials</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveS3Credentials">
+RisingWaveS3Credentials
+</a>
+</em>
+</td>
+<td>
+<p>RisingWaveS3Credentials is the credentials provider from a Secret.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>secret</code><br/>
 <em>
 string
@@ -4159,6 +4442,19 @@ only available in the internal network.</p>
 <tbody>
 <tr>
 <td>
+<code>credentials</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveAzureBlobCredentials">
+RisingWaveAzureBlobCredentials
+</a>
+</em>
+</td>
+<td>
+<p>RisingWaveAzureBlobCredentials is the credentials provider from a Secret.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>secret</code><br/>
 <em>
 string
@@ -4222,6 +4518,19 @@ e.g. <a href="https://yufantest.blob.core.windows.net">https://yufantest.blob.co
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>credentials</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGCSCredentials">
+RisingWaveGCSCredentials
+</a>
+</em>
+</td>
+<td>
+<p>RisingWaveGCSCredentials is the credentials provider from a Secret.</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>useWorkloadIdentity</code><br/>
@@ -4327,6 +4636,19 @@ string
 <tbody>
 <tr>
 <td>
+<code>credentials</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMinIOCredentials">
+RisingWaveMinIOCredentials
+</a>
+</em>
+</td>
+<td>
+<p>RisingWaveMinIOCredentials is the credentials provider from a Secret.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>secret</code><br/>
 <em>
 string
@@ -4378,6 +4700,19 @@ string
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>credentials</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveS3Credentials">
+RisingWaveS3Credentials
+</a>
+</em>
+</td>
+<td>
+<p>RisingWaveS3Credentials is the credentials provider from a Secret.</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>secret</code><br/>

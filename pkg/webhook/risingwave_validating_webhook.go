@@ -193,8 +193,8 @@ func (v *RisingWaveValidatingWebhook) validateStorages(path *field.Path, metaSto
 	isStateWebHDFS := stateStore.WebHDFS != nil
 
 	if isStateGCS {
-		if (stateStore.GCS.UseWorkloadIdentity && stateStore.GCS.Secret != "") || (!stateStore.GCS.UseWorkloadIdentity && stateStore.GCS.Secret == "") {
-			fieldErrs = append(fieldErrs, field.Invalid(path.Child("state", "gcs", "secret"), stateStore.GCS.Secret, "either secret or useWorkloadIdentity must be specified"))
+		if (stateStore.GCS.UseWorkloadIdentity && stateStore.GCS.RisingWaveGCSCredentials.SecretName != "") || (!stateStore.GCS.UseWorkloadIdentity && stateStore.GCS.RisingWaveGCSCredentials.SecretName == "") {
+			fieldErrs = append(fieldErrs, field.Invalid(path.Child("state", "gcs", "secret"), stateStore.GCS.RisingWaveGCSCredentials.SecretName, "either secret or useWorkloadIdentity must be specified"))
 		}
 	}
 

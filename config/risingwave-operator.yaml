@@ -17284,6 +17284,30 @@ spec:
                   etcd:
                     description: Endpoint of the etcd service for storing the metadata.
                     properties:
+                      credentials:
+                        description: RisingWaveEtcdCredentials is the credentials
+                          provider from a Secret. It could be optional to mean that
+                          the etcd service could be accessed without authentication.
+                        properties:
+                          passwordKeyRef:
+                            default: password
+                            description: PasswordKeyRef is the key of the secret to
+                              be the password. Must be a valid secret key. Defaults
+                              to "password".
+                            type: string
+                          secretName:
+                            description: The name of the secret in the pod's namespace
+                              to select from.
+                            type: string
+                          usernameKeyRef:
+                            default: username
+                            description: UsernameKeyRef is the key of the secret to
+                              be the username. Must be a valid secret key. Defaults
+                              to "username".
+                            type: string
+                        required:
+                        - secretName
+                        type: object
                       endpoint:
                         description: Endpoint of etcd. It must be provided.
                         type: string
@@ -17318,6 +17342,21 @@ spec:
                       bucket:
                         description: Bucket of the GCS bucket service.
                         type: string
+                      credentials:
+                        description: RisingWaveGCSCredentials is the credentials provider
+                          from a Secret.
+                        properties:
+                          secretName:
+                            description: The name of the secret in the pod's namespace
+                              to select from.
+                            type: string
+                          serviceAccountCredentialsKeyRef:
+                            default: ServiceAccountCredentials
+                            description: ServiceAccountCredentialsKeyRef is the key
+                              of the secret to be the service account credentials.
+                              Must be a valid secret key. Defaults to "ServiceAccountCredentials".
+                            type: string
+                        type: object
                       root:
                         description: Working directory root of the GCS bucket
                         type: string
@@ -17341,6 +17380,29 @@ spec:
                       bucket:
                         description: Bucket of the Aliyun OSS service.
                         type: string
+                      credentials:
+                        description: RisingWaveS3Credentials is the credentials provider
+                          from a Secret.
+                        properties:
+                          accessKeyRef:
+                            default: AccessKeyID
+                            description: AccessKeyRef is the key of the secret to
+                              be the access key. Must be a valid secret key. Defaults
+                              to "AccessKeyID".
+                            type: string
+                          secretAccessKeyRef:
+                            default: SecretAccessKey
+                            description: SecretAccessKeyRef is the key of the secret
+                              to be the secret access key. Must be a valid secret
+                              key. Defaults to "SecretAccessKey".
+                            type: string
+                          secretName:
+                            description: The name of the secret in the pod's namespace
+                              to select from.
+                            type: string
+                        required:
+                        - secretName
+                        type: object
                       internalEndpoint:
                         description: InternalEndpoint indicates if we use the internal
                           endpoint to access Aliyun OSS, which is only available in
@@ -17360,6 +17422,7 @@ spec:
                         type: string
                     required:
                     - bucket
+                    - credentials
                     - secret
                     type: object
                   azureBlob:
@@ -17368,6 +17431,29 @@ spec:
                       container:
                         description: Container Name of the Azure Blob service.
                         type: string
+                      credentials:
+                        description: RisingWaveAzureBlobCredentials is the credentials
+                          provider from a Secret.
+                        properties:
+                          AccountKeyRef:
+                            default: AccountKey
+                            description: AccountKeyRef is the key of the secret to
+                              be the secret account key. Must be a valid secret key.
+                              Defaults to "AccountKey".
+                            type: string
+                          accountNameRef:
+                            default: AccountName
+                            description: AccountNameKeyRef is the key of the secret
+                              to be the account name. Must be a valid secret key.
+                              Defaults to "AccountName".
+                            type: string
+                          secretName:
+                            description: The name of the secret in the pod's namespace
+                              to select from.
+                            type: string
+                        required:
+                        - secretName
+                        type: object
                       endpoint:
                         description: Endpoint of the Azure Blob service. e.g. https://yufantest.blob.core.windows.net
                         pattern: ^(?:https://)?(?:[^/.\s]+\.)*(?:[^/\s]+)*$
@@ -17382,6 +17468,7 @@ spec:
                         type: string
                     required:
                     - container
+                    - credentials
                     - endpoint
                     - root
                     - secret
@@ -17413,6 +17500,29 @@ spec:
                       bucket:
                         description: Bucket of the MinIO service.
                         type: string
+                      credentials:
+                        description: RisingWaveMinIOCredentials is the credentials
+                          provider from a Secret.
+                        properties:
+                          passwordKeyRef:
+                            default: password
+                            description: PasswordKeyRef is the key of the secret to
+                              be the password. Must be a valid secret key. Defaults
+                              to "password".
+                            type: string
+                          secretName:
+                            description: The name of the secret in the pod's namespace
+                              to select from.
+                            type: string
+                          usernameKeyRef:
+                            default: username
+                            description: UsernameKeyRef is the key of the secret to
+                              be the username. Must be a valid secret key. Defaults
+                              to "username".
+                            type: string
+                        required:
+                        - secretName
+                        type: object
                       endpoint:
                         description: Endpoint of the MinIO service.
                         type: string
@@ -17423,6 +17533,7 @@ spec:
                         type: string
                     required:
                     - bucket
+                    - credentials
                     - endpoint
                     - secret
                     type: object
@@ -17432,6 +17543,29 @@ spec:
                       bucket:
                         description: Bucket of the AWS S3 service.
                         type: string
+                      credentials:
+                        description: RisingWaveS3Credentials is the credentials provider
+                          from a Secret.
+                        properties:
+                          accessKeyRef:
+                            default: AccessKeyID
+                            description: AccessKeyRef is the key of the secret to
+                              be the access key. Must be a valid secret key. Defaults
+                              to "AccessKeyID".
+                            type: string
+                          secretAccessKeyRef:
+                            default: SecretAccessKey
+                            description: SecretAccessKeyRef is the key of the secret
+                              to be the secret access key. Must be a valid secret
+                              key. Defaults to "SecretAccessKey".
+                            type: string
+                          secretName:
+                            description: The name of the secret in the pod's namespace
+                              to select from.
+                            type: string
+                        required:
+                        - secretName
+                        type: object
                       endpoint:
                         description: Endpoint of the AWS (or other vendor's S3-compatible)
                           service. Leave it empty when using AWS S3 service. You can
@@ -17462,6 +17596,7 @@ spec:
                         type: boolean
                     required:
                     - bucket
+                    - credentials
                     - secret
                     type: object
                   webhdfs:
@@ -17489,6 +17624,30 @@ spec:
                         description: Endpoint of the etcd service for storing the
                           metadata.
                         properties:
+                          credentials:
+                            description: RisingWaveEtcdCredentials is the credentials
+                              provider from a Secret. It could be optional to mean
+                              that the etcd service could be accessed without authentication.
+                            properties:
+                              passwordKeyRef:
+                                default: password
+                                description: PasswordKeyRef is the key of the secret
+                                  to be the password. Must be a valid secret key.
+                                  Defaults to "password".
+                                type: string
+                              secretName:
+                                description: The name of the secret in the pod's namespace
+                                  to select from.
+                                type: string
+                              usernameKeyRef:
+                                default: username
+                                description: UsernameKeyRef is the key of the secret
+                                  to be the username. Must be a valid secret key.
+                                  Defaults to "username".
+                                type: string
+                            required:
+                            - secretName
+                            type: object
                           endpoint:
                             description: Endpoint of etcd. It must be provided.
                             type: string
@@ -17519,6 +17678,21 @@ spec:
                           bucket:
                             description: Bucket of the GCS bucket service.
                             type: string
+                          credentials:
+                            description: RisingWaveGCSCredentials is the credentials
+                              provider from a Secret.
+                            properties:
+                              secretName:
+                                description: The name of the secret in the pod's namespace
+                                  to select from.
+                                type: string
+                              serviceAccountCredentialsKeyRef:
+                                default: ServiceAccountCredentials
+                                description: ServiceAccountCredentialsKeyRef is the
+                                  key of the secret to be the service account credentials.
+                                  Must be a valid secret key. Defaults to "ServiceAccountCredentials".
+                                type: string
+                            type: object
                           root:
                             description: Working directory root of the GCS bucket
                             type: string
@@ -17543,6 +17717,29 @@ spec:
                           bucket:
                             description: Bucket of the Aliyun OSS service.
                             type: string
+                          credentials:
+                            description: RisingWaveS3Credentials is the credentials
+                              provider from a Secret.
+                            properties:
+                              accessKeyRef:
+                                default: AccessKeyID
+                                description: AccessKeyRef is the key of the secret
+                                  to be the access key. Must be a valid secret key.
+                                  Defaults to "AccessKeyID".
+                                type: string
+                              secretAccessKeyRef:
+                                default: SecretAccessKey
+                                description: SecretAccessKeyRef is the key of the
+                                  secret to be the secret access key. Must be a valid
+                                  secret key. Defaults to "SecretAccessKey".
+                                type: string
+                              secretName:
+                                description: The name of the secret in the pod's namespace
+                                  to select from.
+                                type: string
+                            required:
+                            - secretName
+                            type: object
                           internalEndpoint:
                             description: InternalEndpoint indicates if we use the
                               internal endpoint to access Aliyun OSS, which is only
@@ -17562,6 +17759,7 @@ spec:
                             type: string
                         required:
                         - bucket
+                        - credentials
                         - secret
                         type: object
                       azureBlob:
@@ -17570,6 +17768,29 @@ spec:
                           container:
                             description: Container Name of the Azure Blob service.
                             type: string
+                          credentials:
+                            description: RisingWaveAzureBlobCredentials is the credentials
+                              provider from a Secret.
+                            properties:
+                              AccountKeyRef:
+                                default: AccountKey
+                                description: AccountKeyRef is the key of the secret
+                                  to be the secret account key. Must be a valid secret
+                                  key. Defaults to "AccountKey".
+                                type: string
+                              accountNameRef:
+                                default: AccountName
+                                description: AccountNameKeyRef is the key of the secret
+                                  to be the account name. Must be a valid secret key.
+                                  Defaults to "AccountName".
+                                type: string
+                              secretName:
+                                description: The name of the secret in the pod's namespace
+                                  to select from.
+                                type: string
+                            required:
+                            - secretName
+                            type: object
                           endpoint:
                             description: Endpoint of the Azure Blob service. e.g.
                               https://yufantest.blob.core.windows.net
@@ -17586,6 +17807,7 @@ spec:
                             type: string
                         required:
                         - container
+                        - credentials
                         - endpoint
                         - root
                         - secret
@@ -17618,6 +17840,29 @@ spec:
                           bucket:
                             description: Bucket of the MinIO service.
                             type: string
+                          credentials:
+                            description: RisingWaveMinIOCredentials is the credentials
+                              provider from a Secret.
+                            properties:
+                              passwordKeyRef:
+                                default: password
+                                description: PasswordKeyRef is the key of the secret
+                                  to be the password. Must be a valid secret key.
+                                  Defaults to "password".
+                                type: string
+                              secretName:
+                                description: The name of the secret in the pod's namespace
+                                  to select from.
+                                type: string
+                              usernameKeyRef:
+                                default: username
+                                description: UsernameKeyRef is the key of the secret
+                                  to be the username. Must be a valid secret key.
+                                  Defaults to "username".
+                                type: string
+                            required:
+                            - secretName
+                            type: object
                           endpoint:
                             description: Endpoint of the MinIO service.
                             type: string
@@ -17628,6 +17873,7 @@ spec:
                             type: string
                         required:
                         - bucket
+                        - credentials
                         - endpoint
                         - secret
                         type: object
@@ -17637,6 +17883,29 @@ spec:
                           bucket:
                             description: Bucket of the AWS S3 service.
                             type: string
+                          credentials:
+                            description: RisingWaveS3Credentials is the credentials
+                              provider from a Secret.
+                            properties:
+                              accessKeyRef:
+                                default: AccessKeyID
+                                description: AccessKeyRef is the key of the secret
+                                  to be the access key. Must be a valid secret key.
+                                  Defaults to "AccessKeyID".
+                                type: string
+                              secretAccessKeyRef:
+                                default: SecretAccessKey
+                                description: SecretAccessKeyRef is the key of the
+                                  secret to be the secret access key. Must be a valid
+                                  secret key. Defaults to "SecretAccessKey".
+                                type: string
+                              secretName:
+                                description: The name of the secret in the pod's namespace
+                                  to select from.
+                                type: string
+                            required:
+                            - secretName
+                            type: object
                           endpoint:
                             description: Endpoint of the AWS (or other vendor's S3-compatible)
                               service. Leave it empty when using AWS S3 service. You
@@ -17667,6 +17936,7 @@ spec:
                             type: boolean
                         required:
                         - bucket
+                        - credentials
                         - secret
                         type: object
                       webhdfs:

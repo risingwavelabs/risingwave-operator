@@ -1,7 +1,7 @@
 # RisingWave Operator
 
 [![Slack](https://badgen.net/badge/Slack/Join%20RisingWave/0abd59?icon=slack)](https://join.slack.com/t/risingwave-community/shared_invite/zt-120rft0mr-d8uGk3d~NZiZAQWPnElOfw)
-![Build](https://github.com/risingwavelabs/risingwave-operator/actions/workflows/e2e.yaml/badge.svg?branch=main)
+[![Build status](https://badge.buildkite.com/db2c3f749ff1696b9ca22b23990f144133a1f74685e3285ad4.svg)](https://buildkite.com/risingwave-operator/main)
 [![codecov](https://codecov.io/gh/risingwavelabs/risingwave-operator/branch/main/graph/badge.svg?token=D08wi9hnt4)](https://codecov.io/gh/risingwavelabs/risingwave-operator)
 
 ## Introduction

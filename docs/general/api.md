@@ -4919,19 +4919,6 @@ RisingWaveComponentsReplicasStatus
 </tr>
 <tr>
 <td>
-<code>storages</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesStatus">
-RisingWaveStoragesStatus
-</a>
-</em>
-</td>
-<td>
-<p>Status of the external storages.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>scaleViews</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveScaleViewLock">
@@ -5032,9 +5019,6 @@ can be referenced in the groups of compute component.</p>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesStatus">RisingWaveStoragesStatus
 </h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>)
-</p>
 <div>
 <p>RisingWaveStoragesStatus is the status of external storages.</p>
 </div>

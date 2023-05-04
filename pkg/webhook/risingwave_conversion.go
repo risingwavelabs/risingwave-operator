@@ -49,12 +49,9 @@ func ConvertGlobalImage(obj *v1alpha1.RisingWave) {
 
 // ConvertStorages converts v1alpha1 storages.
 func ConvertStorages(obj *v1alpha1.RisingWave) {
-	if !equality.Semantic.DeepEqual(obj.Spec.Storages, v1alpha1.RisingWaveStoragesSpec{}) ||
-		!equality.Semantic.DeepEqual(obj.Status.Storages, v1alpha1.RisingWaveStoragesStatus{}) {
+	if !equality.Semantic.DeepEqual(obj.Spec.Storages, v1alpha1.RisingWaveStoragesSpec{}) {
 		obj.Spec.MetaStore = *obj.Spec.Storages.Meta.DeepCopy()
 		obj.Spec.StateStore = *obj.Spec.Storages.Object.DeepCopy()
-		obj.Status.MetaStore = *obj.Status.Storages.Meta.DeepCopy()
-		obj.Status.StateStore = *obj.Status.Storages.Object.DeepCopy()
 	}
 
 	metaStorage := &obj.Spec.MetaStore

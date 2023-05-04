@@ -698,9 +698,6 @@ type RisingWaveStatus struct {
 	// +patchStrategy=merge,retainKeys
 	Conditions []RisingWaveCondition `json:"conditions,omitempty"`
 
-	// Status of the external storages.
-	Storages RisingWaveStoragesStatus `json:"storages,omitempty"`
-
 	// Scale view locks.
 	// +listType=map
 	// +listMapKey=name

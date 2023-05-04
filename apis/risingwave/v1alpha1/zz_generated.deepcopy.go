@@ -1301,7 +1301,6 @@ func (in *RisingWaveStatus) DeepCopyInto(out *RisingWaveStatus) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	out.Storages = in.Storages
 	if in.ScaleViews != nil {
 		in, out := &in.ScaleViews, &out.ScaleViews
 		*out = make([]RisingWaveScaleViewLock, len(*in))

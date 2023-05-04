@@ -11422,29 +11422,6 @@ spec:
                     description: Backend type of the state store.
                     type: string
                 type: object
-              storages:
-                description: Status of the external storages.
-                properties:
-                  meta:
-                    description: RisingWaveMetaStoreStatus is the status of the meta
-                      store.
-                    properties:
-                      backend:
-                        description: Backend type of the meta store.
-                        type: string
-                    type: object
-                  object:
-                    description: RisingWaveStateStoreStatus is the status of the state
-                      store.
-                    properties:
-                      backend:
-                        description: Backend type of the state store.
-                        type: string
-                    type: object
-                required:
-                - meta
-                - object
-                type: object
               version:
                 description: Version of the Global Image
                 type: string

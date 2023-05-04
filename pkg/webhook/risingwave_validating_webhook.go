@@ -169,40 +169,40 @@ func ptrValueNotZero[T comparable](ptr *T) bool {
 	return ptr != nil && *ptr != zero
 }
 
-func (v *RisingWaveValidatingWebhook) validateStorages(path *field.Path, storages *risingwavev1alpha1.RisingWaveStoragesSpec) field.ErrorList {
+func (v *RisingWaveValidatingWebhook) validateStorages(path *field.Path, metaStore *risingwavev1alpha1.RisingWaveMetaStoreBackend, stateStore *risingwavev1alpha1.RisingWaveStateStoreBackend) field.ErrorList {
 	fieldErrs := field.ErrorList{}
 
-	isMetaMemory, isMetaEtcd := ptrValueNotZero(storages.Meta.Memory), ptrValueNotZero(storages.Meta.Etcd)
+	isMetaMemory, isMetaEtcd := ptrValueNotZero(metaStore.Memory), ptrValueNotZero(metaStore.Etcd)
 	if isMetaMemory {
 		if isMetaEtcd {
 			fieldErrs = append(fieldErrs, field.Forbidden(path.Child("meta", "etcd"), "must not specified when type is memory"))
 		}
 	} else {
 		if !isMetaEtcd {
-			fieldErrs = append(fieldErrs, field.Invalid(path.Child("meta"), storages.Meta, "either memory or etcd must be specified"))
+			fieldErrs = append(fieldErrs, field.Invalid(path.Child("meta"), metaStore, "either memory or etcd must be specified"))
 		}
 	}
 
-	isObjectMemory := ptrValueNotZero(storages.Object.Memory)
-	isObjectMinIO := storages.Object.MinIO != nil
-	isObjectS3 := storages.Object.S3 != nil
-	isObjectGCS := storages.Object.GCS != nil
-	isObjectAliyunOSS := storages.Object.AliyunOSS != nil
-	isObjectAzureBlob := storages.Object.AzureBlob != nil
-	isObjectHDFS := storages.Object.HDFS != nil
-	isObjectWebHDFS := storages.Object.WebHDFS != nil
+	isStateMemory := ptrValueNotZero(stateStore.Memory)
+	isStateMinIO := stateStore.MinIO != nil
+	isStateS3 := stateStore.S3 != nil
+	isStateGCS := stateStore.GCS != nil
+	isStateAliyunOSS := stateStore.AliyunOSS != nil
+	isStateAzureBlob := stateStore.AzureBlob != nil
+	isStateHDFS := stateStore.HDFS != nil
+	isStateWebHDFS := stateStore.WebHDFS != nil
 
-	if isObjectGCS {
-		if (storages.Object.GCS.UseWorkloadIdentity && storages.Object.GCS.Secret != "") || (!storages.Object.GCS.UseWorkloadIdentity && storages.Object.GCS.Secret == "") {
-			fieldErrs = append(fieldErrs, field.Invalid(path.Child("object", "gcs", "secret"), storages.Object.GCS.Secret, "either secret or useWorkloadIdentity must be specified"))
+	if isStateGCS {
+		if (stateStore.GCS.UseWorkloadIdentity && stateStore.GCS.RisingWaveGCSCredentials.SecretName != "") || (!stateStore.GCS.UseWorkloadIdentity && stateStore.GCS.RisingWaveGCSCredentials.SecretName == "") {
+			fieldErrs = append(fieldErrs, field.Invalid(path.Child("state", "gcs", "secret"), stateStore.GCS.RisingWaveGCSCredentials.SecretName, "either secret or useWorkloadIdentity must be specified"))
 		}
 	}
 
-	validObjectStorageTypeCount := lo.CountBy([]bool{isObjectMemory, isObjectMinIO, isObjectS3, isObjectGCS, isObjectAliyunOSS, isObjectAzureBlob, isObjectHDFS, isObjectWebHDFS}, func(x bool) bool { return x })
-	if validObjectStorageTypeCount == 0 {
-		fieldErrs = append(fieldErrs, field.Invalid(path.Child("object"), storages.Object, "must configure the object storage"))
-	} else if validObjectStorageTypeCount > 1 {
-		fieldErrs = append(fieldErrs, field.Invalid(path.Child("object"), storages.Object, "multiple object storage types"))
+	validStateStoreTypeCount := lo.CountBy([]bool{isStateMemory, isStateMinIO, isStateS3, isStateGCS, isStateAliyunOSS, isStateAzureBlob, isStateHDFS, isStateWebHDFS}, func(x bool) bool { return x })
+	if validStateStoreTypeCount == 0 {
+		fieldErrs = append(fieldErrs, field.Invalid(path.Child("state"), stateStore, "must configure the state storage"))
+	} else if validStateStoreTypeCount > 1 {
+		fieldErrs = append(fieldErrs, field.Invalid(path.Child("state"), stateStore, "multiple state storage types"))
 	}
 
 	return fieldErrs
@@ -289,7 +289,7 @@ func (v *RisingWaveValidatingWebhook) validateComponents(path *field.Path, compo
 
 func (v *RisingWaveValidatingWebhook) validateMetaReplicas(obj *risingwavev1alpha1.RisingWave) field.ErrorList {
 	// When the meta storage isn't memory, there's no limitation on the replicas.
-	if !pointer.BoolDeref(obj.Spec.Storages.Meta.Memory, false) {
+	if !pointer.BoolDeref(obj.Spec.MetaStore.Memory, false) {
 		return nil
 	}
 
@@ -322,7 +322,7 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 	fieldErrs = append(fieldErrs, v.validateGlobal(field.NewPath("spec", "global"), &obj.Spec.Global, pointer.BoolDeref(obj.Spec.EnableOpenKruise, false), obj.Spec.Image != "")...)
 
 	// Validate the storages spec.
-	fieldErrs = append(fieldErrs, v.validateStorages(field.NewPath("spec", "storages"), &obj.Spec.Storages)...)
+	fieldErrs = append(fieldErrs, v.validateStorages(field.NewPath("spec", "storages"), &obj.Spec.MetaStore, &obj.Spec.StateStore)...)
 
 	// Validate the configuration spec.
 	fieldErrs = append(fieldErrs, v.validateConfiguration(field.NewPath("spec", "configuration"), &obj.Spec.Configuration)...)
@@ -356,12 +356,12 @@ func (v *RisingWaveValidatingWebhook) ValidateDelete(ctx context.Context, obj ru
 	return nil
 }
 
-func (v *RisingWaveValidatingWebhook) isMetaStoragesTheSame(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
-	return equality.Semantic.DeepEqual(oldObj.Spec.Storages.Meta, newObj.Spec.Storages.Meta)
+func (v *RisingWaveValidatingWebhook) isMetaStoresTheSame(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
+	return equality.Semantic.DeepEqual(oldObj.Spec.MetaStore, newObj.Spec.MetaStore)
 }
 
-func (v *RisingWaveValidatingWebhook) isObjectStoragesTheSame(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
-	return equality.Semantic.DeepEqual(oldObj.Spec.Storages.Object, newObj.Spec.Storages.Object)
+func (v *RisingWaveValidatingWebhook) isStateStoresTheSame(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
+	return equality.Semantic.DeepEqual(oldObj.Spec.StateStore, newObj.Spec.StateStore)
 }
 
 func pathForGroupReplicas(obj *risingwavev1alpha1.RisingWave, component, group string) *field.Path {
@@ -375,8 +375,8 @@ func pathForGroupReplicas(obj *risingwavev1alpha1.RisingWave, component, group s
 func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWave) error {
 	gvk := oldObj.GroupVersionKind()
 
-	// The storages must not be changed, especially meta and object.
-	if !v.isMetaStoragesTheSame(oldObj, newObj) {
+	// The storages must not be changed, especially meta and state.
+	if !v.isMetaStoresTheSame(oldObj, newObj) {
 		return apierrors.NewForbidden(
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			oldObj.Name,
@@ -384,11 +384,11 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 		)
 	}
 
-	if !v.isObjectStoragesTheSame(oldObj, newObj) {
+	if !v.isStateStoresTheSame(oldObj, newObj) {
 		return apierrors.NewForbidden(
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			oldObj.Name,
-			field.Forbidden(field.NewPath("spec", "storages", "object"), "object storage must be kept consistent"),
+			field.Forbidden(field.NewPath("spec", "storages", "state"), "state storage must be kept consistent"),
 		)
 	}
 

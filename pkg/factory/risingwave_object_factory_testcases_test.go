@@ -57,10 +57,10 @@ type testCaseType interface {
 		computeAdvancedSTSTestCase |
 		servicesTestCase |
 		serviceMetadataTestCase |
-		objectStoragesTestCase |
+		stateStoresTestCase |
 		configMapTestCase |
 		computeArgsTestCase |
-		metaStorageTestCase |
+		metaStoreTestCase |
 		metaStatefulSetTestCase |
 		metaAdvancedSTSTestCase
 }
@@ -2479,16 +2479,16 @@ func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
 	}
 }
 
-type objectStoragesTestCase struct {
+type stateStoresTestCase struct {
 	baseTestCase
-	objectStorage risingwavev1alpha1.RisingWaveObjectStorage
-	envs          []corev1.EnvVar
+	stateStore risingwavev1alpha1.RisingWaveStateStoreBackend
+	envs       []corev1.EnvVar
 }
 
-func objectStorageTestCases() map[string]objectStoragesTestCase {
-	return map[string]objectStoragesTestCase{
+func stateStoreTestCases() map[string]stateStoresTestCase {
+	return map[string]stateStoresTestCase{
 		"empty_data_directory": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				DataDirectory: "",
 				Memory:        pointer.Bool(true),
 			},
@@ -2500,7 +2500,7 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			},
 		},
 		"some_data_directory": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				DataDirectory: "1234",
 				Memory:        pointer.Bool(true),
 			},
@@ -2512,7 +2512,7 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			},
 		},
 		"memory": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				Memory: pointer.Bool(true),
 			},
 			envs: []corev1.EnvVar{
@@ -2523,11 +2523,15 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			},
 		},
 		"minio": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
-				MinIO: &risingwavev1alpha1.RisingWaveObjectStorageMinIO{
-					Secret:   "minio-creds",
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				MinIO: &risingwavev1alpha1.RisingWaveStateStoreBackendMinIO{
 					Endpoint: "minio-endpoint:1234",
 					Bucket:   "minio-hummock01",
+					RisingWaveMinIOCredentials: risingwavev1alpha1.RisingWaveMinIOCredentials{
+						SecretName:     "minio-creds",
+						UsernameKeyRef: consts.SecretKeyMinIOUsername,
+						PasswordKeyRef: consts.SecretKeyMinIOPassword,
+					},
 				},
 			},
 			envs: []corev1.EnvVar{
@@ -2542,7 +2546,7 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "minio-creds",
 							},
-							Key: "username",
+							Key: consts.SecretKeyMinIOUsername,
 						},
 					},
 				},
@@ -2553,17 +2557,21 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "minio-creds",
 							},
-							Key: "password",
+							Key: consts.SecretKeyMinIOPassword,
 						},
 					},
 				},
 			},
 		},
 		"s3": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
-				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
-					Secret: "s3-creds",
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 					Bucket: "s3-hummock01",
+					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+						SecretName:         "s3-creds",
+						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,
+						SecretAccessKeyRef: consts.SecretKeyAWSS3SecretAccessKey,
+					},
 				},
 			},
 			envs: []corev1.EnvVar{
@@ -2611,8 +2619,8 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			},
 		},
 		"gcs-workload": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
-				GCS: &risingwavev1alpha1.RisingWaveObjectStorageGCS{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 					UseWorkloadIdentity: true,
 					Bucket:              "gcs-bucket",
 					Root:                "gcs-root",
@@ -2624,12 +2632,15 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			}},
 		},
 		"gcs-secret": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
-				GCS: &risingwavev1alpha1.RisingWaveObjectStorageGCS{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 					UseWorkloadIdentity: false,
-					Secret:              "gcs-creds",
 					Bucket:              "gcs-bucket",
 					Root:                "gcs-root",
+					RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
+						SecretName:                      "gcs-creds",
+						ServiceAccountCredentialsKeyRef: consts.SecretKeyGCSServiceAccountCredentials,
+					},
 				},
 			},
 			envs: []corev1.EnvVar{
@@ -2651,10 +2662,14 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			},
 		},
 		"aliyun-oss": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
-				AliyunOSS: &risingwavev1alpha1.RisingWaveObjectStorageAliyunOSS{
-					Secret: "s3-creds",
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
 					Bucket: "s3-hummock01",
+					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+						SecretName:         "s3-creds",
+						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,
+						SecretAccessKeyRef: consts.SecretKeyAWSS3SecretAccessKey,
+					},
 				},
 			},
 			envs: []corev1.EnvVar{
@@ -2706,11 +2721,15 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			},
 		},
 		"aliyun-oss-internal": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
-				AliyunOSS: &risingwavev1alpha1.RisingWaveObjectStorageAliyunOSS{
-					Secret:           "s3-creds",
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
 					Bucket:           "s3-hummock01",
 					InternalEndpoint: true,
+					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+						SecretName:         "s3-creds",
+						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,
+						SecretAccessKeyRef: consts.SecretKeyAWSS3SecretAccessKey,
+					},
 				},
 			},
 			envs: []corev1.EnvVar{
@@ -2762,11 +2781,15 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			},
 		},
 		"aliyun-oss-with-region": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
-				AliyunOSS: &risingwavev1alpha1.RisingWaveObjectStorageAliyunOSS{
-					Secret: "s3-creds",
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
 					Bucket: "s3-hummock01",
 					Region: "cn-hangzhou",
+					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+						SecretName:         "s3-creds",
+						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,
+						SecretAccessKeyRef: consts.SecretKeyAWSS3SecretAccessKey,
+					},
 				},
 			},
 			envs: []corev1.EnvVar{
@@ -2811,11 +2834,15 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			},
 		},
 		"s3-compatible": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
-				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
-					Secret:   "s3-creds",
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 					Bucket:   "s3-hummock01",
 					Endpoint: "oss-cn-hangzhou.aliyuncs.com",
+					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+						SecretName:         "s3-creds",
+						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,
+						SecretAccessKeyRef: consts.SecretKeyAWSS3SecretAccessKey,
+					},
 				},
 			},
 			envs: []corev1.EnvVar{
@@ -2867,12 +2894,15 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			},
 		},
 		"s3-compatible-virtual-hosted-style": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
-				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
-					Secret:             "s3-creds",
-					Bucket:             "s3-hummock01",
-					Endpoint:           "https://oss-cn-hangzhou.aliyuncs.com",
-					VirtualHostedStyle: true,
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
+					Bucket:   "s3-hummock01",
+					Endpoint: "https://${BUCKET}.oss-cn-hangzhou.aliyuncs.com",
+					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+						SecretName:         "s3-creds",
+						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,
+						SecretAccessKeyRef: consts.SecretKeyAWSS3SecretAccessKey,
+					},
 				},
 			},
 			envs: []corev1.EnvVar{
@@ -2924,11 +2954,15 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			},
 		},
 		"s3-with-region": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
-				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
-					Secret: "s3-creds",
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 					Bucket: "s3-hummock01",
 					Region: "ap-southeast-1",
+					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+						SecretName:         "s3-creds",
+						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,
+						SecretAccessKeyRef: consts.SecretKeyAWSS3SecretAccessKey,
+					},
 				},
 			},
 			envs: []corev1.EnvVar{
@@ -2969,10 +3003,15 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			},
 		},
 		"endpoint-with-region-variable": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
-				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 					Bucket:   "s3-hummock01",
 					Endpoint: "s3.${REGION}.amazonaws.com",
+					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+						SecretName:         "",
+						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,
+						SecretAccessKeyRef: consts.SecretKeyAWSS3SecretAccessKey,
+					},
 				},
 			},
 			envs: []corev1.EnvVar{
@@ -2987,10 +3026,15 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			},
 		},
 		"endpoint-with-bucket-variable": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
-				S3: &risingwavev1alpha1.RisingWaveObjectStorageS3{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 					Bucket:   "s3-hummock01",
 					Endpoint: "${BUCKET}.s3.${REGION}.amazonaws.com",
+					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+						SecretName:         "",
+						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,
+						SecretAccessKeyRef: consts.SecretKeyAWSS3SecretAccessKey,
+					},
 				},
 			},
 			envs: []corev1.EnvVar{
@@ -3005,12 +3049,16 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			},
 		},
 		"azure-blob": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
-				AzureBlob: &risingwavev1alpha1.RisingWaveObjectStorageAzureBlob{
-					Secret:    "azure-blob-creds",
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
 					Container: "azure-blob-hummock01",
 					Root:      "/azure-blob-root",
 					Endpoint:  "https://accountName.blob.core.windows.net",
+					RisingWaveAzureBlobCredentials: risingwavev1alpha1.RisingWaveAzureBlobCredentials{
+						SecretName:     "azure-blob-creds",
+						AccountNameRef: consts.SecretKeyAzureBlobAccountName,
+						AccountKeyRef:  consts.SecretKeyAzureBlobAccountKey,
+					},
 				},
 			},
 			envs: []corev1.EnvVar{
@@ -3047,8 +3095,8 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			},
 		},
 		"hdfs": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
-				HDFS: &risingwavev1alpha1.RisingWaveObjectStorageHDFS{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				HDFS: &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{
 					NameNode: "name-node",
 					Root:     "root",
 				},
@@ -3059,8 +3107,8 @@ func objectStorageTestCases() map[string]objectStoragesTestCase {
 			}},
 		},
 		"webhdfs": {
-			objectStorage: risingwavev1alpha1.RisingWaveObjectStorage{
-				WebHDFS: &risingwavev1alpha1.RisingWaveObjectStorageHDFS{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				WebHDFS: &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{
 					NameNode: "name-node",
 					Root:     "root",
 				},
@@ -3221,15 +3269,15 @@ func inheritedLabelsTestCases() map[string]inheritedLabelsTestCase {
 	}
 }
 
-type metaStorageTestCase struct {
-	metaStorage risingwavev1alpha1.RisingWaveMetaStorage
-	envs        []corev1.EnvVar
+type metaStoreTestCase struct {
+	metaStore risingwavev1alpha1.RisingWaveMetaStoreBackend
+	envs      []corev1.EnvVar
 }
 
-func metaStorageTestCases() map[string]metaStorageTestCase {
-	return map[string]metaStorageTestCase{
+func metaStoreTestCases() map[string]metaStoreTestCase {
+	return map[string]metaStoreTestCase{
 		"memory": {
-			metaStorage: risingwavev1alpha1.RisingWaveMetaStorage{
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
 				Memory: pointer.Bool(true),
 			},
 			envs: []corev1.EnvVar{
@@ -3240,8 +3288,8 @@ func metaStorageTestCases() map[string]metaStorageTestCase {
 			},
 		},
 		"etcd-no-auth": {
-			metaStorage: risingwavev1alpha1.RisingWaveMetaStorage{
-				Etcd: &risingwavev1alpha1.RisingWaveMetaStorageEtcd{
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+				Etcd: &risingwavev1alpha1.RisingWaveMetaStoreBackendEtcd{
 					Endpoint: "etcd:1234",
 				},
 			},
@@ -3257,10 +3305,14 @@ func metaStorageTestCases() map[string]metaStorageTestCase {
 			},
 		},
 		"etcd-auth": {
-			metaStorage: risingwavev1alpha1.RisingWaveMetaStorage{
-				Etcd: &risingwavev1alpha1.RisingWaveMetaStorageEtcd{
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+				Etcd: &risingwavev1alpha1.RisingWaveMetaStoreBackendEtcd{
 					Endpoint: "etcd:1234",
-					Secret:   "etcd-credentials",
+					RisingWaveEtcdCredentials: &risingwavev1alpha1.RisingWaveEtcdCredentials{
+						SecretName:     "etcd-credentials",
+						UsernameKeyRef: consts.SecretKeyEtcdUsername,
+						PasswordKeyRef: consts.SecretKeyEtcdPassword,
+					},
 				},
 			},
 			envs: []corev1.EnvVar{

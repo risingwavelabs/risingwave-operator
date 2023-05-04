@@ -47,8 +47,40 @@ func ConvertGlobalImage(obj *v1alpha1.RisingWave) {
 	}
 }
 
+// ConvertStorages converts v1alpha1 storages.
+func ConvertStorages(obj *v1alpha1.RisingWave) {
+	if !equality.Semantic.DeepEqual(obj.Spec.Storages, v1alpha1.RisingWaveStoragesSpec{}) {
+		obj.Spec.MetaStore = *obj.Spec.Storages.Meta.DeepCopy()
+		obj.Spec.StateStore = *obj.Spec.Storages.Object.DeepCopy()
+	}
+
+	metaStore := &obj.Spec.MetaStore
+	if metaStore.Etcd != nil && metaStore.Etcd.Secret != "" {
+		if metaStore.Etcd.RisingWaveEtcdCredentials == nil {
+			metaStore.Etcd.RisingWaveEtcdCredentials = &v1alpha1.RisingWaveEtcdCredentials{}
+		}
+		metaStore.Etcd.RisingWaveEtcdCredentials.SecretName = metaStore.Etcd.Secret
+	}
+
+	stateStore := &obj.Spec.StateStore
+	switch {
+	case stateStore.MinIO != nil && stateStore.MinIO.Secret != "":
+		stateStore.MinIO.RisingWaveMinIOCredentials.SecretName = stateStore.MinIO.Secret
+	case stateStore.S3 != nil && stateStore.S3.Secret != "":
+		stateStore.S3.RisingWaveS3Credentials.SecretName = stateStore.S3.Secret
+	case stateStore.GCS != nil && stateStore.GCS.Secret != "":
+		stateStore.GCS.RisingWaveGCSCredentials.SecretName = stateStore.GCS.Secret
+	case stateStore.AliyunOSS != nil && stateStore.AliyunOSS.Secret != "":
+		stateStore.AliyunOSS.RisingWaveS3Credentials.SecretName = stateStore.AliyunOSS.Secret
+	case stateStore.AzureBlob != nil && stateStore.AzureBlob.Secret != "":
+		stateStore.AzureBlob.RisingWaveAzureBlobCredentials.SecretName = stateStore.AzureBlob.Secret
+	default:
+	}
+}
+
 // ConvertToV1alpha2Features converts v1alpha1 features to v1alpha2 features.
 func ConvertToV1alpha2Features(obj *v1alpha1.RisingWave) {
 	ConvertFrontendService(obj)
 	ConvertGlobalImage(obj)
+	ConvertStorages(obj)
 }

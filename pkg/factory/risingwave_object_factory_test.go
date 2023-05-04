@@ -125,8 +125,8 @@ func Test_RisingWaveObjectFactory_Frontend_Deployments(t *testing.T) {
 
 	for name, tc := range deploymentTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
-			r.Spec.Storages.Meta.Memory = pointer.Bool(true)
-			r.Spec.Storages.Object.Memory = pointer.Bool(true)
+			r.Spec.MetaStore.Memory = pointer.Bool(true)
+			r.Spec.StateStore.Memory = pointer.Bool(true)
 			if tc.group.Name == "" {
 				r.Spec.Global.RisingWaveComponentGroupTemplate = *tc.group.RisingWaveComponentGroupTemplate
 				r.Spec.Global.Replicas.Frontend = tc.group.Replicas
@@ -155,8 +155,8 @@ func Test_RisingWaveObjectFactory_Compactor_Deployments(t *testing.T) {
 
 	for name, tc := range deploymentTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
-			r.Spec.Storages.Meta.Memory = pointer.Bool(true)
-			r.Spec.Storages.Object.Memory = pointer.Bool(true)
+			r.Spec.MetaStore.Memory = pointer.Bool(true)
+			r.Spec.StateStore.Memory = pointer.Bool(true)
 			if tc.group.Name == "" {
 				r.Spec.Global.RisingWaveComponentGroupTemplate = *tc.group.RisingWaveComponentGroupTemplate
 				r.Spec.Global.Replicas.Compactor = tc.group.Replicas
@@ -186,8 +186,8 @@ func Test_RisingWaveObjectFactory_Frontend_CloneSet(t *testing.T) {
 	for name, tc := range cloneSetTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.EnableOpenKruise = pointer.Bool(true)
-			r.Spec.Storages.Meta.Memory = pointer.Bool(true)
-			r.Spec.Storages.Object.Memory = pointer.Bool(true)
+			r.Spec.MetaStore.Memory = pointer.Bool(true)
+			r.Spec.StateStore.Memory = pointer.Bool(true)
 			if tc.group.Name == "" {
 				r.Spec.Global.RisingWaveComponentGroupTemplate = *tc.group.RisingWaveComponentGroupTemplate
 				r.Spec.Global.Replicas.Frontend = tc.group.Replicas
@@ -217,8 +217,8 @@ func Test_RisingWaveObjectFactory_Compactor_CloneSet(t *testing.T) {
 	for name, tc := range cloneSetTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.EnableOpenKruise = pointer.Bool(true)
-			r.Spec.Storages.Meta.Memory = pointer.Bool(true)
-			r.Spec.Storages.Object.Memory = pointer.Bool(true)
+			r.Spec.MetaStore.Memory = pointer.Bool(true)
+			r.Spec.StateStore.Memory = pointer.Bool(true)
 			if tc.group.Name == "" {
 				r.Spec.Global.RisingWaveComponentGroupTemplate = *tc.group.RisingWaveComponentGroupTemplate
 				r.Spec.Global.Replicas.Compactor = tc.group.Replicas
@@ -247,8 +247,8 @@ func Test_RisingWaveObjectFactory_Meta_StatefulSets(t *testing.T) {
 
 	for name, tc := range metaStatefulSetTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
-			r.Spec.Storages.Meta.Memory = pointer.Bool(true)
-			r.Spec.Storages.Object.Memory = pointer.Bool(true)
+			r.Spec.MetaStore.Memory = pointer.Bool(true)
+			r.Spec.StateStore.Memory = pointer.Bool(true)
 			if tc.group.Name == "" {
 				r.Spec.Global.RisingWaveComponentGroupTemplate = *tc.group.RisingWaveComponentGroupTemplate
 				r.Spec.Global.Replicas.Meta = tc.group.Replicas
@@ -280,8 +280,8 @@ func Test_RisingWaveObjectFactory_Compute_StatefulSets(t *testing.T) {
 	for name, tc := range computeStatefulSetTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.EnableOpenKruise = pointer.Bool(true)
-			r.Spec.Storages.Meta.Memory = pointer.Bool(true)
-			r.Spec.Storages.Object.Memory = pointer.Bool(true)
+			r.Spec.MetaStore.Memory = pointer.Bool(true)
+			r.Spec.StateStore.Memory = pointer.Bool(true)
 			if tc.group.Name == "" {
 				r.Spec.Global.Replicas.Compute = tc.group.Replicas
 				r.Spec.Global.RisingWaveComponentGroupTemplate = tc.group.RisingWaveComponentGroupTemplate
@@ -309,8 +309,8 @@ func Test_RisingWaveObjectFactory_Meta_AdvancedStatefulSets(t *testing.T) {
 
 	for name, tc := range metaAdvancedSTSTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
-			r.Spec.Storages.Meta.Memory = pointer.Bool(true)
-			r.Spec.Storages.Object.Memory = pointer.Bool(true)
+			r.Spec.MetaStore.Memory = pointer.Bool(true)
+			r.Spec.StateStore.Memory = pointer.Bool(true)
 			if tc.group.Name == "" {
 				r.Spec.Global.RisingWaveComponentGroupTemplate = *tc.group.RisingWaveComponentGroupTemplate
 				r.Spec.Global.Replicas.Meta = tc.group.Replicas
@@ -341,8 +341,8 @@ func Test_RisingWaveObjectFactory_Compute_AdvancedStatefulSets(t *testing.T) {
 
 	for name, tc := range computeAdvancedSTSTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
-			r.Spec.Storages.Meta.Memory = pointer.Bool(true)
-			r.Spec.Storages.Object.Memory = pointer.Bool(true)
+			r.Spec.MetaStore.Memory = pointer.Bool(true)
+			r.Spec.StateStore.Memory = pointer.Bool(true)
 			if tc.group.Name == "" {
 				r.Spec.Global.Replicas.Compute = tc.group.Replicas
 				r.Spec.Global.RisingWaveComponentGroupTemplate = tc.group.RisingWaveComponentGroupTemplate
@@ -365,16 +365,14 @@ func Test_RisingWaveObjectFactory_Compute_AdvancedStatefulSets(t *testing.T) {
 	}
 }
 
-func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
-	predicates := objectStorageStatefulsetPredicates()
+func Test_RisingWaveObjectFactory_StateStores(t *testing.T) {
+	predicates := stateStoreStatefulsetPredicates()
 
-	for name, tc := range objectStorageTestCases() {
+	for name, tc := range stateStoreTestCases() {
 		t.Run(name, func(t *testing.T) {
 			tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages = risingwavev1alpha1.RisingWaveStoragesSpec{
-					Meta:   risingwavev1alpha1.RisingWaveMetaStorage{Memory: pointer.Bool(true)},
-					Object: tc.objectStorage,
-				}
+				r.Spec.MetaStore = risingwavev1alpha1.RisingWaveMetaStoreBackend{Memory: pointer.Bool(true)}
+				r.Spec.StateStore = tc.stateStore
 			})
 
 			factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
@@ -387,15 +385,13 @@ func Test_RisingWaveObjectFactory_ObjectStorages(t *testing.T) {
 	}
 }
 
-func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
-	predicates := metaStoragePredicates()
+func Test_RisingWaveObjectFactory_MetaStores(t *testing.T) {
+	predicates := metaStorePredicates()
 
-	for name, tc := range metaStorageTestCases() {
+	for name, tc := range metaStoreTestCases() {
 		risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
-			r.Spec.Storages = risingwavev1alpha1.RisingWaveStoragesSpec{
-				Meta:   tc.metaStorage,
-				Object: risingwavev1alpha1.RisingWaveObjectStorage{Memory: pointer.Bool(true)},
-			}
+			r.Spec.MetaStore = tc.metaStore
+			r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{Memory: pointer.Bool(true)}
 		})
 
 		factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme, "")
@@ -440,7 +436,7 @@ func TestRisingWaveObjectFactory_ComputeArgs(t *testing.T) {
 			factory := NewRisingWaveObjectFactory(&risingwavev1alpha1.RisingWave{
 				Spec: risingwavev1alpha1.RisingWaveSpec{
 					Storages: risingwavev1alpha1.RisingWaveStoragesSpec{
-						Object: risingwavev1alpha1.RisingWaveObjectStorage{
+						Object: risingwavev1alpha1.RisingWaveStateStoreBackend{
 							Memory: pointer.Bool(true),
 						},
 					},

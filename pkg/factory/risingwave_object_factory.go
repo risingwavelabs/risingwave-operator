@@ -79,71 +79,71 @@ func (f *RisingWaveObjectFactory) namespace() string {
 	return f.risingwave.Namespace
 }
 
-func (f *RisingWaveObjectFactory) isObjectStorageS3() bool {
-	return f.risingwave.Spec.Storages.Object.S3 != nil && len(f.risingwave.Spec.Storages.Object.S3.Endpoint) == 0
+func (f *RisingWaveObjectFactory) isStateStoreS3() bool {
+	return f.risingwave.Spec.StateStore.S3 != nil && len(f.risingwave.Spec.StateStore.S3.Endpoint) == 0
 }
 
-func (f *RisingWaveObjectFactory) isObjectStorageS3Compatible() bool {
-	return f.risingwave.Spec.Storages.Object.S3 != nil && len(f.risingwave.Spec.Storages.Object.S3.Endpoint) > 0
+func (f *RisingWaveObjectFactory) isStateStoreS3Compatible() bool {
+	return f.risingwave.Spec.StateStore.S3 != nil && len(f.risingwave.Spec.StateStore.S3.Endpoint) > 0
 }
 
-func (f *RisingWaveObjectFactory) isObjectStorageGCS() bool {
-	return f.risingwave.Spec.Storages.Object.GCS != nil
+func (f *RisingWaveObjectFactory) isStateStoreGCS() bool {
+	return f.risingwave.Spec.StateStore.GCS != nil
 }
 
-func (f *RisingWaveObjectFactory) isObjectStorageAliyunOSS() bool {
-	return f.risingwave.Spec.Storages.Object.AliyunOSS != nil
+func (f *RisingWaveObjectFactory) isStateStoreAliyunOSS() bool {
+	return f.risingwave.Spec.StateStore.AliyunOSS != nil
 }
 
-func (f *RisingWaveObjectFactory) isObjectStorageAzureBlob() bool {
-	return f.risingwave.Spec.Storages.Object.AzureBlob != nil
+func (f *RisingWaveObjectFactory) isStateStoreAzureBlob() bool {
+	return f.risingwave.Spec.StateStore.AzureBlob != nil
 }
 
-func (f *RisingWaveObjectFactory) isObjectStorageHDFS() bool {
-	return f.risingwave.Spec.Storages.Object.HDFS != nil
+func (f *RisingWaveObjectFactory) isStateStoreHDFS() bool {
+	return f.risingwave.Spec.StateStore.HDFS != nil
 }
 
-func (f *RisingWaveObjectFactory) isObjectStorageWebHDFS() bool {
-	return f.risingwave.Spec.Storages.Object.WebHDFS != nil
+func (f *RisingWaveObjectFactory) isStateStoreWebHDFS() bool {
+	return f.risingwave.Spec.StateStore.WebHDFS != nil
 }
 
-func (f *RisingWaveObjectFactory) isObjectStorageMinIO() bool {
-	return f.risingwave.Spec.Storages.Object.MinIO != nil
+func (f *RisingWaveObjectFactory) isStateStoreMinIO() bool {
+	return f.risingwave.Spec.StateStore.MinIO != nil
 }
 
-func (f *RisingWaveObjectFactory) isMetaStorageEtcd() bool {
-	return f.risingwave.Spec.Storages.Meta.Etcd != nil
+func (f *RisingWaveObjectFactory) isMetaStoreEtcd() bool {
+	return f.risingwave.Spec.MetaStore.Etcd != nil
 }
 
 func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
-	objectStorage := f.risingwave.Spec.Storages.Object
+	stateStore := f.risingwave.Spec.StateStore
 	switch {
-	case pointer.BoolDeref(objectStorage.Memory, false):
+	case pointer.BoolDeref(stateStore.Memory, false):
 		return "hummock+memory"
-	case f.isObjectStorageS3():
-		bucket := objectStorage.S3.Bucket
+	case f.isStateStoreS3():
+		bucket := stateStore.S3.Bucket
 		return fmt.Sprintf("hummock+s3://%s", bucket)
-	case f.isObjectStorageS3Compatible():
-		bucket := objectStorage.S3.Bucket
+	case f.isStateStoreS3Compatible():
+		bucket := stateStore.S3.Bucket
 		return fmt.Sprintf("hummock+s3-compatible://%s", bucket)
-	case objectStorage.MinIO != nil:
-		minio := objectStorage.MinIO
+	case stateStore.MinIO != nil:
+		minio := stateStore.MinIO
 		return fmt.Sprintf("hummock+minio://$(%s):$(%s)@%s/%s", envs.MinIOUsername, envs.MinIOPassword, minio.Endpoint, minio.Bucket)
-	case f.isObjectStorageGCS():
-		return fmt.Sprintf("hummock+gcs://%s@%s", objectStorage.GCS.Bucket, objectStorage.GCS.Root)
-	case objectStorage.AliyunOSS != nil:
-		aliyunOSS := objectStorage.AliyunOSS
+	case f.isStateStoreGCS():
+		return fmt.Sprintf("hummock+gcs://%s@%s", stateStore.GCS.Bucket, stateStore.GCS.Root)
+	case stateStore.AliyunOSS != nil:
+		aliyunOSS := stateStore.AliyunOSS
 		// Redirect to s3-compatible.
 		return fmt.Sprintf("hummock+s3-compatible://%s", aliyunOSS.Bucket)
-	case objectStorage.AzureBlob != nil:
-		azureBlob := objectStorage.AzureBlob
+	case stateStore.AzureBlob != nil:
+		azureBlob := stateStore.AzureBlob
 		// Redirect to s3-compatible.
 		return fmt.Sprintf("hummock+azblob://%s@%s", azureBlob.Container, azureBlob.Root)
-	case objectStorage.HDFS != nil:
-		hdfs := objectStorage.HDFS
+	case stateStore.HDFS != nil:
+		hdfs := stateStore.HDFS
 		return fmt.Sprintf("hummock+hdfs://%s@%s", hdfs.NameNode, hdfs.Root)
-	case objectStorage.WebHDFS != nil:
-		webhdfs := objectStorage.WebHDFS
+	case stateStore.WebHDFS != nil:
+		webhdfs := stateStore.WebHDFS
 		return fmt.Sprintf("hummock+webhdfs://%s@%s", webhdfs.NameNode, webhdfs.Root)
 	default:
 		panic("unrecognized storage type")
@@ -400,15 +400,15 @@ func (f *RisingWaveObjectFactory) NewConnectorService() *corev1.Service {
 }
 
 func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
-	etcd := f.risingwave.Spec.Storages.Meta.Etcd
+	credentials := f.risingwave.Spec.MetaStore.Etcd.RisingWaveEtcdCredentials
 
 	// Empty secret indicates no authentication.
-	if etcd.Secret == "" {
+	if credentials == nil || credentials.SecretName == "" {
 		return []corev1.EnvVar{}
 	}
 
 	secretRef := corev1.LocalObjectReference{
-		Name: etcd.Secret,
+		Name: credentials.SecretName,
 	}
 
 	return []corev1.EnvVar{
@@ -418,7 +418,7 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyEtcdUsername,
+					Key:                  credentials.UsernameKeyRef,
 				},
 			},
 		},
@@ -427,7 +427,7 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyEtcdPassword,
+					Key:                  credentials.PasswordKeyRef,
 				},
 			},
 		},
@@ -437,7 +437,7 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyEtcdUsername,
+					Key:                  credentials.UsernameKeyRef,
 				},
 			},
 		},
@@ -446,7 +446,7 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyEtcdPassword,
+					Key:                  credentials.PasswordKeyRef,
 				},
 			},
 		},
@@ -455,8 +455,8 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 
 func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
-	metaStorage := &f.risingwave.Spec.Storages.Meta
-	objectStorage := f.risingwave.Spec.Storages.Object
+	metaStore := &f.risingwave.Spec.MetaStore
+	stateStore := f.risingwave.Spec.StateStore
 
 	connectorPorts := f.getConnectorPorts()
 	envVars := []corev1.EnvVar{
@@ -478,7 +478,7 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWDataDirectory,
-			Value: objectStorage.DataDirectory,
+			Value: stateStore.DataDirectory,
 		},
 		{
 			Name:  envs.RWDashboardHost,
@@ -495,12 +495,12 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 	}
 
 	switch {
-	case pointer.BoolDeref(metaStorage.Memory, false):
+	case pointer.BoolDeref(metaStore.Memory, false):
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  envs.RWBackend,
 			Value: "mem",
 		})
-	case metaStorage.Etcd != nil:
+	case metaStore.Etcd != nil:
 		envVars = append(envVars, []corev1.EnvVar{
 			{
 				Name:  envs.RWBackend,
@@ -508,10 +508,11 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 			},
 			{
 				Name:  envs.RWEtcdEndpoints,
-				Value: metaStorage.Etcd.Endpoint,
+				Value: metaStore.Etcd.Endpoint,
 			},
 		}...)
-		if metaStorage.Etcd.Secret != "" {
+		credentials := f.risingwave.Spec.MetaStore.Etcd.RisingWaveEtcdCredentials
+		if credentials != nil && credentials.SecretName != "" {
 			envVars = append(envVars, corev1.EnvVar{
 				Name:  envs.RWEtcdAuth,
 				Value: "true",
@@ -682,27 +683,28 @@ func mergeListByKey[T any](list []T, val T, keyPred func(*T) bool) []T {
 }
 
 func (f *RisingWaveObjectFactory) envsForMinIO() []corev1.EnvVar {
-	objectStorage := &f.risingwave.Spec.Storages.Object
+	stateStore := &f.risingwave.Spec.StateStore
+	credentials := &stateStore.MinIO.RisingWaveMinIOCredentials
 
 	secretRef := corev1.LocalObjectReference{
-		Name: objectStorage.MinIO.Secret,
+		Name: credentials.SecretName,
 	}
 
 	return []corev1.EnvVar{
 		{
 			Name:  envs.MinIOEndpoint,
-			Value: objectStorage.MinIO.Endpoint,
+			Value: stateStore.MinIO.Endpoint,
 		},
 		{
 			Name:  envs.MinIOBucket,
-			Value: objectStorage.MinIO.Bucket,
+			Value: stateStore.MinIO.Bucket,
 		},
 		{
 			Name: envs.MinIOUsername,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyMinIOUsername,
+					Key:                  credentials.UsernameKeyRef,
 				},
 			},
 		},
@@ -711,16 +713,16 @@ func (f *RisingWaveObjectFactory) envsForMinIO() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyMinIOPassword,
+					Key:                  credentials.PasswordKeyRef,
 				},
 			},
 		},
 	}
 }
 
-func envsForAWSS3(region, bucket, secret string) []corev1.EnvVar {
+func envsForAWSS3(region, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials) []corev1.EnvVar {
 	secretRef := corev1.LocalObjectReference{
-		Name: secret,
+		Name: credentials.SecretName,
 	}
 
 	var regionEnvVar corev1.EnvVar
@@ -752,7 +754,7 @@ func envsForAWSS3(region, bucket, secret string) []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyAWSS3AccessKeyID,
+					Key:                  credentials.AccessKeyRef,
 				},
 			},
 		},
@@ -761,7 +763,7 @@ func envsForAWSS3(region, bucket, secret string) []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyAWSS3SecretAccessKey,
+					Key:                  credentials.SecretAccessKeyRef,
 				},
 			},
 		},
@@ -769,8 +771,8 @@ func envsForAWSS3(region, bucket, secret string) []corev1.EnvVar {
 }
 
 func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
-	objectStorage := &f.risingwave.Spec.Storages.Object
-	s3Spec := objectStorage.S3
+	stateStore := &f.risingwave.Spec.StateStore
+	s3Spec := stateStore.S3
 
 	if len(s3Spec.Endpoint) > 0 {
 		// S3 compatible mode.
@@ -780,27 +782,18 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 		endpoint = strings.ReplaceAll(endpoint, "${REGION}", fmt.Sprintf("$(%s)", envs.S3CompatibleRegion))
 		endpoint = strings.ReplaceAll(endpoint, "${BUCKET}", fmt.Sprintf("$(%s)", envs.S3CompatibleBucket))
 
-		if s3Spec.VirtualHostedStyle {
-			if strings.HasPrefix(endpoint, "https://") {
-				endpoint = fmt.Sprintf("https://$(%s).%s", envs.S3CompatibleBucket, endpoint[len("https://"):])
-			} else {
-				endpoint = fmt.Sprintf("https://$(%s).%s", envs.S3CompatibleBucket, endpoint)
-			}
-		} else {
-			if !strings.HasPrefix(endpoint, "https://") {
-				endpoint = "https://" + endpoint
-			}
+		if !strings.HasPrefix(endpoint, "https://") {
+			endpoint = "https://" + endpoint
 		}
-
-		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.Secret)
+		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials)
 	}
 	// AWS S3 mode.
-	return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.Secret)
+	return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials)
 }
 
-func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVar {
+func envsForS3Compatible(region, endpoint, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials) []corev1.EnvVar {
 	secretRef := corev1.LocalObjectReference{
-		Name: secret,
+		Name: credentials.SecretName,
 	}
 
 	var regionEnvVar corev1.EnvVar
@@ -839,7 +832,7 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyAWSS3AccessKeyID,
+					Key:                  credentials.AccessKeyRef,
 				},
 			},
 		},
@@ -848,7 +841,7 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyAWSS3SecretAccessKey,
+					Key:                  credentials.SecretAccessKeyRef,
 				},
 			},
 		},
@@ -860,15 +853,15 @@ func envsForS3Compatible(region, endpoint, bucket, secret string) []corev1.EnvVa
 }
 
 func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
-	gcs := f.risingwave.Spec.Storages.Object.GCS
+	gcs := f.risingwave.Spec.StateStore.GCS
 	useWorkloadIdentity := gcs.UseWorkloadIdentity
 	if useWorkloadIdentity {
 		return []corev1.EnvVar{}
 	}
 
-	secret := gcs.Secret
+	credentials := gcs.RisingWaveGCSCredentials
 	secretRef := corev1.LocalObjectReference{
-		Name: secret,
+		Name: credentials.SecretName,
 	}
 	return []corev1.EnvVar{
 		{
@@ -876,7 +869,7 @@ func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyGCSServiceAccountCredentials,
+					Key:                  credentials.ServiceAccountCredentialsKeyRef,
 				},
 			},
 		},
@@ -884,22 +877,23 @@ func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
 }
 
 func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
-	objectStorage := &f.risingwave.Spec.Storages.Object
+	stateStore := &f.risingwave.Spec.StateStore
 
 	var endpoint string
-	if objectStorage.AliyunOSS.InternalEndpoint {
+	if stateStore.AliyunOSS.InternalEndpoint {
 		endpoint = internalAliyunOSSEndpoint
 	} else {
 		endpoint = aliyunOSSEndpoint
 	}
 
-	return envsForS3Compatible(objectStorage.AliyunOSS.Region, endpoint, objectStorage.AliyunOSS.Bucket, objectStorage.AliyunOSS.Secret)
+	return envsForS3Compatible(stateStore.AliyunOSS.Region, endpoint, stateStore.AliyunOSS.Bucket, stateStore.AliyunOSS.RisingWaveS3Credentials)
 }
 
 func (f *RisingWaveObjectFactory) envsForAzureBlob() []corev1.EnvVar {
-	objectStorage := &f.risingwave.Spec.Storages.Object
+	stateStore := &f.risingwave.Spec.StateStore
+	credentials := stateStore.AzureBlob.RisingWaveAzureBlobCredentials
 	secretRef := corev1.LocalObjectReference{
-		Name: objectStorage.AzureBlob.Secret,
+		Name: credentials.SecretName,
 	}
 	return []corev1.EnvVar{
 
@@ -908,7 +902,7 @@ func (f *RisingWaveObjectFactory) envsForAzureBlob() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyAzureBlobAccountName,
+					Key:                  credentials.AccountNameRef,
 				},
 			},
 		},
@@ -917,13 +911,13 @@ func (f *RisingWaveObjectFactory) envsForAzureBlob() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyAzureBlobAccountKey,
+					Key:                  credentials.AccountKeyRef,
 				},
 			},
 		},
 		{
 			Name:  envs.AzureBlobEndpoint,
-			Value: objectStorage.AzureBlob.Endpoint,
+			Value: stateStore.AzureBlob.Endpoint,
 		},
 	}
 
@@ -937,21 +931,21 @@ func (f *RisingWaveObjectFactory) envsForWebHDFS() []corev1.EnvVar {
 	return []corev1.EnvVar{}
 }
 
-func (f *RisingWaveObjectFactory) envsForObjectStorage() []corev1.EnvVar {
+func (f *RisingWaveObjectFactory) envsForStateStore() []corev1.EnvVar {
 	switch {
-	case f.isObjectStorageMinIO():
+	case f.isStateStoreMinIO():
 		return f.envsForMinIO()
-	case f.isObjectStorageS3() || f.isObjectStorageS3Compatible():
+	case f.isStateStoreS3() || f.isStateStoreS3Compatible():
 		return f.envsForS3()
-	case f.isObjectStorageGCS():
+	case f.isStateStoreGCS():
 		return f.envsForGCS()
-	case f.isObjectStorageAliyunOSS():
+	case f.isStateStoreAliyunOSS():
 		return f.envsForAliyunOSS()
-	case f.isObjectStorageAzureBlob():
+	case f.isStateStoreAzureBlob():
 		return f.envsForAzureBlob()
-	case f.isObjectStorageHDFS():
+	case f.isStateStoreHDFS():
 		return f.envsForHDFS()
-	case f.isObjectStorageWebHDFS():
+	case f.isStateStoreWebHDFS():
 		return f.envsForWebHDFS()
 	default:
 		return nil
@@ -1313,12 +1307,12 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 	container.Ports = f.portsForMetaContainer()
 	container.Env = append(container.Env, f.envsForMetaArgs()...)
 
-	for _, env := range f.envsForObjectStorage() {
+	for _, env := range f.envsForStateStore() {
 		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
 			return a.Name == b.Name
 		})
 	}
-	if f.isMetaStorageEtcd() {
+	if f.isMetaStoreEtcd() {
 		for _, env := range f.envsForEtcd() {
 			container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
 				return a.Name == b.Name
@@ -1624,7 +1618,7 @@ func (f *RisingWaveObjectFactory) setupCompactorContainer(container *corev1.Cont
 	container.Env = append(container.Env, f.envsForCompactorArgs()...)
 	container.Ports = f.portsForCompactorContainer()
 
-	for _, env := range f.envsForObjectStorage() {
+	for _, env := range f.envsForStateStore() {
 		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
 			return a.Name == b.Name
 		})
@@ -1912,7 +1906,7 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 	container.Env = append(container.Env, f.envsForComputeArgs(cpuLimit, memLimit)...)
 	container.Ports = f.portsForComputeContainer()
 
-	for _, env := range f.envsForObjectStorage() {
+	for _, env := range f.envsForStateStore() {
 		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
 			return a.Name == b.Name
 		})

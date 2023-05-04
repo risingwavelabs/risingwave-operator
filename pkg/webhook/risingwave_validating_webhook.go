@@ -198,10 +198,10 @@ func (v *RisingWaveValidatingWebhook) validateStorages(path *field.Path, metaSto
 		}
 	}
 
-	validStateStorageTypeCount := lo.CountBy([]bool{isStateMemory, isStateMinIO, isStateS3, isStateGCS, isStateAliyunOSS, isStateAzureBlob, isStateHDFS, isStateWebHDFS}, func(x bool) bool { return x })
-	if validStateStorageTypeCount == 0 {
+	validStateStoreTypeCount := lo.CountBy([]bool{isStateMemory, isStateMinIO, isStateS3, isStateGCS, isStateAliyunOSS, isStateAzureBlob, isStateHDFS, isStateWebHDFS}, func(x bool) bool { return x })
+	if validStateStoreTypeCount == 0 {
 		fieldErrs = append(fieldErrs, field.Invalid(path.Child("state"), stateStore, "must configure the state storage"))
-	} else if validStateStorageTypeCount > 1 {
+	} else if validStateStoreTypeCount > 1 {
 		fieldErrs = append(fieldErrs, field.Invalid(path.Child("state"), stateStore, "multiple state storage types"))
 	}
 
@@ -356,11 +356,11 @@ func (v *RisingWaveValidatingWebhook) ValidateDelete(ctx context.Context, obj ru
 	return nil
 }
 
-func (v *RisingWaveValidatingWebhook) isMetaStoragesTheSame(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
+func (v *RisingWaveValidatingWebhook) isMetaStoresTheSame(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
 	return equality.Semantic.DeepEqual(oldObj.Spec.MetaStore, newObj.Spec.MetaStore)
 }
 
-func (v *RisingWaveValidatingWebhook) isStateStoragesTheSame(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
+func (v *RisingWaveValidatingWebhook) isStateStoresTheSame(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
 	return equality.Semantic.DeepEqual(oldObj.Spec.StateStore, newObj.Spec.StateStore)
 }
 
@@ -376,7 +376,7 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 	gvk := oldObj.GroupVersionKind()
 
 	// The storages must not be changed, especially meta and state.
-	if !v.isMetaStoragesTheSame(oldObj, newObj) {
+	if !v.isMetaStoresTheSame(oldObj, newObj) {
 		return apierrors.NewForbidden(
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			oldObj.Name,
@@ -384,7 +384,7 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 		)
 	}
 
-	if !v.isStateStoragesTheSame(oldObj, newObj) {
+	if !v.isStateStoresTheSame(oldObj, newObj) {
 		return apierrors.NewForbidden(
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			oldObj.Name,

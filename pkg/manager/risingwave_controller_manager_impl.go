@@ -120,34 +120,34 @@ func isGroupMissing(group risingwavev1alpha1.ComponentGroupReplicasStatus) bool 
 	return !group.Exists
 }
 
-func buildMetaStorageType(metaStorage *risingwavev1alpha1.RisingWaveMetaStoreBackend) risingwavev1alpha1.RisingWaveMetaStoreBackendType {
+func buildMetaStoreType(metaStore *risingwavev1alpha1.RisingWaveMetaStoreBackend) risingwavev1alpha1.RisingWaveMetaStoreBackendType {
 	switch {
-	case metaStorage.Memory != nil && *metaStorage.Memory:
+	case metaStore.Memory != nil && *metaStore.Memory:
 		return risingwavev1alpha1.RisingWaveMetaStoreBackendTypeMemory
-	case metaStorage.Etcd != nil:
+	case metaStore.Etcd != nil:
 		return risingwavev1alpha1.RisingWaveMetaStoreBackendTypeEtcd
 	default:
 		return risingwavev1alpha1.RisingWaveMetaStoreBackendTypeUnknown
 	}
 }
 
-func buildStateStorageType(stateStorage *risingwavev1alpha1.RisingWaveStateStoreBackend) risingwavev1alpha1.RisingWaveStateStoreBackendType {
+func buildStateStoreType(stateStore *risingwavev1alpha1.RisingWaveStateStoreBackend) risingwavev1alpha1.RisingWaveStateStoreBackendType {
 	switch {
-	case pointer.BoolDeref(stateStorage.Memory, false):
+	case pointer.BoolDeref(stateStore.Memory, false):
 		return risingwavev1alpha1.RisingWaveStateStoreBackendTypeMemory
-	case stateStorage.MinIO != nil:
+	case stateStore.MinIO != nil:
 		return risingwavev1alpha1.RisingWaveStateStoreBackendTypeMinIO
-	case stateStorage.S3 != nil:
+	case stateStore.S3 != nil:
 		return risingwavev1alpha1.RisingWaveStateStoreBackendTypeS3
-	case stateStorage.GCS != nil:
+	case stateStore.GCS != nil:
 		return risingwavev1alpha1.RisingWaveStateStoreBackendTypeGCS
-	case stateStorage.AliyunOSS != nil:
+	case stateStore.AliyunOSS != nil:
 		return risingwavev1alpha1.RisingWaveStateStoreBackendTypeAliyunOSS
-	case stateStorage.AzureBlob != nil:
+	case stateStore.AzureBlob != nil:
 		return risingwavev1alpha1.RisingWaveStateStoreBackendTypeAzureBlob
-	case stateStorage.HDFS != nil:
+	case stateStore.HDFS != nil:
 		return risingwavev1alpha1.RisingWaveStateStoreBackendTypeHDFS
-	case stateStorage.WebHDFS != nil:
+	case stateStore.WebHDFS != nil:
 		return risingwavev1alpha1.RisingWaveStateStoreBackendTypeWebHDFS
 	default:
 		return risingwavev1alpha1.RisingWaveStateStoreBackendTypeUnknown
@@ -187,15 +187,15 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 	}
 	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
 		// Report meta storage status.
-		metaStorage := &risingwave.Spec.MetaStore
+		metaStore := &risingwave.Spec.MetaStore
 		status.MetaStore = risingwavev1alpha1.RisingWaveMetaStoreStatus{
-			Backend: buildMetaStorageType(metaStorage),
+			Backend: buildMetaStoreType(metaStore),
 		}
 
 		// Report object storage status.
-		stateStorage := &risingwave.Spec.StateStore
+		stateStore := &risingwave.Spec.StateStore
 		status.StateStore = risingwavev1alpha1.RisingWaveStateStoreStatus{
-			Backend: buildStateStorageType(stateStorage),
+			Backend: buildStateStoreType(stateStore),
 		}
 
 		// Report Version status.
@@ -311,15 +311,15 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 	}
 	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
 		// Report meta storage status.
-		metaStorage := &risingwave.Spec.MetaStore
+		metaStore := &risingwave.Spec.MetaStore
 		status.MetaStore = risingwavev1alpha1.RisingWaveMetaStoreStatus{
-			Backend: buildMetaStorageType(metaStorage),
+			Backend: buildMetaStoreType(metaStore),
 		}
 
 		// Report object storage status.
-		stateStorage := &risingwave.Spec.StateStore
+		stateStore := &risingwave.Spec.StateStore
 		status.StateStore = risingwavev1alpha1.RisingWaveStateStoreStatus{
-			Backend: buildStateStorageType(stateStorage),
+			Backend: buildStateStoreType(stateStore),
 		}
 
 		// Report Version status.

@@ -973,11 +973,11 @@ func serviceMetadataPredicates() []predicate[*corev1.Service, serviceMetadataTes
 	}
 }
 
-func stateStorageStatefulsetPredicates() []predicate[*appsv1.StatefulSet, stateStoragesTestCase] {
-	return []predicate[*appsv1.StatefulSet, stateStoragesTestCase]{
+func stateStoreStatefulsetPredicates() []predicate[*appsv1.StatefulSet, stateStoresTestCase] {
+	return []predicate[*appsv1.StatefulSet, stateStoresTestCase]{
 		{
 			Name: "env-vars-contains",
-			Fn: func(obj *appsv1.StatefulSet, tc stateStoragesTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc stateStoresTestCase) bool {
 				return listContainsByKey(obj.Spec.Template.Spec.Containers[0].Env, tc.envs, func(t *corev1.EnvVar) string { return t.Name }, deepEqual[corev1.EnvVar])
 			},
 		},
@@ -1015,11 +1015,11 @@ func configMapPredicates() []predicate[*corev1.ConfigMap, configMapTestCase] {
 	}
 }
 
-func metaStoragePredicates() []predicate[*appsv1.StatefulSet, metaStorageTestCase] {
-	return []predicate[*appsv1.StatefulSet, metaStorageTestCase]{
+func metaStorePredicates() []predicate[*appsv1.StatefulSet, metaStoreTestCase] {
+	return []predicate[*appsv1.StatefulSet, metaStoreTestCase]{
 		{
 			Name: "env-vars-contains",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStorageTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc metaStoreTestCase) bool {
 				return listContainsByKey(obj.Spec.Template.Spec.Containers[0].Env, tc.envs, func(t *corev1.EnvVar) string { return t.Name }, deepEqual[corev1.EnvVar])
 			},
 		},

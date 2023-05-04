@@ -57,10 +57,10 @@ type testCaseType interface {
 		computeAdvancedSTSTestCase |
 		servicesTestCase |
 		serviceMetadataTestCase |
-		stateStoragesTestCase |
+		stateStoresTestCase |
 		configMapTestCase |
 		computeArgsTestCase |
-		metaStorageTestCase |
+		metaStoreTestCase |
 		metaStatefulSetTestCase |
 		metaAdvancedSTSTestCase
 }
@@ -2479,16 +2479,16 @@ func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
 	}
 }
 
-type stateStoragesTestCase struct {
+type stateStoresTestCase struct {
 	baseTestCase
-	stateStorage risingwavev1alpha1.RisingWaveStateStoreBackend
-	envs         []corev1.EnvVar
+	stateStore risingwavev1alpha1.RisingWaveStateStoreBackend
+	envs       []corev1.EnvVar
 }
 
-func stateStorageTestCases() map[string]stateStoragesTestCase {
-	return map[string]stateStoragesTestCase{
+func stateStoreTestCases() map[string]stateStoresTestCase {
+	return map[string]stateStoresTestCase{
 		"empty_data_directory": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				DataDirectory: "",
 				Memory:        pointer.Bool(true),
 			},
@@ -2500,7 +2500,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			},
 		},
 		"some_data_directory": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				DataDirectory: "1234",
 				Memory:        pointer.Bool(true),
 			},
@@ -2512,7 +2512,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			},
 		},
 		"memory": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				Memory: pointer.Bool(true),
 			},
 			envs: []corev1.EnvVar{
@@ -2523,7 +2523,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			},
 		},
 		"minio": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				MinIO: &risingwavev1alpha1.RisingWaveStateStoreBackendMinIO{
 					Endpoint: "minio-endpoint:1234",
 					Bucket:   "minio-hummock01",
@@ -2564,7 +2564,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			},
 		},
 		"s3": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 					Bucket: "s3-hummock01",
 					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
@@ -2619,7 +2619,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			},
 		},
 		"gcs-workload": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 					UseWorkloadIdentity: true,
 					Bucket:              "gcs-bucket",
@@ -2632,7 +2632,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			}},
 		},
 		"gcs-secret": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 					UseWorkloadIdentity: false,
 					Bucket:              "gcs-bucket",
@@ -2662,7 +2662,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			},
 		},
 		"aliyun-oss": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
 					Bucket: "s3-hummock01",
 					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
@@ -2721,7 +2721,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			},
 		},
 		"aliyun-oss-internal": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
 					Bucket:           "s3-hummock01",
 					InternalEndpoint: true,
@@ -2781,7 +2781,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			},
 		},
 		"aliyun-oss-with-region": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
 					Bucket: "s3-hummock01",
 					Region: "cn-hangzhou",
@@ -2834,7 +2834,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			},
 		},
 		"s3-compatible": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 					Bucket:   "s3-hummock01",
 					Endpoint: "oss-cn-hangzhou.aliyuncs.com",
@@ -2894,7 +2894,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			},
 		},
 		"s3-compatible-virtual-hosted-style": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 					Bucket:             "s3-hummock01",
 					Endpoint:           "https://oss-cn-hangzhou.aliyuncs.com",
@@ -2955,7 +2955,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			},
 		},
 		"s3-with-region": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 					Bucket: "s3-hummock01",
 					Region: "ap-southeast-1",
@@ -3004,7 +3004,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			},
 		},
 		"endpoint-with-region-variable": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 					Bucket:   "s3-hummock01",
 					Endpoint: "s3.${REGION}.amazonaws.com",
@@ -3027,7 +3027,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			},
 		},
 		"endpoint-with-bucket-variable": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 					Bucket:   "s3-hummock01",
 					Endpoint: "${BUCKET}.s3.${REGION}.amazonaws.com",
@@ -3050,7 +3050,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			},
 		},
 		"azure-blob": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
 					Container: "azure-blob-hummock01",
 					Root:      "/azure-blob-root",
@@ -3096,7 +3096,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			},
 		},
 		"hdfs": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				HDFS: &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{
 					NameNode: "name-node",
 					Root:     "root",
@@ -3108,7 +3108,7 @@ func stateStorageTestCases() map[string]stateStoragesTestCase {
 			}},
 		},
 		"webhdfs": {
-			stateStorage: risingwavev1alpha1.RisingWaveStateStoreBackend{
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				WebHDFS: &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{
 					NameNode: "name-node",
 					Root:     "root",
@@ -3270,15 +3270,15 @@ func inheritedLabelsTestCases() map[string]inheritedLabelsTestCase {
 	}
 }
 
-type metaStorageTestCase struct {
-	metaStorage risingwavev1alpha1.RisingWaveMetaStoreBackend
-	envs        []corev1.EnvVar
+type metaStoreTestCase struct {
+	metaStore risingwavev1alpha1.RisingWaveMetaStoreBackend
+	envs      []corev1.EnvVar
 }
 
-func metaStorageTestCases() map[string]metaStorageTestCase {
-	return map[string]metaStorageTestCase{
+func metaStoreTestCases() map[string]metaStoreTestCase {
+	return map[string]metaStoreTestCase{
 		"memory": {
-			metaStorage: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
 				Memory: pointer.Bool(true),
 			},
 			envs: []corev1.EnvVar{
@@ -3289,7 +3289,7 @@ func metaStorageTestCases() map[string]metaStorageTestCase {
 			},
 		},
 		"etcd-no-auth": {
-			metaStorage: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
 				Etcd: &risingwavev1alpha1.RisingWaveMetaStoreBackendEtcd{
 					Endpoint: "etcd:1234",
 				},
@@ -3306,7 +3306,7 @@ func metaStorageTestCases() map[string]metaStorageTestCase {
 			},
 		},
 		"etcd-auth": {
-			metaStorage: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
 				Etcd: &risingwavev1alpha1.RisingWaveMetaStoreBackendEtcd{
 					Endpoint: "etcd:1234",
 					RisingWaveEtcdCredentials: &risingwavev1alpha1.RisingWaveEtcdCredentials{

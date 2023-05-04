@@ -365,14 +365,14 @@ func Test_RisingWaveObjectFactory_Compute_AdvancedStatefulSets(t *testing.T) {
 	}
 }
 
-func Test_RisingWaveObjectFactory_StateStorages(t *testing.T) {
-	predicates := stateStorageStatefulsetPredicates()
+func Test_RisingWaveObjectFactory_StateStores(t *testing.T) {
+	predicates := stateStoreStatefulsetPredicates()
 
-	for name, tc := range stateStorageTestCases() {
+	for name, tc := range stateStoreTestCases() {
 		t.Run(name, func(t *testing.T) {
 			tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.MetaStore = risingwavev1alpha1.RisingWaveMetaStoreBackend{Memory: pointer.Bool(true)}
-				r.Spec.StateStore = tc.stateStorage
+				r.Spec.StateStore = tc.stateStore
 			})
 
 			factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
@@ -385,12 +385,12 @@ func Test_RisingWaveObjectFactory_StateStorages(t *testing.T) {
 	}
 }
 
-func Test_RisingWaveObjectFactory_MetaStorages(t *testing.T) {
-	predicates := metaStoragePredicates()
+func Test_RisingWaveObjectFactory_MetaStores(t *testing.T) {
+	predicates := metaStorePredicates()
 
-	for name, tc := range metaStorageTestCases() {
+	for name, tc := range metaStoreTestCases() {
 		risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
-			r.Spec.MetaStore = tc.metaStorage
+			r.Spec.MetaStore = tc.metaStore
 			r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{Memory: pointer.Bool(true)}
 		})
 

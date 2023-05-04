@@ -54,26 +54,26 @@ func ConvertStorages(obj *v1alpha1.RisingWave) {
 		obj.Spec.StateStore = *obj.Spec.Storages.Object.DeepCopy()
 	}
 
-	metaStorage := &obj.Spec.MetaStore
-	if metaStorage.Etcd != nil && metaStorage.Etcd.Secret != "" {
-		if metaStorage.Etcd.RisingWaveEtcdCredentials == nil {
-			metaStorage.Etcd.RisingWaveEtcdCredentials = &v1alpha1.RisingWaveEtcdCredentials{}
+	metaStore := &obj.Spec.MetaStore
+	if metaStore.Etcd != nil && metaStore.Etcd.Secret != "" {
+		if metaStore.Etcd.RisingWaveEtcdCredentials == nil {
+			metaStore.Etcd.RisingWaveEtcdCredentials = &v1alpha1.RisingWaveEtcdCredentials{}
 		}
-		metaStorage.Etcd.RisingWaveEtcdCredentials.SecretName = metaStorage.Etcd.Secret
+		metaStore.Etcd.RisingWaveEtcdCredentials.SecretName = metaStore.Etcd.Secret
 	}
 
-	stateStorage := &obj.Spec.StateStore
+	stateStore := &obj.Spec.StateStore
 	switch {
-	case stateStorage.MinIO != nil && stateStorage.MinIO.Secret != "":
-		stateStorage.MinIO.RisingWaveMinIOCredentials.SecretName = stateStorage.MinIO.Secret
-	case stateStorage.S3 != nil && stateStorage.S3.Secret != "":
-		stateStorage.S3.RisingWaveS3Credentials.SecretName = stateStorage.S3.Secret
-	case stateStorage.GCS != nil && stateStorage.GCS.Secret != "":
-		stateStorage.GCS.RisingWaveGCSCredentials.SecretName = stateStorage.GCS.Secret
-	case stateStorage.AliyunOSS != nil && stateStorage.AliyunOSS.Secret != "":
-		stateStorage.AliyunOSS.RisingWaveS3Credentials.SecretName = stateStorage.AliyunOSS.Secret
-	case stateStorage.AzureBlob != nil && stateStorage.AzureBlob.Secret != "":
-		stateStorage.AzureBlob.RisingWaveAzureBlobCredentials.SecretName = stateStorage.AzureBlob.Secret
+	case stateStore.MinIO != nil && stateStore.MinIO.Secret != "":
+		stateStore.MinIO.RisingWaveMinIOCredentials.SecretName = stateStore.MinIO.Secret
+	case stateStore.S3 != nil && stateStore.S3.Secret != "":
+		stateStore.S3.RisingWaveS3Credentials.SecretName = stateStore.S3.Secret
+	case stateStore.GCS != nil && stateStore.GCS.Secret != "":
+		stateStore.GCS.RisingWaveGCSCredentials.SecretName = stateStore.GCS.Secret
+	case stateStore.AliyunOSS != nil && stateStore.AliyunOSS.Secret != "":
+		stateStore.AliyunOSS.RisingWaveS3Credentials.SecretName = stateStore.AliyunOSS.Secret
+	case stateStore.AzureBlob != nil && stateStore.AzureBlob.Secret != "":
+		stateStore.AzureBlob.RisingWaveAzureBlobCredentials.SecretName = stateStore.AzureBlob.Secret
 	default:
 	}
 }

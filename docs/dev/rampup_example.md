@@ -171,15 +171,15 @@ We use `make manifests` and `make install-local` to create a new YAML file. The 
 ```golang
 mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
     // Report meta storage status.
-    metaStorage := &risingwave.Spec.metaStore
+    metaStore := &risingwave.Spec.metaStore
     status.metaStore = risingwavev1alpha1.RisingWaveMetaStoreStatus{
-        Type: buildMetaStorageType(metaStorage),
+        Type: buildMetaStoreType(metaStore),
     }
 
     // Report object storage status.
-    stateStorage := &risingwave.Spec.stateStore
+    stateStore := &risingwave.Spec.stateStore
     status.metaStore = risingwavev1alpha1.RisingWaveStateStoreStatus{
-        Type: buildStateStorageType(stateStorage),
+        Type: buildStateStoreType(stateStore),
     }
 
     // Report Version status.

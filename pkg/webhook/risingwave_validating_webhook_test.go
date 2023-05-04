@@ -317,9 +317,11 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					MinIO: &risingwavev1alpha1.RisingWaveStateStoreBackendMinIO{
-						Secret:   "minio-creds",
 						Endpoint: "minio",
 						Bucket:   "hummock",
+						RisingWaveMinIOCredentials: risingwavev1alpha1.RisingWaveMinIOCredentials{
+							SecretName: "minio-creds",
+						},
 					},
 				}
 			},
@@ -329,8 +331,10 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
-						Secret: "s3-creds",
 						Bucket: "hummock",
+						RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+							SecretName: "s3-creds",
+						},
 					},
 				}
 			},
@@ -395,9 +399,11 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 						UseWorkloadIdentity: false,
-						Secret:              "",
 						Bucket:              "gcs-bucket",
 						Root:                "gcs-root",
+						RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
+							SecretName: "",
+						},
 					},
 				}
 			},
@@ -407,8 +413,10 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
-						Secret: "aliyun-oss-creds",
 						Bucket: "hummock",
+						RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+							SecretName: "aliyun-oss-creds",
+						},
 					},
 				}
 			},
@@ -418,10 +426,12 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
-						Secret:    "azure-blob-creds",
 						Container: "hummock",
 						Root:      "azure-blob-root",
 						Endpoint:  "https://accountName.blob.core.windows.net",
+						RisingWaveAzureBlobCredentials: risingwavev1alpha1.RisingWaveAzureBlobCredentials{
+							SecretName: "azure-blob-creds",
+						},
 					},
 				}
 			},
@@ -762,7 +772,9 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.MetaStore = risingwavev1alpha1.RisingWaveMetaStoreBackend{
 					Etcd: &risingwavev1alpha1.RisingWaveMetaStoreBackendEtcd{
 						Endpoint: "etcd",
-						Secret:   "etcd-credentials",
+						RisingWaveEtcdCredentials: &risingwavev1alpha1.RisingWaveEtcdCredentials{
+							SecretName: "etcd-credentials",
+						},
 					},
 				}
 			},

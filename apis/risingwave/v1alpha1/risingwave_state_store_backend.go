@@ -60,7 +60,7 @@ type RisingWaveStateStoreBackendMinIO struct {
 	// Secret contains the credentials to access the MinIO service. It must contain the following keys:
 	//   * username
 	//   * password
-	// +kubebuilder:validation:Required
+	// Deprecated: Please use "credentials" field instead. The "Secret" field will be removed in a future release.
 	Secret string `json:"secret"`
 
 	// Endpoint of the MinIO service.
@@ -97,7 +97,7 @@ type RisingWaveStateStoreBackendS3 struct {
 	//   * AccessKeyID
 	//   * SecretAccessKey
 	//   * Region (optional if region is specified in the field.)
-	// +kubebuilder:validation:Required
+	// Deprecated: Please use "credentials" field instead. The "Secret" field will be removed in a future release.
 	Secret string `json:"secret"`
 
 	// Bucket of the AWS S3 service.
@@ -147,6 +147,7 @@ type RisingWaveStateStoreBackendGCS struct {
 	// Secret contains the credentials to access the GCS service. It must contain the following keys:
 	//   * ServiceAccountCredentials
 	// +kubebuilder:validation:Optional
+	// Deprecated: Please use "credentials" field instead. The "Secret" field will be removed in a future release.
 	Secret string `json:"secret,omitempty"`
 
 	// Bucket of the GCS bucket service.
@@ -167,7 +168,7 @@ type RisingWaveStateStoreBackendAliyunOSS struct {
 	//   * AccessKeyID
 	//   * SecretAccessKey
 	//   * Region (optional if region is specified in the field.)
-	// +kubebuilder:validation:Required
+	// Deprecated: Please use "credentials" field instead. The "Secret" field will be removed in a future release.
 	Secret string `json:"secret"`
 
 	// Region of Aliyun OSS service. It is an optional field that overrides the `Region` key from the secret.
@@ -207,7 +208,7 @@ type RisingWaveStateStoreBackendAzureBlob struct {
 	// Secret contains the credentials to access the Azure Blob service. It must contain the following keys:
 	//   * AccessKeyID
 	//   * SecretAccessKey
-	// +kubebuilder:validation:Required
+	// Deprecated: Please use "credentials" field instead. The "Secret" field will be removed in a future release.
 	Secret string `json:"secret"`
 
 	// Container Name of the Azure Blob service.

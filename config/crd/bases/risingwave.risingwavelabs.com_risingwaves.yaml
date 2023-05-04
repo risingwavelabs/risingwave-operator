@@ -10155,7 +10155,9 @@ spec:
                         description: 'Secret contains the credentials of access the
                           etcd, it must contain the following keys: * username * password
                           But it is an optional field. Empty value indicates etcd
-                          is available without authentication.'
+                          is available without authentication. Deprecated: Please
+                          use "credentials" field instead. The "Secret" field will
+                          be removed in a future release.'
                         type: string
                     required:
                     - endpoint
@@ -10202,7 +10204,9 @@ spec:
                         type: string
                       secret:
                         description: 'Secret contains the credentials to access the
-                          GCS service. It must contain the following keys: * ServiceAccountCredentials'
+                          GCS service. It must contain the following keys: * ServiceAccountCredentials
+                          Deprecated: Please use "credentials" field instead. The
+                          "Secret" field will be removed in a future release.'
                         type: string
                       useWorkloadIdentity:
                         description: UseWorkloadIdentity indicates to use workload
@@ -10258,7 +10262,9 @@ spec:
                         description: 'Secret contains the credentials to access the
                           Aliyun OSS service. It must contain the following keys:
                           * AccessKeyID * SecretAccessKey * Region (optional if region
-                          is specified in the field.)'
+                          is specified in the field.) Deprecated: Please use "credentials"
+                          field instead. The "Secret" field will be removed in a future
+                          release.'
                         type: string
                     required:
                     - bucket
@@ -10304,7 +10310,9 @@ spec:
                       secret:
                         description: 'Secret contains the credentials to access the
                           Azure Blob service. It must contain the following keys:
-                          * AccessKeyID * SecretAccessKey'
+                          * AccessKeyID * SecretAccessKey Deprecated: Please use "credentials"
+                          field instead. The "Secret" field will be removed in a future
+                          release.'
                         type: string
                     required:
                     - container
@@ -10369,7 +10377,8 @@ spec:
                       secret:
                         description: 'Secret contains the credentials to access the
                           MinIO service. It must contain the following keys: * username
-                          * password'
+                          * password Deprecated: Please use "credentials" field instead.
+                          The "Secret" field will be removed in a future release.'
                         type: string
                     required:
                     - bucket
@@ -10424,7 +10433,9 @@ spec:
                         description: 'Secret contains the credentials to access the
                           AWS S3 service. It must contain the following keys: * AccessKeyID
                           * SecretAccessKey * Region (optional if region is specified
-                          in the field.)'
+                          in the field.) Deprecated: Please use "credentials" field
+                          instead. The "Secret" field will be removed in a future
+                          release.'
                         type: string
                       virtualHostedStyle:
                         description: VirtualHostedStyle indicates to use a virtual
@@ -10495,7 +10506,9 @@ spec:
                             description: 'Secret contains the credentials of access
                               the etcd, it must contain the following keys: * username
                               * password But it is an optional field. Empty value
-                              indicates etcd is available without authentication.'
+                              indicates etcd is available without authentication.
+                              Deprecated: Please use "credentials" field instead.
+                              The "Secret" field will be removed in a future release.'
                             type: string
                         required:
                         - endpoint
@@ -10539,7 +10552,9 @@ spec:
                           secret:
                             description: 'Secret contains the credentials to access
                               the GCS service. It must contain the following keys:
-                              * ServiceAccountCredentials'
+                              * ServiceAccountCredentials Deprecated: Please use "credentials"
+                              field instead. The "Secret" field will be removed in
+                              a future release.'
                             type: string
                           useWorkloadIdentity:
                             description: UseWorkloadIdentity indicates to use workload
@@ -10595,7 +10610,9 @@ spec:
                             description: 'Secret contains the credentials to access
                               the Aliyun OSS service. It must contain the following
                               keys: * AccessKeyID * SecretAccessKey * Region (optional
-                              if region is specified in the field.)'
+                              if region is specified in the field.) Deprecated: Please
+                              use "credentials" field instead. The "Secret" field
+                              will be removed in a future release.'
                             type: string
                         required:
                         - bucket
@@ -10643,7 +10660,9 @@ spec:
                           secret:
                             description: 'Secret contains the credentials to access
                               the Azure Blob service. It must contain the following
-                              keys: * AccessKeyID * SecretAccessKey'
+                              keys: * AccessKeyID * SecretAccessKey Deprecated: Please
+                              use "credentials" field instead. The "Secret" field
+                              will be removed in a future release.'
                             type: string
                         required:
                         - container
@@ -10709,7 +10728,9 @@ spec:
                           secret:
                             description: 'Secret contains the credentials to access
                               the MinIO service. It must contain the following keys:
-                              * username * password'
+                              * username * password Deprecated: Please use "credentials"
+                              field instead. The "Secret" field will be removed in
+                              a future release.'
                             type: string
                         required:
                         - bucket
@@ -10764,7 +10785,9 @@ spec:
                             description: 'Secret contains the credentials to access
                               the AWS S3 service. It must contain the following keys:
                               * AccessKeyID * SecretAccessKey * Region (optional if
-                              region is specified in the field.)'
+                              region is specified in the field.) Deprecated: Please
+                              use "credentials" field instead. The "Secret" field
+                              will be removed in a future release.'
                             type: string
                           virtualHostedStyle:
                             description: VirtualHostedStyle indicates to use a virtual

@@ -2572,7 +2572,8 @@ string
 <p>Secret contains the credentials of access the etcd, it must contain the following keys:
 * username
 * password
-But it is an optional field. Empty value indicates etcd is available without authentication.</p>
+But it is an optional field. Empty value indicates etcd is available without authentication.
+Deprecated: Please use &ldquo;credentials&rdquo; field instead. The &ldquo;Secret&rdquo; field will be removed in a future release.</p>
 </td>
 </tr>
 </tbody>
@@ -4384,7 +4385,8 @@ string
 <p>Secret contains the credentials to access the Aliyun OSS service. It must contain the following keys:
 * AccessKeyID
 * SecretAccessKey
-* Region (optional if region is specified in the field.)</p>
+* Region (optional if region is specified in the field.)
+Deprecated: Please use &ldquo;credentials&rdquo; field instead. The &ldquo;Secret&rdquo; field will be removed in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -4463,7 +4465,8 @@ string
 <td>
 <p>Secret contains the credentials to access the Azure Blob service. It must contain the following keys:
 * AccessKeyID
-* SecretAccessKey</p>
+* SecretAccessKey
+Deprecated: Please use &ldquo;credentials&rdquo; field instead. The &ldquo;Secret&rdquo; field will be removed in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -4551,7 +4554,8 @@ string
 </td>
 <td>
 <p>Secret contains the credentials to access the GCS service. It must contain the following keys:
-* ServiceAccountCredentials</p>
+* ServiceAccountCredentials
+Deprecated: Please use &ldquo;credentials&rdquo; field instead. The &ldquo;Secret&rdquo; field will be removed in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -4657,7 +4661,8 @@ string
 <td>
 <p>Secret contains the credentials to access the MinIO service. It must contain the following keys:
 * username
-* password</p>
+* password
+Deprecated: Please use &ldquo;credentials&rdquo; field instead. The &ldquo;Secret&rdquo; field will be removed in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -4724,7 +4729,8 @@ string
 <p>Secret contains the credentials to access the AWS S3 service. It must contain the following keys:
 * AccessKeyID
 * SecretAccessKey
-* Region (optional if region is specified in the field.)</p>
+* Region (optional if region is specified in the field.)
+Deprecated: Please use &ldquo;credentials&rdquo; field instead. The &ldquo;Secret&rdquo; field will be removed in a future release.</p>
 </td>
 </tr>
 <tr>

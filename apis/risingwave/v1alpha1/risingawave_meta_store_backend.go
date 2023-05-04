@@ -61,6 +61,7 @@ type RisingWaveMetaStoreBackendEtcd struct {
 	//   * password
 	// But it is an optional field. Empty value indicates etcd is available without authentication.
 	// +optional
+	// Deprecated: Please use "credentials" field instead. The "Secret" field will be removed in a future release.
 	Secret string `json:"secret,omitempty"`
 }
 

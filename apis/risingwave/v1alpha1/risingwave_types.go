@@ -640,12 +640,6 @@ type RisingWaveCondition struct {
 	Message string `json:"message,omitempty"`
 }
 
-// RisingWaveStoragesStatus is the status of external storages.
-type RisingWaveStoragesStatus struct {
-	Meta   RisingWaveMetaStoreStatus  `json:"meta"`
-	Object RisingWaveStateStoreStatus `json:"object"`
-}
-
 // RisingWaveScaleViewLockGroupLock is the lock record of RisingWaveScaleView.
 type RisingWaveScaleViewLockGroupLock struct {
 	// Group name.

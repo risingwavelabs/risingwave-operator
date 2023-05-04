@@ -2604,7 +2604,7 @@ Deprecated: Please use &ldquo;credentials&rdquo; field instead. The &ldquo;Secre
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreStatus">RisingWaveMetaStoreStatus
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesStatus">RisingWaveStoragesStatus</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>)
 </p>
 <div>
 <p>RisingWaveMetaStoreStatus is the status of the meta store.</p>
@@ -4811,7 +4811,7 @@ ${BUCKET}.s3.${REGION}.amazonaws.com</p>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreStatus">RisingWaveStateStoreStatus
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesStatus">RisingWaveStoragesStatus</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>)
 </p>
 <div>
 <p>RisingWaveStateStoreStatus is the status of the state store.</p>
@@ -5000,45 +5000,6 @@ RisingWaveStateStoreBackend
 <em>(Optional)</em>
 <p>The persistent volume claim templates for the compute component. PVCs declared here
 can be referenced in the groups of compute component.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesStatus">RisingWaveStoragesStatus
-</h3>
-<div>
-<p>RisingWaveStoragesStatus is the status of external storages.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>meta</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreStatus">
-RisingWaveMetaStoreStatus
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>object</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreStatus">
-RisingWaveStateStoreStatus
-</a>
-</em>
-</td>
-<td>
 </td>
 </tr>
 </tbody>

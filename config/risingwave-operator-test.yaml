@@ -17597,14 +17597,6 @@ spec:
                           instead. The "Secret" field will be removed in a future
                           release.'
                         type: string
-                      virtualHostedStyle:
-                        description: VirtualHostedStyle indicates to use a virtual
-                          hosted endpoint when endpoint is specified. The operator
-                          automatically adds the bucket prefix for you if this is
-                          enabled. Be careful about doubly using the style by specifying
-                          an endpoint of virtual hosted style as well as enabling
-                          this.
-                        type: boolean
                     required:
                     - bucket
                     - credentials
@@ -17949,14 +17941,6 @@ spec:
                               use "credentials" field instead. The "Secret" field
                               will be removed in a future release.'
                             type: string
-                          virtualHostedStyle:
-                            description: VirtualHostedStyle indicates to use a virtual
-                              hosted endpoint when endpoint is specified. The operator
-                              automatically adds the bucket prefix for you if this
-                              is enabled. Be careful about doubly using the style
-                              by specifying an endpoint of virtual hosted style as
-                              well as enabling this.
-                            type: boolean
                         required:
                         - bucket
                         - credentials

@@ -2896,9 +2896,8 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 		"s3-compatible-virtual-hosted-style": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
-					Bucket:             "s3-hummock01",
-					Endpoint:           "https://oss-cn-hangzhou.aliyuncs.com",
-					VirtualHostedStyle: true,
+					Bucket:   "s3-hummock01",
+					Endpoint: "https://${BUCKET}.oss-cn-hangzhou.aliyuncs.com",
 					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
 						SecretName:         "s3-creds",
 						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,

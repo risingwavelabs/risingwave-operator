@@ -4771,19 +4771,6 @@ s3.${REGION}.amazonaws.com
 ${BUCKET}.s3.${REGION}.amazonaws.com</p>
 </td>
 </tr>
-<tr>
-<td>
-<code>virtualHostedStyle</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>VirtualHostedStyle indicates to use a virtual hosted endpoint when endpoint is specified. The operator automatically
-adds the bucket prefix for you if this is enabled. Be careful about doubly using the style by specifying an endpoint
-of virtual hosted style as well as enabling this.</p>
-</td>
-</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendType">RisingWaveStateStoreBackendType

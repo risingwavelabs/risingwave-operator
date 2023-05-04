@@ -19,8 +19,7 @@ spec:
         secret: cos-credentials
         region: ap-guangzhou
         bucket: hummock001
-        endpoint: cos.${REGION}.myqcloud.com
-        virtualHostedStyle: true
+        endpoint: ${BUCKET}.cos.${REGION}.myqcloud.com
   global:
     image: ghcr.io/risingwavelabs/risingwave:v0.18.0
     imagePullPolicy: IfNotPresent

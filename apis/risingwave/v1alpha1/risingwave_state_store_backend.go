@@ -115,11 +115,6 @@ type RisingWaveStateStoreBackendS3 struct {
 	// +optional
 	// +kubebuilder:validation:Pattern="^(?:https://)?(?:[^/.\\s]+\\.)*(?:[^/\\s]+)*$"
 	Endpoint string `json:"endpoint,omitempty"`
-
-	// VirtualHostedStyle indicates to use a virtual hosted endpoint when endpoint is specified. The operator automatically
-	// adds the bucket prefix for you if this is enabled. Be careful about doubly using the style by specifying an endpoint
-	// of virtual hosted style as well as enabling this.
-	VirtualHostedStyle bool `json:"virtualHostedStyle,omitempty"`
 }
 
 // RisingWaveGCSCredentials is the reference and keys selector to the GCS access credentials stored in a local secret.

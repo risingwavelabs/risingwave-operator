@@ -782,18 +782,9 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 		endpoint = strings.ReplaceAll(endpoint, "${REGION}", fmt.Sprintf("$(%s)", envs.S3CompatibleRegion))
 		endpoint = strings.ReplaceAll(endpoint, "${BUCKET}", fmt.Sprintf("$(%s)", envs.S3CompatibleBucket))
 
-		if s3Spec.VirtualHostedStyle {
-			if strings.HasPrefix(endpoint, "https://") {
-				endpoint = fmt.Sprintf("https://$(%s).%s", envs.S3CompatibleBucket, endpoint[len("https://"):])
-			} else {
-				endpoint = fmt.Sprintf("https://$(%s).%s", envs.S3CompatibleBucket, endpoint)
-			}
-		} else {
-			if !strings.HasPrefix(endpoint, "https://") {
-				endpoint = "https://" + endpoint
-			}
+		if !strings.HasPrefix(endpoint, "https://") {
+			endpoint = "https://" + endpoint
 		}
-
 		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials)
 	}
 	// AWS S3 mode.

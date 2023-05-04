@@ -44,12 +44,12 @@ type RisingWaveMinIOCredentials struct {
 	// UsernameKeyRef is the key of the secret to be the username. Must be a valid secret key.
 	// Defaults to "username".
 	// +kubebuilder:default=username
-	UsernameKeyRef *string `json:"usernameKeyRef,omitempty"`
+	UsernameKeyRef string `json:"usernameKeyRef,omitempty"`
 
 	// PasswordKeyRef is the key of the secret to be the password. Must be a valid secret key.
 	// Defaults to "password".
 	// +kubebuilder:default=password
-	PasswordKeyRef *string `json:"passwordKeyRef,omitempty"`
+	PasswordKeyRef string `json:"passwordKeyRef,omitempty"`
 }
 
 // RisingWaveStateStoreBackendMinIO is the collection of parameters for the MinIO backend state store.
@@ -80,12 +80,12 @@ type RisingWaveS3Credentials struct {
 	// AccessKeyRef is the key of the secret to be the access key. Must be a valid secret key.
 	// Defaults to "AccessKeyID".
 	// +kubebuilder:default=AccessKeyID
-	AccessKeyRef *string `json:"accessKeyRef,omitempty"`
+	AccessKeyRef string `json:"accessKeyRef,omitempty"`
 
 	// SecretAccessKeyRef is the key of the secret to be the secret access key. Must be a valid secret key.
 	// Defaults to "SecretAccessKey".
 	// +kubebuilder:default=SecretAccessKey
-	SecretAccessKeyRef *string `json:"secretAccessKeyRef,omitempty"`
+	SecretAccessKeyRef string `json:"secretAccessKeyRef,omitempty"`
 }
 
 // RisingWaveStateStoreBackendS3 is the collection of parameters for the S3 backend state store.
@@ -132,7 +132,7 @@ type RisingWaveGCSCredentials struct {
 	// Defaults to "ServiceAccountCredentials".
 	// +kubebuilder:default=ServiceAccountCredentials
 	// +optional
-	ServiceAccountCredentialsKeyRef *string `json:"serviceAccountCredentialsKeyRef,omitempty"`
+	ServiceAccountCredentialsKeyRef string `json:"serviceAccountCredentialsKeyRef,omitempty"`
 }
 
 // RisingWaveStateStoreBackendGCS is the collection of parameters for the GCS backend state store.
@@ -192,12 +192,12 @@ type RisingWaveAzureBlobCredentials struct {
 	// AccountNameKeyRef is the key of the secret to be the account name. Must be a valid secret key.
 	// Defaults to "AccountName".
 	// +kubebuilder:default=AccountName
-	AccountNameRef *string `json:"accountNameRef,omitempty"`
+	AccountNameRef string `json:"accountNameRef,omitempty"`
 
 	// AccountKeyRef is the key of the secret to be the secret account key. Must be a valid secret key.
 	// Defaults to "AccountKey".
 	// +kubebuilder:default=AccountKey
-	AccountKeyRef *string `json:"AccountKeyRef,omitempty"`
+	AccountKeyRef string `json:"AccountKeyRef,omitempty"`
 }
 
 // RisingWaveStateStoreBackendAzureBlob is the details of Azure blob storage (S3 compatible) for compute and compactor components.

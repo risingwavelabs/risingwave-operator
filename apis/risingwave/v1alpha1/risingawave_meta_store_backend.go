@@ -38,12 +38,12 @@ type RisingWaveEtcdCredentials struct {
 	// UsernameKeyRef is the key of the secret to be the username. Must be a valid secret key.
 	// Defaults to "username".
 	// +kubebuilder:default=username
-	UsernameKeyRef *string `json:"usernameKeyRef,omitempty"`
+	UsernameKeyRef string `json:"usernameKeyRef,omitempty"`
 
 	// PasswordKeyRef is the key of the secret to be the password. Must be a valid secret key.
 	// Defaults to "password".
 	// +kubebuilder:default=password
-	PasswordKeyRef *string `json:"passwordKeyRef,omitempty"`
+	PasswordKeyRef string `json:"passwordKeyRef,omitempty"`
 }
 
 // RisingWaveMetaStoreBackendEtcd is the collection of parameters for the etcd backend meta store.

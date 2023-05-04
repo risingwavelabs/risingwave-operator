@@ -1119,6 +1119,9 @@ func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podT
 		if groupTemplate.TerminationGracePeriodSeconds != nil {
 			podTemplate.Spec.TerminationGracePeriodSeconds = pointer.Int64(*groupTemplate.TerminationGracePeriodSeconds)
 		}
+
+		// Set the affinity.
+		podTemplate.Spec.Affinity = groupTemplate.Affinity.DeepCopy()
 	}
 
 	// Set config volume.

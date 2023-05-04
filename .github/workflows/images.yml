@@ -67,6 +67,8 @@ jobs:
       with:
         context: .
         file: build/Dockerfile
+        build-args: |
+          VERSION=${{ github.sha }}
         push: ${{ github.event_name != 'pull_request' }}
         platforms: linux/amd64,linux/arm64
         tags: "${{ steps.meta.outputs.tags }}\n${{ steps.dockerhub-meta.outputs.tags }}"

@@ -383,7 +383,7 @@ func (v *RisingWaveValidatingWebhook) isConvertFromObject(oldObj, newObj *rising
 	} else if newStateStore.AzureBlob != nil && oldStateStore.AzureBlob != nil {
 		return newStateStore.AzureBlob.RisingWaveAzureBlobCredentials.SecretName == oldStateStore.AzureBlob.Secret
 	} else {
-		return equality.Semantic.DeepEqual(oldObj.Spec.Storages.Object, newObj.Spec.StateStore)
+		return equality.Semantic.DeepEqual(oldStateStore, newStateStore)
 	}
 }
 

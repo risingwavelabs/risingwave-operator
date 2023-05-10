@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/risingwavelabs/risingwave-operator/pkg/webhook"
+
 	"github.com/go-logr/logr"
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
 	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
@@ -161,6 +163,14 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 	}
 
 	logger = logger.WithValues("generation", risingwave.Generation)
+
+	// Converts and updates v1alpha1 storages.
+	webhook.ConvertStorages(&risingwave)
+	err = c.Client.Update(ctx, &risingwave)
+	if err != nil {
+		logger.Error(err, "Failed to converts and updates v1alpha1 storages")
+		return ctrlkit.Exit()
+	}
 
 	// Pause and skip the reconciliation if the annotation is found.
 	if _, ok := risingwave.Annotations[consts.AnnotationPauseReconcile]; ok {

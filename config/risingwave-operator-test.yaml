@@ -17429,7 +17429,6 @@ spec:
                     required:
                     - bucket
                     - credentials
-                    - secret
                     type: object
                   azureBlob:
                     description: Azure Blob storage spec.
@@ -17479,7 +17478,6 @@ spec:
                     - credentials
                     - endpoint
                     - root
-                    - secret
                     type: object
                   dataDirectory:
                     description: DataDirectory is the directory to store the data
@@ -17544,7 +17542,6 @@ spec:
                     - bucket
                     - credentials
                     - endpoint
-                    - secret
                     type: object
                   s3:
                     description: S3 storage spec.
@@ -17600,7 +17597,6 @@ spec:
                     required:
                     - bucket
                     - credentials
-                    - secret
                     type: object
                   webhdfs:
                     description: WebHDFS storage spec.
@@ -17769,7 +17765,6 @@ spec:
                         required:
                         - bucket
                         - credentials
-                        - secret
                         type: object
                       azureBlob:
                         description: Azure Blob storage spec.
@@ -17821,7 +17816,6 @@ spec:
                         - credentials
                         - endpoint
                         - root
-                        - secret
                         type: object
                       dataDirectory:
                         description: DataDirectory is the directory to store the data
@@ -17888,7 +17882,6 @@ spec:
                         - bucket
                         - credentials
                         - endpoint
-                        - secret
                         type: object
                       s3:
                         description: S3 storage spec.
@@ -17944,7 +17937,6 @@ spec:
                         required:
                         - bucket
                         - credentials
-                        - secret
                         type: object
                       webhdfs:
                         description: WebHDFS storage spec.

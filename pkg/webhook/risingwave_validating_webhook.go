@@ -360,8 +360,31 @@ func (v *RisingWaveValidatingWebhook) isMetaStoresTheSame(oldObj, newObj *rising
 	return equality.Semantic.DeepEqual(oldObj.Spec.MetaStore, newObj.Spec.MetaStore)
 }
 
+func (v *RisingWaveValidatingWebhook) isConvertFromMeta(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
+	return equality.Semantic.DeepEqual(oldObj.Spec.Storages.Meta, newObj.Spec.MetaStore)
+}
+
 func (v *RisingWaveValidatingWebhook) isStateStoresTheSame(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
 	return equality.Semantic.DeepEqual(oldObj.Spec.StateStore, newObj.Spec.StateStore)
+}
+
+func (v *RisingWaveValidatingWebhook) isConvertFromObject(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
+	oldStateStore := &oldObj.Spec.Storages.Object
+	newStateStore := &newObj.Spec.StateStore
+
+	if newStateStore.MinIO != nil && oldStateStore.MinIO != nil {
+		return newStateStore.MinIO.RisingWaveMinIOCredentials.SecretName == oldStateStore.MinIO.Secret
+	} else if newStateStore.S3 != nil && oldStateStore.S3 != nil {
+		return newStateStore.S3.RisingWaveS3Credentials.SecretName == oldStateStore.S3.Secret
+	} else if newStateStore.GCS != nil && oldStateStore.GCS != nil {
+		return newStateStore.GCS.RisingWaveGCSCredentials.SecretName == oldStateStore.GCS.Secret
+	} else if newStateStore.AliyunOSS != nil && oldStateStore.AliyunOSS != nil {
+		return newStateStore.AliyunOSS.RisingWaveS3Credentials.SecretName == oldStateStore.AliyunOSS.Secret
+	} else if newStateStore.AzureBlob != nil && oldStateStore.AzureBlob != nil {
+		return newStateStore.AzureBlob.RisingWaveAzureBlobCredentials.SecretName == oldStateStore.AzureBlob.Secret
+	} else {
+		return equality.Semantic.DeepEqual(oldStateStore, newStateStore)
+	}
 }
 
 func pathForGroupReplicas(obj *risingwavev1alpha1.RisingWave, component, group string) *field.Path {
@@ -376,7 +399,7 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 	gvk := oldObj.GroupVersionKind()
 
 	// The storages must not be changed, especially meta and state.
-	if !v.isMetaStoresTheSame(oldObj, newObj) {
+	if !v.isMetaStoresTheSame(oldObj, newObj) && !v.isConvertFromMeta(oldObj, newObj) {
 		return apierrors.NewForbidden(
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			oldObj.Name,
@@ -384,7 +407,7 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 		)
 	}
 
-	if !v.isStateStoresTheSame(oldObj, newObj) {
+	if !v.isStateStoresTheSame(oldObj, newObj) && !v.isConvertFromObject(oldObj, newObj) {
 		return apierrors.NewForbidden(
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			oldObj.Name,

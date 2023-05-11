@@ -61,7 +61,7 @@ type RisingWaveStateStoreBackendMinIO struct {
 	//   * username
 	//   * password
 	// Deprecated: Please use "credentials" field instead. The "Secret" field will be removed in a future release.
-	Secret string `json:"secret"`
+	Secret string `json:"secret,omitempty"`
 
 	// Endpoint of the MinIO service.
 	// +kubebuilder:validation:Required
@@ -98,7 +98,7 @@ type RisingWaveStateStoreBackendS3 struct {
 	//   * SecretAccessKey
 	//   * Region (optional if region is specified in the field.)
 	// Deprecated: Please use "credentials" field instead. The "Secret" field will be removed in a future release.
-	Secret string `json:"secret"`
+	Secret string `json:"secret,omitempty"`
 
 	// Bucket of the AWS S3 service.
 	// +kubebuilder:validation:Required
@@ -164,7 +164,7 @@ type RisingWaveStateStoreBackendAliyunOSS struct {
 	//   * SecretAccessKey
 	//   * Region (optional if region is specified in the field.)
 	// Deprecated: Please use "credentials" field instead. The "Secret" field will be removed in a future release.
-	Secret string `json:"secret"`
+	Secret string `json:"secret,omitempty"`
 
 	// Region of Aliyun OSS service. It is an optional field that overrides the `Region` key from the secret.
 	// Specifying the region here makes a guarantee that it won't be changed anymore.
@@ -204,7 +204,7 @@ type RisingWaveStateStoreBackendAzureBlob struct {
 	//   * AccessKeyID
 	//   * SecretAccessKey
 	// Deprecated: Please use "credentials" field instead. The "Secret" field will be removed in a future release.
-	Secret string `json:"secret"`
+	Secret string `json:"secret,omitempty"`
 
 	// Container Name of the Azure Blob service.
 	// +kubebuilder:validation:Required

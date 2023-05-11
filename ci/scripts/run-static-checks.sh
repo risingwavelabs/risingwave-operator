@@ -69,7 +69,7 @@ make manifests || mark_fail "Manifest generation failed" $?
 
 echo "--- Generating YAML files"
 
-make generate-yaml generate-test-yaml || exit_code=$?
+make generate-yaml generate-test-yaml || mark_fail "YAML generation failed" $?
 
 function yaml_change_check() {
   if git status --porcelain | grep -q 'config/risingwave-operator.*.yaml'; then
@@ -77,6 +77,8 @@ function yaml_change_check() {
     return 1
   fi
 }
+
+yaml_change_check || mark_fail "YAML files changed" $?
 
 echo "--- Generating docs"
 

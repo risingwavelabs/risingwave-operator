@@ -34,7 +34,6 @@ import (
 	"k8s.io/utils/pointer"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
 
 // Scheme for test only.
@@ -98,39 +97,11 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 			},
 		},
 		Components: risingwavev1alpha1.RisingWaveComponentsSpec{
-			Meta: risingwavev1alpha1.RisingWaveComponentMeta{
-				Ports: risingwavev1alpha1.RisingWaveComponentMetaPorts{
-					RisingWaveComponentCommonPorts: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-						ServicePort: consts.DefaultMetaServicePort,
-						MetricsPort: consts.DefaultMetaMetricsPort,
-					},
-					DashboardPort: consts.DefaultMetaDashboardPort,
-				},
-			},
-			Frontend: risingwavev1alpha1.RisingWaveComponentFrontend{
-				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-					ServicePort: consts.DefaultFrontendServicePort,
-					MetricsPort: consts.DefaultFrontendMetricsPort,
-				},
-			},
-			Compute: risingwavev1alpha1.RisingWaveComponentCompute{
-				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-					ServicePort: consts.DefaultComputeServicePort,
-					MetricsPort: consts.DefaultComputeMetricsPort,
-				},
-			},
-			Compactor: risingwavev1alpha1.RisingWaveComponentCompactor{
-				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-					ServicePort: consts.DefaultCompactorServicePort,
-					MetricsPort: consts.DefaultCompactorMetricsPort,
-				},
-			},
-			Connector: risingwavev1alpha1.RisingWaveComponentConnector{
-				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-					ServicePort: consts.DefaultConnectorServicePort,
-					MetricsPort: consts.DefaultConnectorMetricsPort,
-				},
-			},
+			Meta:      risingwavev1alpha1.RisingWaveComponentMeta{},
+			Frontend:  risingwavev1alpha1.RisingWaveComponentFrontend{},
+			Compute:   risingwavev1alpha1.RisingWaveComponentCompute{},
+			Compactor: risingwavev1alpha1.RisingWaveComponentCompactor{},
+			Connector: risingwavev1alpha1.RisingWaveComponentConnector{},
 		},
 	},
 	Status: risingwavev1alpha1.RisingWaveStatus{
@@ -273,13 +244,6 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 		},
 		Components: risingwavev1alpha1.RisingWaveComponentsSpec{
 			Meta: risingwavev1alpha1.RisingWaveComponentMeta{
-				Ports: risingwavev1alpha1.RisingWaveComponentMetaPorts{
-					RisingWaveComponentCommonPorts: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-						ServicePort: consts.DefaultMetaServicePort,
-						MetricsPort: consts.DefaultMetaMetricsPort,
-					},
-					DashboardPort: consts.DefaultMetaDashboardPort,
-				},
 				Groups: []risingwavev1alpha1.RisingWaveComponentGroup{
 					{
 						Name:     GetGroupName(0),
@@ -288,10 +252,6 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				},
 			},
 			Frontend: risingwavev1alpha1.RisingWaveComponentFrontend{
-				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-					ServicePort: consts.DefaultFrontendServicePort,
-					MetricsPort: consts.DefaultFrontendMetricsPort,
-				},
 				Groups: []risingwavev1alpha1.RisingWaveComponentGroup{
 					{
 						Name:     GetGroupName(0),
@@ -300,10 +260,6 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				},
 			},
 			Compute: risingwavev1alpha1.RisingWaveComponentCompute{
-				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-					ServicePort: consts.DefaultComputeServicePort,
-					MetricsPort: consts.DefaultComputeMetricsPort,
-				},
 				Groups: []risingwavev1alpha1.RisingWaveComputeGroup{
 					{
 						Name:     GetGroupName(0),
@@ -312,10 +268,6 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				},
 			},
 			Compactor: risingwavev1alpha1.RisingWaveComponentCompactor{
-				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-					ServicePort: consts.DefaultCompactorServicePort,
-					MetricsPort: consts.DefaultCompactorMetricsPort,
-				},
 				Groups: []risingwavev1alpha1.RisingWaveComponentGroup{
 					{
 						Name:     GetGroupName(0),
@@ -324,10 +276,6 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				},
 			},
 			Connector: risingwavev1alpha1.RisingWaveComponentConnector{
-				Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-					ServicePort: consts.DefaultConnectorServicePort,
-					MetricsPort: consts.DefaultConnectorMetricsPort,
-				},
 				Groups: []risingwavev1alpha1.RisingWaveComponentGroup{
 					{
 						Name:     GetGroupName(0),

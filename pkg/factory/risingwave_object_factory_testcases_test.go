@@ -2282,97 +2282,76 @@ type servicesTestCase struct {
 
 func servicesTestCases() map[string]servicesTestCase {
 	return map[string]servicesTestCase{
-		"random-meta-ports": {
+		"meta-ports": {
 			component:         consts.ComponentMeta,
 			globalServiceType: corev1.ServiceTypeClusterIP,
 			expectServiceType: corev1.ServiceTypeClusterIP,
 			ports: map[string]int32{
-				consts.PortService:   int32(rand.Int() & 0xffff),
-				consts.PortMetrics:   int32(rand.Int() & 0xffff),
-				consts.PortDashboard: int32(rand.Int() & 0xffff),
+				consts.PortService:   consts.MetaServicePort,
+				consts.PortMetrics:   consts.MetaMetricsPort,
+				consts.PortDashboard: consts.MetaDashboardPort,
 			},
 		},
-		"random-meta-ports-node-port": {
+		"meta-ports-node-port": {
 			component:         consts.ComponentMeta,
 			globalServiceType: corev1.ServiceTypeNodePort,
 			expectServiceType: corev1.ServiceTypeClusterIP,
-			ports: map[string]int32{
-				consts.PortService:   int32(rand.Int() & 0xffff),
-				consts.PortMetrics:   int32(rand.Int() & 0xffff),
-				consts.PortDashboard: int32(rand.Int() & 0xffff),
-			},
 		},
-		"random-frontend-ports": {
+		"frontend-ports": {
 			component:         consts.ComponentFrontend,
 			globalServiceType: corev1.ServiceTypeClusterIP,
 			expectServiceType: corev1.ServiceTypeClusterIP,
 			ports: map[string]int32{
-				consts.PortService: int32(rand.Int() & 0xffff),
-				consts.PortMetrics: int32(rand.Int() & 0xffff),
+				consts.PortService: consts.FrontendServicePort,
+				consts.PortMetrics: consts.FrontendMetricsPort,
 			},
 		},
-		"random-frontend-ports-node-port": {
+		"frontend-ports-node-port": {
 			component:         consts.ComponentFrontend,
 			globalServiceType: corev1.ServiceTypeNodePort,
 			expectServiceType: corev1.ServiceTypeNodePort,
-			ports: map[string]int32{
-				consts.PortService: int32(rand.Int() & 0xffff),
-				consts.PortMetrics: int32(rand.Int() & 0xffff),
-			},
 		},
-		"random-compute-ports": {
+		"compute-ports": {
 			component:         consts.ComponentCompute,
 			globalServiceType: corev1.ServiceTypeClusterIP,
 			expectServiceType: corev1.ServiceTypeClusterIP,
 			ports: map[string]int32{
-				consts.PortService: int32(rand.Int() & 0xffff),
-				consts.PortMetrics: int32(rand.Int() & 0xffff),
+				consts.PortService: consts.ComputeServicePort,
+				consts.PortMetrics: consts.ComputeMetricsPort,
 			},
 		},
-		"random-compute-ports-node-port": {
+		"compute-ports-node-port": {
 			component:         consts.ComponentCompute,
 			globalServiceType: corev1.ServiceTypeNodePort,
 			expectServiceType: corev1.ServiceTypeClusterIP,
-			ports: map[string]int32{
-				consts.PortService: int32(rand.Int() & 0xffff),
-				consts.PortMetrics: int32(rand.Int() & 0xffff),
-			},
 		},
-		"random-compactor-ports": {
+		"compactor-ports": {
 			component:         consts.ComponentCompactor,
 			globalServiceType: corev1.ServiceTypeClusterIP,
 			expectServiceType: corev1.ServiceTypeClusterIP,
 			ports: map[string]int32{
-				consts.PortService: int32(rand.Int() & 0xffff),
-				consts.PortMetrics: int32(rand.Int() & 0xffff),
+				consts.PortService: consts.CompactorServicePort,
+				consts.PortMetrics: consts.CompactorMetricsPort,
 			},
 		},
-		"random-compactor-ports-node-port": {
+		"compactor-ports-node-port": {
 			component:         consts.ComponentCompactor,
 			globalServiceType: corev1.ServiceTypeNodePort,
 			expectServiceType: corev1.ServiceTypeClusterIP,
-			ports: map[string]int32{
-				consts.PortService: int32(rand.Int() & 0xffff),
-				consts.PortMetrics: int32(rand.Int() & 0xffff),
-			},
 		},
-		"random-connector-ports": {
+		"connector-ports": {
 			component:         consts.ComponentConnector,
 			globalServiceType: corev1.ServiceTypeClusterIP,
 			expectServiceType: corev1.ServiceTypeClusterIP,
 			ports: map[string]int32{
-				consts.PortService: int32(rand.Int() & 0xffff),
-				consts.PortMetrics: int32(rand.Int() & 0xffff),
+				consts.PortService: consts.ConnectorServicePort,
+				consts.PortMetrics: consts.ConnectorMetricsPort,
 			},
 		},
-		"random-connector-ports-node-port": {
+		"connector-ports-node-port": {
 			component:         consts.ComponentConnector,
 			globalServiceType: corev1.ServiceTypeNodePort,
 			expectServiceType: corev1.ServiceTypeClusterIP,
-			ports: map[string]int32{
-				consts.PortService: int32(rand.Int() & 0xffff),
-				consts.PortMetrics: int32(rand.Int() & 0xffff),
-			},
 		},
 	}
 

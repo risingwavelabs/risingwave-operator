@@ -676,51 +676,6 @@ Defaults to &ldquo;AccountKey&rdquo;.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">RisingWaveComponentCommonPorts
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompute">RisingWaveComponentCompute</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentConnector">RisingWaveComponentConnector</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMetaPorts">RisingWaveComponentMetaPorts</a>)
-</p>
-<div>
-<p>RisingWaveComponentCommonPorts are the common ports that components need to listen.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>service</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Service port of the component. For each component,
-the &lsquo;service&rsquo; has different meanings. It&rsquo;s an optional field and if it&rsquo;s left out, a
-default port (varies among components) will be used.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>metrics</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Metrics port of the component. It always serves the metrics in
-Prometheus format.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor
 </h3>
 <p>
@@ -750,20 +705,6 @@ Kubernetes meta/v1.Time
 <em>(Optional)</em>
 <p>The time that the Pods of compactor that should be restarted. Setting a value on this
 field will trigger a recreation of all Pods of this component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ports</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">
-RisingWaveComponentCommonPorts
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Ports to be listened by compactor Pods.</p>
 </td>
 </tr>
 <tr>
@@ -815,20 +756,6 @@ field will trigger a recreation of all Pods of this component.</p>
 </tr>
 <tr>
 <td>
-<code>ports</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">
-RisingWaveComponentCommonPorts
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Ports to be listened by compute Pods.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>groups</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComputeGroup">
@@ -876,20 +803,6 @@ field will trigger a recreation of all Pods of this component.</p>
 </tr>
 <tr>
 <td>
-<code>ports</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">
-RisingWaveComponentCommonPorts
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Ports to be listened by compactor Pods.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>groups</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">
@@ -933,20 +846,6 @@ Kubernetes meta/v1.Time
 <em>(Optional)</em>
 <p>The time that the Pods of frontend that should be restarted. Setting a value on this
 field will trigger a recreation of all Pods of this component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ports</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">
-RisingWaveComponentCommonPorts
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Ports to be listened by the frontend Pods.</p>
 </td>
 </tr>
 <tr>
@@ -1295,20 +1194,6 @@ field will trigger a recreation of all Pods of this component.</p>
 </tr>
 <tr>
 <td>
-<code>ports</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMetaPorts">
-RisingWaveComponentMetaPorts
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Ports to be listened by the meta Pods.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>groups</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">
@@ -1319,64 +1204,6 @@ RisingWaveComponentMetaPorts
 <td>
 <em>(Optional)</em>
 <p>Groups of Pods of meta component.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMetaPorts">RisingWaveComponentMetaPorts
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta</a>)
-</p>
-<div>
-<p>RisingWaveComponentMetaPorts are the ports of component meta.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>service</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Service port of the component. For each component,
-the &lsquo;service&rsquo; has different meanings. It&rsquo;s an optional field and if it&rsquo;s left out, a
-default port (varies among components) will be used.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>metrics</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Metrics port of the component. It always serves the metrics in
-Prometheus format.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>dashboard</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Dashboard port of the meta, a default value of 8080 will be
-used if not specified.</p>
 </td>
 </tr>
 </tbody>

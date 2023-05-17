@@ -27,7 +27,7 @@ func ConvertFrontendService(obj *v1alpha1.RisingWave) {
 		obj.Spec.FrontendServiceType = obj.Spec.Global.ServiceType
 	}
 
-	if !equality.Semantic.DeepEqual(obj.Spec.Global.ServiceMeta, v1alpha1.RisingWavePodTemplatePartialObjectMeta{}) {
+	if !equality.Semantic.DeepEqual(obj.Spec.Global.ServiceMeta, v1alpha1.PartialObjectMeta{}) {
 		obj.Spec.AdditionalFrontendServiceMetadata.Labels = make(map[string]string)
 		obj.Spec.AdditionalFrontendServiceMetadata.Annotations = make(map[string]string)
 

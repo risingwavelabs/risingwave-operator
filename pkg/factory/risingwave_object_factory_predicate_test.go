@@ -84,16 +84,6 @@ func deploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestCase] 
 			},
 		},
 		{
-			Name: "pod-template-works",
-			Fn: func(obj *appsv1.Deployment, tc deploymentTestCase) bool {
-				if tc.group.PodTemplate != nil {
-					temp := tc.podTemplate[*tc.group.PodTemplate].Template
-					return matchesPodTemplate(&obj.Spec.Template, &temp)
-				}
-				return true
-			},
-		},
-		{
 			Name: "image-pull-policy-match",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestCase) bool {
 				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.ImagePullPolicy
@@ -232,16 +222,6 @@ func metaStatefulSetPredicates() []predicate[*appsv1.StatefulSet, metaStatefulSe
 			},
 		},
 		{
-			Name: "pod-template-works",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStatefulSetTestCase) bool {
-				if tc.group.PodTemplate != nil {
-					temp := tc.podTemplate[*tc.group.PodTemplate].Template
-					return matchesPodTemplate(&obj.Spec.Template, &temp)
-				}
-				return true
-			},
-		},
-		{
 			Name: "image-pull-policy-match",
 			Fn: func(obj *appsv1.StatefulSet, tc metaStatefulSetTestCase) bool {
 				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.ImagePullPolicy
@@ -365,16 +345,6 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 				}
 				_, ok := obj.Spec.Template.Annotations[consts.AnnotationRestartAt]
 				return !ok
-			},
-		},
-		{
-			Name: "pod-template-works",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
-				if tc.group.PodTemplate != nil {
-					temp := tc.podTemplate[*tc.group.PodTemplate].Template
-					return matchesPodTemplate(&obj.Spec.Template, &temp)
-				}
-				return true
 			},
 		},
 		{
@@ -523,16 +493,6 @@ func getCloneSetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, cloneSetT
 			},
 		},
 		{
-			Name: "pod-template-works",
-			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc cloneSetTestCase) bool {
-				if tc.group.PodTemplate != nil {
-					temp := tc.podTemplate[*tc.group.PodTemplate].Template
-					return matchesPodTemplate(&obj.Spec.Template, &temp)
-				}
-				return true
-			},
-		},
-		{
 			Name: "image-pull-policy-match",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc cloneSetTestCase) bool {
 				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.ImagePullPolicy
@@ -668,16 +628,6 @@ func getAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, comp
 				}
 				_, ok := obj.Spec.Template.Annotations[consts.AnnotationRestartAt]
 				return !ok
-			},
-		},
-		{
-			Name: "pod-template-works",
-			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
-				if tc.group.PodTemplate != nil {
-					temp := tc.podTemplate[*tc.group.PodTemplate].Template
-					return matchesPodTemplate(&obj.Spec.Template, &temp)
-				}
-				return true
 			},
 		},
 		{
@@ -823,16 +773,6 @@ func metaAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, met
 				}
 				_, ok := obj.Spec.Template.Annotations[consts.AnnotationRestartAt]
 				return !ok
-			},
-		},
-		{
-			Name: "pod-template-works",
-			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestCase) bool {
-				if tc.group.PodTemplate != nil {
-					temp := tc.podTemplate[*tc.group.PodTemplate].Template
-					return matchesPodTemplate(&obj.Spec.Template, &temp)
-				}
-				return true
 			},
 		},
 		{

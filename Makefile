@@ -240,8 +240,7 @@ GEN_CRD_API_REFERENCE_DOCS = $(shell pwd)/bin/$(OS)/gen-crd-api-reference-docs
 gen-crd-api-reference-docs: ## Download gen-crd-api-reference-docs locally if necessary
 	$(call go-get-tool,$(GEN_CRD_API_REFERENCE_DOCS),github.com/arkbriar/gen-crd-api-reference-docs@cd878bb3)
 
-TYPES_V1ALPHA1_TARGET := apis/risingwave/v1alpha1/risingwave_types.go
-TYPES_V1ALPHA1_TARGET += apis/risingwave/v1alpha1/risingwave_pod_template_types.go
+TYPES_V1ALPHA1_TARGET := $(shell find apis/risingwave/v1alpha1/ -name "*_types.go")
 
 docs/general/api.md: gen-crd-api-reference-docs $(TYPES_V1ALPHA1_TARGET)
 	@$(GEN_CRD_API_REFERENCE_DOCS) -api-dir "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1" -config "$(PWD)/hack/docs/config.json" -template-dir "$(PWD)/hack/docs/templates" -out-file "$(PWD)/docs/general/api.md"

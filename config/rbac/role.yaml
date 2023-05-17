@@ -117,20 +117,6 @@ rules:
 - apiGroups:
   - risingwave.risingwavelabs.com
   resources:
-  - risingwavepodtemplates
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - risingwave.risingwavelabs.com
-  resources:
-  - risingwavepodtemplates/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - risingwave.risingwavelabs.com
-  resources:
   - risingwaves
   verbs:
   - create

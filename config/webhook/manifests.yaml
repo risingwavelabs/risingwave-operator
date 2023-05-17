@@ -30,25 +30,6 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-risingwave-risingwavelabs-com-v1alpha1-risingwavepodtemplate
-  failurePolicy: Fail
-  name: mrisingwavepodtemplate.kb.io
-  rules:
-  - apiGroups:
-    - risingwave.risingwavelabs.com
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    resources:
-    - risingwavepodtemplates
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
       path: /mutate-risingwave-risingwavelabs-com-v1alpha1-risingwavescaleview
   failurePolicy: Fail
   name: mrisingwavescaleview.kb.io
@@ -89,27 +70,6 @@ webhooks:
     - DELETE
     resources:
     - risingwaves
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-risingwave-risingwavelabs-com-v1alpha1-risingwavepodtemplate
-  failurePolicy: Fail
-  name: vrisingwavepodtemplate.kb.io
-  rules:
-  - apiGroups:
-    - risingwave.risingwavelabs.com
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    - DELETE
-    resources:
-    - risingwavepodtemplates
   sideEffects: None
 - admissionReviewVersions:
   - v1

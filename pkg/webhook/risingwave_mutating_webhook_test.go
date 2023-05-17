@@ -20,55 +20,13 @@ import (
 	"context"
 	"testing"
 
-	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
 
 func Test_RisingWaveMutatingWebhook_Default(t *testing.T) {
-	risingwave := &risingwavev1alpha1.RisingWave{}
-
-	_ = NewRisingWaveMutatingWebhook().Default(context.Background(), risingwave)
-
-	if !testutils.DeepEqual(risingwave, &risingwavev1alpha1.RisingWave{
-		Spec: risingwavev1alpha1.RisingWaveSpec{
-			Components: risingwavev1alpha1.RisingWaveComponentsSpec{
-				Meta: risingwavev1alpha1.RisingWaveComponentMeta{
-					Ports: risingwavev1alpha1.RisingWaveComponentMetaPorts{
-						RisingWaveComponentCommonPorts: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-							ServicePort: consts.DefaultMetaServicePort,
-							MetricsPort: consts.DefaultMetaMetricsPort,
-						},
-						DashboardPort: consts.DefaultMetaDashboardPort,
-					},
-				},
-				Frontend: risingwavev1alpha1.RisingWaveComponentFrontend{
-					Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-						ServicePort: consts.DefaultFrontendServicePort,
-						MetricsPort: consts.DefaultFrontendMetricsPort,
-					},
-				},
-				Compute: risingwavev1alpha1.RisingWaveComponentCompute{
-					Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-						ServicePort: consts.DefaultComputeServicePort,
-						MetricsPort: consts.DefaultComputeMetricsPort,
-					},
-				},
-				Compactor: risingwavev1alpha1.RisingWaveComponentCompactor{
-					Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-						ServicePort: consts.DefaultCompactorServicePort,
-						MetricsPort: consts.DefaultCompactorMetricsPort,
-					},
-				},
-				Connector: risingwavev1alpha1.RisingWaveComponentConnector{
-					Ports: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-						ServicePort: consts.DefaultConnectorServicePort,
-						MetricsPort: consts.DefaultConnectorMetricsPort,
-					},
-				},
-			},
-		},
-	}) {
-		t.Fail()
+	mutatingWebhook := NewRisingWaveMutatingWebhook()
+	err := mutatingWebhook.Default(context.Background(), testutils.FakeRisingWave())
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
 	}
 }

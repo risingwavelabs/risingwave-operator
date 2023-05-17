@@ -115,17 +115,17 @@ const (
 	PortDashboard string = "dashboard"
 )
 
-// Default port values of components.
+// Port numbers of components.
 const (
-	DefaultMetaServicePort      int32 = 5690
-	DefaultMetaDashboardPort    int32 = 5691
-	DefaultMetaMetricsPort      int32 = 1250
-	DefaultComputeServicePort   int32 = 5688
-	DefaultComputeMetricsPort   int32 = 1222
-	DefaultFrontendServicePort  int32 = 4567
-	DefaultFrontendMetricsPort  int32 = 8080
-	DefaultCompactorServicePort int32 = 6660
-	DefaultCompactorMetricsPort int32 = 1260
-	DefaultConnectorServicePort int32 = 50051
-	DefaultConnectorMetricsPort int32 = 8080
+	MetaServicePort      int32 = 5690
+	MetaDashboardPort    int32 = 5691
+	MetaMetricsPort      int32 = 1250
+	ComputeServicePort   int32 = 5688
+	ComputeMetricsPort   int32 = 1222
+	FrontendServicePort  int32 = 4567
+	FrontendMetricsPort  int32 = 8080
+	CompactorServicePort int32 = 6660
+	CompactorMetricsPort int32 = 1260
+	ConnectorServicePort int32 = 50051
+	ConnectorMetricsPort int32 = 8080
 )

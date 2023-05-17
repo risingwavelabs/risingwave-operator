@@ -35,19 +35,6 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 	for name, tc := range servicesTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.FrontendServiceType = tc.globalServiceType
-
-			switch tc.component {
-			case consts.ComponentMeta:
-				setupMetaPorts(r, tc.ports)
-			case consts.ComponentFrontend:
-				setupFrontendPorts(r, tc.ports)
-			case consts.ComponentCompute:
-				setupComputePorts(r, tc.ports)
-			case consts.ComponentCompactor:
-				setupCompactorPorts(r, tc.ports)
-			case consts.ComponentConnector:
-				setupConnectorPorts(r, tc.ports)
-			}
 		})
 
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")

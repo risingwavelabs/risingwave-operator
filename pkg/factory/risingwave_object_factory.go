@@ -252,8 +252,6 @@ func (f *RisingWaveObjectFactory) podLabelsOrSelectorsForGroup(component, group 
 
 // NewMetaService creates a new Service for the meta.
 func (f *RisingWaveObjectFactory) NewMetaService() *corev1.Service {
-	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
-
 	metaService := &corev1.Service{
 		ObjectMeta: f.componentObjectMeta(consts.ComponentMeta, true),
 		Spec: corev1.ServiceSpec{
@@ -263,19 +261,19 @@ func (f *RisingWaveObjectFactory) NewMetaService() *corev1.Service {
 				{
 					Name:       consts.PortService,
 					Protocol:   corev1.ProtocolTCP,
-					Port:       metaPorts.ServicePort,
+					Port:       consts.MetaServicePort,
 					TargetPort: intstr.FromString(consts.PortService),
 				},
 				{
 					Name:       consts.PortMetrics,
 					Protocol:   corev1.ProtocolTCP,
-					Port:       metaPorts.MetricsPort,
+					Port:       consts.MetaMetricsPort,
 					TargetPort: intstr.FromString(consts.PortMetrics),
 				},
 				{
 					Name:       consts.PortDashboard,
 					Protocol:   corev1.ProtocolTCP,
-					Port:       metaPorts.DashboardPort,
+					Port:       consts.MetaDashboardPort,
 					TargetPort: intstr.FromString(consts.PortDashboard),
 				},
 			},
@@ -286,8 +284,6 @@ func (f *RisingWaveObjectFactory) NewMetaService() *corev1.Service {
 
 // NewFrontendService creates a new Service for the frontend.
 func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
-	frontendPorts := &f.risingwave.Spec.Components.Frontend.Ports
-
 	frontendService := &corev1.Service{
 		ObjectMeta: f.componentObjectMeta(consts.ComponentFrontend, true),
 		Spec: corev1.ServiceSpec{
@@ -297,13 +293,13 @@ func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 				{
 					Name:       consts.PortService,
 					Protocol:   corev1.ProtocolTCP,
-					Port:       frontendPorts.ServicePort,
+					Port:       consts.FrontendServicePort,
 					TargetPort: intstr.FromString(consts.PortService),
 				},
 				{
 					Name:       consts.PortMetrics,
 					Protocol:   corev1.ProtocolTCP,
-					Port:       frontendPorts.MetricsPort,
+					Port:       consts.FrontendMetricsPort,
 					TargetPort: intstr.FromString(consts.PortMetrics),
 				},
 			},
@@ -314,8 +310,6 @@ func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 
 // NewComputeService creates a new Service for the compute nodes.
 func (f *RisingWaveObjectFactory) NewComputeService() *corev1.Service {
-	computePorts := &f.risingwave.Spec.Components.Compute.Ports
-
 	computeService := &corev1.Service{
 		ObjectMeta: f.componentObjectMeta(consts.ComponentCompute, true),
 		Spec: corev1.ServiceSpec{
@@ -325,13 +319,13 @@ func (f *RisingWaveObjectFactory) NewComputeService() *corev1.Service {
 				{
 					Name:       consts.PortService,
 					Protocol:   corev1.ProtocolTCP,
-					Port:       computePorts.ServicePort,
+					Port:       consts.ComputeServicePort,
 					TargetPort: intstr.FromString(consts.PortService),
 				},
 				{
 					Name:       consts.PortMetrics,
 					Protocol:   corev1.ProtocolTCP,
-					Port:       computePorts.MetricsPort,
+					Port:       consts.ComputeMetricsPort,
 					TargetPort: intstr.FromString(consts.PortMetrics),
 				},
 			},
@@ -343,8 +337,6 @@ func (f *RisingWaveObjectFactory) NewComputeService() *corev1.Service {
 
 // NewCompactorService creates a new Service for the compactor.
 func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
-	compactorPorts := &f.risingwave.Spec.Components.Compactor.Ports
-
 	compactorService := &corev1.Service{
 		ObjectMeta: f.componentObjectMeta(consts.ComponentCompactor, true),
 		Spec: corev1.ServiceSpec{
@@ -354,13 +346,13 @@ func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 				{
 					Name:       consts.PortService,
 					Protocol:   corev1.ProtocolTCP,
-					Port:       compactorPorts.ServicePort,
+					Port:       consts.CompactorServicePort,
 					TargetPort: intstr.FromString(consts.PortService),
 				},
 				{
 					Name:       consts.PortMetrics,
 					Protocol:   corev1.ProtocolTCP,
-					Port:       compactorPorts.MetricsPort,
+					Port:       consts.CompactorMetricsPort,
 					TargetPort: intstr.FromString(consts.PortMetrics),
 				},
 			},
@@ -372,8 +364,6 @@ func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 
 // NewConnectorService creates a new Service for the connector.
 func (f *RisingWaveObjectFactory) NewConnectorService() *corev1.Service {
-	connectorPorts := f.getConnectorPorts()
-
 	connectorService := &corev1.Service{
 		ObjectMeta: f.componentObjectMeta(consts.ComponentConnector, true),
 		Spec: corev1.ServiceSpec{
@@ -383,13 +373,13 @@ func (f *RisingWaveObjectFactory) NewConnectorService() *corev1.Service {
 				{
 					Name:       consts.PortService,
 					Protocol:   corev1.ProtocolTCP,
-					Port:       connectorPorts.ServicePort,
+					Port:       consts.ConnectorServicePort,
 					TargetPort: intstr.FromString(consts.PortService),
 				},
 				{
 					Name:       consts.PortMetrics,
 					Protocol:   corev1.ProtocolTCP,
-					Port:       connectorPorts.MetricsPort,
+					Port:       consts.ConnectorMetricsPort,
 					TargetPort: intstr.FromString(consts.PortMetrics),
 				},
 			},
@@ -454,11 +444,9 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 }
 
 func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
-	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
 	metaStore := &f.risingwave.Spec.MetaStore
 	stateStore := f.risingwave.Spec.StateStore
 
-	connectorPorts := f.getConnectorPorts()
 	envVars := []corev1.EnvVar{
 		{
 			Name:  envs.RWConfigPath,
@@ -466,11 +454,11 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWListenAddr,
-			Value: fmt.Sprintf("0.0.0.0:%d", metaPorts.ServicePort),
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWAdvertiseAddr,
-			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWStateStore,
@@ -482,15 +470,15 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWDashboardHost,
-			Value: fmt.Sprintf("0.0.0.0:%d", metaPorts.DashboardPort),
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaDashboardPort),
 		},
 		{
 			Name:  envs.RWPrometheusHost,
-			Value: fmt.Sprintf("0.0.0.0:%d", metaPorts.MetricsPort),
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaMetricsPort),
 		},
 		{
 			Name:  envs.RWConnectorRPCEndPoint,
-			Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
+			Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), consts.ConnectorMetricsPort),
 		},
 	}
 
@@ -526,13 +514,10 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 }
 
 func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
-	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
-	frontendPorts := &f.risingwave.Spec.Components.Frontend.Ports
-
 	return []corev1.EnvVar{
 		{
 			Name:  envs.RWListenAddr,
-			Value: fmt.Sprintf("0.0.0.0:%d", frontendPorts.ServicePort),
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.FrontendServicePort),
 		},
 		{
 			Name:  envs.RWConfigPath,
@@ -540,15 +525,15 @@ func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWAdvertiseAddr,
-			Value: fmt.Sprintf("$(POD_IP):%d", frontendPorts.ServicePort),
+			Value: fmt.Sprintf("$(POD_IP):%d", consts.FrontendServicePort),
 		},
 		{
 			Name:  envs.RWMetaAddr,
-			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWMetaAddrLegacy,
-			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWMetricsLevel,
@@ -556,16 +541,12 @@ func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWPrometheusListenerAddr,
-			Value: fmt.Sprintf("0.0.0.0:%d", frontendPorts.MetricsPort),
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.FrontendMetricsPort),
 		},
 	}
 }
 
 func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit int64) []corev1.EnvVar {
-	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
-	computePorts := &f.risingwave.Spec.Components.Compute.Ports
-	connectorPorts := f.getConnectorPorts()
-
 	envVars := []corev1.EnvVar{
 		{
 			Name:  envs.RWConfigPath,
@@ -573,19 +554,19 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 		},
 		{
 			Name:  envs.RWListenAddr,
-			Value: fmt.Sprintf("0.0.0.0:%d", computePorts.ServicePort),
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.ComputeServicePort),
 		},
 		{
 			Name:  envs.RWAdvertiseAddr,
-			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentCompute, ""), computePorts.ServicePort),
+			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentCompute, ""), consts.ComputeServicePort),
 		},
 		{
 			Name:  envs.RWMetaAddr,
-			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWMetaAddrLegacy,
-			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWMetricsLevel,
@@ -593,11 +574,11 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 		},
 		{
 			Name:  envs.RWConnectorRPCEndPoint,
-			Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), connectorPorts.ServicePort),
+			Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), consts.ConnectorServicePort),
 		},
 		{
 			Name:  envs.RWPrometheusListenerAddr,
-			Value: fmt.Sprintf("0.0.0.0:%d", computePorts.MetricsPort),
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.ComputeMetricsPort),
 		},
 	}
 
@@ -619,9 +600,6 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 }
 
 func (f *RisingWaveObjectFactory) envsForCompactorArgs() []corev1.EnvVar {
-	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
-	compactorPorts := &f.risingwave.Spec.Components.Compactor.Ports
-
 	return []corev1.EnvVar{
 		{
 			Name:  envs.RWConfigPath,
@@ -629,23 +607,23 @@ func (f *RisingWaveObjectFactory) envsForCompactorArgs() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWListenAddr,
-			Value: fmt.Sprintf("0.0.0.0:%d", compactorPorts.ServicePort),
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.CompactorServicePort),
 		},
 		{
 			Name:  envs.RWAdvertiseAddr,
-			Value: fmt.Sprintf("$(POD_IP):%d", compactorPorts.ServicePort),
+			Value: fmt.Sprintf("$(POD_IP):%d", consts.CompactorServicePort),
 		},
 		{
 			Name:  envs.RWPrometheusListenerAddr,
-			Value: fmt.Sprintf("0.0.0.0:%d", compactorPorts.MetricsPort),
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.CompactorMetricsPort),
 		},
 		{
 			Name:  envs.RWMetaAddr,
-			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWMetaAddrLegacy,
-			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), metaPorts.ServicePort),
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWMetricsLevel,
@@ -655,10 +633,8 @@ func (f *RisingWaveObjectFactory) envsForCompactorArgs() []corev1.EnvVar {
 }
 
 func (f *RisingWaveObjectFactory) argsForConnector() []string {
-	connectorPorts := f.getConnectorPorts()
-
 	return []string{
-		"-p", fmt.Sprintf("%d", connectorPorts.ServicePort),
+		"-p", fmt.Sprintf("%d", consts.ConnectorServicePort),
 	}
 }
 
@@ -1208,23 +1184,21 @@ func buildComputeGroup(globalReplicas int32, globalTemplate *risingwavev1alpha1.
 }
 
 func (f *RisingWaveObjectFactory) portsForMetaContainer() []corev1.ContainerPort {
-	metaPorts := &f.risingwave.Spec.Components.Meta.Ports
-
 	return []corev1.ContainerPort{
 		{
 			Name:          consts.PortService,
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: metaPorts.ServicePort,
+			ContainerPort: consts.MetaServicePort,
 		},
 		{
 			Name:          consts.PortMetrics,
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: metaPorts.MetricsPort,
+			ContainerPort: consts.MetaMetricsPort,
 		},
 		{
 			Name:          consts.PortDashboard,
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: metaPorts.DashboardPort,
+			ContainerPort: consts.MetaDashboardPort,
 		},
 	}
 }
@@ -1481,18 +1455,16 @@ func (f *RisingWaveObjectFactory) NewMetaAdvancedStatefulSet(group string, podTe
 }
 
 func (f *RisingWaveObjectFactory) portsForFrontendContainer() []corev1.ContainerPort {
-	frontendPorts := &f.risingwave.Spec.Components.Frontend.Ports
-
 	return []corev1.ContainerPort{
 		{
 			Name:          consts.PortService,
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: frontendPorts.ServicePort,
+			ContainerPort: consts.FrontendServicePort,
 		},
 		{
 			Name:          consts.PortMetrics,
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: frontendPorts.MetricsPort,
+			ContainerPort: consts.FrontendMetricsPort,
 		},
 	}
 }
@@ -1594,18 +1566,16 @@ func (f *RisingWaveObjectFactory) NewFrontendCloneSet(group string, podTemplates
 }
 
 func (f *RisingWaveObjectFactory) portsForCompactorContainer() []corev1.ContainerPort {
-	compactorPorts := &f.risingwave.Spec.Components.Compactor.Ports
-
 	return []corev1.ContainerPort{
 		{
 			Name:          consts.PortService,
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: compactorPorts.ServicePort,
+			ContainerPort: consts.CompactorServicePort,
 		},
 		{
 			Name:          consts.PortMetrics,
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: compactorPorts.MetricsPort,
+			ContainerPort: consts.CompactorMetricsPort,
 		},
 	}
 }
@@ -1711,18 +1681,16 @@ func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string, podTemplate
 }
 
 func (f *RisingWaveObjectFactory) portsForConnectorContainer() []corev1.ContainerPort {
-	connectorPorts := f.getConnectorPorts()
-
 	return []corev1.ContainerPort{
 		{
 			Name:          consts.PortService,
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: connectorPorts.ServicePort,
+			ContainerPort: consts.ConnectorServicePort,
 		},
 		{
 			Name:          consts.PortMetrics,
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: connectorPorts.MetricsPort,
+			ContainerPort: consts.ConnectorMetricsPort,
 		},
 	}
 }
@@ -1879,18 +1847,16 @@ func buildUpgradeStrategyForAdvancedStatefulSet(strategy risingwavev1alpha1.Risi
 }
 
 func (f *RisingWaveObjectFactory) portsForComputeContainer() []corev1.ContainerPort {
-	computePorts := &f.risingwave.Spec.Components.Compute.Ports
-
 	return []corev1.ContainerPort{
 		{
 			Name:          consts.PortService,
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: computePorts.ServicePort,
+			ContainerPort: consts.ComputeServicePort,
 		},
 		{
 			Name:          consts.PortMetrics,
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: computePorts.MetricsPort,
+			ContainerPort: consts.ComputeMetricsPort,
 		},
 	}
 }
@@ -2087,17 +2053,6 @@ func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonit
 	}
 
 	return mustSetControllerReference(f.risingwave, serviceMonitor, f.scheme)
-}
-
-func (f *RisingWaveObjectFactory) getConnectorPorts() *risingwavev1alpha1.RisingWaveComponentCommonPorts {
-	connectorPorts := f.risingwave.Spec.Components.Connector.Ports.DeepCopy()
-	if connectorPorts.ServicePort == 0 {
-		connectorPorts.ServicePort = consts.DefaultConnectorServicePort
-	}
-	if connectorPorts.MetricsPort == 0 {
-		connectorPorts.MetricsPort = consts.DefaultConnectorMetricsPort
-	}
-	return connectorPorts
 }
 
 // NewRisingWaveObjectFactory creates a new RisingWaveObjectFactory.

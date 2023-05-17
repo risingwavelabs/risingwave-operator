@@ -221,44 +221,6 @@ func newTestRisingwave(patches ...func(r *risingwavev1alpha1.RisingWave)) *risin
 	return r
 }
 
-func setupMetaPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
-	r.Spec.Components.Meta.Ports = risingwavev1alpha1.RisingWaveComponentMetaPorts{
-		RisingWaveComponentCommonPorts: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-			ServicePort: ports[consts.PortService],
-			MetricsPort: ports[consts.PortMetrics],
-		},
-		DashboardPort: ports[consts.PortDashboard],
-	}
-}
-
-func setupFrontendPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
-	r.Spec.Components.Frontend.Ports = risingwavev1alpha1.RisingWaveComponentCommonPorts{
-		ServicePort: ports[consts.PortService],
-		MetricsPort: ports[consts.PortMetrics],
-	}
-}
-
-func setupComputePorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
-	r.Spec.Components.Compute.Ports = risingwavev1alpha1.RisingWaveComponentCommonPorts{
-		ServicePort: ports[consts.PortService],
-		MetricsPort: ports[consts.PortMetrics],
-	}
-}
-
-func setupCompactorPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
-	r.Spec.Components.Compactor.Ports = risingwavev1alpha1.RisingWaveComponentCommonPorts{
-		ServicePort: ports[consts.PortService],
-		MetricsPort: ports[consts.PortMetrics],
-	}
-}
-
-func setupConnectorPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
-	r.Spec.Components.Connector.Ports = risingwavev1alpha1.RisingWaveComponentCommonPorts{
-		ServicePort: ports[consts.PortService],
-		MetricsPort: ports[consts.PortMetrics],
-	}
-}
-
 func deepEqual[T any](x, y T) bool {
 	return equality.Semantic.DeepEqual(x, y)
 }

@@ -19,9 +19,11 @@ package controller
 import (
 	"context"
 	"fmt"
-	"github.com/risingwavelabs/risingwave-operator/pkg/webhook"
-	"k8s.io/apimachinery/pkg/api/equality"
 	"time"
+
+	"k8s.io/apimachinery/pkg/api/equality"
+
+	"github.com/risingwavelabs/risingwave-operator/pkg/webhook"
 
 	"github.com/go-logr/logr"
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"

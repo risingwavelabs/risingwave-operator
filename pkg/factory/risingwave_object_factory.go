@@ -1025,17 +1025,6 @@ func mergeComponentGroupTemplates(base, overlay *risingwavev1alpha1.RisingWaveCo
 	return r
 }
 
-func buildPodTemplateSpecFrom(t *risingwavev1alpha1.RisingWavePodTemplateSpec) corev1.PodTemplateSpec {
-	t = t.DeepCopy()
-	return corev1.PodTemplateSpec{
-		ObjectMeta: metav1.ObjectMeta{
-			Labels:      t.Labels,
-			Annotations: t.Annotations,
-		},
-		Spec: t.Spec,
-	}
-}
-
 func captureInheritedLabels(risingwave *risingwavev1alpha1.RisingWave) map[string]string {
 	inheritLabelPrefix, exist := risingwave.Annotations[consts.AnnotationInheritLabelPrefix]
 	if !exist {
@@ -1083,16 +1072,11 @@ func (f *RisingWaveObjectFactory) getInheritedLabels() map[string]string {
 	return f.inheritedLabels
 }
 
-func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate,
+func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string,
 	groupTemplate *risingwavev1alpha1.RisingWaveComponentGroupTemplate, restartAt *metav1.Time) corev1.PodTemplateSpec {
 	var podTemplate corev1.PodTemplateSpec
 
 	if groupTemplate != nil {
-		if groupTemplate.PodTemplate != nil && *groupTemplate.PodTemplate != "" {
-			t := podTemplates[*groupTemplate.PodTemplate]
-			podTemplate = buildPodTemplateSpecFrom(&t.Template)
-		}
-
 		// Set the image pull secrets.
 		podTemplate.Spec.ImagePullSecrets = append(podTemplate.Spec.ImagePullSecrets, lo.Map(groupTemplate.ImagePullSecrets, func(s string, _ int) corev1.LocalObjectReference {
 			return corev1.LocalObjectReference{
@@ -1384,7 +1368,7 @@ func buildUpgradeStrategyForCloneSet(strategy risingwavev1alpha1.RisingWaveUpgra
 }
 
 // NewMetaStatefulSet creates a new StatefulSet for the meta component and specified group.
-func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.StatefulSet {
+func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string) *appsv1.StatefulSet {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Meta,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -1398,7 +1382,7 @@ func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string, podTemplates 
 	restartAt := f.risingwave.Spec.Components.Meta.RestartAt
 
 	// Build the pod template.
-	podTemplate := f.buildPodTemplate(consts.ComponentMeta, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+	podTemplate := f.buildPodTemplate(consts.ComponentMeta, group, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 
 	// Set up the first container.
 	f.setupMetaContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
@@ -1430,7 +1414,7 @@ func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string, podTemplates 
 }
 
 // NewMetaAdvancedStatefulSet creates a new OpenKruise StatefulSet for the meta component and specified group.
-func (f *RisingWaveObjectFactory) NewMetaAdvancedStatefulSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1beta1.StatefulSet {
+func (f *RisingWaveObjectFactory) NewMetaAdvancedStatefulSet(group string) *kruiseappsv1beta1.StatefulSet {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Meta,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -1444,7 +1428,7 @@ func (f *RisingWaveObjectFactory) NewMetaAdvancedStatefulSet(group string, podTe
 	restartAt := f.risingwave.Spec.Components.Meta.RestartAt
 
 	// Build the pod template.
-	podTemplate := f.buildPodTemplate(consts.ComponentMeta, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+	podTemplate := f.buildPodTemplate(consts.ComponentMeta, group, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 
 	// Set up the first container.
 	f.setupMetaContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
@@ -1511,7 +1495,7 @@ func (f *RisingWaveObjectFactory) setupFrontendContainer(container *corev1.Conta
 }
 
 // NewFrontendDeployment creates a new Deployment for the frontend component and specified group.
-func (f *RisingWaveObjectFactory) NewFrontendDeployment(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
+func (f *RisingWaveObjectFactory) NewFrontendDeployment(group string) *appsv1.Deployment {
 	// TODO setup the TLS configs
 
 	componentGroup := buildComponentGroup(
@@ -1527,7 +1511,7 @@ func (f *RisingWaveObjectFactory) NewFrontendDeployment(group string, podTemplat
 	restartAt := f.risingwave.Spec.Components.Frontend.RestartAt
 
 	// Build the pod template.
-	podTemplate := f.buildPodTemplate(consts.ComponentFrontend, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+	podTemplate := f.buildPodTemplate(consts.ComponentFrontend, group, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 
 	// Set up the first container.
 	f.setupFrontendContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
@@ -1553,7 +1537,7 @@ func (f *RisingWaveObjectFactory) NewFrontendDeployment(group string, podTemplat
 }
 
 // NewFrontendCloneSet creates a new CloneSet for the frontend component and specified group.
-func (f *RisingWaveObjectFactory) NewFrontendCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
+func (f *RisingWaveObjectFactory) NewFrontendCloneSet(group string) *kruiseappsv1alpha1.CloneSet {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Frontend,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -1566,7 +1550,7 @@ func (f *RisingWaveObjectFactory) NewFrontendCloneSet(group string, podTemplates
 
 	restartAt := f.risingwave.Spec.Components.Frontend.RestartAt
 
-	podTemplate := f.buildPodTemplate(consts.ComponentFrontend, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+	podTemplate := f.buildPodTemplate(consts.ComponentFrontend, group, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 
 	f.setupFrontendContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
 
@@ -1630,7 +1614,7 @@ func (f *RisingWaveObjectFactory) setupCompactorContainer(container *corev1.Cont
 }
 
 // NewCompactorDeployment creates a new Deployment for the compactor component and specified group.
-func (f *RisingWaveObjectFactory) NewCompactorDeployment(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
+func (f *RisingWaveObjectFactory) NewCompactorDeployment(group string) *appsv1.Deployment {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Compactor,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -1644,7 +1628,7 @@ func (f *RisingWaveObjectFactory) NewCompactorDeployment(group string, podTempla
 	restartAt := f.risingwave.Spec.Components.Compactor.RestartAt
 
 	// Build the pod template.
-	podTemplate := f.buildPodTemplate(consts.ComponentCompactor, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+	podTemplate := f.buildPodTemplate(consts.ComponentCompactor, group, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 
 	// Set up the first container.
 	f.setupCompactorContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
@@ -1670,7 +1654,7 @@ func (f *RisingWaveObjectFactory) NewCompactorDeployment(group string, podTempla
 }
 
 // NewCompactorCloneSet creates a new CloneSet for the compactor component and specified group.
-func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
+func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string) *kruiseappsv1alpha1.CloneSet {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Compactor,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -1683,7 +1667,7 @@ func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string, podTemplate
 
 	restartAt := f.risingwave.Spec.Components.Compactor.RestartAt
 
-	podTemplate := f.buildPodTemplate(consts.ComponentCompactor, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+	podTemplate := f.buildPodTemplate(consts.ComponentCompactor, group, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 
 	f.setupCompactorContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
 
@@ -1748,7 +1732,7 @@ func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Cont
 }
 
 // NewConnectorDeployment creates a new Deployment for the connector component and specified group.
-func (f *RisingWaveObjectFactory) NewConnectorDeployment(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.Deployment {
+func (f *RisingWaveObjectFactory) NewConnectorDeployment(group string) *appsv1.Deployment {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Connector,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -1762,7 +1746,7 @@ func (f *RisingWaveObjectFactory) NewConnectorDeployment(group string, podTempla
 	restartAt := f.risingwave.Spec.Components.Connector.RestartAt
 
 	// Build the pod template.
-	podTemplate := f.buildPodTemplate(consts.ComponentConnector, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+	podTemplate := f.buildPodTemplate(consts.ComponentConnector, group, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 
 	// Set up the first container.
 	f.setupConnectorContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
@@ -1788,7 +1772,7 @@ func (f *RisingWaveObjectFactory) NewConnectorDeployment(group string, podTempla
 }
 
 // NewConnectorCloneSet creates a new CloneSet for the connector component and specified group.
-func (f *RisingWaveObjectFactory) NewConnectorCloneSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1alpha1.CloneSet {
+func (f *RisingWaveObjectFactory) NewConnectorCloneSet(group string) *kruiseappsv1alpha1.CloneSet {
 	componentGroup := buildComponentGroup(
 		f.risingwave.Spec.Global.Replicas.Connector,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -1801,7 +1785,7 @@ func (f *RisingWaveObjectFactory) NewConnectorCloneSet(group string, podTemplate
 
 	restartAt := f.risingwave.Spec.Components.Connector.RestartAt
 
-	podTemplate := f.buildPodTemplate(consts.ComponentConnector, group, podTemplates, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+	podTemplate := f.buildPodTemplate(consts.ComponentConnector, group, componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 
 	f.setupConnectorContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComponentGroupTemplate)
 
@@ -1946,7 +1930,7 @@ func buildPersistentVolumeClaims(claims []risingwavev1alpha1.PersistentVolumeCla
 }
 
 // NewComputeStatefulSet creates a new StatefulSet for the compute component and specified group.
-func (f *RisingWaveObjectFactory) NewComputeStatefulSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *appsv1.StatefulSet {
+func (f *RisingWaveObjectFactory) NewComputeStatefulSet(group string) *appsv1.StatefulSet {
 	componentGroup := buildComputeGroup(
 		f.risingwave.Spec.Global.Replicas.Compute,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -1961,7 +1945,7 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet(group string, podTemplat
 	pvcTemplates := f.risingwave.Spec.Storages.PVCTemplates
 
 	// Build the pod template.
-	podTemplate := f.buildPodTemplate(consts.ComponentCompute, group, podTemplates, &componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+	podTemplate := f.buildPodTemplate(consts.ComponentCompute, group, &componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 
 	// Set up the first container.
 	f.setupComputeContainer(&podTemplate.Spec.Containers[0], componentGroup.RisingWaveComputeGroupTemplate)
@@ -1994,7 +1978,7 @@ func (f *RisingWaveObjectFactory) NewComputeStatefulSet(group string, podTemplat
 }
 
 // NewComputeAdvancedStatefulSet creates a new OpenKruise StatefulSet for the compute component and specified group.
-func (f *RisingWaveObjectFactory) NewComputeAdvancedStatefulSet(group string, podTemplates map[string]risingwavev1alpha1.RisingWavePodTemplate) *kruiseappsv1beta1.StatefulSet {
+func (f *RisingWaveObjectFactory) NewComputeAdvancedStatefulSet(group string) *kruiseappsv1beta1.StatefulSet {
 	componentGroup := buildComputeGroup(
 		f.risingwave.Spec.Global.Replicas.Compute,
 		&f.risingwave.Spec.Global.RisingWaveComponentGroupTemplate,
@@ -2007,7 +1991,7 @@ func (f *RisingWaveObjectFactory) NewComputeAdvancedStatefulSet(group string, po
 	restartAt := f.risingwave.Spec.Components.Compute.RestartAt
 	pvcTemplates := f.risingwave.Spec.Storages.PVCTemplates
 
-	podTemplate := f.buildPodTemplate(consts.ComponentCompute, group, podTemplates, &componentGroup.RisingWaveComponentGroupTemplate, restartAt)
+	podTemplate := f.buildPodTemplate(consts.ComponentCompute, group, &componentGroup.RisingWaveComponentGroupTemplate, restartAt)
 
 	// Readiness gate InPlaceUpdateReady required for advanced statefulset
 	podTemplate.Spec.ReadinessGates = append(podTemplate.Spec.ReadinessGates, corev1.PodReadinessGate{

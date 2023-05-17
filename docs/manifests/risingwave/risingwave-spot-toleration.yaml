@@ -1,19 +1,4 @@
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
-kind: RisingWavePodTemplate
-metadata:
-  name: spot-toleration
-template:
-  metadata:
-    labels:
-      risingwave/spot: "1"
-  spec:
-    containers: []
-    tolerations:
-    - key: spot
-      operator: Exists
-      effect: NoSchedule
----
-apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
   name: risingwave-spot-toleration
@@ -42,4 +27,7 @@ spec:
       groups:
       - name: spot
         replicas: 1
-        podTemplate: spot-toleration
+        tolerations:
+        - key: spot
+          operator: Exists
+          effect: NoSchedule

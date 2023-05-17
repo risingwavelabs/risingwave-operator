@@ -1329,11 +1329,6 @@ spec:
                               description: A map of labels describing the nodes to
                                 be scheduled on.
                               type: object
-                            podTemplate:
-                              description: Base template for Pods of RisingWave. By
-                                default, there's no such template and the controller
-                                will set all unrelated fields to the default value.
-                              type: string
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -3009,11 +3004,6 @@ spec:
                               description: A map of labels describing the nodes to
                                 be scheduled on.
                               type: object
-                            podTemplate:
-                              description: Base template for Pods of RisingWave. By
-                                default, there's no such template and the controller
-                                will set all unrelated fields to the default value.
-                              type: string
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -4736,11 +4726,6 @@ spec:
                               description: A map of labels describing the nodes to
                                 be scheduled on.
                               type: object
-                            podTemplate:
-                              description: Base template for Pods of RisingWave. By
-                                default, there's no such template and the controller
-                                will set all unrelated fields to the default value.
-                              type: string
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -6423,11 +6408,6 @@ spec:
                               description: A map of labels describing the nodes to
                                 be scheduled on.
                               type: object
-                            podTemplate:
-                              description: Base template for Pods of RisingWave. By
-                                default, there's no such template and the controller
-                                will set all unrelated fields to the default value.
-                              type: string
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -8107,11 +8087,6 @@ spec:
                               description: A map of labels describing the nodes to
                                 be scheduled on.
                               type: object
-                            podTemplate:
-                              description: Base template for Pods of RisingWave. By
-                                default, there's no such template and the controller
-                                will set all unrelated fields to the default value.
-                              type: string
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -9695,11 +9670,6 @@ spec:
                     description: A map of labels describing the nodes to be scheduled
                       on.
                     type: object
-                  podTemplate:
-                    description: Base template for Pods of RisingWave. By default,
-                      there's no such template and the controller will set all unrelated
-                      fields to the default value.
-                    type: string
                   priorityClassName:
                     description: If specified, indicates the pod's priority. "system-node-critical"
                       and "system-cluster-critical" are two special keywords which

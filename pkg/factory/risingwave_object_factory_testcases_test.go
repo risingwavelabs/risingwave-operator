@@ -86,7 +86,6 @@ type baseTestCase struct {
 type testCase[T risingWaveComponentGroup, K kubeObjectsUpgradeStrategy] struct {
 	baseTestCase
 	component               string
-	podTemplate             map[string]risingwavev1alpha1.RisingWavePodTemplate
 	group                   T
 	expectedUpgradeStrategy K
 	restartAt               *metav1.Time
@@ -102,7 +101,7 @@ func deploymentTestCases() map[string]deploymentTestCase {
 				Replicas: int32(rand.Intn(math.MaxInt32)),
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+					Metadata: risingwavev1alpha1.PartialObjectMeta{
 						Labels: map[string]string{
 							"key1": "value1",
 							"key2": "value2",
@@ -117,7 +116,7 @@ func deploymentTestCases() map[string]deploymentTestCase {
 				Replicas: int32(rand.Intn(math.MaxInt32)),
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+					Metadata: risingwavev1alpha1.PartialObjectMeta{
 						Annotations: map[string]string{
 							"key1": "value1",
 							"key2": "value2",
@@ -322,25 +321,6 @@ func deploymentTestCases() map[string]deploymentTestCase {
 				},
 			},
 		},
-		"with-pod-template": {
-			podTemplate: map[string]risingwavev1alpha1.RisingWavePodTemplate{
-				"test": {
-					Template: *newPodTemplate(func(t *risingwavev1alpha1.RisingWavePodTemplateSpec) {
-						t.Spec.Containers[0].SecurityContext = &corev1.SecurityContext{
-							Privileged: pointer.Bool(true),
-						}
-					}),
-				},
-			},
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:       rand.String(20),
-					PodTemplate: pointer.String("test"),
-				},
-			},
-		},
 	}
 }
 
@@ -354,7 +334,7 @@ func metaStatefulSetTestCases() map[string]metaStatefulSetTestCase {
 				Replicas: int32(rand.Intn(math.MaxInt32)),
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+					Metadata: risingwavev1alpha1.PartialObjectMeta{
 						Labels: map[string]string{
 							"key1": "value1",
 							"key2": "value2",
@@ -369,7 +349,7 @@ func metaStatefulSetTestCases() map[string]metaStatefulSetTestCase {
 				Replicas: int32(rand.Intn(math.MaxInt32)),
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+					Metadata: risingwavev1alpha1.PartialObjectMeta{
 						Annotations: map[string]string{
 							"key1": "value1",
 							"key2": "value2",
@@ -572,25 +552,6 @@ func metaStatefulSetTestCases() map[string]metaStatefulSetTestCase {
 				},
 			},
 		},
-		"with-pod-template": {
-			podTemplate: map[string]risingwavev1alpha1.RisingWavePodTemplate{
-				"test": {
-					Template: *newPodTemplate(func(t *risingwavev1alpha1.RisingWavePodTemplateSpec) {
-						t.Spec.Containers[0].SecurityContext = &corev1.SecurityContext{
-							Privileged: pointer.Bool(true),
-						}
-					}),
-				},
-			},
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:       rand.String(20),
-					PodTemplate: pointer.String("test"),
-				},
-			},
-		},
 	}
 }
 
@@ -605,7 +566,7 @@ func computeStatefulSetTestCases() map[string]computeStatefulSetTestCase {
 				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 						Image: rand.String(20),
-						Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Metadata: risingwavev1alpha1.PartialObjectMeta{
 							Labels: map[string]string{
 								"key1": "value1",
 								"key2": "value2",
@@ -622,7 +583,7 @@ func computeStatefulSetTestCases() map[string]computeStatefulSetTestCase {
 				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 						Image: rand.String(20),
-						Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Metadata: risingwavev1alpha1.PartialObjectMeta{
 							Annotations: map[string]string{
 								"key1": "value1",
 								"key2": "value2",
@@ -852,27 +813,6 @@ func computeStatefulSetTestCases() map[string]computeStatefulSetTestCase {
 				},
 			},
 		},
-		"with-pod-template": {
-			podTemplate: map[string]risingwavev1alpha1.RisingWavePodTemplate{
-				"test": {
-					Template: *newPodTemplate(func(t *risingwavev1alpha1.RisingWavePodTemplateSpec) {
-						t.Spec.Containers[0].SecurityContext = &corev1.SecurityContext{
-							Privileged: pointer.Bool(true),
-						}
-					}),
-				},
-			},
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image:       rand.String(20),
-						PodTemplate: pointer.String("test"),
-					},
-				},
-			},
-		},
 		"with-pvc-volumes-mounts": {
 			group: risingwavev1alpha1.RisingWaveComputeGroup{
 				Name:     "test",
@@ -903,7 +843,7 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 				Replicas: int32(rand.Intn(math.MaxInt32)),
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+					Metadata: risingwavev1alpha1.PartialObjectMeta{
 						Labels: map[string]string{
 							"key1": "value1",
 							"key2": "value2",
@@ -918,7 +858,7 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 				Replicas: int32(rand.Intn(math.MaxInt32)),
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+					Metadata: risingwavev1alpha1.PartialObjectMeta{
 						Annotations: map[string]string{
 							"key1": "value1",
 							"key2": "value2",
@@ -1414,25 +1354,6 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 				},
 			},
 		},
-		"with-pod-template": {
-			podTemplate: map[string]risingwavev1alpha1.RisingWavePodTemplate{
-				"test": {
-					Template: *newPodTemplate(func(t *risingwavev1alpha1.RisingWavePodTemplateSpec) {
-						t.Spec.Containers[0].SecurityContext = &corev1.SecurityContext{
-							Privileged: pointer.Bool(true),
-						}
-					}),
-				},
-			},
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:       rand.String(20),
-					PodTemplate: pointer.String("test"),
-				},
-			},
-		},
 	}
 }
 
@@ -1446,7 +1367,7 @@ func metaAdvancedSTSTestCases() map[string]metaAdvancedSTSTestCase {
 				Replicas: int32(rand.Intn(math.MaxInt32)),
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+					Metadata: risingwavev1alpha1.PartialObjectMeta{
 						Labels: map[string]string{
 							"key1": "value1",
 							"key2": "value2",
@@ -1461,7 +1382,7 @@ func metaAdvancedSTSTestCases() map[string]metaAdvancedSTSTestCase {
 				Replicas: int32(rand.Intn(math.MaxInt32)),
 				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+					Metadata: risingwavev1alpha1.PartialObjectMeta{
 						Annotations: map[string]string{
 							"key1": "value1",
 							"key2": "value2",
@@ -1859,25 +1780,6 @@ func metaAdvancedSTSTestCases() map[string]metaAdvancedSTSTestCase {
 				},
 			},
 		},
-		"with-pod-template": {
-			podTemplate: map[string]risingwavev1alpha1.RisingWavePodTemplate{
-				"test": {
-					Template: *newPodTemplate(func(t *risingwavev1alpha1.RisingWavePodTemplateSpec) {
-						t.Spec.Containers[0].SecurityContext = &corev1.SecurityContext{
-							Privileged: pointer.Bool(true),
-						}
-					}),
-				},
-			},
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:       rand.String(20),
-					PodTemplate: pointer.String("test"),
-				},
-			},
-		},
 	}
 }
 
@@ -1892,7 +1794,7 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 						Image: rand.String(20),
-						Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Metadata: risingwavev1alpha1.PartialObjectMeta{
 							Labels: map[string]string{
 								"key1": "value1",
 								"key2": "value2",
@@ -1909,7 +1811,7 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
 						Image: rand.String(20),
-						Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Metadata: risingwavev1alpha1.PartialObjectMeta{
 							Annotations: map[string]string{
 								"key1": "value1",
 								"key2": "value2",
@@ -2381,14 +2283,14 @@ func servicesTestCases() map[string]servicesTestCase {
 type serviceMetadataTestCase struct {
 	baseTestCase
 	component         string
-	globalServiceMeta risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta
+	globalServiceMeta risingwavev1alpha1.PartialObjectMeta
 }
 
 func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
 	return map[string]serviceMetadataTestCase{
 		"random-meta-labels": {
 			component: consts.ComponentMeta,
-			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+			globalServiceMeta: risingwavev1alpha1.PartialObjectMeta{
 				Labels: map[string]string{
 					"key1": "value1",
 					"key2": "value2",
@@ -2397,7 +2299,7 @@ func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
 		},
 		"random-meta-annotations": {
 			component: consts.ComponentMeta,
-			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+			globalServiceMeta: risingwavev1alpha1.PartialObjectMeta{
 				Annotations: map[string]string{
 					"key1": "value1",
 					"key2": "value2",
@@ -2406,7 +2308,7 @@ func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
 		},
 		"random-frontend-labels": {
 			component: consts.ComponentFrontend,
-			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+			globalServiceMeta: risingwavev1alpha1.PartialObjectMeta{
 				Labels: map[string]string{
 					"key1": "value1",
 					"key2": "value2",
@@ -2415,7 +2317,7 @@ func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
 		},
 		"random-frontend-annotations": {
 			component: consts.ComponentFrontend,
-			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+			globalServiceMeta: risingwavev1alpha1.PartialObjectMeta{
 				Annotations: map[string]string{
 					"key1": "value1",
 					"key2": "value2",
@@ -2424,7 +2326,7 @@ func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
 		},
 		"random-compute-labels": {
 			component: consts.ComponentCompute,
-			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+			globalServiceMeta: risingwavev1alpha1.PartialObjectMeta{
 				Labels: map[string]string{
 					"key1": "value1",
 					"key2": "value2",
@@ -2433,7 +2335,7 @@ func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
 		},
 		"random-compute-annotations": {
 			component: consts.ComponentCompute,
-			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+			globalServiceMeta: risingwavev1alpha1.PartialObjectMeta{
 				Annotations: map[string]string{
 					"key1": "value1",
 					"key2": "value2",
@@ -2442,7 +2344,7 @@ func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
 		},
 		"random-compactor-labels": {
 			component: consts.ComponentCompactor,
-			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+			globalServiceMeta: risingwavev1alpha1.PartialObjectMeta{
 				Labels: map[string]string{
 					"key1": "value1",
 					"key2": "value2",
@@ -2451,7 +2353,7 @@ func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
 		},
 		"random-compactor-annotations": {
 			component: consts.ComponentCompactor,
-			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+			globalServiceMeta: risingwavev1alpha1.PartialObjectMeta{
 				Annotations: map[string]string{
 					"key1": "value1",
 					"key2": "value2",
@@ -2460,7 +2362,7 @@ func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
 		},
 		"random-connector-labels": {
 			component: consts.ComponentConnector,
-			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+			globalServiceMeta: risingwavev1alpha1.PartialObjectMeta{
 				Labels: map[string]string{
 					"key1": "value1",
 					"key2": "value2",
@@ -2469,7 +2371,7 @@ func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
 		},
 		"random-connector-annotations": {
 			component: consts.ComponentConnector,
-			globalServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+			globalServiceMeta: risingwavev1alpha1.PartialObjectMeta{
 				Annotations: map[string]string{
 					"key1": "value1",
 					"key2": "value2",

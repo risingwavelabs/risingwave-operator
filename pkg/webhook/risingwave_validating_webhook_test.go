@@ -69,7 +69,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		"service-meta-labels-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
-					ServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+					ServiceMeta: risingwavev1alpha1.PartialObjectMeta{
 						Labels: map[string]string{
 							"key1": "value1",
 							"key2": "value2",
@@ -82,7 +82,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		"service-meta-labels-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
-					ServiceMeta: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+					ServiceMeta: risingwavev1alpha1.PartialObjectMeta{
 						Labels: map[string]string{
 							"key1":            "value1",
 							"risingwave/key2": "value2",
@@ -649,7 +649,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Metadata: risingwavev1alpha1.PartialObjectMeta{
 							Labels: map[string]string{
 								"key1": "value1",
 								"key2": "value2",
@@ -664,7 +664,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
 					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Metadata: risingwavev1alpha1.RisingWavePodTemplatePartialObjectMeta{
+						Metadata: risingwavev1alpha1.PartialObjectMeta{
 							Labels: map[string]string{
 								"key1":            "value1",
 								"risingwave/key2": "value2",

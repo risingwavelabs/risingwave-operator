@@ -113,11 +113,6 @@ type RisingWaveComponentGroupTemplate struct {
 	// +optional
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
-	// Base template for Pods of RisingWave. By default, there's no such template
-	// and the controller will set all unrelated fields to the default value.
-	// +optional
-	PodTemplate *string `json:"podTemplate,omitempty"`
-
 	// If specified, the pod's tolerations.
 	// +optional
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
@@ -155,7 +150,7 @@ type RisingWaveComponentGroupTemplate struct {
 
 	// metadata of the RisingWave's Pods.
 	// +optional
-	Metadata RisingWavePodTemplatePartialObjectMeta `json:"metadata,omitempty"`
+	Metadata PartialObjectMeta `json:"metadata,omitempty"`
 
 	// List of environment variables to set in the container.
 	// Cannot be updated.
@@ -502,7 +497,7 @@ type RisingWaveGlobalSpec struct {
 
 	// Service metadata of the frontend service.
 	// +optional
-	ServiceMeta RisingWavePodTemplatePartialObjectMeta `json:"serviceMetadata,omitempty"`
+	ServiceMeta PartialObjectMeta `json:"serviceMetadata,omitempty"`
 }
 
 // RisingWaveSpec is the overall spec.
@@ -548,7 +543,7 @@ type RisingWaveSpec struct {
 
 	// AdditionalFrontendServiceMetadata tells the operator to add the specified metadata onto the frontend Service.
 	// Note that the system reserved labels and annotations are not valid and will be rejected by the webhook.
-	AdditionalFrontendServiceMetadata RisingWavePodTemplatePartialObjectMeta `json:"additionalFrontendServiceMetadata,omitempty"`
+	AdditionalFrontendServiceMetadata PartialObjectMeta `json:"additionalFrontendServiceMetadata,omitempty"`
 
 	// MetaStore determines which backend the meta store will use and the parameters for it. Defaults to memory.
 	// But keep in mind that memory backend is not recommended in production.

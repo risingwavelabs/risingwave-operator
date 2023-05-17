@@ -8891,24 +8891,6 @@ spec:
                         x-kubernetes-list-map-keys:
                         - name
                         x-kubernetes-list-type: map
-                      ports:
-                        description: Ports to be listened by compactor Pods.
-                        properties:
-                          metrics:
-                            description: Metrics port of the component. It always
-                              serves the metrics in Prometheus format.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                          service:
-                            description: Service port of the component. For each component,
-                              the 'service' has different meanings. It's an optional
-                              field and if it's left out, a default port (varies among
-                              components) will be used.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                        type: object
                       restartAt:
                         description: The time that the Pods of compactor that should
                           be restarted. Setting a value on this field will trigger
@@ -10610,24 +10592,6 @@ spec:
                         x-kubernetes-list-map-keys:
                         - name
                         x-kubernetes-list-type: map
-                      ports:
-                        description: Ports to be listened by compute Pods.
-                        properties:
-                          metrics:
-                            description: Metrics port of the component. It always
-                              serves the metrics in Prometheus format.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                          service:
-                            description: Service port of the component. For each component,
-                              the 'service' has different meanings. It's an optional
-                              field and if it's left out, a default port (varies among
-                              components) will be used.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                        type: object
                       restartAt:
                         description: The time that the Pods of compute that should
                           be restarted. Setting a value on this field will trigger
@@ -12288,27 +12252,6 @@ spec:
                         x-kubernetes-list-map-keys:
                         - name
                         x-kubernetes-list-type: map
-                      ports:
-                        default:
-                          metrics: 8080
-                          service: 50051
-                        description: Ports to be listened by compactor Pods.
-                        properties:
-                          metrics:
-                            description: Metrics port of the component. It always
-                              serves the metrics in Prometheus format.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                          service:
-                            description: Service port of the component. For each component,
-                              the 'service' has different meanings. It's an optional
-                              field and if it's left out, a default port (varies among
-                              components) will be used.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                        type: object
                       restartAt:
                         description: The time that the Pods of connector that should
                           be restarted. Setting a value on this field will trigger
@@ -13970,24 +13913,6 @@ spec:
                         x-kubernetes-list-map-keys:
                         - name
                         x-kubernetes-list-type: map
-                      ports:
-                        description: Ports to be listened by the frontend Pods.
-                        properties:
-                          metrics:
-                            description: Metrics port of the component. It always
-                              serves the metrics in Prometheus format.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                          service:
-                            description: Service port of the component. For each component,
-                              the 'service' has different meanings. It's an optional
-                              field and if it's left out, a default port (varies among
-                              components) will be used.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                        type: object
                       restartAt:
                         description: The time that the Pods of frontend that should
                           be restarted. Setting a value on this field will trigger
@@ -15649,30 +15574,6 @@ spec:
                         x-kubernetes-list-map-keys:
                         - name
                         x-kubernetes-list-type: map
-                      ports:
-                        description: Ports to be listened by the meta Pods.
-                        properties:
-                          dashboard:
-                            description: Dashboard port of the meta, a default value
-                              of 8080 will be used if not specified.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                          metrics:
-                            description: Metrics port of the component. It always
-                              serves the metrics in Prometheus format.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                          service:
-                            description: Service port of the component. For each component,
-                              the 'service' has different meanings. It's an optional
-                              field and if it's left out, a default port (varies among
-                              components) will be used.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                        type: object
                       restartAt:
                         description: The time that the Pods of frontend that should
                           be restarted. Setting a value on this field will trigger

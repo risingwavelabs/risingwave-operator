@@ -28,7 +28,7 @@ function go_mod_tidy_check() {
     echo "$go_mod_tidy_output"
     return 1
   fi
-  if echo "$go_mod_tidy_output" | grep -q -v "go: downloading"; then
+  if [[ -n "$go_mod_tidy_output" ]] && echo "$go_mod_tidy_output" | grep -q -v "go: downloading"; then
     echo "go mod tidy modified go.mod or go.sum:"
     echo "$go_mod_tidy_output"
     return 1

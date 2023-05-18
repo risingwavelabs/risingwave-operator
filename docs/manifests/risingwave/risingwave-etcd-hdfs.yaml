@@ -1,0 +1,404 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kube-hadoop-conf
+data:
+  HDFS_MASTER_SERVICE: hadoop-hdfs-master
+  HDOOP_YARN_MASTER: hadoop-yarn-master
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hadoop-hdfs-master
+spec:
+  type: NodePort
+  selector:
+    app: hdfs-master
+  ports:
+    - name: rpc
+      port: 9000
+      targetPort: 9000
+    - name: http
+      port: 50070
+      targetPort: 50070
+      nodePort: 32007
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hdfs-master
+  labels:
+    app: hdfs-master
+spec:
+  containers:
+    - name: hdfs-master
+      image: kubeguide/hadoop:latest
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 9000
+        - containerPort: 50070    
+      env:
+        - name: HADOOP_NODE_TYPE
+          value: namenode
+        - name: HDFS_MASTER_SERVICE
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDFS_MASTER_SERVICE
+        - name: HDOOP_YARN_MASTER
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDOOP_YARN_MASTER
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Pod
+metadata:
+    name: hadoop-datanode-1
+    labels:
+      app: hadoop-datanode-1
+spec:
+  containers:
+    - name: hadoop-datanode-1
+      image: kubeguide/hadoop:latest
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 9000
+        - containerPort: 50070    
+      env:
+        - name: HADOOP_NODE_TYPE
+          value: datanode
+        - name: HDFS_MASTER_SERVICE
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDFS_MASTER_SERVICE
+        - name: HDOOP_YARN_MASTER
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDOOP_YARN_MASTER        
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Pod
+metadata:
+    name: hadoop-datanode-2
+    labels:
+      app: hadoop-datanode-2
+spec:
+  containers:
+    - name: hadoop-datanode-2
+      image: kubeguide/hadoop:latest
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 9000
+        - containerPort: 50070    
+      env:
+        - name: HADOOP_NODE_TYPE
+          value: datanode
+        - name: HDFS_MASTER_SERVICE
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDFS_MASTER_SERVICE
+        - name: HDOOP_YARN_MASTER
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDOOP_YARN_MASTER        
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Pod
+metadata:
+    name: hadoop-datanode-3
+    labels:
+      app: hadoop-datanode-3
+spec:
+  containers:
+    - name: hadoop-datanode-3
+      image: kubeguide/hadoop:latest
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 9000
+        - containerPort: 50070    
+      env:
+        - name: HADOOP_NODE_TYPE
+          value: datanode
+        - name: HDFS_MASTER_SERVICE
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDFS_MASTER_SERVICE
+        - name: HDOOP_YARN_MASTER
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDOOP_YARN_MASTER        
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hadoop-yarn-master
+spec:
+  type: NodePort
+  selector:
+    app: yarn-master
+  ports:
+     - name: "8030"       
+       port: 8030
+     - name: "8031"     
+       port: 8031
+     - name: "8032"
+       port: 8032     
+     - name: http
+       port: 8088
+       targetPort: 8088
+       nodePort: 32088
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: yarn-master
+  labels:
+    app: yarn-master
+spec:
+  containers:
+    - name: yarn-master
+      image: kubeguide/hadoop:latest
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 9000
+        - containerPort: 50070    
+      env:
+        - name: HADOOP_NODE_TYPE
+          value: resourceman
+        - name: HDFS_MASTER_SERVICE
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDFS_MASTER_SERVICE
+        - name: HDOOP_YARN_MASTER
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDOOP_YARN_MASTER          
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: yarn-node-1
+spec:
+  clusterIP: None
+  selector:
+    app: yarn-node-1
+  ports:
+     - port: 8040
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: yarn-node-2
+spec:
+  clusterIP: None
+  selector:
+    app: yarn-node-2
+  ports:
+     - port: 8040
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: yarn-node-3
+spec:
+  clusterIP: None
+  selector:
+    app: yarn-node-3
+  ports:
+     - port: 8040
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: yarn-node-1
+  labels:
+    app: yarn-node-1
+spec:
+  containers:
+    - name: yarn-node-1
+      image: kubeguide/hadoop:latest
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 8040
+        - containerPort: 8041   
+        - containerPort: 8042        
+      env:
+        - name: HADOOP_NODE_TYPE
+          value: yarnnode
+        - name: HDFS_MASTER_SERVICE
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDFS_MASTER_SERVICE
+        - name: HDOOP_YARN_MASTER
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDOOP_YARN_MASTER          
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: yarn-node-2
+  labels:
+    app: yarn-node-2
+spec:
+  containers:
+    - name: yarn-node-2
+      image: kubeguide/hadoop:latest
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 8040
+        - containerPort: 8041   
+        - containerPort: 8042        
+      env:
+        - name: HADOOP_NODE_TYPE
+          value: yarnnode
+        - name: HDFS_MASTER_SERVICE
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDFS_MASTER_SERVICE
+        - name: HDOOP_YARN_MASTER
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDOOP_YARN_MASTER          
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: yarn-node-3
+  labels:
+    app: yarn-node-3
+spec:
+  containers:
+    - name: yarn-node-3
+      image: kubeguide/hadoop:latest
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 8040
+        - containerPort: 8041   
+        - containerPort: 8042        
+      env:
+        - name: HADOOP_NODE_TYPE
+          value: yarnnode
+        - name: HDFS_MASTER_SERVICE
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDFS_MASTER_SERVICE
+        - name: HDOOP_YARN_MASTER
+          valueFrom:
+            configMapKeyRef:
+              name: kube-hadoop-conf
+              key: HDOOP_YARN_MASTER          
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: risingwave-etcd
+  labels:
+    app: risingwave-etcd
+spec:
+  ports:
+  - port: 2388
+    name: client
+  - port: 2389
+    name: peer
+  selector:
+    app: risingwave-etcd
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: risingwave-etcd
+  name: risingwave-etcd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: risingwave-etcd
+  serviceName: risingwave-etcd
+  template:
+    metadata:
+      labels:
+        app: risingwave-etcd
+    spec:
+      containers:
+        - name: etcd
+          image: quay.io/coreos/etcd:latest
+          imagePullPolicy: IfNotPresent
+          command:
+          - /usr/local/bin/etcd
+          args:
+          - "--listen-client-urls"
+          - "http://0.0.0.0:2388"
+          - "--advertise-client-urls"
+          - "http://risingwave-etcd-0:2388"
+          - "--listen-peer-urls"
+          - "http://0.0.0.0:2389"
+          - "--initial-advertise-peer-urls"
+          - "http://risingwave-etcd-0:2389"
+          - "--listen-metrics-urls"
+          - "http://0.0.0.0:2379"
+          - "--name"
+          - "risingwave-etcd"
+          - "--max-txn-ops"
+          - "999999"
+          - "--auto-compaction-mode"
+          - periodic
+          - "--auto-compaction-retention"
+          - 1m
+          - "--snapshot-count"
+          - "10000"
+          env:
+          - name: ALLOW_NONE_AUTHENTICATION
+            value: "1"
+          ports:
+          - containerPort: 2389
+            name: peer
+            protocol: TCP
+          - containerPort: 2388
+            name: client
+            protocol: TCP
+---
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-etcd-hdfs
+spec:
+  storages:
+    meta:
+      etcd: 
+        endpoint: risingwave-etcd:2388
+    object:
+      hdfs:
+        nameNode: hadoop-hdfs-master:9000
+        root: risingwave
+  global:
+    image: ghcr.io/risingwavelabs/risingwave:git-4e93d7061b66f8f12c4e89e097d950dfd3a5963a
+    imagePullPolicy: IfNotPresent
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+      compactor: 1

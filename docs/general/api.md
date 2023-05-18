@@ -134,6 +134,47 @@ int32
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">PartialObjectMeta
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
+</p>
+<div>
+<p>PartialObjectMeta contains partial metadata of an object, including labels and annotations.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>labels</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Labels of the object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>annotations</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<p>Annotations of the object.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.PersistentVolumeClaim">PersistentVolumeClaim
 </h3>
 <p>
@@ -568,8 +609,8 @@ Kubernetes core/v1.ServiceType
 <td>
 <code>additionalFrontendServiceMetadata</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
-RisingWavePodTemplatePartialObjectMeta
+<a href="#risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">
+PartialObjectMeta
 </a>
 </em>
 </td>
@@ -676,51 +717,6 @@ Defaults to &ldquo;AccountKey&rdquo;.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">RisingWaveComponentCommonPorts
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompute">RisingWaveComponentCompute</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentConnector">RisingWaveComponentConnector</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMetaPorts">RisingWaveComponentMetaPorts</a>)
-</p>
-<div>
-<p>RisingWaveComponentCommonPorts are the common ports that components need to listen.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>service</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Service port of the component. For each component,
-the &lsquo;service&rsquo; has different meanings. It&rsquo;s an optional field and if it&rsquo;s left out, a
-default port (varies among components) will be used.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>metrics</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Metrics port of the component. It always serves the metrics in
-Prometheus format.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor
 </h3>
 <p>
@@ -750,20 +746,6 @@ Kubernetes meta/v1.Time
 <em>(Optional)</em>
 <p>The time that the Pods of compactor that should be restarted. Setting a value on this
 field will trigger a recreation of all Pods of this component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ports</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">
-RisingWaveComponentCommonPorts
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Ports to be listened by compactor Pods.</p>
 </td>
 </tr>
 <tr>
@@ -815,20 +797,6 @@ field will trigger a recreation of all Pods of this component.</p>
 </tr>
 <tr>
 <td>
-<code>ports</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">
-RisingWaveComponentCommonPorts
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Ports to be listened by compute Pods.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>groups</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComputeGroup">
@@ -876,20 +844,6 @@ field will trigger a recreation of all Pods of this component.</p>
 </tr>
 <tr>
 <td>
-<code>ports</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">
-RisingWaveComponentCommonPorts
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Ports to be listened by compactor Pods.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>groups</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">
@@ -933,20 +887,6 @@ Kubernetes meta/v1.Time
 <em>(Optional)</em>
 <p>The time that the Pods of frontend that should be restarted. Setting a value on this
 field will trigger a recreation of all Pods of this component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ports</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCommonPorts">
-RisingWaveComponentCommonPorts
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Ports to be listened by the frontend Pods.</p>
 </td>
 </tr>
 <tr>
@@ -1106,19 +1046,6 @@ map[string]string
 </tr>
 <tr>
 <td>
-<code>podTemplate</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Base template for Pods of RisingWave. By default, there&rsquo;s no such template
-and the controller will set all unrelated fields to the default value.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>tolerations</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core">
@@ -1202,8 +1129,8 @@ Defaults to 30 seconds.</p>
 <td>
 <code>metadata</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
-RisingWavePodTemplatePartialObjectMeta
+<a href="#risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">
+PartialObjectMeta
 </a>
 </em>
 </td>
@@ -1295,20 +1222,6 @@ field will trigger a recreation of all Pods of this component.</p>
 </tr>
 <tr>
 <td>
-<code>ports</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMetaPorts">
-RisingWaveComponentMetaPorts
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Ports to be listened by the meta Pods.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>groups</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">
@@ -1319,64 +1232,6 @@ RisingWaveComponentMetaPorts
 <td>
 <em>(Optional)</em>
 <p>Groups of Pods of meta component.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMetaPorts">RisingWaveComponentMetaPorts
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta</a>)
-</p>
-<div>
-<p>RisingWaveComponentMetaPorts are the ports of component meta.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>service</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Service port of the component. For each component,
-the &lsquo;service&rsquo; has different meanings. It&rsquo;s an optional field and if it&rsquo;s left out, a
-default port (varies among components) will be used.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>metrics</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Metrics port of the component. It always serves the metrics in
-Prometheus format.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>dashboard</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Dashboard port of the meta, a default value of 8080 will be
-used if not specified.</p>
 </td>
 </tr>
 </tbody>
@@ -1687,19 +1542,6 @@ map[string]string
 </tr>
 <tr>
 <td>
-<code>podTemplate</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Base template for Pods of RisingWave. By default, there&rsquo;s no such template
-and the controller will set all unrelated fields to the default value.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>tolerations</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core">
@@ -1783,8 +1625,8 @@ Defaults to 30 seconds.</p>
 <td>
 <code>metadata</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
-RisingWavePodTemplatePartialObjectMeta
+<a href="#risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">
+PartialObjectMeta
 </a>
 </em>
 </td>
@@ -2272,19 +2114,6 @@ map[string]string
 </tr>
 <tr>
 <td>
-<code>podTemplate</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Base template for Pods of RisingWave. By default, there&rsquo;s no such template
-and the controller will set all unrelated fields to the default value.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>tolerations</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core">
@@ -2368,8 +2197,8 @@ Defaults to 30 seconds.</p>
 <td>
 <code>metadata</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
-RisingWavePodTemplatePartialObjectMeta
+<a href="#risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">
+PartialObjectMeta
 </a>
 </em>
 </td>
@@ -2458,8 +2287,8 @@ Kubernetes core/v1.ServiceType
 <td>
 <code>serviceMetadata</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
-RisingWavePodTemplatePartialObjectMeta
+<a href="#risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">
+PartialObjectMeta
 </a>
 </em>
 </td>
@@ -2681,770 +2510,6 @@ string
 <td>
 <p>PasswordKeyRef is the key of the secret to be the password. Must be a valid secret key.
 Defaults to &ldquo;password&rdquo;.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplate">RisingWavePodTemplate
-</h3>
-<div>
-<p>RisingWavePodTemplate is the struct for RisingWavePodTemplate object.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>metadata</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta">
-Kubernetes meta/v1.ObjectMeta
-</a>
-</em>
-</td>
-<td>
-Refer to the Kubernetes API documentation for the fields of the
-<code>metadata</code> field.
-</td>
-</tr>
-<tr>
-<td>
-<code>template</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplateSpec">
-RisingWavePodTemplateSpec
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">RisingWavePodTemplatePartialObjectMeta
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplateSpec">RisingWavePodTemplateSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
-</p>
-<div>
-<p>RisingWavePodTemplatePartialObjectMeta is the spec for metadata templates.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>labels</code><br/>
-<em>
-map[string]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Labels of the object.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>annotations</code><br/>
-<em>
-map[string]string
-</em>
-</td>
-<td>
-<p>Annotations of the object.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplateSpec">RisingWavePodTemplateSpec
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplate">RisingWavePodTemplate</a>)
-</p>
-<div>
-<p>RisingWavePodTemplateSpec is the spec of RisingWavePodTemplate.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>metadata</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
-RisingWavePodTemplatePartialObjectMeta
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>spec</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podspec-v1-core">
-Kubernetes core/v1.PodSpec
-</a>
-</em>
-</td>
-<td>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>volumes</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volume-v1-core">
-[]Kubernetes core/v1.Volume
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>List of volumes that can be mounted by containers belonging to the pod.
-More info: <a href="https://kubernetes.io/docs/concepts/storage/volumes">https://kubernetes.io/docs/concepts/storage/volumes</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>initContainers</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core">
-[]Kubernetes core/v1.Container
-</a>
-</em>
-</td>
-<td>
-<p>List of initialization containers belonging to the pod.
-Init containers are executed in order prior to containers being started. If any
-init container fails, the pod is considered to have failed and is handled according
-to its restartPolicy. The name for an init container or normal container must be
-unique among all containers.
-Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes.
-The resourceRequirements of an init container are taken into account during scheduling
-by finding the highest request/limit for each resource type, and then using the max of
-of that value or the sum of the normal containers. Limits are applied to init containers
-in a similar fashion.
-Init containers cannot currently be added or removed.
-Cannot be updated.
-More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>containers</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core">
-[]Kubernetes core/v1.Container
-</a>
-</em>
-</td>
-<td>
-<p>List of containers belonging to the pod.
-Containers cannot currently be added or removed.
-There must be at least one container in a Pod.
-Cannot be updated.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ephemeralContainers</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#ephemeralcontainer-v1-core">
-[]Kubernetes core/v1.EphemeralContainer
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing
-pod to perform user-initiated actions such as debugging. This list cannot be specified when
-creating a pod, and it cannot be modified by updating the pod spec. In order to add an
-ephemeral container to an existing pod, use the pod&rsquo;s ephemeralcontainers subresource.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>restartPolicy</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#restartpolicy-v1-core">
-Kubernetes core/v1.RestartPolicy
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Restart policy for all containers within the pod.
-One of Always, OnFailure, Never.
-Default to Always.
-More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy">https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>terminationGracePeriodSeconds</code><br/>
-<em>
-int64
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Optional duration in seconds the pod needs to terminate gracefully. May be decreased in delete request.
-Value must be non-negative integer. The value zero indicates stop immediately via
-the kill signal (no opportunity to shut down).
-If this value is nil, the default grace period will be used instead.
-The grace period is the duration in seconds after the processes running in the pod are sent
-a termination signal and the time when the processes are forcibly halted with a kill signal.
-Set this value longer than the expected cleanup time for your process.
-Defaults to 30 seconds.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>activeDeadlineSeconds</code><br/>
-<em>
-int64
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Optional duration in seconds the pod may be active on the node relative to
-StartTime before the system will actively try to mark it failed and kill associated containers.
-Value must be a positive integer.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>dnsPolicy</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#dnspolicy-v1-core">
-Kubernetes core/v1.DNSPolicy
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Set DNS policy for the pod.
-Defaults to &ldquo;ClusterFirst&rdquo;.
-Valid values are &lsquo;ClusterFirstWithHostNet&rsquo;, &lsquo;ClusterFirst&rsquo;, &lsquo;Default&rsquo; or &lsquo;None&rsquo;.
-DNS parameters given in DNSConfig will be merged with the policy selected with DNSPolicy.
-To have DNS options set along with hostNetwork, you have to specify DNS policy
-explicitly to &lsquo;ClusterFirstWithHostNet&rsquo;.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>nodeSelector</code><br/>
-<em>
-map[string]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>NodeSelector is a selector which must be true for the pod to fit on a node.
-Selector which must match a node&rsquo;s labels for the pod to be scheduled on that node.
-More info: <a href="https://kubernetes.io/docs/concepts/configuration/assign-pod-node/">https://kubernetes.io/docs/concepts/configuration/assign-pod-node/</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serviceAccountName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>ServiceAccountName is the name of the ServiceAccount to use to run this pod.
-More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/">https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serviceAccount</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>DeprecatedServiceAccount is a depreciated alias for ServiceAccountName.
-Deprecated: Use serviceAccountName instead.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>automountServiceAccountToken</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>nodeName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>NodeName is a request to schedule this pod onto a specific node. If it is non-empty,
-the scheduler simply schedules this pod onto that node, assuming that it fits resource
-requirements.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>hostNetwork</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Host networking requested for this pod. Use the host&rsquo;s network namespace.
-If this option is set, the ports that will be used must be specified.
-Default to false.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>hostPID</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Use the host&rsquo;s pid namespace.
-Optional: Default to false.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>hostIPC</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Use the host&rsquo;s ipc namespace.
-Optional: Default to false.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>shareProcessNamespace</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Share a single process namespace between all of the containers in a pod.
-When this is set containers will be able to view and signal processes from other containers
-in the same pod, and the first process in each container will not be assigned PID 1.
-HostPID and ShareProcessNamespace cannot both be set.
-Optional: Default to false.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>securityContext</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
-Kubernetes core/v1.PodSecurityContext
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>SecurityContext holds pod-level security attributes and common container settings.
-Optional: Defaults to empty.  See type description for default values of each field.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>imagePullSecrets</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#localobjectreference-v1-core">
-[]Kubernetes core/v1.LocalObjectReference
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
-If specified, these secrets will be passed to individual puller implementations for them to use.
-More info: <a href="https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod">https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>hostname</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Specifies the hostname of the Pod
-If not specified, the pod&rsquo;s hostname will be set to a system-defined value.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>subdomain</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If specified, the fully qualified Pod hostname will be &ldquo;<hostname>.<subdomain>.<pod namespace>.svc.<cluster domain>&rdquo;.
-If not specified, the pod will not have a domainname at all.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>affinity</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#affinity-v1-core">
-Kubernetes core/v1.Affinity
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If specified, the pod&rsquo;s scheduling constraints</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>schedulerName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If specified, the pod will be dispatched by specified scheduler.
-If not specified, the pod will be dispatched by default scheduler.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tolerations</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core">
-[]Kubernetes core/v1.Toleration
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If specified, the pod&rsquo;s tolerations.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>hostAliases</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#hostalias-v1-core">
-[]Kubernetes core/v1.HostAlias
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>HostAliases is an optional list of hosts and IPs that will be injected into the pod&rsquo;s hosts
-file if specified. This is only valid for non-hostNetwork pods.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>priorityClassName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If specified, indicates the pod&rsquo;s priority. &ldquo;system-node-critical&rdquo; and
-&ldquo;system-cluster-critical&rdquo; are two special keywords which indicate the
-highest priorities with the former being the highest priority. Any other
-name must be defined by creating a PriorityClass object with that name.
-If not specified, the pod priority will be default or zero if there is no
-default.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>priority</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The priority value. Various system components use this field to find the
-priority of the pod. When Priority Admission Controller is enabled, it
-prevents users from setting this field. The admission controller populates
-this field from PriorityClassName.
-The higher the value, the higher the priority.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>dnsConfig</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#poddnsconfig-v1-core">
-Kubernetes core/v1.PodDNSConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Specifies the DNS parameters of a pod.
-Parameters specified here will be merged to the generated DNS
-configuration based on DNSPolicy.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>readinessGates</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podreadinessgate-v1-core">
-[]Kubernetes core/v1.PodReadinessGate
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If specified, all readiness gates will be evaluated for pod readiness.
-A pod is ready when all its containers are ready AND
-all conditions specified in the readiness gates have status equal to &ldquo;True&rdquo;
-More info: <a href="https://git.k8s.io/enhancements/keps/sig-network/580-pod-readiness-gates">https://git.k8s.io/enhancements/keps/sig-network/580-pod-readiness-gates</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>runtimeClassName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>RuntimeClassName refers to a RuntimeClass object in the node.k8s.io group, which should be used
-to run this pod.  If no RuntimeClass resource matches the named class, the pod will not be run.
-If unset or empty, the &ldquo;legacy&rdquo; RuntimeClass will be used, which is an implicit class with an
-empty definition that uses the default runtime handler.
-More info: <a href="https://git.k8s.io/enhancements/keps/sig-node/585-runtime-class">https://git.k8s.io/enhancements/keps/sig-node/585-runtime-class</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>enableServiceLinks</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>EnableServiceLinks indicates whether information about services should be injected into pod&rsquo;s
-environment variables, matching the syntax of Docker links.
-Optional: Defaults to true.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>preemptionPolicy</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#preemptionpolicy-v1-core">
-Kubernetes core/v1.PreemptionPolicy
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>PreemptionPolicy is the Policy for preempting pods with lower priority.
-One of Never, PreemptLowerPriority.
-Defaults to PreemptLowerPriority if unset.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>overhead</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#resourcelist-v1-core">
-Kubernetes core/v1.ResourceList
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Overhead represents the resource overhead associated with running a pod for a given RuntimeClass.
-This field will be autopopulated at admission time by the RuntimeClass admission controller. If
-the RuntimeClass admission controller is enabled, overhead must not be set in Pod create requests.
-The RuntimeClass admission controller will reject Pod create requests which have the overhead already
-set. If RuntimeClass is configured and selected in the PodSpec, Overhead will be set to the value
-defined in the corresponding RuntimeClass, otherwise it will remain unset and treated as zero.
-More info: <a href="https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md">https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>topologySpreadConstraints</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#topologyspreadconstraint-v1-core">
-[]Kubernetes core/v1.TopologySpreadConstraint
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>TopologySpreadConstraints describes how a group of pods ought to spread across topology
-domains. Scheduler will schedule pods in a way which abides by the constraints.
-All topologySpreadConstraints are ANDed.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>setHostnameAsFQDN</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If true the pod&rsquo;s hostname will be configured as the pod&rsquo;s FQDN, rather than the leaf name (the default).
-In Linux containers, this means setting the FQDN in the hostname field of the kernel (the nodename field of struct utsname).
-In Windows containers, this means setting the registry value of hostname for the registry key HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters to FQDN.
-If a pod does not have FQDN, this has no effect.
-Default to false.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>os</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podos-v1-core">
-Kubernetes core/v1.PodOS
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Specifies the OS of the containers in the pod.
-Some pod and container fields are restricted if this is set.</p>
-<p>If the OS field is set to linux, the following fields must be unset:
--securityContext.windowsOptions</p>
-<p>If the OS field is set to windows, following fields must be unset:
-- spec.hostPID
-- spec.hostIPC
-- spec.hostUsers
-- spec.securityContext.seLinuxOptions
-- spec.securityContext.seccompProfile
-- spec.securityContext.fsGroup
-- spec.securityContext.fsGroupChangePolicy
-- spec.securityContext.sysctls
-- spec.shareProcessNamespace
-- spec.securityContext.runAsUser
-- spec.securityContext.runAsGroup
-- spec.securityContext.supplementalGroups
-- spec.containers[<em>].securityContext.seLinuxOptions
-- spec.containers[</em>].securityContext.seccompProfile
-- spec.containers[<em>].securityContext.capabilities
-- spec.containers[</em>].securityContext.readOnlyRootFilesystem
-- spec.containers[<em>].securityContext.privileged
-- spec.containers[</em>].securityContext.allowPrivilegeEscalation
-- spec.containers[<em>].securityContext.procMount
-- spec.containers[</em>].securityContext.runAsUser
-- spec.containers[*].securityContext.runAsGroup</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>hostUsers</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Use the host&rsquo;s user namespace.
-Optional: Default to true.
-If set to true or not present, the pod will be run in the host user namespace, useful
-for when the pod needs a feature only available to the host user namespace, such as
-loading a kernel module with CAP_SYS_MODULE.
-When set to false, a new userns is created for the pod. Setting false is useful for
-mitigating container breakout vulnerabilities even allowing users to run their
-containers as root without actually having root privileges on the host.
-This field is alpha-level and is only honored by servers that enable the UserNamespacesSupport feature.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>schedulingGates</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podschedulinggate-v1-core">
-[]Kubernetes core/v1.PodSchedulingGate
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>SchedulingGates is an opaque list of values that if specified will block scheduling the pod.
-More info:  <a href="https://git.k8s.io/enhancements/keps/sig-scheduling/3521-pod-scheduling-readiness">https://git.k8s.io/enhancements/keps/sig-scheduling/3521-pod-scheduling-readiness</a>.</p>
-<p>This is an alpha-level feature enabled by PodSchedulingReadiness feature gate.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>resourceClaims</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podresourceclaim-v1-core">
-[]Kubernetes core/v1.PodResourceClaim
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>ResourceClaims defines which ResourceClaims must be allocated
-and reserved before the Pod is allowed to start. The resources
-will be made available to those containers which consume them
-by name.</p>
-<p>This is an alpha field and requires enabling the
-DynamicResourceAllocation feature gate.</p>
-<p>This field is immutable.</p>
-</td>
-</tr>
-</table>
 </td>
 </tr>
 </tbody>
@@ -4164,8 +3229,8 @@ Kubernetes core/v1.ServiceType
 <td>
 <code>additionalFrontendServiceMetadata</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWavePodTemplatePartialObjectMeta">
-RisingWavePodTemplatePartialObjectMeta
+<a href="#risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">
+PartialObjectMeta
 </a>
 </em>
 </td>

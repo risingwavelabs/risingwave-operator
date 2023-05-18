@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package webhook
+package v1alpha1
 
-import (
-	"context"
-	"testing"
+// PartialObjectMeta contains partial metadata of an object, including labels and annotations.
+type PartialObjectMeta struct {
+	// Labels of the object.
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 
-	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
-)
-
-func Test_RisingWaveMutatingWebhook_Default(t *testing.T) {
-	mutatingWebhook := NewRisingWaveMutatingWebhook()
-	err := mutatingWebhook.Default(context.Background(), testutils.FakeRisingWave())
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
+	// Annotations of the object.
+	Annotations map[string]string `json:"annotations,omitempty"`
 }

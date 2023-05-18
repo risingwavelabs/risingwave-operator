@@ -24,7 +24,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/uuid"
-	"k8s.io/utils/pointer"
 	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -221,44 +220,6 @@ func newTestRisingwave(patches ...func(r *risingwavev1alpha1.RisingWave)) *risin
 	return r
 }
 
-func setupMetaPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
-	r.Spec.Components.Meta.Ports = risingwavev1alpha1.RisingWaveComponentMetaPorts{
-		RisingWaveComponentCommonPorts: risingwavev1alpha1.RisingWaveComponentCommonPorts{
-			ServicePort: ports[consts.PortService],
-			MetricsPort: ports[consts.PortMetrics],
-		},
-		DashboardPort: ports[consts.PortDashboard],
-	}
-}
-
-func setupFrontendPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
-	r.Spec.Components.Frontend.Ports = risingwavev1alpha1.RisingWaveComponentCommonPorts{
-		ServicePort: ports[consts.PortService],
-		MetricsPort: ports[consts.PortMetrics],
-	}
-}
-
-func setupComputePorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
-	r.Spec.Components.Compute.Ports = risingwavev1alpha1.RisingWaveComponentCommonPorts{
-		ServicePort: ports[consts.PortService],
-		MetricsPort: ports[consts.PortMetrics],
-	}
-}
-
-func setupCompactorPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
-	r.Spec.Components.Compactor.Ports = risingwavev1alpha1.RisingWaveComponentCommonPorts{
-		ServicePort: ports[consts.PortService],
-		MetricsPort: ports[consts.PortMetrics],
-	}
-}
-
-func setupConnectorPorts(r *risingwavev1alpha1.RisingWave, ports map[string]int32) {
-	r.Spec.Components.Connector.Ports = risingwavev1alpha1.RisingWaveComponentCommonPorts{
-		ServicePort: ports[consts.PortService],
-		MetricsPort: ports[consts.PortMetrics],
-	}
-}
-
 func deepEqual[T any](x, y T) bool {
 	return equality.Semantic.DeepEqual(x, y)
 }
@@ -293,70 +254,6 @@ func listContainsByKey[T any, K comparable](a, b []T, key func(*T) K, equals fun
 	}
 
 	return mapContainsWith(aKeys, bKeys, equals)
-}
-
-func matchesPodTemplate(podSpec *corev1.PodTemplateSpec, podTemplate *risingwavev1alpha1.RisingWavePodTemplateSpec) bool {
-	if podTemplate == nil {
-		return true
-	}
-
-	if !(mapContains(podSpec.Labels, podTemplate.Labels) &&
-		mapContains(podSpec.Annotations, podTemplate.Annotations)) {
-		return false
-	}
-
-	pSpec, tSpec := podSpec.Spec, podTemplate.Spec
-	pSpec.Containers = pSpec.Containers[1:]
-	tSpec.Containers = tSpec.Containers[1:]
-
-	// Trick: remove the readinessGate to pass the match.
-	pSpec.ReadinessGates = nil
-	tSpec.ReadinessGates = nil
-
-	// Check volumes first.
-	if !listContainsByKey(pSpec.Volumes, tSpec.Volumes, func(x *corev1.Volume) string { return x.Name }, deepEqual[corev1.Volume]) {
-		return false
-	}
-	pSpec.Volumes, tSpec.Volumes = nil, nil
-
-	// Set default enable service links to false.
-	if tSpec.EnableServiceLinks == nil {
-		tSpec.EnableServiceLinks = pointer.Bool(false)
-	}
-
-	if !equality.Semantic.DeepEqual(pSpec, tSpec) {
-		return false
-	}
-
-	pContainer, tContainer := podSpec.Spec.Containers[0], podTemplate.Spec.Containers[0]
-
-	// Only check the
-	//   * SecurityContext
-	//   * Env
-	//   * EnvFrom
-	//   * VolumeDevices
-	return deepEqual(pContainer.SecurityContext, tContainer.SecurityContext) &&
-		listContainsByKey(pContainer.VolumeMounts, tContainer.VolumeMounts, func(t *corev1.VolumeMount) string { return t.MountPath }, deepEqual[corev1.VolumeMount]) &&
-		listContainsByKey(pContainer.Env, tContainer.Env, func(t *corev1.EnvVar) string { return t.Name }, deepEqual[corev1.EnvVar]) &&
-		listContainsByKey(pContainer.EnvFrom, tContainer.EnvFrom, func(t *corev1.EnvFromSource) string { return t.Prefix }, deepEqual[corev1.EnvFromSource])
-}
-
-func newPodTemplate(patches ...func(t *risingwavev1alpha1.RisingWavePodTemplateSpec)) *risingwavev1alpha1.RisingWavePodTemplateSpec {
-	t := &risingwavev1alpha1.RisingWavePodTemplateSpec{
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name: "",
-				},
-			},
-		},
-	}
-
-	for _, patch := range patches {
-		patch(t)
-	}
-
-	return t
 }
 
 //nolint:golint,unused

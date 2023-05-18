@@ -19,9 +19,11 @@ package controller
 import (
 	"context"
 	"fmt"
-	"github.com/risingwavelabs/risingwave-operator/pkg/webhook"
-	"k8s.io/apimachinery/pkg/api/equality"
 	"time"
+
+	"k8s.io/apimachinery/pkg/api/equality"
+
+	"github.com/risingwavelabs/risingwave-operator/pkg/webhook"
 
 	"github.com/go-logr/logr"
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
@@ -109,8 +111,6 @@ const (
 )
 
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwavepodtemplates,verbs=get;list;watch
-// +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwavepodtemplates/finalizers,verbs=update
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves/finalizers,verbs=update
 // +kubebuilder:rbac:groups=apps.kruise.io,resources=clonesets,verbs=get;list;watch;create;delete;update;patch

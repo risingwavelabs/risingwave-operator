@@ -35,19 +35,6 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 	for name, tc := range servicesTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.FrontendServiceType = tc.globalServiceType
-
-			switch tc.component {
-			case consts.ComponentMeta:
-				setupMetaPorts(r, tc.ports)
-			case consts.ComponentFrontend:
-				setupFrontendPorts(r, tc.ports)
-			case consts.ComponentCompute:
-				setupComputePorts(r, tc.ports)
-			case consts.ComponentCompactor:
-				setupCompactorPorts(r, tc.ports)
-			case consts.ComponentConnector:
-				setupConnectorPorts(r, tc.ports)
-			}
 		})
 
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
@@ -142,7 +129,7 @@ func Test_RisingWaveObjectFactory_Frontend_Deployments(t *testing.T) {
 		tc.component = consts.ComponentFrontend
 
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
-		deploy := factory.NewFrontendDeployment(tc.group.Name, tc.podTemplate)
+		deploy := factory.NewFrontendDeployment(tc.group.Name)
 
 		t.Run(name, func(t *testing.T) {
 			composeAssertions(predicates, t).assertTest(deploy, tc)
@@ -172,7 +159,7 @@ func Test_RisingWaveObjectFactory_Compactor_Deployments(t *testing.T) {
 		tc.component = consts.ComponentCompactor
 
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
-		deploy := factory.NewCompactorDeployment(tc.group.Name, tc.podTemplate)
+		deploy := factory.NewCompactorDeployment(tc.group.Name)
 
 		t.Run(name, func(t *testing.T) {
 			composeAssertions(predicates, t).assertTest(deploy, tc)
@@ -203,7 +190,7 @@ func Test_RisingWaveObjectFactory_Frontend_CloneSet(t *testing.T) {
 		tc.component = consts.ComponentFrontend
 
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
-		cloneSet := factory.NewFrontendCloneSet(tc.group.Name, tc.podTemplate)
+		cloneSet := factory.NewFrontendCloneSet(tc.group.Name)
 
 		t.Run(name, func(t *testing.T) {
 			composeAssertions(predicates, t).assertTest(cloneSet, tc)
@@ -234,7 +221,7 @@ func Test_RisingWaveObjectFactory_Compactor_CloneSet(t *testing.T) {
 		tc.component = consts.ComponentCompactor
 
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
-		cloneSet := factory.NewCompactorCloneSet(tc.group.Name, tc.podTemplate)
+		cloneSet := factory.NewCompactorCloneSet(tc.group.Name)
 
 		t.Run(name, func(t *testing.T) {
 			composeAssertions(predicates, t).assertTest(cloneSet, tc)
@@ -266,7 +253,7 @@ func Test_RisingWaveObjectFactory_Meta_StatefulSets(t *testing.T) {
 		tc.component = consts.ComponentMeta
 
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
-		sts := factory.NewMetaStatefulSet(tc.group.Name, tc.podTemplate)
+		sts := factory.NewMetaStatefulSet(tc.group.Name)
 
 		t.Run(name, func(t *testing.T) {
 			composeAssertions(predicates, t).assertTest(sts, tc)
@@ -296,7 +283,7 @@ func Test_RisingWaveObjectFactory_Compute_StatefulSets(t *testing.T) {
 		})
 
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
-		sts := factory.NewComputeStatefulSet(tc.group.Name, tc.podTemplate)
+		sts := factory.NewComputeStatefulSet(tc.group.Name)
 
 		t.Run(name, func(t *testing.T) {
 			composeAssertions(predicates, t).assertTest(sts, tc)
@@ -328,7 +315,7 @@ func Test_RisingWaveObjectFactory_Meta_AdvancedStatefulSets(t *testing.T) {
 		tc.component = consts.ComponentMeta
 
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
-		sts := factory.NewMetaAdvancedStatefulSet(tc.group.Name, tc.podTemplate)
+		sts := factory.NewMetaAdvancedStatefulSet(tc.group.Name)
 
 		t.Run(name, func(t *testing.T) {
 			composeAssertions(predicates, t).assertTest(sts, tc)
@@ -357,7 +344,7 @@ func Test_RisingWaveObjectFactory_Compute_AdvancedStatefulSets(t *testing.T) {
 		})
 
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
-		asts := factory.NewComputeAdvancedStatefulSet(tc.group.Name, tc.podTemplate)
+		asts := factory.NewComputeAdvancedStatefulSet(tc.group.Name)
 
 		t.Run(name, func(t *testing.T) {
 			composeAssertions(predicates, t).assertTest(asts, tc)
@@ -376,7 +363,7 @@ func Test_RisingWaveObjectFactory_StateStores(t *testing.T) {
 			})
 
 			factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
-			sts := factory.NewMetaStatefulSet("", nil)
+			sts := factory.NewMetaStatefulSet("")
 
 			t.Run(name, func(t *testing.T) {
 				composeAssertions(predicates, t).assertTest(sts, tc)
@@ -395,7 +382,7 @@ func Test_RisingWaveObjectFactory_MetaStores(t *testing.T) {
 		})
 
 		factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme, "")
-		sts := factory.NewMetaStatefulSet("", nil)
+		sts := factory.NewMetaStatefulSet("")
 
 		t.Run(name, func(t *testing.T) {
 			composeAssertions(predicates, t).assertTest(sts, tc)

@@ -8489,11 +8489,6 @@ spec:
                               description: A map of labels describing the nodes to
                                 be scheduled on.
                               type: object
-                            podTemplate:
-                              description: Base template for Pods of RisingWave. By
-                                default, there's no such template and the controller
-                                will set all unrelated fields to the default value.
-                              type: string
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -8896,24 +8891,6 @@ spec:
                         x-kubernetes-list-map-keys:
                         - name
                         x-kubernetes-list-type: map
-                      ports:
-                        description: Ports to be listened by compactor Pods.
-                        properties:
-                          metrics:
-                            description: Metrics port of the component. It always
-                              serves the metrics in Prometheus format.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                          service:
-                            description: Service port of the component. For each component,
-                              the 'service' has different meanings. It's an optional
-                              field and if it's left out, a default port (varies among
-                              components) will be used.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                        type: object
                       restartAt:
                         description: The time that the Pods of compactor that should
                           be restarted. Setting a value on this field will trigger
@@ -10169,11 +10146,6 @@ spec:
                               description: A map of labels describing the nodes to
                                 be scheduled on.
                               type: object
-                            podTemplate:
-                              description: Base template for Pods of RisingWave. By
-                                default, there's no such template and the controller
-                                will set all unrelated fields to the default value.
-                              type: string
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -10620,24 +10592,6 @@ spec:
                         x-kubernetes-list-map-keys:
                         - name
                         x-kubernetes-list-type: map
-                      ports:
-                        description: Ports to be listened by compute Pods.
-                        properties:
-                          metrics:
-                            description: Metrics port of the component. It always
-                              serves the metrics in Prometheus format.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                          service:
-                            description: Service port of the component. For each component,
-                              the 'service' has different meanings. It's an optional
-                              field and if it's left out, a default port (varies among
-                              components) will be used.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                        type: object
                       restartAt:
                         description: The time that the Pods of compute that should
                           be restarted. Setting a value on this field will trigger
@@ -11896,11 +11850,6 @@ spec:
                               description: A map of labels describing the nodes to
                                 be scheduled on.
                               type: object
-                            podTemplate:
-                              description: Base template for Pods of RisingWave. By
-                                default, there's no such template and the controller
-                                will set all unrelated fields to the default value.
-                              type: string
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -12303,27 +12252,6 @@ spec:
                         x-kubernetes-list-map-keys:
                         - name
                         x-kubernetes-list-type: map
-                      ports:
-                        default:
-                          metrics: 8080
-                          service: 50051
-                        description: Ports to be listened by compactor Pods.
-                        properties:
-                          metrics:
-                            description: Metrics port of the component. It always
-                              serves the metrics in Prometheus format.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                          service:
-                            description: Service port of the component. For each component,
-                              the 'service' has different meanings. It's an optional
-                              field and if it's left out, a default port (varies among
-                              components) will be used.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                        type: object
                       restartAt:
                         description: The time that the Pods of connector that should
                           be restarted. Setting a value on this field will trigger
@@ -13583,11 +13511,6 @@ spec:
                               description: A map of labels describing the nodes to
                                 be scheduled on.
                               type: object
-                            podTemplate:
-                              description: Base template for Pods of RisingWave. By
-                                default, there's no such template and the controller
-                                will set all unrelated fields to the default value.
-                              type: string
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -13990,24 +13913,6 @@ spec:
                         x-kubernetes-list-map-keys:
                         - name
                         x-kubernetes-list-type: map
-                      ports:
-                        description: Ports to be listened by the frontend Pods.
-                        properties:
-                          metrics:
-                            description: Metrics port of the component. It always
-                              serves the metrics in Prometheus format.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                          service:
-                            description: Service port of the component. For each component,
-                              the 'service' has different meanings. It's an optional
-                              field and if it's left out, a default port (varies among
-                              components) will be used.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                        type: object
                       restartAt:
                         description: The time that the Pods of frontend that should
                           be restarted. Setting a value on this field will trigger
@@ -15267,11 +15172,6 @@ spec:
                               description: A map of labels describing the nodes to
                                 be scheduled on.
                               type: object
-                            podTemplate:
-                              description: Base template for Pods of RisingWave. By
-                                default, there's no such template and the controller
-                                will set all unrelated fields to the default value.
-                              type: string
                             priorityClassName:
                               description: If specified, indicates the pod's priority.
                                 "system-node-critical" and "system-cluster-critical"
@@ -15674,30 +15574,6 @@ spec:
                         x-kubernetes-list-map-keys:
                         - name
                         x-kubernetes-list-type: map
-                      ports:
-                        description: Ports to be listened by the meta Pods.
-                        properties:
-                          dashboard:
-                            description: Dashboard port of the meta, a default value
-                              of 8080 will be used if not specified.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                          metrics:
-                            description: Metrics port of the component. It always
-                              serves the metrics in Prometheus format.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                          service:
-                            description: Service port of the component. For each component,
-                              the 'service' has different meanings. It's an optional
-                              field and if it's left out, a default port (varies among
-                              components) will be used.
-                            format: int32
-                            minimum: 1
-                            type: integer
-                        type: object
                       restartAt:
                         description: The time that the Pods of frontend that should
                           be restarted. Setting a value on this field will trigger
@@ -16855,11 +16731,6 @@ spec:
                     description: A map of labels describing the nodes to be scheduled
                       on.
                     type: object
-                  podTemplate:
-                    description: Base template for Pods of RisingWave. By default,
-                      there's no such template and the controller will set all unrelated
-                      fields to the default value.
-                    type: string
                   priorityClassName:
                     description: If specified, indicates the pod's priority. "system-node-critical"
                       and "system-cluster-critical" are two special keywords which
@@ -18871,20 +18742,6 @@ rules:
 - apiGroups:
   - risingwave.risingwavelabs.com
   resources:
-  - risingwavepodtemplates
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - risingwave.risingwavelabs.com
-  resources:
-  - risingwavepodtemplates/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - risingwave.risingwavelabs.com
-  resources:
   - risingwaves
   verbs:
   - create
@@ -19218,25 +19075,6 @@ webhooks:
     service:
       name: risingwave-operator-webhook-service
       namespace: risingwave-operator-system
-      path: /mutate-risingwave-risingwavelabs-com-v1alpha1-risingwavepodtemplate
-  failurePolicy: Fail
-  name: mrisingwavepodtemplate.kb.io
-  rules:
-  - apiGroups:
-    - risingwave.risingwavelabs.com
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    resources:
-    - risingwavepodtemplates
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: risingwave-operator-webhook-service
-      namespace: risingwave-operator-system
       path: /mutate-risingwave-risingwavelabs-com-v1alpha1-risingwavescaleview
   failurePolicy: Fail
   name: mrisingwavescaleview.kb.io
@@ -19278,27 +19116,6 @@ webhooks:
     - DELETE
     resources:
     - risingwaves
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: risingwave-operator-webhook-service
-      namespace: risingwave-operator-system
-      path: /validate-risingwave-risingwavelabs-com-v1alpha1-risingwavepodtemplate
-  failurePolicy: Fail
-  name: vrisingwavepodtemplate.kb.io
-  rules:
-  - apiGroups:
-    - risingwave.risingwavelabs.com
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    - DELETE
-    resources:
-    - risingwavepodtemplates
   sideEffects: None
 - admissionReviewVersions:
   - v1

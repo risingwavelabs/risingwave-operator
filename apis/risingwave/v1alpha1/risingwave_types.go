@@ -113,11 +113,6 @@ type RisingWaveComponentGroupTemplate struct {
 	// +optional
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
-	// Base template for Pods of RisingWave. By default, there's no such template
-	// and the controller will set all unrelated fields to the default value.
-	// +optional
-	PodTemplate *string `json:"podTemplate,omitempty"`
-
 	// If specified, the pod's tolerations.
 	// +optional
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
@@ -155,7 +150,7 @@ type RisingWaveComponentGroupTemplate struct {
 
 	// metadata of the RisingWave's Pods.
 	// +optional
-	Metadata RisingWavePodTemplatePartialObjectMeta `json:"metadata,omitempty"`
+	Metadata PartialObjectMeta `json:"metadata,omitempty"`
 
 	// List of environment variables to set in the container.
 	// Cannot be updated.
@@ -235,43 +230,12 @@ type RisingWaveComputeGroup struct {
 	*RisingWaveComputeGroupTemplate `json:",inline"`
 }
 
-// RisingWaveComponentCommonPorts are the common ports that components need to listen.
-type RisingWaveComponentCommonPorts struct {
-	// Service port of the component. For each component,
-	// the 'service' has different meanings. It's an optional field and if it's left out, a
-	// default port (varies among components) will be used.
-	// +optional
-	// +kubebuilder:validation:Minimum=1
-	ServicePort int32 `json:"service,omitempty"`
-
-	// Metrics port of the component. It always serves the metrics in
-	// Prometheus format.
-	// +optional
-	// +kubebuilder:validation:Minimum=1
-	MetricsPort int32 `json:"metrics,omitempty"`
-}
-
-// RisingWaveComponentMetaPorts are the ports of component meta.
-type RisingWaveComponentMetaPorts struct {
-	RisingWaveComponentCommonPorts `json:",inline"`
-
-	// Dashboard port of the meta, a default value of 8080 will be
-	// used if not specified.
-	// +optional
-	// +kubebuilder:validation:Minimum=1
-	DashboardPort int32 `json:"dashboard,omitempty"`
-}
-
 // RisingWaveComponentMeta is the spec describes the meta component.
 type RisingWaveComponentMeta struct {
 	// The time that the Pods of frontend that should be restarted. Setting a value on this
 	// field will trigger a recreation of all Pods of this component.
 	// +optional
 	RestartAt *metav1.Time `json:"restartAt,omitempty"`
-
-	// Ports to be listened by the meta Pods.
-	// +optional
-	Ports RisingWaveComponentMetaPorts `json:"ports,omitempty"`
 
 	// Groups of Pods of meta component.
 	// +optional
@@ -289,10 +253,6 @@ type RisingWaveComponentFrontend struct {
 	// +optional
 	RestartAt *metav1.Time `json:"restartAt,omitempty"`
 
-	// Ports to be listened by the frontend Pods.
-	// +optional
-	Ports RisingWaveComponentCommonPorts `json:"ports,omitempty"`
-
 	// Groups of Pods of frontend component.
 	// +optional
 	// +listType=map
@@ -308,10 +268,6 @@ type RisingWaveComponentCompute struct {
 	// field will trigger a recreation of all Pods of this component.
 	// +optional
 	RestartAt *metav1.Time `json:"restartAt,omitempty"`
-
-	// Ports to be listened by compute Pods.
-	// +optional
-	Ports RisingWaveComponentCommonPorts `json:"ports,omitempty"`
 
 	// Groups of Pods of compute component.
 	// +optional
@@ -329,10 +285,6 @@ type RisingWaveComponentCompactor struct {
 	// +optional
 	RestartAt *metav1.Time `json:"restartAt,omitempty"`
 
-	// Ports to be listened by compactor Pods.
-	// +optional
-	Ports RisingWaveComponentCommonPorts `json:"ports,omitempty"`
-
 	// Groups of Pods of compactor component.
 	// +optional
 	// +listType=map
@@ -348,11 +300,6 @@ type RisingWaveComponentConnector struct {
 	// field will trigger a recreation of all Pods of this component.
 	// +optional
 	RestartAt *metav1.Time `json:"restartAt,omitempty"`
-
-	// Ports to be listened by compactor Pods.
-	// +optional
-	// +kubebuilder:default={service: 50051, metrics: 8080}
-	Ports RisingWaveComponentCommonPorts `json:"ports,omitempty"`
 
 	// Groups of Pods of compactor component.
 	// +optional
@@ -502,7 +449,7 @@ type RisingWaveGlobalSpec struct {
 
 	// Service metadata of the frontend service.
 	// +optional
-	ServiceMeta RisingWavePodTemplatePartialObjectMeta `json:"serviceMetadata,omitempty"`
+	ServiceMeta PartialObjectMeta `json:"serviceMetadata,omitempty"`
 }
 
 // RisingWaveSpec is the overall spec.
@@ -548,7 +495,7 @@ type RisingWaveSpec struct {
 
 	// AdditionalFrontendServiceMetadata tells the operator to add the specified metadata onto the frontend Service.
 	// Note that the system reserved labels and annotations are not valid and will be rejected by the webhook.
-	AdditionalFrontendServiceMetadata RisingWavePodTemplatePartialObjectMeta `json:"additionalFrontendServiceMetadata,omitempty"`
+	AdditionalFrontendServiceMetadata PartialObjectMeta `json:"additionalFrontendServiceMetadata,omitempty"`
 
 	// MetaStore determines which backend the meta store will use and the parameters for it. Defaults to memory.
 	// But keep in mind that memory backend is not recommended in production.

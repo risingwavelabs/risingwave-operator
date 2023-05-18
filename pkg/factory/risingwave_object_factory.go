@@ -228,10 +228,6 @@ func (f *RisingWaveObjectFactory) componentGroupObjectMeta(component, group stri
 	}
 
 	objectMeta.Labels = mergeMap(objectMeta.Labels, f.getInheritedLabels())
-
-	objectMeta.Labels = mergeMap(objectMeta.Labels, f.risingwave.Spec.Global.Metadata.Labels)
-	objectMeta.Annotations = mergeMap(objectMeta.Annotations, f.risingwave.Spec.Global.Metadata.Annotations)
-
 	return objectMeta
 }
 
@@ -1094,6 +1090,10 @@ func (f *RisingWaveObjectFactory) buildPodTemplate(component, group string,
 
 	// Inherit labels from RisingWave, according to the hint.
 	podTemplate.Labels = mergeMap(podTemplate.Labels, f.getInheritedLabels())
+
+	// global metadata
+	podTemplate.Labels = mergeMap(podTemplate.Labels, f.risingwave.Spec.Global.Metadata.Labels)
+	podTemplate.Annotations = mergeMap(podTemplate.Annotations, f.risingwave.Spec.Global.Metadata.Annotations)
 
 	if restartAt != nil {
 		if podTemplate.Annotations == nil {

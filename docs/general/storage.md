@@ -111,7 +111,7 @@ We support using Azure blob as the object storage. FOllow the steps below and ch
 
 ## HDFS
 We support using HDFS S3 as the object storage. Follow the steps below and check
-the [docs/manifests/risingwave-hdfs.yaml](/docs/manifests/risingwave/risingwave-hdfs.yaml) for details. 
+the [/docs/manifests/risingwave/risingwave-etcd-hdfs.yaml](/docs/manifests/risingwave/risingwave-etcd-hdfs.yaml) for details. 
 1. You need to launch the HDFS service
 2. Specific the storage type like below. 
    1. nameNode: If you follow the yaml file we provide, it should be hadoop-hdfs-master:9000

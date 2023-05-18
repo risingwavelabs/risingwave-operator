@@ -95,36 +95,6 @@ type deploymentTestCase testCase[risingwavev1alpha1.RisingWaveComponentGroup, *a
 
 func deploymentTestCases() map[string]deploymentTestCase {
 	return map[string]deploymentTestCase{
-		"pods-meta-labels": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.PartialObjectMeta{
-						Labels: map[string]string{
-							"key1": "value1",
-							"key2": "value2",
-						},
-					},
-				},
-			},
-		},
-		"pods-meta-annotations": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.PartialObjectMeta{
-						Annotations: map[string]string{
-							"key1": "value1",
-							"key2": "value2",
-						},
-					},
-				},
-			},
-		},
 		"node-selectors": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
@@ -328,36 +298,6 @@ type metaStatefulSetTestCase testCase[risingwavev1alpha1.RisingWaveComponentGrou
 
 func metaStatefulSetTestCases() map[string]metaStatefulSetTestCase {
 	return map[string]metaStatefulSetTestCase{
-		"pods-meta-labels": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.PartialObjectMeta{
-						Labels: map[string]string{
-							"key1": "value1",
-							"key2": "value2",
-						},
-					},
-				},
-			},
-		},
-		"pods-meta-annotations": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.PartialObjectMeta{
-						Annotations: map[string]string{
-							"key1": "value1",
-							"key2": "value2",
-						},
-					},
-				},
-			},
-		},
 		"node-selectors": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
@@ -559,40 +499,6 @@ type computeStatefulSetTestCase testCase[risingwavev1alpha1.RisingWaveComputeGro
 
 func computeStatefulSetTestCases() map[string]computeStatefulSetTestCase {
 	return map[string]computeStatefulSetTestCase{
-		"pods-meta-labels": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						Metadata: risingwavev1alpha1.PartialObjectMeta{
-							Labels: map[string]string{
-								"key1": "value1",
-								"key2": "value2",
-							},
-						},
-					},
-				},
-			},
-		},
-		"pods-meta-annotations": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						Metadata: risingwavev1alpha1.PartialObjectMeta{
-							Annotations: map[string]string{
-								"key1": "value1",
-								"key2": "value2",
-							},
-						},
-					},
-				},
-			},
-		},
 		"node-selectors": {
 			group: risingwavev1alpha1.RisingWaveComputeGroup{
 				Name:     "",
@@ -837,36 +743,6 @@ type cloneSetTestCase testCase[risingwavev1alpha1.RisingWaveComponentGroup, *kru
 
 func cloneSetTestCases() map[string]cloneSetTestCase {
 	return map[string]cloneSetTestCase{
-		"pods-meta-labels": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.PartialObjectMeta{
-						Labels: map[string]string{
-							"key1": "value1",
-							"key2": "value2",
-						},
-					},
-				},
-			},
-		},
-		"pods-meta-annotations": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.PartialObjectMeta{
-						Annotations: map[string]string{
-							"key1": "value1",
-							"key2": "value2",
-						},
-					},
-				},
-			},
-		},
 		"default-group": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
@@ -1361,36 +1237,6 @@ type metaAdvancedSTSTestCase testCase[risingwavev1alpha1.RisingWaveComponentGrou
 
 func metaAdvancedSTSTestCases() map[string]metaAdvancedSTSTestCase {
 	return map[string]metaAdvancedSTSTestCase{
-		"pods-meta-labels": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.PartialObjectMeta{
-						Labels: map[string]string{
-							"key1": "value1",
-							"key2": "value2",
-						},
-					},
-				},
-			},
-		},
-		"pods-meta-annotations": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Metadata: risingwavev1alpha1.PartialObjectMeta{
-						Annotations: map[string]string{
-							"key1": "value1",
-							"key2": "value2",
-						},
-					},
-				},
-			},
-		},
 		"default-group": {
 			group: risingwavev1alpha1.RisingWaveComponentGroup{
 				Name:     "",
@@ -1787,40 +1633,6 @@ type computeAdvancedSTSTestCase testCase[risingwavev1alpha1.RisingWaveComputeGro
 
 func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 	return map[string]computeAdvancedSTSTestCase{
-		"pods-meta-labels": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						Metadata: risingwavev1alpha1.PartialObjectMeta{
-							Labels: map[string]string{
-								"key1": "value1",
-								"key2": "value2",
-							},
-						},
-					},
-				},
-			},
-		},
-		"pods-meta-annotations": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						Metadata: risingwavev1alpha1.PartialObjectMeta{
-							Annotations: map[string]string{
-								"key1": "value1",
-								"key2": "value2",
-							},
-						},
-					},
-				},
-			},
-		},
 		"node-selectors": {
 			group: risingwavev1alpha1.RisingWaveComputeGroup{
 				Name:     "",

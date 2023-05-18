@@ -201,13 +201,13 @@ func (s *RisingWaveControllerManagerState) GetComputeStatefulSets(ctx context.Co
 	return validated, nil
 }
 
-// GetConfigConfigMap gets configConfigMap with name equals to ${target.Name}-config.
+// GetConfigConfigMap gets configConfigMap with name equals to ${target.Name}-default-config.
 func (s *RisingWaveControllerManagerState) GetConfigConfigMap(ctx context.Context) (*corev1.ConfigMap, error) {
 	var configConfigMap corev1.ConfigMap
 
 	err := s.Get(ctx, types.NamespacedName{
 		Namespace: s.target.Namespace,
-		Name:      s.target.Name + "-config",
+		Name:      s.target.Name + "-default-config",
 	}, &configConfigMap)
 	if err != nil {
 		if apierrors.IsNotFound(err) {

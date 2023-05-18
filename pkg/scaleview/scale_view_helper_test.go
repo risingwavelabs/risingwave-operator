@@ -43,9 +43,9 @@ func TestRisingWaveScaleViewHelper_ListComponentGroups(t *testing.T) {
 	for _, component := range []string{
 		consts.ComponentFrontend, consts.ComponentMeta, consts.ComponentCompactor, consts.ComponentCompute, consts.ComponentConnector,
 	} {
-		helper := NewRisingWaveScaleViewHelper(testutils.FakeRisingWaveComponentOnly(), component)
+		helper := NewRisingWaveScaleViewHelper(testutils.FakeRisingWave(), component)
 		groups := helper.ListComponentGroups()
-		assert.Equal(t, []string{testutils.GetGroupName(0)}, groups, "component group names should be listed")
+		assert.Equal(t, []string{testutils.GetNodeGroupName(0)}, groups, "component group names should be listed")
 	}
 }
 
@@ -53,12 +53,12 @@ func TestRisingWaveScaleViewHelper_ReadReplicas(t *testing.T) {
 	for _, component := range []string{
 		consts.ComponentFrontend, consts.ComponentMeta, consts.ComponentCompactor, consts.ComponentCompute, consts.ComponentConnector,
 	} {
-		helper := NewRisingWaveScaleViewHelper(testutils.FakeRisingWaveComponentOnly(), component)
-		replicas, ok := helper.ReadReplicas(testutils.GetGroupName(0))
+		helper := NewRisingWaveScaleViewHelper(testutils.FakeRisingWave(), component)
+		replicas, ok := helper.ReadReplicas(testutils.GetNodeGroupName(0))
 		assert.True(t, ok, "group must be found")
 		assert.Equal(t, int32(1), replicas, "replicas must be 1")
 
-		_, ok = helper.ReadReplicas(testutils.GetGroupName(1))
+		_, ok = helper.ReadReplicas(testutils.GetNodeGroupName(1))
 		assert.False(t, ok, "group of index 1 doesn't exist")
 	}
 }
@@ -67,9 +67,9 @@ func TestRisingWaveScaleViewHelper_WriteReplicas(t *testing.T) {
 	for _, component := range []string{
 		consts.ComponentFrontend, consts.ComponentMeta, consts.ComponentCompactor, consts.ComponentCompute, consts.ComponentConnector,
 	} {
-		helper := NewRisingWaveScaleViewHelper(testutils.FakeRisingWaveComponentOnly(), component)
+		helper := NewRisingWaveScaleViewHelper(testutils.FakeRisingWave(), component)
 
-		group := testutils.GetGroupName(0)
+		group := testutils.GetNodeGroupName(0)
 		replicas, _ := helper.ReadReplicas(group)
 		assert.Equal(t, int32(1), replicas, "replicas must be 1")
 

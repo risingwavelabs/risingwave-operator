@@ -252,7 +252,7 @@ type RisingWaveStateStoreBackend struct {
 
 	// GCS storage spec.
 	// +optional
-	GCS *RisingWaveStateStoreBackendGCS `json:"GCS,omitempty"`
+	GCS *RisingWaveStateStoreBackendGCS `json:"gcs,omitempty"`
 
 	// AliyunOSS storage spec.
 	// +optional

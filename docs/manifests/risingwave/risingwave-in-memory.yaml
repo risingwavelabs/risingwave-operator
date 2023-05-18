@@ -8,11 +8,21 @@ spec:
       memory: true
     object:
       memory: true
-  global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.18.0
-    imagePullPolicy: IfNotPresent
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
-      compactor: 1
+  image: ghcr.io/risingwavelabs/risingwave:v0.18.0
+  components:
+    meta:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+    frontend:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+    compute:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+    compactor:
+      nodeGroups:
+      - replicas: 1
+        name: ""

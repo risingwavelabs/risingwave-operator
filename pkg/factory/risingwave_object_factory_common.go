@@ -17,22 +17,15 @@
 package factory
 
 import (
-	"fmt"
-	"reflect"
 	"sort"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
-
-func nonZeroOrDefault[T comparable](v T, defaultVal T) T {
-	var zero T
-	if v == zero {
-		return defaultVal
-	}
-	return v
-}
 
 func sortSlicesInContainer(container *corev1.Container) {
 	utils.TopologicalSort(container.Env)
@@ -59,39 +52,46 @@ func keepPodSpecConsistent(podSpec *corev1.PodSpec) {
 	}
 }
 
-func setDefaultValueForField(field reflect.StructField, target, base reflect.Value) {
-	// Only consider primitive types and Map, Slice, and Ptr of these types.
-	switch field.Type.Kind() {
-	case reflect.Map, reflect.Slice:
-		if target.IsZero() || target.Len() == 0 {
-			target.Set(base)
-		}
-	case reflect.Ptr:
-		if target.IsZero() {
-			target.Set(base)
-		}
-	default:
-		if target.IsZero() {
-			target.Set(base)
-		}
+func mergeMap[K comparable, V any](a, b map[K]V) map[K]V {
+	if a == nil && b == nil {
+		return nil
 	}
+
+	r := make(map[K]V)
+	for k, v := range a {
+		r[k] = v
+	}
+	for k, v := range b {
+		r[k] = v
+	}
+
+	return r
 }
 
-func setDefaultValueForFirstLevelFields[T any](target, base *T) {
-	if target == nil || base == nil {
-		return
+func mergeListWhenKeyEquals[T any](list []T, val T, equals func(a, b *T) bool) []T {
+	for i, v := range list {
+		if equals(&val, &v) {
+			list[i] = val
+			return list
+		}
 	}
+	return append(list, val)
+}
 
-	tType := reflect.TypeOf(target).Elem()
-
-	if tType.Kind() != reflect.Struct {
-		panic(fmt.Sprintf("type %s isn't a struct", tType.Name()))
+func mergeListByKey[T any](list []T, val T, keyPred func(*T) bool) []T {
+	for i, v := range list {
+		if keyPred(&v) {
+			list[i] = val
+			return list
+		}
 	}
+	return append(list, val)
+}
 
-	targetValue, baseValue := reflect.ValueOf(target).Elem(), reflect.ValueOf(base).Elem()
-
-	// Iterate over the fields and set the default values.
-	for i := 0; i < tType.NumField(); i++ {
-		setDefaultValueForField(tType.Field(i), targetValue.Field(i), baseValue.Field(i))
+func mustSetControllerReference[T client.Object](owner client.Object, controlled T, scheme *runtime.Scheme) T {
+	err := ctrl.SetControllerReference(owner, controlled, scheme)
+	if err != nil {
+		panic(err)
 	}
+	return controlled
 }

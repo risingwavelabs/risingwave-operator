@@ -114,16 +114,10 @@ func Test_RisingWaveObjectFactory_Frontend_Deployments(t *testing.T) {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.MetaStore.Memory = pointer.Bool(true)
 			r.Spec.StateStore.Memory = pointer.Bool(true)
-			if tc.group.Name == "" {
-				r.Spec.Global.RisingWaveComponentGroupTemplate = *tc.group.RisingWaveComponentGroupTemplate
-				r.Spec.Global.Replicas.Frontend = tc.group.Replicas
-			} else {
-				r.Spec.Components.Frontend.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
-					tc.group,
-				}
-				r.Spec.Components.Frontend.RestartAt = tc.restartAt
+			tc.group.RestartAt = tc.restartAt
+			r.Spec.Components.Frontend.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+				tc.group,
 			}
-			r.Spec.Components.Frontend.RestartAt = tc.restartAt
 		})
 
 		tc.component = consts.ComponentFrontend
@@ -144,16 +138,10 @@ func Test_RisingWaveObjectFactory_Compactor_Deployments(t *testing.T) {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.MetaStore.Memory = pointer.Bool(true)
 			r.Spec.StateStore.Memory = pointer.Bool(true)
-			if tc.group.Name == "" {
-				r.Spec.Global.RisingWaveComponentGroupTemplate = *tc.group.RisingWaveComponentGroupTemplate
-				r.Spec.Global.Replicas.Compactor = tc.group.Replicas
-			} else {
-				r.Spec.Components.Compactor.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
-					tc.group,
-				}
-				r.Spec.Components.Compactor.RestartAt = tc.restartAt
+			tc.group.RestartAt = tc.restartAt
+			r.Spec.Components.Compactor.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+				tc.group,
 			}
-			r.Spec.Components.Compactor.RestartAt = tc.restartAt
 		})
 
 		tc.component = consts.ComponentCompactor
@@ -175,16 +163,10 @@ func Test_RisingWaveObjectFactory_Frontend_CloneSet(t *testing.T) {
 			r.Spec.EnableOpenKruise = pointer.Bool(true)
 			r.Spec.MetaStore.Memory = pointer.Bool(true)
 			r.Spec.StateStore.Memory = pointer.Bool(true)
-			if tc.group.Name == "" {
-				r.Spec.Global.RisingWaveComponentGroupTemplate = *tc.group.RisingWaveComponentGroupTemplate
-				r.Spec.Global.Replicas.Frontend = tc.group.Replicas
-			} else {
-				r.Spec.Components.Frontend.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
-					tc.group,
-				}
-				r.Spec.Components.Frontend.RestartAt = tc.restartAt
+			tc.group.RestartAt = tc.restartAt
+			r.Spec.Components.Frontend.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+				tc.group,
 			}
-			r.Spec.Components.Frontend.RestartAt = tc.restartAt
 		})
 
 		tc.component = consts.ComponentFrontend
@@ -206,16 +188,10 @@ func Test_RisingWaveObjectFactory_Compactor_CloneSet(t *testing.T) {
 			r.Spec.EnableOpenKruise = pointer.Bool(true)
 			r.Spec.MetaStore.Memory = pointer.Bool(true)
 			r.Spec.StateStore.Memory = pointer.Bool(true)
-			if tc.group.Name == "" {
-				r.Spec.Global.RisingWaveComponentGroupTemplate = *tc.group.RisingWaveComponentGroupTemplate
-				r.Spec.Global.Replicas.Compactor = tc.group.Replicas
-			} else {
-				r.Spec.Components.Compactor.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
-					tc.group,
-				}
-				r.Spec.Components.Compactor.RestartAt = tc.restartAt
+			tc.group.RestartAt = tc.restartAt
+			r.Spec.Components.Compactor.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+				tc.group,
 			}
-			r.Spec.Components.Compactor.RestartAt = tc.restartAt
 		})
 
 		tc.component = consts.ComponentCompactor
@@ -236,17 +212,9 @@ func Test_RisingWaveObjectFactory_Meta_StatefulSets(t *testing.T) {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.MetaStore.Memory = pointer.Bool(true)
 			r.Spec.StateStore.Memory = pointer.Bool(true)
-			if tc.group.Name == "" {
-				r.Spec.Global.RisingWaveComponentGroupTemplate = *tc.group.RisingWaveComponentGroupTemplate
-				r.Spec.Global.Replicas.Meta = tc.group.Replicas
-			} else {
-				r.Spec.Components.Meta.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
-					tc.group,
-				}
-				r.Spec.Components.Meta.RestartAt = tc.restartAt
-			}
-			if tc.restartAt != nil {
-				r.Spec.Components.Meta.RestartAt = tc.restartAt
+			tc.group.RestartAt = tc.restartAt
+			r.Spec.Components.Meta.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+				tc.group,
 			}
 		})
 
@@ -269,16 +237,9 @@ func Test_RisingWaveObjectFactory_Compute_StatefulSets(t *testing.T) {
 			r.Spec.EnableOpenKruise = pointer.Bool(true)
 			r.Spec.MetaStore.Memory = pointer.Bool(true)
 			r.Spec.StateStore.Memory = pointer.Bool(true)
-			if tc.group.Name == "" {
-				r.Spec.Global.Replicas.Compute = tc.group.Replicas
-				r.Spec.Global.RisingWaveComponentGroupTemplate = tc.group.RisingWaveComponentGroupTemplate
-			} else {
-				r.Spec.Components.Compute.Groups = []risingwavev1alpha1.RisingWaveComputeGroup{
-					tc.group,
-				}
-			}
-			if tc.restartAt != nil {
-				r.Spec.Components.Compute.RestartAt = tc.restartAt
+			tc.group.RestartAt = tc.restartAt
+			r.Spec.Components.Compute.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+				tc.group,
 			}
 		})
 
@@ -298,17 +259,9 @@ func Test_RisingWaveObjectFactory_Meta_AdvancedStatefulSets(t *testing.T) {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.MetaStore.Memory = pointer.Bool(true)
 			r.Spec.StateStore.Memory = pointer.Bool(true)
-			if tc.group.Name == "" {
-				r.Spec.Global.RisingWaveComponentGroupTemplate = *tc.group.RisingWaveComponentGroupTemplate
-				r.Spec.Global.Replicas.Meta = tc.group.Replicas
-			} else {
-				r.Spec.Components.Meta.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
-					tc.group,
-				}
-				r.Spec.Components.Meta.RestartAt = tc.restartAt
-			}
-			if tc.restartAt != nil {
-				r.Spec.Components.Meta.RestartAt = tc.restartAt
+			tc.group.RestartAt = tc.restartAt
+			r.Spec.Components.Meta.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+				tc.group,
 			}
 		})
 
@@ -330,16 +283,9 @@ func Test_RisingWaveObjectFactory_Compute_AdvancedStatefulSets(t *testing.T) {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.MetaStore.Memory = pointer.Bool(true)
 			r.Spec.StateStore.Memory = pointer.Bool(true)
-			if tc.group.Name == "" {
-				r.Spec.Global.Replicas.Compute = tc.group.Replicas
-				r.Spec.Global.RisingWaveComponentGroupTemplate = tc.group.RisingWaveComponentGroupTemplate
-			} else {
-				r.Spec.Components.Compute.Groups = []risingwavev1alpha1.RisingWaveComputeGroup{
-					tc.group,
-				}
-			}
-			if tc.restartAt != nil {
-				r.Spec.Components.Compute.RestartAt = tc.restartAt
+			tc.group.RestartAt = tc.restartAt
+			r.Spec.Components.Compute.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+				tc.group,
 			}
 		})
 
@@ -360,6 +306,16 @@ func Test_RisingWaveObjectFactory_StateStores(t *testing.T) {
 			tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.MetaStore = risingwavev1alpha1.RisingWaveMetaStoreBackend{Memory: pointer.Bool(true)}
 				r.Spec.StateStore = tc.stateStore
+				r.Spec.Components = risingwavev1alpha1.RisingWaveComponentsSpec{
+					Meta: risingwavev1alpha1.RisingWaveComponentMeta{
+						NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
+							{
+								Name:     "",
+								Replicas: 1,
+							},
+						},
+					},
+				}
 			})
 
 			factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
@@ -379,6 +335,16 @@ func Test_RisingWaveObjectFactory_MetaStores(t *testing.T) {
 		risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.MetaStore = tc.metaStore
 			r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{Memory: pointer.Bool(true)}
+			r.Spec.Components = risingwavev1alpha1.RisingWaveComponentsSpec{
+				Meta: risingwavev1alpha1.RisingWaveComponentMeta{
+					NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
+						{
+							Name:     "",
+							Replicas: 1,
+						},
+					},
+				},
+			}
 		})
 
 		factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme, "")

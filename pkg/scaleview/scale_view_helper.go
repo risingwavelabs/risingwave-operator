@@ -21,8 +21,6 @@ package scaleview
 import (
 	"fmt"
 
-	"github.com/samber/lo"
-
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
@@ -33,7 +31,7 @@ type RisingWaveScaleViewHelper struct {
 	component  string
 }
 
-func findGroup[T any](groups []T, target string, name func(*T) string) (*T, int) {
+func findNodeGroup[T any](groups []T, target string, name func(*T) string) (*T, int) {
 	for i, group := range groups {
 		if name(&group) == target {
 			return &groups[i], i
@@ -42,34 +40,8 @@ func findGroup[T any](groups []T, target string, name func(*T) string) (*T, int)
 	return nil, 0
 }
 
-// getReplicasGlobalPtr returns the global pointer to the respective group.
-func (r *RisingWaveScaleViewHelper) getReplicasGlobalPtr() *int32 {
-	switch r.component {
-	case consts.ComponentMeta:
-		return &r.risingwave.Spec.Global.Replicas.Meta
-	case consts.ComponentCompute:
-		return &r.risingwave.Spec.Global.Replicas.Compute
-	case consts.ComponentFrontend:
-		return &r.risingwave.Spec.Global.Replicas.Frontend
-	case consts.ComponentCompactor:
-		return &r.risingwave.Spec.Global.Replicas.Compactor
-	case consts.ComponentConnector:
-		return &r.risingwave.Spec.Global.Replicas.Connector
-	default:
-		panic(fmt.Sprintf("Unknown component %v", r.component))
-	}
-}
-
-func (r *RisingWaveScaleViewHelper) findReplicaPtrComponentGroup(groups []risingwavev1alpha1.RisingWaveComponentGroup, group string) (*int32, int) {
-	ptr, i := findGroup(groups, group, func(g *risingwavev1alpha1.RisingWaveComponentGroup) string { return g.Name })
-	if ptr == nil {
-		return nil, 0
-	}
-	return &ptr.Replicas, i
-}
-
-func (r *RisingWaveScaleViewHelper) findReplicaPtrComputeGroup(groups []risingwavev1alpha1.RisingWaveComputeGroup, group string) (*int32, int) {
-	ptr, i := findGroup(groups, group, func(g *risingwavev1alpha1.RisingWaveComputeGroup) string { return g.Name })
+func (r *RisingWaveScaleViewHelper) findReplicaPtrFromNodeGroups(nodeGroups []risingwavev1alpha1.RisingWaveNodeGroup, group string) (*int32, int) {
+	ptr, i := findNodeGroup(nodeGroups, group, func(g *risingwavev1alpha1.RisingWaveNodeGroup) string { return g.Name })
 	if ptr == nil {
 		return nil, 0
 	}
@@ -80,15 +52,15 @@ func (r *RisingWaveScaleViewHelper) findReplicaPtrComputeGroup(groups []risingwa
 func (r *RisingWaveScaleViewHelper) findReplicaPtrGroup(group string) (*int32, int) {
 	switch r.component {
 	case consts.ComponentMeta:
-		return r.findReplicaPtrComponentGroup(r.risingwave.Spec.Components.Meta.Groups, group)
+		return r.findReplicaPtrFromNodeGroups(r.risingwave.Spec.Components.Meta.NodeGroups, group)
 	case consts.ComponentFrontend:
-		return r.findReplicaPtrComponentGroup(r.risingwave.Spec.Components.Frontend.Groups, group)
+		return r.findReplicaPtrFromNodeGroups(r.risingwave.Spec.Components.Frontend.NodeGroups, group)
 	case consts.ComponentCompactor:
-		return r.findReplicaPtrComponentGroup(r.risingwave.Spec.Components.Compactor.Groups, group)
+		return r.findReplicaPtrFromNodeGroups(r.risingwave.Spec.Components.Compactor.NodeGroups, group)
 	case consts.ComponentConnector:
-		return r.findReplicaPtrComponentGroup(r.risingwave.Spec.Components.Connector.Groups, group)
+		return r.findReplicaPtrFromNodeGroups(r.risingwave.Spec.Components.Connector.NodeGroups, group)
 	case consts.ComponentCompute:
-		return r.findReplicaPtrComputeGroup(r.risingwave.Spec.Components.Compute.Groups, group)
+		return r.findReplicaPtrFromNodeGroups(r.risingwave.Spec.Components.Compute.NodeGroups, group)
 	default:
 		panic(fmt.Sprintf("Unknown component %v", r.component))
 	}
@@ -96,28 +68,33 @@ func (r *RisingWaveScaleViewHelper) findReplicaPtrGroup(group string) (*int32, i
 
 // getReplicasPtr returns the pointer and group index to the required group or to the global group. Returns nil ptr if group is not found.
 func (r *RisingWaveScaleViewHelper) getReplicasPtr(group string) (*int32, int) {
-	if group == "" {
-		return r.getReplicasGlobalPtr(), 0
-	}
 	return r.findReplicaPtrGroup(group)
 }
 
 // ListComponentGroups lists the groups under `.spec.components`. The default group "" is not included.
 func (r *RisingWaveScaleViewHelper) ListComponentGroups() []string {
+	var nodeGroups []risingwavev1alpha1.RisingWaveNodeGroup
 	switch r.component {
 	case consts.ComponentMeta:
-		return lo.Map(r.risingwave.Spec.Components.Meta.Groups, func(g risingwavev1alpha1.RisingWaveComponentGroup, _ int) string { return g.Name })
+		nodeGroups = r.risingwave.Spec.Components.Meta.NodeGroups
 	case consts.ComponentFrontend:
-		return lo.Map(r.risingwave.Spec.Components.Frontend.Groups, func(g risingwavev1alpha1.RisingWaveComponentGroup, _ int) string { return g.Name })
+		nodeGroups = r.risingwave.Spec.Components.Frontend.NodeGroups
 	case consts.ComponentCompute:
-		return lo.Map(r.risingwave.Spec.Components.Compute.Groups, func(g risingwavev1alpha1.RisingWaveComputeGroup, _ int) string { return g.Name })
+		nodeGroups = r.risingwave.Spec.Components.Compute.NodeGroups
 	case consts.ComponentCompactor:
-		return lo.Map(r.risingwave.Spec.Components.Compactor.Groups, func(g risingwavev1alpha1.RisingWaveComponentGroup, _ int) string { return g.Name })
+		nodeGroups = r.risingwave.Spec.Components.Compactor.NodeGroups
 	case consts.ComponentConnector:
-		return lo.Map(r.risingwave.Spec.Components.Connector.Groups, func(g risingwavev1alpha1.RisingWaveComponentGroup, _ int) string { return g.Name })
+		nodeGroups = r.risingwave.Spec.Components.Connector.NodeGroups
 	default:
-		panic(fmt.Sprintf("Unknown component %v", r.component))
+		panic(fmt.Sprintf("unknown component %v", r.component))
 	}
+
+	names := make([]string, 0, len(nodeGroups))
+	for _, ng := range nodeGroups {
+		names = append(names, ng.Name)
+	}
+
+	return names
 }
 
 // GetGroupIndex gets the index of the given group in the list under `.spec.components.{component}.groups`.

@@ -15,15 +15,21 @@
 package webhook
 
 import (
+	"fmt"
+	"reflect"
+
+	"github.com/samber/lo"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
 
 // ConvertFrontendService converts v1alpha1 service type and service meta.
+// nolint
 func ConvertFrontendService(obj *v1alpha1.RisingWave) {
-	if obj.Spec.Global.ServiceType != corev1.ServiceTypeClusterIP {
+	if obj.Spec.Global.ServiceType != "" && obj.Spec.Global.ServiceType != corev1.ServiceTypeClusterIP {
 		obj.Spec.FrontendServiceType = obj.Spec.Global.ServiceType
 	}
 
@@ -41,6 +47,7 @@ func ConvertFrontendService(obj *v1alpha1.RisingWave) {
 }
 
 // ConvertGlobalImage converts v1alpha1 global image.
+// nolint
 func ConvertGlobalImage(obj *v1alpha1.RisingWave) {
 	if obj.Spec.Global.Image != "" {
 		obj.Spec.Image = obj.Spec.Global.Image
@@ -48,6 +55,7 @@ func ConvertGlobalImage(obj *v1alpha1.RisingWave) {
 }
 
 // ConvertStorages converts v1alpha1 storages.
+// nolint
 func ConvertStorages(obj *v1alpha1.RisingWave) {
 	if !equality.Semantic.DeepEqual(obj.Spec.Storages, v1alpha1.RisingWaveStoragesSpec{}) {
 		obj.Spec.MetaStore = *obj.Spec.Storages.Meta.DeepCopy()
@@ -78,9 +86,194 @@ func ConvertStorages(obj *v1alpha1.RisingWave) {
 	}
 }
 
+func setDefaultValueForField(field reflect.StructField, target, base reflect.Value) {
+	// Only consider primitive types and Map, Slice, and Ptr of these types.
+	switch field.Type.Kind() {
+	case reflect.Map, reflect.Slice:
+		if target.IsZero() || target.Len() == 0 {
+			target.Set(base)
+		}
+	case reflect.Ptr:
+		if target.IsZero() {
+			target.Set(base)
+		}
+	default:
+		if target.IsZero() {
+			target.Set(base)
+		}
+	}
+}
+
+func setDefaultValueForFirstLevelFields[T any](target, base *T) {
+	if target == nil || base == nil {
+		return
+	}
+
+	tType := reflect.TypeOf(target).Elem()
+
+	if tType.Kind() != reflect.Struct {
+		panic(fmt.Sprintf("type %s isn't a struct", tType.Name()))
+	}
+
+	targetValue, baseValue := reflect.ValueOf(target).Elem(), reflect.ValueOf(base).Elem()
+
+	// Iterate over the fields and set the default values.
+	for i := 0; i < tType.NumField(); i++ {
+		setDefaultValueForField(tType.Field(i), targetValue.Field(i), baseValue.Field(i))
+	}
+}
+
+func mergeComponentGroupTemplates(base, overlay *v1alpha1.RisingWaveComponentGroupTemplate) *v1alpha1.RisingWaveComponentGroupTemplate {
+	if overlay == nil {
+		return base
+	}
+
+	r := overlay.DeepCopy()
+	setDefaultValueForFirstLevelFields(r, base.DeepCopy())
+	return r
+}
+
+func convertComponentGroupToNodeGroup(globalTemplate *v1alpha1.RisingWaveComponentGroupTemplate, componentGroup v1alpha1.RisingWaveComponentGroup, restartAt *metav1.Time) v1alpha1.RisingWaveNodeGroup {
+	template := mergeComponentGroupTemplates(globalTemplate, componentGroup.RisingWaveComponentGroupTemplate)
+
+	nodeGroup := v1alpha1.RisingWaveNodeGroup{
+		Name:            componentGroup.Name,
+		Replicas:        componentGroup.Replicas,
+		RestartAt:       restartAt,
+		Configuration:   nil,
+		UpgradeStrategy: template.UpgradeStrategy,
+		Template: v1alpha1.RisingWaveNodePodTemplate{
+			ObjectMeta: template.Metadata,
+			Spec: v1alpha1.RisingWaveNodePodTemplateSpec{
+				RisingWaveNodeContainer: v1alpha1.RisingWaveNodeContainer{
+					Image:           template.Image,
+					EnvFrom:         template.EnvFrom,
+					Env:             template.Env,
+					Resources:       template.Resources,
+					ImagePullPolicy: template.ImagePullPolicy,
+				},
+				TerminationGracePeriodSeconds: template.TerminationGracePeriodSeconds,
+				NodeSelector:                  template.NodeSelector,
+				SecurityContext:               template.SecurityContext,
+				ImagePullSecrets: lo.Map(template.ImagePullSecrets, func(s string, _ int) corev1.LocalObjectReference {
+					return corev1.LocalObjectReference{
+						Name: s,
+					}
+				}),
+				Affinity:          template.Affinity,
+				Tolerations:       template.Tolerations,
+				PriorityClassName: template.PriorityClassName,
+				DNSConfig:         template.DNSConfig,
+			},
+		},
+	}
+
+	return nodeGroup
+}
+
+// ConvertNodeGroups converts the old node groups to the new node groups.
+// nolint
+func ConvertNodeGroups(obj *v1alpha1.RisingWave) {
+	components := &obj.Spec.Components
+
+	if components.Meta.NodeGroups == nil {
+		components.Meta.NodeGroups = lo.Map(components.Meta.Groups, func(ng v1alpha1.RisingWaveComponentGroup, _ int) v1alpha1.RisingWaveNodeGroup {
+			return convertComponentGroupToNodeGroup(&obj.Spec.Global.RisingWaveComponentGroupTemplate, ng, components.Meta.RestartAt)
+		})
+		if obj.Spec.Global.Replicas.Meta > 0 {
+			components.Meta.NodeGroups = append(components.Meta.NodeGroups, convertComponentGroupToNodeGroup(&obj.Spec.Global.RisingWaveComponentGroupTemplate, v1alpha1.RisingWaveComponentGroup{
+				Name:                             "",
+				Replicas:                         obj.Spec.Global.Replicas.Meta,
+				RisingWaveComponentGroupTemplate: nil,
+			}, nil))
+		}
+	}
+
+	if components.Frontend.NodeGroups == nil {
+		components.Frontend.NodeGroups = lo.Map(components.Frontend.Groups, func(ng v1alpha1.RisingWaveComponentGroup, _ int) v1alpha1.RisingWaveNodeGroup {
+			return convertComponentGroupToNodeGroup(&obj.Spec.Global.RisingWaveComponentGroupTemplate, ng, components.Frontend.RestartAt)
+		})
+		if obj.Spec.Global.Replicas.Frontend > 0 {
+			components.Frontend.NodeGroups = append(components.Frontend.NodeGroups, convertComponentGroupToNodeGroup(&obj.Spec.Global.RisingWaveComponentGroupTemplate, v1alpha1.RisingWaveComponentGroup{
+				Name:                             "",
+				Replicas:                         obj.Spec.Global.Replicas.Frontend,
+				RisingWaveComponentGroupTemplate: nil,
+			}, nil))
+		}
+	}
+
+	if components.Compute.NodeGroups == nil {
+		components.Compute.NodeGroups = lo.Map(components.Compute.Groups, func(ng v1alpha1.RisingWaveComputeGroup, _ int) v1alpha1.RisingWaveNodeGroup {
+			var groupTemplate *v1alpha1.RisingWaveComponentGroupTemplate
+			if ng.RisingWaveComputeGroupTemplate != nil {
+				groupTemplate = &ng.RisingWaveComponentGroupTemplate
+			}
+			nodeGroup := convertComponentGroupToNodeGroup(&obj.Spec.Global.RisingWaveComponentGroupTemplate, v1alpha1.RisingWaveComponentGroup{
+				Name:                             ng.Name,
+				Replicas:                         ng.Replicas,
+				RisingWaveComponentGroupTemplate: groupTemplate,
+			}, components.Compute.RestartAt)
+			nodeGroup.VolumeClaimTemplates = obj.Spec.Storages.PVCTemplates
+
+			if ng.RisingWaveComputeGroupTemplate != nil {
+				nodeGroup.Template.Spec.VolumeMounts = ng.VolumeMounts
+			}
+
+			return nodeGroup
+		})
+		if obj.Spec.Global.Replicas.Compute > 0 {
+			components.Compute.NodeGroups = append(components.Compute.NodeGroups, convertComponentGroupToNodeGroup(&obj.Spec.Global.RisingWaveComponentGroupTemplate, v1alpha1.RisingWaveComponentGroup{
+				Name:                             "",
+				Replicas:                         obj.Spec.Global.Replicas.Compute,
+				RisingWaveComponentGroupTemplate: nil,
+			}, nil))
+		}
+	}
+
+	if components.Compactor.NodeGroups == nil {
+		components.Compactor.NodeGroups = lo.Map(components.Compactor.Groups, func(ng v1alpha1.RisingWaveComponentGroup, _ int) v1alpha1.RisingWaveNodeGroup {
+			return convertComponentGroupToNodeGroup(&obj.Spec.Global.RisingWaveComponentGroupTemplate, ng, components.Compactor.RestartAt)
+		})
+		if obj.Spec.Global.Replicas.Compactor > 0 {
+			components.Compactor.NodeGroups = append(components.Compactor.NodeGroups, convertComponentGroupToNodeGroup(&obj.Spec.Global.RisingWaveComponentGroupTemplate, v1alpha1.RisingWaveComponentGroup{
+				Name:                             "",
+				Replicas:                         obj.Spec.Global.Replicas.Compactor,
+				RisingWaveComponentGroupTemplate: nil,
+			}, nil))
+		}
+	}
+
+	if components.Connector.NodeGroups == nil {
+		components.Connector.NodeGroups = lo.Map(components.Connector.Groups, func(ng v1alpha1.RisingWaveComponentGroup, _ int) v1alpha1.RisingWaveNodeGroup {
+			return convertComponentGroupToNodeGroup(&obj.Spec.Global.RisingWaveComponentGroupTemplate, ng, components.Connector.RestartAt)
+		})
+		if obj.Spec.Global.Replicas.Connector > 0 {
+			components.Connector.NodeGroups = append(components.Connector.NodeGroups, convertComponentGroupToNodeGroup(&obj.Spec.Global.RisingWaveComponentGroupTemplate, v1alpha1.RisingWaveComponentGroup{
+				Name:                             "",
+				Replicas:                         obj.Spec.Global.Replicas.Connector,
+				RisingWaveComponentGroupTemplate: nil,
+			}, nil))
+		}
+	}
+}
+
+// ConvertGlobalConfig converts the global config to the new global config.
+func ConvertGlobalConfig(obj *v1alpha1.RisingWave) {
+	if obj.Spec.Configuration.RisingWaveNodeConfiguration.ConfigMap == nil && obj.Spec.Configuration.ConfigMap != nil {
+		obj.Spec.Configuration.RisingWaveNodeConfiguration.ConfigMap = &v1alpha1.RisingWaveNodeConfigurationConfigMapSource{
+			Name:     obj.Spec.Configuration.ConfigMap.Name,
+			Key:      obj.Spec.Configuration.ConfigMap.Key,
+			Optional: obj.Spec.Configuration.ConfigMap.Optional,
+		}
+		obj.Spec.Configuration.ConfigMap = nil
+	}
+}
+
 // ConvertToV1alpha2Features converts v1alpha1 features to v1alpha2 features.
 func ConvertToV1alpha2Features(obj *v1alpha1.RisingWave) {
 	ConvertFrontendService(obj)
 	ConvertGlobalImage(obj)
 	ConvertStorages(obj)
+	ConvertNodeGroups(obj)
+	ConvertGlobalConfig(obj)
 }

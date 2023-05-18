@@ -141,27 +141,68 @@ kind: RisingWave
 metadata:
   name: risingwave-etcd-minio
 spec:
-  storages:
+  metaStore:
+    etcd:
+      endpoint: risingwave-etcd:2388
+  stateStore:
+    minio:
+      bucket: hummock001
+      credentials:
+        secretName: risingwave-minio-credentials
+        usernameKeyRef: username
+        passwordKeyRef: password
+      endpoint: risingwave-minio:9301
+  image: ghcr.io/risingwavelabs/risingwave:v0.18.0
+  components:
     meta:
-      etcd: 
-        endpoint: risingwave-etcd:2388
-    object:
-      minio: 
-        secret:  risingwave-minio-credentials
-        endpoint: risingwave-minio:9301
-        bucket: hummock001
-  global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.18.0
-    imagePullPolicy: IfNotPresent
-    resources:
-      limits:
-        cpu: 1
-        memory: 1Gi
-      requests:
-        cpu: 100m
-        memory: 100Mi
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
-      compactor: 1
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi
+    frontend:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi
+    compute:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi
+    compactor:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi

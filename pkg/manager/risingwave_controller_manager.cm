@@ -55,7 +55,7 @@ decl RisingWaveControllerManager for RisingWave {
 
         // ConfigMap for RisingWave configs.
         configConfigMap ConfigMap {
-            name=${target.Name}-config
+            name=${target.Name}-default-config
             owned
         }
 

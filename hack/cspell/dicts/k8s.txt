@@ -55,6 +55,16 @@ customresourcedefinition
 customresourcedefinitions
 crd
 crds
+userns
+automount
+nodename
+hkey
+tcpip
+seccomp
+sysctls
+seccomp
+utsname
+casttype
 
 # Webhook
 *webhook

@@ -22,30 +22,69 @@ metadata:
   name: risingwave-aliyun-oss
 spec:
   configuration:
-    configmap:
+    configMap:
       key: risingwave.toml
       name: risingwave-aliyun-oss-config-template
-  storages:
+  metaStore:
+    memory: true
+  stateStore:
+    aliyunOSS:
+      region: cn-hangzhou
+      bucket: hummock001
+      internalEndpoint: true
+      credentials:
+        secretName: aliyun-oss-credentials
+  image: ghcr.io/risingwavelabs/risingwave:v0.18.0
+  components:
     meta:
-      memory: true
-    object:
-      aliyunOSS:
-        secret: aliyun-oss-credentials
-        region: cn-hangzhou
-        bucket: hummock001
-        internalEndpoint: true
-  global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.18.0
-    imagePullPolicy: IfNotPresent
-    resources:
-      limits:
-        cpu: 1
-        memory: 1Gi
-      requests:
-        cpu: 100m
-        memory: 100Mi
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
-      compactor: 1
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi
+    frontend:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi
+    compute:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi
+    compactor:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi

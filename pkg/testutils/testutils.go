@@ -48,137 +48,6 @@ func init() {
 	_ = kruiseappsv1beta1.AddToScheme(Scheme)
 }
 
-// Fake RisingWave.
-var fakeRisingWave = &risingwavev1alpha1.RisingWave{
-	TypeMeta: metav1.TypeMeta{
-		Kind:       "RisingWave",
-		APIVersion: "risingwave.risingwavelabs.com/v1alpha1",
-	},
-	ObjectMeta: metav1.ObjectMeta{
-		Name:       "fake-risingwave",
-		Namespace:  "default",
-		Generation: 2,
-		UID:        uuid.NewUUID(),
-	},
-	Spec: risingwavev1alpha1.RisingWaveSpec{
-		EnableOpenKruise: pointer.Bool(false),
-		MetaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
-			Memory: pointer.Bool(true),
-		},
-		StateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
-			Memory: pointer.Bool(true),
-		},
-		Image: "ghcr.io/risingwavelabs/risingwave:latest",
-		Global: risingwavev1alpha1.RisingWaveGlobalSpec{
-			Replicas: risingwavev1alpha1.RisingWaveGlobalReplicas{
-				Meta:      1,
-				Compute:   1,
-				Frontend:  1,
-				Compactor: 1,
-				Connector: 1,
-			},
-			ServiceType: corev1.ServiceTypeClusterIP,
-			RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-				ImagePullPolicy: corev1.PullIfNotPresent,
-				NodeSelector: map[string]string{
-					"kubernetes.io/os":   "linux",
-					"kubernetes.io/arch": "amd64",
-				},
-				Resources: corev1.ResourceRequirements{
-					Limits: corev1.ResourceList{
-						corev1.ResourceCPU:    resource.MustParse("1"),
-						corev1.ResourceMemory: resource.MustParse("1Gi"),
-					},
-					Requests: corev1.ResourceList{
-						corev1.ResourceCPU:    resource.MustParse("100m"),
-						corev1.ResourceMemory: resource.MustParse("100Mi"),
-					},
-				},
-			},
-		},
-		Components: risingwavev1alpha1.RisingWaveComponentsSpec{
-			Meta:      risingwavev1alpha1.RisingWaveComponentMeta{},
-			Frontend:  risingwavev1alpha1.RisingWaveComponentFrontend{},
-			Compute:   risingwavev1alpha1.RisingWaveComponentCompute{},
-			Compactor: risingwavev1alpha1.RisingWaveComponentCompactor{},
-			Connector: risingwavev1alpha1.RisingWaveComponentConnector{},
-		},
-	},
-	Status: risingwavev1alpha1.RisingWaveStatus{
-		ObservedGeneration: 1,
-		MetaStore: risingwavev1alpha1.RisingWaveMetaStoreStatus{
-			Backend: risingwavev1alpha1.RisingWaveMetaStoreBackendTypeMemory,
-		},
-		StateStore: risingwavev1alpha1.RisingWaveStateStoreStatus{
-			Backend: risingwavev1alpha1.RisingWaveStateStoreBackendTypeMemory,
-		},
-		Conditions: []risingwavev1alpha1.RisingWaveCondition{
-			{
-				Type:               risingwavev1alpha1.RisingWaveConditionRunning,
-				Status:             metav1.ConditionTrue,
-				LastTransitionTime: metav1.Now(),
-			},
-		},
-		ComponentReplicas: risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
-			Meta: risingwavev1alpha1.ComponentReplicasStatus{
-				Target:  1,
-				Running: 1,
-				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
-					{
-						Name:    "",
-						Target:  1,
-						Running: 1,
-					},
-				},
-			},
-			Frontend: risingwavev1alpha1.ComponentReplicasStatus{
-				Target:  1,
-				Running: 1,
-				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
-					{
-						Name:    "",
-						Target:  1,
-						Running: 1,
-					},
-				},
-			},
-			Compute: risingwavev1alpha1.ComponentReplicasStatus{
-				Target:  1,
-				Running: 1,
-				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
-					{
-						Name:    "",
-						Target:  1,
-						Running: 1,
-					},
-				},
-			},
-			Compactor: risingwavev1alpha1.ComponentReplicasStatus{
-				Target:  1,
-				Running: 1,
-				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
-					{
-						Name:    "",
-						Target:  1,
-						Running: 1,
-					},
-				},
-			},
-			Connector: risingwavev1alpha1.ComponentReplicasStatus{
-				Target:  1,
-				Running: 1,
-				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
-					{
-						Name:    "",
-						Target:  1,
-						Running: 1,
-					},
-				},
-			},
-		},
-	},
-}
-
 // FakeRisingWaveOpenKruiseEnabled returns a new fake RisingWave with OpenKruise enabled.
 func FakeRisingWaveOpenKruiseEnabled() *risingwavev1alpha1.RisingWave {
 	risingwaveCopy := fakeRisingWave.DeepCopy()
@@ -198,18 +67,13 @@ func FakeRisingWave() *risingwavev1alpha1.RisingWave {
 	return fakeRisingWave.DeepCopy()
 }
 
-// GetGroupName returns the group name used in the fake RisingWaves.
-func GetGroupName(index int) string {
-	return fmt.Sprintf("group-%d", index)
-}
-
-var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
+var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 	TypeMeta: metav1.TypeMeta{
 		Kind:       "RisingWave",
 		APIVersion: "risingwave.risingwavelabs.com/v1alpha1",
 	},
 	ObjectMeta: metav1.ObjectMeta{
-		Name:       "fake-risingwave-component-only",
+		Name:       "fake-risingwave",
 		Namespace:  "default",
 		Generation: 2,
 		UID:        uuid.NewUUID(),
@@ -221,65 +85,121 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 		StateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 			Memory: pointer.Bool(true),
 		},
-		Image: "ghcr.io/risingwavelabs/risingwave:latest",
-		Global: risingwavev1alpha1.RisingWaveGlobalSpec{
-			ServiceType: corev1.ServiceTypeClusterIP,
-			RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-				ImagePullPolicy: corev1.PullIfNotPresent,
-				NodeSelector: map[string]string{
-					"kubernetes.io/os":   "linux",
-					"kubernetes.io/arch": "amd64",
-				},
-				Resources: corev1.ResourceRequirements{
-					Limits: corev1.ResourceList{
-						corev1.ResourceCPU:    resource.MustParse("1"),
-						corev1.ResourceMemory: resource.MustParse("1Gi"),
-					},
-					Requests: corev1.ResourceList{
-						corev1.ResourceCPU:    resource.MustParse("100m"),
-						corev1.ResourceMemory: resource.MustParse("100Mi"),
-					},
-				},
-			},
-		},
+		FrontendServiceType: corev1.ServiceTypeClusterIP,
+		Image:               "ghcr.io/risingwavelabs/risingwave:latest",
 		Components: risingwavev1alpha1.RisingWaveComponentsSpec{
 			Meta: risingwavev1alpha1.RisingWaveComponentMeta{
-				Groups: []risingwavev1alpha1.RisingWaveComponentGroup{
+				NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
 					{
-						Name:     GetGroupName(0),
 						Replicas: 1,
+						Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+							Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+								RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+									Resources: corev1.ResourceRequirements{
+										Limits: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("1"),
+											corev1.ResourceMemory: resource.MustParse("1Gi"),
+										},
+										Requests: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("100m"),
+											corev1.ResourceMemory: resource.MustParse("100Mi"),
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
 			Frontend: risingwavev1alpha1.RisingWaveComponentFrontend{
-				Groups: []risingwavev1alpha1.RisingWaveComponentGroup{
+				NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
 					{
-						Name:     GetGroupName(0),
 						Replicas: 1,
+						Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+							Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+								RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+									Resources: corev1.ResourceRequirements{
+										Limits: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("1"),
+											corev1.ResourceMemory: resource.MustParse("1Gi"),
+										},
+										Requests: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("100m"),
+											corev1.ResourceMemory: resource.MustParse("100Mi"),
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
 			Compute: risingwavev1alpha1.RisingWaveComponentCompute{
-				Groups: []risingwavev1alpha1.RisingWaveComputeGroup{
+				NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
 					{
-						Name:     GetGroupName(0),
 						Replicas: 1,
+						Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+							Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+								RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+									Resources: corev1.ResourceRequirements{
+										Limits: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("1"),
+											corev1.ResourceMemory: resource.MustParse("1Gi"),
+										},
+										Requests: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("100m"),
+											corev1.ResourceMemory: resource.MustParse("100Mi"),
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
 			Compactor: risingwavev1alpha1.RisingWaveComponentCompactor{
-				Groups: []risingwavev1alpha1.RisingWaveComponentGroup{
+				NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
 					{
-						Name:     GetGroupName(0),
 						Replicas: 1,
+						Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+							Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+								RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+									Resources: corev1.ResourceRequirements{
+										Limits: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("1"),
+											corev1.ResourceMemory: resource.MustParse("1Gi"),
+										},
+										Requests: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("100m"),
+											corev1.ResourceMemory: resource.MustParse("100Mi"),
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
 			Connector: risingwavev1alpha1.RisingWaveComponentConnector{
-				Groups: []risingwavev1alpha1.RisingWaveComponentGroup{
+				NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
 					{
-						Name:     GetGroupName(0),
 						Replicas: 1,
+						Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+							Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+								RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+									Resources: corev1.ResourceRequirements{
+										Limits: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("1"),
+											corev1.ResourceMemory: resource.MustParse("1Gi"),
+										},
+										Requests: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.MustParse("100m"),
+											corev1.ResourceMemory: resource.MustParse("100Mi"),
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -306,7 +226,7 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				Running: 1,
 				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
 					{
-						Name:    GetGroupName(0),
+						Name:    "",
 						Target:  1,
 						Running: 1,
 					},
@@ -317,7 +237,7 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				Running: 1,
 				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
 					{
-						Name:    GetGroupName(0),
+						Name:    "",
 						Target:  1,
 						Running: 1,
 					},
@@ -328,7 +248,7 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				Running: 1,
 				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
 					{
-						Name:    GetGroupName(0),
+						Name:    "",
 						Target:  1,
 						Running: 1,
 					},
@@ -339,7 +259,7 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				Running: 1,
 				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
 					{
-						Name:    GetGroupName(0),
+						Name:    "",
 						Target:  1,
 						Running: 1,
 					},
@@ -350,7 +270,7 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 				Running: 1,
 				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
 					{
-						Name:    GetGroupName(0),
+						Name:    "",
 						Target:  1,
 						Running: 1,
 					},
@@ -358,18 +278,6 @@ var fakeRisingWaveComponentOnly = &risingwavev1alpha1.RisingWave{
 			},
 		},
 	},
-}
-
-// FakeRisingWaveComponentOnly returns a new RisingWave object copied from fakeRisingWaveComponentOnly.
-func FakeRisingWaveComponentOnly() *risingwavev1alpha1.RisingWave {
-	return fakeRisingWaveComponentOnly.DeepCopy()
-}
-
-// FakeRisingWaveComponentOnlyOpenKruiseEnabled returns a new RisingWave object with OpenKruise enabled.
-func FakeRisingWaveComponentOnlyOpenKruiseEnabled() *risingwavev1alpha1.RisingWave {
-	fakeRisingWaveComponentOnlyCopy := fakeRisingWaveComponentOnly.DeepCopy()
-	fakeRisingWaveComponentOnlyCopy.Spec.EnableOpenKruise = pointer.Bool(true)
-	return fakeRisingWaveComponentOnlyCopy.DeepCopy()
 }
 
 // DeepEqual returns true when the two objects are semantically equal.
@@ -409,4 +317,12 @@ func FakeRisingWaveWithMutate(mutate func(wave *risingwavev1alpha1.RisingWave)) 
 	r := FakeRisingWave()
 	mutate(r)
 	return r
+}
+
+// GetNodeGroupName returns the group name for a specified index.
+func GetNodeGroupName(i int) string {
+	if i == 0 {
+		return ""
+	}
+	return fmt.Sprintf("group-%d", i)
 }

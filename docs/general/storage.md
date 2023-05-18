@@ -1,6 +1,6 @@
-## Storages
+# Storages
 
-### Memory
+## Memory
 
 Currently, memory storage is supported for test usage only. We highly discourage you use the memory storage for other
 purposes. For now, you can enable the memory metadata and object storage with the following configs:
@@ -16,7 +16,7 @@ spec:
 #...
 ```
 
-### etcd (meta)
+## etcd (meta)
 
 We recommend using the [etcd](https://etcd.io/) to store the metadata. You can specify the connection information of
 the `etcd` you'd like to use like the following:
@@ -35,7 +35,7 @@ spec:
 Check the [docs/manifests/risingwave/risingwave-etcd-minio.yaml](/docs/manifests/risingwave/risingwave-etcd-minio.yaml) for how to
 provision a simple RisingWave with an `etcd` instance as the metadata storage.
 
-### MinIO
+## MinIO
 
 We support using MinIO as the object storage. Check
 the [docs/manifests/risingwave/risingwave-etcd-minio.yaml](/docs/manifests/risingwave/risingwave-etcd-minio.yaml) for details. The
@@ -53,7 +53,7 @@ spec:
 #...
 ```
 
-### S3
+## S3
 
 We support using AWS S3 as the object storage. Follow the steps below and check
 the [docs/manifests/risingwave/risingwave-etcd-s3.yaml](/docs/manifests/risingwave/risingwave-etcd-s3.yaml) for details:
@@ -79,7 +79,7 @@ spec:
 #...
 ```
 
-### Azure Blob
+## Azure Blob
 
 We support using Azure blob as the object storage. FOllow the steps below and check the [yaml file](/docs/manifests/risingwave/risingwave-azure.yaml) for details:
 
@@ -107,3 +107,79 @@ We support using Azure blob as the object storage. FOllow the steps below and ch
         endpoint: https://your-azure-account-name.blob.core.windows.net
     ```
 3. After your success launches the risinwgave, execute some query, and flush the data. You should see some files created in your azure blob container folder.
+
+
+## HDFS
+We support using HDFS S3 as the object storage. Follow the steps below and check
+the [docs/manifests/risingwave-hdfs.yaml](/docs/manifests/risingwave/risingwave-hdfs.yaml) for details. 
+1. You need to launch the HDFS service
+2. Specific the storage type like below. 
+   1. nameNode: If you follow the yaml file we provide, it should be hadoop-hdfs-master:9000
+   2. root: the path that storage the data, you can change it.
+    ```yamlex
+      storages:
+        meta:
+          memory: true
+        object:
+          hdfs:
+            nameNode: hadoop-hdfs-master:9000
+            root: risingwave
+
+    ```
+3. Note: you need to pay attention that we only provide HDFS feature in some specific docker image like `ghcr.io/risingwavelabs/risingwave:git-4e93d7061b66f8f12c4e89e097d950dfd3a5963a`. If you use other image, it will error.
+4. After launch, you cannot connect to database can execute SQL. After flush, you can find the file written in the `${root}` fold we assigned in HDFS.
+5. If you use the above yaml file, you can forward the port and check the HDFS data in `localhost:50070`.
+   ```
+   kubectl port-forward service/hadoop-hdfs-master 50070:50070
+   ```
+
+
+# Test
+
+## check instance status
+When you launch the RW, you can use `kubectl get risingwave` to check the detail. 
+1. `RUNNING` will show whether instance launch correctly.
+2. `STORAGE(META)`, `STORAGE(OBJECT)` will show the type of your meta storage type and obejct storage type
+```
+NAME                    RUNNING   STORAGE(META)   STORAGE(OBJECT)   AGE
+risingwave-etcd-minio   True      etcd            MinIO             30s
+```
+## Connect and execute SQL
+1. creating a pod
+   ```
+   kubectl apply -f https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/docs/manifests/psql/psql-console.yaml
+   ```
+2. Attach the pod
+   ```
+   kubectl exec -it psql-console -- bash
+   ```
+3. Connect RW via psql. You need to replace `risingwave-frontend` with your rw frontend name
+   ```
+   psql -h risingwave-frontend -p 4567 -d dev -U root
+   ```
+4. Execute a simple read/write test
+  ```sql  
+    /* create a table */
+  create table t1(v1 int);
+
+  /* create a materialized view based on the previous table */
+  create materialized view mv1 as select sum(v1) as sum_v1 from t1;
+
+  /* insert some data into the source table */
+  insert into t1 values (1), (2), (3);
+
+  /* (optional) ensure the materialized view has been updated */
+  flush;
+
+  /* the materialized view should reflect the changes in source table */
+  select * from mv1;
+  ```
+
+  If everything is correct, the result should be:
+  ```
+   sum_v1
+  --------
+        6
+  (1 row)
+  ```
+5. In the end, you can check whether the data has already written into your object storage.

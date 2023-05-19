@@ -4,14 +4,15 @@ metadata:
   name: ${E2E_RISINGWAVE_NAME}
   namespace: ${E2E_NAMESPACE}
 spec:
+  components:
+    frontend:
+      nodeGroups:
+      - replicas: 0
   global:
     image: ${E2E_RISINGWAVE_IMAGE}
     imagePullPolicy: IfNotPresent
     replicas:
       meta: 1
-      frontend: 0
-      compute: 0
-      compactor: 0
   storages:
     meta:
       memory: true

@@ -1426,6 +1426,9 @@ func (f *RisingWaveObjectFactory) NewMetaService() *corev1.Service {
 		},
 	})
 
+	// Set the ClusterIP to None to make it a headless service.
+	metaSvc.Spec.ClusterIP = corev1.ClusterIPNone
+
 	return mustSetControllerReference(f.risingwave, metaSvc, f.scheme)
 }
 
@@ -1469,6 +1472,9 @@ func (f *RisingWaveObjectFactory) NewComputeService() *corev1.Service {
 			TargetPort: intstr.FromString(consts.PortMetrics),
 		},
 	})
+
+	// Set the ClusterIP to None to make it a headless service.
+	computeSvc.Spec.ClusterIP = corev1.ClusterIPNone
 
 	return mustSetControllerReference(f.risingwave, computeSvc, f.scheme)
 }

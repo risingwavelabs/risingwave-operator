@@ -1496,6 +1496,9 @@ func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 		},
 	})
 
+	// Set the ClusterIP to None to make it a headless service.
+	compactorSvc.Spec.ClusterIP = corev1.ClusterIPNone
+
 	return mustSetControllerReference(f.risingwave, compactorSvc, f.scheme)
 }
 

@@ -43733,8 +43733,12 @@ spec:
                             description: The name of the secret in the pod's namespace
                               to select from.
                             type: string
-                        required:
-                        - secretName
+                          useProjectedServiceAccountToken:
+                            description: UseServiceAccount indicates whether to use
+                              the service account token mounted in the pod. It only
+                              works when using the AWS S3. If this is enabled, secret
+                              and keys are ignored. Defaults to false.
+                            type: boolean
                         type: object
                       internalEndpoint:
                         description: InternalEndpoint indicates if we use the internal
@@ -43832,6 +43836,11 @@ spec:
                               of the secret to be the service account credentials.
                               Must be a valid secret key. Defaults to "ServiceAccountCredentials".
                             type: string
+                          useWorkloadIdentity:
+                            description: UseWorkloadIdentity indicates to use workload
+                              identity to access the GCS service. If this is enabled,
+                              secret is not required, and ADC is used.
+                            type: boolean
                         type: object
                       root:
                         description: Working directory root of the GCS bucket
@@ -43842,15 +43851,9 @@ spec:
                           Deprecated: Please use "credentials" field instead. The
                           "Secret" field will be removed in a future release.'
                         type: string
-                      useWorkloadIdentity:
-                        description: UseWorkloadIdentity indicates to use workload
-                          identity to access the GCS service. If this is enabled,
-                          secret is not required, and ADC is used.
-                        type: boolean
                     required:
                     - bucket
                     - root
-                    - useWorkloadIdentity
                     type: object
                   hdfs:
                     description: HDFS storage spec.
@@ -43938,8 +43941,12 @@ spec:
                             description: The name of the secret in the pod's namespace
                               to select from.
                             type: string
-                        required:
-                        - secretName
+                          useProjectedServiceAccountToken:
+                            description: UseServiceAccount indicates whether to use
+                              the service account token mounted in the pod. It only
+                              works when using the AWS S3. If this is enabled, secret
+                              and keys are ignored. Defaults to false.
+                            type: boolean
                         type: object
                       endpoint:
                         description: Endpoint of the AWS (or other vendor's S3-compatible)
@@ -43950,10 +43957,8 @@ spec:
                         pattern: ^(?:https://)?(?:[^/.\s]+\.)*(?:[^/\s]+)*$
                         type: string
                       region:
-                        description: Region of AWS S3 service. It is an optional field
-                          that overrides the `Region` key from the secret. Specifying
-                          the region here makes a guarantee that it won't be changed
-                          anymore.
+                        default: us-east-1
+                        description: Region of AWS S3 service. Defaults to "us-east-1".
                         type: string
                       secret:
                         description: 'Secret contains the credentials to access the
@@ -43966,6 +43971,7 @@ spec:
                     required:
                     - bucket
                     - credentials
+                    - region
                     type: object
                   webhdfs:
                     description: WebHDFS storage spec.
@@ -44068,8 +44074,13 @@ spec:
                                 description: The name of the secret in the pod's namespace
                                   to select from.
                                 type: string
-                            required:
-                            - secretName
+                              useProjectedServiceAccountToken:
+                                description: UseServiceAccount indicates whether to
+                                  use the service account token mounted in the pod.
+                                  It only works when using the AWS S3. If this is
+                                  enabled, secret and keys are ignored. Defaults to
+                                  false.
+                                type: boolean
                             type: object
                           internalEndpoint:
                             description: InternalEndpoint indicates if we use the
@@ -44169,6 +44180,12 @@ spec:
                                   key of the secret to be the service account credentials.
                                   Must be a valid secret key. Defaults to "ServiceAccountCredentials".
                                 type: string
+                              useWorkloadIdentity:
+                                description: UseWorkloadIdentity indicates to use
+                                  workload identity to access the GCS service. If
+                                  this is enabled, secret is not required, and ADC
+                                  is used.
+                                type: boolean
                             type: object
                           root:
                             description: Working directory root of the GCS bucket
@@ -44180,15 +44197,9 @@ spec:
                               field instead. The "Secret" field will be removed in
                               a future release.'
                             type: string
-                          useWorkloadIdentity:
-                            description: UseWorkloadIdentity indicates to use workload
-                              identity to access the GCS service. If this is enabled,
-                              secret is not required, and ADC is used.
-                            type: boolean
                         required:
                         - bucket
                         - root
-                        - useWorkloadIdentity
                         type: object
                       hdfs:
                         description: HDFS storage spec.
@@ -44278,8 +44289,13 @@ spec:
                                 description: The name of the secret in the pod's namespace
                                   to select from.
                                 type: string
-                            required:
-                            - secretName
+                              useProjectedServiceAccountToken:
+                                description: UseServiceAccount indicates whether to
+                                  use the service account token mounted in the pod.
+                                  It only works when using the AWS S3. If this is
+                                  enabled, secret and keys are ignored. Defaults to
+                                  false.
+                                type: boolean
                             type: object
                           endpoint:
                             description: Endpoint of the AWS (or other vendor's S3-compatible)
@@ -44290,10 +44306,8 @@ spec:
                             pattern: ^(?:https://)?(?:[^/.\s]+\.)*(?:[^/\s]+)*$
                             type: string
                           region:
-                            description: Region of AWS S3 service. It is an optional
-                              field that overrides the `Region` key from the secret.
-                              Specifying the region here makes a guarantee that it
-                              won't be changed anymore.
+                            default: us-east-1
+                            description: Region of AWS S3 service. Defaults to "us-east-1".
                             type: string
                           secret:
                             description: 'Secret contains the credentials to access
@@ -44306,6 +44320,7 @@ spec:
                         required:
                         - bucket
                         - credentials
+                        - region
                         type: object
                       webhdfs:
                         description: WebHDFS storage spec.

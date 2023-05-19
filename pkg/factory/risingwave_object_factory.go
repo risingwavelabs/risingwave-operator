@@ -534,53 +534,45 @@ func (f *RisingWaveObjectFactory) envsForMinIO() []corev1.EnvVar {
 }
 
 func envsForAWSS3(region, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials) []corev1.EnvVar {
-	secretRef := corev1.LocalObjectReference{
-		Name: credentials.SecretName,
-	}
-
-	var regionEnvVar corev1.EnvVar
-	if len(region) > 0 {
-		regionEnvVar = corev1.EnvVar{
+	envVars := []corev1.EnvVar{
+		{
 			Name:  envs.AWSRegion,
 			Value: region,
-		}
-	} else {
-		regionEnvVar = corev1.EnvVar{
-			Name: envs.AWSRegion,
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: secretRef,
-					Key:                  consts.SecretKeyAWSS3Region,
-				},
-			},
-		}
-	}
-
-	return []corev1.EnvVar{
+		},
 		{
 			Name:  envs.AWSS3Bucket,
 			Value: bucket,
 		},
-		regionEnvVar,
-		{
-			Name: envs.AWSAccessKeyID,
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: secretRef,
-					Key:                  credentials.AccessKeyRef,
-				},
-			},
-		},
-		{
-			Name: envs.AWSSecretAccessKey,
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: secretRef,
-					Key:                  credentials.SecretAccessKeyRef,
-				},
-			},
-		},
 	}
+
+	if !pointer.BoolDeref(credentials.UseServiceAccount, false) {
+		secretRef := corev1.LocalObjectReference{
+			Name: credentials.SecretName,
+		}
+		credentialsEnvVars := []corev1.EnvVar{
+			{
+				Name: envs.AWSAccessKeyID,
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: secretRef,
+						Key:                  credentials.AccessKeyRef,
+					},
+				},
+			},
+			{
+				Name: envs.AWSSecretAccessKey,
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: secretRef,
+						Key:                  credentials.SecretAccessKeyRef,
+					},
+				},
+			},
+		}
+		envVars = append(envVars, credentialsEnvVars...)
+	}
+
+	return envVars
 }
 
 func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
@@ -600,6 +592,7 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 		}
 		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials)
 	}
+
 	// AWS S3 mode.
 	return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials)
 }
@@ -667,7 +660,7 @@ func envsForS3Compatible(region, endpoint, bucket string, credentials risingwave
 
 func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
 	gcs := f.risingwave.Spec.StateStore.GCS
-	useWorkloadIdentity := gcs.UseWorkloadIdentity
+	useWorkloadIdentity := pointer.BoolDeref(gcs.UseWorkloadIdentity, false)
 	if useWorkloadIdentity {
 		return []corev1.EnvVar{}
 	}

@@ -16,7 +16,6 @@ spec:
     gcs:
       bucket: your-bucket
       root: your-root
-      useWorkloadIdentity: false
       credentials:
         secretName: gcs-credentials
         serviceAccountCredentialsKeyRef: ServiceAccountCredentials

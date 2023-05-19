@@ -152,11 +152,11 @@ func (v *RisingWaveValidatingWebhook) validateMetaStoreAndStateStore(path *field
 	isMetaMemory, isMetaEtcd := ptrValueNotZero(metaStore.Memory), ptrValueNotZero(metaStore.Etcd)
 	if isMetaMemory {
 		if isMetaEtcd {
-			fieldErrs = append(fieldErrs, field.Forbidden(path.Child("meta", "etcd"), "must not specified when type is memory"))
+			fieldErrs = append(fieldErrs, field.Forbidden(path.Child("metaStore", "etcd"), "must not specified when type is memory"))
 		}
 	} else {
 		if !isMetaEtcd {
-			fieldErrs = append(fieldErrs, field.Invalid(path.Child("meta"), metaStore, "either memory or etcd must be specified"))
+			fieldErrs = append(fieldErrs, field.Invalid(path.Child("metaStore"), metaStore, "either memory or etcd must be specified"))
 		}
 	}
 
@@ -169,17 +169,31 @@ func (v *RisingWaveValidatingWebhook) validateMetaStoreAndStateStore(path *field
 	isStateHDFS := stateStore.HDFS != nil
 	isStateWebHDFS := stateStore.WebHDFS != nil
 
+	if isStateS3 {
+		if len(stateStore.S3.Endpoint) > 0 {
+			// S3-compatible mode, secretName is required.
+			if stateStore.S3.RisingWaveS3Credentials.SecretName == "" {
+				fieldErrs = append(fieldErrs, field.Required(path.Child("stateStore", "s3", "credentials", "secretName"), "secretName is required"))
+			}
+		} else {
+			// AWS S3.
+			if !pointer.BoolDeref(stateStore.S3.UseServiceAccount, false) == (stateStore.S3.RisingWaveS3Credentials.SecretName == "") {
+				fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore", "s3", "credentials"), stateStore.S3.SecretName, "either secretName or useServiceAccount must be specified"))
+			}
+		}
+	}
+
 	if isStateGCS {
-		if (stateStore.GCS.UseWorkloadIdentity && stateStore.GCS.RisingWaveGCSCredentials.SecretName != "") || (!stateStore.GCS.UseWorkloadIdentity && stateStore.GCS.RisingWaveGCSCredentials.SecretName == "") {
-			fieldErrs = append(fieldErrs, field.Invalid(path.Child("state", "gcs", "secret"), stateStore.GCS.RisingWaveGCSCredentials.SecretName, "either secret or useWorkloadIdentity must be specified"))
+		if !pointer.BoolDeref(stateStore.GCS.UseWorkloadIdentity, false) == (stateStore.GCS.RisingWaveGCSCredentials.SecretName == "") {
+			fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore", "gcs", "credentials"), stateStore.GCS.RisingWaveGCSCredentials.SecretName, "either secretName or useWorkloadIdentity must be specified"))
 		}
 	}
 
 	validStateStoreTypeCount := lo.CountBy([]bool{isStateMemory, isStateMinIO, isStateS3, isStateGCS, isStateAliyunOSS, isStateAzureBlob, isStateHDFS, isStateWebHDFS}, func(x bool) bool { return x })
 	if validStateStoreTypeCount == 0 {
-		fieldErrs = append(fieldErrs, field.Invalid(path.Child("state"), stateStore, "must configure the state storage"))
+		fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore"), stateStore, "must configure the state store"))
 	} else if validStateStoreTypeCount > 1 {
-		fieldErrs = append(fieldErrs, field.Invalid(path.Child("state"), stateStore, "multiple state storage types"))
+		fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore"), stateStore, "multiple state store types"))
 	}
 
 	return fieldErrs

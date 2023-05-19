@@ -2114,6 +2114,18 @@ Defaults to &ldquo;password&rdquo;.</p>
 <tbody>
 <tr>
 <td>
+<code>useWorkloadIdentity</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>UseWorkloadIdentity indicates to use workload identity to access the GCS service.
+If this is enabled, secret is not required, and ADC is used.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>secretName</code><br/>
 <em>
 string
@@ -4611,6 +4623,19 @@ This field is alpha-level and is only honored by servers that enable the UserNam
 <tbody>
 <tr>
 <td>
+<code>useProjectedServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>UseServiceAccount indicates whether to use the service account token mounted in the pod. It only works when using
+the AWS S3. If this is enabled, secret and keys are ignored. Defaults to false.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>secretName</code><br/>
 <em>
 string
@@ -5610,17 +5635,6 @@ RisingWaveGCSCredentials
 </tr>
 <tr>
 <td>
-<code>useWorkloadIdentity</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>UseWorkloadIdentity indicates to use workload identity to access the GCS service. If this is enabled, secret is not required, and ADC is used.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>secret</code><br/>
 <em>
 string
@@ -5826,8 +5840,7 @@ string
 </em>
 </td>
 <td>
-<p>Region of AWS S3 service. It is an optional field that overrides the <code>Region</code> key from the secret.
-Specifying the region here makes a guarantee that it won&rsquo;t be changed anymore.</p>
+<p>Region of AWS S3 service. Defaults to &ldquo;us-east-1&rdquo;.</p>
 </td>
 </tr>
 <tr>

@@ -2956,6 +2956,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 					Bucket: "s3-hummock01",
+					Region: "ap-southeast-1",
 					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
 						SecretName:         "s3-creds",
 						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,
@@ -2995,24 +2996,19 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					},
 				},
 				{
-					Name: "AWS_REGION",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "s3-creds",
-							},
-							Key: consts.SecretKeyAWSS3Region,
-						},
-					},
+					Name:  "AWS_REGION",
+					Value: "ap-southeast-1",
 				},
 			},
 		},
 		"gcs-workload": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
-					UseWorkloadIdentity: true,
-					Bucket:              "gcs-bucket",
-					Root:                "gcs-root",
+					RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
+						UseWorkloadIdentity: pointer.Bool(true),
+					},
+					Bucket: "gcs-bucket",
+					Root:   "gcs-root",
 				},
 			},
 			envs: []corev1.EnvVar{{
@@ -3023,9 +3019,8 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 		"gcs-secret": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
-					UseWorkloadIdentity: false,
-					Bucket:              "gcs-bucket",
-					Root:                "gcs-root",
+					Bucket: "gcs-bucket",
+					Root:   "gcs-root",
 					RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
 						SecretName:                      "gcs-creds",
 						ServiceAccountCredentialsKeyRef: consts.SecretKeyGCSServiceAccountCredentials,

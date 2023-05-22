@@ -81,32 +81,32 @@ spec:
 
 ## Azure Blob
 
-We support using Azure blob as the object storage. FOllow the steps below and check the [yaml file](/docs/manifests/risingwave/risingwave-azure.yaml) for details:
+We support using Azure blob as the object storage. Follow the steps below and check the [yaml file](/docs/manifests/risingwave/risingwave-azure.yaml) for details:
 
 
-1. You need to get several parameter values in your Azure account. 
-   1. Account Name & Account Key: You need to create a `storage account` in azure blob. Then [storage accounts] -> find your account -> [security + networking] -> [Access keys] -> get your account name and key.
-   2. container name: After creating the `storage account`, you need to create a `Container`, use the container name.
-   3. root: The risingwave kernel will store data in this folder. For object storage in Azure blob, you do not need to create this folder in advance.
-   4. endpoint: When you upload something into your Azure container, each item will have a URL for the download. The prefix of this download URL is the endpoint you need to use. For publicly accessible links, it should be like: `https://StorageAccountA.blob.core.windows.net`. If you use a private link like this `https://StorageAccountA.privatelink.blob.core.windows.net`, you need to do some additional settings in your Azure and make sure your machine can get access to the Azure blob storage.
+1. You need to get the value of several parameters in your Azure account. 
+   1. `AccountName` & `AccountKey`: You need to create a `storage account` in azure blob. Then [storage accounts] -> find your account -> [security + networking] -> [Access keys] -> get your account name and key.
+   2. `container`: After creating the `storage account`, you need to create a `Container`, use the container name.
+   3. `root`: The risingwave kernel will store data in this folder. For object storage in Azure blob, you do not need to create this folder in advance.
+   4. `endpoint`: When you upload something into your Azure container, each item will have a URL for the download. The prefix of this download URL is the endpoint you need to use. For publicly accessible links, it should be like: `https://StorageAccountA.blob.core.windows.net`. If you use a private link like this `https://StorageAccountA.privatelink.blob.core.windows.net`, you need to do some additional settings in your Azure and make sure your machine can get access to the Azure blob storage.
 2. Change the corresponding values in the [yaml file](/docs/manifests/risingwave/risingwave-azure.yaml) and apply it.
 
     ```yamlex
     stringData:
-    AccountName: your-azure-account-name
-    AccountKey: your-azure-account-key
+      AccountName: your-azure-account-name
+      AccountKey: your-azure-account-key
     ```
     and 
 
     ```yamlex
     object:
-        azureBlob: 
-        secret:  risingwave-azure-blob-credentials
-        container: your-azure-container-name
-        root: risingwave
-        endpoint: https://your-azure-account-name.blob.core.windows.net
+      azureBlob: 
+      secret:  risingwave-azure-blob-credentials
+      container: your-azure-container-name
+      root: risingwave
+      endpoint: https://your-azure-account-name.blob.core.windows.net
     ```
-3. After your success launches the risinwgave, execute some query, and flush the data. You should see some files created in your azure blob container folder.
+3.  After risinwgave lunched successfully, execute some queries, and flush the data. You should see some files created in your Azure blob container folder.
 
 
 ## HDFS

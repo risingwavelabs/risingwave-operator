@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 )
 
 // RisingWaveReader is a reader for RisingWave object.
@@ -62,6 +63,36 @@ func (r *RisingWaveReader) GetCondition(conditionType risingwavev1alpha1.RisingW
 func (r *RisingWaveReader) DoesConditionExistAndEqual(conditionType risingwavev1alpha1.RisingWaveConditionType, value bool) bool {
 	cond := r.GetCondition(conditionType)
 	return cond != nil && (cond.Status == metav1.ConditionTrue) == value
+}
+
+// GetNodeGroups gets the node groups of the given component. It panics when the component is unknown.
+func (r *RisingWaveReader) GetNodeGroups(component string) []risingwavev1alpha1.RisingWaveNodeGroup {
+	switch component {
+	case consts.ComponentMeta:
+		return r.risingwave.Spec.Components.Meta.NodeGroups
+	case consts.ComponentCompactor:
+		return r.risingwave.Spec.Components.Compactor.NodeGroups
+	case consts.ComponentFrontend:
+		return r.risingwave.Spec.Components.Frontend.NodeGroups
+	case consts.ComponentConnector:
+		return r.risingwave.Spec.Components.Connector.NodeGroups
+	case consts.ComponentCompute:
+		return r.risingwave.Spec.Components.Compute.NodeGroups
+	default:
+		panic("unknown component: " + component)
+	}
+}
+
+// GetNodeGroup gets the node groups of the given component and group.
+// It panics when the component is unknown and returns nil when the node group isn't found.
+func (r *RisingWaveReader) GetNodeGroup(component, group string) *risingwavev1alpha1.RisingWaveNodeGroup {
+	nodeGroups := r.GetNodeGroups(component)
+	for _, nodeGroup := range nodeGroups {
+		if nodeGroup.Name == group {
+			return nodeGroup.DeepCopy()
+		}
+	}
+	return nil
 }
 
 // RisingWaveManager is a struct to help manipulate the RisingWave object in memory. It is concurrent-safe.

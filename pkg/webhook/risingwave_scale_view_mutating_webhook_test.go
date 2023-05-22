@@ -63,13 +63,6 @@ func Test_RisingWaveScaleViewMutatingWebhook_Default(t *testing.T) {
 			origin:    testutils.NewFakeRisingWaveScaleViewFor(testutils.FakeRisingWave(), consts.ComponentFrontend),
 			returnErr: false,
 		},
-		"good-1": {
-			initObjs: []client.Object{
-				testutils.FakeRisingWaveComponentOnly(),
-			},
-			origin:    testutils.NewFakeRisingWaveScaleViewFor(testutils.FakeRisingWaveComponentOnly(), consts.ComponentFrontend),
-			returnErr: false,
-		},
 		"replicas-out-of-range": {
 			initObjs: []client.Object{
 				testutils.FakeRisingWave(),

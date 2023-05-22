@@ -11,20 +11,30 @@ kind: RisingWave
 metadata:
   name: risingwave-in-memory-azure-blob
 spec:
-  storages:
+  metaStore:
+    memory: true
+  stateStore:
+    azureBlob:
+      credentials:
+        secretName: risingwave-azure-blob-credentials
+      container: your-azure-container-name
+      root: risingwave
+      endpoint: https://your-azure-account-name.blob.core.windows.net
+  image: ghcr.io/risingwavelabs/risingwave:git-5cd14918233990d28b48a153fa8d11115089c148
+  components:
     meta:
-      memory: true
-    object:
-      azureBlob: 
-        secret:  risingwave-azure-blob-credentials
-        container: your-azure-container-name
-        root: risingwave
-        endpoint: https://your-azure-account-name.blob.core.windows.net
-  global:
-    image: ghcr.io/risingwavelabs/risingwave:git-5cd14918233990d28b48a153fa8d11115089c148
-    imagePullPolicy: IfNotPresent
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
-      compactor: 1
+      nodeGroups:
+      - replicas: 1
+        name: ""
+    frontend:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+    compute:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+    compactor:
+      nodeGroups:
+      - replicas: 1
+        name: ""

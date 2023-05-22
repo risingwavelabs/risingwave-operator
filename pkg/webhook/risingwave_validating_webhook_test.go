@@ -62,18 +62,16 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"invalid-image-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global.Image = "1234_"
+				r.Spec.Image = "1234_"
 			},
 			pass: false,
 		},
 		"service-meta-labels-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
-					ServiceMeta: risingwavev1alpha1.PartialObjectMeta{
-						Labels: map[string]string{
-							"key1": "value1",
-							"key2": "value2",
-						},
+				r.Spec.AdditionalFrontendServiceMetadata = risingwavev1alpha1.PartialObjectMeta{
+					Labels: map[string]string{
+						"key1": "value1",
+						"key2": "value2",
 					},
 				}
 			},
@@ -81,12 +79,10 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"service-meta-labels-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
-					ServiceMeta: risingwavev1alpha1.PartialObjectMeta{
-						Labels: map[string]string{
-							"key1":            "value1",
-							"risingwave/key2": "value2",
-						},
+				r.Spec.AdditionalFrontendServiceMetadata = risingwavev1alpha1.PartialObjectMeta{
+					Labels: map[string]string{
+						"key1":            "value1",
+						"risingwave/key2": "value2",
 					},
 				}
 			},
@@ -94,23 +90,23 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"invalid-upgrade-strategy-type-InPlaceIfPossible-openKruise-disabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global.RisingWaveComponentGroupTemplate.UpgradeStrategy.Type = risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible
+				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy.Type = risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible
 			},
 			pass:                false,
 			openKruiseAvailable: true,
 		},
 		"invalid-upgrade-strategy-type-InPlaceOnly-openKruise-disabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global.RisingWaveComponentGroupTemplate.UpgradeStrategy.Type = risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly
+				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy.Type = risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly
 			},
 			pass:                false,
 			openKruiseAvailable: true,
 		},
 		"invalid-partition-str-val": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global.RisingWaveComponentGroupTemplate.UpgradeStrategy = risingwavev1alpha1.RisingWaveUpgradeStrategy{
+				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy = risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
 					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
-					RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
 						Partition: &intstr.IntOrString{
 							Type:   intstr.String,
 							StrVal: "test-string",
@@ -123,13 +119,15 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"invalid-image-in-compute-group-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Components.Compute.Groups = []risingwavev1alpha1.RisingWaveComputeGroup{
+				r.Spec.Components.Compute.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
 					{
 						Name:     "a",
 						Replicas: 1,
-						RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-							RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-								Image: "abc@/def:123",
+						Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+							Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+								RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+									Image: "abc@/def:123",
+								},
 							},
 						},
 					},
@@ -139,12 +137,16 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"invalid-image-in-component-group-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Components.Meta.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
+				r.Spec.Components.Meta.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
 					{
 						Name:     "a",
 						Replicas: 1,
-						RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-							Image: "abc@/def:123",
+						Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+							Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+								RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+									Image: "abc@/def:123",
+								},
+							},
 						},
 					},
 				}
@@ -153,8 +155,8 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"meta-group-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global.Replicas.Meta = 0
-				r.Spec.Components.Meta.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
+				r.Spec.Components.Meta.NodeGroups[0].Replicas = 0
+				r.Spec.Components.Meta.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
 					{
 						Name:     "a",
 						Replicas: 1,
@@ -165,7 +167,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"frontend-group-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Components.Frontend.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
+				r.Spec.Components.Frontend.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
 					{
 						Name:     "a",
 						Replicas: 1,
@@ -176,7 +178,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"compactor-group-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Components.Compactor.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
+				r.Spec.Components.Compactor.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
 					{
 						Name:     "a",
 						Replicas: 1,
@@ -187,7 +189,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"rolling-upgrade-nil-when-create-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global.UpgradeStrategy = risingwavev1alpha1.RisingWaveUpgradeStrategy{
+				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy = risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
 					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
 				}
 			},
@@ -195,16 +197,16 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"rolling-upgrade-not-nil-when-create-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global.UpgradeStrategy = risingwavev1alpha1.RisingWaveUpgradeStrategy{
+				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy = risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
 					Type:          risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
-					RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{},
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{},
 				}
 			},
 			pass: false,
 		},
 		"rolling-upgrade-nil-when-set-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global.UpgradeStrategy = risingwavev1alpha1.RisingWaveUpgradeStrategy{
+				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy = risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
 					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRollingUpdate,
 				}
 			},
@@ -212,9 +214,9 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"rolling-upgrade-not-nil-when-set-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global.UpgradeStrategy = risingwavev1alpha1.RisingWaveUpgradeStrategy{
+				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy = risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
 					Type:          risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRollingUpdate,
-					RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{},
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{},
 				}
 			},
 			pass: true,
@@ -222,9 +224,9 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		"upgrade-strategy-partition-valid-string": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.EnableOpenKruise = pointer.Bool(true)
-				r.Spec.Global.UpgradeStrategy = risingwavev1alpha1.RisingWaveUpgradeStrategy{
+				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy = risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
 					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
-					RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
 						Partition: &intstr.IntOrString{
 							Type:   intstr.String,
 							StrVal: "50%",
@@ -238,7 +240,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		"upgrade-strategy-InPlaceOnly-openKruise-enabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.EnableOpenKruise = pointer.Bool(true)
-				r.Spec.Global.UpgradeStrategy = risingwavev1alpha1.RisingWaveUpgradeStrategy{
+				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy = risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
 					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
 				}
 			},
@@ -248,7 +250,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		"upgrade-strategy-InPlaceIfPossible-openKruise-enabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.EnableOpenKruise = pointer.Bool(true)
-				r.Spec.Global.UpgradeStrategy = risingwavev1alpha1.RisingWaveUpgradeStrategy{
+				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy = risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
 					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
 				}
 			},
@@ -258,7 +260,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		"inPlace-strategy-openKruise-disabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.EnableOpenKruise = pointer.Bool(false)
-				r.Spec.Global.UpgradeStrategy = risingwavev1alpha1.RisingWaveUpgradeStrategy{
+				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy = risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
 					Type:                  risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
 					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{},
 				}
@@ -269,7 +271,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		"inPlace-strategy-Recreate-openKruise-enabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.EnableOpenKruise = pointer.Bool(true)
-				r.Spec.Global.UpgradeStrategy = risingwavev1alpha1.RisingWaveUpgradeStrategy{
+				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy = risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
 					Type:                  risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
 					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{},
 				}
@@ -313,7 +315,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: false,
 		},
-		"minio-object-storage-pass": {
+		"minio-state-store-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					MinIO: &risingwavev1alpha1.RisingWaveStateStoreBackendMinIO{
@@ -327,7 +329,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
-		"s3-object-storage-pass": {
+		"s3-state-store-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
@@ -340,25 +342,77 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
-		"gcs-object-storage-workload-pass": {
+		"s3-state-store-use-service-account-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
-					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
-						UseWorkloadIdentity: true,
-						Bucket:              "gcs-bucket",
-						Root:                "gcs-root",
+					S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
+						Bucket: "hummock",
+						RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+							UseServiceAccount: pointer.Bool(true),
+						},
 					},
 				}
 			},
 			pass: true,
 		},
-		"gcs-object-storage-secret-pass": {
+		"s3-state-store-no-credentials-fail": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
+						Bucket: "hummock",
+					},
+				}
+			},
+			pass: false,
+		},
+		"s3-compatible-state-store-pass": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
+						Bucket:   "hummock",
+						Endpoint: "123",
+						RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+							SecretName: "s3-creds",
+						},
+					},
+				}
+			},
+			pass: true,
+		},
+		"s3-compatible-state-store-use-service-account-fail": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
+						Bucket:   "hummock",
+						Endpoint: "123",
+						RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+							UseServiceAccount: pointer.Bool(true),
+						},
+					},
+				}
+			},
+			pass: false,
+		},
+		"gcs-state-store-workload-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
-						UseWorkloadIdentity: false,
-						Bucket:              "gcs-bucket",
-						Root:                "gcs-root",
+						RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
+							UseWorkloadIdentity: pointer.Bool(true),
+						},
+						Bucket: "gcs-bucket",
+						Root:   "gcs-root",
+					},
+				}
+			},
+			pass: true,
+		},
+		"gcs-state-store-secret-pass": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
+						Bucket: "gcs-bucket",
+						Root:   "gcs-root",
 						RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
 							SecretName: "gcs-creds",
 						},
@@ -367,40 +421,38 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
-		"gcs-object-storage-both-fail": {
+		"gcs-state-store-both-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
-						UseWorkloadIdentity: true,
-						Bucket:              "gcs-bucket",
-						Root:                "gcs-root",
+						Bucket: "gcs-bucket",
+						Root:   "gcs-root",
 						RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
-							SecretName: "gcs-creds",
+							UseWorkloadIdentity: pointer.Bool(true),
+							SecretName:          "gcs-creds",
 						},
 					},
 				}
 			},
 			pass: false,
 		},
-		"gcs-object-storage-none-fail": {
+		"gcs-state-store-none-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
-						UseWorkloadIdentity: false,
-						Bucket:              "gcs-bucket",
-						Root:                "gcs-root",
+						Bucket: "gcs-bucket",
+						Root:   "gcs-root",
 					},
 				}
 			},
 			pass: false,
 		},
-		"gcs-object-storage-edge-fail": {
+		"gcs-state-store-edge-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
-						UseWorkloadIdentity: false,
-						Bucket:              "gcs-bucket",
-						Root:                "gcs-root",
+						Bucket: "gcs-bucket",
+						Root:   "gcs-root",
 						RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
 							SecretName: "",
 						},
@@ -409,7 +461,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: false,
 		},
-		"aliyun-oss-object-storage-pass": {
+		"aliyun-oss-state-store-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
@@ -422,7 +474,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
-		"azure-blob-object-storage-pass": {
+		"azure-blob-state-store-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
@@ -437,7 +489,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
-		"hdfs-object-storage-pass": {
+		"hdfs-state-store-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					HDFS: &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{
@@ -448,7 +500,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
-		"webhdfs-object-storage-pass": {
+		"webhdfs-state-store-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					WebHDFS: &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{
@@ -459,13 +511,13 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
-		"empty-object-storage-fail": {
+		"empty-state-store-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{}
 			},
 			pass: false,
 		},
-		"multiple-object-storages-fail-1": {
+		"multiple-state-stores-fail-1": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					Memory: pointer.Bool(true),
@@ -474,7 +526,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: false,
 		},
-		"multiple-object-storages-fail-2": {
+		"multiple-state-stores-fail-2": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					Memory: pointer.Bool(true),
@@ -483,7 +535,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: false,
 		},
-		"multiple-object-storages-fail-3": {
+		"multiple-state-stores-fail-3": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					MinIO: &risingwavev1alpha1.RisingWaveStateStoreBackendMinIO{},
@@ -492,7 +544,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: false,
 		},
-		"multiple-object-storages-fail-4": {
+		"multiple-state-stores-fail-4": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					MinIO: &risingwavev1alpha1.RisingWaveStateStoreBackendMinIO{},
@@ -501,7 +553,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: false,
 		},
-		"multiple-object-storages-fail-5": {
+		"multiple-state-stores-fail-5": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					MinIO:     &risingwavev1alpha1.RisingWaveStateStoreBackendMinIO{},
@@ -510,7 +562,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: false,
 		},
-		"multiple-object-storages-fail-6": {
+		"multiple-state-stores-fail-6": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					HDFS:    &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{},
@@ -543,86 +595,14 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: false,
 		},
-		"pvc-mounts-match-pass": {
-			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.PVCTemplates = []risingwavev1alpha1.PersistentVolumeClaim{
-					{
-						PersistentVolumeClaimPartialObjectMeta: risingwavev1alpha1.PersistentVolumeClaimPartialObjectMeta{
-							Name: "pvc1",
-						},
-					},
-				}
-				r.Spec.Components.Compute.Groups = []risingwavev1alpha1.RisingWaveComputeGroup{
-					{
-						Name:     "a",
-						Replicas: 1,
-						RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name: "pvc1",
-								},
-							},
-						},
-					},
-				}
-			},
-			pass: true,
-		},
-		"pvc-not-mounted-pass": {
-			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.PVCTemplates = []risingwavev1alpha1.PersistentVolumeClaim{
-					{
-						PersistentVolumeClaimPartialObjectMeta: risingwavev1alpha1.PersistentVolumeClaimPartialObjectMeta{
-							Name: "pvc1",
-						},
-					},
-				}
-				r.Spec.Components.Compute.Groups = []risingwavev1alpha1.RisingWaveComputeGroup{
-					{
-						Name:     "a",
-						Replicas: 1,
-					},
-				}
-			},
-			pass: true,
-		},
-		"pvc-mounts-not-match-fail": {
-			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Storages.PVCTemplates = []risingwavev1alpha1.PersistentVolumeClaim{
-					{
-						PersistentVolumeClaimPartialObjectMeta: risingwavev1alpha1.PersistentVolumeClaimPartialObjectMeta{
-							Name: "pvc1",
-						},
-					},
-				}
-				r.Spec.Components.Compute.Groups = []risingwavev1alpha1.RisingWaveComputeGroup{
-					{
-						Name:     "a",
-						Replicas: 1,
-						RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name: "pvc0",
-								},
-							},
-						},
-					},
-				}
-			},
-			pass: false,
-		},
 		"insufficient-resources-cpu-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Resources: corev1.ResourceRequirements{
-							Limits: corev1.ResourceList{
-								"cpu": resource.MustParse("250m"),
-							},
-							Requests: corev1.ResourceList{
-								"cpu": resource.MustParse("1000m"),
-							},
-						},
+				r.Spec.Components.Meta.NodeGroups[0].Template.Spec.Resources = corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						"cpu": resource.MustParse("250m"),
+					},
+					Requests: corev1.ResourceList{
+						"cpu": resource.MustParse("1000m"),
 					},
 				}
 			},
@@ -630,16 +610,12 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"insufficient-resources-memory-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Resources: corev1.ResourceRequirements{
-							Limits: corev1.ResourceList{
-								"memory": resource.MustParse("100Mi"),
-							},
-							Requests: corev1.ResourceList{
-								"memory": resource.MustParse("1Gi"),
-							},
-						},
+				r.Spec.Components.Meta.NodeGroups[0].Template.Spec.Resources = corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						"memory": resource.MustParse("100Mi"),
+					},
+					Requests: corev1.ResourceList{
+						"memory": resource.MustParse("1Gi"),
 					},
 				}
 			},
@@ -647,14 +623,10 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"pods-meta-labels-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Metadata: risingwavev1alpha1.PartialObjectMeta{
-							Labels: map[string]string{
-								"key1": "value1",
-								"key2": "value2",
-							},
-						},
+				r.Spec.Components.Meta.NodeGroups[0].Template.ObjectMeta = risingwavev1alpha1.PartialObjectMeta{
+					Labels: map[string]string{
+						"key1": "value1",
+						"key2": "value2",
 					},
 				}
 			},
@@ -662,14 +634,10 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"pods-meta-labels-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Metadata: risingwavev1alpha1.PartialObjectMeta{
-							Labels: map[string]string{
-								"key1":            "value1",
-								"risingwave/key2": "value2",
-							},
-						},
+				r.Spec.Components.Meta.NodeGroups[0].Template.ObjectMeta = risingwavev1alpha1.PartialObjectMeta{
+					Labels: map[string]string{
+						"key1":            "value1",
+						"risingwave/key2": "value2",
 					},
 				}
 			},
@@ -677,14 +645,10 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"limit-not-exist-pass-1": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Resources: corev1.ResourceRequirements{
-							Requests: corev1.ResourceList{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("100Mi"),
-							},
-						},
+				r.Spec.Components.Meta.NodeGroups[0].Template.Spec.Resources = corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						"cpu":    resource.MustParse("1"),
+						"memory": resource.MustParse("100Mi"),
 					},
 				}
 			},
@@ -692,16 +656,12 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"limit-not-exist-pass-2": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Resources: corev1.ResourceRequirements{
-							Limits: corev1.ResourceList{
-								"cpu": resource.MustParse("1"),
-							},
-							Requests: corev1.ResourceList{
-								"memory": resource.MustParse("100Mi"),
-							},
-						},
+				r.Spec.Components.Meta.NodeGroups[0].Template.Spec.Resources = corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						"cpu": resource.MustParse("1"),
+					},
+					Requests: corev1.ResourceList{
+						"memory": resource.MustParse("100Mi"),
 					},
 				}
 			},
@@ -709,16 +669,12 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"limit-zero-fail-1": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Resources: corev1.ResourceRequirements{
-							Limits: corev1.ResourceList{
-								"cpu": resource.MustParse("0"),
-							},
-							Requests: corev1.ResourceList{
-								"cpu": resource.MustParse("1"),
-							},
-						},
+				r.Spec.Components.Meta.NodeGroups[0].Template.Spec.Resources = corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						"cpu": resource.MustParse("0"),
+					},
+					Requests: corev1.ResourceList{
+						"cpu": resource.MustParse("1"),
 					},
 				}
 			},
@@ -726,16 +682,12 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"limit-zero-fail-2": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Resources: corev1.ResourceRequirements{
-							Limits: corev1.ResourceList{
-								"memory": resource.MustParse("0"),
-							},
-							Requests: corev1.ResourceList{
-								"memory": resource.MustParse("100Mi"),
-							},
-						},
+				r.Spec.Components.Meta.NodeGroups[0].Template.Spec.Resources = corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						"memory": resource.MustParse("0"),
+					},
+					Requests: corev1.ResourceList{
+						"memory": resource.MustParse("100Mi"),
 					},
 				}
 			},
@@ -743,18 +695,14 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"limit-exist-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global = risingwavev1alpha1.RisingWaveGlobalSpec{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Resources: corev1.ResourceRequirements{
-							Limits: corev1.ResourceList{
-								"cpu":    resource.MustParse("1"),
-								"memory": resource.MustParse("1Gi"),
-							},
-							Requests: corev1.ResourceList{
-								"cpu":    resource.MustParse("100m"),
-								"memory": resource.MustParse("100Mi"),
-							},
-						},
+				r.Spec.Components.Meta.NodeGroups[0].Template.Spec.Resources = corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						"cpu":    resource.MustParse("1"),
+						"memory": resource.MustParse("1Gi"),
+					},
+					Requests: corev1.ResourceList{
+						"cpu":    resource.MustParse("100m"),
+						"memory": resource.MustParse("100Mi"),
 					},
 				}
 			},
@@ -762,13 +710,13 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"multi-memory-meta-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global.Replicas.Meta = 2
+				r.Spec.Components.Meta.NodeGroups[0].Replicas = 2
 			},
 			pass: false,
 		},
 		"multi-etcd-meta-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global.Replicas.Meta = 2
+				r.Spec.Components.Meta.NodeGroups[0].Replicas = 2
 				r.Spec.MetaStore = risingwavev1alpha1.RisingWaveMetaStoreBackend{
 					Etcd: &risingwavev1alpha1.RisingWaveMetaStoreBackendEtcd{
 						Endpoint: "etcd",
@@ -809,7 +757,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 	}{
 		"storages-unchanged-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global.Replicas.Meta = 1
+				r.Spec.Components.Meta.NodeGroups[0].Replicas = 1
 			},
 			pass: true,
 		},
@@ -833,7 +781,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 			pass: true,
 			oldObjMutation: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.EnableOpenKruise = pointer.Bool(true)
-				r.Spec.Global.UpgradeStrategy.Type = risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly
+				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy.Type = risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly
 			},
 		},
 		"illegal-changes-fail": {
@@ -852,7 +800,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 			},
 			pass: false,
 		},
-		"object-storage-changed-fail-1": {
+		"state-store-changed-fail-1": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					MinIO: &risingwavev1alpha1.RisingWaveStateStoreBackendMinIO{},
@@ -860,110 +808,13 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 			},
 			pass: false,
 		},
-		"object-storage-changed-fail-2": {
+		"state-store-changed-fail-2": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{},
 				}
 			},
 			pass: false,
-		},
-		"empty-image-fail": {
-			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Image = ""
-			},
-			pass: false,
-		},
-		"empty-image-and-empty-component-images-fail": {
-			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Image = ""
-				r.Spec.Global.Replicas = risingwavev1alpha1.RisingWaveGlobalReplicas{}
-				r.Spec.Components.Meta.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
-					{
-						Name:     "a",
-						Replicas: 1,
-					},
-				}
-				r.Spec.Components.Frontend.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
-					{
-						Name:     "a",
-						Replicas: 1,
-					},
-				}
-				r.Spec.Components.Compactor.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
-					{
-						Name:     "a",
-						Replicas: 1,
-					},
-				}
-				r.Spec.Components.Compute.Groups = []risingwavev1alpha1.RisingWaveComputeGroup{
-					{
-						Name:     "a",
-						Replicas: 1,
-					},
-				}
-				r.Spec.Components.Connector.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
-					{
-						Name:     "a",
-						Replicas: 1,
-					},
-				}
-			},
-			pass: false,
-		},
-		"empty-global-image-but-component-images-pass": {
-			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Global.Image = ""
-				r.Spec.Global.Replicas = risingwavev1alpha1.RisingWaveGlobalReplicas{}
-				r.Spec.Components.Meta.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
-					{
-						Name:     "a",
-						Replicas: 1,
-						RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-							Image: "ghcr.io/risingwavelabs/risingwave:latest",
-						},
-					},
-				}
-				r.Spec.Components.Frontend.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
-					{
-						Name:     "a",
-						Replicas: 1,
-						RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-							Image: "ghcr.io/risingwavelabs/risingwave:latest",
-						},
-					},
-				}
-				r.Spec.Components.Compactor.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
-					{
-						Name:     "a",
-						Replicas: 1,
-						RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-							Image: "ghcr.io/risingwavelabs/risingwave:latest",
-						},
-					},
-				}
-				r.Spec.Components.Compute.Groups = []risingwavev1alpha1.RisingWaveComputeGroup{
-					{
-						Name:     "a",
-						Replicas: 1,
-						RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-							RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-								Image: "ghcr.io/risingwavelabs/risingwave:latest",
-							},
-						},
-					},
-				}
-				r.Spec.Components.Connector.Groups = []risingwavev1alpha1.RisingWaveComponentGroup{
-					{
-						Name:     "a",
-						Replicas: 1,
-						RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-							Image: "ghcr.io/risingwavelabs/risingwave:latest",
-						},
-					},
-				}
-			},
-			pass: true,
 		},
 	}
 
@@ -983,7 +834,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 
 			// test when operator is disabled and openKruise enabled -> disabled, risingwave should be set to default.
 			if name == "disabled-openKruise-when-not-available" {
-				if risingwave.Spec.Global.UpgradeStrategy.Type == oldObj.Spec.Global.UpgradeStrategy.Type {
+				if risingwave.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy.Type == oldObj.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy.Type {
 					t.Fatal("Risingwave is not default")
 				}
 			}
@@ -1003,14 +854,14 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate_ScaleViews(t *testing.T) {
 		pass        bool
 	}{
 		"empty-scale-views": {
-			mutate: func(wave *risingwavev1alpha1.RisingWave) {
-				wave.Spec.Global.Replicas.Frontend++
+			mutate: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Components.Frontend.NodeGroups[0].Replicas++
 			},
 			pass: true,
 		},
 		"scale-views-on-frontend": {
-			mutate: func(wave *risingwavev1alpha1.RisingWave) {
-				wave.Spec.Global.Replicas.Frontend++
+			mutate: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Components.Frontend.NodeGroups[0].Replicas++
 			},
 			statusPatch: func(status *risingwavev1alpha1.RisingWaveStatus) {
 				status.ScaleViews = append(status.ScaleViews, risingwavev1alpha1.RisingWaveScaleViewLock{
@@ -1029,8 +880,8 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate_ScaleViews(t *testing.T) {
 			pass: false,
 		},
 		"scale-views-on-compactor-but-update-frontend": {
-			mutate: func(wave *risingwavev1alpha1.RisingWave) {
-				wave.Spec.Global.Replicas.Frontend++
+			mutate: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Components.Frontend.NodeGroups[0].Replicas++
 			},
 			statusPatch: func(status *risingwavev1alpha1.RisingWaveStatus) {
 				status.ScaleViews = append(status.ScaleViews, risingwavev1alpha1.RisingWaveScaleViewLock{
@@ -1049,9 +900,9 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate_ScaleViews(t *testing.T) {
 			pass: true,
 		},
 		"delete-locked-group": {
-			origin: testutils.FakeRisingWaveComponentOnly(),
+			origin: testutils.FakeRisingWave(),
 			mutate: func(wave *risingwavev1alpha1.RisingWave) {
-				wave.Spec.Components.Frontend.Groups = nil
+				wave.Spec.Components.Frontend.NodeGroups = nil
 			},
 			statusPatch: func(status *risingwavev1alpha1.RisingWaveStatus) {
 				status.ScaleViews = append(status.ScaleViews, risingwavev1alpha1.RisingWaveScaleViewLock{
@@ -1061,7 +912,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate_ScaleViews(t *testing.T) {
 					Generation: 1,
 					GroupLocks: []risingwavev1alpha1.RisingWaveScaleViewLockGroupLock{
 						{
-							Name:     testutils.GetGroupName(0),
+							Name:     testutils.GetNodeGroupName(0),
 							Replicas: 0,
 						},
 					},
@@ -1070,9 +921,9 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate_ScaleViews(t *testing.T) {
 			pass: false,
 		},
 		"multiple-locked-groups": {
-			origin: testutils.FakeRisingWaveComponentOnly(),
+			origin: testutils.FakeRisingWave(),
 			mutate: func(wave *risingwavev1alpha1.RisingWave) {
-				wave.Spec.Components.Frontend.Groups[0].Replicas = 2
+				wave.Spec.Components.Frontend.NodeGroups[0].Replicas = 2
 			},
 			statusPatch: func(status *risingwavev1alpha1.RisingWaveStatus) {
 				status.ScaleViews = append(status.ScaleViews, risingwavev1alpha1.RisingWaveScaleViewLock{
@@ -1082,7 +933,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate_ScaleViews(t *testing.T) {
 					Generation: 1,
 					GroupLocks: []risingwavev1alpha1.RisingWaveScaleViewLockGroupLock{
 						{
-							Name:     testutils.GetGroupName(0),
+							Name:     testutils.GetNodeGroupName(0),
 							Replicas: 2,
 						},
 					},
@@ -1093,7 +944,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate_ScaleViews(t *testing.T) {
 					Generation: 1,
 					GroupLocks: []risingwavev1alpha1.RisingWaveScaleViewLockGroupLock{
 						{
-							Name:     testutils.GetGroupName(0),
+							Name:     testutils.GetNodeGroupName(0),
 							Replicas: 1,
 						},
 					},

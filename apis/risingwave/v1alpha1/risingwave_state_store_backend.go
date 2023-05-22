@@ -74,8 +74,13 @@ type RisingWaveStateStoreBackendMinIO struct {
 
 // RisingWaveS3Credentials is the reference and keys selector to the AWS access credentials stored in a local secret.
 type RisingWaveS3Credentials struct {
+	// UseServiceAccount indicates whether to use the service account token mounted in the pod. It only works when using
+	// the AWS S3. If this is enabled, secret and keys are ignored. Defaults to false.
+	// +optional
+	UseServiceAccount *bool `json:"useProjectedServiceAccountToken,omitempty"`
+
 	// The name of the secret in the pod's namespace to select from.
-	SecretName string `json:"secretName"`
+	SecretName string `json:"secretName,omitempty"`
 
 	// AccessKeyRef is the key of the secret to be the access key. Must be a valid secret key.
 	// Defaults to "AccessKeyID".
@@ -104,9 +109,10 @@ type RisingWaveStateStoreBackendS3 struct {
 	// +kubebuilder:validation:Required
 	Bucket string `json:"bucket"`
 
-	// Region of AWS S3 service. It is an optional field that overrides the `Region` key from the secret.
-	// Specifying the region here makes a guarantee that it won't be changed anymore.
-	Region string `json:"region,omitempty"`
+	// Region of AWS S3 service. Defaults to "us-east-1".
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=us-east-1
+	Region string `json:"region"`
 
 	// Endpoint of the AWS (or other vendor's S3-compatible) service. Leave it empty when using AWS S3 service.
 	// You can reference the `REGION` and `BUCKET` variables in the endpoint with `${BUCKET}` and `${REGION}`, e.g.,
@@ -119,6 +125,11 @@ type RisingWaveStateStoreBackendS3 struct {
 
 // RisingWaveGCSCredentials is the reference and keys selector to the GCS access credentials stored in a local secret.
 type RisingWaveGCSCredentials struct {
+	// UseWorkloadIdentity indicates to use workload identity to access the GCS service.
+	// If this is enabled, secret is not required, and ADC is used.
+	// +kubebuilder:validation:Required
+	UseWorkloadIdentity *bool `json:"useWorkloadIdentity,omitempty"`
+
 	// The name of the secret in the pod's namespace to select from.
 	// +optional
 	SecretName string `json:"secretName,omitempty"`
@@ -134,10 +145,6 @@ type RisingWaveGCSCredentials struct {
 type RisingWaveStateStoreBackendGCS struct {
 	// RisingWaveGCSCredentials is the credentials provider from a Secret.
 	RisingWaveGCSCredentials `json:"credentials,omitempty"`
-
-	// UseWorkloadIdentity indicates to use workload identity to access the GCS service. If this is enabled, secret is not required, and ADC is used.
-	// +kubebuilder:validation:Required
-	UseWorkloadIdentity bool `json:"useWorkloadIdentity"`
 
 	// Secret contains the credentials to access the GCS service. It must contain the following keys:
 	//   * ServiceAccountCredentials
@@ -252,7 +259,7 @@ type RisingWaveStateStoreBackend struct {
 
 	// GCS storage spec.
 	// +optional
-	GCS *RisingWaveStateStoreBackendGCS `json:"GCS,omitempty"`
+	GCS *RisingWaveStateStoreBackendGCS `json:"gcs,omitempty"`
 
 	// AliyunOSS storage spec.
 	// +optional

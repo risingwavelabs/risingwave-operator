@@ -19,6 +19,7 @@ package envs
 // Environment variables to pass options to the RisingWave process and control the behavior.
 const (
 	RustBacktrace = "RUST_BACKTRACE"
+	RustLog       = "RUST_LOG"
 	JavaOpts      = "JAVA_OPTS"
 
 	RWListenAddr             = "RW_LISTEN_ADDR"

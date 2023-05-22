@@ -1,16 +1,16 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: compute-config
+  name: risingwave-customize-config
 data:
   risingwave.toml: |-
-    [ server ]
+    [server]
     heartbeat_interval = 1000
 
-    [ streaming ]
+    [streaming]
     checkpoint_interval_ms = 100
 
-    [ storage ]
+    [storage]
     sstable_size_mb = 256
     block_size_kb = 16
     bloom_false_positive = 0.1
@@ -30,26 +30,64 @@ metadata:
   name: risingwave-customize-config
 spec:
   configuration:
-    configmap:
-      name: compute-config
+    configMap:
+      name: risingwave-customize-config
       key: risingwave.toml
-  storages:
+  metaStore:
+    memory: true
+  stateStore:
+    memory: true
+  image: ghcr.io/risingwavelabs/risingwave:v0.18.0
+  components:
     meta:
-      memory: true
-    object:
-      memory: true
-  global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.18.0
-    imagePullPolicy: IfNotPresent
-    resources:
-      limits:
-        cpu: 1
-        memory: 1Gi
-      requests:
-        cpu: 100m
-        memory: 100Mi
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
-      compactor: 1
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi
+    frontend:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi
+    compute:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi
+    compactor:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi

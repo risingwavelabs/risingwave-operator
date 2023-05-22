@@ -11,27 +11,66 @@ kind: RisingWave
 metadata:
   name: risingwave-s3-compatible
 spec:
-  storages:
+  metaStore:
+    memory: true
+  stateStore:
+    s3:
+      endpoint: ${BUCKET}.cos.${REGION}.myqcloud.com
+      bucket: cos-credentials
+      region: ap-guangzhou
+      credentials:
+        secretName: cos-credentials
+  image: ghcr.io/risingwavelabs/risingwave:v0.18.0
+  components:
     meta:
-      memory: true
-    object:
-      s3:
-        secret: cos-credentials
-        region: ap-guangzhou
-        bucket: hummock001
-        endpoint: ${BUCKET}.cos.${REGION}.myqcloud.com
-  global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.18.0
-    imagePullPolicy: IfNotPresent
-    resources:
-      limits:
-        cpu: 1
-        memory: 1Gi
-      requests:
-        cpu: 100m
-        memory: 100Mi
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
-      compactor: 1
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi
+    frontend:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi
+    compute:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi
+    compactor:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 100Mi

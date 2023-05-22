@@ -86,14 +86,14 @@ func deploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestCase] 
 		{
 			Name: "image-pull-policy-match",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestCase) bool {
-				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.ImagePullPolicy
+				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.Template.Spec.ImagePullPolicy
 			},
 		},
 		{
 			Name: "image-pull-secrets-match",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestCase) bool {
-				for _, s := range tc.group.ImagePullSecrets {
-					if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, corev1.LocalObjectReference{Name: s}) {
+				for _, s := range tc.group.Template.Spec.ImagePullSecrets {
+					if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, s) {
 						return false
 					}
 				}
@@ -103,44 +103,44 @@ func deploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestCase] 
 		{
 			Name: "resources-match",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Template.Spec.Resources)
 			},
 		},
 		{
 			Name: "node-selector-match",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Template.Spec.Resources)
 			},
 		},
 		{
 			Name: "tolerations-match",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Template.Spec.Tolerations)
 			},
 		},
 		{
 			Name: "priority-class-name-match",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestCase) bool {
-				return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName
+				return obj.Spec.Template.Spec.PriorityClassName == tc.group.Template.Spec.PriorityClassName
 			},
 		},
 		{
 			Name: "security-context-match",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.Template.Spec.SecurityContext)
 			},
 		},
 		{
 			Name: "dns-config-match",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.DNSConfig)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.Template.Spec.DNSConfig)
 			},
 		},
 		{
 			Name: "termination-grace-period-seconds-match",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestCase) bool {
-				if tc.group.TerminationGracePeriodSeconds != nil {
-					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.TerminationGracePeriodSeconds
+				if tc.group.Template.Spec.TerminationGracePeriodSeconds != nil {
+					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.Template.Spec.TerminationGracePeriodSeconds
 				}
 				return true
 			},
@@ -224,14 +224,14 @@ func metaStatefulSetPredicates() []predicate[*appsv1.StatefulSet, metaStatefulSe
 		{
 			Name: "image-pull-policy-match",
 			Fn: func(obj *appsv1.StatefulSet, tc metaStatefulSetTestCase) bool {
-				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.ImagePullPolicy
+				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.Template.Spec.ImagePullPolicy
 			},
 		},
 		{
 			Name: "image-pull-secrets-match",
 			Fn: func(obj *appsv1.StatefulSet, tc metaStatefulSetTestCase) bool {
-				for _, s := range tc.group.ImagePullSecrets {
-					if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, corev1.LocalObjectReference{Name: s}) {
+				for _, s := range tc.group.Template.Spec.ImagePullSecrets {
+					if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, s) {
 						return false
 					}
 				}
@@ -241,44 +241,44 @@ func metaStatefulSetPredicates() []predicate[*appsv1.StatefulSet, metaStatefulSe
 		{
 			Name: "resources-match",
 			Fn: func(obj *appsv1.StatefulSet, tc metaStatefulSetTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Template.Spec.Resources)
 			},
 		},
 		{
 			Name: "node-selector-match",
 			Fn: func(obj *appsv1.StatefulSet, tc metaStatefulSetTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Template.Spec.Resources)
 			},
 		},
 		{
 			Name: "tolerations-match",
 			Fn: func(obj *appsv1.StatefulSet, tc metaStatefulSetTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Template.Spec.Tolerations)
 			},
 		},
 		{
 			Name: "priority-class-name-match",
 			Fn: func(obj *appsv1.StatefulSet, tc metaStatefulSetTestCase) bool {
-				return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName
+				return obj.Spec.Template.Spec.PriorityClassName == tc.group.Template.Spec.PriorityClassName
 			},
 		},
 		{
 			Name: "security-context-match",
 			Fn: func(obj *appsv1.StatefulSet, tc metaStatefulSetTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.Template.Spec.SecurityContext)
 			},
 		},
 		{
 			Name: "dns-config-match",
 			Fn: func(obj *appsv1.StatefulSet, tc metaStatefulSetTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.DNSConfig)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.Template.Spec.DNSConfig)
 			},
 		},
 		{
 			Name: "termination-grace-period-seconds-match",
 			Fn: func(obj *appsv1.StatefulSet, tc metaStatefulSetTestCase) bool {
-				if tc.group.TerminationGracePeriodSeconds != nil {
-					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.TerminationGracePeriodSeconds
+				if tc.group.Template.Spec.TerminationGracePeriodSeconds != nil {
+					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.Template.Spec.TerminationGracePeriodSeconds
 				}
 				return true
 			},
@@ -350,14 +350,14 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 		{
 			Name: "image-pull-policy-match",
 			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
-				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.ImagePullPolicy
+				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.Template.Spec.ImagePullPolicy
 			},
 		},
 		{
 			Name: "image-pull-secrets-match",
 			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
-				for _, s := range tc.group.ImagePullSecrets {
-					if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, corev1.LocalObjectReference{Name: s}) {
+				for _, s := range tc.group.Template.Spec.ImagePullSecrets {
+					if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, s) {
 						return false
 					}
 				}
@@ -367,44 +367,44 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 		{
 			Name: "resources-match",
 			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Template.Spec.Resources)
 			},
 		},
 		{
 			Name: "node-selector-match",
 			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Template.Spec.Resources)
 			},
 		},
 		{
 			Name: "tolerations-match",
 			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Template.Spec.Tolerations)
 			},
 		},
 		{
 			Name: "priority-class-name-match",
 			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
-				return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName
+				return obj.Spec.Template.Spec.PriorityClassName == tc.group.Template.Spec.PriorityClassName
 			},
 		},
 		{
 			Name: "security-context-match",
 			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.Template.Spec.SecurityContext)
 			},
 		},
 		{
 			Name: "dns-config-match",
 			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.DNSConfig)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.Template.Spec.DNSConfig)
 			},
 		},
 		{
 			Name: "termination-grace-period-seconds-match",
 			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
-				if tc.group.TerminationGracePeriodSeconds != nil {
-					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.TerminationGracePeriodSeconds
+				if tc.group.Template.Spec.TerminationGracePeriodSeconds != nil {
+					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.Template.Spec.TerminationGracePeriodSeconds
 				}
 				return true
 			},
@@ -427,7 +427,7 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 		{
 			Name: "check-volume-mounts",
 			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
-				return listContainsByKey(obj.Spec.Template.Spec.Containers[0].VolumeMounts, tc.group.VolumeMounts, func(t *corev1.VolumeMount) string { return t.MountPath }, deepEqual[corev1.VolumeMount])
+				return listContainsByKey(obj.Spec.Template.Spec.Containers[0].VolumeMounts, tc.group.Template.Spec.VolumeMounts, func(t *corev1.VolumeMount) string { return t.MountPath }, deepEqual[corev1.VolumeMount])
 			},
 		},
 		{
@@ -495,14 +495,14 @@ func getCloneSetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, cloneSetT
 		{
 			Name: "image-pull-policy-match",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc cloneSetTestCase) bool {
-				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.ImagePullPolicy
+				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.Template.Spec.ImagePullPolicy
 			},
 		},
 		{
 			Name: "image-pull-secrets-match",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc cloneSetTestCase) bool {
-				for _, s := range tc.group.ImagePullSecrets {
-					if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, corev1.LocalObjectReference{Name: s}) {
+				for _, s := range tc.group.Template.Spec.ImagePullSecrets {
+					if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, s) {
 						return false
 					}
 				}
@@ -512,44 +512,44 @@ func getCloneSetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, cloneSetT
 		{
 			Name: "resources-match",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc cloneSetTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Template.Spec.Resources)
 			},
 		},
 		{
 			Name: "node-selector-match",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc cloneSetTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Template.Spec.Resources)
 			},
 		},
 		{
 			Name: "tolerations-match",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc cloneSetTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Template.Spec.Tolerations)
 			},
 		},
 		{
 			Name: "priority-class-name-match",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc cloneSetTestCase) bool {
-				return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName
+				return obj.Spec.Template.Spec.PriorityClassName == tc.group.Template.Spec.PriorityClassName
 			},
 		},
 		{
 			Name: "security-context-match",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc cloneSetTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.Template.Spec.SecurityContext)
 			},
 		},
 		{
 			Name: "dns-config-match",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc cloneSetTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.DNSConfig)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.Template.Spec.DNSConfig)
 			},
 		},
 		{
 			Name: "termination-grace-period-seconds-match",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc cloneSetTestCase) bool {
-				if tc.group.TerminationGracePeriodSeconds != nil {
-					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.TerminationGracePeriodSeconds
+				if tc.group.Template.Spec.TerminationGracePeriodSeconds != nil {
+					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.Template.Spec.TerminationGracePeriodSeconds
 				}
 				return true
 			},
@@ -633,14 +633,14 @@ func getAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, comp
 		{
 			Name: "image-pull-policy-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
-				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.ImagePullPolicy
+				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.Template.Spec.ImagePullPolicy
 			},
 		},
 		{
 			Name: "image-pull-secrets-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
-				for _, s := range tc.group.ImagePullSecrets {
-					if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, corev1.LocalObjectReference{Name: s}) {
+				for _, s := range tc.group.Template.Spec.ImagePullSecrets {
+					if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, s) {
 						return false
 					}
 				}
@@ -650,44 +650,44 @@ func getAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, comp
 		{
 			Name: "resources-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Template.Spec.Resources)
 			},
 		},
 		{
 			Name: "node-selector-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Template.Spec.Resources)
 			},
 		},
 		{
 			Name: "tolerations-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Template.Spec.Tolerations)
 			},
 		},
 		{
 			Name: "priority-class-name-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
-				return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName
+				return obj.Spec.Template.Spec.PriorityClassName == tc.group.Template.Spec.PriorityClassName
 			},
 		},
 		{
 			Name: "security-context-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.Template.Spec.SecurityContext)
 			},
 		},
 		{
 			Name: "dns-config-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.DNSConfig)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.Template.Spec.DNSConfig)
 			},
 		},
 		{
 			Name: "termination-grace-period-seconds-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
-				if tc.group.TerminationGracePeriodSeconds != nil {
-					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.TerminationGracePeriodSeconds
+				if tc.group.Template.Spec.TerminationGracePeriodSeconds != nil {
+					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.Template.Spec.TerminationGracePeriodSeconds
 				}
 				return true
 			},
@@ -710,7 +710,7 @@ func getAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, comp
 		{
 			Name: "check-volume-mounts",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
-				return listContainsByKey(obj.Spec.Template.Spec.Containers[0].VolumeMounts, tc.group.VolumeMounts, func(t *corev1.VolumeMount) string { return t.MountPath }, deepEqual[corev1.VolumeMount])
+				return listContainsByKey(obj.Spec.Template.Spec.Containers[0].VolumeMounts, tc.group.Template.Spec.VolumeMounts, func(t *corev1.VolumeMount) string { return t.MountPath }, deepEqual[corev1.VolumeMount])
 			},
 		},
 		{
@@ -778,14 +778,14 @@ func metaAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, met
 		{
 			Name: "image-pull-policy-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestCase) bool {
-				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.ImagePullPolicy
+				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.Template.Spec.ImagePullPolicy
 			},
 		},
 		{
 			Name: "image-pull-secrets-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestCase) bool {
-				for _, s := range tc.group.ImagePullSecrets {
-					if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, corev1.LocalObjectReference{Name: s}) {
+				for _, s := range tc.group.Template.Spec.ImagePullSecrets {
+					if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, s) {
 						return false
 					}
 				}
@@ -795,44 +795,44 @@ func metaAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, met
 		{
 			Name: "resources-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Template.Spec.Resources)
 			},
 		},
 		{
 			Name: "node-selector-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Resources)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Template.Spec.Resources)
 			},
 		},
 		{
 			Name: "tolerations-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Tolerations)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Template.Spec.Tolerations)
 			},
 		},
 		{
 			Name: "priority-class-name-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestCase) bool {
-				return obj.Spec.Template.Spec.PriorityClassName == tc.group.PriorityClassName
+				return obj.Spec.Template.Spec.PriorityClassName == tc.group.Template.Spec.PriorityClassName
 			},
 		},
 		{
 			Name: "security-context-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.SecurityContext)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.Template.Spec.SecurityContext)
 			},
 		},
 		{
 			Name: "dns-config-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestCase) bool {
-				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.DNSConfig)
+				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.Template.Spec.DNSConfig)
 			},
 		},
 		{
 			Name: "termination-grace-period-seconds-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestCase) bool {
-				if tc.group.TerminationGracePeriodSeconds != nil {
-					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.TerminationGracePeriodSeconds
+				if tc.group.Template.Spec.TerminationGracePeriodSeconds != nil {
+					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.Template.Spec.TerminationGracePeriodSeconds
 				}
 				return true
 			},

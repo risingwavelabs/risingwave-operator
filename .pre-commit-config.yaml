@@ -29,7 +29,7 @@ repos:
     - id: go-imports
       exclude: ^.*zz_generated.*.go$
     - id: go-cyclo
-      args: [-over=25]
+      args: [-over=27]
     - id: validate-toml
     - id: no-go-testing
     - id: golangci-lint

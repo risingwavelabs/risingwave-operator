@@ -38,8 +38,7 @@ import (
 )
 
 type risingWaveComponentGroup interface {
-	risingwavev1alpha1.RisingWaveComputeGroup |
-		risingwavev1alpha1.RisingWaveComponentGroup
+	risingwavev1alpha1.RisingWaveNodeGroup
 }
 
 type kubeObjectsUpgradeStrategy interface {
@@ -91,83 +90,141 @@ type testCase[T risingWaveComponentGroup, K kubeObjectsUpgradeStrategy] struct {
 	restartAt               *metav1.Time
 }
 
-type deploymentTestCase testCase[risingwavev1alpha1.RisingWaveComponentGroup, *appsv1.DeploymentStrategy]
+type deploymentTestCase testCase[risingwavev1alpha1.RisingWaveNodeGroup, *appsv1.DeploymentStrategy]
 
 func deploymentTestCases() map[string]deploymentTestCase {
 	return map[string]deploymentTestCase{
-		"node-selectors": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+		"pods-meta-labels": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					NodeSelector: map[string]string{
-						"a": "b",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					ObjectMeta: risingwavev1alpha1.PartialObjectMeta{
+						Labels: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"pods-meta-annotations": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					ObjectMeta: risingwavev1alpha1.PartialObjectMeta{
+						Annotations: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"node-selectors": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						NodeSelector: map[string]string{
+							"a": "b",
+						},
 					},
 				},
 			},
 		},
 		"tolerations": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Tolerations: []corev1.Toleration{
-						{
-							Key:               "key1",
-							Operator:          "Equal",
-							Value:             "value1",
-							Effect:            "NoExecute",
-							TolerationSeconds: &[]int64{3600}[0],
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						Tolerations: []corev1.Toleration{
+							{
+								Key:               "key1",
+								Operator:          "Equal",
+								Value:             "value1",
+								Effect:            "NoExecute",
+								TolerationSeconds: &[]int64{3600}[0],
+							},
 						},
 					},
 				},
 			},
 		},
 		"priority-class-name": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:             rand.String(20),
-					PriorityClassName: "high-priority",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						PriorityClassName: "high-priority",
+					},
 				},
 			},
 		},
 		"security-context": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					SecurityContext: &corev1.PodSecurityContext{
-						RunAsUser:           &[]int64{1000}[0],
-						RunAsGroup:          &[]int64{3000}[0],
-						FSGroup:             &[]int64{2000}[0],
-						FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						SecurityContext: &corev1.PodSecurityContext{
+							RunAsUser:           &[]int64{1000}[0],
+							RunAsGroup:          &[]int64{3000}[0],
+							FSGroup:             &[]int64{2000}[0],
+							FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
+						},
 					},
 				},
 			},
 		},
 		"dns-config": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					DNSConfig: &corev1.PodDNSConfig{
-						Nameservers: []string{"1.2.3.4"},
-						Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
-						Options: []corev1.PodDNSConfigOption{
-							{
-								// spellchecker: disable
-								Name:  "ndots",
-								Value: &[]string{"2"}[0],
-							},
-							{
-								// spellchecker: disable
-								Name: "edns0",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						DNSConfig: &corev1.PodDNSConfig{
+							Nameservers: []string{"1.2.3.4"},
+							Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
+							Options: []corev1.PodDNSConfigOption{
+								{
+									// spellchecker: disable
+									Name:  "ndots",
+									Value: &[]string{"2"}[0],
+								},
+								{
+									// spellchecker: disable
+									Name: "edns0",
+								},
 							},
 						},
 					},
@@ -175,73 +232,102 @@ func deploymentTestCases() map[string]deploymentTestCase {
 			},
 		},
 		"termination-grace-period-seconds": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:                         rand.String(20),
-					TerminationGracePeriodSeconds: pointer.Int64(5),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						TerminationGracePeriodSeconds: pointer.Int64(5),
+					},
 				},
 			},
 		},
 		"default-group": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
 				},
 			},
 		},
 		"with-group-name": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "test-group",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
 				},
 			},
 		},
 		"with-restart-at": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
 				},
 			},
 			restartAt: &metav1.Time{Time: time.Now()},
 		},
 		"image-pull-policy-always": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:           rand.String(20),
-					ImagePullPolicy: corev1.PullAlways,
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image:           rand.String(20),
+							ImagePullPolicy: corev1.PullAlways,
+						},
+					},
 				},
 			},
 		},
 		"image-pull-secrets": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					ImagePullSecrets: []string{
-						"a",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						ImagePullSecrets: []corev1.LocalObjectReference{
+							{Name: "a"},
+						},
 					},
 				},
 			},
 		},
 		"upgrade-strategy-recreate": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+				},
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image:           rand.String(20),
+							ImagePullPolicy: corev1.PullAlways,
+						},
 					},
 				},
 			},
@@ -250,18 +336,22 @@ func deploymentTestCases() map[string]deploymentTestCase {
 			},
 		},
 		"upgrade-strategy-rolling-update-max-unavailable-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRollingUpdate,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							MaxUnavailable: &intstr.IntOrString{
-								Type:   intstr.String,
-								StrVal: "50%",
-							},
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRollingUpdate,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						MaxUnavailable: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
 						},
 					},
 				},
@@ -277,15 +367,19 @@ func deploymentTestCases() map[string]deploymentTestCase {
 			},
 		},
 		"resources-1c1g": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Resources: corev1.ResourceRequirements{
-						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("1"),
-							corev1.ResourceMemory: resource.MustParse("1Gi"),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("1"),
+									corev1.ResourceMemory: resource.MustParse("1Gi"),
+								},
+							},
 						},
 					},
 				},
@@ -294,83 +388,141 @@ func deploymentTestCases() map[string]deploymentTestCase {
 	}
 }
 
-type metaStatefulSetTestCase testCase[risingwavev1alpha1.RisingWaveComponentGroup, *appsv1.StatefulSetUpdateStrategy]
+type metaStatefulSetTestCase testCase[risingwavev1alpha1.RisingWaveNodeGroup, *appsv1.StatefulSetUpdateStrategy]
 
 func metaStatefulSetTestCases() map[string]metaStatefulSetTestCase {
 	return map[string]metaStatefulSetTestCase{
-		"node-selectors": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+		"pods-meta-labels": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					NodeSelector: map[string]string{
-						"a": "b",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					ObjectMeta: risingwavev1alpha1.PartialObjectMeta{
+						Labels: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"pods-meta-annotations": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					ObjectMeta: risingwavev1alpha1.PartialObjectMeta{
+						Annotations: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"node-selectors": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						NodeSelector: map[string]string{
+							"a": "b",
+						},
 					},
 				},
 			},
 		},
 		"tolerations": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Tolerations: []corev1.Toleration{
-						{
-							Key:               "key1",
-							Operator:          "Equal",
-							Value:             "value1",
-							Effect:            "NoExecute",
-							TolerationSeconds: &[]int64{3600}[0],
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						Tolerations: []corev1.Toleration{
+							{
+								Key:               "key1",
+								Operator:          "Equal",
+								Value:             "value1",
+								Effect:            "NoExecute",
+								TolerationSeconds: &[]int64{3600}[0],
+							},
 						},
 					},
 				},
 			},
 		},
 		"priority-class-name": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:             rand.String(20),
-					PriorityClassName: "high-priority",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						PriorityClassName: "high-priority",
+					},
 				},
 			},
 		},
 		"security-context": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					SecurityContext: &corev1.PodSecurityContext{
-						RunAsUser:           &[]int64{1000}[0],
-						RunAsGroup:          &[]int64{3000}[0],
-						FSGroup:             &[]int64{2000}[0],
-						FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						SecurityContext: &corev1.PodSecurityContext{
+							RunAsUser:           &[]int64{1000}[0],
+							RunAsGroup:          &[]int64{3000}[0],
+							FSGroup:             &[]int64{2000}[0],
+							FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
+						},
 					},
 				},
 			},
 		},
 		"dns-config": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					DNSConfig: &corev1.PodDNSConfig{
-						Nameservers: []string{"1.2.3.4"},
-						Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
-						Options: []corev1.PodDNSConfigOption{
-							{
-								// spellchecker: disable
-								Name:  "ndots",
-								Value: &[]string{"2"}[0],
-							},
-							{
-								// spellchecker: disable
-								Name: "edns0",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						DNSConfig: &corev1.PodDNSConfig{
+							Nameservers: []string{"1.2.3.4"},
+							Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
+							Options: []corev1.PodDNSConfigOption{
+								{
+									// spellchecker: disable
+									Name:  "ndots",
+									Value: &[]string{"2"}[0],
+								},
+								{
+									// spellchecker: disable
+									Name: "edns0",
+								},
 							},
 						},
 					},
@@ -378,91 +530,124 @@ func metaStatefulSetTestCases() map[string]metaStatefulSetTestCase {
 			},
 		},
 		"termination-grace-period-seconds": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:                         rand.String(20),
-					TerminationGracePeriodSeconds: pointer.Int64(5),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						TerminationGracePeriodSeconds: pointer.Int64(5),
+					},
 				},
 			},
 		},
 		"default-group": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
 				},
 			},
 		},
 		"with-group-name": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "test-group",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
 				},
 			},
 		},
 		"with-restart-at": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
 				},
 			},
 			restartAt: &metav1.Time{Time: time.Now()},
 		},
 		"image-pull-policy-always": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:           rand.String(20),
-					ImagePullPolicy: corev1.PullAlways,
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image:           rand.String(20),
+							ImagePullPolicy: corev1.PullAlways,
+						},
+					},
 				},
 			},
 		},
 		"image-pull-secrets": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					ImagePullSecrets: []string{
-						"a",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						ImagePullSecrets: []corev1.LocalObjectReference{
+							{Name: "a"},
+						},
 					},
 				},
 			},
 		},
 		"upgrade-strategy-recreate": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+				},
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image:           rand.String(20),
+							ImagePullPolicy: corev1.PullAlways,
+						},
 					},
 				},
 			},
-			expectedUpgradeStrategy: nil,
+			expectedUpgradeStrategy: &appsv1.StatefulSetUpdateStrategy{},
 		},
 		"upgrade-strategy-rolling-update-max-unavailable-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRollingUpdate,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							MaxUnavailable: &intstr.IntOrString{
-								Type:   intstr.String,
-								StrVal: "50%",
-							},
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRollingUpdate,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						MaxUnavailable: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
 						},
 					},
 				},
@@ -478,15 +663,19 @@ func metaStatefulSetTestCases() map[string]metaStatefulSetTestCase {
 			},
 		},
 		"resources-1c1g": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Resources: corev1.ResourceRequirements{
-						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("1"),
-							corev1.ResourceMemory: resource.MustParse("1Gi"),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("1"),
+									corev1.ResourceMemory: resource.MustParse("1Gi"),
+								},
+							},
 						},
 					},
 				},
@@ -495,17 +684,57 @@ func metaStatefulSetTestCases() map[string]metaStatefulSetTestCase {
 	}
 }
 
-type computeStatefulSetTestCase testCase[risingwavev1alpha1.RisingWaveComputeGroup, *appsv1.StatefulSetUpdateStrategy]
+type computeStatefulSetTestCase testCase[risingwavev1alpha1.RisingWaveNodeGroup, *appsv1.StatefulSetUpdateStrategy]
 
 func computeStatefulSetTestCases() map[string]computeStatefulSetTestCase {
 	return map[string]computeStatefulSetTestCase{
-		"node-selectors": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+		"pods-meta-labels": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					ObjectMeta: risingwavev1alpha1.PartialObjectMeta{
+						Labels: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"pods-meta-annotations": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					ObjectMeta: risingwavev1alpha1.PartialObjectMeta{
+						Annotations: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"node-selectors": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 						NodeSelector: map[string]string{
 							"a": "b",
 						},
@@ -514,12 +743,14 @@ func computeStatefulSetTestCases() map[string]computeStatefulSetTestCase {
 			},
 		},
 		"tolerations": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 						Tolerations: []corev1.Toleration{
 							{
 								Key:               "key1",
@@ -534,24 +765,28 @@ func computeStatefulSetTestCases() map[string]computeStatefulSetTestCase {
 			},
 		},
 		"priority-class-name": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image:             rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 						PriorityClassName: "high-priority",
 					},
 				},
 			},
 		},
 		"security-context": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 						SecurityContext: &corev1.PodSecurityContext{
 							RunAsUser:           &[]int64{1000}[0],
 							RunAsGroup:          &[]int64{3000}[0],
@@ -563,12 +798,329 @@ func computeStatefulSetTestCases() map[string]computeStatefulSetTestCase {
 			},
 		},
 		"dns-config": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						DNSConfig: &corev1.PodDNSConfig{
+							Nameservers: []string{"1.2.3.4"},
+							Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
+							Options: []corev1.PodDNSConfigOption{
+								{
+									// spellchecker: disable
+									Name:  "ndots",
+									Value: &[]string{"2"}[0],
+								},
+								{
+									// spellchecker: disable
+									Name: "edns0",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"termination-grace-period-seconds": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						TerminationGracePeriodSeconds: pointer.Int64(5),
+					},
+				},
+			},
+		},
+		"default-group": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"with-group-name": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "test-group",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"with-restart-at": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+			restartAt: &metav1.Time{Time: time.Now()},
+		},
+		"image-pull-policy-always": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image:           rand.String(20),
+							ImagePullPolicy: corev1.PullAlways,
+						},
+					},
+				},
+			},
+		},
+		"image-pull-secrets": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						ImagePullSecrets: []corev1.LocalObjectReference{
+							{Name: "a"},
+						},
+					},
+				},
+			},
+		},
+		"upgrade-strategy-recreate": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+				},
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image:           rand.String(20),
+							ImagePullPolicy: corev1.PullAlways,
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &appsv1.StatefulSetUpdateStrategy{},
+		},
+		"upgrade-strategy-rolling-update-max-unavailable-50%": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRollingUpdate,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						MaxUnavailable: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &appsv1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
+					MaxUnavailable: &intstr.IntOrString{
+						Type:   intstr.String,
+						StrVal: "50%",
+					},
+				},
+			},
+		},
+		"resources-1c1g": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("1"),
+									corev1.ResourceMemory: resource.MustParse("1Gi"),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+type cloneSetTestCase testCase[risingwavev1alpha1.RisingWaveNodeGroup, *kruiseappsv1alpha1.CloneSetUpdateStrategy]
+
+func cloneSetTestCases() map[string]cloneSetTestCase {
+	return map[string]cloneSetTestCase{
+		"pods-meta-labels": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					ObjectMeta: risingwavev1alpha1.PartialObjectMeta{
+						Labels: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"pods-meta-annotations": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					ObjectMeta: risingwavev1alpha1.PartialObjectMeta{
+						Annotations: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"default-group": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"node-selectors": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					ObjectMeta: risingwavev1alpha1.PartialObjectMeta{
+						Labels: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						NodeSelector: map[string]string{
+							"a": "b",
+						},
+					},
+				},
+			},
+		},
+		"tolerations": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						Tolerations: []corev1.Toleration{
+							{
+								Key:               "key1",
+								Operator:          "Equal",
+								Value:             "value1",
+								Effect:            "NoExecute",
+								TolerationSeconds: &[]int64{3600}[0],
+							},
+						},
+					},
+				},
+			},
+		},
+		"priority-class-name": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						PriorityClassName: "high-priority",
+					},
+				},
+			},
+		},
+		"security-context": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						SecurityContext: &corev1.PodSecurityContext{
+							RunAsUser:           &[]int64{1000}[0],
+							RunAsGroup:          &[]int64{3000}[0],
+							FSGroup:             &[]int64{2000}[0],
+							FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
+						},
+					},
+				},
+			},
+		},
+		"dns-config": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 						DNSConfig: &corev1.PodDNSConfig{
 							Nameservers: []string{"1.2.3.4"},
 							Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
@@ -587,309 +1139,90 @@ func computeStatefulSetTestCases() map[string]computeStatefulSetTestCase {
 			},
 		},
 		"termination-grace-period-seconds": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image:                         rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 						TerminationGracePeriodSeconds: pointer.Int64(5),
 					},
 				},
 			},
 		},
-		"default-group": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-					},
-				},
-			},
-		},
 		"with-group-name": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "test-group",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-					},
-				},
-			},
-		},
-		"with-restart-at": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-					},
-				},
-			},
-			restartAt: &metav1.Time{Time: time.Now()},
-		},
-		"image-pull-policy-always": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image:           rand.String(20),
-						ImagePullPolicy: corev1.PullAlways,
-					},
-				},
-			},
-		},
-		"image-pull-secrets": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						ImagePullSecrets: []string{
-							"a",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
 						},
 					},
-				},
-			},
-		},
-		"upgrade-strategy-recreate": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-							Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
-						},
-					},
-				},
-			},
-			expectedUpgradeStrategy: nil,
-		},
-		"upgrade-strategy-rolling-update-max-unavailable-50%": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-							Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRollingUpdate,
-							RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-								MaxUnavailable: &intstr.IntOrString{
-									Type:   intstr.String,
-									StrVal: "50%",
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedUpgradeStrategy: &appsv1.StatefulSetUpdateStrategy{
-				Type: appsv1.RollingUpdateStatefulSetStrategyType,
-				RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
-					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.String,
-						StrVal: "50%",
-					},
-				},
-			},
-		},
-		"resources-1c1g": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						Resources: corev1.ResourceRequirements{
-							Limits: corev1.ResourceList{
-								corev1.ResourceCPU:    resource.MustParse("1"),
-								corev1.ResourceMemory: resource.MustParse("1Gi"),
-							},
-						},
-					},
-				},
-			},
-		},
-		"with-pvc-volumes-mounts": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "test",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-					},
-					VolumeMounts: []corev1.VolumeMount{
-						{
-							Name:      "t",
-							MountPath: "/tt",
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-type cloneSetTestCase testCase[risingwavev1alpha1.RisingWaveComponentGroup, *kruiseappsv1alpha1.CloneSetUpdateStrategy]
-
-func cloneSetTestCases() map[string]cloneSetTestCase {
-	return map[string]cloneSetTestCase{
-		"default-group": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-				},
-			},
-		},
-		"node-selectors": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					NodeSelector: map[string]string{
-						"a": "b",
-					},
-				},
-			},
-		},
-		"tolerations": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Tolerations: []corev1.Toleration{
-						{
-							Key:               "key1",
-							Operator:          "Equal",
-							Value:             "value1",
-							Effect:            "NoExecute",
-							TolerationSeconds: &[]int64{3600}[0],
-						},
-					},
-				},
-			},
-		},
-		"priority-class-name": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:             rand.String(20),
-					PriorityClassName: "high-priority",
-				},
-			},
-		},
-		"security-context": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					SecurityContext: &corev1.PodSecurityContext{
-						RunAsUser:           &[]int64{1000}[0],
-						RunAsGroup:          &[]int64{3000}[0],
-						FSGroup:             &[]int64{2000}[0],
-						FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
-					},
-				},
-			},
-		},
-		"dns-config": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					DNSConfig: &corev1.PodDNSConfig{
-						Nameservers: []string{"1.2.3.4"},
-						Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
-						Options: []corev1.PodDNSConfigOption{
-							{
-								Name:  "ndots",
-								Value: &[]string{"2"}[0],
-							},
-							{
-								Name: "edns0",
-							},
-						},
-					},
-				},
-			},
-		},
-		"termination-grace-period-seconds": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:                         rand.String(20),
-					TerminationGracePeriodSeconds: pointer.Int64(5),
-				},
-			},
-		},
-		"with-group-name": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "test-group",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
 				},
 			},
 		},
 		"with-restart": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "test-group",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
 				},
 			},
 			restartAt: &metav1.Time{Time: time.Now()},
 		},
 		"image-pull-policy-always": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "test-group",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:           rand.String(20),
-					ImagePullPolicy: corev1.PullAlways,
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image:           rand.String(20),
+							ImagePullPolicy: corev1.PullAlways,
+						},
+					},
 				},
 			},
 			restartAt: &metav1.Time{Time: time.Now()},
 		},
 		"image-pull-secrets": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "test-group",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					ImagePullSecrets: []string{
-						"a",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						ImagePullSecrets: []corev1.LocalObjectReference{
+							{Name: "a"},
+						},
 					},
 				},
 			},
 		},
 		"upgrade-strategy-Recreate": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
 				},
 			},
 			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
@@ -897,18 +1230,22 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 			},
 		},
 		"upgrade-strategy-Recreate-max-unavailable-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							MaxUnavailable: &intstr.IntOrString{
-								Type:   intstr.String,
-								StrVal: "50%",
-							},
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						MaxUnavailable: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
 						},
 					},
 				},
@@ -922,18 +1259,22 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 			},
 		},
 		"upgrade-strategy-Recreate-max-surge-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							MaxSurge: &intstr.IntOrString{
-								Type:   intstr.String,
-								StrVal: "50%",
-							},
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						MaxSurge: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
 						},
 					},
 				},
@@ -947,18 +1288,22 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 			},
 		},
 		"upgrade-strategy-Recreate-partition-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							Partition: &intstr.IntOrString{
-								Type:   intstr.String,
-								StrVal: "50%",
-							},
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						Partition: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
 						},
 					},
 				},
@@ -972,16 +1317,20 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 			},
 		},
 		"upgrade-strategy-Recreate-Grace-Period-20seconds": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
-						InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
-							GracePeriodSeconds: 20,
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
 						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+						GracePeriodSeconds: 20,
 					},
 				},
 			},
@@ -993,14 +1342,18 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 			},
 		},
 		"upgrade-strategy-InPlaceOnly": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
 				},
 			},
 			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
@@ -1008,18 +1361,22 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 			},
 		},
 		"upgrade-strategy-InPlaceOnly-max-unavailable-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							MaxUnavailable: &intstr.IntOrString{
-								Type:   intstr.String,
-								StrVal: "50%",
-							},
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						MaxUnavailable: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
 						},
 					},
 				},
@@ -1033,18 +1390,22 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 			},
 		},
 		"upgrade-strategy-InPlaceOnly-max-surge-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							MaxSurge: &intstr.IntOrString{
-								Type:   intstr.String,
-								StrVal: "50%",
-							},
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						MaxSurge: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
 						},
 					},
 				},
@@ -1058,18 +1419,22 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 			},
 		},
 		"upgrade-strategy-InPlaceOnly-partition-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							Partition: &intstr.IntOrString{
-								Type:   intstr.String,
-								StrVal: "50%",
-							},
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						Partition: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
 						},
 					},
 				},
@@ -1084,16 +1449,20 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 		},
 		// HERE
 		"upgrade-strategy-InPlaceOnly-Grace-Period-20seconds": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
-						InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
-							GracePeriodSeconds: 20,
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
 						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+						GracePeriodSeconds: 20,
 					},
 				},
 			},
@@ -1105,14 +1474,18 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 			},
 		},
 		"upgrade-strategy-InPlaceIfPossible": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
 				},
 			},
 			expectedUpgradeStrategy: &kruiseappsv1alpha1.CloneSetUpdateStrategy{
@@ -1120,18 +1493,22 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 			},
 		},
 		"upgrade-strategy-InPlaceIfPossible-max-unavailable-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							MaxUnavailable: &intstr.IntOrString{
-								Type:   intstr.String,
-								StrVal: "50%",
-							},
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						MaxUnavailable: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
 						},
 					},
 				},
@@ -1145,18 +1522,22 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 			},
 		},
 		"upgrade-strategy-InPlaceIfPossible-max-surge-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							MaxSurge: &intstr.IntOrString{
-								Type:   intstr.String,
-								StrVal: "50%",
-							},
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						MaxSurge: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
 						},
 					},
 				},
@@ -1170,18 +1551,22 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 			},
 		},
 		"upgrade-strategy-InPlaceIfPossible-partition-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							Partition: &intstr.IntOrString{
-								Type:   intstr.String,
-								StrVal: "50%",
-							},
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						Partition: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
 						},
 					},
 				},
@@ -1195,16 +1580,20 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 			},
 		},
 		"upgrade-strategy-InPlaceIfPossible-Grace-Period-20seconds": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
-						InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
-							GracePeriodSeconds: 20,
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
 						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+						GracePeriodSeconds: 20,
 					},
 				},
 			},
@@ -1216,15 +1605,19 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 			},
 		},
 		"resources-1c1g": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Resources: corev1.ResourceRequirements{
-						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("1"),
-							corev1.ResourceMemory: resource.MustParse("1Gi"),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("1"),
+									corev1.ResourceMemory: resource.MustParse("1Gi"),
+								},
+							},
 						},
 					},
 				},
@@ -1233,413 +1626,76 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 	}
 }
 
-type metaAdvancedSTSTestCase testCase[risingwavev1alpha1.RisingWaveComponentGroup, *kruiseappsv1beta1.StatefulSetUpdateStrategy]
+type metaAdvancedSTSTestCase testCase[risingwavev1alpha1.RisingWaveNodeGroup, *kruiseappsv1beta1.StatefulSetUpdateStrategy]
 
 func metaAdvancedSTSTestCases() map[string]metaAdvancedSTSTestCase {
 	return map[string]metaAdvancedSTSTestCase{
+		"pods-meta-labels": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					ObjectMeta: risingwavev1alpha1.PartialObjectMeta{
+						Labels: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"pods-meta-annotations": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					ObjectMeta: risingwavev1alpha1.PartialObjectMeta{
+						Annotations: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
 		"default-group": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
 				},
 			},
 		},
 		"node-selectors": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					NodeSelector: map[string]string{
-						"a": "b",
-					},
-				},
-			},
-		},
-		"tolerations": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Tolerations: []corev1.Toleration{
-						{
-							Key:               "key1",
-							Operator:          "Equal",
-							Value:             "value1",
-							Effect:            "NoExecute",
-							TolerationSeconds: &[]int64{3600}[0],
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					ObjectMeta: risingwavev1alpha1.PartialObjectMeta{
+						Labels: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
 						},
 					},
-				},
-			},
-		},
-		"priority-class-name": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:             rand.String(20),
-					PriorityClassName: "high-priority",
-				},
-			},
-		},
-		"security-context": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					SecurityContext: &corev1.PodSecurityContext{
-						RunAsUser:           &[]int64{1000}[0],
-						RunAsGroup:          &[]int64{3000}[0],
-						FSGroup:             &[]int64{2000}[0],
-						FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
-					},
-				},
-			},
-		},
-		"dns-config": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					DNSConfig: &corev1.PodDNSConfig{
-						Nameservers: []string{"1.2.3.4"},
-						Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
-						Options: []corev1.PodDNSConfigOption{
-							{
-								Name:  "ndots",
-								Value: &[]string{"2"}[0],
-							},
-							{
-								Name: "edns0",
-							},
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
 						},
-					},
-				},
-			},
-		},
-		"termination-grace-period-seconds": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:                         rand.String(20),
-					TerminationGracePeriodSeconds: pointer.Int64(5),
-				},
-			},
-		},
-		"with-group-name": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "test-group",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-				},
-			},
-		},
-		"with-restart": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "test-group",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-				},
-			},
-			restartAt: &metav1.Time{Time: time.Now()},
-		},
-		"image-pull-policy-always": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "test-group",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image:           rand.String(20),
-					ImagePullPolicy: corev1.PullAlways,
-				},
-			},
-			restartAt: &metav1.Time{Time: time.Now()},
-		},
-		"image-pull-secrets": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "test-group",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					ImagePullSecrets: []string{
-						"a",
-					},
-				},
-			},
-		},
-		"upgrade-strategy-Recreate": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
-					},
-				},
-			},
-			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
-				Type: appsv1.RollingUpdateStatefulSetStrategyType,
-				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
-					PodUpdatePolicy: kruiseappsv1beta1.RecreatePodUpdateStrategyType,
-				},
-			},
-		},
-		"upgrade-strategy-Recreate-max-unavailable-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							MaxUnavailable: &intstr.IntOrString{
-								Type:   intstr.String,
-								StrVal: "50%",
-							},
-						},
-					},
-				},
-			},
-			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
-				Type: appsv1.RollingUpdateStatefulSetStrategyType,
-				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
-					PodUpdatePolicy: kruiseappsv1beta1.RecreatePodUpdateStrategyType,
-					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.String,
-						StrVal: "50%",
-					},
-				},
-			},
-		},
-		"upgrade-strategy-InPlaceOnly": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
-					},
-				},
-			},
-			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
-				Type: appsv1.RollingUpdateStatefulSetStrategyType,
-				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
-					PodUpdatePolicy: kruiseappsv1beta1.InPlaceOnlyPodUpdateStrategyType,
-				},
-			},
-		},
-		"upgrade-strategy-InPlaceOnly-max-unavailable-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							MaxUnavailable: &intstr.IntOrString{
-								Type:   intstr.String,
-								StrVal: "50%",
-							},
-						},
-					},
-				},
-			},
-			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
-				Type: appsv1.RollingUpdateStatefulSetStrategyType,
-				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
-					PodUpdatePolicy: kruiseappsv1beta1.InPlaceOnlyPodUpdateStrategyType,
-					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.String,
-						StrVal: "50%",
-					},
-				},
-			},
-		},
-		"upgrade-strategy-InPlaceOnly-partition-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							Partition: &intstr.IntOrString{
-								Type:   intstr.Int,
-								IntVal: 50,
-							},
-						},
-					},
-				},
-			},
-			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
-				Type: appsv1.RollingUpdateStatefulSetStrategyType,
-				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
-					PodUpdatePolicy: kruiseappsv1beta1.InPlaceOnlyPodUpdateStrategyType,
-					Partition:       pointer.Int32(50),
-				},
-			},
-		},
-		"upgrade-strategy-InPlaceOnly-Grace-Period-20seconds": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
-						InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
-							GracePeriodSeconds: 20,
-						},
-					},
-				},
-			},
-			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
-				Type: appsv1.RollingUpdateStatefulSetStrategyType,
-				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
-					PodUpdatePolicy: kruiseappsv1beta1.InPlaceOnlyPodUpdateStrategyType,
-					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
-						GracePeriodSeconds: 20,
-					},
-				},
-			},
-		},
-		"upgrade-strategy-InPlaceIfPossible": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
-					},
-				},
-			},
-			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
-				Type: appsv1.RollingUpdateStatefulSetStrategyType,
-				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
-					PodUpdatePolicy: kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType,
-				},
-			},
-		},
-		"upgrade-strategy-InPlaceIfPossible-max-unavailable-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							MaxUnavailable: &intstr.IntOrString{
-								Type:   intstr.String,
-								StrVal: "50%",
-							},
-						},
-					},
-				},
-			},
-			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
-				Type: appsv1.RollingUpdateStatefulSetStrategyType,
-				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
-					PodUpdatePolicy: kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType,
-					MaxUnavailable: &intstr.IntOrString{
-						Type:   intstr.String,
-						StrVal: "50%",
-					},
-				},
-			},
-		},
-		"upgrade-strategy-InPlaceIfPossible-partition-50%": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
-						RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-							Partition: &intstr.IntOrString{
-								Type:   intstr.String,
-								StrVal: "50%",
-							},
-						},
-					},
-				},
-			},
-			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
-				Type: appsv1.RollingUpdateStatefulSetStrategyType,
-				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
-					PodUpdatePolicy: kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType,
-					Partition:       pointer.Int32(50),
-				},
-			},
-		},
-		"upgrade-strategy-InPlaceIfPossible-Grace-Period-20seconds": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-						Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
-						InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
-							GracePeriodSeconds: 20,
-						},
-					},
-				},
-			},
-			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
-				Type: appsv1.RollingUpdateStatefulSetStrategyType,
-				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
-					PodUpdatePolicy: kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType,
-					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
-						GracePeriodSeconds: 20,
-					},
-				},
-			},
-		},
-		"resources-1c1g": {
-			group: risingwavev1alpha1.RisingWaveComponentGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComponentGroupTemplate: &risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-					Image: rand.String(20),
-					Resources: corev1.ResourceRequirements{
-						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("1"),
-							corev1.ResourceMemory: resource.MustParse("1Gi"),
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-type computeAdvancedSTSTestCase testCase[risingwavev1alpha1.RisingWaveComputeGroup, *kruiseappsv1beta1.StatefulSetUpdateStrategy]
-
-func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
-	return map[string]computeAdvancedSTSTestCase{
-		"node-selectors": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
 						NodeSelector: map[string]string{
 							"a": "b",
 						},
@@ -1648,12 +1704,14 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 			},
 		},
 		"tolerations": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 						Tolerations: []corev1.Toleration{
 							{
 								Key:               "key1",
@@ -1668,24 +1726,28 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 			},
 		},
 		"priority-class-name": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image:             rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 						PriorityClassName: "high-priority",
 					},
 				},
 			},
 		},
 		"security-context": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 						SecurityContext: &corev1.PodSecurityContext{
 							RunAsUser:           &[]int64{1000}[0],
 							RunAsGroup:          &[]int64{3000}[0],
@@ -1697,12 +1759,14 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 			},
 		},
 		"dns-config": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 						DNSConfig: &corev1.PodDNSConfig{
 							Nameservers: []string{"1.2.3.4"},
 							Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
@@ -1721,91 +1785,90 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 			},
 		},
 		"termination-grace-period-seconds": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image:                         rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 						TerminationGracePeriodSeconds: pointer.Int64(5),
 					},
 				},
 			},
 		},
-		"default-group": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
-				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-					},
-				},
-			},
-		},
 		"with-group-name": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "test-group",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 					},
 				},
 			},
 		},
-		"with-restart-at": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
+		"with-restart": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "test-group",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
 					},
 				},
 			},
 			restartAt: &metav1.Time{Time: time.Now()},
 		},
 		"image-pull-policy-always": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "test-group",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image:           rand.String(20),
-						ImagePullPolicy: corev1.PullAlways,
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image:           rand.String(20),
+							ImagePullPolicy: corev1.PullAlways,
+						},
 					},
 				},
 			},
+			restartAt: &metav1.Time{Time: time.Now()},
 		},
 		"image-pull-secrets": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
-				Name:     "",
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "test-group",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						ImagePullSecrets: []string{
-							"a",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						ImagePullSecrets: []corev1.LocalObjectReference{
+							{Name: "a"},
 						},
 					},
 				},
 			},
 		},
 		"upgrade-strategy-Recreate": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						ImagePullSecrets: []string{
-							"a",
-						},
-						UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-							Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
 						},
 					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
 				},
 			},
 			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
@@ -1815,18 +1878,23 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 				},
 			},
 		},
-		"upgrade-strategy-InPlaceIfPossible": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+		"upgrade-strategy-Recreate-max-unavailable-50%": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						ImagePullSecrets: []string{
-							"a",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
 						},
-						UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-							Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						MaxUnavailable: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
 						},
 					},
 				},
@@ -1834,24 +1902,27 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
-					PodUpdatePolicy: kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType,
+					PodUpdatePolicy: kruiseappsv1beta1.RecreatePodUpdateStrategyType,
+					MaxUnavailable: &intstr.IntOrString{
+						Type:   intstr.String,
+						StrVal: "50%",
+					},
 				},
 			},
 		},
 		"upgrade-strategy-InPlaceOnly": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						ImagePullSecrets: []string{
-							"a",
-						},
-						UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-							Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
 						},
 					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
 				},
 			},
 			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
@@ -1861,24 +1932,134 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 				},
 			},
 		},
-		"upgrade-strategy-InPlaceIfPossible-max-unavailable-50%": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+		"upgrade-strategy-InPlaceOnly-max-unavailable-50%": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						ImagePullSecrets: []string{
-							"a",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
 						},
-						UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-							Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
-							RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-								MaxUnavailable: &intstr.IntOrString{
-									Type:   intstr.String,
-									StrVal: "50%",
-								},
-							},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						MaxUnavailable: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
+					PodUpdatePolicy: kruiseappsv1beta1.InPlaceOnlyPodUpdateStrategyType,
+					MaxUnavailable: &intstr.IntOrString{
+						Type:   intstr.String,
+						StrVal: "50%",
+					},
+				},
+			},
+		},
+		"upgrade-strategy-InPlaceOnly-partition-50%": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						Partition: &intstr.IntOrString{
+							Type:   intstr.Int,
+							IntVal: 50,
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
+					PodUpdatePolicy: kruiseappsv1beta1.InPlaceOnlyPodUpdateStrategyType,
+					Partition:       pointer.Int32(50),
+				},
+			},
+		},
+		"upgrade-strategy-InPlaceOnly-Grace-Period-20seconds": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+						GracePeriodSeconds: 20,
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
+					PodUpdatePolicy: kruiseappsv1beta1.InPlaceOnlyPodUpdateStrategyType,
+					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+						GracePeriodSeconds: 20,
+					},
+				},
+			},
+		},
+		"upgrade-strategy-InPlaceIfPossible": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
+					PodUpdatePolicy: kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType,
+				},
+			},
+		},
+		"upgrade-strategy-InPlaceIfPossible-max-unavailable-50%": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						MaxUnavailable: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
 						},
 					},
 				},
@@ -1895,23 +2076,22 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 			},
 		},
 		"upgrade-strategy-InPlaceIfPossible-partition-50%": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						ImagePullSecrets: []string{
-							"a",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
 						},
-						UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-							Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
-							RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-								Partition: &intstr.IntOrString{
-									Type:   intstr.Int,
-									IntVal: 50,
-								},
-							},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						Partition: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
 						},
 					},
 				},
@@ -1925,21 +2105,20 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 			},
 		},
 		"upgrade-strategy-InPlaceIfPossible-Grace-Period-20seconds": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						ImagePullSecrets: []string{
-							"a",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
 						},
-						UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-							Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
-							InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
-								GracePeriodSeconds: 20,
-							},
-						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+						GracePeriodSeconds: 20,
 					},
 				},
 			},
@@ -1953,24 +2132,494 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 				},
 			},
 		},
-		"upgrade-strategy-InPlaceIfPossible-partition-50-string": {
-			group: risingwavev1alpha1.RisingWaveComputeGroup{
+		"resources-1c1g": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",
 				Replicas: int32(rand.Intn(math.MaxInt32)),
-				RisingWaveComputeGroupTemplate: &risingwavev1alpha1.RisingWaveComputeGroupTemplate{
-					RisingWaveComponentGroupTemplate: risingwavev1alpha1.RisingWaveComponentGroupTemplate{
-						Image: rand.String(20),
-						ImagePullSecrets: []string{
-							"a",
-						},
-						UpgradeStrategy: risingwavev1alpha1.RisingWaveUpgradeStrategy{
-							Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
-							RollingUpdate: &risingwavev1alpha1.RisingWaveRollingUpdate{
-								Partition: &intstr.IntOrString{
-									Type:   intstr.String,
-									StrVal: "50%",
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("1"),
+									corev1.ResourceMemory: resource.MustParse("1Gi"),
 								},
 							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+type computeAdvancedSTSTestCase testCase[risingwavev1alpha1.RisingWaveNodeGroup, *kruiseappsv1beta1.StatefulSetUpdateStrategy]
+
+func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
+	return map[string]computeAdvancedSTSTestCase{
+		"pods-meta-labels": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					ObjectMeta: risingwavev1alpha1.PartialObjectMeta{
+						Labels: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"pods-meta-annotations": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					ObjectMeta: risingwavev1alpha1.PartialObjectMeta{
+						Annotations: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"default-group": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"node-selectors": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					ObjectMeta: risingwavev1alpha1.PartialObjectMeta{
+						Labels: map[string]string{
+							"key1": "value1",
+							"key2": "value2",
+						},
+					},
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						NodeSelector: map[string]string{
+							"a": "b",
+						},
+					},
+				},
+			},
+		},
+		"tolerations": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						Tolerations: []corev1.Toleration{
+							{
+								Key:               "key1",
+								Operator:          "Equal",
+								Value:             "value1",
+								Effect:            "NoExecute",
+								TolerationSeconds: &[]int64{3600}[0],
+							},
+						},
+					},
+				},
+			},
+		},
+		"priority-class-name": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						PriorityClassName: "high-priority",
+					},
+				},
+			},
+		},
+		"security-context": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						SecurityContext: &corev1.PodSecurityContext{
+							RunAsUser:           &[]int64{1000}[0],
+							RunAsGroup:          &[]int64{3000}[0],
+							FSGroup:             &[]int64{2000}[0],
+							FSGroupChangePolicy: &[]corev1.PodFSGroupChangePolicy{"OnRootMismatch"}[0],
+						},
+					},
+				},
+			},
+		},
+		"dns-config": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						DNSConfig: &corev1.PodDNSConfig{
+							Nameservers: []string{"1.2.3.4"},
+							Searches:    []string{"ns1.svc.cluster-domain.example", "my.dns.search.suffix"},
+							Options: []corev1.PodDNSConfigOption{
+								{
+									Name:  "ndots",
+									Value: &[]string{"2"}[0],
+								},
+								{
+									Name: "edns0",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"termination-grace-period-seconds": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						TerminationGracePeriodSeconds: pointer.Int64(5),
+					},
+				},
+			},
+		},
+		"with-group-name": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "test-group",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+		},
+		"with-restart": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "test-group",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+			},
+			restartAt: &metav1.Time{Time: time.Now()},
+		},
+		"image-pull-policy-always": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "test-group",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image:           rand.String(20),
+							ImagePullPolicy: corev1.PullAlways,
+						},
+					},
+				},
+			},
+			restartAt: &metav1.Time{Time: time.Now()},
+		},
+		"image-pull-secrets": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "test-group",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+						ImagePullSecrets: []corev1.LocalObjectReference{
+							{Name: "a"},
+						},
+					},
+				},
+			},
+		},
+		"upgrade-strategy-Recreate": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
+					PodUpdatePolicy: kruiseappsv1beta1.RecreatePodUpdateStrategyType,
+				},
+			},
+		},
+		"upgrade-strategy-Recreate-max-unavailable-50%": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						MaxUnavailable: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
+					PodUpdatePolicy: kruiseappsv1beta1.RecreatePodUpdateStrategyType,
+					MaxUnavailable: &intstr.IntOrString{
+						Type:   intstr.String,
+						StrVal: "50%",
+					},
+				},
+			},
+		},
+		"upgrade-strategy-InPlaceOnly": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
+					PodUpdatePolicy: kruiseappsv1beta1.InPlaceOnlyPodUpdateStrategyType,
+				},
+			},
+		},
+		"upgrade-strategy-InPlaceOnly-max-unavailable-50%": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						MaxUnavailable: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
+					PodUpdatePolicy: kruiseappsv1beta1.InPlaceOnlyPodUpdateStrategyType,
+					MaxUnavailable: &intstr.IntOrString{
+						Type:   intstr.String,
+						StrVal: "50%",
+					},
+				},
+			},
+		},
+		"upgrade-strategy-InPlaceOnly-partition-50%": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						Partition: &intstr.IntOrString{
+							Type:   intstr.Int,
+							IntVal: 50,
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
+					PodUpdatePolicy: kruiseappsv1beta1.InPlaceOnlyPodUpdateStrategyType,
+					Partition:       pointer.Int32(50),
+				},
+			},
+		},
+		"upgrade-strategy-InPlaceOnly-Grace-Period-20seconds": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
+					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+						GracePeriodSeconds: 20,
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
+					PodUpdatePolicy: kruiseappsv1beta1.InPlaceOnlyPodUpdateStrategyType,
+					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+						GracePeriodSeconds: 20,
+					},
+				},
+			},
+		},
+		"upgrade-strategy-InPlaceIfPossible": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
+					PodUpdatePolicy: kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType,
+				},
+			},
+		},
+		"upgrade-strategy-InPlaceIfPossible-max-unavailable-50%": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						MaxUnavailable: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
+						},
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
+					PodUpdatePolicy: kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType,
+					MaxUnavailable: &intstr.IntOrString{
+						Type:   intstr.String,
+						StrVal: "50%",
+					},
+				},
+			},
+		},
+		"upgrade-strategy-InPlaceIfPossible-partition-50%": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
+						Partition: &intstr.IntOrString{
+							Type:   intstr.String,
+							StrVal: "50%",
 						},
 					},
 				},
@@ -1980,6 +2629,53 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
 					PodUpdatePolicy: kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType,
 					Partition:       pointer.Int32(50),
+				},
+			},
+		},
+		"upgrade-strategy-InPlaceIfPossible-Grace-Period-20seconds": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+						},
+					},
+				},
+				UpgradeStrategy: risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
+					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
+					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+						GracePeriodSeconds: 20,
+					},
+				},
+			},
+			expectedUpgradeStrategy: &kruiseappsv1beta1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
+					PodUpdatePolicy: kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType,
+					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{
+						GracePeriodSeconds: 20,
+					},
+				},
+			},
+		},
+		"resources-1c1g": {
+			group: risingwavev1alpha1.RisingWaveNodeGroup{
+				Name:     "",
+				Replicas: int32(rand.Intn(math.MaxInt32)),
+				Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+					Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
+							Image: rand.String(20),
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("1"),
+									corev1.ResourceMemory: resource.MustParse("1Gi"),
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -2260,6 +2956,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 					Bucket: "s3-hummock01",
+					Region: "ap-southeast-1",
 					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
 						SecretName:         "s3-creds",
 						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,
@@ -2299,24 +2996,19 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					},
 				},
 				{
-					Name: "AWS_REGION",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "s3-creds",
-							},
-							Key: consts.SecretKeyAWSS3Region,
-						},
-					},
+					Name:  "AWS_REGION",
+					Value: "ap-southeast-1",
 				},
 			},
 		},
 		"gcs-workload": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
-					UseWorkloadIdentity: true,
-					Bucket:              "gcs-bucket",
-					Root:                "gcs-root",
+					RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
+						UseWorkloadIdentity: pointer.Bool(true),
+					},
+					Bucket: "gcs-bucket",
+					Root:   "gcs-root",
 				},
 			},
 			envs: []corev1.EnvVar{{
@@ -2327,9 +3019,8 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 		"gcs-secret": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
-					UseWorkloadIdentity: false,
-					Bucket:              "gcs-bucket",
-					Root:                "gcs-root",
+					Bucket: "gcs-bucket",
+					Root:   "gcs-root",
 					RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
 						SecretName:                      "gcs-creds",
 						ServiceAccountCredentialsKeyRef: consts.SecretKeyGCSServiceAccountCredentials,

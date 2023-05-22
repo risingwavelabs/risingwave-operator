@@ -137,7 +137,7 @@ int32
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">PartialObjectMeta
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodePodTemplate">RisingWaveNodePodTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
 </p>
 <div>
 <p>PartialObjectMeta contains partial metadata of an object, including labels and annotations.</p>
@@ -178,7 +178,7 @@ map[string]string
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.PersistentVolumeClaim">PersistentVolumeClaim
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec</a>)
 </p>
 <div>
 <p>PersistentVolumeClaim used by RisingWave.</p>
@@ -507,7 +507,8 @@ RisingWaveGlobalSpec
 </em>
 </td>
 <td>
-<p>The spec of a shared template for components and a global scope of replicas.</p>
+<p>Deprecated
+The spec of a shared template for components and a global scope of replicas.</p>
 </td>
 </tr>
 <tr>
@@ -587,7 +588,6 @@ string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Image for RisingWave component.</p>
 </td>
 </tr>
@@ -717,6 +717,60 @@ Defaults to &ldquo;AccountKey&rdquo;.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponent">RisingWaveComponent
+</h3>
+<div>
+<p>RisingWaveComponent determines how a RisingWave component is deployed.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>logLevel</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>LogLevel controls the log level of the running nodes. Available values are info, error, warn, and debug.
+Defaults to INFO.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>disallowPrintStackTraces</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>DisallowPrintStackTraces determines if the stack traces are allowed to print when panic happens. This options applies
+to both Rust and Java programs. Defaults to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeGroups</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">
+[]RisingWaveNodeGroup
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NodeGroups of the component deployment.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor
 </h3>
 <p>
@@ -744,7 +798,8 @@ Kubernetes meta/v1.Time
 </td>
 <td>
 <em>(Optional)</em>
-<p>The time that the Pods of compactor that should be restarted. Setting a value on this
+<p>Deprecated
+The time that the Pods of compactor that should be restarted. Setting a value on this
 field will trigger a recreation of all Pods of this component.</p>
 </td>
 </tr>
@@ -759,7 +814,22 @@ field will trigger a recreation of all Pods of this component.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Groups of Pods of compactor component.</p>
+<p>Deprecated: Use NodeGroups instead.
+Groups of Pods of compactor component.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeGroups</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">
+[]RisingWaveNodeGroup
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NodeGroups of the component deployment.</p>
 </td>
 </tr>
 </tbody>
@@ -791,7 +861,8 @@ Kubernetes meta/v1.Time
 </td>
 <td>
 <em>(Optional)</em>
-<p>The time that the Pods of compute that should be restarted. Setting a value on this
+<p>Deprecated
+The time that the Pods of compute that should be restarted. Setting a value on this
 field will trigger a recreation of all Pods of this component.</p>
 </td>
 </tr>
@@ -806,7 +877,22 @@ field will trigger a recreation of all Pods of this component.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Groups of Pods of compute component.</p>
+<p>Deprecated: Use NodeGroups instead.
+Groups of Pods of compute component.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeGroups</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">
+[]RisingWaveNodeGroup
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NodeGroups of the component deployment.</p>
 </td>
 </tr>
 </tbody>
@@ -838,7 +924,8 @@ Kubernetes meta/v1.Time
 </td>
 <td>
 <em>(Optional)</em>
-<p>The time that the Pods of connector that should be restarted. Setting a value on this
+<p>Deprecated
+The time that the Pods of connector that should be restarted. Setting a value on this
 field will trigger a recreation of all Pods of this component.</p>
 </td>
 </tr>
@@ -853,7 +940,22 @@ field will trigger a recreation of all Pods of this component.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Groups of Pods of compactor component.</p>
+<p>Deprecated: Use NodeGroups instead.
+Groups of Pods of compactor component.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeGroups</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">
+[]RisingWaveNodeGroup
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NodeGroups of the component deployment.</p>
 </td>
 </tr>
 </tbody>
@@ -885,7 +987,8 @@ Kubernetes meta/v1.Time
 </td>
 <td>
 <em>(Optional)</em>
-<p>The time that the Pods of frontend that should be restarted. Setting a value on this
+<p>Deprecated
+The time that the Pods of frontend that should be restarted. Setting a value on this
 field will trigger a recreation of all Pods of this component.</p>
 </td>
 </tr>
@@ -900,7 +1003,22 @@ field will trigger a recreation of all Pods of this component.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Groups of Pods of frontend component.</p>
+<p>Deprecated: Use NodeGroups instead.
+Groups of Pods of frontend component.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeGroups</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">
+[]RisingWaveNodeGroup
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NodeGroups of the component deployment.</p>
 </td>
 </tr>
 </tbody>
@@ -1006,8 +1124,8 @@ default of Kubernetes.</p>
 <td>
 <code>upgradeStrategy</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategy">
-RisingWaveUpgradeStrategy
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupUpgradeStrategy">
+RisingWaveNodeGroupUpgradeStrategy
 </a>
 </em>
 </td>
@@ -1216,7 +1334,8 @@ Kubernetes meta/v1.Time
 </td>
 <td>
 <em>(Optional)</em>
-<p>The time that the Pods of frontend that should be restarted. Setting a value on this
+<p>Deprecated
+The time that the Pods of frontend that should be restarted. Setting a value on this
 field will trigger a recreation of all Pods of this component.</p>
 </td>
 </tr>
@@ -1231,7 +1350,64 @@ field will trigger a recreation of all Pods of this component.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Groups of Pods of meta component.</p>
+<p>Deprecated: Use NodeGroups instead.
+Groups of Pods of meta component.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeGroups</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">
+[]RisingWaveNodeGroup
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NodeGroups of the component deployment.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentStatus">RisingWaveComponentStatus
+</h3>
+<div>
+<p>RisingWaveComponentStatus is the status of a component.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>total</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.WorkloadReplicaStatus">
+WorkloadReplicaStatus
+</a>
+</em>
+</td>
+<td>
+<p>Total is the replica status of the component.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeGroups</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupStatus">
+[]RisingWaveNodeGroupStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NodeGroups are the status list of all declared node groups of some component.</p>
 </td>
 </tr>
 </tbody>
@@ -1325,7 +1501,7 @@ ComponentReplicasStatus
 (<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
 </p>
 <div>
-<p>RisingWaveComponentsSpec is the spec describes the components of RisingWave.</p>
+<p>RisingWaveComponentsSpec is the spec for RisingWave components.</p>
 </div>
 <table>
 <thead>
@@ -1345,7 +1521,7 @@ RisingWaveComponentMeta
 </em>
 </td>
 <td>
-<p>Meta component spec.The central metadata management service. It also acts as a failure detector that periodically sends heartbeats to frontend nodes and compute nodes in the cluster.</p>
+<p>Meta contains configuration of the meta component.</p>
 </td>
 </tr>
 <tr>
@@ -1358,7 +1534,7 @@ RisingWaveComponentFrontend
 </em>
 </td>
 <td>
-<p>Frontend component spec. A frontend node acts as a stateless proxy that accepts user queries through Postgres protocol. It is responsible for parsing and validating queries, optimizing query execution plans, and delivering query results.</p>
+<p>Frontend contains configuration of the frontend component.</p>
 </td>
 </tr>
 <tr>
@@ -1371,7 +1547,7 @@ RisingWaveComponentCompute
 </em>
 </td>
 <td>
-<p>Compute component spec. A computer node executes the optimized query plans and handles data ingestion and output.</p>
+<p>Compute contains configuration of the compute component.</p>
 </td>
 </tr>
 <tr>
@@ -1384,7 +1560,7 @@ RisingWaveComponentCompactor
 </em>
 </td>
 <td>
-<p>Compactor component spec. A stateless worker node that compacts data for the storage engine.</p>
+<p>Compactor contains configuration of the compactor component.</p>
 </td>
 </tr>
 <tr>
@@ -1397,7 +1573,7 @@ RisingWaveComponentConnector
 </em>
 </td>
 <td>
-<p>Connector component spec. A connector node, which enables the communication with other systems like kinesis or pulsar.</p>
+<p>Connector contains configuration of the connector component.</p>
 </td>
 </tr>
 </tbody>
@@ -1502,8 +1678,8 @@ default of Kubernetes.</p>
 <td>
 <code>upgradeStrategy</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategy">
-RisingWaveUpgradeStrategy
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupUpgradeStrategy">
+RisingWaveNodeGroupUpgradeStrategy
 </a>
 </em>
 </td>
@@ -1839,6 +2015,32 @@ Kubernetes core/v1.ConfigMapKeySelector
 It&rsquo;s an optional field and can be left out. If not specified, a default config is going to be used.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>configMap</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeConfigurationConfigMapSource">
+RisingWaveNodeConfigurationConfigMapSource
+</a>
+</em>
+</td>
+<td>
+<p>ConfigMap where the <code>risingwave.toml</code> locates.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secret</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeConfigurationSecretSource">
+RisingWaveNodeConfigurationSecretSource
+</a>
+</em>
+</td>
+<td>
+<p>Secret where the <code>risingwave.toml</code> locates.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveEtcdCredentials">RisingWaveEtcdCredentials
@@ -1910,6 +2112,18 @@ Defaults to &ldquo;password&rdquo;.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>useWorkloadIdentity</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>UseWorkloadIdentity indicates to use workload identity to access the GCS service.
+If this is enabled, secret is not required, and ADC is used.</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>secretName</code><br/>
@@ -2074,8 +2288,8 @@ default of Kubernetes.</p>
 <td>
 <code>upgradeStrategy</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategy">
-RisingWaveUpgradeStrategy
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupUpgradeStrategy">
+RisingWaveNodeGroupUpgradeStrategy
 </a>
 </em>
 </td>
@@ -2514,13 +2728,480 @@ Defaults to &ldquo;password&rdquo;.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveRollingUpdate">RisingWaveRollingUpdate
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeConfiguration">RisingWaveNodeConfiguration
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategy">RisingWaveUpgradeStrategy</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveConfigurationSpec">RisingWaveConfigurationSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup</a>)
 </p>
 <div>
-<p>RisingWaveRollingUpdate is the spec to define rolling update strategies.</p>
+<p>RisingWaveNodeConfiguration determines where the configurations are from, either ConfigMap, Secret, or raw string.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>configMap</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeConfigurationConfigMapSource">
+RisingWaveNodeConfigurationConfigMapSource
+</a>
+</em>
+</td>
+<td>
+<p>ConfigMap where the <code>risingwave.toml</code> locates.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secret</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeConfigurationSecretSource">
+RisingWaveNodeConfigurationSecretSource
+</a>
+</em>
+</td>
+<td>
+<p>Secret where the <code>risingwave.toml</code> locates.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeConfigurationConfigMapSource">RisingWaveNodeConfigurationConfigMapSource
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeConfiguration">RisingWaveNodeConfiguration</a>)
+</p>
+<div>
+<p>RisingWaveNodeConfigurationConfigMapSource refers to a ConfigMap where the RisingWave configuration is stored.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Name determines the ConfigMap to provide the configs RisingWave requests. It will be mounted on the Pods
+directly. It the ConfigMap isn&rsquo;t provided, the controller will use empty value as the configs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>key</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Key to the configuration file. Defaults to <code>risingwave.toml</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>optional</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional determines if the key must exist in the ConfigMap. Defaults to false.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeConfigurationSecretSource">RisingWaveNodeConfigurationSecretSource
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeConfiguration">RisingWaveNodeConfiguration</a>)
+</p>
+<div>
+<p>RisingWaveNodeConfigurationSecretSource refers to a Secret where the RisingWave configuration is stored.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Name determines the Secret to provide the configs RisingWave requests. It will be mounted on the Pods
+directly. It the Secret isn&rsquo;t provided, the controller will use empty value as the configs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>key</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Key to the configuration file. Defaults to <code>risingwave.toml</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>optional</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional determines if the key must exist in the Secret. Defaults to false.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeContainer">RisingWaveNodeContainer
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodePodTemplateSpec">RisingWaveNodePodTemplateSpec</a>)
+</p>
+<div>
+<p>RisingWaveNodeContainer determines the container specs of a RisingWave node.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>image</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Container image name.
+More info: <a href="https://kubernetes.io/docs/concepts/containers/images">https://kubernetes.io/docs/concepts/containers/images</a>
+This field is optional to allow higher level config management to default or override
+container images in workload controllers like Deployments and StatefulSets.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>envFrom</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envfromsource-v1-core">
+[]Kubernetes core/v1.EnvFromSource
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of sources to populate environment variables in the container.
+The keys defined within a source must be a C_IDENTIFIER. All invalid keys
+will be reported as an event when the container is starting. When a key exists in multiple
+sources, the value associated with the last source will take precedence.
+Values defined by an Env with a duplicate key will take precedence.
+Cannot be updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>env</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envvar-v1-core">
+[]Kubernetes core/v1.EnvVar
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of environment variables to set in the container.
+Cannot be updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resources</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#resourcerequirements-v1-core">
+Kubernetes core/v1.ResourceRequirements
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Compute Resources required by this container.
+Cannot be updated.
+More info: <a href="https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/">https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumeMounts</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">
+[]Kubernetes core/v1.VolumeMount
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Pod volumes to mount into the container&rsquo;s filesystem.
+Cannot be updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumeDevices</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumedevice-v1-core">
+[]Kubernetes core/v1.VolumeDevice
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>volumeDevices is the list of block devices to be used by the container.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imagePullPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pullpolicy-v1-core">
+Kubernetes core/v1.PullPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Image pull policy.
+One of Always, Never, IfNotPresent.
+Defaults to Always if :latest tag is specified, or IfNotPresent otherwise.
+Cannot be updated.
+More info: <a href="https://kubernetes.io/docs/concepts/containers/images#updating-images">https://kubernetes.io/docs/concepts/containers/images#updating-images</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>securityContext</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#securitycontext-v1-core">
+Kubernetes core/v1.SecurityContext
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecurityContext defines the security options the container should be run with.
+If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext.
+More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/security-context/">https://kubernetes.io/docs/tasks/configure-pod-container/security-context/</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponent">RisingWaveComponent</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompute">RisingWaveComponentCompute</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentConnector">RisingWaveComponentConnector</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta</a>)
+</p>
+<div>
+<p>RisingWaveNodeGroup is the definition of a group of RisingWave nodes of the same component.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the node group.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>replicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Replicas of Pods in this group.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>restartAt</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#time-v1-meta">
+Kubernetes meta/v1.Time
+</a>
+</em>
+</td>
+<td>
+<p>RestartAt is the time that the Pods under the group should be restarted. Setting a value on this field will
+trigger a full recreation of the Pods. Defaults to nil.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>configuration</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeConfiguration">
+RisingWaveNodeConfiguration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configuration determines the configuration to be used for the RisingWave nodes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>upgradeStrategy</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupUpgradeStrategy">
+RisingWaveNodeGroupUpgradeStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Upgrade strategy for the components. By default, it is the same as the
+workload&rsquo;s default strategy that the component is deployed with.
+Note: the maxSurge will not take effect for the compute component.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>minReadySeconds</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum number of seconds for which a newly created pod should be ready
+without any of its container crashing for it to be considered available.
+Defaults to 0 (pod will be considered available as soon as it is ready)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumeClaimTemplates</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.PersistentVolumeClaim">
+[]PersistentVolumeClaim
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>volumeClaimTemplates is a list of claims that pods are allowed to reference.
+The StatefulSet controller is responsible for mapping network identities to
+claims in a way that maintains the identity of a pod. Every claim in
+this list must have at least one matching (by name) volumeMount in one
+container in the template. A claim in this list takes precedence over
+any volumes in the template, with the same name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>persistentVolumeClaimRetentionPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#statefulsetpersistentvolumeclaimretentionpolicy-v1-apps">
+Kubernetes apps/v1.StatefulSetPersistentVolumeClaimRetentionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>persistentVolumeClaimRetentionPolicy describes the lifecycle of persistent
+volume claims created from volumeClaimTemplates. By default, all persistent
+volume claims are created as needed and retained until manually deleted. This
+policy allows the lifecycle to be altered, for example by deleting persistent
+volume claims when their stateful set is deleted, or when their pod is scaled
+down. This requires the StatefulSetAutoDeletePVC feature gate to be enabled,
+which is alpha.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>progressDeadlineSeconds</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>The maximum time in seconds for a deployment to make progress before it
+is considered to be failed. The deployment controller will continue to
+process failed deployments and a condition with a ProgressDeadlineExceeded
+reason will be surfaced in the deployment status. Note that progress will
+not be estimated during the time a deployment is paused. Defaults to 600s.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>template</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodePodTemplate">
+RisingWaveNodePodTemplate
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Template tells how the Pod should be started. It is an optional field. If it&rsquo;s empty, then the pod template in
+the first-level fields under spec will be used.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupRollingUpdate">RisingWaveNodeGroupRollingUpdate
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupUpgradeStrategy">RisingWaveNodeGroupUpgradeStrategy</a>)
+</p>
+<div>
+<p>RisingWaveNodeGroupRollingUpdate is the spec to define rolling update strategies.</p>
 </div>
 <table>
 <thead>
@@ -2584,6 +3265,1346 @@ Defaults to 0.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupStatus">RisingWaveNodeGroupStatus
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentStatus">RisingWaveComponentStatus</a>)
+</p>
+<div>
+<p>RisingWaveNodeGroupStatus is the status of a node group.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the node group.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>replicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Replicas is the declared replicas of the workload.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>readyReplicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>ReadyReplicas is the ready replicas of the workload.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>availableReplicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>AvailableReplicas is the available replicas of the workload.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>updatedReplicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>UpdatedReplicas is the update replicas of the workload.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>unavailableReplicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>UnavailableReplicas is the unavailable replicas of the workload.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>exists</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Existence status of the node group.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupUpgradeStrategy">RisingWaveNodeGroupUpgradeStrategy
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup</a>)
+</p>
+<div>
+<p>RisingWaveNodeGroupUpgradeStrategy is the spec of upgrade strategy used by RisingWave.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupUpgradeStrategyType">
+RisingWaveNodeGroupUpgradeStrategyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Type of upgrade. Can be &ldquo;Recreate&rdquo; or &ldquo;RollingUpdate&rdquo;. Default is RollingUpdate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>rollingUpdate</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupRollingUpdate">
+RisingWaveNodeGroupRollingUpdate
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Rolling update config params. Present only if DeploymentStrategyType = RollingUpdate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>inPlaceUpdateStrategy</code><br/>
+<em>
+github.com/openkruise/kruise-api/apps/pub.InPlaceUpdateStrategy
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>InPlaceUpdateStrategy contains strategies for in-place update.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupUpgradeStrategyType">RisingWaveNodeGroupUpgradeStrategyType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupUpgradeStrategy">RisingWaveNodeGroupUpgradeStrategy</a>)
+</p>
+<div>
+<p>RisingWaveNodeGroupUpgradeStrategyType is the type of upgrade strategies used in RisingWave.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;InPlaceIfPossible&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;InPlaceOnly&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Recreate&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;RollingUpdate&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodePodTemplate">RisingWaveNodePodTemplate
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup</a>)
+</p>
+<div>
+<p>RisingWaveNodePodTemplate determines the Pod specs of a RisingWave node.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">
+PartialObjectMeta
+</a>
+</em>
+</td>
+<td>
+<p>PartialObjectMeta tells the operator to add the specified metadata onto the Pod.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodePodTemplateSpec">
+RisingWaveNodePodTemplateSpec
+</a>
+</em>
+</td>
+<td>
+<p>RisingWaveNodePodTemplateSpec determines the Pod spec to start the RisingWave pod.</p>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>image</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Container image name.
+More info: <a href="https://kubernetes.io/docs/concepts/containers/images">https://kubernetes.io/docs/concepts/containers/images</a>
+This field is optional to allow higher level config management to default or override
+container images in workload controllers like Deployments and StatefulSets.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>envFrom</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envfromsource-v1-core">
+[]Kubernetes core/v1.EnvFromSource
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of sources to populate environment variables in the container.
+The keys defined within a source must be a C_IDENTIFIER. All invalid keys
+will be reported as an event when the container is starting. When a key exists in multiple
+sources, the value associated with the last source will take precedence.
+Values defined by an Env with a duplicate key will take precedence.
+Cannot be updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>env</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envvar-v1-core">
+[]Kubernetes core/v1.EnvVar
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of environment variables to set in the container.
+Cannot be updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resources</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#resourcerequirements-v1-core">
+Kubernetes core/v1.ResourceRequirements
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Compute Resources required by this container.
+Cannot be updated.
+More info: <a href="https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/">https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumeMounts</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">
+[]Kubernetes core/v1.VolumeMount
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Pod volumes to mount into the container&rsquo;s filesystem.
+Cannot be updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumeDevices</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumedevice-v1-core">
+[]Kubernetes core/v1.VolumeDevice
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>volumeDevices is the list of block devices to be used by the container.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imagePullPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pullpolicy-v1-core">
+Kubernetes core/v1.PullPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Image pull policy.
+One of Always, Never, IfNotPresent.
+Defaults to Always if :latest tag is specified, or IfNotPresent otherwise.
+Cannot be updated.
+More info: <a href="https://kubernetes.io/docs/concepts/containers/images#updating-images">https://kubernetes.io/docs/concepts/containers/images#updating-images</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>securityContext</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#securitycontext-v1-core">
+Kubernetes core/v1.SecurityContext
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecurityContext defines the security options the container should be run with.
+If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext.
+More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/security-context/">https://kubernetes.io/docs/tasks/configure-pod-container/security-context/</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumes</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volume-v1-core">
+[]Kubernetes core/v1.Volume
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of volumes that can be mounted by containers belonging to the pod.
+More info: <a href="https://kubernetes.io/docs/concepts/storage/volumes">https://kubernetes.io/docs/concepts/storage/volumes</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>activeDeadlineSeconds</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional duration in seconds the pod may be active on the node relative to
+StartTime before the system will actively try to mark it failed and kill associated containers.
+Value must be a positive integer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>terminationGracePeriodSeconds</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional duration in seconds the pod needs to terminate gracefully. May be decreased in delete request.
+Value must be non-negative integer. The value zero indicates stop immediately via
+the kill signal (no opportunity to shut down).
+If this value is nil, the default grace period will be used instead.
+The grace period is the duration in seconds after the processes running in the pod are sent
+a termination signal and the time when the processes are forcibly halted with a kill signal.
+Set this value longer than the expected cleanup time for your process.
+Defaults to 30 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#dnspolicy-v1-core">
+Kubernetes core/v1.DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Set DNS policy for the pod.
+Defaults to &ldquo;ClusterFirst&rdquo;.
+Valid values are &lsquo;ClusterFirstWithHostNet&rsquo;, &lsquo;ClusterFirst&rsquo;, &lsquo;Default&rsquo; or &lsquo;None&rsquo;.
+DNS parameters given in DNSConfig will be merged with the policy selected with DNSPolicy.
+To have DNS options set along with hostNetwork, you have to specify DNS policy
+explicitly to &lsquo;ClusterFirstWithHostNet&rsquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeSelector</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NodeSelector is a selector which must be true for the pod to fit on a node.
+Selector which must match a node&rsquo;s labels for the pod to be scheduled on that node.
+More info: <a href="https://kubernetes.io/docs/concepts/configuration/assign-pod-node/">https://kubernetes.io/docs/concepts/configuration/assign-pod-node/</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceAccountName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ServiceAccountName is the name of the ServiceAccount to use to run this pod.
+More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/">https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostPID</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Use the host&rsquo;s pid namespace.
+Optional: Default to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostIPC</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Use the host&rsquo;s ipc namespace.
+Optional: Default to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>shareProcessNamespace</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Share a single process namespace between all of the containers in a pod.
+When this is set containers will be able to view and signal processes from other containers
+in the same pod, and the first process in each container will not be assigned PID 1.
+HostPID and ShareProcessNamespace cannot both be set.
+Optional: Default to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podSecurityContext</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
+Kubernetes core/v1.PodSecurityContext
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecurityContext holds pod-level security attributes and common container settings.
+Optional: Defaults to empty.  See type description for default values of each field.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imagePullSecrets</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#localobjectreference-v1-core">
+[]Kubernetes core/v1.LocalObjectReference
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
+If specified, these secrets will be passed to individual puller implementations for them to use.
+More info: <a href="https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod">https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>affinity</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#affinity-v1-core">
+Kubernetes core/v1.Affinity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If specified, the pod&rsquo;s scheduling constraints</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>schedulerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If specified, the pod will be dispatched by specified scheduler.
+If not specified, the pod will be dispatched by default scheduler.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tolerations</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core">
+[]Kubernetes core/v1.Toleration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If specified, the pod&rsquo;s tolerations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostAliases</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#hostalias-v1-core">
+[]Kubernetes core/v1.HostAlias
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostAliases is an optional list of hosts and IPs that will be injected into the pod&rsquo;s hosts
+file if specified. This is only valid for non-hostNetwork pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priorityClassName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If specified, indicates the pod&rsquo;s priority. &ldquo;system-node-critical&rdquo; and
+&ldquo;system-cluster-critical&rdquo; are two special keywords which indicate the
+highest priorities with the former being the highest priority. Any other
+name must be defined by creating a PriorityClass object with that name.
+If not specified, the pod priority will be default or zero if there is no
+default.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priority</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The priority value. Various system components use this field to find the
+priority of the pod. When Priority Admission Controller is enabled, it
+prevents users from setting this field. The admission controller populates
+this field from PriorityClassName.
+The higher the value, the higher the priority.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#poddnsconfig-v1-core">
+Kubernetes core/v1.PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the DNS parameters of a pod.
+Parameters specified here will be merged to the generated DNS
+configuration based on DNSPolicy.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>runtimeClassName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RuntimeClassName refers to a RuntimeClass object in the node.k8s.io group, which should be used
+to run this pod.  If no RuntimeClass resource matches the named class, the pod will not be run.
+If unset or empty, the &ldquo;legacy&rdquo; RuntimeClass will be used, which is an implicit class with an
+empty definition that uses the default runtime handler.
+More info: <a href="https://git.k8s.io/enhancements/keps/sig-node/585-runtime-class">https://git.k8s.io/enhancements/keps/sig-node/585-runtime-class</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>preemptionPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#preemptionpolicy-v1-core">
+Kubernetes core/v1.PreemptionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PreemptionPolicy is the Policy for preempting pods with lower priority.
+One of Never, PreemptLowerPriority.
+Defaults to PreemptLowerPriority if unset.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>topologySpreadConstraints</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#topologyspreadconstraint-v1-core">
+[]Kubernetes core/v1.TopologySpreadConstraint
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TopologySpreadConstraints describes how a group of pods ought to spread across topology
+domains. Scheduler will schedule pods in a way which abides by the constraints.
+All topologySpreadConstraints are ANDed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>setHostnameAsFQDN</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If true the pod&rsquo;s hostname will be configured as the pod&rsquo;s FQDN, rather than the leaf name (the default).
+In Linux containers, this means setting the FQDN in the hostname field of the kernel (the nodename field of struct utsname).
+In Windows containers, this means setting the registry value of hostname for the registry key HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters to FQDN.
+If a pod does not have FQDN, this has no effect.
+Default to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>os</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podos-v1-core">
+Kubernetes core/v1.PodOS
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the OS of the containers in the pod.
+Some pod and container fields are restricted if this is set.</p>
+<p>If the OS field is set to linux, the following fields must be unset:
+-securityContext.windowsOptions</p>
+<p>If the OS field is set to windows, following fields must be unset:
+- spec.hostPID
+- spec.hostIPC
+- spec.hostUsers
+- spec.securityContext.seLinuxOptions
+- spec.securityContext.seccompProfile
+- spec.securityContext.fsGroup
+- spec.securityContext.fsGroupChangePolicy
+- spec.securityContext.sysctls
+- spec.shareProcessNamespace
+- spec.securityContext.runAsUser
+- spec.securityContext.runAsGroup
+- spec.securityContext.supplementalGroups
+- spec.containers[<em>].securityContext.seLinuxOptions
+- spec.containers[</em>].securityContext.seccompProfile
+- spec.containers[<em>].securityContext.capabilities
+- spec.containers[</em>].securityContext.readOnlyRootFilesystem
+- spec.containers[<em>].securityContext.privileged
+- spec.containers[</em>].securityContext.allowPrivilegeEscalation
+- spec.containers[<em>].securityContext.procMount
+- spec.containers[</em>].securityContext.runAsUser
+- spec.containers[*].securityContext.runAsGroup</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Use the host&rsquo;s user namespace.
+Optional: Default to true.
+If set to true or not present, the pod will be run in the host user namespace, useful
+for when the pod needs a feature only available to the host user namespace, such as
+loading a kernel module with CAP_SYS_MODULE.
+When set to false, a new userns is created for the pod. Setting false is useful for
+mitigating container breakout vulnerabilities even allowing users to run their
+containers as root without actually having root privileges on the host.
+This field is alpha-level and is only honored by servers that enable the UserNamespacesSupport feature.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalContainers</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core">
+[]Kubernetes core/v1.Container
+</a>
+</em>
+</td>
+<td>
+<p>Additional containers to run in the same Pod. The containers will be appended to the Pod&rsquo;s containers array in order.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodePodTemplateSpec">RisingWaveNodePodTemplateSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodePodTemplate">RisingWaveNodePodTemplate</a>)
+</p>
+<div>
+<p>RisingWaveNodePodTemplateSpec is a template for a RisingWave&rsquo;s Pod.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>image</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Container image name.
+More info: <a href="https://kubernetes.io/docs/concepts/containers/images">https://kubernetes.io/docs/concepts/containers/images</a>
+This field is optional to allow higher level config management to default or override
+container images in workload controllers like Deployments and StatefulSets.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>envFrom</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envfromsource-v1-core">
+[]Kubernetes core/v1.EnvFromSource
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of sources to populate environment variables in the container.
+The keys defined within a source must be a C_IDENTIFIER. All invalid keys
+will be reported as an event when the container is starting. When a key exists in multiple
+sources, the value associated with the last source will take precedence.
+Values defined by an Env with a duplicate key will take precedence.
+Cannot be updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>env</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envvar-v1-core">
+[]Kubernetes core/v1.EnvVar
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of environment variables to set in the container.
+Cannot be updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resources</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#resourcerequirements-v1-core">
+Kubernetes core/v1.ResourceRequirements
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Compute Resources required by this container.
+Cannot be updated.
+More info: <a href="https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/">https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumeMounts</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">
+[]Kubernetes core/v1.VolumeMount
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Pod volumes to mount into the container&rsquo;s filesystem.
+Cannot be updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumeDevices</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumedevice-v1-core">
+[]Kubernetes core/v1.VolumeDevice
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>volumeDevices is the list of block devices to be used by the container.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imagePullPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pullpolicy-v1-core">
+Kubernetes core/v1.PullPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Image pull policy.
+One of Always, Never, IfNotPresent.
+Defaults to Always if :latest tag is specified, or IfNotPresent otherwise.
+Cannot be updated.
+More info: <a href="https://kubernetes.io/docs/concepts/containers/images#updating-images">https://kubernetes.io/docs/concepts/containers/images#updating-images</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>securityContext</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#securitycontext-v1-core">
+Kubernetes core/v1.SecurityContext
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecurityContext defines the security options the container should be run with.
+If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext.
+More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/security-context/">https://kubernetes.io/docs/tasks/configure-pod-container/security-context/</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumes</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volume-v1-core">
+[]Kubernetes core/v1.Volume
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of volumes that can be mounted by containers belonging to the pod.
+More info: <a href="https://kubernetes.io/docs/concepts/storage/volumes">https://kubernetes.io/docs/concepts/storage/volumes</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>activeDeadlineSeconds</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional duration in seconds the pod may be active on the node relative to
+StartTime before the system will actively try to mark it failed and kill associated containers.
+Value must be a positive integer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>terminationGracePeriodSeconds</code><br/>
+<em>
+int64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional duration in seconds the pod needs to terminate gracefully. May be decreased in delete request.
+Value must be non-negative integer. The value zero indicates stop immediately via
+the kill signal (no opportunity to shut down).
+If this value is nil, the default grace period will be used instead.
+The grace period is the duration in seconds after the processes running in the pod are sent
+a termination signal and the time when the processes are forcibly halted with a kill signal.
+Set this value longer than the expected cleanup time for your process.
+Defaults to 30 seconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#dnspolicy-v1-core">
+Kubernetes core/v1.DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Set DNS policy for the pod.
+Defaults to &ldquo;ClusterFirst&rdquo;.
+Valid values are &lsquo;ClusterFirstWithHostNet&rsquo;, &lsquo;ClusterFirst&rsquo;, &lsquo;Default&rsquo; or &lsquo;None&rsquo;.
+DNS parameters given in DNSConfig will be merged with the policy selected with DNSPolicy.
+To have DNS options set along with hostNetwork, you have to specify DNS policy
+explicitly to &lsquo;ClusterFirstWithHostNet&rsquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeSelector</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NodeSelector is a selector which must be true for the pod to fit on a node.
+Selector which must match a node&rsquo;s labels for the pod to be scheduled on that node.
+More info: <a href="https://kubernetes.io/docs/concepts/configuration/assign-pod-node/">https://kubernetes.io/docs/concepts/configuration/assign-pod-node/</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceAccountName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ServiceAccountName is the name of the ServiceAccount to use to run this pod.
+More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/">https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostPID</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Use the host&rsquo;s pid namespace.
+Optional: Default to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostIPC</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Use the host&rsquo;s ipc namespace.
+Optional: Default to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>shareProcessNamespace</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Share a single process namespace between all of the containers in a pod.
+When this is set containers will be able to view and signal processes from other containers
+in the same pod, and the first process in each container will not be assigned PID 1.
+HostPID and ShareProcessNamespace cannot both be set.
+Optional: Default to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podSecurityContext</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
+Kubernetes core/v1.PodSecurityContext
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecurityContext holds pod-level security attributes and common container settings.
+Optional: Defaults to empty.  See type description for default values of each field.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imagePullSecrets</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#localobjectreference-v1-core">
+[]Kubernetes core/v1.LocalObjectReference
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
+If specified, these secrets will be passed to individual puller implementations for them to use.
+More info: <a href="https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod">https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>affinity</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#affinity-v1-core">
+Kubernetes core/v1.Affinity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If specified, the pod&rsquo;s scheduling constraints</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>schedulerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If specified, the pod will be dispatched by specified scheduler.
+If not specified, the pod will be dispatched by default scheduler.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tolerations</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core">
+[]Kubernetes core/v1.Toleration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If specified, the pod&rsquo;s tolerations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostAliases</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#hostalias-v1-core">
+[]Kubernetes core/v1.HostAlias
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostAliases is an optional list of hosts and IPs that will be injected into the pod&rsquo;s hosts
+file if specified. This is only valid for non-hostNetwork pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priorityClassName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If specified, indicates the pod&rsquo;s priority. &ldquo;system-node-critical&rdquo; and
+&ldquo;system-cluster-critical&rdquo; are two special keywords which indicate the
+highest priorities with the former being the highest priority. Any other
+name must be defined by creating a PriorityClass object with that name.
+If not specified, the pod priority will be default or zero if there is no
+default.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priority</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The priority value. Various system components use this field to find the
+priority of the pod. When Priority Admission Controller is enabled, it
+prevents users from setting this field. The admission controller populates
+this field from PriorityClassName.
+The higher the value, the higher the priority.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#poddnsconfig-v1-core">
+Kubernetes core/v1.PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the DNS parameters of a pod.
+Parameters specified here will be merged to the generated DNS
+configuration based on DNSPolicy.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>runtimeClassName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RuntimeClassName refers to a RuntimeClass object in the node.k8s.io group, which should be used
+to run this pod.  If no RuntimeClass resource matches the named class, the pod will not be run.
+If unset or empty, the &ldquo;legacy&rdquo; RuntimeClass will be used, which is an implicit class with an
+empty definition that uses the default runtime handler.
+More info: <a href="https://git.k8s.io/enhancements/keps/sig-node/585-runtime-class">https://git.k8s.io/enhancements/keps/sig-node/585-runtime-class</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>preemptionPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#preemptionpolicy-v1-core">
+Kubernetes core/v1.PreemptionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PreemptionPolicy is the Policy for preempting pods with lower priority.
+One of Never, PreemptLowerPriority.
+Defaults to PreemptLowerPriority if unset.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>topologySpreadConstraints</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#topologyspreadconstraint-v1-core">
+[]Kubernetes core/v1.TopologySpreadConstraint
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TopologySpreadConstraints describes how a group of pods ought to spread across topology
+domains. Scheduler will schedule pods in a way which abides by the constraints.
+All topologySpreadConstraints are ANDed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>setHostnameAsFQDN</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If true the pod&rsquo;s hostname will be configured as the pod&rsquo;s FQDN, rather than the leaf name (the default).
+In Linux containers, this means setting the FQDN in the hostname field of the kernel (the nodename field of struct utsname).
+In Windows containers, this means setting the registry value of hostname for the registry key HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters to FQDN.
+If a pod does not have FQDN, this has no effect.
+Default to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>os</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podos-v1-core">
+Kubernetes core/v1.PodOS
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the OS of the containers in the pod.
+Some pod and container fields are restricted if this is set.</p>
+<p>If the OS field is set to linux, the following fields must be unset:
+-securityContext.windowsOptions</p>
+<p>If the OS field is set to windows, following fields must be unset:
+- spec.hostPID
+- spec.hostIPC
+- spec.hostUsers
+- spec.securityContext.seLinuxOptions
+- spec.securityContext.seccompProfile
+- spec.securityContext.fsGroup
+- spec.securityContext.fsGroupChangePolicy
+- spec.securityContext.sysctls
+- spec.shareProcessNamespace
+- spec.securityContext.runAsUser
+- spec.securityContext.runAsGroup
+- spec.securityContext.supplementalGroups
+- spec.containers[<em>].securityContext.seLinuxOptions
+- spec.containers[</em>].securityContext.seccompProfile
+- spec.containers[<em>].securityContext.capabilities
+- spec.containers[</em>].securityContext.readOnlyRootFilesystem
+- spec.containers[<em>].securityContext.privileged
+- spec.containers[</em>].securityContext.allowPrivilegeEscalation
+- spec.containers[<em>].securityContext.procMount
+- spec.containers[</em>].securityContext.runAsUser
+- spec.containers[*].securityContext.runAsGroup</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostUsers</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Use the host&rsquo;s user namespace.
+Optional: Default to true.
+If set to true or not present, the pod will be run in the host user namespace, useful
+for when the pod needs a feature only available to the host user namespace, such as
+loading a kernel module with CAP_SYS_MODULE.
+When set to false, a new userns is created for the pod. Setting false is useful for
+mitigating container breakout vulnerabilities even allowing users to run their
+containers as root without actually having root privileges on the host.
+This field is alpha-level and is only honored by servers that enable the UserNamespacesSupport feature.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalContainers</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core">
+[]Kubernetes core/v1.Container
+</a>
+</em>
+</td>
+<td>
+<p>Additional containers to run in the same Pod. The containers will be appended to the Pod&rsquo;s containers array in order.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveS3Credentials">RisingWaveS3Credentials
 </h3>
 <p>
@@ -2600,6 +4621,19 @@ Defaults to 0.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>useProjectedServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>UseServiceAccount indicates whether to use the service account token mounted in the pod. It only works when using
+the AWS S3. If this is enabled, secret and keys are ignored. Defaults to false.</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>secretName</code><br/>
@@ -3127,7 +5161,8 @@ RisingWaveGlobalSpec
 </em>
 </td>
 <td>
-<p>The spec of a shared template for components and a global scope of replicas.</p>
+<p>Deprecated
+The spec of a shared template for components and a global scope of replicas.</p>
 </td>
 </tr>
 <tr>
@@ -3207,7 +5242,6 @@ string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Image for RisingWave component.</p>
 </td>
 </tr>
@@ -3340,7 +5374,7 @@ RisingWaveStateStoreBackendS3
 </tr>
 <tr>
 <td>
-<code>GCS</code><br/>
+<code>gcs</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendGCS">
 RisingWaveStateStoreBackendGCS
@@ -3601,17 +5635,6 @@ RisingWaveGCSCredentials
 </tr>
 <tr>
 <td>
-<code>useWorkloadIdentity</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>UseWorkloadIdentity indicates to use workload identity to access the GCS service. If this is enabled, secret is not required, and ADC is used.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>secret</code><br/>
 <em>
 string
@@ -3817,8 +5840,7 @@ string
 </em>
 </td>
 <td>
-<p>Region of AWS S3 service. It is an optional field that overrides the <code>Region</code> key from the secret.
-Specifying the region here makes a guarantee that it won&rsquo;t be changed anymore.</p>
+<p>Region of AWS S3 service. Defaults to &ldquo;us-east-1&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -4069,13 +6091,13 @@ can be referenced in the groups of compute component.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategy">RisingWaveUpgradeStrategy
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.WorkloadReplicaStatus">WorkloadReplicaStatus
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentStatus">RisingWaveComponentStatus</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupStatus">RisingWaveNodeGroupStatus</a>)
 </p>
 <div>
-<p>RisingWaveUpgradeStrategy is the spec of upgrade strategy used by RisingWave.</p>
+<p>WorkloadReplicaStatus is a common structure for replica status of some workload.</p>
 </div>
 <table>
 <thead>
@@ -4087,69 +6109,59 @@ can be referenced in the groups of compute component.</p>
 <tbody>
 <tr>
 <td>
-<code>type</code><br/>
+<code>replicas</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategyType">
-RisingWaveUpgradeStrategyType
-</a>
+int32
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>Type of upgrade. Can be &ldquo;Recreate&rdquo; or &ldquo;RollingUpdate&rdquo;. Default is RollingUpdate.</p>
+<p>Replicas is the declared replicas of the workload.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>rollingUpdate</code><br/>
+<code>readyReplicas</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveRollingUpdate">
-RisingWaveRollingUpdate
-</a>
+int32
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>Rolling update config params. Present only if DeploymentStrategyType = RollingUpdate.</p>
+<p>ReadyReplicas is the ready replicas of the workload.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>inPlaceUpdateStrategy</code><br/>
+<code>availableReplicas</code><br/>
 <em>
-github.com/openkruise/kruise-api/apps/pub.InPlaceUpdateStrategy
+int32
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>InPlaceUpdateStrategy contains strategies for in-place update.</p>
+<p>AvailableReplicas is the available replicas of the workload.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>updatedReplicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>UpdatedReplicas is the update replicas of the workload.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>unavailableReplicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>UnavailableReplicas is the unavailable replicas of the workload.</p>
 </td>
 </tr>
 </tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategyType">RisingWaveUpgradeStrategyType
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveUpgradeStrategy">RisingWaveUpgradeStrategy</a>)
-</p>
-<div>
-<p>RisingWaveUpgradeStrategyType is the type of upgrade strategies used in RisingWave.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Value</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr><td><p>&#34;InPlaceIfPossible&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;InPlaceOnly&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;Recreate&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;RollingUpdate&#34;</p></td>
-<td></td>
-</tr></tbody>
 </table>
 <hr/>

@@ -80,7 +80,6 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 
 	// Set the default groups.
 	if len(obj.Spec.ScalePolicy) == 0 {
-		obj.Spec.ScalePolicy = append(obj.Spec.ScalePolicy, risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{Group: ""})
 		for _, group := range helper.ListComponentGroups() {
 			obj.Spec.ScalePolicy = append(obj.Spec.ScalePolicy, risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{Group: group})
 		}
@@ -104,20 +103,13 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 			fieldErrs = append(fieldErrs, field.Invalid(
 				field.NewPath("spec", "scalePolicy").Index(i),
 				*scalePolicy,
-				"target group not found"),
+				"target group not found: "+scalePolicy.Group),
 			)
 		}
 	}
 	obj.Spec.Replicas = pointer.Int32(replicas)
 
-	if len(fieldErrs) > 0 {
-		gvk := obj.GroupVersionKind()
-		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, field.ErrorList{
-			field.Invalid(field.NewPath("spec", "targetRef"), obj.Spec.TargetRef, "target risingwave not found"),
-		})
-	}
-
-	return nil
+	return fieldErrs.ToAggregate()
 }
 
 func (w *RisingWaveScaleViewMutatingWebhook) setDefault(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {

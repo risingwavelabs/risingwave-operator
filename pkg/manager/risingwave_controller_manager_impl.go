@@ -24,8 +24,6 @@ import (
 	"strconv"
 	"strings"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-
 	"github.com/go-logr/logr"
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
 	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
@@ -33,8 +31,8 @@ import (
 	"github.com/samber/lo"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
@@ -58,16 +56,13 @@ type risingWaveControllerManagerImpl struct {
 	forceUpdateEnabled bool
 }
 
-func buildGroupStatus[T any, TP ptrAsObject[T], G any](globalReplicas int32, groups []G, nameAndReplicas func(*G) (string, int32), workloads []T, groupAndReadyReplicas func(*T) (string, int32)) risingwavev1alpha1.ComponentReplicasStatus {
+func buildNodeGroupStatus[T any, TP ptrAsObject[T], G any](groups []G, nameAndReplicas func(*G) (string, int32), workloads []T, groupAndReadyReplicas func(*T) (string, int32)) risingwavev1alpha1.ComponentReplicasStatus {
 	status := risingwavev1alpha1.ComponentReplicasStatus{
-		Target: globalReplicas,
+		Target: 0,
 	}
 
 	expectedGroups := make(map[string]int32)
-	if globalReplicas > 0 {
-		expectedGroups[""] = globalReplicas
-	}
-	status.Target = globalReplicas
+
 	for _, group := range groups {
 		name, replicas := nameAndReplicas(&group)
 		expectedGroups[name] = replicas
@@ -162,28 +157,25 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 	computeStatefulSets []kruiseappsv1beta1.StatefulSet, compactorCloneSets []kruiseappsv1alpha1.CloneSet, connectorCloneSets []kruiseappsv1alpha1.CloneSet,
 	configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
-	globalSpec := &risingwave.Spec.Global
+
 	componentsSpec := &risingwave.Spec.Components
 
 	// Update the replicas and storage status.
-	nameAndReplicasForComponentGroup := func(g *risingwavev1alpha1.RisingWaveComponentGroup) (string, int32) {
+	getNameAndReplicasFromNodeGroup := func(g *risingwavev1alpha1.RisingWaveNodeGroup) (string, int32) {
 		return g.Name, g.Replicas
 	}
-	groupAndReadyReplicasForCloneSets := func(t *kruiseappsv1alpha1.CloneSet) (string, int32) {
+	getGroupAndReadyReplicasForCloneSets := func(t *kruiseappsv1alpha1.CloneSet) (string, int32) {
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
-	nameAndReplicasForComputeGroup := func(g *risingwavev1alpha1.RisingWaveComputeGroup) (string, int32) {
-		return g.Name, g.Replicas
-	}
-	groupAndReadyReplicasForStatefulSet := func(t *kruiseappsv1beta1.StatefulSet) (string, int32) {
+	getGroupAndReadyReplicasForStatefulSet := func(t *kruiseappsv1beta1.StatefulSet) (string, int32) {
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
 	componentReplicas := risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
-		Meta:      buildGroupStatus(globalSpec.Replicas.Meta, componentsSpec.Meta.Groups, nameAndReplicasForComponentGroup, metaAdvancedStatefulSets, groupAndReadyReplicasForStatefulSet),
-		Frontend:  buildGroupStatus(globalSpec.Replicas.Frontend, componentsSpec.Frontend.Groups, nameAndReplicasForComponentGroup, frontendCloneSets, groupAndReadyReplicasForCloneSets),
-		Compactor: buildGroupStatus(globalSpec.Replicas.Compactor, componentsSpec.Compactor.Groups, nameAndReplicasForComponentGroup, compactorCloneSets, groupAndReadyReplicasForCloneSets),
-		Connector: buildGroupStatus(globalSpec.Replicas.Connector, componentsSpec.Connector.Groups, nameAndReplicasForComponentGroup, connectorCloneSets, groupAndReadyReplicasForCloneSets),
-		Compute:   buildGroupStatus(globalSpec.Replicas.Compute, componentsSpec.Compute.Groups, nameAndReplicasForComputeGroup, computeStatefulSets, groupAndReadyReplicasForStatefulSet),
+		Meta:      buildNodeGroupStatus(componentsSpec.Meta.NodeGroups, getNameAndReplicasFromNodeGroup, metaAdvancedStatefulSets, getGroupAndReadyReplicasForStatefulSet),
+		Frontend:  buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendCloneSets, getGroupAndReadyReplicasForCloneSets),
+		Compactor: buildNodeGroupStatus(componentsSpec.Compactor.NodeGroups, getNameAndReplicasFromNodeGroup, compactorCloneSets, getGroupAndReadyReplicasForCloneSets),
+		Connector: buildNodeGroupStatus(componentsSpec.Connector.NodeGroups, getNameAndReplicasFromNodeGroup, connectorCloneSets, getGroupAndReadyReplicasForCloneSets),
+		Compute:   buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
 	}
 	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
 		// Report meta storage status.
@@ -286,29 +278,26 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 	computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, connectorDeployments []appsv1.Deployment,
 	configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
-	globalSpec := &risingwave.Spec.Global
+
 	componentsSpec := &risingwave.Spec.Components
 
-	// Update the replicas and storage status.
-	nameAndReplicasForComponentGroup := func(g *risingwavev1alpha1.RisingWaveComponentGroup) (string, int32) {
+	getNameAndReplicasFromNodeGroup := func(g *risingwavev1alpha1.RisingWaveNodeGroup) (string, int32) {
 		return g.Name, g.Replicas
 	}
-	groupAndReadyReplicasForDeployments := func(t *appsv1.Deployment) (string, int32) {
+	getGroupAndReadyReplicasForDeployment := func(t *appsv1.Deployment) (string, int32) {
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
-	nameAndReplicasForComputeGroup := func(g *risingwavev1alpha1.RisingWaveComputeGroup) (string, int32) {
-		return g.Name, g.Replicas
-	}
-	groupAndReadyReplicasForStatefulSet := func(t *appsv1.StatefulSet) (string, int32) {
+	getGroupAndReadyReplicasForStatefulSet := func(t *appsv1.StatefulSet) (string, int32) {
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
 	componentReplicas := risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
-		Meta:      buildGroupStatus(globalSpec.Replicas.Meta, componentsSpec.Meta.Groups, nameAndReplicasForComponentGroup, metaStatefulSets, groupAndReadyReplicasForStatefulSet),
-		Frontend:  buildGroupStatus(globalSpec.Replicas.Frontend, componentsSpec.Frontend.Groups, nameAndReplicasForComponentGroup, frontendDeployments, groupAndReadyReplicasForDeployments),
-		Compactor: buildGroupStatus(globalSpec.Replicas.Compactor, componentsSpec.Compactor.Groups, nameAndReplicasForComponentGroup, compactorDeployments, groupAndReadyReplicasForDeployments),
-		Connector: buildGroupStatus(globalSpec.Replicas.Connector, componentsSpec.Connector.Groups, nameAndReplicasForComponentGroup, connectorDeployments, groupAndReadyReplicasForDeployments),
-		Compute:   buildGroupStatus(globalSpec.Replicas.Compute, componentsSpec.Compute.Groups, nameAndReplicasForComputeGroup, computeStatefulSets, groupAndReadyReplicasForStatefulSet),
+		Meta:      buildNodeGroupStatus(componentsSpec.Meta.NodeGroups, getNameAndReplicasFromNodeGroup, metaStatefulSets, getGroupAndReadyReplicasForStatefulSet),
+		Frontend:  buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendDeployments, getGroupAndReadyReplicasForDeployment),
+		Compactor: buildNodeGroupStatus(componentsSpec.Compactor.NodeGroups, getNameAndReplicasFromNodeGroup, compactorDeployments, getGroupAndReadyReplicasForDeployment),
+		Connector: buildNodeGroupStatus(componentsSpec.Connector.NodeGroups, getNameAndReplicasFromNodeGroup, connectorDeployments, getGroupAndReadyReplicasForDeployment),
+		Compute:   buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
 	}
+
 	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
 		// Report meta storage status.
 		metaStore := &risingwave.Spec.MetaStore
@@ -412,11 +401,16 @@ func syncComponentGroupWorkloads[T any, TP ptrAsObject[T]](
 	ctx context.Context,
 	logger logr.Logger,
 	component string,
-	expectedGroupSet map[string]int,
 	objects []T,
 	factory func(group string) TP,
+	enabled bool,
 ) (reconcile.Result, error) {
 	logger = logger.WithValues("component", component)
+
+	var expectedGroupSet map[string]int
+	if enabled {
+		expectedGroupSet = buildKeyMapFromList(mgr.risingwaveManager.GetNodeGroups(component), getNameFromNodeGroup)
+	}
 
 	// Decide to delete or to sync.
 	observedGroupSet := make(map[string]int)
@@ -473,18 +467,14 @@ func syncComponentGroupWorkloads[T any, TP ptrAsObject[T]](
 	return ctrlkit.Continue()
 }
 
-func getNameFromComponentGroup(g *risingwavev1alpha1.RisingWaveComponentGroup) string {
+func getNameFromNodeGroup(g *risingwavev1alpha1.RisingWaveNodeGroup) string {
 	return g.Name
 }
 
-func getNameFromComputeGroup(g *risingwavev1alpha1.RisingWaveComputeGroup) string {
-	return g.Name
-}
-
-func buildExpectedGroupSet[G any](groups []G, extract func(*G) string) map[string]int {
+func buildKeyMapFromList[Elem any](list []Elem, key func(*Elem) string) map[string]int {
 	r := make(map[string]int)
-	for _, group := range groups {
-		name := extract(&group)
+	for _, group := range list {
+		name := key(&group)
 		r[name] = 1
 	}
 	return r
@@ -492,234 +482,101 @@ func buildExpectedGroupSet[G any](groups []G, extract func(*G) string) map[strin
 
 // SyncCompactorDeployments implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncCompactorDeployments(ctx context.Context, logger logr.Logger, compactorDeployments []appsv1.Deployment) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	// We only want groupSet to be populated for deployments if open Kruise is disabled
-	groupSet := make(map[string]int)
-	if !mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		groupSet = buildExpectedGroupSet(risingwave.Spec.Components.Compactor.Groups, getNameFromComponentGroup)
-		// Enable the default group only if the global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Compactor > 0 {
-			groupSet[""] = 1
-		}
-	}
-
-	return syncComponentGroupWorkloads(
-		mgr, ctx, logger,
+	return syncComponentGroupWorkloads(mgr, ctx, logger,
 		consts.ComponentCompactor,
-		groupSet,
-		compactorDeployments,
-		mgr.objectFactory.NewCompactorDeployment,
+		compactorDeployments, mgr.objectFactory.NewCompactorDeployment,
+		// Only sync if Open Kruise is enabled.
+		!mgr.risingwaveManager.IsOpenKruiseEnabled(),
 	)
 }
 
 // SyncCompactorCloneSets implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncCompactorCloneSets(ctx context.Context, logger logr.Logger, compactorCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	// We only want to populate groupSet for CloneSets if Open Kruise is enabled.
-	var groupSet = make(map[string]int)
-	if mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		groupSet = buildExpectedGroupSet(risingwave.Spec.Components.Compactor.Groups, getNameFromComponentGroup)
-		// Enable the default group only if the global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Compactor > 0 {
-			groupSet[""] = 1
-		}
-	}
-
-	return syncComponentGroupWorkloads(
-		mgr, ctx, logger,
+	return syncComponentGroupWorkloads(mgr, ctx, logger,
 		consts.ComponentCompactor,
-		groupSet,
-		compactorCloneSets,
-		mgr.objectFactory.NewCompactorCloneSet,
+		compactorCloneSets, mgr.objectFactory.NewCompactorCloneSet,
+		// Only sync if Open Kruise is enabled.
+		mgr.risingwaveManager.IsOpenKruiseEnabled(),
 	)
 }
 
 // SyncConnectorDeployments implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncConnectorDeployments(ctx context.Context, logger logr.Logger, connectorDeployments []appsv1.Deployment) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	// We only want groupSet to be populated for deployments if open Kruise is disabled
-	groupSet := make(map[string]int)
-	if !mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		groupSet = buildExpectedGroupSet(risingwave.Spec.Components.Connector.Groups, getNameFromComponentGroup)
-		// Enable the default group only if the global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Connector > 0 {
-			groupSet[""] = 1
-		}
-	}
-
-	return syncComponentGroupWorkloads(
-		mgr, ctx, logger,
+	return syncComponentGroupWorkloads(mgr, ctx, logger,
 		consts.ComponentConnector,
-		groupSet,
-		connectorDeployments,
-		mgr.objectFactory.NewConnectorDeployment,
+		connectorDeployments, mgr.objectFactory.NewConnectorDeployment,
+		// Only sync if Open Kruise is disabled.
+		!mgr.risingwaveManager.IsOpenKruiseEnabled(),
 	)
 }
 
 // SyncConnectorCloneSets implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncConnectorCloneSets(ctx context.Context, logger logr.Logger, connectorCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	// We only want to populate groupSet for CloneSets if Open Kruise is enabled.
-	groupSet := make(map[string]int)
-	if mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		groupSet = buildExpectedGroupSet(risingwave.Spec.Components.Connector.Groups, getNameFromComponentGroup)
-		// Enable the default group only if the global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Connector > 0 {
-			groupSet[""] = 1
-		}
-	}
-
-	return syncComponentGroupWorkloads(
-		mgr, ctx, logger,
+	return syncComponentGroupWorkloads(mgr, ctx, logger,
 		consts.ComponentConnector,
-		groupSet,
-		connectorCloneSets,
-		mgr.objectFactory.NewConnectorCloneSet,
+		connectorCloneSets, mgr.objectFactory.NewConnectorCloneSet,
+		// Only sync if Open Kruise is enabled.
+		mgr.risingwaveManager.IsOpenKruiseEnabled(),
 	)
 }
 
 // SyncComputeStatefulSets implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncComputeStatefulSets(ctx context.Context, logger logr.Logger, computeStatefulSets []appsv1.StatefulSet) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	groupSet := make(map[string]int)
-	// We only want groupSet to be populated for StatefulSets if open Kruise is disabled
-	if !mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		groupSet = buildExpectedGroupSet(risingwave.Spec.Components.Compute.Groups, getNameFromComputeGroup)
-		// Enable the default group only if the global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Compute > 0 {
-			groupSet[""] = 1
-		}
-	}
-
-	return syncComponentGroupWorkloads(
-		mgr, ctx, logger,
+	return syncComponentGroupWorkloads(mgr, ctx, logger,
 		consts.ComponentCompute,
-		groupSet,
-		computeStatefulSets,
-		mgr.objectFactory.NewComputeStatefulSet,
+		computeStatefulSets, mgr.objectFactory.NewComputeStatefulSet,
+		// Only sync if Open Kruise is disabled.
+		!mgr.risingwaveManager.IsOpenKruiseEnabled(),
 	)
 }
 
 // SyncComputeAdvancedStatefulSets implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncComputeAdvancedStatefulSets(ctx context.Context, logger logr.Logger, computeStatefulSets []kruiseappsv1beta1.StatefulSet) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	// We only want groupPodTemplates to be populated for deployments if open Kruise is disabled
-	groupSet := make(map[string]int)
-	if mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		groupSet = buildExpectedGroupSet(risingwave.Spec.Components.Compute.Groups, getNameFromComputeGroup)
-		// Enable the default group only if the global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Compute > 0 {
-			groupSet[""] = 1
-		}
-
-	}
-
-	return syncComponentGroupWorkloads(
-		mgr, ctx, logger,
+	return syncComponentGroupWorkloads(mgr, ctx, logger,
 		consts.ComponentCompute,
-		groupSet,
-		computeStatefulSets,
-		mgr.objectFactory.NewComputeAdvancedStatefulSet,
+		computeStatefulSets, mgr.objectFactory.NewComputeAdvancedStatefulSet,
+		// Only sync if Open Kruise is enabled.
+		mgr.risingwaveManager.IsOpenKruiseEnabled(),
 	)
 }
 
 // SyncFrontendDeployments implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncFrontendDeployments(ctx context.Context, logger logr.Logger, frontendDeployments []appsv1.Deployment) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	// We only want groupSet to be populated for deployments if open Kruise is disabled
-	groupSet := make(map[string]int)
-	if !mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		groupSet = buildExpectedGroupSet(risingwave.Spec.Components.Frontend.Groups, getNameFromComponentGroup)
-		// Enable the default group only if the global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Frontend > 0 {
-			groupSet[""] = 1
-		}
-	}
-
-	return syncComponentGroupWorkloads(
-		mgr, ctx, logger,
+	return syncComponentGroupWorkloads(mgr, ctx, logger,
 		consts.ComponentFrontend,
-		groupSet,
-		frontendDeployments,
-		mgr.objectFactory.NewFrontendDeployment,
+		frontendDeployments, mgr.objectFactory.NewFrontendDeployment,
+		// Only sync if Open Kruise is disabled.
+		!mgr.risingwaveManager.IsOpenKruiseEnabled(),
 	)
 }
 
 // SyncFrontendCloneSets implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncFrontendCloneSets(ctx context.Context, logger logr.Logger, frontendCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	// We only want to populate groupSet for CloneSets if Open Kruise is enabled.
-	groupSet := make(map[string]int)
-	if mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		groupSet = buildExpectedGroupSet(risingwave.Spec.Components.Frontend.Groups, getNameFromComponentGroup)
-		// Enable the default group only if the global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Frontend > 0 {
-			groupSet[""] = 1
-		}
-	}
-
-	return syncComponentGroupWorkloads(
-		mgr, ctx, logger,
+	return syncComponentGroupWorkloads(mgr, ctx, logger,
 		consts.ComponentFrontend,
-		groupSet,
-		frontendCloneSets,
-		mgr.objectFactory.NewFrontendCloneSet,
+		frontendCloneSets, mgr.objectFactory.NewFrontendCloneSet,
+		// Only sync if Open Kruise is enabled.
+		mgr.risingwaveManager.IsOpenKruiseEnabled(),
 	)
 }
 
 // SyncMetaStatefulSets implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncMetaStatefulSets(ctx context.Context, logger logr.Logger, metaStatefulSets []appsv1.StatefulSet) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	// We only want groupSet to be populated for deployments if open Kruise is disabled
-	groupSet := make(map[string]int)
-	if !mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		groupSet = buildExpectedGroupSet(risingwave.Spec.Components.Meta.Groups, getNameFromComponentGroup)
-		// Enable the default group only if the global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Meta > 0 {
-			groupSet[""] = 1
-		}
-
-	}
-
-	return syncComponentGroupWorkloads(
-		mgr, ctx, logger,
+	return syncComponentGroupWorkloads(mgr, ctx, logger,
 		consts.ComponentMeta,
-		groupSet,
-		metaStatefulSets,
-		mgr.objectFactory.NewMetaStatefulSet,
+		metaStatefulSets, mgr.objectFactory.NewMetaStatefulSet,
+		// Only sync if Open Kruise is disabled.
+		!mgr.risingwaveManager.IsOpenKruiseEnabled(),
 	)
 }
 
 // SyncMetaAdvancedStatefulSets implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) SyncMetaAdvancedStatefulSets(ctx context.Context, logger logr.Logger, metaCloneSets []kruiseappsv1beta1.StatefulSet) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	// We only want to populate groupSet for CloneSets if Open Kruise is enabled.
-	groupSet := make(map[string]int)
-	if mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		groupSet = buildExpectedGroupSet(risingwave.Spec.Components.Meta.Groups, getNameFromComponentGroup)
-
-		// Enable the default group only if the global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Meta > 0 {
-			groupSet[""] = 1
-		}
-	}
-
-	return syncComponentGroupWorkloads(
-		mgr, ctx, logger,
+func (mgr *risingWaveControllerManagerImpl) SyncMetaAdvancedStatefulSets(ctx context.Context, logger logr.Logger, metaStatefulSets []kruiseappsv1beta1.StatefulSet) (reconcile.Result, error) {
+	return syncComponentGroupWorkloads(mgr, ctx, logger,
 		consts.ComponentMeta,
-		groupSet,
-		metaCloneSets,
-		mgr.objectFactory.NewMetaAdvancedStatefulSet,
+		metaStatefulSets, mgr.objectFactory.NewMetaAdvancedStatefulSet,
+		// Only sync if Open Kruise is enabled.
+		mgr.risingwaveManager.IsOpenKruiseEnabled(),
 	)
 }
 
@@ -753,49 +610,23 @@ func waitComponentGroupWorkloadsReady[T any, TP ptrAsObject[T]](ctx context.Cont
 	return ctrlkit.Continue()
 }
 
-// WaitBeforeCompactorDeploymentsReady implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) WaitBeforeCompactorDeploymentsReady(ctx context.Context, logger logr.Logger, compactorDeployments []appsv1.Deployment) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	groupMap := make(map[string]int)
-	if !mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		for _, group := range risingwave.Spec.Components.Compactor.Groups {
-			groupMap[group.Name] = 1
-		}
-
-		// Enable the default group only if global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Compactor > 0 {
-			groupMap[""] = 1
-		}
-	}
-
-	return waitComponentGroupWorkloadsReady(ctx, logger,
-		consts.ComponentCompactor, groupMap,
-		compactorDeployments,
-		func(t *appsv1.Deployment) bool {
-			return mgr.isObjectSynced(t) && utils.IsDeploymentRolledOut(t)
-		},
-	)
+func (mgr *risingWaveControllerManagerImpl) buildExpectedGroupSet(component string) map[string]int {
+	return buildKeyMapFromList(mgr.risingwaveManager.GetNodeGroups(component), getNameFromNodeGroup)
 }
 
 // WaitBeforeCompactorDeploymentsReady implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) WaitBeforeCompactorDeploymentsReady(ctx context.Context, logger logr.Logger, compactorDeployments []appsv1.Deployment) (reconcile.Result, error) {
+	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentCompactor,
+		lo.If(!mgr.risingwaveManager.IsOpenKruiseEnabled(), mgr.buildExpectedGroupSet(consts.ComponentCompactor)).Else(nil),
+		compactorDeployments,
+		func(t *appsv1.Deployment) bool { return mgr.isObjectSynced(t) && utils.IsDeploymentRolledOut(t) },
+	)
+}
+
+// WaitBeforeCompactorCloneSetsReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeCompactorCloneSetsReady(ctx context.Context, logger logr.Logger, compactorCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	groupMap := make(map[string]int)
-	if mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		for _, group := range risingwave.Spec.Components.Compactor.Groups {
-			groupMap[group.Name] = 1
-		}
-
-		// Enable the default group only if global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Compactor > 0 {
-			groupMap[""] = 1
-		}
-	}
-
-	return waitComponentGroupWorkloadsReady(ctx, logger,
-		consts.ComponentCompactor, groupMap,
+	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentCompactor,
+		lo.If(mgr.risingwaveManager.IsOpenKruiseEnabled(), mgr.buildExpectedGroupSet(consts.ComponentCompactor)).Else(nil),
 		compactorCloneSets,
 		func(t *kruiseappsv1alpha1.CloneSet) bool {
 			return mgr.isObjectSynced(t) && utils.IsCloneSetRolledOut(t)
@@ -805,47 +636,17 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeCompactorCloneSetsReady(ct
 
 // WaitBeforeConnectorDeploymentsReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeConnectorDeploymentsReady(ctx context.Context, logger logr.Logger, connectorDeployments []appsv1.Deployment) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	groupMap := make(map[string]int)
-	if !mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		for _, group := range risingwave.Spec.Components.Connector.Groups {
-			groupMap[group.Name] = 1
-		}
-
-		// Enable the default group only if global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Connector > 0 {
-			groupMap[""] = 1
-		}
-	}
-
-	return waitComponentGroupWorkloadsReady(ctx, logger,
-		consts.ComponentConnector, groupMap,
+	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentConnector,
+		lo.If(!mgr.risingwaveManager.IsOpenKruiseEnabled(), mgr.buildExpectedGroupSet(consts.ComponentConnector)).Else(nil),
 		connectorDeployments,
-		func(t *appsv1.Deployment) bool {
-			return mgr.isObjectSynced(t) && utils.IsDeploymentRolledOut(t)
-		},
+		func(t *appsv1.Deployment) bool { return mgr.isObjectSynced(t) && utils.IsDeploymentRolledOut(t) },
 	)
 }
 
 // WaitBeforeConnectorCloneSetsReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeConnectorCloneSetsReady(ctx context.Context, logger logr.Logger, connectorCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	groupMap := make(map[string]int)
-	if mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		for _, group := range risingwave.Spec.Components.Connector.Groups {
-			groupMap[group.Name] = 1
-		}
-
-		// Enable the default group only if global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Connector > 0 {
-			groupMap[""] = 1
-		}
-	}
-
-	return waitComponentGroupWorkloadsReady(ctx, logger,
-		consts.ComponentConnector, groupMap,
+	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentConnector,
+		lo.If(mgr.risingwaveManager.IsOpenKruiseEnabled(), mgr.buildExpectedGroupSet(consts.ComponentConnector)).Else(nil),
 		connectorCloneSets,
 		func(t *kruiseappsv1alpha1.CloneSet) bool {
 			return mgr.isObjectSynced(t) && utils.IsCloneSetRolledOut(t)
@@ -855,47 +656,17 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeConnectorCloneSetsReady(ct
 
 // WaitBeforeComputeStatefulSetsReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeComputeStatefulSetsReady(ctx context.Context, logger logr.Logger, computeStatefulSets []appsv1.StatefulSet) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	groupMap := make(map[string]int)
-	if !mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		for _, group := range risingwave.Spec.Components.Compute.Groups {
-			groupMap[group.Name] = 1
-		}
-
-		// Enable the default group only if global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Compute > 0 {
-			groupMap[""] = 1
-		}
-	}
-
-	return waitComponentGroupWorkloadsReady(ctx, logger,
-		consts.ComponentCompute, groupMap,
+	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentCompute,
+		lo.If(!mgr.risingwaveManager.IsOpenKruiseEnabled(), mgr.buildExpectedGroupSet(consts.ComponentCompute)).Else(nil),
 		computeStatefulSets,
-		func(t *appsv1.StatefulSet) bool {
-			return mgr.isObjectSynced(t) && utils.IsStatefulSetRolledOut(t)
-		},
+		func(t *appsv1.StatefulSet) bool { return mgr.isObjectSynced(t) && utils.IsStatefulSetRolledOut(t) },
 	)
 }
 
-// WaitBeforeComputeStatefulSetsReady implements RisingWaveControllerManagerImpl.
+// WaitBeforeComputeAdvancedStatefulSetsReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeComputeAdvancedStatefulSetsReady(ctx context.Context, logger logr.Logger, computeStatefulSets []kruiseappsv1beta1.StatefulSet) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	groupMap := make(map[string]int)
-	if mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		for _, group := range risingwave.Spec.Components.Compute.Groups {
-			groupMap[group.Name] = 1
-		}
-
-		// Enable the default group only if global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Compute > 0 {
-			groupMap[""] = 1
-		}
-	}
-
-	return waitComponentGroupWorkloadsReady(ctx, logger,
-		consts.ComponentCompute, groupMap,
+	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentCompute,
+		lo.If(mgr.risingwaveManager.IsOpenKruiseEnabled(), mgr.buildExpectedGroupSet(consts.ComponentCompute)).Else(nil),
 		computeStatefulSets,
 		func(t *kruiseappsv1beta1.StatefulSet) bool {
 			return mgr.isObjectSynced(t) && utils.IsAdvancedStatefulSetRolledOut(t)
@@ -905,47 +676,17 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeComputeAdvancedStatefulSet
 
 // WaitBeforeFrontendDeploymentsReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendDeploymentsReady(ctx context.Context, logger logr.Logger, frontendDeployments []appsv1.Deployment) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	groupMap := make(map[string]int)
-	if !mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		for _, group := range risingwave.Spec.Components.Frontend.Groups {
-			groupMap[group.Name] = 1
-		}
-
-		// Enable the default group only if global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Frontend > 0 {
-			groupMap[""] = 1
-		}
-	}
-
-	return waitComponentGroupWorkloadsReady(ctx, logger,
-		consts.ComponentFrontend, groupMap,
+	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentFrontend,
+		lo.If(!mgr.risingwaveManager.IsOpenKruiseEnabled(), mgr.buildExpectedGroupSet(consts.ComponentFrontend)).Else(nil),
 		frontendDeployments,
-		func(t *appsv1.Deployment) bool {
-			return mgr.isObjectSynced(t) && utils.IsDeploymentRolledOut(t)
-		},
+		func(t *appsv1.Deployment) bool { return mgr.isObjectSynced(t) && utils.IsDeploymentRolledOut(t) },
 	)
 }
 
-// WaitBeforeFrontendDeploymentsReady implements RisingWaveControllerManagerImpl.
+// WaitBeforeFrontendCloneSetsReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendCloneSetsReady(ctx context.Context, logger logr.Logger, frontendCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	groupMap := make(map[string]int)
-	if mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		for _, group := range risingwave.Spec.Components.Frontend.Groups {
-			groupMap[group.Name] = 1
-		}
-
-		// Enable the default group only if global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Frontend > 0 {
-			groupMap[""] = 1
-		}
-	}
-
-	return waitComponentGroupWorkloadsReady(ctx, logger,
-		consts.ComponentFrontend, groupMap,
+	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentFrontend,
+		lo.If(mgr.risingwaveManager.IsOpenKruiseEnabled(), mgr.buildExpectedGroupSet(consts.ComponentFrontend)).Else(nil),
 		frontendCloneSets,
 		func(t *kruiseappsv1alpha1.CloneSet) bool {
 			return mgr.isObjectSynced(t) && utils.IsCloneSetRolledOut(t)
@@ -955,49 +696,17 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendCloneSetsReady(ctx
 
 // WaitBeforeMetaStatefulSetsReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaStatefulSetsReady(ctx context.Context, logger logr.Logger, metaStatefulSets []appsv1.StatefulSet) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	groupMap := make(map[string]int)
-
-	if !mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		for _, group := range risingwave.Spec.Components.Meta.Groups {
-			groupMap[group.Name] = 1
-		}
-
-		// Enable the default group only if global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Meta > 0 {
-			groupMap[""] = 1
-		}
-	}
-
-	return waitComponentGroupWorkloadsReady(ctx, logger,
-		consts.ComponentMeta, groupMap,
+	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentMeta,
+		lo.If(!mgr.risingwaveManager.IsOpenKruiseEnabled(), mgr.buildExpectedGroupSet(consts.ComponentMeta)).Else(nil),
 		metaStatefulSets,
-		func(t *appsv1.StatefulSet) bool {
-			return mgr.isObjectSynced(t) && utils.IsStatefulSetRolledOut(t)
-		},
+		func(t *appsv1.StatefulSet) bool { return mgr.isObjectSynced(t) && utils.IsStatefulSetRolledOut(t) },
 	)
 }
 
 // WaitBeforeMetaAdvancedStatefulSetsReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaAdvancedStatefulSetsReady(ctx context.Context, logger logr.Logger, metaAdvancedStatefulSets []kruiseappsv1beta1.StatefulSet) (reconcile.Result, error) {
-	risingwave := mgr.risingwaveManager.RisingWave()
-
-	groupMap := make(map[string]int)
-
-	if mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		for _, group := range risingwave.Spec.Components.Meta.Groups {
-			groupMap[group.Name] = 1
-		}
-
-		// Enable the default group only if global replicas > 0.
-		if risingwave.Spec.Global.Replicas.Meta > 0 {
-			groupMap[""] = 1
-		}
-	}
-
-	return waitComponentGroupWorkloadsReady(ctx, logger,
-		consts.ComponentMeta, groupMap,
+	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentMeta,
+		lo.If(mgr.risingwaveManager.IsOpenKruiseEnabled(), mgr.buildExpectedGroupSet(consts.ComponentMeta)).Else(nil),
 		metaAdvancedStatefulSets,
 		func(t *kruiseappsv1beta1.StatefulSet) bool {
 			return mgr.isObjectSynced(t) && utils.IsAdvancedStatefulSetRolledOut(t)
@@ -1122,12 +831,6 @@ func syncObject[T client.Object](mgr *risingWaveControllerManagerImpl, ctx conte
 	}, logger)
 }
 
-func syncObjectErr[T client.Object](mgr *risingWaveControllerManagerImpl, ctx context.Context, obj T, factory func() (T, error), logger logr.Logger) error {
-	return mgr.syncObject(ctx, obj, func() (client.Object, error) {
-		return factory()
-	}, logger)
-}
-
 // SyncCompactorService implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncCompactorService(ctx context.Context, logger logr.Logger, compactorService *corev1.Service) (reconcile.Result, error) {
 	err := syncObject(mgr, ctx, compactorService, mgr.objectFactory.NewCompactorService, logger)
@@ -1169,24 +872,8 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaServiceIsAvailable(ctx
 
 // SyncConfigConfigMap implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncConfigConfigMap(ctx context.Context, logger logr.Logger, configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
-	err := syncObjectErr(mgr, ctx, configConfigMap, func() (*corev1.ConfigMap, error) {
-		configurationSpec := &mgr.risingwaveManager.RisingWave().Spec.Configuration
-		if configurationSpec.ConfigMap == nil {
-			return mgr.objectFactory.NewConfigConfigMap(""), nil
-		}
-		var cm corev1.ConfigMap
-		err := mgr.client.Get(ctx, types.NamespacedName{
-			Namespace: mgr.risingwaveManager.RisingWave().Namespace,
-			Name:      configurationSpec.ConfigMap.Name,
-		}, &cm)
-		if client.IgnoreNotFound(err) != nil {
-			return nil, fmt.Errorf("unable to get configmap %s: %w", configurationSpec.ConfigMap.Name, err)
-		}
-		val, ok := cm.Data[configurationSpec.ConfigMap.Key]
-		if !ok && (configurationSpec.ConfigMap.Optional == nil || !*configurationSpec.ConfigMap.Optional) {
-			return nil, fmt.Errorf("key not found in configmap")
-		}
-		return mgr.objectFactory.NewConfigConfigMap(val), nil
+	err := syncObject(mgr, ctx, configConfigMap, func() *corev1.ConfigMap {
+		return mgr.objectFactory.NewConfigConfigMap("")
 	}, logger)
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync config configmap", err)
 }

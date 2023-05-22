@@ -25,6 +25,10 @@ run:
   # If false (default) - golangci-lint acquires file lock on start.
   allow-parallel-runners: false
 
+  run:
+    skip-files:
+    - ".*\\_generated.*\\.go$"
+
 # output configuration options
 output:
   # Format: colored-line-number|line-number|json|tab|checkstyle|code-climate|junit-xml|github-actions

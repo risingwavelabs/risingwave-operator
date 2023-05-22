@@ -1,22 +1,24 @@
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
-  name: sv-spot
+  name: sv-example
 spec:
-  storages:
-    meta:
-      memory: true
-    object:
-      memory: true
-  global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.18.0
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
+  image: ghcr.io/risingwavelabs/risingwave:v0.18.0
   components:
+    meta:
+      nodeGroups:
+      - name: ""
+        replicas: 1
+    frontend:
+      nodeGroups:
+      - name: ""
+        replicas: 1
+    compute:
+      nodeGroups:
+      - name: ""
+        replicas: 1
     compactor:
-      groups:
+      nodeGroups:
       - name: normal
         replicas: 1
       - name: spot

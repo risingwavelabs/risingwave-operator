@@ -115,6 +115,15 @@ spec:
       nodeGroups:
       - name: ""
         replicas: 1
+        template:
+          spec:
+            volumes:
+            - name: risingwave-data
+              persistentVolumeClaim:
+                claimName: risingwave-data
+            volumeMounts:
+            - mountPath: /var/lib/risingwave/data
+              name: risingwave-data
     frontend:
       nodeGroups:
       - name: ""

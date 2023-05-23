@@ -168,6 +168,7 @@ func (v *RisingWaveValidatingWebhook) validateMetaStoreAndStateStore(path *field
 	isStateAzureBlob := stateStore.AzureBlob != nil
 	isStateHDFS := stateStore.HDFS != nil
 	isStateWebHDFS := stateStore.WebHDFS != nil
+	isStateLocalDisk := stateStore.LocalDisk != nil
 
 	if isStateS3 {
 		if len(stateStore.S3.Endpoint) > 0 {
@@ -189,7 +190,7 @@ func (v *RisingWaveValidatingWebhook) validateMetaStoreAndStateStore(path *field
 		}
 	}
 
-	validStateStoreTypeCount := lo.CountBy([]bool{isStateMemory, isStateMinIO, isStateS3, isStateGCS, isStateAliyunOSS, isStateAzureBlob, isStateHDFS, isStateWebHDFS}, func(x bool) bool { return x })
+	validStateStoreTypeCount := lo.CountBy([]bool{isStateMemory, isStateMinIO, isStateS3, isStateGCS, isStateAliyunOSS, isStateAzureBlob, isStateHDFS, isStateWebHDFS, isStateLocalDisk}, func(x bool) bool { return x })
 	if validStateStoreTypeCount == 0 {
 		fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore"), stateStore, "must configure the state store"))
 	} else if validStateStoreTypeCount > 1 {

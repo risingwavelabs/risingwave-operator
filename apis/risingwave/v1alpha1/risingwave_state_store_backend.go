@@ -27,6 +27,7 @@ const (
 	RisingWaveStateStoreBackendTypeGCS       RisingWaveStateStoreBackendType = "GCS"
 	RisingWaveStateStoreBackendTypeAliyunOSS RisingWaveStateStoreBackendType = "AliyunOSS"
 	RisingWaveStateStoreBackendTypeAzureBlob RisingWaveStateStoreBackendType = "AzureBlob"
+	RisingWaveStateStoreBackendTypeLocalDisk RisingWaveStateStoreBackendType = "LocalDisk"
 	RisingWaveStateStoreBackendTypeUnknown   RisingWaveStateStoreBackendType = "Unknown"
 )
 
@@ -238,6 +239,13 @@ type RisingWaveStateStoreBackendHDFS struct {
 	Root string `json:"root"`
 }
 
+// RisingWaveStateStoreBackendLocalDisk is the details of local storage for compute and compactor components.
+type RisingWaveStateStoreBackendLocalDisk struct {
+	// Root is the root directory to store the data in the object storage.
+	// +kubebuilder:validation:Required
+	Root string `json:"root"`
+}
+
 // RisingWaveStateStoreBackend is the collection of parameters for the state store that RisingWave uses. Note that one
 // and only one of the first-level fields could be set.
 type RisingWaveStateStoreBackend struct {
@@ -248,6 +256,11 @@ type RisingWaveStateStoreBackend struct {
 	// be used in production.
 	// +optional
 	Memory *bool `json:"memory,omitempty"`
+
+	// Local indicates to store the data in local disk. It's only for test usage and strongly discouraged to
+	// be used in production.
+	// +optional
+	LocalDisk *RisingWaveStateStoreBackendLocalDisk `json:"localDisk,omitempty"`
 
 	// MinIO storage spec.
 	// +optional

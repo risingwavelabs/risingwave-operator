@@ -5346,6 +5346,21 @@ be used in production.</p>
 </tr>
 <tr>
 <td>
+<code>localDisk</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendLocalDisk">
+RisingWaveStateStoreBackendLocalDisk
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Local indicates to store the data in local disk. It&rsquo;s only for test usage and strongly discouraged to
+be used in production.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minio</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendMinIO">
@@ -5706,6 +5721,35 @@ string
 </td>
 <td>
 <p>Working directory root of the HDFS</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendLocalDisk">RisingWaveStateStoreBackendLocalDisk
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">RisingWaveStateStoreBackend</a>)
+</p>
+<div>
+<p>RisingWaveStateStoreBackendLocalDisk is the details of local storage for compute and compactor components.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>root</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Root is the root directory to store the data in the object storage.</p>
 </td>
 </tr>
 </tbody>

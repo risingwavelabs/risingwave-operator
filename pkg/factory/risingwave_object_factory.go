@@ -106,6 +106,10 @@ func (f *RisingWaveObjectFactory) isStateStoreMinIO() bool {
 	return f.risingwave.Spec.StateStore.MinIO != nil
 }
 
+func (f *RisingWaveObjectFactory) isStateStoreLocalDisk() bool {
+	return f.risingwave.Spec.StateStore.LocalDisk != nil
+}
+
 func (f *RisingWaveObjectFactory) isMetaStoreMemory() bool {
 	return pointer.BoolDeref(f.risingwave.Spec.MetaStore.Memory, false)
 }
@@ -130,20 +134,23 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 		return fmt.Sprintf("hummock+minio://$(%s):$(%s)@%s/%s", envs.MinIOUsername, envs.MinIOPassword, minio.Endpoint, minio.Bucket)
 	case f.isStateStoreGCS():
 		return fmt.Sprintf("hummock+gcs://%s@%s", stateStore.GCS.Bucket, stateStore.GCS.Root)
-	case stateStore.AliyunOSS != nil:
+	case f.isStateStoreAliyunOSS():
 		aliyunOSS := stateStore.AliyunOSS
 		// Redirect to s3-compatible.
 		return fmt.Sprintf("hummock+s3-compatible://%s", aliyunOSS.Bucket)
-	case stateStore.AzureBlob != nil:
+	case f.isStateStoreAzureBlob():
 		azureBlob := stateStore.AzureBlob
 		// Redirect to s3-compatible.
 		return fmt.Sprintf("hummock+azblob://%s@%s", azureBlob.Container, azureBlob.Root)
-	case stateStore.HDFS != nil:
+	case f.isStateStoreHDFS():
 		hdfs := stateStore.HDFS
 		return fmt.Sprintf("hummock+hdfs://%s@%s", hdfs.NameNode, hdfs.Root)
-	case stateStore.WebHDFS != nil:
+	case f.isStateStoreWebHDFS():
 		webhdfs := stateStore.WebHDFS
 		return fmt.Sprintf("hummock+webhdfs://%s@%s", webhdfs.NameNode, webhdfs.Root)
+	case f.isStateStoreLocalDisk():
+		localDisk := stateStore.LocalDisk
+		return fmt.Sprintf("hummock+fs://@%s", localDisk.Root)
 	default:
 		panic("unrecognized storage type")
 	}
@@ -737,6 +744,10 @@ func (f *RisingWaveObjectFactory) envsForWebHDFS() []corev1.EnvVar {
 	return []corev1.EnvVar{}
 }
 
+func (f *RisingWaveObjectFactory) envsForLocalDisk() []corev1.EnvVar {
+	return []corev1.EnvVar{}
+}
+
 func (f *RisingWaveObjectFactory) envsForStateStore() []corev1.EnvVar {
 	switch {
 	case f.isStateStoreMinIO():
@@ -753,6 +764,8 @@ func (f *RisingWaveObjectFactory) envsForStateStore() []corev1.EnvVar {
 		return f.envsForHDFS()
 	case f.isStateStoreWebHDFS():
 		return f.envsForWebHDFS()
+	case f.isStateStoreLocalDisk():
+		return f.envsForLocalDisk()
 	default:
 		return nil
 	}

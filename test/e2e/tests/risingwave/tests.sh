@@ -249,3 +249,22 @@ if [[ -v "E2E_AZURE_ACCOUNTNAME" && -v "E2E_AZURE_ACCOUNTKEY" && -v "E2E_AZURE_E
 else
   logging::warn "Test case \"risingwave::storage_support::object_azure_blob\" is disabled due to lack of parameters!"
 fi
+
+function test::run::risingwave::local_disk() {
+  logging::info "Starting RisingWave..."
+  if ! test::risingwave::start storages/local-disk.yaml; then
+    return 1
+  fi
+  logging::info "Started!"
+
+  if ! test::risingwave::check_status_with_simple_queries; then
+    logging::error "Queries run against storage failed!"
+    return 1
+  else
+    logging::info "Queries succeeded!"
+  fi
+
+  logging::info "Stopping RisingWave..."
+  test::risingwave::stop storages/local-disk.yaml
+  logging::info "Stopped!"
+}

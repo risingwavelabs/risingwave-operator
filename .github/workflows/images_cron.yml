@@ -16,6 +16,12 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+    - name: Find Tag
+      id: tagger
+      uses: jimschubert/query-tag-actions@v1
+      with:
+        include: 'v*'
+        commit-ish: "HEAD"
     - name: Docker meta for GHCR
       id: meta
       uses: docker/metadata-action@v4
@@ -64,7 +70,7 @@ jobs:
         context: .
         file: build/Dockerfile
         build-args: |
-          VERSION=${{ github.sha }}
+          VERSION=${{steps.tagger.outputs.tag}}
         push: true
         platforms: linux/amd64,linux/arm64
         tags: "${{ steps.meta.outputs.tags }}\n${{ steps.dockerhub-meta.outputs.tags }}"

@@ -12,6 +12,11 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+    - name: Unshallow
+      run: git fetch --prune --unshallow
+    - name: Get Tag
+      id: tagger
+      run: echo "tag=$(git describe --tags)" >> $GITHUB_OUTPUT
     - name: Docker meta for GHCR
       id: meta
       uses: docker/metadata-action@v4
@@ -37,7 +42,7 @@ jobs:
         context: .
         file: build/Dockerfile
         build-args: |
-          VERSION=${{ github.sha }}
+          VERSION=${{steps.tagger.outputs.tag}}
         push: ${{ github.event_name != 'pull_request' }}
         platforms: linux/amd64,linux/arm64
         tags: ${{ steps.meta.outputs.tags }}

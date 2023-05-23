@@ -18,12 +18,17 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/discovery"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -61,8 +66,18 @@ var (
 	configPath           string
 	enableLeaderElection bool
 	featureGates         string
-	version              string
+	operatorVersion      string
 )
+
+func requireKubernetesVersion(serverVersion *version.Info, minMajor, minMinor int) {
+	major, _ := strconv.Atoi(serverVersion.Major)
+	minor, _ := strconv.Atoi(strings.TrimRight(serverVersion.Minor, "+"))
+	if major < minMajor || (major == minMajor && minor < minMinor) {
+		setupLog.Error(nil, "Kubernetes version is too low", "expected", fmt.Sprintf("%d.%d+", minMajor, minMinor),
+			"actual", serverVersion.GitVersion)
+		os.Exit(1)
+	}
+}
 
 func main() {
 	metrics.InitMetrics()
@@ -96,6 +111,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Barrier to ensure that the operator is not started on Kubernetes lower than 1.21.
+	// This is to avoid the issue that the operator will be stuck in a crash loop if it is started on Kubernetes lower than 1.21.
+	kubernetesVersion, err := discovery.NewDiscoveryClientForConfigOrDie(mgr.GetConfig()).ServerVersion()
+	if err != nil {
+		setupLog.Error(err, "Unable to get Kubernetes version")
+		os.Exit(1)
+	}
+	requireKubernetesVersion(kubernetesVersion, 1, 21)
+
 	if err = webhook.SetupWebhooksWithManager(mgr, featureManager.IsFeatureEnabled(features.EnableOpenKruiseFeature)); err != nil {
 		setupLog.Error(err, "unable to setup webhooks")
 		os.Exit(1)
@@ -111,7 +135,7 @@ func main() {
 		mgr.GetEventRecorderFor("risingwave-controller"),
 		featureManager.IsFeatureEnabled(features.EnableOpenKruiseFeature),
 		featureManager.IsFeatureEnabled(features.EnableForceUpdate),
-		version,
+		operatorVersion,
 	).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RisingWave")
 		os.Exit(1)

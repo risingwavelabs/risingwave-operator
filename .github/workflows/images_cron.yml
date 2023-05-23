@@ -16,12 +16,11 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-    - name: Find Tag
+    - name: Unshallow
+      run: git fetch --prune --unshallow
+    - name: Get Tag
       id: tagger
-      uses: jimschubert/query-tag-action@v1
-      with:
-        include: 'v*'
-        commit-ish: "HEAD"
+      run: echo "tag=$(git describe --tags)" >> $GITHUB_OUTPUT
     - name: Docker meta for GHCR
       id: meta
       uses: docker/metadata-action@v4

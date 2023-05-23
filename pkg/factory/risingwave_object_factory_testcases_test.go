@@ -3502,6 +3502,17 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 				Value: "hummock+webhdfs://name-node@root",
 			}},
 		},
+		"local-disk": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				LocalDisk: &risingwavev1alpha1.RisingWaveStateStoreBackendLocalDisk{
+					Root: "root",
+				},
+			},
+			envs: []corev1.EnvVar{{
+				Name:  "RW_STATE_STORE",
+				Value: "hummock+fs://@root",
+			}},
+		},
 	}
 }
 

@@ -51028,6 +51028,18 @@ spec:
                     - nameNode
                     - root
                     type: object
+                  localDisk:
+                    description: Local indicates to store the data in local disk.
+                      It's only for test usage and strongly discouraged to be used
+                      in production.
+                    properties:
+                      root:
+                        description: Root is the root directory to store the data
+                          in the object storage.
+                        type: string
+                    required:
+                    - root
+                    type: object
                   memory:
                     description: Memory indicates to store the data in memory. It's
                       only for test usage and strongly discouraged to be used in production.
@@ -51372,6 +51384,18 @@ spec:
                             type: string
                         required:
                         - nameNode
+                        - root
+                        type: object
+                      localDisk:
+                        description: Local indicates to store the data in local disk.
+                          It's only for test usage and strongly discouraged to be
+                          used in production.
+                        properties:
+                          root:
+                            description: Root is the root directory to store the data
+                              in the object storage.
+                            type: string
+                        required:
                         - root
                         type: object
                       memory:

@@ -69,12 +69,12 @@ var (
 	operatorVersion      string
 )
 
-func requireKubernetesVersion(version *version.Info, major, minor int) {
-	serverMajor, _ := strconv.Atoi(version.Major)
-	serverMinor, _ := strconv.Atoi(strings.TrimRight(version.Minor, "+"))
-	if serverMajor < major || (serverMajor == major && serverMinor < minor) {
-		setupLog.Error(nil, "Kubernetes version is too low", "expected", fmt.Sprintf("%d.%d+", major, minor),
-			"actual", version.GitVersion)
+func requireKubernetesVersion(serverVersion *version.Info, minMajor, minMinor int) {
+	major, _ := strconv.Atoi(serverVersion.Major)
+	minor, _ := strconv.Atoi(strings.TrimRight(serverVersion.Minor, "+"))
+	if major < minMajor || (major == minMajor && minor < minMinor) {
+		setupLog.Error(nil, "Kubernetes version is too low", "expected", fmt.Sprintf("%d.%d+", minMajor, minMinor),
+			"actual", serverVersion.GitVersion)
 		os.Exit(1)
 	}
 }

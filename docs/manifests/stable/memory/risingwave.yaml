@@ -1,0 +1,17 @@
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave
+spec:
+  storages:
+    meta:
+      memory: true
+    object:
+      memory: true
+  global:
+    image: ghcr.io/risingwavelabs/risingwave:v0.18.0
+    replicas:
+      meta: 1
+      frontend: 1
+      compute: 1
+      compactor: 1

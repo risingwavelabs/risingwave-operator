@@ -21,13 +21,13 @@ FROM base as vendor-true
 ARG TARGETARCH
 ARG VERSION=""
 RUN echo "version is ${VERSION}"
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -ldflags "-X main.version=${VERSION}" -mod=vendor -a -o manager cmd/manager/manager.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -ldflags "-X main.operatorVersion=${VERSION}" -mod=vendor -a -o manager cmd/manager/manager.go
 
 FROM base as vendor-false
 ARG TARGETARCH
 ARG VERSION=""
 RUN echo "version is ${VERSION}"
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -ldflags "-X main.version=${VERSION}" -a -o manager cmd/manager/manager.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -ldflags "-X main.operatorVersion=${VERSION}" -a -o manager cmd/manager/manager.go
 
 FROM vendor-${USE_VENDOR} as vendor
 RUN echo "vendor is ${USE_VENDOR}"

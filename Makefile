@@ -142,7 +142,7 @@ proto:
 build: build-manager
 
 build-manager: generate fmt vet lint vendor ## Build manager binary.
-	go build -ldflags "-X main.version=$(shell git describe --tags)" -o bin/$(OS)/manager cmd/manager/manager.go
+	go build -ldflags "-X main.operatorVersion=$(shell git describe --tags)" -o bin/$(OS)/manager cmd/manager/manager.go
 
 # Helper target for generating new local certs used in development. Use install-local instead
 # if you also use Docker for Desktop as your development environment.
@@ -167,7 +167,7 @@ copy-local-certs:
 	cp -R config/local/certs/* ${TMPDIR}/k8s-webhook-server/serving-certs
 
 run-local: use-local-context manifests generate fmt vet lint install-local
-	go run -ldflags "-X main.version=$(shell git describe --tags)" cmd/manager/manager.go -zap-time-encoding rfc3339
+	go run -ldflags "-X main.operatorVersion=$(shell git describe --tags)" cmd/manager/manager.go -zap-time-encoding rfc3339
 
 build-e2e-image:
 	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=true --build-arg VERSION="$(shell git describe --tags)" -t docker.io/risingwavelabs/risingwave-operator:dev . --load

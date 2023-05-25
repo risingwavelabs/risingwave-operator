@@ -5328,7 +5328,8 @@ string
 </em>
 </td>
 <td>
-<p>DataDirectory is the directory to store the data in the object storage. It is an optional field.</p>
+<p>DataDirectory is the directory to store the data in the object storage.
+Defaults to hummock.</p>
 </td>
 </tr>
 <tr>
@@ -5926,6 +5927,8 @@ ${BUCKET}.s3.${REGION}.amazonaws.com</p>
 </tr><tr><td><p>&#34;GCS&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;HDFS&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;LocalDisk&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;Memory&#34;</p></td>
 <td></td>

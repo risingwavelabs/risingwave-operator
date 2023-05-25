@@ -43813,8 +43813,9 @@ spec:
                     - root
                     type: object
                   dataDirectory:
+                    default: hummock
                     description: DataDirectory is the directory to store the data
-                      in the object storage. It is an optional field.
+                      in the object storage. Defaults to hummock.
                     type: string
                   gcs:
                     description: GCS storage spec.
@@ -44169,8 +44170,9 @@ spec:
                         - root
                         type: object
                       dataDirectory:
+                        default: hummock
                         description: DataDirectory is the directory to store the data
-                          in the object storage. It is an optional field.
+                          in the object storage. Defaults to hummock.
                         type: string
                       gcs:
                         description: GCS storage spec.

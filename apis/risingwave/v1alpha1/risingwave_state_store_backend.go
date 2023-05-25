@@ -249,7 +249,9 @@ type RisingWaveStateStoreBackendLocalDisk struct {
 // RisingWaveStateStoreBackend is the collection of parameters for the state store that RisingWave uses. Note that one
 // and only one of the first-level fields could be set.
 type RisingWaveStateStoreBackend struct {
-	// DataDirectory is the directory to store the data in the object storage. It is an optional field.
+	// DataDirectory is the directory to store the data in the object storage.
+	// Defaults to hummock.
+	// +kubebuilder:default=hummock
 	DataDirectory string `json:"dataDirectory,omitempty"`
 
 	// Memory indicates to store the data in memory. It's only for test usage and strongly discouraged to

@@ -178,7 +178,7 @@ func (v *RisingWaveValidatingWebhook) validateMetaStoreAndStateStore(path *field
 			}
 		} else {
 			// AWS S3.
-			if !pointer.BoolDeref(stateStore.S3.UseServiceAccount, false) == (stateStore.S3.RisingWaveS3Credentials.SecretName == "") {
+			if !pointer.BoolDeref(stateStore.S3.UseServiceAccount, false) && stateStore.S3.RisingWaveS3Credentials.SecretName == "" {
 				fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore", "s3", "credentials"), stateStore.S3.SecretName, "either secretName or useServiceAccount must be specified"))
 			}
 		}

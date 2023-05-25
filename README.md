@@ -80,9 +80,8 @@ Check the installation status:
 ```shell
 # Check the CRDs
 $ kubectl get crds | grep risingwavelabs.com
-risingwavepodtemplates.risingwave.risingwavelabs.com    2022-11-15T12:55:05Z
-risingwaves.risingwave.risingwavelabs.com               2022-11-15T12:55:07Z
-risingwavescaleviews.risingwave.risingwavelabs.com      2022-11-15T12:55:09Z
+risingwaves.risingwave.risingwavelabs.com              2023-05-23T06:04:00Z
+risingwavescaleviews.risingwave.risingwavelabs.com     2023-05-23T06:04:01Z
 
 # Check the controller Pod status
 $ kubectl -n risingwave-operator-system get pods

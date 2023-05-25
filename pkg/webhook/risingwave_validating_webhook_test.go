@@ -355,6 +355,20 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
+		"s3-state-store-use-service-account-pass-1": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
+						Bucket: "hummock",
+						RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+							UseServiceAccount: pointer.Bool(true),
+							SecretName:        "s3-creds",
+						},
+					},
+				}
+			},
+			pass: true,
+		},
 		"s3-state-store-no-credentials-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
@@ -407,6 +421,21 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
+		"gcs-state-store-workload-pass-1": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
+						RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
+							UseWorkloadIdentity: pointer.Bool(true),
+							SecretName:          "gcs-creds",
+						},
+						Bucket: "gcs-bucket",
+						Root:   "gcs-root",
+					},
+				}
+			},
+			pass: true,
+		},
 		"gcs-state-store-secret-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
@@ -420,21 +449,6 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				}
 			},
 			pass: true,
-		},
-		"gcs-state-store-both-fail": {
-			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
-					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
-						Bucket: "gcs-bucket",
-						Root:   "gcs-root",
-						RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
-							UseWorkloadIdentity: pointer.Bool(true),
-							SecretName:          "gcs-creds",
-						},
-					},
-				}
-			},
-			pass: false,
 		},
 		"gcs-state-store-none-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {

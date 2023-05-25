@@ -16,6 +16,20 @@ The Kubernetes operator acts as a bridge between the RisingWave platform and the
 deployment and management process. It leverages the native capabilities of Kubernetes to automate tasks such as scaling,
 monitoring, and fault tolerance, making it easier to operate RisingWave in a Kubernetes environment.
 
+## Table of Contents
+
+- [Description](#description)
+- [Compatibility](#compatibility)
+- [Installation](#installation)
+  - [Install RisingWave Operator](#install-risingwave-operator)
+- [Usage](#usage)
+  - [Create a RisingWave Cluster](#create-a-risingwave-cluster)
+  - [Connect to the RisingWave Cluster](#connect-to-the-risingwave-cluster)
+  - [Delete the RisingWave Cluster](#delete-the-risingwave-cluster)
+  - [Customize the RisingWave Cluster](#customize-the-risingwave-cluster)
+- [Contribution Guidelines](#contribution-guidelines)
+- [License](#license)
+
 ## Compatibility
 
 RisingWave Operator has been tested and should be working with the following Kubernetes distributions:

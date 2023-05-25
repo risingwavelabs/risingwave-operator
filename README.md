@@ -237,7 +237,7 @@ You can customize the RisingWave cluster by modifying the manifest YAML file. Fo
 reference in the [docs/general/api.md](docs/general/api.md) file.
 
 For customizing the state store backends of RisingWave
-cluster, please refer to the [docs/general/state-store.md](docs/general/state-store.md) file.
+cluster, please refer to the [docs/general/state-stores.md](docs/general/state-stores.md) file.
 
 ## Contribution Guidelines
 

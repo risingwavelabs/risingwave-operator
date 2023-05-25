@@ -7,6 +7,15 @@ please refer to the API reference in the [api.md](api.md) file.
 The state store backends are defined in the `spec.stateStore` section of the RisingWave manifest YAML file. Currently,
 the following state store backends are supported:
 
+- [Memory (for test only)](#memory-for-test-only)
+- [Local File System (for test only)](#local-file-system-for-test-only)
+- [MinIO](#minio)
+- [AWS S3](#aws-s3)
+- [S3 compatible object storages](#s3-compatible-object-storages)
+- [Google Cloud Storage](#google-cloud-storage)
+- [Azure Blob Storage](#azure-blob-storage)
+- [Apache HDFS / WebHDFS](#apache-hdfs--webhdfs)
+
 ## Memory (for test only)
 
 ```yamlex

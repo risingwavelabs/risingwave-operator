@@ -166,42 +166,31 @@ psql -h localhost -p 4567 -d dev -U root
 Now try to create a table in the database:
 
 ```sql
-dev=>
-CREATE TABLE t1
-(
-    v1 int
-);
+dev=> CREATE TABLE t1 (v1 int);
 CREATE_TABLE
 ```
 
 Then create a materialized view based on the table:
 
 ```sql
-dev=>
-CREATE MATERIALIZED VIEW mv1 AS
-SELECT sum(v1) AS sum_v1
-FROM t1;
+dev=> CREATE MATERIALIZED VIEW mv1 AS SELECT sum(v1) AS sum_v1 FROM t1;
 CREATE_MATERIALIZED_VIEW
 ```
 
 Insert some data into the table:
 
 ```sql
-dev=>
-INSERT INTO t1
-VALUES (1),
-       (2),
-       (3);
+dev=> INSERT INTO t1 VALUES (1), (2), (3);
 INSERT 0 3
-    dev=> FLUSH;
+
+dev=> FLUSH;
 FLUSH
 ```
 
 Now you can query the materialized view:
 
 ```sql
-SELECT *
-FROM mv1;
+dev=> SELECT * FROM mv1;
 sum_v1
 --------
       6

@@ -7181,17 +7181,17 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .status.conditions[?(@.type=="Running")].status
-      name: RUNNING
-      type: string
     - jsonPath: .status.metaStore.backend
-      name: STORAGE(META)
+      name: META STORE
       type: string
     - jsonPath: .status.stateStore.backend
-      name: STORAGE(OBJECT)
+      name: STATE STORE
       type: string
     - jsonPath: .status.version
       name: VERSION
+      type: string
+    - jsonPath: .status.conditions[?(@.type=="Running")].status
+      name: RUNNING
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: AGE
@@ -50893,7 +50893,7 @@ spec:
                             description: The name of the secret in the pod's namespace
                               to select from.
                             type: string
-                          useProjectedServiceAccountToken:
+                          useServiceAccount:
                             description: UseServiceAccount indicates whether to use
                               the service account token mounted in the pod. It only
                               works when using the AWS S3. If this is enabled, secret
@@ -50933,7 +50933,7 @@ spec:
                         description: RisingWaveAzureBlobCredentials is the credentials
                           provider from a Secret.
                         properties:
-                          AccountKeyRef:
+                          accountKeyRef:
                             default: AccountKey
                             description: AccountKeyRef is the key of the secret to
                               be the secret account key. Must be a valid secret key.
@@ -51114,7 +51114,7 @@ spec:
                             description: The name of the secret in the pod's namespace
                               to select from.
                             type: string
-                          useProjectedServiceAccountToken:
+                          useServiceAccount:
                             description: UseServiceAccount indicates whether to use
                               the service account token mounted in the pod. It only
                               works when using the AWS S3. If this is enabled, secret
@@ -51247,7 +51247,7 @@ spec:
                                 description: The name of the secret in the pod's namespace
                                   to select from.
                                 type: string
-                              useProjectedServiceAccountToken:
+                              useServiceAccount:
                                 description: UseServiceAccount indicates whether to
                                   use the service account token mounted in the pod.
                                   It only works when using the AWS S3. If this is
@@ -51288,7 +51288,7 @@ spec:
                             description: RisingWaveAzureBlobCredentials is the credentials
                               provider from a Secret.
                             properties:
-                              AccountKeyRef:
+                              accountKeyRef:
                                 default: AccountKey
                                 description: AccountKeyRef is the key of the secret
                                   to be the secret account key. Must be a valid secret
@@ -51475,7 +51475,7 @@ spec:
                                 description: The name of the secret in the pod's namespace
                                   to select from.
                                 type: string
-                              useProjectedServiceAccountToken:
+                              useServiceAccount:
                                 description: UseServiceAccount indicates whether to
                                   use the service account token mounted in the pod.
                                   It only works when using the AWS S3. If this is

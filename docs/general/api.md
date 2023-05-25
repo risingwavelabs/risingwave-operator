@@ -705,7 +705,7 @@ Defaults to &ldquo;AccountName&rdquo;.</p>
 </tr>
 <tr>
 <td>
-<code>AccountKeyRef</code><br/>
+<code>accountKeyRef</code><br/>
 <em>
 string
 </em>
@@ -4623,7 +4623,7 @@ This field is alpha-level and is only honored by servers that enable the UserNam
 <tbody>
 <tr>
 <td>
-<code>useProjectedServiceAccountToken</code><br/>
+<code>useServiceAccount</code><br/>
 <em>
 bool
 </em>

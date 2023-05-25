@@ -78,7 +78,7 @@ type RisingWaveS3Credentials struct {
 	// UseServiceAccount indicates whether to use the service account token mounted in the pod. It only works when using
 	// the AWS S3. If this is enabled, secret and keys are ignored. Defaults to false.
 	// +optional
-	UseServiceAccount *bool `json:"useProjectedServiceAccountToken,omitempty"`
+	UseServiceAccount *bool `json:"useServiceAccount,omitempty"`
 
 	// The name of the secret in the pod's namespace to select from.
 	SecretName string `json:"secretName,omitempty"`
@@ -200,7 +200,7 @@ type RisingWaveAzureBlobCredentials struct {
 	// AccountKeyRef is the key of the secret to be the secret account key. Must be a valid secret key.
 	// Defaults to "AccountKey".
 	// +kubebuilder:default=AccountKey
-	AccountKeyRef string `json:"AccountKeyRef,omitempty"`
+	AccountKeyRef string `json:"accountKeyRef,omitempty"`
 }
 
 // RisingWaveStateStoreBackendAzureBlob is the details of Azure blob storage (S3 compatible) for compute and compactor components.

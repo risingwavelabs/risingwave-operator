@@ -421,6 +421,21 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
+		"gcs-state-store-workload-pass-1": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
+					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
+						RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
+							UseWorkloadIdentity: pointer.Bool(true),
+							SecretName:          "gcs-creds",
+						},
+						Bucket: "gcs-bucket",
+						Root:   "gcs-root",
+					},
+				}
+			},
+			pass: true,
+		},
 		"gcs-state-store-secret-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{

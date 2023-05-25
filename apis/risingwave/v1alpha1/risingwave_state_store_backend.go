@@ -128,7 +128,6 @@ type RisingWaveStateStoreBackendS3 struct {
 type RisingWaveGCSCredentials struct {
 	// UseWorkloadIdentity indicates to use workload identity to access the GCS service.
 	// If this is enabled, secret is not required, and ADC is used.
-	// +kubebuilder:validation:Required
 	UseWorkloadIdentity *bool `json:"useWorkloadIdentity,omitempty"`
 
 	// The name of the secret in the pod's namespace to select from.

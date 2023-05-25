@@ -185,7 +185,7 @@ func (v *RisingWaveValidatingWebhook) validateMetaStoreAndStateStore(path *field
 	}
 
 	if isStateGCS {
-		if !pointer.BoolDeref(stateStore.GCS.UseWorkloadIdentity, false) == (stateStore.GCS.RisingWaveGCSCredentials.SecretName == "") {
+		if !pointer.BoolDeref(stateStore.GCS.UseWorkloadIdentity, false) && (stateStore.GCS.RisingWaveGCSCredentials.SecretName == "") {
 			fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore", "gcs", "credentials"), stateStore.GCS.RisingWaveGCSCredentials.SecretName, "either secretName or useWorkloadIdentity must be specified"))
 		}
 	}

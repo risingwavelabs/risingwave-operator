@@ -32,6 +32,7 @@ import (
 	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
@@ -56,7 +57,7 @@ func getScaleViewMaxConstraints(obj *risingwavev1alpha1.RisingWaveScaleView) int
 	return max
 }
 
-func (w *RisingWaveScaleViewValidatingWebhook) validateObject(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
+func (w *RisingWaveScaleViewValidatingWebhook) validateObject(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) (warnings admission.Warnings, err error) {
 	fieldErrs := field.ErrorList{}
 
 	targetRefPath := field.NewPath("spec", "targetRef")
@@ -77,49 +78,49 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateObject(ctx context.Contex
 
 	if len(fieldErrs) > 0 {
 		gvk := obj.GroupVersionKind()
-		return apierrors.NewInvalid(
+		return nil, apierrors.NewInvalid(
 			gvk.GroupKind(),
 			obj.Name,
 			fieldErrs,
 		)
 	}
 
-	return nil
+	return nil, nil
 }
 
-func (w *RisingWaveScaleViewValidatingWebhook) validateCreate(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
-	if err := w.validateObject(ctx, obj); err != nil {
-		return err
+func (w *RisingWaveScaleViewValidatingWebhook) validateCreate(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) (warnings admission.Warnings, err error) {
+	if warnings, err := w.validateObject(ctx, obj); err != nil {
+		return warnings, err
 	}
 
 	var risingwave risingwavev1alpha1.RisingWave
-	err := w.client.Get(ctx, types.NamespacedName{
+	err = w.client.Get(ctx, types.NamespacedName{
 		Namespace: obj.Namespace,
 		Name:      obj.Spec.TargetRef.Name,
 	}, &risingwave)
 	if err != nil {
-		return fmt.Errorf("unable to get the risingwave: %w", err)
+		return nil, fmt.Errorf("unable to get the risingwave: %w", err)
 	}
 
 	if obj.Spec.TargetRef.UID != risingwave.UID {
-		return fmt.Errorf("risingwave not match, expect uid: %s, but is: %s", obj.Spec.TargetRef.UID, risingwave.UID)
+		return nil, fmt.Errorf("risingwave not match, expect uid: %s, but is: %s", obj.Spec.TargetRef.UID, risingwave.UID)
 	}
 
 	// Try grab the lock to see if there are conflicts.
 	if err := object.NewScaleViewLockManager(&risingwave).GrabScaleViewLockFor(obj); err != nil {
 		gvk := obj.GroupVersionKind()
-		return apierrors.NewConflict(
+		return nil, apierrors.NewConflict(
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			obj.Name,
 			fmt.Errorf("conflict detected: %w", err),
 		)
 	}
 
-	return nil
+	return nil, nil
 }
 
 // ValidateCreate implements the webhook.CustomValidator.
-func (w *RisingWaveScaleViewValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
+func (w *RisingWaveScaleViewValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
 	return w.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWaveScaleView))
 }
 
@@ -160,18 +161,19 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateUpdate(ctx context.Contex
 }
 
 // ValidateUpdate implements the webhook.CustomValidator.
-func (w *RisingWaveScaleViewValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) error {
+func (w *RisingWaveScaleViewValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (warnings admission.Warnings, err error) {
 	// Validate the new object first.
-	if err := w.validateObject(ctx, newObj.(*risingwavev1alpha1.RisingWaveScaleView)); err != nil {
-		return err
+	if warnings, err := w.validateObject(ctx, newObj.(*risingwavev1alpha1.RisingWaveScaleView)); err != nil {
+		return warnings, err
 	}
 
-	return w.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWaveScaleView), newObj.(*risingwavev1alpha1.RisingWaveScaleView))
+	err = w.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWaveScaleView), newObj.(*risingwavev1alpha1.RisingWaveScaleView))
+	return nil, err
 }
 
 // ValidateDelete implements the webhook.CustomValidator.
-func (w *RisingWaveScaleViewValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
-	return nil
+func (w *RisingWaveScaleViewValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
+	return nil, nil
 }
 
 // NewRisingWaveScaleViewValidatingWebhook returns a new validator for RisingWaveScaleViews.

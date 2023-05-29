@@ -28,6 +28,7 @@ import (
 	"github.com/go-logr/logr"
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
 	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
+	"github.com/risingwavelabs/ctrlkit"
 	"golang.org/x/time/rate"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -45,11 +46,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
-	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
 	"github.com/risingwavelabs/risingwave-operator/pkg/event"
 	"github.com/risingwavelabs/risingwave-operator/pkg/manager"
 	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
@@ -481,8 +480,8 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.Service{}).
 		Owns(&corev1.ConfigMap{}).
 		Watches(
-			&source.Kind{Type: &risingwavev1alpha1.RisingWaveScaleView{}},
-			handler.EnqueueRequestsFromMapFunc(func(object client.Object) []reconcile.Request {
+			&risingwavev1alpha1.RisingWaveScaleView{},
+			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, object client.Object) []reconcile.Request {
 				obj := object.(*risingwavev1alpha1.RisingWaveScaleView)
 				return []reconcile.Request{
 					{

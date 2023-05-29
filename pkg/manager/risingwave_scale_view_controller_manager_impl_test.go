@@ -53,6 +53,7 @@ func TestRisingWaveScaleViewControllerManagerImpl_HandleScaleViewFinalizer(t *te
 	client := fake.NewClientBuilder().
 		WithScheme(testutils.Scheme).
 		WithObjects(risingwave.DeepCopy(), scaleView.DeepCopy()).
+		WithStatusSubresource(&risingwavev1alpha1.RisingWave{}).
 		Build()
 
 	impl := NewRisingWaveScaleViewControllerManagerImpl(client, scaleView)
@@ -91,6 +92,7 @@ func TestRisingWaveScaleViewControllerManagerImpl_GrabOrUpdateScaleViewLock(t *t
 
 	client := fake.NewClientBuilder().
 		WithScheme(testutils.Scheme).
+		WithStatusSubresource(&risingwavev1alpha1.RisingWave{}).
 		WithObjects(risingwave.DeepCopy(), scaleView.DeepCopy()).
 		Build()
 
@@ -134,6 +136,8 @@ func TestRisingWaveScaleViewControllerManagerImpl_UpdateScaleViewStatus(t *testi
 
 	client := fake.NewClientBuilder().
 		WithScheme(testutils.Scheme).
+		WithStatusSubresource(&risingwavev1alpha1.RisingWave{}).
+		WithStatusSubresource(&risingwavev1alpha1.RisingWaveScaleView{}).
 		WithObjects(scaleView.DeepCopy()).
 		Build()
 

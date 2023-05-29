@@ -92,11 +92,11 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 	@$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./apis/..."
 
 generate-manager: ctrlkit-gen goimports-reviser ## Generate codes of controller managers.
-	@$(CTRLKIT-GEN) -o pkg/manager/ -p "github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit" -b hack/boilerplate.go.txt pkg/manager/risingwave_controller_manager.cm
+	@$(CTRLKIT-GEN) -o pkg/manager/ -p "github.com/risingwavelabs/ctrlkit" -b hack/boilerplate.go.txt pkg/manager/risingwave_controller_manager.cm
 	@mv pkg/manager/risingwave_controller_manager.go pkg/manager/risingwave_controller_manager_generated.go
 	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_controller_manager_generated.go -local "github.com/risingwavelabs/risingwave-operator"
 
-	@$(CTRLKIT-GEN) -o pkg/manager/ -p "github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit" -b hack/boilerplate.go.txt pkg/manager/risingwave_scale_view_controller_manager.cm
+	@$(CTRLKIT-GEN) -o pkg/manager/ -p "github.com/risingwavelabs/ctrlkit" -b hack/boilerplate.go.txt pkg/manager/risingwave_scale_view_controller_manager.cm
 	@mv pkg/manager/risingwave_scale_view_controller_manager.go pkg/manager/risingwave_scale_view_controller_manager_generated.go
 	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_scale_view_controller_manager_generated.go -local "github.com/risingwavelabs/risingwave-operator"
 

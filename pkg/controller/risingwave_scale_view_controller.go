@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/risingwavelabs/ctrlkit"
 	"github.com/samber/lo"
 	"golang.org/x/time/rate"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -33,10 +34,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
 	"github.com/risingwavelabs/risingwave-operator/pkg/manager"
 	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
@@ -127,10 +126,10 @@ func (c *RisingWaveScaleViewController) SetupWithManager(mgr ctrl.Manager) error
 		}).
 		For(&risingwavev1alpha1.RisingWaveScaleView{}).
 		Watches(
-			&source.Kind{Type: &risingwavev1alpha1.RisingWave{}},
+			&risingwavev1alpha1.RisingWave{},
 			// Enqueue requests for the RisingWaveScaleViews recorded in the status of RisingWave object when
 			// there is change happened on the RisingWave object.
-			handler.EnqueueRequestsFromMapFunc(func(object client.Object) []reconcile.Request {
+			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, object client.Object) []reconcile.Request {
 				obj := object.(*risingwavev1alpha1.RisingWave)
 				return lo.Map(obj.Status.ScaleViews, func(t risingwavev1alpha1.RisingWaveScaleViewLock, _ int) reconcile.Request {
 					return reconcile.Request{NamespacedName: types.NamespacedName{

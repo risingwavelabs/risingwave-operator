@@ -95,6 +95,7 @@ func Test_RisingWaveScaleViewMutatingWebhook_Default(t *testing.T) {
 			webhook := NewRisingWaveScaleViewMutatingWebhook(
 				fake.NewClientBuilder().
 					WithScheme(testutils.Scheme).
+					WithStatusSubresource(&risingwavev1alpha1.RisingWave{}).
 					WithObjects(tc.initObjs...).
 					Build(),
 			)

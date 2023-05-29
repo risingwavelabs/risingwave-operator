@@ -22,6 +22,8 @@ import (
 	"strconv"
 	"strings"
 
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+
 	"github.com/risingwavelabs/risingwave-operator/pkg/factory/envs"
 
 	"github.com/distribution/distribution/reference"
@@ -313,13 +315,14 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 }
 
 // ValidateCreate implements admission.CustomValidator.
-func (v *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) error {
-	return v.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWave))
+func (v *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
+	err = v.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWave))
+	return
 }
 
 // ValidateDelete implements admission.CustomValidator.
-func (v *RisingWaveValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) error {
-	return nil
+func (v *RisingWaveValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
+	return nil, nil
 }
 
 func (v *RisingWaveValidatingWebhook) isMetaStoresTheSame(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
@@ -423,13 +426,14 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 }
 
 // ValidateUpdate implements admission.CustomValidator.
-func (v *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error {
+func (v *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (warnings admission.Warnings, err error) {
 	// Validate the new object first.
-	if err := v.ValidateCreate(ctx, newObj); err != nil {
-		return err
+	if warnings, err := v.ValidateCreate(ctx, newObj); err != nil {
+		return warnings, err
 	}
 
-	return v.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWave), newObj.(*risingwavev1alpha1.RisingWave))
+	err = v.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWave), newObj.(*risingwavev1alpha1.RisingWave))
+	return
 }
 
 func nodeGroupPartitionExistAndIsString(nodeGroup *risingwavev1alpha1.RisingWaveNodeGroup) bool {

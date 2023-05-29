@@ -22,6 +22,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
@@ -77,7 +78,7 @@ type validatingWebhookMetricsRecorder struct {
 }
 
 // ValidateCreate implements the CustomValidator.
-func (r *validatingWebhookMetricsRecorder) ValidateCreate(ctx context.Context, obj runtime.Object) (err error) {
+func (r *validatingWebhookMetricsRecorder) ValidateCreate(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
 	startTime := time.Now()
 
 	r.webhookMetricsRecorder.beforeInvoke(ctx, obj)
@@ -87,7 +88,7 @@ func (r *validatingWebhookMetricsRecorder) ValidateCreate(ctx context.Context, o
 }
 
 // ValidateUpdate implements the CustomValidator.
-func (r *validatingWebhookMetricsRecorder) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (err error) {
+func (r *validatingWebhookMetricsRecorder) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (warnings admission.Warnings, err error) {
 	startTime := time.Now()
 
 	r.webhookMetricsRecorder.beforeInvoke(ctx, newObj)
@@ -97,7 +98,7 @@ func (r *validatingWebhookMetricsRecorder) ValidateUpdate(ctx context.Context, o
 }
 
 // ValidateDelete implements the CustomValidator.
-func (r *validatingWebhookMetricsRecorder) ValidateDelete(ctx context.Context, obj runtime.Object) (err error) {
+func (r *validatingWebhookMetricsRecorder) ValidateDelete(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
 	startTime := time.Now()
 
 	r.webhookMetricsRecorder.beforeInvoke(ctx, obj)

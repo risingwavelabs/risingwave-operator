@@ -115,7 +115,7 @@ func Test_RisingWaveScaleViewValidatingWebhook_ValidateObject(t *testing.T) {
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			webhook := &RisingWaveScaleViewValidatingWebhook{}
-			err := webhook.validateObject(context.Background(), tc.object)
+			_, err := webhook.validateObject(context.Background(), tc.object)
 			if tc.returnErr {
 				assert.NotNil(t, err)
 			} else {
@@ -191,10 +191,11 @@ func Test_RisingWaveScaleViewValidatingWebhook_ValidateCreate(t *testing.T) {
 			webhook := NewRisingWaveScaleViewValidatingWebhook(
 				fake.NewClientBuilder().
 					WithScheme(testutils.Scheme).
+					WithStatusSubresource(&risingwavev1alpha1.RisingWave{}).
 					WithObjects(tc.initObjs...).
 					Build(),
 			)
-			err := webhook.ValidateCreate(context.Background(), tc.scaleView)
+			_, err := webhook.ValidateCreate(context.Background(), tc.scaleView)
 			if tc.returnErr {
 				assert.NotNil(t, err)
 			} else {
@@ -275,13 +276,14 @@ func Test_RisingWaveScaleViewValidatingWebhook_ValidateUpdate(t *testing.T) {
 			webhook := NewRisingWaveScaleViewValidatingWebhook(
 				fake.NewClientBuilder().
 					WithScheme(testutils.Scheme).
+					WithStatusSubresource(&risingwavev1alpha1.RisingWave{}).
 					Build(),
 			)
 
 			newObj := tc.scaleView.DeepCopy()
 			tc.mutate(newObj)
 
-			err := webhook.ValidateUpdate(context.Background(), tc.scaleView, newObj)
+			_, err := webhook.ValidateUpdate(context.Background(), tc.scaleView, newObj)
 			if tc.returnErr {
 				assert.NotNil(t, err, "error expected")
 			} else {
@@ -292,5 +294,6 @@ func Test_RisingWaveScaleViewValidatingWebhook_ValidateUpdate(t *testing.T) {
 }
 
 func Test_RisingWaveScaleViewValidatingWebhook_ValidateDelete(t *testing.T) {
-	assert.Nil(t, NewRisingWaveScaleViewValidatingWebhook(nil).ValidateDelete(context.Background(), &risingwavev1alpha1.RisingWaveScaleView{}))
+	_, err := NewRisingWaveScaleViewValidatingWebhook(nil).ValidateDelete(context.Background(), &risingwavev1alpha1.RisingWaveScaleView{})
+	assert.Nil(t, err)
 }

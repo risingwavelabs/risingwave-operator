@@ -23,9 +23,10 @@ import (
 
 	"github.com/samber/lo"
 
+	"github.com/risingwavelabs/ctrlkit"
+
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	pb "github.com/risingwavelabs/risingwave-operator/pkg/controller/proto"
-	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
 	"github.com/risingwavelabs/risingwave-operator/pkg/factory/envs"
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 

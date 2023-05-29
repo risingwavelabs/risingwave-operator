@@ -26,6 +26,7 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	"github.com/risingwavelabs/ctrlkit"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -33,7 +34,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
 )
 
 // RisingWaveScaleViewControllerManagerState is the state manager of RisingWaveScaleViewControllerManager.

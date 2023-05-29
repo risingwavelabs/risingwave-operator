@@ -35,8 +35,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	"github.com/risingwavelabs/ctrlkit"
+
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
-	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
 	"github.com/risingwavelabs/risingwave-operator/pkg/object"
 	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
@@ -114,6 +115,7 @@ func Test_RisingWaveController_New(t *testing.T) {
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Scheme).
+			WithStatusSubresource(&risingwavev1alpha1.RisingWave{}).
 			WithObjects(risingwave).
 			Build(),
 		ActionHookFactory: func() ctrlkit.ActionHook {
@@ -171,6 +173,7 @@ func Test_RisingWaveController_Deleted(t *testing.T) {
 			Name:              "example",
 			Namespace:         "default",
 			DeletionTimestamp: &metav1.Time{Time: time.Now()},
+			Finalizers:        []string{"workaround"},
 		},
 		Spec:   risingwavev1alpha1.RisingWaveSpec{},
 		Status: risingwavev1alpha1.RisingWaveStatus{},
@@ -180,6 +183,7 @@ func Test_RisingWaveController_Deleted(t *testing.T) {
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Scheme).
+			WithStatusSubresource(&risingwavev1alpha1.RisingWave{}).
 			WithObjects(risingwave).
 			Build(),
 		ActionHookFactory: func() ctrlkit.ActionHook {
@@ -222,6 +226,7 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Scheme).
+			WithStatusSubresource(&risingwavev1alpha1.RisingWave{}).
 			WithObjects(risingwave).
 			Build(),
 		Recorder: recorder,
@@ -283,6 +288,7 @@ func Test_RisingWaveController_Recovery(t *testing.T) {
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Scheme).
+			WithStatusSubresource(&risingwavev1alpha1.RisingWave{}).
 			WithObjects(risingwave).
 			Build(),
 		Recorder: recorder,

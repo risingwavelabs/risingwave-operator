@@ -34,7 +34,8 @@ import (
 )
 
 func Test_RisingWaveValidatingWebhook_ValidateDelete(t *testing.T) {
-	assert.Nil(t, NewRisingWaveValidatingWebhook(false).ValidateDelete(context.Background(), &risingwavev1alpha1.RisingWave{}))
+	_, err := NewRisingWaveValidatingWebhook(false).ValidateDelete(context.Background(), &risingwavev1alpha1.RisingWave{})
+	assert.Nil(t, err)
 }
 
 func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
@@ -754,7 +755,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			// we let webhook take on open kruise availability specified in Test case.
 			webhook := NewRisingWaveValidatingWebhook(tc.openKruiseAvailable)
 
-			err := webhook.ValidateCreate(context.Background(), risingwave)
+			_, err := webhook.ValidateCreate(context.Background(), risingwave)
 			if tc.pass != (err == nil) {
 				t.Fatal(tc.pass, err)
 			}
@@ -852,7 +853,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 					t.Fatal("Risingwave is not default")
 				}
 			}
-			err := webhook.ValidateUpdate(context.Background(), oldObj, risingwave)
+			_, err := webhook.ValidateUpdate(context.Background(), oldObj, risingwave)
 			if tc.pass != (err == nil) {
 				t.Fatal(tc.pass, err)
 			}
@@ -982,7 +983,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate_ScaleViews(t *testing.T) {
 			newObj := obj.DeepCopy()
 			tc.mutate(newObj)
 
-			err := NewRisingWaveValidatingWebhook(false).ValidateUpdate(context.Background(), obj, newObj)
+			_, err := NewRisingWaveValidatingWebhook(false).ValidateUpdate(context.Background(), obj, newObj)
 			if tc.pass {
 				assert.Nil(t, err, "unexpected error")
 			} else {

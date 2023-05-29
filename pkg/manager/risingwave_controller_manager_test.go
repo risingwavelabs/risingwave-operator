@@ -39,9 +39,10 @@ import (
 
 	"github.com/risingwavelabs/risingwave-operator/pkg/event"
 
+	"github.com/risingwavelabs/ctrlkit"
+
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
-	"github.com/risingwavelabs/risingwave-operator/pkg/ctrlkit"
 	"github.com/risingwavelabs/risingwave-operator/pkg/object"
 	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
@@ -49,6 +50,7 @@ import (
 func newRisingWaveControllerManagerImplForTest(risingwave *risingwavev1alpha1.RisingWave, objects ...client.Object) *risingWaveControllerManagerImpl {
 	fakeClient := fake.NewClientBuilder().
 		WithObjects(append(objects, risingwave.DeepCopy())...).
+		WithStatusSubresource(&risingwavev1alpha1.RisingWave{}).
 		WithScheme(testutils.Scheme).
 		Build()
 	risingwaveManager := object.NewRisingWaveManager(fakeClient, risingwave.DeepCopy(), false)
@@ -58,6 +60,7 @@ func newRisingWaveControllerManagerImplForTest(risingwave *risingwavev1alpha1.Ri
 func newRisingWaveControllerManagerImplOpenKruiseAvailableForTest(risingwave *risingwavev1alpha1.RisingWave, objects ...client.Object) *risingWaveControllerManagerImpl {
 	fakeClient := fake.NewClientBuilder().
 		WithObjects(append(objects, risingwave.DeepCopy())...).
+		WithStatusSubresource(&risingwavev1alpha1.RisingWave{}).
 		WithScheme(testutils.Scheme).
 		Build()
 	risingwaveManager := object.NewRisingWaveManager(fakeClient, risingwave.DeepCopy(), true)

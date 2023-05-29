@@ -199,6 +199,13 @@ func (v *RisingWaveValidatingWebhook) validateMetaStoreAndStateStore(path *field
 		fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore"), stateStore, "multiple state store types"))
 	}
 
+	if strings.HasSuffix(stateStore.DataDirectory, "/") ||
+		strings.HasPrefix(stateStore.DataDirectory, "/") ||
+		strings.Contains(stateStore.DataDirectory, "//") ||
+		len(stateStore.DataDirectory) > 800 {
+		fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore", "dataDirectory"), stateStore.DataDirectory, "must be a valid path"))
+	}
+
 	return fieldErrs
 }
 

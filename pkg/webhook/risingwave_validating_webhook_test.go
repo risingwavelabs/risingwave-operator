@@ -18,6 +18,7 @@ package webhook
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	kruisepubs "github.com/openkruise/kruise-api/apps/pub"
@@ -740,6 +741,48 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 						},
 					},
 				}
+			},
+			pass: true,
+		},
+		"invalid-data-dir-1": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore.DataDirectory = "/"
+			},
+			pass: false,
+		},
+		"invalid-data-dir-2": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore.DataDirectory = "/a"
+			},
+			pass: false,
+		},
+		"invalid-data-dir-3": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore.DataDirectory = "a/"
+			},
+			pass: false,
+		},
+		"invalid-data-dir-4": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore.DataDirectory = "a//b"
+			},
+			pass: false,
+		},
+		"invalid-data-dir-5": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore.DataDirectory = strings.Repeat("a", 801)
+			},
+			pass: false,
+		},
+		"valid-data-dir-1": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore.DataDirectory = "a"
+			},
+			pass: true,
+		},
+		"valid-data-dir-2": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore.DataDirectory = "a/b"
 			},
 			pass: true,
 		},

@@ -127,5 +127,5 @@ const (
 	CompactorServicePort int32 = 6660
 	CompactorMetricsPort int32 = 1260
 	ConnectorServicePort int32 = 50051
-	ConnectorMetricsPort int32 = 8080
+	ConnectorMetricsPort int32 = 50052
 )

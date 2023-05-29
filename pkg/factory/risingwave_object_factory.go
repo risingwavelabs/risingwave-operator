@@ -348,7 +348,7 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWConnectorRPCEndPoint,
-			Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), consts.ConnectorMetricsPort),
+			Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), consts.ConnectorServicePort),
 		},
 	}
 
@@ -1408,6 +1408,10 @@ func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Cont
 		container.Env = append(container.Env, corev1.EnvVar{
 			Name:  envs.JavaOpts,
 			Value: fmt.Sprintf("-Xmx%d", memLimits),
+		})
+		container.Env = append(container.Env, corev1.EnvVar{
+			Name:  envs.RWConnectorNodePrometheusPort,
+			Value: fmt.Sprintf("%d", consts.ConnectorMetricsPort),
 		})
 	}
 

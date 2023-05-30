@@ -251,7 +251,7 @@ type RisingWaveStateStoreBackend struct {
 	// DataDirectory is the directory to store the data in the object storage.
 	// Defaults to hummock.
 	// +kubebuilder:default=hummock
-	// +kubebuilder:validation:Pattern="^[0-9a-zA-Z_/]{1,}$"
+	// +kubebuilder:validation:Pattern="^[0-9a-zA-Z_/-]{1,}$"
 	DataDirectory string `json:"dataDirectory,omitempty"`
 
 	// Memory indicates to store the data in memory. It's only for test usage and strongly discouraged to

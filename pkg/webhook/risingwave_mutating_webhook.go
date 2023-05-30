@@ -18,6 +18,7 @@ package webhook
 
 import (
 	"context"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -32,6 +33,8 @@ type RisingWaveMutatingWebhook struct{}
 // Default implements admission.CustomDefaulter.
 func (m *RisingWaveMutatingWebhook) Default(ctx context.Context, obj runtime.Object) error {
 	ConvertToV1alpha2Features(obj.(*risingwavev1alpha1.RisingWave))
+	risingwave := obj.(*risingwavev1alpha1.RisingWave)
+	risingwave.Spec.StateStore.DataDirectory = strings.TrimRight(strings.TrimSpace(risingwave.Spec.StateStore.DataDirectory), "/")
 	return nil
 }
 

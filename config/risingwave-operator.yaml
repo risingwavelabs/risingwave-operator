@@ -51268,6 +51268,7 @@ spec:
                     default: hummock
                     description: DataDirectory is the directory to store the data
                       in the object storage. Defaults to hummock.
+                    pattern: ^[0-9a-zA-Z_/-]{1,}$
                     type: string
                   gcs:
                     description: GCS storage spec.
@@ -51625,6 +51626,7 @@ spec:
                         default: hummock
                         description: DataDirectory is the directory to store the data
                           in the object storage. Defaults to hummock.
+                        pattern: ^[0-9a-zA-Z_/-]{1,}$
                         type: string
                       gcs:
                         description: GCS storage spec.

@@ -49,7 +49,9 @@ Here is the compatibility matrix:
 
 | RisingWave Operator | RisingWave | Kubernetes |
 |---------------------|------------|------------|
+| v0.4.0              | v0.18.0+   | v1.21+     |
 | v0.3.6              | v0.18.0+   | v1.21+     |
+
 
 ## Installation
 
@@ -67,6 +69,7 @@ kubectl apply --server-side -f https://github.com/risingwavelabs/risingwave-oper
 (Optional) Install RisingWave Operator with a specific version:
 
 ```shell
+# Replace ${VERSION} with the version you want to install, e.g., v0.4.0
 kubectl apply --server-side -f https://github.com/risingwavelabs/risingwave-operator/releases/download/${VERSION}/risingwave-operator.yaml
 ```
 

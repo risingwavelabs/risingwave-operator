@@ -298,8 +298,8 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 		fieldErrs = append(fieldErrs, field.Forbidden(field.NewPath("spec", "enableOpenKruise"), "OpenKruise is disabled."))
 	}
 
-	// Validate the storages spec.
-	fieldErrs = append(fieldErrs, v.validateMetaStoreAndStateStore(field.NewPath("spec", "storages"), &obj.Spec.MetaStore, &obj.Spec.StateStore)...)
+	// Validate the meta store and state store spec.
+	fieldErrs = append(fieldErrs, v.validateMetaStoreAndStateStore(field.NewPath("spec"), &obj.Spec.MetaStore, &obj.Spec.StateStore)...)
 
 	// Validate the configuration spec.
 	fieldErrs = append(fieldErrs, v.validateConfiguration(field.NewPath("spec", "configuration"), &obj.Spec.Configuration)...)
@@ -371,12 +371,12 @@ func pathForGroupReplicas(obj *risingwavev1alpha1.RisingWave, component, group s
 func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWave) error {
 	gvk := oldObj.GroupVersionKind()
 
-	// The storages must not be changed, especially meta and state.
+	// The meta store and state store must be kept consistent.
 	if !v.isMetaStoresTheSame(oldObj, newObj) && !v.isConvertFromMeta(oldObj, newObj) {
 		return apierrors.NewForbidden(
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			oldObj.Name,
-			field.Forbidden(field.NewPath("spec", "storages", "meta"), "meta storage must be kept consistent"),
+			field.Forbidden(field.NewPath("spec", "metaStore"), "meta store must be kept consistent"),
 		)
 	}
 
@@ -384,7 +384,7 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 		return apierrors.NewForbidden(
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			oldObj.Name,
-			field.Forbidden(field.NewPath("spec", "storages", "state"), "state storage must be kept consistent"),
+			field.Forbidden(field.NewPath("spec", "stateStore"), "state store must be kept consistent"),
 		)
 	}
 

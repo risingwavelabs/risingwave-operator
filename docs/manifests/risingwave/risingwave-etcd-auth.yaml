@@ -95,7 +95,7 @@ spec:
         passwordKeyRef: password
   stateStore:
     memory: true
-  image: ghcr.io/risingwavelabs/risingwave:v0.18.0
+  image: ghcr.io/risingwavelabs/risingwave:v0.19.0
   components:
     meta:
       nodeGroups:

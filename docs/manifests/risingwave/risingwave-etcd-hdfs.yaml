@@ -395,7 +395,7 @@ spec:
         nameNode: hadoop-hdfs-master:9000
         root: risingwave
   global:
-    image: ghcr.io/risingwavelabs/risingwave:git-4e93d7061b66f8f12c4e89e097d950dfd3a5963a
+    image: ghcr.io/risingwavelabs/risingwave:v0.19.0
     imagePullPolicy: IfNotPresent
     replicas:
       meta: 1

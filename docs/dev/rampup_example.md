@@ -198,6 +198,6 @@ mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveSta
     Because we have not start the controller, there is not value in `VERSION`. Run `make run-local` to start controller, the controller will update the field:
     ```bash
     NAME                   RUNNING   STORAGE(META)   STORAGE(OBJECT)   VERSION   AGE
-    risingwave-in-memory   True      Memory          Memory            v0.18.0   20m
+    risingwave-in-memory   True      Memory          Memory            v0.19.0   20m
     ```
 5. When we launch the k8s, the k8s will update the name. The controller will update the `status` field, the k8s will collect the column we want and show it.

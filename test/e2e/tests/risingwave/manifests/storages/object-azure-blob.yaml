@@ -23,7 +23,7 @@ spec:
         root: risingwave
         endpoint: ${E2E_AZURE_ENDPOINT}
   global:
-    image: ghcr.io/risingwavelabs/risingwave:git-5cd14918233990d28b48a153fa8d11115089c148
+    image: ghcr.io/risingwavelabs/risingwave:v0.19.0
     imagePullPolicy: IfNotPresent
     replicas:
       meta: 1

@@ -34,6 +34,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
 	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
@@ -42,7 +43,7 @@ import (
 	risingwavecontroller "github.com/risingwavelabs/risingwave-operator/pkg/controller"
 	"github.com/risingwavelabs/risingwave-operator/pkg/features"
 	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
-	"github.com/risingwavelabs/risingwave-operator/pkg/webhook"
+	risingwavewebhook "github.com/risingwavelabs/risingwave-operator/pkg/webhook"
 )
 
 var (
@@ -101,7 +102,7 @@ func main() {
 	mgr, err := ctrl.NewManager(config, ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
-		Port:                   9443,
+		WebhookServer:          webhook.NewServer(webhook.Options{}),
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "02bd7444.risingwavelabs.com",
@@ -120,7 +121,7 @@ func main() {
 	}
 	requireKubernetesVersion(kubernetesVersion, 1, 21)
 
-	if err = webhook.SetupWebhooksWithManager(mgr, featureManager.IsFeatureEnabled(features.EnableOpenKruiseFeature)); err != nil {
+	if err = risingwavewebhook.SetupWebhooksWithManager(mgr, featureManager.IsFeatureEnabled(features.EnableOpenKruiseFeature)); err != nil {
 		setupLog.Error(err, "unable to setup webhooks")
 		os.Exit(1)
 	}

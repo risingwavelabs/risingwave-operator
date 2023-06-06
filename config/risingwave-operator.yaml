@@ -11905,7 +11905,6 @@ spec:
                                           type: array
                                       type: object
                                     dnsPolicy:
-                                      default: ClusterFirst
                                       description: Set DNS policy for the pod. Defaults
                                         to "ClusterFirst". Valid values are 'ClusterFirstWithHostNet',
                                         'ClusterFirst', 'Default' or 'None'. DNS parameters
@@ -20389,7 +20388,6 @@ spec:
                                           type: array
                                       type: object
                                     dnsPolicy:
-                                      default: ClusterFirst
                                       description: Set DNS policy for the pod. Defaults
                                         to "ClusterFirst". Valid values are 'ClusterFirstWithHostNet',
                                         'ClusterFirst', 'Default' or 'None'. DNS parameters
@@ -28832,7 +28830,6 @@ spec:
                                           type: array
                                       type: object
                                     dnsPolicy:
-                                      default: ClusterFirst
                                       description: Set DNS policy for the pod. Defaults
                                         to "ClusterFirst". Valid values are 'ClusterFirstWithHostNet',
                                         'ClusterFirst', 'Default' or 'None'. DNS parameters
@@ -37274,7 +37271,6 @@ spec:
                                           type: array
                                       type: object
                                     dnsPolicy:
-                                      default: ClusterFirst
                                       description: Set DNS policy for the pod. Defaults
                                         to "ClusterFirst". Valid values are 'ClusterFirstWithHostNet',
                                         'ClusterFirst', 'Default' or 'None'. DNS parameters
@@ -45716,7 +45712,6 @@ spec:
                                           type: array
                                       type: object
                                     dnsPolicy:
-                                      default: ClusterFirst
                                       description: Set DNS policy for the pod. Defaults
                                         to "ClusterFirst". Valid values are 'ClusterFirstWithHostNet',
                                         'ClusterFirst', 'Default' or 'None'. DNS parameters

@@ -9,13 +9,14 @@ spec:
     imagePullPolicy: IfNotPresent
     replicas:
       meta: 1
-      frontend: 1
       compute: 1
       compactor: 1
   components:
     frontend:
-      groups:
+      nodeGroups:
       - name: target
+        replicas: 1
+      - name: ""
         replicas: 1
   storages:
     meta:

@@ -181,7 +181,7 @@ func convertComponentGroupToNodeGroup(globalTemplate *v1alpha1.RisingWaveCompone
 func ConvertNodeGroups(obj *v1alpha1.RisingWave) {
 	components := &obj.Spec.Components
 
-	if components.Meta.NodeGroups == nil {
+	if components.Meta.Groups != nil || obj.Spec.Global.Replicas.Meta > 0 {
 		components.Meta.NodeGroups = lo.Map(components.Meta.Groups, func(ng v1alpha1.RisingWaveComponentGroup, _ int) v1alpha1.RisingWaveNodeGroup {
 			return convertComponentGroupToNodeGroup(&obj.Spec.Global.RisingWaveComponentGroupTemplate, ng, components.Meta.RestartAt)
 		})
@@ -194,7 +194,7 @@ func ConvertNodeGroups(obj *v1alpha1.RisingWave) {
 		}
 	}
 
-	if components.Frontend.NodeGroups == nil {
+	if components.Frontend.Groups != nil || obj.Spec.Global.Replicas.Frontend > 0 {
 		components.Frontend.NodeGroups = lo.Map(components.Frontend.Groups, func(ng v1alpha1.RisingWaveComponentGroup, _ int) v1alpha1.RisingWaveNodeGroup {
 			return convertComponentGroupToNodeGroup(&obj.Spec.Global.RisingWaveComponentGroupTemplate, ng, components.Frontend.RestartAt)
 		})
@@ -207,7 +207,7 @@ func ConvertNodeGroups(obj *v1alpha1.RisingWave) {
 		}
 	}
 
-	if components.Compute.NodeGroups == nil {
+	if components.Compute.Groups != nil || obj.Spec.Global.Replicas.Compute > 0 {
 		components.Compute.NodeGroups = lo.Map(components.Compute.Groups, func(ng v1alpha1.RisingWaveComputeGroup, _ int) v1alpha1.RisingWaveNodeGroup {
 			var groupTemplate *v1alpha1.RisingWaveComponentGroupTemplate
 			if ng.RisingWaveComputeGroupTemplate != nil {
@@ -235,7 +235,7 @@ func ConvertNodeGroups(obj *v1alpha1.RisingWave) {
 		}
 	}
 
-	if components.Compactor.NodeGroups == nil {
+	if components.Compactor.Groups != nil || obj.Spec.Global.Replicas.Compactor > 0 {
 		components.Compactor.NodeGroups = lo.Map(components.Compactor.Groups, func(ng v1alpha1.RisingWaveComponentGroup, _ int) v1alpha1.RisingWaveNodeGroup {
 			return convertComponentGroupToNodeGroup(&obj.Spec.Global.RisingWaveComponentGroupTemplate, ng, components.Compactor.RestartAt)
 		})
@@ -248,7 +248,7 @@ func ConvertNodeGroups(obj *v1alpha1.RisingWave) {
 		}
 	}
 
-	if components.Connector.NodeGroups == nil {
+	if components.Connector.Groups != nil || obj.Spec.Global.Replicas.Connector > 0 {
 		components.Connector.NodeGroups = lo.Map(components.Connector.Groups, func(ng v1alpha1.RisingWaveComponentGroup, _ int) v1alpha1.RisingWaveNodeGroup {
 			return convertComponentGroupToNodeGroup(&obj.Spec.Global.RisingWaveComponentGroupTemplate, ng, components.Connector.RestartAt)
 		})
@@ -264,13 +264,12 @@ func ConvertNodeGroups(obj *v1alpha1.RisingWave) {
 
 // ConvertGlobalConfig converts the global config to the new global config.
 func ConvertGlobalConfig(obj *v1alpha1.RisingWave) {
-	if obj.Spec.Configuration.RisingWaveNodeConfiguration.ConfigMap == nil && obj.Spec.Configuration.ConfigMap != nil {
+	if obj.Spec.Configuration.ConfigMap != nil {
 		obj.Spec.Configuration.RisingWaveNodeConfiguration.ConfigMap = &v1alpha1.RisingWaveNodeConfigurationConfigMapSource{
 			Name:     obj.Spec.Configuration.ConfigMap.Name,
 			Key:      obj.Spec.Configuration.ConfigMap.Key,
 			Optional: obj.Spec.Configuration.ConfigMap.Optional,
 		}
-		obj.Spec.Configuration.ConfigMap = nil
 	}
 }
 

@@ -184,7 +184,7 @@ spec:
         secret: minio-credentials
         endpoint: minio:9301
   global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.18.0
+    image: ghcr.io/risingwavelabs/risingwave:v0.19.1
     replicas:
       meta: 1
       frontend: 1

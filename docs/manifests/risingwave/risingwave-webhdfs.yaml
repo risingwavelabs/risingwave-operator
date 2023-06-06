@@ -15,7 +15,7 @@ spec:
         nameNode: your-name-node
         root: your-root
   global:
-    image: ghcr.io/risingwavelabs/risingwave:nightly-20221107
+    image: ghcr.io/risingwavelabs/risingwave:v0.19.1
     imagePullPolicy: IfNotPresent
     resources:
       limits:

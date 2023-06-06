@@ -143,7 +143,7 @@ the following command:
 ```shell
 kubectl get risingwave
 NAME         META STORE   STATE STORE   VERSION   RUNNING   AGE
-risingwave   Etcd         MinIO         v0.18.0   True      2m20s
+risingwave   Etcd         MinIO         v0.19.1   True      2m20s
 ```
 
 > Note: the `META STORE` column indicates the storage backend for the RisingWave metadata. The `STATE STORE` column

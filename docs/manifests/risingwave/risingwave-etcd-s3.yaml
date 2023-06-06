@@ -84,7 +84,7 @@ spec:
         accessKeyRef: AccessKeyID
         secretAccessKeyRef: SecretAccessKey
       region: ap-southeast-1
-  image: ghcr.io/risingwavelabs/risingwave:v0.18.0
+  image: ghcr.io/risingwavelabs/risingwave:v0.19.1
   components:
     meta:
       nodeGroups:

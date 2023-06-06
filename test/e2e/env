@@ -1,5 +1,5 @@
 E2E_KUBERNETES_RUNTIME=kind
-E2E_RISINGWAVE_IMAGE=ghcr.io/risingwavelabs/risingwave:v0.18.0
+E2E_RISINGWAVE_IMAGE=ghcr.io/risingwavelabs/risingwave:v0.19.1
 E2E_AWS_S3_REGION=
 E2E_AWS_S3_BUCKET=
 E2E_AWS_ACCESS_KEY_ID=

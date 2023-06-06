@@ -115,7 +115,6 @@ type RisingWaveNodePodTemplateSpec struct {
 	// To have DNS options set along with hostNetwork, you have to specify DNS policy
 	// explicitly to 'ClusterFirstWithHostNet'.
 	// +optional
-	// +kubebuilder:default=ClusterFirst
 	// +kubebuilder:validation:Enum=ClusterFirst;ClusterFirstWithHostNet;Default;None
 	DNSPolicy corev1.DNSPolicy `json:"dnsPolicy,omitempty" protobuf:"bytes,6,opt,name=dnsPolicy,casttype=DNSPolicy"`
 

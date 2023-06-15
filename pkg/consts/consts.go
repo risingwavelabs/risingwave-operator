@@ -36,9 +36,10 @@ const (
 
 // System reserved annotations.
 const (
-	AnnotationRestartAt          = "risingwave/restart-at"
-	AnnotationPauseReconcile     = "risingwave.risingwavelabs.com/pause-reconcile"
-	AnnotationInheritLabelPrefix = "risingwave.risingwavelabs.com/inherit-label-prefix"
+	AnnotationRestartAt               = "risingwave/restart-at"
+	AnnotationPauseReconcile          = "risingwave.risingwavelabs.com/pause-reconcile"
+	AnnotationBypassValidatingWebhook = "risingwave.risingwavelabs.com/bypass-validating-webhook"
+	AnnotationInheritLabelPrefix      = "risingwave.risingwavelabs.com/inherit-label-prefix"
 )
 
 // =================================================

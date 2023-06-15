@@ -22,8 +22,10 @@ import (
 	"strconv"
 	"strings"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
+	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	"github.com/risingwavelabs/risingwave-operator/pkg/factory/envs"
 
 	"github.com/distribution/distribution/reference"
@@ -59,6 +61,15 @@ var systemEnv = map[string]bool{
 	envs.RWWorkerThreads:        true,
 	envs.RWConnectorRPCEndPoint: true,
 	envs.JavaOpts:               true,
+}
+
+func (v *RisingWaveValidatingWebhook) isBypassed(obj client.Object) bool {
+	val, ok := obj.GetAnnotations()[consts.AnnotationBypassValidatingWebhook]
+	if !ok {
+		return false
+	}
+	boolVal, _ := strconv.ParseBool(val)
+	return boolVal
 }
 
 func (v *RisingWaveValidatingWebhook) validateNodeGroup(path *field.Path, nodeGroup *risingwavev1alpha1.RisingWaveNodeGroup, openKruiseEnabled bool) field.ErrorList {
@@ -323,6 +334,10 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 
 // ValidateCreate implements admission.CustomValidator.
 func (v *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
+	if v.isBypassed(obj.(client.Object)) {
+		return nil, nil
+	}
+
 	err = v.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWave))
 	return
 }
@@ -336,31 +351,8 @@ func (v *RisingWaveValidatingWebhook) isMetaStoresTheSame(oldObj, newObj *rising
 	return equality.Semantic.DeepEqual(oldObj.Spec.MetaStore, newObj.Spec.MetaStore)
 }
 
-func (v *RisingWaveValidatingWebhook) isConvertFromMeta(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
-	return equality.Semantic.DeepEqual(oldObj.Spec.Storages.Meta, newObj.Spec.MetaStore)
-}
-
 func (v *RisingWaveValidatingWebhook) isStateStoresTheSame(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
 	return equality.Semantic.DeepEqual(oldObj.Spec.StateStore, newObj.Spec.StateStore)
-}
-
-func (v *RisingWaveValidatingWebhook) isConvertFromObject(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
-	oldStateStore := &oldObj.Spec.Storages.Object
-	newStateStore := &newObj.Spec.StateStore
-
-	if newStateStore.MinIO != nil && oldStateStore.MinIO != nil {
-		return newStateStore.MinIO.RisingWaveMinIOCredentials.SecretName == oldStateStore.MinIO.Secret
-	} else if newStateStore.S3 != nil && oldStateStore.S3 != nil {
-		return newStateStore.S3.RisingWaveS3Credentials.SecretName == oldStateStore.S3.Secret
-	} else if newStateStore.GCS != nil && oldStateStore.GCS != nil {
-		return newStateStore.GCS.RisingWaveGCSCredentials.SecretName == oldStateStore.GCS.Secret
-	} else if newStateStore.AliyunOSS != nil && oldStateStore.AliyunOSS != nil {
-		return newStateStore.AliyunOSS.RisingWaveS3Credentials.SecretName == oldStateStore.AliyunOSS.Secret
-	} else if newStateStore.AzureBlob != nil && oldStateStore.AzureBlob != nil {
-		return newStateStore.AzureBlob.RisingWaveAzureBlobCredentials.SecretName == oldStateStore.AzureBlob.Secret
-	} else {
-		return equality.Semantic.DeepEqual(oldStateStore, newStateStore)
-	}
 }
 
 func pathForGroupReplicas(obj *risingwavev1alpha1.RisingWave, component, group string) *field.Path {
@@ -372,7 +364,7 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 	gvk := oldObj.GroupVersionKind()
 
 	// The meta store and state store must be kept consistent.
-	if !v.isMetaStoresTheSame(oldObj, newObj) && !v.isConvertFromMeta(oldObj, newObj) {
+	if !v.isMetaStoresTheSame(oldObj, newObj) {
 		return apierrors.NewForbidden(
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			oldObj.Name,
@@ -380,7 +372,7 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 		)
 	}
 
-	if !v.isStateStoresTheSame(oldObj, newObj) && !v.isConvertFromObject(oldObj, newObj) {
+	if !v.isStateStoresTheSame(oldObj, newObj) {
 		return apierrors.NewForbidden(
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			oldObj.Name,
@@ -434,6 +426,10 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 
 // ValidateUpdate implements admission.CustomValidator.
 func (v *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (warnings admission.Warnings, err error) {
+	if v.isBypassed(newObj.(client.Object)) {
+		return nil, nil
+	}
+
 	// Validate the new object first.
 	if warnings, err := v.ValidateCreate(ctx, newObj); err != nil {
 		return warnings, err

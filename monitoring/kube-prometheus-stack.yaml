@@ -24,8 +24,37 @@ prometheus:
     selector:
       matchLabels: 
         control-plane: controller-manager
+  - name: risingwave-service-monitor
+    additionalLabels:
+      risingwave/name: risingwave
+    endpoints:
+    - bearerTokenSecret:
+        key: ""
+      interval: 5s
+      metricRelabelings:
+        - action: drop
+          regex: stream_exchange_.+
+          sourceLabels:
+            - __name__
+      port: metrics
+      scrapeTimeout: 5s
+    jobLabel: risingwave/risingwave
+    namespaceSelector:
+      any: true
+    selector:
+      matchExpressions:
+      - key: risingwave/name
+        operator: Exists
+    targetLabels:
+    - risingwave/name
+    - risingwave/component
+    - risingwave/group
 
 grafana:
+  additionalDataSources:
+    - name: risedev-prometheus
+      url: http://prometheus-kube-prometheus-prometheus:9090/
+      type: prometheus
   dashboardProviders:
     rw-dashboardproviders.yaml:
       apiVersion: 1
@@ -41,4 +70,4 @@ grafana:
   dashboards:
     risingwave:
       risingwave-dashboard:
-        url: https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/monitoring/grafana/risingwave-dashboard.json
+        url: https://raw.githubusercontent.com/risingwavelabs/risingwave/main/grafana/risingwave-user-dashboard.json

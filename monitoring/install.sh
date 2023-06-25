@@ -15,20 +15,16 @@
 # limitations under the License.
 #
 
-
 usage() {
     {
-        echo "This script installs the entire monitoring stack"
+        echo "This script installs the kube-prometheus-stack stack"
         echo ""
         echo "Usage:"
-        echo "$0 [-h] [-d] [-r] [-k <aws_access_key>] [-s <aws_secret_key>] [-n <namespace>]"
+        echo "$0 [-h] [-d] [-n <namespace>]"
         echo ""
         echo "-d    Dry-run. Print what would be done without executing"
         echo "-h    Show this help message"
-        echo "-k    AWS access key"
         echo "-n    The namespace in which to install the monitoring stack. Defaults to 'monitoring'"
-        echo "-r    Enable prometheus remote write (AWS). Requires that -k and -s are set"
-        echo "-s    AWS secret key"
     } 1>&2
 
     exit 1
@@ -36,27 +32,17 @@ usage() {
 
 dry=false
 ns="monitoring"
-r=false
 
-while getopts ":n:k:s:rdh" o; do
+while getopts ":n:hd" o; do
     case "${o}" in
-        k)
-            k=${OPTARG}
-            ;;
-        s)
-            s=${OPTARG}
-            ;;
-        r)
-            r=true
+        h)
+            usage
             ;;
         d)
             dry=true
             ;;
         n)
             ns=${OPTARG}
-            ;;
-        h)
-            usage
             ;;
         *)
             usage
@@ -65,45 +51,17 @@ while getopts ":n:k:s:rdh" o; do
 done
 shift $((OPTIND-1))
 
-# We require credentials, if we use prometheus remote write
-if [[ $r = true ]]; then
-    if [ -z "${s}" ] || [ -z "${k}" ]; then
-        usage
-    fi
-fi
-
+dryParam=""
 if [[ $dry = true ]]; then 
     echo "Dry-run modus activated in $0"
+    dryParam="--dry-run"
 fi
-echo "Installing monitoring stack in namespace $ns"
 
 _SCRIPT_BASEDIR=$(dirname "$0")
 
-cd "${_SCRIPT_BASEDIR}" || exit
+msg="Installing Kube Prometheus Stack"
+echo $msg
 
-echo "Set up the helm repos and update"
-if [[ $dry = false ]]; then 
-    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 
-    helm repo add grafana https://grafana.github.io/helm-charts
-    helm repo update
-fi
-
-dryParam=""
-if [[ $dry = true ]]; then 
-    dryParam=" -d "
-fi
-
-# Install the `kube-prometheus-stack` locally
-rParams=""
-if [[ $r = true ]]; then
-    # Install the `kube-prometheus-stack` with remote write
-    rParams=" -r -s $s -k $k "
-fi 
-./kube-prometheus-stack/install.sh $rParams $dryParam -n $ns &
-
-# Install the `loki-distributed`
-./loki-distributed/install.sh $dryParam -n $ns &
-
-# Install the `promtail`
-./promtail/install.sh $dryParam -n $ns & 
-wait
+helm --namespace $ns upgrade --install --create-namespace prometheus prometheus-community/kube-prometheus-stack \
+  -f "${_SCRIPT_BASEDIR}"/kube-prometheus-stack.yaml \
+  $dryParam

@@ -56,7 +56,7 @@ Here is the compatibility matrix:
 ## Installation
 
 To secure the webhook server, you need to install the `cert-manager` first. Please refer to
-the [cert-manager installation guide](https://cert-manager.io/docs/installation/kubernetes/) for more information.
+the [cert-manager installation guide](https://cert-manager.io/docs/installation/kubectl/) for more information.
 
 ### Install RisingWave Operator
 

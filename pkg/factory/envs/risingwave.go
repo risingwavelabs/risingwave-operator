@@ -70,11 +70,11 @@ const (
 
 // S3 compatible.
 const (
-	S3CompatibleRegion          = "S3_COMPATIBLE_REGION"
-	S3CompatibleBucket          = "S3_COMPATIBLE_BUCKET"
-	S3CompatibleAccessKeyID     = "S3_COMPATIBLE_ACCESS_KEY_ID"
-	S3CompatibleSecretAccessKey = "S3_COMPATIBLE_SECRET_ACCESS_KEY"
-	S3CompatibleEndpoint        = "S3_COMPATIBLE_ENDPOINT"
+	S3CompatibleRegion          = "AWS_REGION"
+	S3CompatibleBucket          = "AWS_S3_BUCKET"
+	S3CompatibleAccessKeyID     = "AWS_ACCESS_KEY_ID"
+	S3CompatibleSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
+	S3CompatibleEndpoint        = "RW_S3_ENDPOINT"
 )
 
 // Azure blob.

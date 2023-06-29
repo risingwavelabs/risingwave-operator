@@ -128,7 +128,7 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 		return fmt.Sprintf("hummock+s3://%s", bucket)
 	case f.isStateStoreS3Compatible():
 		bucket := stateStore.S3.Bucket
-		return fmt.Sprintf("hummock+s3-compatible://%s", bucket)
+		return fmt.Sprintf("hummock+s3://%s", bucket)
 	case stateStore.MinIO != nil:
 		minio := stateStore.MinIO
 		return fmt.Sprintf("hummock+minio://$(%s):$(%s)@%s/%s", envs.MinIOUsername, envs.MinIOPassword, minio.Endpoint, minio.Bucket)
@@ -137,7 +137,7 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 	case f.isStateStoreAliyunOSS():
 		aliyunOSS := stateStore.AliyunOSS
 		// Redirect to s3-compatible.
-		return fmt.Sprintf("hummock+s3-compatible://%s", aliyunOSS.Bucket)
+		return fmt.Sprintf("hummock+s3://%s", aliyunOSS.Bucket)
 	case f.isStateStoreAzureBlob():
 		azureBlob := stateStore.AzureBlob
 		// Redirect to s3-compatible.

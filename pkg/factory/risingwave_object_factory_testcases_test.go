@@ -3059,18 +3059,18 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			envs: []corev1.EnvVar{
 				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+s3-compatible://s3-hummock01",
+					Value: "hummock+s3://s3-hummock01",
 				},
 				{
-					Name:  "S3_COMPATIBLE_BUCKET",
+					Name:  "AWS_S3_BUCKET",
 					Value: "s3-hummock01",
 				},
 				{
-					Name:  "S3_COMPATIBLE_ENDPOINT",
-					Value: "https://$(S3_COMPATIBLE_BUCKET).oss-$(S3_COMPATIBLE_REGION).aliyuncs.com",
+					Name:  "RW_S3_ENDPOINT",
+					Value: "https://$(AWS_S3_BUCKET).oss-$(AWS_REGION).aliyuncs.com",
 				},
 				{
-					Name: "S3_COMPATIBLE_ACCESS_KEY_ID",
+					Name: "AWS_ACCESS_KEY_ID",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -3081,7 +3081,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					},
 				},
 				{
-					Name: "S3_COMPATIBLE_SECRET_ACCESS_KEY",
+					Name: "AWS_SECRET_ACCESS_KEY",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -3092,7 +3092,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					},
 				},
 				{
-					Name: "S3_COMPATIBLE_REGION",
+					Name: "AWS_REGION",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -3119,18 +3119,18 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			envs: []corev1.EnvVar{
 				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+s3-compatible://s3-hummock01",
+					Value: "hummock+s3://s3-hummock01",
 				},
 				{
-					Name:  "S3_COMPATIBLE_BUCKET",
+					Name:  "AWS_S3_BUCKET",
 					Value: "s3-hummock01",
 				},
 				{
-					Name:  "S3_COMPATIBLE_ENDPOINT",
-					Value: "https://$(S3_COMPATIBLE_BUCKET).oss-$(S3_COMPATIBLE_REGION)-internal.aliyuncs.com",
+					Name:  "RW_S3_ENDPOINT",
+					Value: "https://$(AWS_S3_BUCKET).oss-$(AWS_REGION)-internal.aliyuncs.com",
 				},
 				{
-					Name: "S3_COMPATIBLE_ACCESS_KEY_ID",
+					Name: "AWS_ACCESS_KEY_ID",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -3141,7 +3141,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					},
 				},
 				{
-					Name: "S3_COMPATIBLE_SECRET_ACCESS_KEY",
+					Name: "AWS_SECRET_ACCESS_KEY",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -3152,7 +3152,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					},
 				},
 				{
-					Name: "S3_COMPATIBLE_REGION",
+					Name: "AWS_REGION",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -3179,18 +3179,18 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			envs: []corev1.EnvVar{
 				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+s3-compatible://s3-hummock01",
+					Value: "hummock+s3://s3-hummock01",
 				},
 				{
-					Name:  "S3_COMPATIBLE_BUCKET",
+					Name:  "AWS_S3_BUCKET",
 					Value: "s3-hummock01",
 				},
 				{
-					Name:  "S3_COMPATIBLE_ENDPOINT",
-					Value: "https://$(S3_COMPATIBLE_BUCKET).oss-$(S3_COMPATIBLE_REGION).aliyuncs.com",
+					Name:  "RW_S3_ENDPOINT",
+					Value: "https://$(AWS_S3_BUCKET).oss-$(AWS_REGION).aliyuncs.com",
 				},
 				{
-					Name: "S3_COMPATIBLE_ACCESS_KEY_ID",
+					Name: "AWS_ACCESS_KEY_ID",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -3201,7 +3201,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					},
 				},
 				{
-					Name: "S3_COMPATIBLE_SECRET_ACCESS_KEY",
+					Name: "AWS_SECRET_ACCESS_KEY",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -3212,7 +3212,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					},
 				},
 				{
-					Name:  "S3_COMPATIBLE_REGION",
+					Name:  "AWS_REGION",
 					Value: "cn-hangzhou",
 				},
 			},
@@ -3232,18 +3232,18 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			envs: []corev1.EnvVar{
 				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+s3-compatible://s3-hummock01",
+					Value: "hummock+s3://s3-hummock01",
 				},
 				{
-					Name:  "S3_COMPATIBLE_BUCKET",
+					Name:  "AWS_S3_BUCKET",
 					Value: "s3-hummock01",
 				},
 				{
-					Name:  "S3_COMPATIBLE_ENDPOINT",
+					Name:  "RW_S3_ENDPOINT",
 					Value: "https://oss-cn-hangzhou.aliyuncs.com",
 				},
 				{
-					Name: "S3_COMPATIBLE_ACCESS_KEY_ID",
+					Name: "AWS_ACCESS_KEY_ID",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -3254,7 +3254,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					},
 				},
 				{
-					Name: "S3_COMPATIBLE_SECRET_ACCESS_KEY",
+					Name: "AWS_SECRET_ACCESS_KEY",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -3265,7 +3265,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					},
 				},
 				{
-					Name: "S3_COMPATIBLE_REGION",
+					Name: "AWS_REGION",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -3292,18 +3292,18 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			envs: []corev1.EnvVar{
 				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+s3-compatible://s3-hummock01",
+					Value: "hummock+s3://s3-hummock01",
 				},
 				{
-					Name:  "S3_COMPATIBLE_BUCKET",
+					Name:  "AWS_S3_BUCKET",
 					Value: "s3-hummock01",
 				},
 				{
-					Name:  "S3_COMPATIBLE_ENDPOINT",
-					Value: "https://$(S3_COMPATIBLE_BUCKET).oss-cn-hangzhou.aliyuncs.com",
+					Name:  "RW_S3_ENDPOINT",
+					Value: "https://$(AWS_S3_BUCKET).oss-cn-hangzhou.aliyuncs.com",
 				},
 				{
-					Name: "S3_COMPATIBLE_ACCESS_KEY_ID",
+					Name: "AWS_ACCESS_KEY_ID",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -3314,7 +3314,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					},
 				},
 				{
-					Name: "S3_COMPATIBLE_SECRET_ACCESS_KEY",
+					Name: "AWS_SECRET_ACCESS_KEY",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -3325,7 +3325,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					},
 				},
 				{
-					Name: "S3_COMPATIBLE_REGION",
+					Name: "AWS_REGION",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -3401,11 +3401,11 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			envs: []corev1.EnvVar{
 				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+s3-compatible://s3-hummock01",
+					Value: "hummock+s3://s3-hummock01",
 				},
 				{
-					Name:  "S3_COMPATIBLE_ENDPOINT",
-					Value: "https://s3.$(S3_COMPATIBLE_REGION).amazonaws.com",
+					Name:  "RW_S3_ENDPOINT",
+					Value: "https://s3.$(AWS_REGION).amazonaws.com",
 				},
 			},
 		},
@@ -3424,11 +3424,11 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			envs: []corev1.EnvVar{
 				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+s3-compatible://s3-hummock01",
+					Value: "hummock+s3://s3-hummock01",
 				},
 				{
-					Name:  "S3_COMPATIBLE_ENDPOINT",
-					Value: "https://$(S3_COMPATIBLE_BUCKET).s3.$(S3_COMPATIBLE_REGION).amazonaws.com",
+					Name:  "RW_S3_ENDPOINT",
+					Value: "https://$(AWS_S3_BUCKET).s3.$(AWS_REGION).amazonaws.com",
 				},
 			},
 		},

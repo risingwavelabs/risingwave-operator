@@ -84,6 +84,13 @@ const (
 	AzureBlobAccountKey  = "AZBLOB_ACCOUNT_KEY"
 )
 
+// AliyunOSS.
+const (
+	AliyunOSSEndpoint    = "OSS_ENDPOINT"
+	AliyunOSSAccountName = "OSS_ACCESS_KEY_ID"
+	AliyunOSSAccountKey  = "OSS_ACCESS_KEY_SECRET"
+)
+
 const (
 	// GoogleApplicationCredentials for GCS service.
 	GoogleApplicationCredentials = "GOOGLE_APPLICATION_CREDENTIALS"

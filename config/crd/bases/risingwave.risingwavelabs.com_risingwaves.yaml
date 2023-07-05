@@ -43997,58 +43997,51 @@ spec:
                   aliyunOSS:
                     description: AliyunOSS storage spec.
                     properties:
-                      bucket:
-                        description: Bucket of the Aliyun OSS service.
+                      container:
+                        description: Container Name of the Azure Blob service.
                         type: string
                       credentials:
-                        description: RisingWaveS3Credentials is the credentials provider
-                          from a Secret.
+                        description: RisingWaveAzureBlobCredentials is the credentials
+                          provider from a Secret.
                         properties:
-                          accessKeyRef:
-                            default: AccessKeyID
-                            description: AccessKeyRef is the key of the secret to
-                              be the access key. Must be a valid secret key. Defaults
-                              to "AccessKeyID".
+                          accountKeyRef:
+                            default: AccountKey
+                            description: AccountKeyRef is the key of the secret to
+                              be the secret account key. Must be a valid secret key.
+                              Defaults to "AccountKey".
                             type: string
-                          secretAccessKeyRef:
-                            default: SecretAccessKey
-                            description: SecretAccessKeyRef is the key of the secret
-                              to be the secret access key. Must be a valid secret
-                              key. Defaults to "SecretAccessKey".
+                          accountNameRef:
+                            default: AccountName
+                            description: AccountNameKeyRef is the key of the secret
+                              to be the account name. Must be a valid secret key.
+                              Defaults to "AccountName".
                             type: string
                           secretName:
                             description: The name of the secret in the pod's namespace
                               to select from.
                             type: string
-                          useServiceAccount:
-                            description: UseServiceAccount indicates whether to use
-                              the service account token mounted in the pod. It only
-                              works when using the AWS S3. If this is enabled, secret
-                              and keys are ignored. Defaults to false.
-                            type: boolean
+                        required:
+                        - secretName
                         type: object
-                      internalEndpoint:
-                        description: InternalEndpoint indicates if we use the internal
-                          endpoint to access Aliyun OSS, which is only available in
-                          the internal network.
-                        type: boolean
-                      region:
-                        description: Region of Aliyun OSS service. It is an optional
-                          field that overrides the `Region` key from the secret. Specifying
-                          the region here makes a guarantee that it won't be changed
-                          anymore.
+                      endpoint:
+                        description: Endpoint of the Azure Blob service. e.g. https://yufantest.blob.core.windows.net
+                        pattern: ^(?:https://)?(?:[^/.\s]+\.)*(?:[^/\s]+)*$
+                        type: string
+                      root:
+                        description: Working directory root of the Azure Blob service.
                         type: string
                       secret:
                         description: 'Secret contains the credentials to access the
-                          Aliyun OSS service. It must contain the following keys:
-                          * AccessKeyID * SecretAccessKey * Region (optional if region
-                          is specified in the field.) Deprecated: Please use "credentials"
+                          Azure Blob service. It must contain the following keys:
+                          * AccessKeyID * SecretAccessKey Deprecated: Please use "credentials"
                           field instead. The "Secret" field will be removed in a future
                           release.'
                         type: string
                     required:
-                    - bucket
+                    - container
                     - credentials
+                    - endpoint
+                    - root
                     type: object
                   azureBlob:
                     description: Azure Blob storage spec.
@@ -44352,59 +44345,53 @@ spec:
                       aliyunOSS:
                         description: AliyunOSS storage spec.
                         properties:
-                          bucket:
-                            description: Bucket of the Aliyun OSS service.
+                          container:
+                            description: Container Name of the Azure Blob service.
                             type: string
                           credentials:
-                            description: RisingWaveS3Credentials is the credentials
+                            description: RisingWaveAzureBlobCredentials is the credentials
                               provider from a Secret.
                             properties:
-                              accessKeyRef:
-                                default: AccessKeyID
-                                description: AccessKeyRef is the key of the secret
-                                  to be the access key. Must be a valid secret key.
-                                  Defaults to "AccessKeyID".
+                              accountKeyRef:
+                                default: AccountKey
+                                description: AccountKeyRef is the key of the secret
+                                  to be the secret account key. Must be a valid secret
+                                  key. Defaults to "AccountKey".
                                 type: string
-                              secretAccessKeyRef:
-                                default: SecretAccessKey
-                                description: SecretAccessKeyRef is the key of the
-                                  secret to be the secret access key. Must be a valid
-                                  secret key. Defaults to "SecretAccessKey".
+                              accountNameRef:
+                                default: AccountName
+                                description: AccountNameKeyRef is the key of the secret
+                                  to be the account name. Must be a valid secret key.
+                                  Defaults to "AccountName".
                                 type: string
                               secretName:
                                 description: The name of the secret in the pod's namespace
                                   to select from.
                                 type: string
-                              useServiceAccount:
-                                description: UseServiceAccount indicates whether to
-                                  use the service account token mounted in the pod.
-                                  It only works when using the AWS S3. If this is
-                                  enabled, secret and keys are ignored. Defaults to
-                                  false.
-                                type: boolean
+                            required:
+                            - secretName
                             type: object
-                          internalEndpoint:
-                            description: InternalEndpoint indicates if we use the
-                              internal endpoint to access Aliyun OSS, which is only
-                              available in the internal network.
-                            type: boolean
-                          region:
-                            description: Region of Aliyun OSS service. It is an optional
-                              field that overrides the `Region` key from the secret.
-                              Specifying the region here makes a guarantee that it
-                              won't be changed anymore.
+                          endpoint:
+                            description: Endpoint of the Azure Blob service. e.g.
+                              https://yufantest.blob.core.windows.net
+                            pattern: ^(?:https://)?(?:[^/.\s]+\.)*(?:[^/\s]+)*$
+                            type: string
+                          root:
+                            description: Working directory root of the Azure Blob
+                              service.
                             type: string
                           secret:
                             description: 'Secret contains the credentials to access
-                              the Aliyun OSS service. It must contain the following
-                              keys: * AccessKeyID * SecretAccessKey * Region (optional
-                              if region is specified in the field.) Deprecated: Please
+                              the Azure Blob service. It must contain the following
+                              keys: * AccessKeyID * SecretAccessKey Deprecated: Please
                               use "credentials" field instead. The "Secret" field
                               will be removed in a future release.'
                             type: string
                         required:
-                        - bucket
+                        - container
                         - credentials
+                        - endpoint
+                        - root
                         type: object
                       azureBlob:
                         description: Azure Blob storage spec.

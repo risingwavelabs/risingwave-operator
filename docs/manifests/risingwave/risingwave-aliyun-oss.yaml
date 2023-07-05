@@ -1,90 +1,40 @@
 apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: risingwave-aliyun-oss-config-template
-data:
-  risingwave.toml: |-
-    [storage]
-    # Support of DeleteObjects API is currently broken in Aliyun OSS. 
-    object_store_use_batch_delete = false
----
-apiVersion: v1
 kind: Secret
-metadata:
-  name: aliyun-oss-credentials
+metadata: 
+  name: risingwave-aliyun-oss-credentials
 stringData:
-  AccessKeyID: your-access-key
-  SecretAccessKey: your-access-secret
+  AccountName: your-oss-account-name
+  AccountKey: your-oss-account-key
 ---
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
-  name: risingwave-aliyun-oss
+  name: risingwave-in-memory-aliyun-oss
 spec:
-  configuration:
-    configMap:
-      key: risingwave.toml
-      name: risingwave-aliyun-oss-config-template
   metaStore:
     memory: true
   stateStore:
-    aliyunOSS:
-      region: cn-hangzhou
-      bucket: hummock001
-      internalEndpoint: true
+    aliyunOss:
       credentials:
-        secretName: aliyun-oss-credentials
+        secretName: risingwave-aliyun-oss-credentials
+      bucket: your-aliyun-oss-bucket
+      root: risingwave
+      endpoint: https://<your-region>.aliyuncs.com
   image: ghcr.io/risingwavelabs/risingwave:v0.19.1
   components:
     meta:
       nodeGroups:
       - replicas: 1
         name: ""
-        template:
-          spec:
-            resources:
-              limits:
-                cpu: 1
-                memory: 1Gi
-              requests:
-                cpu: 100m
-                memory: 100Mi
     frontend:
       nodeGroups:
       - replicas: 1
         name: ""
-        template:
-          spec:
-            resources:
-              limits:
-                cpu: 1
-                memory: 1Gi
-              requests:
-                cpu: 100m
-                memory: 100Mi
     compute:
       nodeGroups:
       - replicas: 1
         name: ""
-        template:
-          spec:
-            resources:
-              limits:
-                cpu: 1
-                memory: 1Gi
-              requests:
-                cpu: 100m
-                memory: 100Mi
     compactor:
       nodeGroups:
       - replicas: 1
         name: ""
-        template:
-          spec:
-            resources:
-              limits:
-                cpu: 1
-                memory: 1Gi
-              requests:
-                cpu: 100m
-                memory: 100Mi

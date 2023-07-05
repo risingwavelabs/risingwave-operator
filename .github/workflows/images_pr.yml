@@ -2,6 +2,12 @@ name: Build Container Images (PR)
 
 on:
   workflow_dispatch:    # For manually triggering workflow
+  workflow_call:
+    inputs:
+      push_image:
+        required: false
+        type: boolean
+        default: false
   pull_request:
     branches: [ main ]
   merge_group:
@@ -44,7 +50,7 @@ jobs:
         file: build/Dockerfile
         build-args: |
           VERSION=${{steps.tagger.outputs.tag}}
-        push: ${{ github.event_name != 'pull_request' }}
+        push: ${{ github.event_name != 'pull_request' || inputs.push_image }}
         platforms: linux/amd64,linux/arm64
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}

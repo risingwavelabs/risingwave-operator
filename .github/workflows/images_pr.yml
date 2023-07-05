@@ -50,7 +50,7 @@ jobs:
         file: build/Dockerfile
         build-args: |
           VERSION=${{steps.tagger.outputs.tag}}
-        push: ${{ github.event_name != 'pull_request' || inputs.push_image }}
+        push: ${{ github.event_name != 'pull_request' || 'inputs.push_image' }}
         platforms: linux/amd64,linux/arm64
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}

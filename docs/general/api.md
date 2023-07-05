@@ -4608,7 +4608,7 @@ This field is alpha-level and is only honored by servers that enable the UserNam
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveS3Credentials">RisingWaveS3Credentials
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAliyunOSS">RisingWaveStateStoreBackendAliyunOSS</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendS3">RisingWaveStateStoreBackendS3</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendS3">RisingWaveStateStoreBackendS3</a>)
 </p>
 <div>
 <p>RisingWaveS3Credentials is the reference and keys selector to the AWS access credentials stored in a local secret.</p>
@@ -5406,8 +5406,8 @@ RisingWaveStateStoreBackendGCS
 <td>
 <code>aliyunOSS</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAliyunOSS">
-RisingWaveStateStoreBackendAliyunOSS
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAzureBlob">
+RisingWaveStateStoreBackendAzureBlob
 </a>
 </em>
 </td>
@@ -5456,87 +5456,6 @@ RisingWaveStateStoreBackendHDFS
 <td>
 <em>(Optional)</em>
 <p>WebHDFS storage spec.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAliyunOSS">RisingWaveStateStoreBackendAliyunOSS
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">RisingWaveStateStoreBackend</a>)
-</p>
-<div>
-<p>RisingWaveStateStoreBackendAliyunOSS is the details of Aliyun OSS storage (S3 compatible) for compute and compactor components.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>credentials</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveS3Credentials">
-RisingWaveS3Credentials
-</a>
-</em>
-</td>
-<td>
-<p>RisingWaveS3Credentials is the credentials provider from a Secret.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>secret</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Secret contains the credentials to access the Aliyun OSS service. It must contain the following keys:
-* AccessKeyID
-* SecretAccessKey
-* Region (optional if region is specified in the field.)
-Deprecated: Please use &ldquo;credentials&rdquo; field instead. The &ldquo;Secret&rdquo; field will be removed in a future release.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>region</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Region of Aliyun OSS service. It is an optional field that overrides the <code>Region</code> key from the secret.
-Specifying the region here makes a guarantee that it won&rsquo;t be changed anymore.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>bucket</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Bucket of the Aliyun OSS service.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>internalEndpoint</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>InternalEndpoint indicates if we use the internal endpoint to access Aliyun OSS, which is
-only available in the internal network.</p>
 </td>
 </tr>
 </tbody>

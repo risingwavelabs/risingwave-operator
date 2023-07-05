@@ -136,11 +136,9 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 		return fmt.Sprintf("hummock+gcs://%s@%s", stateStore.GCS.Bucket, stateStore.GCS.Root)
 	case f.isStateStoreAliyunOSS():
 		aliyunOSS := stateStore.AliyunOSS
-		// Redirect to s3-compatible.
-		return fmt.Sprintf("hummock+s3-compatible://%s", aliyunOSS.Bucket)
+		return fmt.Sprintf("hummock+oss://%s@%s", aliyunOSS.Container, aliyunOSS.Root)
 	case f.isStateStoreAzureBlob():
 		azureBlob := stateStore.AzureBlob
-		// Redirect to s3-compatible.
 		return fmt.Sprintf("hummock+azblob://%s@%s", azureBlob.Container, azureBlob.Root)
 	case f.isStateStoreHDFS():
 		hdfs := stateStore.HDFS
@@ -691,15 +689,35 @@ func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
 
 func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 	stateStore := &f.risingwave.Spec.StateStore
-
-	var endpoint string
-	if stateStore.AliyunOSS.InternalEndpoint {
-		endpoint = internalAliyunOSSEndpoint
-	} else {
-		endpoint = aliyunOSSEndpoint
+	credentials := stateStore.AliyunOSS.RisingWaveAzureBlobCredentials
+	secretRef := corev1.LocalObjectReference{
+		Name: credentials.SecretName,
 	}
+	return []corev1.EnvVar{
 
-	return envsForS3Compatible(stateStore.AliyunOSS.Region, endpoint, stateStore.AliyunOSS.Bucket, stateStore.AliyunOSS.RisingWaveS3Credentials)
+		{
+			Name: envs.AliyunOSSAccountName,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  credentials.AccountNameRef,
+				},
+			},
+		},
+		{
+			Name: envs.AliyunOSSAccountKey,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  credentials.AccountKeyRef,
+				},
+			},
+		},
+		{
+			Name:  envs.AliyunOSSEndpoint,
+			Value: stateStore.AliyunOSS.Endpoint,
+		},
+	}
 }
 
 func (f *RisingWaveObjectFactory) envsForAzureBlob() []corev1.EnvVar {
@@ -733,7 +751,6 @@ func (f *RisingWaveObjectFactory) envsForAzureBlob() []corev1.EnvVar {
 			Value: stateStore.AzureBlob.Endpoint,
 		},
 	}
-
 }
 
 func (f *RisingWaveObjectFactory) envsForHDFS() []corev1.EnvVar {

@@ -51,6 +51,8 @@ spec:
           - "risingwave-etcd"
           - "--max-txn-ops"
           - "999999"
+          - "--max-request-bytes"
+          - "10485760"
           - "--auto-compaction-mode"
           - periodic
           - "--auto-compaction-retention"

@@ -131,7 +131,7 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 		return fmt.Sprintf("hummock+gcs://%s@%s", stateStore.GCS.Bucket, stateStore.GCS.Root)
 	case f.isStateStoreAliyunOSS():
 		aliyunOSS := stateStore.AliyunOSS
-		return fmt.Sprintf("hummock+oss://%s@%s", aliyunOSS.Container, aliyunOSS.Root)
+		return fmt.Sprintf("hummock+oss://%s@%s", aliyunOSS.Bucket, aliyunOSS.Root)
 	case f.isStateStoreAzureBlob():
 		azureBlob := stateStore.AzureBlob
 		return fmt.Sprintf("hummock+azblob://%s@%s", azureBlob.Container, azureBlob.Root)
@@ -684,7 +684,7 @@ func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
 
 func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 	stateStore := &f.risingwave.Spec.StateStore
-	credentials := stateStore.AliyunOSS.RisingWaveAzureBlobCredentials
+	credentials := stateStore.AliyunOSS.RisingWaveAliyunOSSCredentials
 	secretRef := corev1.LocalObjectReference{
 		Name: credentials.SecretName,
 	}
@@ -695,7 +695,7 @@ func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  credentials.AccountNameRef,
+					Key:                  credentials.AccessKeyIDRef,
 				},
 			},
 		},
@@ -704,7 +704,7 @@ func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  credentials.AccountKeyRef,
+					Key:                  credentials.AccessKeySecretRef,
 				},
 			},
 		},

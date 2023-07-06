@@ -480,11 +480,11 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		"aliyun-oss-state-store-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
-					AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
-						Container: "hummock",
-						Root:      "AliyunOSS-root",
-						Endpoint:  "https://oss-cn-hangzhou.aliyuncs.com",
-						RisingWaveAzureBlobCredentials: risingwavev1alpha1.RisingWaveAzureBlobCredentials{
+					AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
+						Bucket:   "hummock",
+						Root:     "AliyunOSS-root",
+						Endpoint: "https://oss-cn-hangzhou.aliyuncs.com",
+						RisingWaveAliyunOSSCredentials: risingwavev1alpha1.RisingWaveAliyunOSSCredentials{
 							SecretName: "AliyunOSS-creds",
 						},
 					},

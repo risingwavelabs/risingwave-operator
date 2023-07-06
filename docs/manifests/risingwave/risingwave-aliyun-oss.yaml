@@ -17,6 +17,7 @@ spec:
     aliyunOSS:
       bucket: hummock001
       root: risingwave
+      endpoint: https://oss-cn-hangzhou.aliyuncs.com
       credentials:
         secretName: risingwave-aliyun-oss-credentials
   image: ghcr.io/risingwavelabs/risingwave:v0.19.1

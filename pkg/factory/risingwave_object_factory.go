@@ -52,11 +52,6 @@ const (
 	risingwaveConfigFileName  = "risingwave.toml"
 )
 
-var (
-	aliyunOSSEndpoint         = fmt.Sprintf("https://$(%s).oss-$(%s).aliyuncs.com", envs.AliyunOSSBucket, envs.AliyunOSSRegion)
-	internalAliyunOSSEndpoint = fmt.Sprintf("https://$(%s).oss-$(%s)-internal.aliyuncs.com", envs.AliyunOSSBucket, envs.AliyunOSSRegion)
-)
-
 // RisingWaveObjectFactory is the object factory to help create owned objects like Deployments, StatefulSets, Services, etc.
 type RisingWaveObjectFactory struct {
 	scheme     *runtime.Scheme
@@ -693,12 +688,6 @@ func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 	secretRef := corev1.LocalObjectReference{
 		Name: credentials.SecretName,
 	}
-	var endpoint string
-	if stateStore.AliyunOSS.InternalEndpoint {
-		endpoint = internalAliyunOSSEndpoint
-	} else {
-		endpoint = aliyunOSSEndpoint
-	}
 
 	return []corev1.EnvVar{
 		{
@@ -725,7 +714,7 @@ func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.AliyunOSSEndpoint,
-			Value: endpoint,
+			Value: fmt.Sprintf("https://oss-$(%s).aliyuncs.com", envs.AliyunOSSRegion),
 		},
 	}
 }

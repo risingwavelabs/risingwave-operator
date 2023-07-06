@@ -234,11 +234,6 @@ type RisingWaveStateStoreBackendAliyunOSS struct {
 	// Region of Aliyun OSS service
 	// +kubebuilder:validation:Required
 	Region string `json:"region,omitempty"`
-
-	// InternalEndpoint indicates if we use the internal endpoint to access Aliyun OSS, which is
-	// only available in the internal network.
-	// +kubebuilder:validation:Required
-	InternalEndpoint bool `json:"internalEndpoint,omitempty"`
 }
 
 // RisingWaveStateStoreBackendHDFS is the details of HDFS storage (S3 compatible) for compute and compactor components.

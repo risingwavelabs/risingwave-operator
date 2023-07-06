@@ -3047,173 +3047,47 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 		},
 		"aliyun-oss": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
-				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
-					Bucket: "s3-hummock01",
-					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
-						SecretName:         "s3-creds",
-						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,
-						SecretAccessKeyRef: consts.SecretKeyAWSS3SecretAccessKey,
+				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
+					Container: "aliyun-oss-hummock01",
+					Root:      "aliyun-oss-root",
+					Endpoint:  "https://oss-cn-hangzhou.aliyuncs.com",
+					RisingWaveAzureBlobCredentials: risingwavev1alpha1.RisingWaveAzureBlobCredentials{
+						SecretName:     "aliyun-oss-creds",
+						AccountNameRef: consts.SecretKeyAzureBlobAccountName,
+						AccountKeyRef:  consts.SecretKeyAzureBlobAccountKey,
 					},
 				},
 			},
 			envs: []corev1.EnvVar{
 				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+s3://s3-hummock01",
+					Value: "hummock+oss://aliyun-oss-hummock01@aliyun-oss-root",
 				},
 				{
-					Name:  "AWS_S3_BUCKET",
-					Value: "s3-hummock01",
-				},
-				{
-					Name:  "RW_S3_ENDPOINT",
-					Value: "https://$(AWS_S3_BUCKET).oss-$(AWS_REGION).aliyuncs.com",
-				},
-				{
-					Name: "AWS_ACCESS_KEY_ID",
+					Name: "OSS_ACCESS_KEY_ID",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "s3-creds",
+								Name: "aliyun-oss-creds",
 							},
-							Key: consts.SecretKeyAWSS3AccessKeyID,
+							Key: consts.SecretKeyAzureBlobAccountName,
 						},
 					},
 				},
 				{
-					Name: "AWS_SECRET_ACCESS_KEY",
+					Name: "OSS_ACCESS_KEY_SECRET",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "s3-creds",
+								Name: "aliyun-oss-creds",
 							},
-							Key: consts.SecretKeyAWSS3SecretAccessKey,
+							Key: consts.SecretKeyAzureBlobAccountKey,
 						},
 					},
 				},
 				{
-					Name: "AWS_REGION",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "s3-creds",
-							},
-							Key: consts.SecretKeyAWSS3Region,
-						},
-					},
-				},
-			},
-		},
-		"aliyun-oss-internal": {
-			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
-				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
-					Bucket:           "s3-hummock01",
-					InternalEndpoint: true,
-					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
-						SecretName:         "s3-creds",
-						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,
-						SecretAccessKeyRef: consts.SecretKeyAWSS3SecretAccessKey,
-					},
-				},
-			},
-			envs: []corev1.EnvVar{
-				{
-					Name:  "RW_STATE_STORE",
-					Value: "hummock+s3://s3-hummock01",
-				},
-				{
-					Name:  "AWS_S3_BUCKET",
-					Value: "s3-hummock01",
-				},
-				{
-					Name:  "RW_S3_ENDPOINT",
-					Value: "https://$(AWS_S3_BUCKET).oss-$(AWS_REGION)-internal.aliyuncs.com",
-				},
-				{
-					Name: "AWS_ACCESS_KEY_ID",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "s3-creds",
-							},
-							Key: consts.SecretKeyAWSS3AccessKeyID,
-						},
-					},
-				},
-				{
-					Name: "AWS_SECRET_ACCESS_KEY",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "s3-creds",
-							},
-							Key: consts.SecretKeyAWSS3SecretAccessKey,
-						},
-					},
-				},
-				{
-					Name: "AWS_REGION",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "s3-creds",
-							},
-							Key: consts.SecretKeyAWSS3Region,
-						},
-					},
-				},
-			},
-		},
-		"aliyun-oss-with-region": {
-			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
-				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
-					Bucket: "s3-hummock01",
-					Region: "cn-hangzhou",
-					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
-						SecretName:         "s3-creds",
-						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,
-						SecretAccessKeyRef: consts.SecretKeyAWSS3SecretAccessKey,
-					},
-				},
-			},
-			envs: []corev1.EnvVar{
-				{
-					Name:  "RW_STATE_STORE",
-					Value: "hummock+s3://s3-hummock01",
-				},
-				{
-					Name:  "AWS_S3_BUCKET",
-					Value: "s3-hummock01",
-				},
-				{
-					Name:  "RW_S3_ENDPOINT",
-					Value: "https://$(AWS_S3_BUCKET).oss-$(AWS_REGION).aliyuncs.com",
-				},
-				{
-					Name: "AWS_ACCESS_KEY_ID",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "s3-creds",
-							},
-							Key: consts.SecretKeyAWSS3AccessKeyID,
-						},
-					},
-				},
-				{
-					Name: "AWS_SECRET_ACCESS_KEY",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "s3-creds",
-							},
-							Key: consts.SecretKeyAWSS3SecretAccessKey,
-						},
-					},
-				},
-				{
-					Name:  "AWS_REGION",
-					Value: "cn-hangzhou",
+					Name:  "OSS_ENDPOINT",
+					Value: "https://oss-cn-hangzhou.aliyuncs.com",
 				},
 			},
 		},

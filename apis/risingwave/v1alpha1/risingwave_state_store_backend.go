@@ -161,31 +161,6 @@ type RisingWaveStateStoreBackendGCS struct {
 	Root string `json:"root"`
 }
 
-// RisingWaveStateStoreBackendAliyunOSS is the details of Aliyun OSS storage (S3 compatible) for compute and compactor components.
-type RisingWaveStateStoreBackendAliyunOSS struct {
-	// RisingWaveS3Credentials is the credentials provider from a Secret.
-	RisingWaveS3Credentials `json:"credentials"`
-
-	// Secret contains the credentials to access the Aliyun OSS service. It must contain the following keys:
-	//   * AccessKeyID
-	//   * SecretAccessKey
-	//   * Region (optional if region is specified in the field.)
-	// Deprecated: Please use "credentials" field instead. The "Secret" field will be removed in a future release.
-	Secret string `json:"secret,omitempty"`
-
-	// Region of Aliyun OSS service. It is an optional field that overrides the `Region` key from the secret.
-	// Specifying the region here makes a guarantee that it won't be changed anymore.
-	Region string `json:"region,omitempty"`
-
-	// Bucket of the Aliyun OSS service.
-	// +kubebuilder:validation:Required
-	Bucket string `json:"bucket"`
-
-	// InternalEndpoint indicates if we use the internal endpoint to access Aliyun OSS, which is
-	// only available in the internal network.
-	InternalEndpoint bool `json:"internalEndpoint,omitempty"`
-}
-
 // RisingWaveAzureBlobCredentials is the reference and keys selector to the AzureBlob access credentials stored in a local secret.
 type RisingWaveAzureBlobCredentials struct {
 	// The name of the secret in the pod's namespace to select from.
@@ -278,7 +253,7 @@ type RisingWaveStateStoreBackend struct {
 
 	// AliyunOSS storage spec.
 	// +optional
-	AliyunOSS *RisingWaveStateStoreBackendAliyunOSS `json:"aliyunOSS,omitempty"`
+	AliyunOSS *RisingWaveStateStoreBackendAzureBlob `json:"aliyunOSS,omitempty"`
 
 	// Azure Blob storage spec.
 	// +optional

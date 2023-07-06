@@ -13,8 +13,8 @@ kind: Secret
 metadata:
   name: aliyun-oss-credentials
 stringData:
-  AccessKeyID: your-access-key
-  SecretAccessKey: your-access-secret
+  AccessKeyIDRef: your-access-key
+  AccessKeySecretRef: your-access-secret
 ---
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
@@ -29,9 +29,8 @@ spec:
     memory: true
   stateStore:
     aliyunOSS:
-      region: cn-hangzhou
       bucket: hummock001
-      internalEndpoint: true
+      root: risingwave
       credentials:
         secretName: aliyun-oss-credentials
   image: ghcr.io/risingwavelabs/risingwave:v0.19.1

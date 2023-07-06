@@ -177,6 +177,22 @@ type RisingWaveAzureBlobCredentials struct {
 	AccountKeyRef string `json:"accountKeyRef,omitempty"`
 }
 
+// RisingWaveAliyunOSSCredentials is the reference and keys selector to the AliyunOSS access credentials stored in a local secret.
+type RisingWaveAliyunOSSCredentials struct {
+	// The name of the secret in the pod's namespace to select from.
+	SecretName string `json:"secretName"`
+
+	// AccessKeyIDRef is the key of the secret to be the access key. Must be a valid secret key.
+	// Defaults to "AccessKeyIDRef".
+	// +kubebuilder:default=AccessKeyIDRef
+	AccessKeyIDRef string `json:"accessKeyIDRef,omitempty"`
+
+	// AccessKeySecretRef is the key of the secret to be the secret access key. Must be a valid secret key.
+	// Defaults to "AccessKeySecretRef".
+	// +kubebuilder:default=AccessKeySecretRef
+	AccessKeySecretRef string `json:"accessKeySecretRef,omitempty"`
+}
+
 // RisingWaveStateStoreBackendAzureBlob is the details of Azure blob storage (S3 compatible) for compute and compactor components.
 type RisingWaveStateStoreBackendAzureBlob struct {
 	// RisingWaveAzureBlobCredentials is the credentials provider from a Secret.
@@ -191,6 +207,25 @@ type RisingWaveStateStoreBackendAzureBlob struct {
 	// Container Name of the Azure Blob service.
 	// +kubebuilder:validation:Required
 	Container string `json:"container"`
+
+	// Working directory root of the Azure Blob service.
+	// +kubebuilder:validation:Required
+	Root string `json:"root"`
+
+	// Endpoint of the Azure Blob service.
+	// e.g. https://yufantest.blob.core.windows.net
+	// +kubebuilder:validation:Pattern="^(?:https://)?(?:[^/.\\s]+\\.)*(?:[^/\\s]+)*$"
+	Endpoint string `json:"endpoint"`
+}
+
+// RisingWaveStateStoreBackendAliyunOSS is the details of AliyunOSS for compute and compactor components.
+type RisingWaveStateStoreBackendAliyunOSS struct {
+	// RisingWaveAliyunOSSCredentials is the credentials provider from a Secret.
+	RisingWaveAliyunOSSCredentials `json:"credentials"`
+
+	// Bucket name of your AliyunOSS
+	// +kubebuilder:validation:Required
+	Bucket string `json:"bucket"`
 
 	// Working directory root of the Azure Blob service.
 	// +kubebuilder:validation:Required
@@ -253,7 +288,7 @@ type RisingWaveStateStoreBackend struct {
 
 	// AliyunOSS storage spec.
 	// +optional
-	AliyunOSS *RisingWaveStateStoreBackendAzureBlob `json:"aliyunOSS,omitempty"`
+	AliyunOSS *RisingWaveStateStoreBackendAliyunOSS `json:"aliyunOSS,omitempty"`
 
 	// Azure Blob storage spec.
 	// +optional

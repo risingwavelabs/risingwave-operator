@@ -104,6 +104,12 @@ const (
 	SecretKeyAzureBlobAccountKey  string = "AccountKey"
 )
 
+// Credential keys for AliyunOSS.
+const (
+	SecretKeyAliyunOSSAccessKeyID     string = "AccessKeyID"
+	SecretKeyAliyunOSSAccessKeySecret string = "AccessKeySecret"
+)
+
 // Credentials for GCS.
 const (
 	SecretKeyGCSServiceAccountCredentials string = "ServiceAccountCredentials"

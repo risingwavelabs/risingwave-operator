@@ -3047,14 +3047,14 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 		},
 		"aliyun-oss": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
-				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
-					Container: "aliyun-oss-hummock01",
-					Root:      "aliyun-oss-root",
-					Endpoint:  "https://oss-cn-hangzhou.aliyuncs.com",
-					RisingWaveAzureBlobCredentials: risingwavev1alpha1.RisingWaveAzureBlobCredentials{
-						SecretName:     "aliyun-oss-creds",
-						AccountNameRef: consts.SecretKeyAzureBlobAccountName,
-						AccountKeyRef:  consts.SecretKeyAzureBlobAccountKey,
+				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
+					Bucket:   "aliyun-oss-hummock01",
+					Root:     "aliyun-oss-root",
+					Endpoint: "https://oss-cn-hangzhou.aliyuncs.com",
+					RisingWaveAliyunOSSCredentials: risingwavev1alpha1.RisingWaveAliyunOSSCredentials{
+						SecretName:         "aliyun-oss-creds",
+						AccessKeyIDRef:     consts.SecretKeyAliyunOSSAccessKeyID,
+						AccessKeySecretRef: consts.SecretKeyAliyunOSSAccessKeySecret,
 					},
 				},
 			},
@@ -3070,7 +3070,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "aliyun-oss-creds",
 							},
-							Key: consts.SecretKeyAzureBlobAccountName,
+							Key: consts.SecretKeyAliyunOSSAccessKeyID,
 						},
 					},
 				},
@@ -3081,7 +3081,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "aliyun-oss-creds",
 							},
-							Key: consts.SecretKeyAzureBlobAccountKey,
+							Key: consts.SecretKeyAliyunOSSAccessKeySecret,
 						},
 					},
 				},

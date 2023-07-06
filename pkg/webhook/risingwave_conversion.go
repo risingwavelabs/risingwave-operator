@@ -83,8 +83,6 @@ func ConvertStorages(obj *v1alpha1.RisingWave) {
 		stateStore.S3.RisingWaveS3Credentials.SecretName = stateStore.S3.Secret
 	case stateStore.GCS != nil && stateStore.GCS.Secret != "":
 		stateStore.GCS.RisingWaveGCSCredentials.SecretName = stateStore.GCS.Secret
-	case stateStore.AliyunOSS != nil && stateStore.AliyunOSS.Secret != "":
-		stateStore.AliyunOSS.RisingWaveAzureBlobCredentials.SecretName = stateStore.AliyunOSS.Secret
 	case stateStore.AzureBlob != nil && stateStore.AzureBlob.Secret != "":
 		stateStore.AzureBlob.RisingWaveAzureBlobCredentials.SecretName = stateStore.AzureBlob.Secret
 	default:

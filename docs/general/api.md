@@ -664,6 +664,59 @@ RisingWaveStatus
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveAliyunOSSCredentials">RisingWaveAliyunOSSCredentials
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAliyunOSS">RisingWaveStateStoreBackendAliyunOSS</a>)
+</p>
+<div>
+<p>RisingWaveAliyunOSSCredentials is the reference and keys selector to the AliyunOSS access credentials stored in a local secret.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The name of the secret in the pod&rsquo;s namespace to select from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>accessKeyIDRef</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>AccessKeyIDRef is the key of the secret to be the access key. Must be a valid secret key.
+Defaults to &ldquo;AccessKeyIDRef&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>accessKeySecretRef</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>AccessKeySecretRef is the key of the secret to be the secret access key. Must be a valid secret key.
+Defaults to &ldquo;AccessKeySecretRef&rdquo;.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveAzureBlobCredentials">RisingWaveAzureBlobCredentials
 </h3>
 <p>
@@ -5406,8 +5459,8 @@ RisingWaveStateStoreBackendGCS
 <td>
 <code>aliyunOSS</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAzureBlob">
-RisingWaveStateStoreBackendAzureBlob
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAliyunOSS">
+RisingWaveStateStoreBackendAliyunOSS
 </a>
 </em>
 </td>
@@ -5456,6 +5509,71 @@ RisingWaveStateStoreBackendHDFS
 <td>
 <em>(Optional)</em>
 <p>WebHDFS storage spec.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAliyunOSS">RisingWaveStateStoreBackendAliyunOSS
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">RisingWaveStateStoreBackend</a>)
+</p>
+<div>
+<p>RisingWaveStateStoreBackendAliyunOSS is the details of AliyunOSS for compute and compactor components.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>credentials</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveAliyunOSSCredentials">
+RisingWaveAliyunOSSCredentials
+</a>
+</em>
+</td>
+<td>
+<p>RisingWaveAliyunOSSCredentials is the credentials provider from a Secret.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bucket</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Bucket name of your AliyunOSS</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>root</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Working directory root of the Azure Blob service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>endpoint</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Endpoint of the Azure Blob service.
+e.g. <a href="https://yufantest.blob.core.windows.net">https://yufantest.blob.core.windows.net</a></p>
 </td>
 </tr>
 </tbody>

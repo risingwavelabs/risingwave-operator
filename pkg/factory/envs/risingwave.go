@@ -86,6 +86,8 @@ const (
 
 // AliyunOSS.
 const (
+	AliyunOSSRegion      = "OSS_REGION"
+	AliyunOSSBucket      = "OSS_S3_BUCKET"
 	AliyunOSSEndpoint    = "OSS_ENDPOINT"
 	AliyunOSSAccountName = "OSS_ACCESS_KEY_ID"
 	AliyunOSSAccountKey  = "OSS_ACCESS_KEY_SECRET"

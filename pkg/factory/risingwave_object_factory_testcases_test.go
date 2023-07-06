@@ -3045,12 +3045,13 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 				},
 			},
 		},
-		"aliyun-oss": {
+		"aliyun-oss-not-internal": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
-					Bucket:   "aliyun-oss-hummock01",
-					Root:     "aliyun-oss-root",
-					Endpoint: "https://oss-cn-hangzhou.aliyuncs.com",
+					Bucket:           "aliyun-oss-hummock01",
+					Root:             "aliyun-oss-root",
+					Region:           "cn-hangzhou",
+					InternalEndpoint: false,
 					RisingWaveAliyunOSSCredentials: risingwavev1alpha1.RisingWaveAliyunOSSCredentials{
 						SecretName:         "aliyun-oss-creds",
 						AccessKeyIDRef:     consts.SecretKeyAliyunOSSAccessKeyID,
@@ -3087,7 +3088,54 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 				},
 				{
 					Name:  "OSS_ENDPOINT",
-					Value: "https://oss-cn-hangzhou.aliyuncs.com",
+					Value: "https://$(OSS_S3_BUCKET).oss-$(OSS_REGION).aliyuncs.com",
+				},
+			},
+		},
+		"aliyun-oss-internal": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
+					Bucket:           "aliyun-oss-hummock01",
+					Root:             "aliyun-oss-root",
+					Region:           "cn-hangzhou",
+					InternalEndpoint: true,
+					RisingWaveAliyunOSSCredentials: risingwavev1alpha1.RisingWaveAliyunOSSCredentials{
+						SecretName:         "aliyun-oss-creds",
+						AccessKeyIDRef:     consts.SecretKeyAliyunOSSAccessKeyID,
+						AccessKeySecretRef: consts.SecretKeyAliyunOSSAccessKeySecret,
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+oss://aliyun-oss-hummock01@aliyun-oss-root",
+				},
+				{
+					Name: "OSS_ACCESS_KEY_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "aliyun-oss-creds",
+							},
+							Key: consts.SecretKeyAliyunOSSAccessKeyID,
+						},
+					},
+				},
+				{
+					Name: "OSS_ACCESS_KEY_SECRET",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "aliyun-oss-creds",
+							},
+							Key: consts.SecretKeyAliyunOSSAccessKeySecret,
+						},
+					},
+				},
+				{
+					Name:  "OSS_ENDPOINT",
+					Value: "https://$(OSS_S3_BUCKET).oss-$(OSS_REGION)-internal.aliyuncs.com",
 				},
 			},
 		},

@@ -44023,17 +44023,20 @@ spec:
                         required:
                         - secretName
                         type: object
-                      endpoint:
-                        description: Endpoint of the Azure Blob service. e.g. https://yufantest.blob.core.windows.net
-                        pattern: ^(?:https://)?(?:[^/.\s]+\.)*(?:[^/\s]+)*$
+                      internalEndpoint:
+                        description: InternalEndpoint indicates if we use the internal
+                          endpoint to access Aliyun OSS, which is only available in
+                          the internal network.
+                        type: boolean
+                      region:
+                        description: Region of Aliyun OSS service
                         type: string
                       root:
-                        description: Working directory root of the Azure Blob service.
+                        description: Working directory root of the Aliyun OSS.
                         type: string
                     required:
                     - bucket
                     - credentials
-                    - endpoint
                     - root
                     type: object
                   azureBlob:
@@ -44364,19 +44367,20 @@ spec:
                             required:
                             - secretName
                             type: object
-                          endpoint:
-                            description: Endpoint of the Azure Blob service. e.g.
-                              https://yufantest.blob.core.windows.net
-                            pattern: ^(?:https://)?(?:[^/.\s]+\.)*(?:[^/\s]+)*$
+                          internalEndpoint:
+                            description: InternalEndpoint indicates if we use the
+                              internal endpoint to access Aliyun OSS, which is only
+                              available in the internal network.
+                            type: boolean
+                          region:
+                            description: Region of Aliyun OSS service
                             type: string
                           root:
-                            description: Working directory root of the Azure Blob
-                              service.
+                            description: Working directory root of the Aliyun OSS.
                             type: string
                         required:
                         - bucket
                         - credentials
-                        - endpoint
                         - root
                         type: object
                       azureBlob:

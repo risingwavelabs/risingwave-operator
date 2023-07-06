@@ -5561,19 +5561,30 @@ string
 </em>
 </td>
 <td>
-<p>Working directory root of the Azure Blob service.</p>
+<p>Working directory root of the Aliyun OSS.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>endpoint</code><br/>
+<code>region</code><br/>
 <em>
 string
 </em>
 </td>
 <td>
-<p>Endpoint of the Azure Blob service.
-e.g. <a href="https://yufantest.blob.core.windows.net">https://yufantest.blob.core.windows.net</a></p>
+<p>Region of Aliyun OSS service</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>internalEndpoint</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>InternalEndpoint indicates if we use the internal endpoint to access Aliyun OSS, which is
+only available in the internal network.</p>
 </td>
 </tr>
 </tbody>

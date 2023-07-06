@@ -227,12 +227,12 @@ type RisingWaveStateStoreBackendAliyunOSS struct {
 	// +kubebuilder:validation:Required
 	Bucket string `json:"bucket"`
 
-	// Working directory root of the Azure Blob service.
+	// Working directory root of the Aliyun OSS.
 	// +kubebuilder:validation:Required
 	Root string `json:"root"`
 
-	// Endpoint of the Azure Blob service.
-	// e.g. https://yufantest.blob.core.windows.net
+	// Endpoint of the Aliyun OSS.
+	// e.g. https://oss-cn-hangzhou.aliyuncs.com
 	// +kubebuilder:validation:Pattern="^(?:https://)?(?:[^/.\\s]+\\.)*(?:[^/\\s]+)*$"
 	Endpoint string `json:"endpoint"`
 }

@@ -3,8 +3,8 @@ kind: Secret
 metadata: 
   name: risingwave-aliyun-oss-credentials
 stringData:
-  AccessKeyIDRef: your-access-key
-  AccessKeySecretRef: your-access-secret
+  AccessKeyIDRef: your-aliyun-oss-access-key
+  AccessKeySecretRef: your-aliyun-oss-access-secret
 ---
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave

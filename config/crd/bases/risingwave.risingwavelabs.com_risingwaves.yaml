@@ -43997,24 +43997,24 @@ spec:
                   aliyunOSS:
                     description: AliyunOSS storage spec.
                     properties:
-                      container:
-                        description: Container Name of the Azure Blob service.
+                      bucket:
+                        description: Bucket name of your AliyunOSS
                         type: string
                       credentials:
-                        description: RisingWaveAzureBlobCredentials is the credentials
+                        description: RisingWaveAliyunOSSCredentials is the credentials
                           provider from a Secret.
                         properties:
-                          accountKeyRef:
-                            default: AccountKey
-                            description: AccountKeyRef is the key of the secret to
-                              be the secret account key. Must be a valid secret key.
-                              Defaults to "AccountKey".
+                          accessKeyIDRef:
+                            default: AccessKeyIDRef
+                            description: AccessKeyIDRef is the key of the secret to
+                              be the access key. Must be a valid secret key. Defaults
+                              to "AccessKeyIDRef".
                             type: string
-                          accountNameRef:
-                            default: AccountName
-                            description: AccountNameKeyRef is the key of the secret
-                              to be the account name. Must be a valid secret key.
-                              Defaults to "AccountName".
+                          accessKeySecretRef:
+                            default: AccessKeySecretRef
+                            description: AccessKeySecretRef is the key of the secret
+                              to be the secret access key. Must be a valid secret
+                              key. Defaults to "AccessKeySecretRef".
                             type: string
                           secretName:
                             description: The name of the secret in the pod's namespace
@@ -44030,15 +44030,8 @@ spec:
                       root:
                         description: Working directory root of the Azure Blob service.
                         type: string
-                      secret:
-                        description: 'Secret contains the credentials to access the
-                          Azure Blob service. It must contain the following keys:
-                          * AccessKeyID * SecretAccessKey Deprecated: Please use "credentials"
-                          field instead. The "Secret" field will be removed in a future
-                          release.'
-                        type: string
                     required:
-                    - container
+                    - bucket
                     - credentials
                     - endpoint
                     - root
@@ -44345,24 +44338,24 @@ spec:
                       aliyunOSS:
                         description: AliyunOSS storage spec.
                         properties:
-                          container:
-                            description: Container Name of the Azure Blob service.
+                          bucket:
+                            description: Bucket name of your AliyunOSS
                             type: string
                           credentials:
-                            description: RisingWaveAzureBlobCredentials is the credentials
+                            description: RisingWaveAliyunOSSCredentials is the credentials
                               provider from a Secret.
                             properties:
-                              accountKeyRef:
-                                default: AccountKey
-                                description: AccountKeyRef is the key of the secret
-                                  to be the secret account key. Must be a valid secret
-                                  key. Defaults to "AccountKey".
+                              accessKeyIDRef:
+                                default: AccessKeyIDRef
+                                description: AccessKeyIDRef is the key of the secret
+                                  to be the access key. Must be a valid secret key.
+                                  Defaults to "AccessKeyIDRef".
                                 type: string
-                              accountNameRef:
-                                default: AccountName
-                                description: AccountNameKeyRef is the key of the secret
-                                  to be the account name. Must be a valid secret key.
-                                  Defaults to "AccountName".
+                              accessKeySecretRef:
+                                default: AccessKeySecretRef
+                                description: AccessKeySecretRef is the key of the
+                                  secret to be the secret access key. Must be a valid
+                                  secret key. Defaults to "AccessKeySecretRef".
                                 type: string
                               secretName:
                                 description: The name of the secret in the pod's namespace
@@ -44380,15 +44373,8 @@ spec:
                             description: Working directory root of the Azure Blob
                               service.
                             type: string
-                          secret:
-                            description: 'Secret contains the credentials to access
-                              the Azure Blob service. It must contain the following
-                              keys: * AccessKeyID * SecretAccessKey Deprecated: Please
-                              use "credentials" field instead. The "Secret" field
-                              will be removed in a future release.'
-                            type: string
                         required:
-                        - container
+                        - bucket
                         - credentials
                         - endpoint
                         - root

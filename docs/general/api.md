@@ -5459,8 +5459,8 @@ RisingWaveStateStoreBackendGCS
 <td>
 <code>aliyunOSS</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAzureBlob">
-RisingWaveStateStoreBackendAzureBlob
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAliyunOSS">
+RisingWaveStateStoreBackendAliyunOSS
 </a>
 </em>
 </td>
@@ -5515,6 +5515,9 @@ RisingWaveStateStoreBackendHDFS
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAliyunOSS">RisingWaveStateStoreBackendAliyunOSS
 </h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">RisingWaveStateStoreBackend</a>)
+</p>
 <div>
 <p>RisingWaveStateStoreBackendAliyunOSS is the details of AliyunOSS for compute and compactor components.</p>
 </div>

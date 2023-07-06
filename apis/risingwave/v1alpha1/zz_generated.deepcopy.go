@@ -1445,7 +1445,7 @@ func (in *RisingWaveStateStoreBackend) DeepCopyInto(out *RisingWaveStateStoreBac
 	}
 	if in.AliyunOSS != nil {
 		in, out := &in.AliyunOSS, &out.AliyunOSS
-		*out = new(RisingWaveStateStoreBackendAzureBlob)
+		*out = new(RisingWaveStateStoreBackendAliyunOSS)
 		**out = **in
 	}
 	if in.AzureBlob != nil {

@@ -288,7 +288,7 @@ type RisingWaveStateStoreBackend struct {
 
 	// AliyunOSS storage spec.
 	// +optional
-	AliyunOSS *RisingWaveStateStoreBackendAzureBlob `json:"aliyunOSS,omitempty"`
+	AliyunOSS *RisingWaveStateStoreBackendAliyunOSS `json:"aliyunOSS,omitempty"`
 
 	// Azure Blob storage spec.
 	// +optional

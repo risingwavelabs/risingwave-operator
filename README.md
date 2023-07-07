@@ -49,7 +49,8 @@ Here is the compatibility matrix:
 
 | RisingWave Operator | RisingWave | Kubernetes |
 |---------------------|------------|------------|
-| v0.4.0              | v0.18.0+   | v1.21+     |
+| main                | v0.19.0+   | v1.21+     |
+| v0.4.1              | v0.18.0+   | v1.21+     |
 | v0.3.6              | v0.18.0+   | v1.21+     |
 
 

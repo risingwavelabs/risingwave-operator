@@ -58,12 +58,6 @@ type RisingWaveStateStoreBackendMinIO struct {
 	// RisingWaveMinIOCredentials is the credentials provider from a Secret.
 	RisingWaveMinIOCredentials `json:"credentials"`
 
-	// Secret contains the credentials to access the MinIO service. It must contain the following keys:
-	//   * username
-	//   * password
-	// Deprecated: Please use "credentials" field instead. The "Secret" field will be removed in a future release.
-	Secret string `json:"secret,omitempty"`
-
 	// Endpoint of the MinIO service.
 	// +kubebuilder:validation:Required
 	Endpoint string `json:"endpoint"`
@@ -98,13 +92,6 @@ type RisingWaveS3Credentials struct {
 type RisingWaveStateStoreBackendS3 struct {
 	// RisingWaveS3Credentials is the credentials provider from a Secret.
 	RisingWaveS3Credentials `json:"credentials"`
-
-	// Secret contains the credentials to access the AWS S3 service. It must contain the following keys:
-	//   * AccessKeyID
-	//   * SecretAccessKey
-	//   * Region (optional if region is specified in the field.)
-	// Deprecated: Please use "credentials" field instead. The "Secret" field will be removed in a future release.
-	Secret string `json:"secret,omitempty"`
 
 	// Bucket of the AWS S3 service.
 	// +kubebuilder:validation:Required
@@ -146,12 +133,6 @@ type RisingWaveStateStoreBackendGCS struct {
 	// RisingWaveGCSCredentials is the credentials provider from a Secret.
 	RisingWaveGCSCredentials `json:"credentials,omitempty"`
 
-	// Secret contains the credentials to access the GCS service. It must contain the following keys:
-	//   * ServiceAccountCredentials
-	// +kubebuilder:validation:Optional
-	// Deprecated: Please use "credentials" field instead. The "Secret" field will be removed in a future release.
-	Secret string `json:"secret,omitempty"`
-
 	// Bucket of the GCS bucket service.
 	// +kubebuilder:validation:Required
 	Bucket string `json:"bucket"`
@@ -181,12 +162,6 @@ type RisingWaveAzureBlobCredentials struct {
 type RisingWaveStateStoreBackendAzureBlob struct {
 	// RisingWaveAzureBlobCredentials is the credentials provider from a Secret.
 	RisingWaveAzureBlobCredentials `json:"credentials"`
-
-	// Secret contains the credentials to access the Azure Blob service. It must contain the following keys:
-	//   * AccessKeyID
-	//   * SecretAccessKey
-	// Deprecated: Please use "credentials" field instead. The "Secret" field will be removed in a future release.
-	Secret string `json:"secret,omitempty"`
 
 	// Container Name of the Azure Blob service.
 	// +kubebuilder:validation:Required

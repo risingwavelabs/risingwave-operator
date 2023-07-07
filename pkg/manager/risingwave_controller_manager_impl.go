@@ -866,7 +866,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaService(ctx context.Context,
 
 // WaitBeforeMetaServiceIsAvailable implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaServiceIsAvailable(ctx context.Context, logger logr.Logger, metaService *corev1.Service) (reconcile.Result, error) {
-	if mgr.isObjectSynced(metaService) && utils.IsServiceReady(metaService) {
+	if mgr.isObjectSynced(metaService) {
 		return ctrlkit.NoRequeue()
 	}
 	logger.Info("Meta service hasn't been ready")

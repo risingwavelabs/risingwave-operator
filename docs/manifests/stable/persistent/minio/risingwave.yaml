@@ -173,20 +173,31 @@ kind: RisingWave
 metadata:
   name: risingwave
 spec:
-  storages:
+  image: ghcr.io/risingwavelabs/risingwave:v0.19.1
+  metaStore:
+    etcd:
+      endpoint: etcd:2388
+  stateStore:
+    dataDirectory: hummock001
+    minio:
+      credentials:
+        secretName: minio-credentials
+      bucket: risingwave
+      endpoint: minio:9301
+  components:
     meta:
-      etcd:
-        endpoint: etcd:2388
-    object:
-      dataDirectory: hummock001
-      minio:
-        bucket: risingwave
-        secret: minio-credentials
-        endpoint: minio:9301
-  global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.19.1
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
-      compactor: 1
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    compactor:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    frontend:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    compute:
+      nodeGroups:
+      - replicas: 1
+        name: ''

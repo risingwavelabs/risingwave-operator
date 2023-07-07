@@ -137,7 +137,7 @@ int32
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">PartialObjectMeta
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodePodTemplate">RisingWaveNodePodTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodePodTemplate">RisingWaveNodePodTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
 </p>
 <div>
 <p>PartialObjectMeta contains partial metadata of an object, including labels and annotations.</p>
@@ -178,7 +178,7 @@ map[string]string
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.PersistentVolumeClaim">PersistentVolumeClaim
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup</a>)
 </p>
 <div>
 <p>PersistentVolumeClaim used by RisingWave.</p>
@@ -499,33 +499,6 @@ RisingWaveSpec
 <table>
 <tr>
 <td>
-<code>global</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">
-RisingWaveGlobalSpec
-</a>
-</em>
-</td>
-<td>
-<p>Deprecated
-The spec of a shared template for components and a global scope of replicas.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>storages</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">
-RisingWaveStoragesSpec
-</a>
-</em>
-</td>
-<td>
-<p>The spec of meta storage, object storage for compute and compactor, and PVC templates for compute.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>components</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">
@@ -719,6 +692,9 @@ Defaults to &ldquo;AccountKey&rdquo;.</p>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponent">RisingWaveComponent
 </h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
+</p>
 <div>
 <p>RisingWaveComponent determines how a RisingWave component is deployed.</p>
 </div>
@@ -753,605 +729,6 @@ bool
 <em>(Optional)</em>
 <p>DisallowPrintStackTraces determines if the stack traces are allowed to print when panic happens. This options applies
 to both Rust and Java programs. Defaults to false.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>nodeGroups</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">
-[]RisingWaveNodeGroup
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>NodeGroups of the component deployment.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
-</p>
-<div>
-<p>RisingWaveComponentCompactor is the spec describes the compactor component.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>restartAt</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#time-v1-meta">
-Kubernetes meta/v1.Time
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Deprecated
-The time that the Pods of compactor that should be restarted. Setting a value on this
-field will trigger a recreation of all Pods of this component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>groups</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">
-[]RisingWaveComponentGroup
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Deprecated: Use NodeGroups instead.
-Groups of Pods of compactor component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>nodeGroups</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">
-[]RisingWaveNodeGroup
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>NodeGroups of the component deployment.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompute">RisingWaveComponentCompute
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
-</p>
-<div>
-<p>RisingWaveComponentCompute is the spec describes the compute component.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>restartAt</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#time-v1-meta">
-Kubernetes meta/v1.Time
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Deprecated
-The time that the Pods of compute that should be restarted. Setting a value on this
-field will trigger a recreation of all Pods of this component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>groups</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComputeGroup">
-[]RisingWaveComputeGroup
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Deprecated: Use NodeGroups instead.
-Groups of Pods of compute component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>nodeGroups</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">
-[]RisingWaveNodeGroup
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>NodeGroups of the component deployment.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentConnector">RisingWaveComponentConnector
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
-</p>
-<div>
-<p>RisingWaveComponentConnector is the spec describes the connector component.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>restartAt</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#time-v1-meta">
-Kubernetes meta/v1.Time
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Deprecated
-The time that the Pods of connector that should be restarted. Setting a value on this
-field will trigger a recreation of all Pods of this component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>groups</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">
-[]RisingWaveComponentGroup
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Deprecated: Use NodeGroups instead.
-Groups of Pods of compactor component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>nodeGroups</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">
-[]RisingWaveNodeGroup
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>NodeGroups of the component deployment.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
-</p>
-<div>
-<p>RisingWaveComponentFrontend is the spec describes the frontend component.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>restartAt</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#time-v1-meta">
-Kubernetes meta/v1.Time
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Deprecated
-The time that the Pods of frontend that should be restarted. Setting a value on this
-field will trigger a recreation of all Pods of this component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>groups</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">
-[]RisingWaveComponentGroup
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Deprecated: Use NodeGroups instead.
-Groups of Pods of frontend component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>nodeGroups</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">
-[]RisingWaveNodeGroup
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>NodeGroups of the component deployment.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">RisingWaveComponentGroup
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentConnector">RisingWaveComponentConnector</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta</a>)
-</p>
-<div>
-<p>RisingWaveComponentGroup is the common deployment group of each component. Currently, we use
-this group for meta/frontend/compactor.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Name of the group.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>replicas</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>Replicas of Pods in this group.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">RisingWaveComponentGroup</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComputeGroupTemplate">RisingWaveComputeGroupTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>)
-</p>
-<div>
-<p>RisingWaveComponentGroupTemplate is the common deployment template for groups of each component.
-Currently, we use the common template for meta/frontend/compactor.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>image</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Image for RisingWave component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>imagePullPolicy</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pullpolicy-v1-core">
-Kubernetes core/v1.PullPolicy
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Pull policy of the RisingWave image. The default value is the same as the
-default of Kubernetes.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>imagePullSecrets</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Secrets for pulling RisingWave images.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>upgradeStrategy</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupUpgradeStrategy">
-RisingWaveNodeGroupUpgradeStrategy
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Upgrade strategy for the components. By default, it is the same as the
-workload&rsquo;s default strategy that the component is deployed with.
-Note: the maxSurge will not take effect for the compute component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>resources</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#resourcerequirements-v1-core">
-Kubernetes core/v1.ResourceRequirements
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Resources of the RisingWave component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>nodeSelector</code><br/>
-<em>
-map[string]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>A map of labels describing the nodes to be scheduled on.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tolerations</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core">
-[]Kubernetes core/v1.Toleration
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If specified, the pod&rsquo;s tolerations.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>priorityClassName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If specified, indicates the pod&rsquo;s priority. &ldquo;system-node-critical&rdquo; and
-&ldquo;system-cluster-critical&rdquo; are two special keywords which indicate the
-highest priorities with the former being the highest priority. Any other
-name must be defined by creating a PriorityClass object with that name.
-If not specified, the pod priority will be default or zero if there is no
-default.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>securityContext</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
-Kubernetes core/v1.PodSecurityContext
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>SecurityContext holds pod-level security attributes and common container settings.
-Optional: Defaults to empty.  See type description for default values of each field.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>dnsConfig</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#poddnsconfig-v1-core">
-Kubernetes core/v1.PodDNSConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Specifies the DNS parameters of a pod.
-Parameters specified here will be merged to the generated DNS
-configuration based on DNSPolicy.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>terminationGracePeriodSeconds</code><br/>
-<em>
-int64
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Optional duration in seconds the pod needs to terminate gracefully. May be decreased in delete request.
-Value must be non-negative integer. The value zero indicates stop immediately via
-the kill signal (no opportunity to shut down).
-If this value is nil, the default grace period will be used instead.
-The grace period is the duration in seconds after the processes running in the pod are sent
-a termination signal and the time when the processes are forcibly halted with a kill signal.
-Set this value longer than the expected cleanup time for your process.
-Defaults to 30 seconds.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>metadata</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">
-PartialObjectMeta
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>metadata of the RisingWave&rsquo;s Pods.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>env</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envvar-v1-core">
-[]Kubernetes core/v1.EnvVar
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>List of environment variables to set in the container.
-Cannot be updated.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>envFrom</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envfromsource-v1-core">
-[]Kubernetes core/v1.EnvFromSource
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>List of sources to populate environment variables in the container.
-The keys defined within a source must be a C_IDENTIFIER. All invalid keys
-will be reported as an event when the container is starting. When a key exists in multiple
-sources, the value associated with the last source will take precedence.
-Values defined by an Env with a duplicate key will take precedence.
-Cannot be updated.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>affinity</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#affinity-v1-core">
-Kubernetes core/v1.Affinity
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If specified, the pod&rsquo;s scheduling constraints</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
-</p>
-<div>
-<p>RisingWaveComponentMeta is the spec describes the meta component.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>restartAt</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#time-v1-meta">
-Kubernetes meta/v1.Time
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Deprecated
-The time that the Pods of frontend that should be restarted. Setting a value on this
-field will trigger a recreation of all Pods of this component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>groups</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroup">
-[]RisingWaveComponentGroup
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Deprecated: Use NodeGroups instead.
-Groups of Pods of meta component.</p>
 </td>
 </tr>
 <tr>
@@ -1515,8 +892,8 @@ ComponentReplicasStatus
 <td>
 <code>meta</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">
-RisingWaveComponentMeta
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponent">
+RisingWaveComponent
 </a>
 </em>
 </td>
@@ -1528,8 +905,8 @@ RisingWaveComponentMeta
 <td>
 <code>frontend</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentFrontend">
-RisingWaveComponentFrontend
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponent">
+RisingWaveComponent
 </a>
 </em>
 </td>
@@ -1541,8 +918,8 @@ RisingWaveComponentFrontend
 <td>
 <code>compute</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompute">
-RisingWaveComponentCompute
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponent">
+RisingWaveComponent
 </a>
 </em>
 </td>
@@ -1554,8 +931,8 @@ RisingWaveComponentCompute
 <td>
 <code>compactor</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">
-RisingWaveComponentCompactor
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponent">
+RisingWaveComponent
 </a>
 </em>
 </td>
@@ -1567,310 +944,13 @@ RisingWaveComponentCompactor
 <td>
 <code>connector</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentConnector">
-RisingWaveComponentConnector
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponent">
+RisingWaveComponent
 </a>
 </em>
 </td>
 <td>
 <p>Connector contains configuration of the connector component.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComputeGroup">RisingWaveComputeGroup
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompute">RisingWaveComponentCompute</a>)
-</p>
-<div>
-<p>RisingWaveComputeGroup is the group for component compute.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Name of the group.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>replicas</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>Replicas of Pods in this group.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComputeGroupTemplate">RisingWaveComputeGroupTemplate
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComputeGroup">RisingWaveComputeGroup</a>)
-</p>
-<div>
-<p>RisingWaveComputeGroupTemplate is the group template for component compute, which supports specifying
-the volume mounts on compute Pods. The volumes should be either local or defined in the storages.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>image</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Image for RisingWave component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>imagePullPolicy</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pullpolicy-v1-core">
-Kubernetes core/v1.PullPolicy
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Pull policy of the RisingWave image. The default value is the same as the
-default of Kubernetes.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>imagePullSecrets</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Secrets for pulling RisingWave images.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>upgradeStrategy</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupUpgradeStrategy">
-RisingWaveNodeGroupUpgradeStrategy
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Upgrade strategy for the components. By default, it is the same as the
-workload&rsquo;s default strategy that the component is deployed with.
-Note: the maxSurge will not take effect for the compute component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>resources</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#resourcerequirements-v1-core">
-Kubernetes core/v1.ResourceRequirements
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Resources of the RisingWave component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>nodeSelector</code><br/>
-<em>
-map[string]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>A map of labels describing the nodes to be scheduled on.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tolerations</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core">
-[]Kubernetes core/v1.Toleration
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If specified, the pod&rsquo;s tolerations.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>priorityClassName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If specified, indicates the pod&rsquo;s priority. &ldquo;system-node-critical&rdquo; and
-&ldquo;system-cluster-critical&rdquo; are two special keywords which indicate the
-highest priorities with the former being the highest priority. Any other
-name must be defined by creating a PriorityClass object with that name.
-If not specified, the pod priority will be default or zero if there is no
-default.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>securityContext</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
-Kubernetes core/v1.PodSecurityContext
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>SecurityContext holds pod-level security attributes and common container settings.
-Optional: Defaults to empty.  See type description for default values of each field.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>dnsConfig</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#poddnsconfig-v1-core">
-Kubernetes core/v1.PodDNSConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Specifies the DNS parameters of a pod.
-Parameters specified here will be merged to the generated DNS
-configuration based on DNSPolicy.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>terminationGracePeriodSeconds</code><br/>
-<em>
-int64
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Optional duration in seconds the pod needs to terminate gracefully. May be decreased in delete request.
-Value must be non-negative integer. The value zero indicates stop immediately via
-the kill signal (no opportunity to shut down).
-If this value is nil, the default grace period will be used instead.
-The grace period is the duration in seconds after the processes running in the pod are sent
-a termination signal and the time when the processes are forcibly halted with a kill signal.
-Set this value longer than the expected cleanup time for your process.
-Defaults to 30 seconds.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>metadata</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">
-PartialObjectMeta
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>metadata of the RisingWave&rsquo;s Pods.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>env</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envvar-v1-core">
-[]Kubernetes core/v1.EnvVar
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>List of environment variables to set in the container.
-Cannot be updated.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>envFrom</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envfromsource-v1-core">
-[]Kubernetes core/v1.EnvFromSource
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>List of sources to populate environment variables in the container.
-The keys defined within a source must be a C_IDENTIFIER. All invalid keys
-will be reported as an event when the container is starting. When a key exists in multiple
-sources, the value associated with the last source will take precedence.
-Values defined by an Env with a duplicate key will take precedence.
-Cannot be updated.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>affinity</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#affinity-v1-core">
-Kubernetes core/v1.Affinity
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If specified, the pod&rsquo;s scheduling constraints</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>volumeMounts</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core">
-[]Kubernetes core/v1.VolumeMount
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Volumes to be mounted on the Pods.</p>
 </td>
 </tr>
 </tbody>
@@ -2000,21 +1080,6 @@ string
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>
-<code>configmap</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#configmapkeyselector-v1-core">
-Kubernetes core/v1.ConfigMapKeySelector
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The reference to a key in a config map that contains the base config for RisingWave.
-It&rsquo;s an optional field and can be left out. If not specified, a default config is going to be used.</p>
-</td>
-</tr>
 <tr>
 <td>
 <code>configMap</code><br/>
@@ -2153,9 +1218,6 @@ Defaults to &ldquo;ServiceAccountCredentials&rdquo;.</p>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalReplicas">RisingWaveGlobalReplicas
 </h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec</a>)
-</p>
 <div>
 <p>RisingWaveGlobalReplicas are the replicas of each component, declared in global scope.</p>
 </div>
@@ -2229,294 +1291,10 @@ int32
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">RisingWaveGlobalSpec
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
-</p>
-<div>
-<p>RisingWaveGlobalSpec is the global spec.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>image</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Image for RisingWave component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>imagePullPolicy</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pullpolicy-v1-core">
-Kubernetes core/v1.PullPolicy
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Pull policy of the RisingWave image. The default value is the same as the
-default of Kubernetes.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>imagePullSecrets</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Secrets for pulling RisingWave images.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>upgradeStrategy</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupUpgradeStrategy">
-RisingWaveNodeGroupUpgradeStrategy
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Upgrade strategy for the components. By default, it is the same as the
-workload&rsquo;s default strategy that the component is deployed with.
-Note: the maxSurge will not take effect for the compute component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>resources</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#resourcerequirements-v1-core">
-Kubernetes core/v1.ResourceRequirements
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Resources of the RisingWave component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>nodeSelector</code><br/>
-<em>
-map[string]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>A map of labels describing the nodes to be scheduled on.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tolerations</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core">
-[]Kubernetes core/v1.Toleration
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If specified, the pod&rsquo;s tolerations.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>priorityClassName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If specified, indicates the pod&rsquo;s priority. &ldquo;system-node-critical&rdquo; and
-&ldquo;system-cluster-critical&rdquo; are two special keywords which indicate the
-highest priorities with the former being the highest priority. Any other
-name must be defined by creating a PriorityClass object with that name.
-If not specified, the pod priority will be default or zero if there is no
-default.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>securityContext</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
-Kubernetes core/v1.PodSecurityContext
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>SecurityContext holds pod-level security attributes and common container settings.
-Optional: Defaults to empty.  See type description for default values of each field.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>dnsConfig</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#poddnsconfig-v1-core">
-Kubernetes core/v1.PodDNSConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Specifies the DNS parameters of a pod.
-Parameters specified here will be merged to the generated DNS
-configuration based on DNSPolicy.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>terminationGracePeriodSeconds</code><br/>
-<em>
-int64
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Optional duration in seconds the pod needs to terminate gracefully. May be decreased in delete request.
-Value must be non-negative integer. The value zero indicates stop immediately via
-the kill signal (no opportunity to shut down).
-If this value is nil, the default grace period will be used instead.
-The grace period is the duration in seconds after the processes running in the pod are sent
-a termination signal and the time when the processes are forcibly halted with a kill signal.
-Set this value longer than the expected cleanup time for your process.
-Defaults to 30 seconds.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>metadata</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">
-PartialObjectMeta
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>metadata of the RisingWave&rsquo;s Pods.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>env</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envvar-v1-core">
-[]Kubernetes core/v1.EnvVar
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>List of environment variables to set in the container.
-Cannot be updated.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>envFrom</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envfromsource-v1-core">
-[]Kubernetes core/v1.EnvFromSource
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>List of sources to populate environment variables in the container.
-The keys defined within a source must be a C_IDENTIFIER. All invalid keys
-will be reported as an event when the container is starting. When a key exists in multiple
-sources, the value associated with the last source will take precedence.
-Values defined by an Env with a duplicate key will take precedence.
-Cannot be updated.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>affinity</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#affinity-v1-core">
-Kubernetes core/v1.Affinity
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>If specified, the pod&rsquo;s scheduling constraints</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>replicas</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalReplicas">
-RisingWaveGlobalReplicas
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Replicas of each component in default groups.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serviceType</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#servicetype-v1-core">
-Kubernetes core/v1.ServiceType
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Service type of the frontend service.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serviceMetadata</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">
-PartialObjectMeta
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Service metadata of the frontend service.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackend">RisingWaveMetaStoreBackend
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
 </p>
 <div>
 <p>RisingWaveMetaStoreBackend is the collection of parameters for the meta store that RisingWave uses. Note that one
@@ -3031,7 +1809,7 @@ More info: <a href="https://kubernetes.io/docs/tasks/configure-pod-container/sec
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponent">RisingWaveComponent</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompactor">RisingWaveComponentCompactor</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentCompute">RisingWaveComponentCompute</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentConnector">RisingWaveComponentConnector</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentFrontend">RisingWaveComponentFrontend</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentMeta">RisingWaveComponentMeta</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponent">RisingWaveComponent</a>)
 </p>
 <div>
 <p>RisingWaveNodeGroup is the definition of a group of RisingWave nodes of the same component.</p>
@@ -3363,7 +2141,7 @@ bool
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupUpgradeStrategy">RisingWaveNodeGroupUpgradeStrategy
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentGroupTemplate">RisingWaveComponentGroupTemplate</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup</a>)
 </p>
 <div>
 <p>RisingWaveNodeGroupUpgradeStrategy is the spec of upgrade strategy used by RisingWave.</p>
@@ -5153,33 +3931,6 @@ k8s.io/apimachinery/pkg/types.UID
 <tbody>
 <tr>
 <td>
-<code>global</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveGlobalSpec">
-RisingWaveGlobalSpec
-</a>
-</em>
-</td>
-<td>
-<p>Deprecated
-The spec of a shared template for components and a global scope of replicas.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>storages</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">
-RisingWaveStoragesSpec
-</a>
-</em>
-</td>
-<td>
-<p>The spec of meta storage, object storage for compute and compactor, and PVC templates for compute.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>components</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">
@@ -5306,7 +4057,7 @@ But keep in mind that memory backend is not recommended in production.</p>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">RisingWaveStateStoreBackend
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
 </p>
 <div>
 <p>RisingWaveStateStoreBackend is the collection of parameters for the state store that RisingWave uses. Note that one
@@ -5491,20 +4242,6 @@ RisingWaveAzureBlobCredentials
 </tr>
 <tr>
 <td>
-<code>secret</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Secret contains the credentials to access the Azure Blob service. It must contain the following keys:
-* AccessKeyID
-* SecretAccessKey
-Deprecated: Please use &ldquo;credentials&rdquo; field instead. The &ldquo;Secret&rdquo; field will be removed in a future release.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>container</code><br/>
 <em>
 string
@@ -5566,19 +4303,6 @@ RisingWaveGCSCredentials
 </td>
 <td>
 <p>RisingWaveGCSCredentials is the credentials provider from a Secret.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>secret</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Secret contains the credentials to access the GCS service. It must contain the following keys:
-* ServiceAccountCredentials
-Deprecated: Please use &ldquo;credentials&rdquo; field instead. The &ldquo;Secret&rdquo; field will be removed in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -5705,20 +4429,6 @@ RisingWaveMinIOCredentials
 </tr>
 <tr>
 <td>
-<code>secret</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Secret contains the credentials to access the MinIO service. It must contain the following keys:
-* username
-* password
-Deprecated: Please use &ldquo;credentials&rdquo; field instead. The &ldquo;Secret&rdquo; field will be removed in a future release.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>endpoint</code><br/>
 <em>
 string
@@ -5768,21 +4478,6 @@ RisingWaveS3Credentials
 </td>
 <td>
 <p>RisingWaveS3Credentials is the credentials provider from a Secret.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>secret</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Secret contains the credentials to access the AWS S3 service. It must contain the following keys:
-* AccessKeyID
-* SecretAccessKey
-* Region (optional if region is specified in the field.)
-Deprecated: Please use &ldquo;credentials&rdquo; field instead. The &ldquo;Secret&rdquo; field will be removed in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -5994,65 +4689,6 @@ RisingWaveStateStoreStatus
 </td>
 <td>
 <p>Status of the state store.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStoragesSpec">RisingWaveStoragesSpec
-</h3>
-<p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
-</p>
-<div>
-<p>RisingWaveStoragesSpec is the storages spec.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>meta</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackend">
-RisingWaveMetaStoreBackend
-</a>
-</em>
-</td>
-<td>
-<p>Storage spec for meta.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>object</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">
-RisingWaveStateStoreBackend
-</a>
-</em>
-</td>
-<td>
-<p>Storage spec for object storage.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>pvcTemplates</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.PersistentVolumeClaim">
-[]PersistentVolumeClaim
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The persistent volume claim templates for the compute component. PVCs declared here
-can be referenced in the groups of compute component.</p>
 </td>
 </tr>
 </tbody>

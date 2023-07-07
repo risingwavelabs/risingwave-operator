@@ -7,7 +7,7 @@ spec:
   components:
     meta:
       nodeGroups:
-      - replicas: 0
+      - replicas: 1
         name: ''
     frontend:
       nodeGroups:

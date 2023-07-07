@@ -62,6 +62,7 @@ _SCRIPT_BASEDIR=$(dirname "$0")
 msg="Installing Kube Prometheus Stack"
 echo $msg
 
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm --namespace $ns upgrade --install --create-namespace prometheus prometheus-community/kube-prometheus-stack \
   -f "${_SCRIPT_BASEDIR}"/kube-prometheus-stack.yaml \
   $dryParam

@@ -18,7 +18,7 @@ spec:
       bucket: hummock001
       root: risingwave
       region: cn-hangzhou
-      internalEndpoint: true
+      internalEndpoint: false
       credentials:
         secretName: risingwave-aliyun-oss-credentials
   image: ghcr.io/risingwavelabs/risingwave:v0.19.1

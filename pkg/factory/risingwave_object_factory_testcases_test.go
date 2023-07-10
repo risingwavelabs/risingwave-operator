@@ -3088,7 +3088,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 				},
 				{
 					Name:  "OSS_ENDPOINT",
-					Value: "https://$(OSS_S3_BUCKET).oss-$(OSS_REGION).aliyuncs.com",
+					Value: "https://oss-$(OSS_REGION).aliyuncs.com",
 				},
 			},
 		},
@@ -3135,7 +3135,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 				},
 				{
 					Name:  "OSS_ENDPOINT",
-					Value: "https://$(OSS_S3_BUCKET).oss-$(OSS_REGION)-internal.aliyuncs.com",
+					Value: "https://oss-$(OSS_REGION)-internal.aliyuncs.com",
 				},
 			},
 		},

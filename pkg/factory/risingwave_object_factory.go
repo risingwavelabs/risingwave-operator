@@ -53,8 +53,8 @@ const (
 )
 
 var (
-	aliyunOSSEndpoint         = fmt.Sprintf("https://$(%s).oss-$(%s).aliyuncs.com", envs.AliyunOSSBucket, envs.AliyunOSSRegion)
-	internalAliyunOSSEndpoint = fmt.Sprintf("https://$(%s).oss-$(%s)-internal.aliyuncs.com", envs.AliyunOSSBucket, envs.AliyunOSSRegion)
+	aliyunOSSEndpoint         = fmt.Sprintf("https://oss-$(%s).aliyuncs.com", envs.AliyunOSSRegion)
+	internalAliyunOSSEndpoint = fmt.Sprintf("https://oss-$(%s)-internal.aliyuncs.com", envs.AliyunOSSRegion)
 )
 
 // RisingWaveObjectFactory is the object factory to help create owned objects like Deployments, StatefulSets, Services, etc.

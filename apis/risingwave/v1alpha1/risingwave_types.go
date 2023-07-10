@@ -22,27 +22,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// RisingWaveStoragesSpec is the storages spec.
-type RisingWaveStoragesSpec struct {
-	// Storage spec for meta.
-	Meta RisingWaveMetaStoreBackend `json:"meta,omitempty"`
-
-	// Storage spec for object storage.
-	Object RisingWaveStateStoreBackend `json:"object,omitempty"`
-
-	// The persistent volume claim templates for the compute component. PVCs declared here
-	// can be referenced in the groups of compute component.
-	// +optional
-	PVCTemplates []PersistentVolumeClaim `json:"pvcTemplates,omitempty"`
-}
-
 // RisingWaveConfigurationSpec is the configuration spec.
 type RisingWaveConfigurationSpec struct {
-	// The reference to a key in a config map that contains the base config for RisingWave.
-	// It's an optional field and can be left out. If not specified, a default config is going to be used.
-	// +optional
-	ConfigMap *corev1.ConfigMapKeySelector `json:"configmap,omitempty"`
-
 	RisingWaveNodeConfiguration `json:",inline"`
 }
 
@@ -74,36 +55,26 @@ type RisingWaveGlobalReplicas struct {
 	Connector int32 `json:"connector,omitempty"`
 }
 
-// RisingWaveGlobalSpec is the global spec.
-type RisingWaveGlobalSpec struct {
-	// Global template for RisingWave that all components share.
-	RisingWaveComponentGroupTemplate `json:",inline"`
+// RisingWaveComponentsSpec is the spec for RisingWave components.
+type RisingWaveComponentsSpec struct {
+	// Meta contains configuration of the meta component.
+	Meta RisingWaveComponent `json:"meta,omitempty"`
 
-	// Replicas of each component in default groups.
-	// +optional
-	// +patchStrategy=retainKeys
-	Replicas RisingWaveGlobalReplicas `json:"replicas,omitempty"`
+	// Frontend contains configuration of the frontend component.
+	Frontend RisingWaveComponent `json:"frontend,omitempty"`
 
-	// Service type of the frontend service.
-	// +optional
-	// +kubebuilder:default=ClusterIP
-	// +kubebuilder:validation:Enum=ClusterIP;NodePort;LoadBalancer
-	ServiceType corev1.ServiceType `json:"serviceType,omitempty"`
+	// Compute contains configuration of the compute component.
+	Compute RisingWaveComponent `json:"compute,omitempty"`
 
-	// Service metadata of the frontend service.
-	// +optional
-	ServiceMeta PartialObjectMeta `json:"serviceMetadata,omitempty"`
+	// Compactor contains configuration of the compactor component.
+	Compactor RisingWaveComponent `json:"compactor,omitempty"`
+
+	// Connector contains configuration of the connector component.
+	Connector RisingWaveComponent `json:"connector,omitempty"`
 }
 
 // RisingWaveSpec is the overall spec.
 type RisingWaveSpec struct {
-	// Deprecated
-	// The spec of a shared template for components and a global scope of replicas.
-	Global RisingWaveGlobalSpec `json:"global,omitempty"`
-
-	// The spec of meta storage, object storage for compute and compactor, and PVC templates for compute.
-	Storages RisingWaveStoragesSpec `json:"storages,omitempty"`
-
 	// The spec of ports and some controllers (such as `restartAt`) of each component,
 	// as well as an advanced concept called `group` to override the global template and create groups
 	// of Pods, e.g., deployment in hybrid-arch cluster.
@@ -124,8 +95,6 @@ type RisingWaveSpec struct {
 	// the controller will determine if it can create the resource by checking if the CRDs are installed.
 	// +optional
 	EnableDefaultServiceMonitor *bool `json:"enableDefaultServiceMonitor,omitempty"`
-
-	// -----------------------------------v1alpha2 features ------------------------------------------ //
 
 	// Image for RisingWave component.
 	Image string `json:"image"`

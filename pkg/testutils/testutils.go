@@ -88,7 +88,7 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 		FrontendServiceType: corev1.ServiceTypeClusterIP,
 		Image:               "ghcr.io/risingwavelabs/risingwave:latest",
 		Components: risingwavev1alpha1.RisingWaveComponentsSpec{
-			Meta: risingwavev1alpha1.RisingWaveComponentMeta{
+			Meta: risingwavev1alpha1.RisingWaveComponent{
 				NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
 					{
 						Replicas: 1,
@@ -111,7 +111,7 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 					},
 				},
 			},
-			Frontend: risingwavev1alpha1.RisingWaveComponentFrontend{
+			Frontend: risingwavev1alpha1.RisingWaveComponent{
 				NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
 					{
 						Replicas: 1,
@@ -134,7 +134,7 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 					},
 				},
 			},
-			Compute: risingwavev1alpha1.RisingWaveComponentCompute{
+			Compute: risingwavev1alpha1.RisingWaveComponent{
 				NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
 					{
 						Replicas: 1,
@@ -157,7 +157,7 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 					},
 				},
 			},
-			Compactor: risingwavev1alpha1.RisingWaveComponentCompactor{
+			Compactor: risingwavev1alpha1.RisingWaveComponent{
 				NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
 					{
 						Replicas: 1,
@@ -180,7 +180,7 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 					},
 				},
 			},
-			Connector: risingwavev1alpha1.RisingWaveComponentConnector{
+			Connector: risingwavev1alpha1.RisingWaveComponent{
 				NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
 					{
 						Replicas: 1,

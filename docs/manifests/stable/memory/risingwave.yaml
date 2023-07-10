@@ -3,15 +3,25 @@ kind: RisingWave
 metadata:
   name: risingwave
 spec:
-  storages:
+  image: ghcr.io/risingwavelabs/risingwave:v0.19.1
+  metaStore:
+    memory: true
+  stateStore:
+    memory: true
+  components:
     meta:
-      memory: true
-    object:
-      memory: true
-  global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.19.1
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
-      compactor: 1
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    compactor:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    frontend:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    compute:
+      nodeGroups:
+      - replicas: 1
+        name: ''

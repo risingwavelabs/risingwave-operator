@@ -75,19 +75,29 @@ metadata:
   name: ${E2E_RISINGWAVE_NAME}
   namespace: ${E2E_NAMESPACE}
 spec:
-  global:
-    image: ${E2E_RISINGWAVE_IMAGE}
-    imagePullPolicy: IfNotPresent
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
-      compactor: 1
-  storages:
+  image: ${E2E_RISINGWAVE_IMAGE}
+  components:
     meta:
-      memory: true
-    object:
-      minio:
-        endpoint: minio:9301
-        bucket: hummock001
-        secret: minio-credentials
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    compactor:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    frontend:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    compute:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+  metaStore:
+    memory: true
+  stateStore:
+    minio:
+      endpoint: minio:9301
+      bucket: hummock001
+      credentials:
+        secretName: minio-credentials

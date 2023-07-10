@@ -21,10 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/apimachinery/pkg/api/equality"
-
-	"github.com/risingwavelabs/risingwave-operator/pkg/webhook"
-
 	"github.com/go-logr/logr"
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
 	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
@@ -162,16 +158,6 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 	}
 
 	logger = logger.WithValues("generation", risingwave.Generation)
-
-	// Convert and update v1alpha1 features.
-	oldRisingwave := *risingwave.DeepCopy()
-	webhook.ConvertToV1alpha2Features(&risingwave)
-	// if convert changes anything, then update
-	if !equality.Semantic.DeepEqual(oldRisingwave, risingwave) {
-		err := c.Client.Update(ctx, &risingwave)
-		// If update happens, then abort the current workflow and wait for another try.
-		return ctrlkit.RequeueIfErrorAndWrap("Failed to convert and update v1alpha1 features", err)
-	}
 
 	// Pause and skip the reconciliation if the annotation is found.
 	if _, ok := risingwave.Annotations[consts.AnnotationPauseReconcile]; ok {

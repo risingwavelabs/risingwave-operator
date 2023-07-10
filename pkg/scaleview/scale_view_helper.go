@@ -71,7 +71,7 @@ func (r *RisingWaveScaleViewHelper) getReplicasPtr(group string) (*int32, int) {
 	return r.findReplicaPtrGroup(group)
 }
 
-// ListComponentGroups lists the groups under `.spec.components`. The default group "" is not included.
+// ListComponentGroups lists the groups under `.spec.components`.
 func (r *RisingWaveScaleViewHelper) ListComponentGroups() []string {
 	var nodeGroups []risingwavev1alpha1.RisingWaveNodeGroup
 	switch r.component {

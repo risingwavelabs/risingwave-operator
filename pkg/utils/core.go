@@ -15,14 +15,3 @@
  */
 
 package utils
-
-import (
-	corev1 "k8s.io/api/core/v1"
-)
-
-// IsServiceReady returns true when services is ready.
-func IsServiceReady(svc *corev1.Service) bool {
-	/* spellchecker: disable */
-	// FIXME(shunjie.dsj)
-	return svc != nil
-}

@@ -34214,24 +34214,24 @@ spec:
                   aliyunOSS:
                     description: AliyunOSS storage spec.
                     properties:
-                      container:
-                        description: Container Name of the Azure Blob service.
+                      bucket:
+                        description: Bucket name of your AliyunOSS
                         type: string
                       credentials:
-                        description: RisingWaveAzureBlobCredentials is the credentials
+                        description: RisingWaveAliyunOSSCredentials is the credentials
                           provider from a Secret.
                         properties:
-                          accountKeyRef:
-                            default: AccountKey
-                            description: AccountKeyRef is the key of the secret to
-                              be the secret account key. Must be a valid secret key.
-                              Defaults to "AccountKey".
+                          accessKeyIDRef:
+                            default: AccessKeyIDRef
+                            description: AccessKeyIDRef is the key of the secret to
+                              be the access key. Must be a valid secret key. Defaults
+                              to "AccessKeyIDRef".
                             type: string
-                          accountNameRef:
-                            default: AccountName
-                            description: AccountNameKeyRef is the key of the secret
-                              to be the account name. Must be a valid secret key.
-                              Defaults to "AccountName".
+                          accessKeySecretRef:
+                            default: AccessKeySecretRef
+                            description: AccessKeySecretRef is the key of the secret
+                              to be the secret access key. Must be a valid secret
+                              key. Defaults to "AccessKeySecretRef".
                             type: string
                           secretName:
                             description: The name of the secret in the pod's namespace
@@ -34240,17 +34240,20 @@ spec:
                         required:
                         - secretName
                         type: object
-                      endpoint:
-                        description: Endpoint of the Azure Blob service. e.g. https://yufantest.blob.core.windows.net
-                        pattern: ^(?:https://)?(?:[^/.\s]+\.)*(?:[^/\s]+)*$
+                      internalEndpoint:
+                        description: InternalEndpoint indicates if we use the internal
+                          endpoint to access Aliyun OSS, which is only available in
+                          the internal network.
+                        type: boolean
+                      region:
+                        description: Region of Aliyun OSS service
                         type: string
                       root:
-                        description: Working directory root of the Azure Blob service.
+                        description: Working directory root of the Aliyun OSS.
                         type: string
                     required:
-                    - container
+                    - bucket
                     - credentials
-                    - endpoint
                     - root
                     type: object
                   azureBlob:

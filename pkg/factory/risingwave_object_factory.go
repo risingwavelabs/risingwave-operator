@@ -52,6 +52,11 @@ const (
 	risingwaveConfigFileName  = "risingwave.toml"
 )
 
+var (
+	aliyunOSSEndpoint         = fmt.Sprintf("https://oss-$(%s).aliyuncs.com", envs.AliyunOSSRegion)
+	internalAliyunOSSEndpoint = fmt.Sprintf("https://oss-$(%s)-internal.aliyuncs.com", envs.AliyunOSSRegion)
+)
+
 // RisingWaveObjectFactory is the object factory to help create owned objects like Deployments, StatefulSets, Services, etc.
 type RisingWaveObjectFactory struct {
 	scheme     *runtime.Scheme
@@ -131,7 +136,7 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 		return fmt.Sprintf("hummock+gcs://%s@%s", stateStore.GCS.Bucket, stateStore.GCS.Root)
 	case f.isStateStoreAliyunOSS():
 		aliyunOSS := stateStore.AliyunOSS
-		return fmt.Sprintf("hummock+oss://%s@%s", aliyunOSS.Container, aliyunOSS.Root)
+		return fmt.Sprintf("hummock+oss://%s@%s", aliyunOSS.Bucket, aliyunOSS.Root)
 	case f.isStateStoreAzureBlob():
 		azureBlob := stateStore.AzureBlob
 		return fmt.Sprintf("hummock+azblob://%s@%s", azureBlob.Container, azureBlob.Root)
@@ -684,18 +689,28 @@ func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
 
 func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 	stateStore := &f.risingwave.Spec.StateStore
-	credentials := stateStore.AliyunOSS.RisingWaveAzureBlobCredentials
+	credentials := stateStore.AliyunOSS.RisingWaveAliyunOSSCredentials
 	secretRef := corev1.LocalObjectReference{
 		Name: credentials.SecretName,
 	}
-	return []corev1.EnvVar{
+	var endpoint string
+	if stateStore.AliyunOSS.InternalEndpoint {
+		endpoint = internalAliyunOSSEndpoint
+	} else {
+		endpoint = aliyunOSSEndpoint
+	}
 
+	return []corev1.EnvVar{
+		{
+			Name:  envs.AliyunOSSRegion,
+			Value: stateStore.AliyunOSS.Region,
+		},
 		{
 			Name: envs.AliyunOSSAccountName,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  credentials.AccountNameRef,
+					Key:                  credentials.AccessKeyIDRef,
 				},
 			},
 		},
@@ -704,13 +719,13 @@ func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
-					Key:                  credentials.AccountKeyRef,
+					Key:                  credentials.AccessKeySecretRef,
 				},
 			},
 		},
 		{
 			Name:  envs.AliyunOSSEndpoint,
-			Value: stateStore.AliyunOSS.Endpoint,
+			Value: endpoint,
 		},
 	}
 }

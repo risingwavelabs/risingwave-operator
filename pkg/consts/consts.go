@@ -43,16 +43,6 @@ const (
 )
 
 // =================================================
-// Finalizers.
-// =================================================
-
-// System reserved finalizers.
-const (
-	// FinalizerScaleView Deprecated.
-	FinalizerScaleView = "risingwavescaleview/finalizer"
-)
-
-// =================================================
 // Consts.
 // =================================================
 

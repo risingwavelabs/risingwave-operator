@@ -307,7 +307,7 @@ func Test_RisingWaveObjectFactory_StateStores(t *testing.T) {
 				r.Spec.MetaStore = risingwavev1alpha1.RisingWaveMetaStoreBackend{Memory: pointer.Bool(true)}
 				r.Spec.StateStore = tc.stateStore
 				r.Spec.Components = risingwavev1alpha1.RisingWaveComponentsSpec{
-					Meta: risingwavev1alpha1.RisingWaveComponentMeta{
+					Meta: risingwavev1alpha1.RisingWaveComponent{
 						NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
 							{
 								Name:     "",
@@ -336,7 +336,7 @@ func Test_RisingWaveObjectFactory_MetaStores(t *testing.T) {
 			r.Spec.MetaStore = tc.metaStore
 			r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{Memory: pointer.Bool(true)}
 			r.Spec.Components = risingwavev1alpha1.RisingWaveComponentsSpec{
-				Meta: risingwavev1alpha1.RisingWaveComponentMeta{
+				Meta: risingwavev1alpha1.RisingWaveComponent{
 					NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
 						{
 							Name:     "",
@@ -388,10 +388,8 @@ func TestRisingWaveObjectFactory_ComputeArgs(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			factory := NewRisingWaveObjectFactory(&risingwavev1alpha1.RisingWave{
 				Spec: risingwavev1alpha1.RisingWaveSpec{
-					Storages: risingwavev1alpha1.RisingWaveStoragesSpec{
-						Object: risingwavev1alpha1.RisingWaveStateStoreBackend{
-							Memory: pointer.Bool(true),
-						},
+					StateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+						Memory: pointer.Bool(true),
 					},
 				},
 			}, nil, "")

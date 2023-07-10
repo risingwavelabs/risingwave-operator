@@ -34,51 +34,9 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
 
-func TestRisingWaveScaleViewControllerManagerImpl_HandleScaleViewFinalizer(t *testing.T) {
-	scaleView := testutils.NewFakeRisingWaveScaleViewFor(testutils.FakeRisingWave(), consts.ComponentFrontend)
-	scaleView.ResourceVersion = "1234"
-	scaleView.Finalizers = []string{consts.FinalizerScaleView}
-	scaleView.Spec.ScalePolicy = []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
-		{
-			Group: "",
-		},
-	}
-
-	risingwave := testutils.FakeRisingWave()
-	risingwave.ResourceVersion = "1234"
-	scaleView.Spec.TargetRef.UID = risingwave.UID
-	err := object.NewScaleViewLockManager(risingwave).GrabScaleViewLockFor(scaleView)
-	assert.Nil(t, err, "must grab the lock")
-
-	client := fake.NewClientBuilder().
-		WithScheme(testutils.Scheme).
-		WithObjects(risingwave.DeepCopy(), scaleView.DeepCopy()).
-		WithStatusSubresource(&risingwavev1alpha1.RisingWave{}).
-		Build()
-
-	impl := NewRisingWaveScaleViewControllerManagerImpl(client, scaleView)
-
-	// Handle the finalizer.
-	r, err := impl.HandleScaleViewFinalizer(context.Background(), logr.Discard(), risingwave)
-	assert.Nil(t, err, "should be nil")
-	assert.Equal(t, r, ctrl.Result{}, "should be empty")
-
-	// Checks RisingWave and RisingWaveScaleView
-	var remoteRisingWave risingwavev1alpha1.RisingWave
-	_ = client.Get(context.Background(), types.NamespacedName{Namespace: risingwave.Namespace, Name: risingwave.Name}, &remoteRisingWave)
-
-	locked := object.NewScaleViewLockManager(&remoteRisingWave).IsScaleViewLocked(scaleView)
-	assert.False(t, locked, "must be unlocked")
-
-	var remoteScaleView risingwavev1alpha1.RisingWaveScaleView
-	_ = client.Get(context.Background(), types.NamespacedName{Namespace: scaleView.Namespace, Name: scaleView.Name}, &remoteScaleView)
-	assert.NotContains(t, remoteScaleView.Finalizers, consts.FinalizerScaleView, "finalizer should be removed")
-}
-
 func TestRisingWaveScaleViewControllerManagerImpl_GrabOrUpdateScaleViewLock(t *testing.T) {
 	scaleView := testutils.NewFakeRisingWaveScaleViewFor(testutils.FakeRisingWave(), consts.ComponentFrontend)
 	scaleView.ResourceVersion = "1234"
-	scaleView.Finalizers = []string{consts.FinalizerScaleView}
 	scaleView.Spec.Replicas = pointer.Int32(1)
 	scaleView.Spec.ScalePolicy = []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 		{

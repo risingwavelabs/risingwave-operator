@@ -160,7 +160,6 @@ func componentGroupLabels(risingwave *risingwavev1alpha1.RisingWave, component s
 
 	if group != nil {
 		labels[consts.LabelRisingWaveGroup] = *group
-		labels = mergeMap(labels, risingwave.Spec.Global.Metadata.Labels)
 	}
 
 	return labels
@@ -177,10 +176,6 @@ func componentAnnotations(risingwave *risingwavev1alpha1.RisingWave, component s
 
 func componentGroupAnnotations(risingwave *risingwavev1alpha1.RisingWave, group *string) map[string]string {
 	annotations := map[string]string{}
-	if group != nil {
-		annotations = mergeMap(annotations, risingwave.Spec.Global.Metadata.Annotations)
-	}
-
 	return annotations
 }
 

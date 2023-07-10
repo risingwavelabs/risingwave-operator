@@ -934,7 +934,6 @@ func (f *RisingWaveObjectFactory) portsForMetaContainer() []corev1.ContainerPort
 }
 
 func basicSetupRisingWaveContainer(container *corev1.Container, component *risingwavev1alpha1.RisingWaveComponent) {
-	// TODO: use component afterward.
 	if component == nil {
 		component = &risingwavev1alpha1.RisingWaveComponent{
 			LogLevel: "INFO",
@@ -1275,23 +1274,29 @@ func (f *RisingWaveObjectFactory) newAdvancedStatefulSet(component string, nodeG
 
 func (f *RisingWaveObjectFactory) newPodTemplateSpecFromNodeGroupByComponent(component string, nodeGroup *risingwavev1alpha1.RisingWaveNodeGroup) corev1.PodTemplateSpec {
 	var containerModifier func(container *corev1.Container)
+	var componentPtr *risingwavev1alpha1.RisingWaveComponent
 	switch component {
 	case consts.ComponentMeta:
 		containerModifier = f.setupMetaContainer
+		componentPtr = &f.risingwave.Spec.Components.Meta
 	case consts.ComponentFrontend:
 		containerModifier = f.setupFrontendContainer
+		componentPtr = &f.risingwave.Spec.Components.Frontend
 	case consts.ComponentCompactor:
 		containerModifier = f.setupCompactorContainer
+		componentPtr = &f.risingwave.Spec.Components.Compactor
 	case consts.ComponentCompute:
 		containerModifier = f.setupComputeContainer
+		componentPtr = &f.risingwave.Spec.Components.Compute
 	case consts.ComponentConnector:
 		containerModifier = f.setupConnectorContainer
+		componentPtr = &f.risingwave.Spec.Components.Connector
 	default:
 		panic("invalid component")
 	}
 
 	return f.buildPodTemplateFromNodeGroup(component, nodeGroup, func(container *corev1.Container) {
-		basicSetupRisingWaveContainer(container, nil)
+		basicSetupRisingWaveContainer(container, componentPtr)
 		containerModifier(container)
 	})
 }

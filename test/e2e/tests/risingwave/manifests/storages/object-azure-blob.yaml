@@ -13,20 +13,30 @@ metadata:
   name: ${E2E_RISINGWAVE_NAME}
   namespace: ${E2E_NAMESPACE}
 spec:
-  storages:
+  metaStore:
+    memory: true
+  stateStore:
+    azureBlob:
+      credentials:
+        secretName: risingwave-azure-blob-credentials
+      container: ${E2E_AZURE_CONTAINER}
+      root: risingwave
+      endpoint: ${E2E_AZURE_ENDPOINT}
+  image: ${E2E_RISINGWAVE_IMAGE}
+  components:
     meta:
-      memory: true
-    object:
-      azureBlob: 
-        secret:  risingwave-azure-blob-credentials
-        container: ${E2E_AZURE_CONTAINER}
-        root: risingwave
-        endpoint: ${E2E_AZURE_ENDPOINT}
-  global:
-    image: ghcr.io/risingwavelabs/risingwave:v0.19.1
-    imagePullPolicy: IfNotPresent
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
-      compactor: 1
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    compactor:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    frontend:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    compute:
+      nodeGroups:
+      - replicas: 1
+        name: ''

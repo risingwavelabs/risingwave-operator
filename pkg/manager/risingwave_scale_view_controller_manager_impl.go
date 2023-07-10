@@ -21,14 +21,12 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/risingwavelabs/ctrlkit"
 	"github.com/samber/lo"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	"github.com/risingwavelabs/ctrlkit"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
@@ -57,28 +55,6 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) UpdateScaleViewStatus(ctx c
 		return ctrlkit.RequeueIfErrorAndWrap("unable to update status of risingwavescaleview", err)
 	}
 	return ctrlkit.Continue()
-}
-
-// HandleScaleViewFinalizer implements theRisingWaveScaleViewControllerManagerImpl.
-func (mgr *risingWaveScaleViewControllerManagerImpl) HandleScaleViewFinalizer(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
-	if !controllerutil.RemoveFinalizer(mgr.scaleView, consts.FinalizerScaleView) {
-		return ctrlkit.Continue()
-	}
-
-	if mgr.isTargetObjMatched(targetObj) {
-		lockMgr := object.NewScaleViewLockManager(targetObj)
-		if lockMgr.ReleaseLockFor(mgr.scaleView) {
-			logger.Info("Lock released in memory! Try updating the remote...")
-			if err := mgr.client.Status().Update(ctx, targetObj); err != nil {
-				return ctrlkit.RequeueIfErrorAndWrap("unable to update the status of RisingWave", err)
-			}
-		}
-	} else if targetObj != nil {
-		logger.Info("Object's uid doesn't match", "expect", mgr.scaleView.Spec.TargetRef.UID, "actual", targetObj.UID)
-	}
-
-	err := mgr.client.Update(ctx, mgr.scaleView)
-	return ctrlkit.RequeueIfErrorAndWrap("unable to remove the finalizer", err)
 }
 
 // GrabOrUpdateScaleViewLock implements RisingWaveScaleViewControllerManagerImpl.

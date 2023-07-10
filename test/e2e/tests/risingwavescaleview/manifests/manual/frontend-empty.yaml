@@ -5,19 +5,19 @@ metadata:
   namespace: ${E2E_NAMESPACE}
 spec:
   components:
+    meta:
+      nodeGroups:
+      - replicas: 1
+        name: ''
     frontend:
       nodeGroups:
       - replicas: 0
-  global:
-    image: ${E2E_RISINGWAVE_IMAGE}
-    imagePullPolicy: IfNotPresent
-    replicas:
-      meta: 1
-  storages:
-    meta:
-      memory: true
-    object:
-      memory: true
+        name: ''
+  image: ${E2E_RISINGWAVE_IMAGE}
+  metaStore:
+    memory: true
+  stateStore:
+    memory: true
 ---
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWaveScaleView

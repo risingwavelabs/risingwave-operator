@@ -76,17 +76,26 @@ metadata:
   name: ${E2E_RISINGWAVE_NAME}
   namespace: ${E2E_NAMESPACE}
 spec:
-  global:
-    image: ${E2E_RISINGWAVE_IMAGE}
-    imagePullPolicy: IfNotPresent
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
-      compactor: 1
-  storages:
+  image: ${E2E_RISINGWAVE_IMAGE}
+  components:
     meta:
-      etcd:
-        endpoint: etcd:2388
-    object:
-      memory: true
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    compactor:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    frontend:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    compute:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+  metaStore:
+    etcd:
+      endpoint: etcd:2388
+  stateStore:
+    memory: true

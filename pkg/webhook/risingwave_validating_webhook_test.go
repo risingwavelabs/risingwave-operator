@@ -592,23 +592,21 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"empty-configuration-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Configuration.ConfigMap = &corev1.ConfigMapKeySelector{}
+				r.Spec.Configuration.ConfigMap = &risingwavev1alpha1.RisingWaveNodeConfigurationConfigMapSource{}
 			},
 			pass: false,
 		},
 		"half-empty-configuration-fail-1": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Configuration.ConfigMap = &corev1.ConfigMapKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: "a",
-					},
+				r.Spec.Configuration.ConfigMap = &risingwavev1alpha1.RisingWaveNodeConfigurationConfigMapSource{
+					Name: "a",
 				}
 			},
 			pass: false,
 		},
 		"half-empty-configuration-fail-2": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.Configuration.ConfigMap = &corev1.ConfigMapKeySelector{
+				r.Spec.Configuration.ConfigMap = &risingwavev1alpha1.RisingWaveNodeConfigurationConfigMapSource{
 					Key: "a",
 				}
 			},

@@ -5575,6 +5575,18 @@ string
 <p>Region of Aliyun OSS service</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>internalEndpoint</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>InternalEndpoint indicates if we use the internal endpoint to access Aliyun OSS, which is
+only available in the internal network.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAzureBlob">RisingWaveStateStoreBackendAzureBlob

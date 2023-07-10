@@ -44023,6 +44023,11 @@ spec:
                         required:
                         - secretName
                         type: object
+                      internalEndpoint:
+                        description: InternalEndpoint indicates if we use the internal
+                          endpoint to access Aliyun OSS, which is only available in
+                          the internal network.
+                        type: boolean
                       region:
                         description: Region of Aliyun OSS service
                         type: string
@@ -44362,6 +44367,11 @@ spec:
                             required:
                             - secretName
                             type: object
+                          internalEndpoint:
+                            description: InternalEndpoint indicates if we use the
+                              internal endpoint to access Aliyun OSS, which is only
+                              available in the internal network.
+                            type: boolean
                           region:
                             description: Region of Aliyun OSS service
                             type: string

@@ -293,7 +293,7 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 
 	// Validate the image.
 	if !isImageValid(obj.Spec.Image) {
-		fieldErrs = append(fieldErrs, field.Invalid(field.NewPath("template", "spec", "image"), obj.Spec.Image, "invalid image reference"))
+		fieldErrs = append(fieldErrs, field.Invalid(field.NewPath("spec", "image"), obj.Spec.Image, "invalid image reference"))
 	}
 
 	// Validate the additional frontend service metadata.

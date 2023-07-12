@@ -91,13 +91,9 @@ spec:
                       logLevel:
                         default: INFO
                         description: LogLevel controls the log level of the running
-                          nodes. Available values are info, error, warn, and debug.
+                          nodes. It can be in any format that the underlying component
+                          supports, e.g., in the RUST_LOG format for Rust programs.
                           Defaults to INFO.
-                        enum:
-                        - INFO
-                        - ERROR
-                        - WARN
-                        - DEBUG
                         type: string
                       nodeGroups:
                         description: NodeGroups of the component deployment.
@@ -6891,13 +6887,9 @@ spec:
                       logLevel:
                         default: INFO
                         description: LogLevel controls the log level of the running
-                          nodes. Available values are info, error, warn, and debug.
+                          nodes. It can be in any format that the underlying component
+                          supports, e.g., in the RUST_LOG format for Rust programs.
                           Defaults to INFO.
-                        enum:
-                        - INFO
-                        - ERROR
-                        - WARN
-                        - DEBUG
                         type: string
                       nodeGroups:
                         description: NodeGroups of the component deployment.
@@ -13692,13 +13684,9 @@ spec:
                       logLevel:
                         default: INFO
                         description: LogLevel controls the log level of the running
-                          nodes. Available values are info, error, warn, and debug.
+                          nodes. It can be in any format that the underlying component
+                          supports, e.g., in the RUST_LOG format for Rust programs.
                           Defaults to INFO.
-                        enum:
-                        - INFO
-                        - ERROR
-                        - WARN
-                        - DEBUG
                         type: string
                       nodeGroups:
                         description: NodeGroups of the component deployment.
@@ -20492,13 +20480,9 @@ spec:
                       logLevel:
                         default: INFO
                         description: LogLevel controls the log level of the running
-                          nodes. Available values are info, error, warn, and debug.
+                          nodes. It can be in any format that the underlying component
+                          supports, e.g., in the RUST_LOG format for Rust programs.
                           Defaults to INFO.
-                        enum:
-                        - INFO
-                        - ERROR
-                        - WARN
-                        - DEBUG
                         type: string
                       nodeGroups:
                         description: NodeGroups of the component deployment.
@@ -27292,13 +27276,9 @@ spec:
                       logLevel:
                         default: INFO
                         description: LogLevel controls the log level of the running
-                          nodes. Available values are info, error, warn, and debug.
+                          nodes. It can be in any format that the underlying component
+                          supports, e.g., in the RUST_LOG format for Rust programs.
                           Defaults to INFO.
-                        enum:
-                        - INFO
-                        - ERROR
-                        - WARN
-                        - DEBUG
                         type: string
                       nodeGroups:
                         description: NodeGroups of the component deployment.

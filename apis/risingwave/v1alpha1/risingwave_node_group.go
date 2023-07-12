@@ -423,10 +423,9 @@ type RisingWaveNodeGroup struct {
 
 // RisingWaveComponent determines how a RisingWave component is deployed.
 type RisingWaveComponent struct {
-	// LogLevel controls the log level of the running nodes. Available values are info, error, warn, and debug.
-	// Defaults to INFO.
+	// LogLevel controls the log level of the running nodes. It can be in any format that the underlying component supports,
+	// e.g., in the RUST_LOG format for Rust programs. Defaults to INFO.
 	// +kubebuilder:default=INFO
-	// +kubebuilder:validation:Enum=INFO;ERROR;WARN;DEBUG
 	LogLevel string `json:"logLevel,omitempty"`
 
 	// DisallowPrintStackTraces determines if the stack traces are allowed to print when panic happens. This options applies

@@ -767,8 +767,8 @@ string
 </em>
 </td>
 <td>
-<p>LogLevel controls the log level of the running nodes. Available values are info, error, warn, and debug.
-Defaults to INFO.</p>
+<p>LogLevel controls the log level of the running nodes. It can be in any format that the underlying component supports,
+e.g., in the RUST_LOG format for Rust programs. Defaults to INFO.</p>
 </td>
 </tr>
 <tr>

@@ -1630,6 +1630,13 @@ func buildUpgradeStrategyForStatefulSet(strategy risingwavev1alpha1.RisingWaveNo
 				MaxUnavailable: rollingUpdateOrDefault(strategy.RollingUpdate).MaxUnavailable,
 			},
 		}
+	case risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate:
+		return appsv1.StatefulSetUpdateStrategy{
+			Type: appsv1.RollingUpdateStatefulSetStrategyType,
+			RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
+				MaxUnavailable: &intstr.IntOrString{Type: intstr.String, StrVal: "100%"},
+			},
+		}
 	default:
 		return appsv1.StatefulSetUpdateStrategy{}
 	}

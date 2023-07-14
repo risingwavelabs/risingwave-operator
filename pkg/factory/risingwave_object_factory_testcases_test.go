@@ -629,7 +629,12 @@ func metaStatefulSetTestCases() map[string]metaStatefulSetTestCase {
 					},
 				},
 			},
-			expectedUpgradeStrategy: &appsv1.StatefulSetUpdateStrategy{},
+			expectedUpgradeStrategy: &appsv1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
+					MaxUnavailable: &intstr.IntOrString{Type: intstr.String, StrVal: "100%"},
+				},
+			},
 		},
 		"upgrade-strategy-rolling-update-max-unavailable-50%": {
 			group: risingwavev1alpha1.RisingWaveNodeGroup{
@@ -925,7 +930,12 @@ func computeStatefulSetTestCases() map[string]computeStatefulSetTestCase {
 					},
 				},
 			},
-			expectedUpgradeStrategy: &appsv1.StatefulSetUpdateStrategy{},
+			expectedUpgradeStrategy: &appsv1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
+					MaxUnavailable: &intstr.IntOrString{Type: intstr.String, StrVal: "100%"},
+				},
+			},
 		},
 		"upgrade-strategy-rolling-update-max-unavailable-50%": {
 			group: risingwavev1alpha1.RisingWaveNodeGroup{

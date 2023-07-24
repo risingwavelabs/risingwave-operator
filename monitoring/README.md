@@ -34,4 +34,10 @@ kubectl port-forward -n monitoring svc/prometheus-grafana 3000:http-web
 Now we can access the Grafana inside the Kubernetes via [http://localhost:3000](http://localhost:3000). By default, the username is `admin` and the password is `prom-operator`.
 Let's open the `RisingWave/RisingWave Dashboard` and select the instance you'd like to observe, and here are the panels.
 
+The command above only allows access from the local machine.
+If we want to let Grafana accept requests from external hosts, e.g. another machine:
+```shell
+kubectl port-forward -n monitoring svc/prometheus-grafana 3000:http-web --address 0.0.0.0
+```
+
 ![RisingWave Dashboard](../docs/assets/risingwave-dashboard.png)

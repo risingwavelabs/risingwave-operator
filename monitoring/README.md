@@ -15,14 +15,14 @@ It will create the `monitoring` namespace and deploy everything inside it.
 The RisingWave operator has integrated with the [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator). If you have installed the Prometheus Operator in the Kubernetes, it will create a `ServiceMonitor` for the `RisingWave` object and keep it synced automatically. You can check the `ServiceMonitor` with the following command:
 
 ```shell
-kubectl get servicemonitors -l risingwave/name
+kubectl get servicemonitors -A -l risingwave/name
 ```
 
 The expected output is like this:
 
 ```plain
-NAME                              AGE
-risingwave-risingwave-etcd-minio   119m
+NAMESPACE    NAME                         AGE
+monitoring   risingwave-service-monitor   119m
 ```
 
 Let's try to forward the web port of Grafana to localhost, with the following command:

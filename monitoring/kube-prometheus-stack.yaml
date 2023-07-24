@@ -69,5 +69,7 @@ grafana:
           path: /var/lib/grafana/dashboards/risingwave
   dashboards:
     risingwave:
-      risingwave-dashboard:
+      risingwave-user-dashboard:
         url: https://raw.githubusercontent.com/risingwavelabs/risingwave/main/grafana/risingwave-user-dashboard.json
+      risingwave-dev-dashboard:
+        url: https://raw.githubusercontent.com/risingwavelabs/risingwave/main/grafana/risingwave-dev-dashboard.json

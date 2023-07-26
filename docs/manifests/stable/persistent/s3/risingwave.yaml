@@ -33,7 +33,7 @@ spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: 2Gi
+          storage: 10Gi
   persistentVolumeClaimRetentionPolicy:
     whenDeleted: Delete
     whenScaled: Retain
@@ -49,28 +49,32 @@ spec:
         command:
         - /usr/local/bin/etcd
         args:
-        - "--listen-client-urls"
-        - "http://0.0.0.0:2388"
-        - "--advertise-client-urls"
-        - "http://etcd-0:2388"
-        - "--listen-peer-urls"
-        - "http://0.0.0.0:2389"
-        - "--initial-advertise-peer-urls"
-        - "http://etcd-0:2389"
-        - "--listen-metrics-urls"
-        - "http://0.0.0.0:2379"
-        - "--name"
-        - "etcd"
-        - "--max-txn-ops"
+        - --listen-client-urls
+        - http://0.0.0.0:2388
+        - --advertise-client-urls
+        - http://etcd-0:2388
+        - --listen-peer-urls
+        - http://0.0.0.0:2389
+        - --initial-advertise-peer-urls
+        - http://etcd-0:2389
+        - --listen-metrics-urls
+        - http://0.0.0.0:2379
+        - --name
+        - etcd
+        - --max-txn-ops
         - "999999"
-        - "--auto-compaction-mode"
+        - --auto-compaction-mode
         - periodic
-        - "--auto-compaction-retention"
+        - --auto-compaction-retention
         - 1m
-        - "--snapshot-count"
+        - --snapshot-count
         - "10000"
-        - "--data-dir"
-        - "/var/lib/etcd"
+        - --data-dir
+        - /var/lib/etcd
+        - --max-request-byte
+        - "104857600"
+        - --quota-backend-bytes
+        - "8589934592"
         env:
         - name: ALLOW_NONE_AUTHENTICATION
           value: "1"

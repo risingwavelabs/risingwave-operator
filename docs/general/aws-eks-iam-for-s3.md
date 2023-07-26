@@ -18,11 +18,14 @@ This document describes how to use IAM for Service Account to configure the S3 s
     2. [Configuring a Kubernetes service account to assume an IAM role](https://docs.aws.amazon.com/eks/latest/userguide/associate-service-account-role.html)
 3. Attach the IAM role
    with [AmazonS3FullAccess](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AmazonS3FullAccess.html).
-    1. You can customize the IAM policy to limit the access to the S3 bucket.
+    1. You can customize the IAM policy to limit the access to the S3 bucket. Here
+       is [a guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_resource.html) to limit
+       the resources in policy.
 
 ## Configure
 
-Assume that 
+Assume that
+
 1. The service account name is `risingwave-s3`.
 2. The S3 bucket name is `risingwave`.
 3. The AWS region is `us-east-1`.

@@ -122,3 +122,8 @@ spec:
       nodeGroups:
       - replicas: 1
         name: ''
+    # Please comment out the following if you do not need connector node
+    connector:
+      nodeGroups:
+      - replicas: 1
+        name: ''

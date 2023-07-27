@@ -71,7 +71,7 @@ spec:
         - "10000"
         - --data-dir
         - /var/lib/etcd
-        - --max-request-byte
+        - --max-request-bytes
         - "104857600"
         - --quota-backend-bytes
         - "8589934592"

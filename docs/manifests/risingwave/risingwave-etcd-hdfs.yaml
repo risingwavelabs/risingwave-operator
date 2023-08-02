@@ -388,19 +388,79 @@ kind: RisingWave
 metadata:
   name: risingwave-etcd-hdfs
 spec:
-  storages:
+  image: ghcr.io/risingwavelabs/risingwave:v1.0.0
+  metaStore:
+    etcd:
+      endpoint: risingwave-etcd:2388
+  stateStore:
+    dataDirectory: hummock
+    hdfs:
+      nameNode: hadoop-hdfs-master:9000
+      root: risingwave
+  components:
     meta:
-      etcd: 
-        endpoint: risingwave-etcd:2388
-    object:
-      hdfs:
-        nameNode: hadoop-hdfs-master:9000
-        root: risingwave
-  global:
-    image: ghcr.io/risingwavelabs/risingwave:v1.0.0
-    imagePullPolicy: IfNotPresent
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
-      compactor: 1
+      nodeGroups:
+        - name: ""
+          replicas: 1
+          template:
+            spec:
+              volumes:
+                - name: risingwave-data
+                  persistentVolumeClaim:
+                    claimName: risingwave-data
+              volumeMounts:
+                - mountPath: /var/lib/risingwave/data
+                  name: risingwave-data
+    frontend:
+      nodeGroups:
+        - name: ""
+          replicas: 1
+          template:
+            spec:
+              affinity:
+                podAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    - topologyKey: "kubernetes.io/hostname"
+                      labelSelector:
+                        matchLabels:
+                          risingwave/component: meta
+    compute:
+      nodeGroups:
+        - name: ""
+          replicas: 1
+          template:
+            spec:
+              volumes:
+                - name: risingwave-data
+                  persistentVolumeClaim:
+                    claimName: risingwave-data
+              volumeMounts:
+                - mountPath: /var/lib/risingwave/data
+                  name: risingwave-data
+              affinity:
+                podAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    - topologyKey: "kubernetes.io/hostname"
+                      labelSelector:
+                        matchLabels:
+                          risingwave/component: meta
+    compactor:
+      nodeGroups:
+        - name: ""
+          replicas: 1
+          template:
+            spec:
+              volumes:
+                - name: risingwave-data
+                  persistentVolumeClaim:
+                    claimName: risingwave-data
+              volumeMounts:
+                - mountPath: /var/lib/risingwave/data
+                  name: risingwave-data
+              affinity:
+                podAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    - topologyKey: "kubernetes.io/hostname"
+                      labelSelector:
+                        matchLabels:
+                          risingwave/component: meta

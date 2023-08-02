@@ -34,9 +34,22 @@ jobs:
         if: ${{ always() }}
         run: |
           kubectl apply --server-side -f config/risingwave-operator.yaml
+      - name: Wait Operator
+        shell: bash
+        working-directory: ./
+        if: ${{ always() }}
+        run: |
+          kubectl wait --for=condition=Ready Pods --all --namespace risingwave-operator-system --timeout=5m
       - name: Apply Minio RisingWave
         shell: bash
         working-directory: ./
         if: ${{ always() }}
         run: |
-          kubectl apply -f docs/manifests/risingwave/risingwave-etcd-minio.yaml
+          kubectl create namespace risingwave-etcd-minio
+          kubectl apply -f docs/manifests/risingwave/risingwave-etcd-minio.yaml -n risingwave-etcd-minio
+      - name: Wait Minio RisingWave
+        shell: bash
+        working-directory: ./
+        if: ${{ always() }}
+        run: |
+          kubectl wait --for=condition=Ready Pods --all --namespace risingwave-etcd-minio --timeout=5m

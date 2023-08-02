@@ -45,7 +45,7 @@ spec:
     # Declaration of the MinIO state store backend.
     minio:
       # Endpoint of the MinIO service.
-      endpoint: minio-endpoint:2388
+      endpoint: risingwave-minio:9301
       
       # Name of the MinIO bucket.
       bucket: risingwave

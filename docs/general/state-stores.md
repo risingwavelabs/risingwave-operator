@@ -48,7 +48,7 @@ spec:
       endpoint: risingwave-minio:9301
       
       # Name of the MinIO bucket.
-      bucket: risingwave
+      bucket: hummock001
       
       # Credentials to access the MinIO bucket.
       credentials:

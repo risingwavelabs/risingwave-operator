@@ -330,3 +330,11 @@ CI_RUNNER_IMAGE := public.ecr.aws/w6q9k3j5/rw-operator-ci-runner:$(shell date +'
 
 build-ci-runner-image:
 	docker buildx build --platform linux/amd64,linux/arm64 -f ci/runner/Dockerfile -t $(CI_RUNNER_IMAGE) . --push
+
+SHFMT = $(shell pwd)/bin/$(OS)/shfmt
+ensure_shfmt: ## Download shfmt locally if necessary.
+# $(call get-golangci-lint)
+	$(call go-get-tool,$(SHFMT),mvdan.cc/sh/v3/cmd/shfmt@latest)
+
+shfmt: shellcheck ensure_shfmt
+	shfmt -s -w .

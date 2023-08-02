@@ -28,21 +28,21 @@ ${__E2E_SOURCE_COMMON_SHELL_SH__:=false} && return 0 || __E2E_SOURCE_COMMON_SHEL
 #   0 if bash version meets requirements, non-zero if not.
 #######################################
 function shell::assert_minimum_bash_version() {
-  (($# >= 1)) || { echo >&2 "not enough arguments" && return 1; }
+	(($# >= 1)) || { echo >&2 "not enough arguments" && return 1; }
 
-  local major=$1
-  local minor=0
-  local patch=0
+	local major=$1
+	local minor=0
+	local patch=0
 
-  (($# < 2)) || minor=$2
-  (($# < 3)) || patch=$3
+	(($# < 2)) || minor=$2
+	(($# < 3)) || patch=$3
 
-  if ((BASH_VERSINFO[0] < major)) ||
-    ((BASH_VERSINFO[0] == major && BASH_VERSINFO[1] < minor)) ||
-    ((BASH_VERSINFO[0] == major && BASH_VERSINFO[2] == minor || BASH_VERSINFO[2] < patch)); then
-    echo >&2 "The minimum bash version required is ${major}.${minor}.${patch}, but current is ${BASH_VERSION}!"
-    return 1
-  fi
+	if ((BASH_VERSINFO[0] < major)) ||
+		((BASH_VERSINFO[0] == major && BASH_VERSINFO[1] < minor)) ||
+		((BASH_VERSINFO[0] == major && BASH_VERSINFO[2] == minor || BASH_VERSINFO[2] < patch)); then
+		echo >&2 "The minimum bash version required is ${major}.${minor}.${patch}, but current is ${BASH_VERSION}!"
+		return 1
+	fi
 }
 
 #######################################
@@ -55,10 +55,10 @@ function shell::assert_minimum_bash_version() {
 #   0 if exists, non-zero if not.
 #######################################
 function shell::command_exists() {
-  (($# == 1)) || { echo >&2 "not enough arguments" && return 1; }
-  [[ -n "$1" ]] || { echo >&2 "command name must be provided" && return 1; }
+	(($# == 1)) || { echo >&2 "not enough arguments" && return 1; }
+	[[ -n $1 ]] || { echo >&2 "command name must be provided" && return 1; }
 
-  command -v "$1" >/dev/null 2>&1
+	command -v "$1" >/dev/null 2>&1
 }
 
 #######################################
@@ -72,30 +72,30 @@ function shell::command_exists() {
 #   Code returns from the command.
 #######################################
 function shell::run() {
-  # shellcheck disable=SC2034
-  local LOGGING_TAGS=(command)
+	# shellcheck disable=SC2034
+	local LOGGING_TAGS=(command)
 
-  if [[ "${TRACE_COMMAND:=false}" == "true" ]]; then
-    logging::debug "$*"
-  fi
+	if [[ ${TRACE_COMMAND:=false} == "true" ]]; then
+		logging::debug "$*"
+	fi
 
-  local exit_code=0
+	local exit_code=0
 
-  {
-    if [[ ${SHOW_COMMAND_OUTPUT:=false} == "true" ]]; then
-      # shellcheck disable=SC2294
-      eval "$@"
-    else
-      # shellcheck disable=SC2294
-      eval "$@" >/dev/null 2>&1
-    fi
-  } || exit_code=$?
+	{
+		if [[ ${SHOW_COMMAND_OUTPUT:=false} == "true" ]]; then
+			# shellcheck disable=SC2294
+			eval "$@"
+		else
+			# shellcheck disable=SC2294
+			eval "$@" >/dev/null 2>&1
+		fi
+	} || exit_code=$?
 
-  if [[ "${TRACE_COMMAND:=false}" == "true" ]]; then
-    logging::debug "$*, exit code: ${exit_code}"
-  fi
+	if [[ ${TRACE_COMMAND:=false} == "true" ]]; then
+		logging::debug "$*, exit code: ${exit_code}"
+	fi
 
-  return ${exit_code}
+	return ${exit_code}
 }
 
 # Global variables used for capturing stdout and stderr of command run by `shell::run_and_capture_outputs`.
@@ -122,14 +122,14 @@ CAPTURED_EXIT_CODE=0
 #   Code returns from the command.
 #######################################
 function shell::run_and_capture_outputs() {
-  # shellcheck disable=SC2034
-  {
-    IFS=$'\n' read -r -d '' CAPTURED_STDERR
-    IFS=$'\n' read -r -d '' CAPTURED_STDOUT
-    IFS=$'\n' read -r -d '' CAPTURED_EXIT_CODE
-  } < <((printf '\0%s\0%d\0' "$("$@")" "${?}" 1>&2) 2>&1)
+	# shellcheck disable=SC2034
+	{
+		IFS=$'\n' read -r -d '' CAPTURED_STDERR
+		IFS=$'\n' read -r -d '' CAPTURED_STDOUT
+		IFS=$'\n' read -r -d '' CAPTURED_EXIT_CODE
+	} < <((printf '\0%s\0%d\0' "$("$@")" "${?}" 1>&2) 2>&1)
 
-  return "${CAPTURED_EXIT_CODE}"
+	return "${CAPTURED_EXIT_CODE}"
 }
 
 #######################################
@@ -144,23 +144,23 @@ function shell::run_and_capture_outputs() {
 #   0
 #######################################
 function shell::spawn() {
-  # shellcheck disable=SC2034
-  local LOGGING_TAGS=(background command)
+	# shellcheck disable=SC2034
+	local LOGGING_TAGS=(background command)
 
-  if [[ "${TRACE_COMMAND:=false}" == "true" ]]; then
-    logging::debug "$*"
-  fi
+	if [[ ${TRACE_COMMAND:=false} == "true" ]]; then
+		logging::debug "$*"
+	fi
 
-  # shellcheck disable=SC2294
-  eval "$@" &
+	# shellcheck disable=SC2294
+	eval "$@" &
 
-  local pid=$!
-  # shellcheck disable=SC2034
-  BACKGROUND_PIDS["${pid}"]="$*"
+	local pid=$!
+	# shellcheck disable=SC2034
+	BACKGROUND_PIDS["${pid}"]="$*"
 
-  if [[ "${TRACE_COMMAND:=false}" == "true" ]]; then
-    logging::debug "$*, pid: ${pid}"
-  fi
+	if [[ ${TRACE_COMMAND:=false} == "true" ]]; then
+		logging::debug "$*, pid: ${pid}"
+	fi
 }
 
 #######################################
@@ -176,23 +176,23 @@ function shell::spawn() {
 #   0 if all succeeds, the first non-zero exit code otherwise.
 #######################################
 function shell::wait() {
-  # shellcheck disable=SC2034
-  local LOGGING_TAGS=(background command)
+	# shellcheck disable=SC2034
+	local LOGGING_TAGS=(background command)
 
-  local cmd
-  local exit_code=0
+	local cmd
+	local exit_code=0
 
-  for pid in "${!BACKGROUND_PIDS[@]}"; do
-    cmd=${BACKGROUND_PIDS[${pid}]}
-    exit_code=0
-    wait "${pid}" || exit_code=$?
+	for pid in "${!BACKGROUND_PIDS[@]}"; do
+		cmd=${BACKGROUND_PIDS[${pid}]}
+		exit_code=0
+		wait "${pid}" || exit_code=$?
 
-    if [[ "${TRACE_COMMAND:=false}" == "true" ]]; then
-      logging::debug "${cmd[*]}, pid: ${pid}, exit code: ${exit_code}"
-    fi
+		if [[ ${TRACE_COMMAND:=false} == "true" ]]; then
+			logging::debug "${cmd[*]}, pid: ${pid}, exit code: ${exit_code}"
+		fi
 
-    ((exit_code == 0)) || return "${exit_code}"
-  done
+		((exit_code == 0)) || return "${exit_code}"
+	done
 }
 
 #######################################
@@ -207,26 +207,26 @@ function shell::wait() {
 #   0 if all succeeds, the last non-zero exit code otherwise.
 #######################################
 function shell::wait_all() {
-  # shellcheck disable=SC2034
-  local LOGGING_TAGS=(background command)
+	# shellcheck disable=SC2034
+	local LOGGING_TAGS=(background command)
 
-  local cmd
-  local return_code=0
-  local exit_code=0
+	local cmd
+	local return_code=0
+	local exit_code=0
 
-  for pid in "${!BACKGROUND_PIDS[@]}"; do
-    cmd=${BACKGROUND_PIDS[${pid}]}
+	for pid in "${!BACKGROUND_PIDS[@]}"; do
+		cmd=${BACKGROUND_PIDS[${pid}]}
 
-    exit_code=0
-    wait "${pid}" || exit_code=$?
-    ((exit_code == 0)) || return_code=${exit_code}
+		exit_code=0
+		wait "${pid}" || exit_code=$?
+		((exit_code == 0)) || return_code=${exit_code}
 
-    if [[ "${TRACE_COMMAND:=false}" == "true" ]]; then
-      logging::debug "${cmd[*]}, pid: ${pid}, exit code: ${exit_code}"
-    fi
-  done
+		if [[ ${TRACE_COMMAND:=false} == "true" ]]; then
+			logging::debug "${cmd[*]}, pid: ${pid}, exit code: ${exit_code}"
+		fi
+	done
 
-  return "${return_code}"
+	return "${return_code}"
 }
 
 #######################################
@@ -241,18 +241,18 @@ function shell::wait_all() {
 #   0 if succeeds, non-zero on errors.
 #######################################
 function shell::md5() {
-  # shellcheck disable=SC2155
-  local os=$(uname -s)
-  case "${os}" in
-  Linux)
-    md5sum <<<"$1" | awk '{print $1}'
-    ;;
-  Darwin)
-    md5 <<<"$1"
-    ;;
-  *)
-    logging:error "Unsupported platform ${os}"
-    return 1
-    ;;
-  esac
+	# shellcheck disable=SC2155
+	local os=$(uname -s)
+	case "${os}" in
+	Linux)
+		md5sum <<<"$1" | awk '{print $1}'
+		;;
+	Darwin)
+		md5 <<<"$1"
+		;;
+	*)
+		logging:error "Unsupported platform ${os}"
+		return 1
+		;;
+	esac
 }

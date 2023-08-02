@@ -400,67 +400,53 @@ spec:
   components:
     meta:
       nodeGroups:
-        - name: ""
-          replicas: 1
+        - replicas: 1
+          name: ""
           template:
             spec:
-              volumes:
-                - name: risingwave-data
-                  persistentVolumeClaim:
-                    claimName: risingwave-data
-              volumeMounts:
-                - mountPath: /var/lib/risingwave/data
-                  name: risingwave-data
+              resources:
+                limits:
+                  cpu: 1
+                  memory: 1Gi
+                requests:
+                  cpu: 100m
+                  memory: 100Mi
     frontend:
       nodeGroups:
-        - name: ""
-          replicas: 1
+        - replicas: 1
+          name: ""
           template:
             spec:
-              affinity:
-                podAffinity:
-                  requiredDuringSchedulingIgnoredDuringExecution:
-                    - topologyKey: "kubernetes.io/hostname"
-                      labelSelector:
-                        matchLabels:
-                          risingwave/component: meta
+              resources:
+                limits:
+                  cpu: 1
+                  memory: 1Gi
+                requests:
+                  cpu: 100m
+                  memory: 100Mi
     compute:
       nodeGroups:
-        - name: ""
-          replicas: 1
+        - replicas: 1
+          name: ""
           template:
             spec:
-              volumes:
-                - name: risingwave-data
-                  persistentVolumeClaim:
-                    claimName: risingwave-data
-              volumeMounts:
-                - mountPath: /var/lib/risingwave/data
-                  name: risingwave-data
-              affinity:
-                podAffinity:
-                  requiredDuringSchedulingIgnoredDuringExecution:
-                    - topologyKey: "kubernetes.io/hostname"
-                      labelSelector:
-                        matchLabels:
-                          risingwave/component: meta
+              resources:
+                limits:
+                  cpu: 1
+                  memory: 1Gi
+                requests:
+                  cpu: 100m
+                  memory: 100Mi
     compactor:
       nodeGroups:
-        - name: ""
-          replicas: 1
+        - replicas: 1
+          name: ""
           template:
             spec:
-              volumes:
-                - name: risingwave-data
-                  persistentVolumeClaim:
-                    claimName: risingwave-data
-              volumeMounts:
-                - mountPath: /var/lib/risingwave/data
-                  name: risingwave-data
-              affinity:
-                podAffinity:
-                  requiredDuringSchedulingIgnoredDuringExecution:
-                    - topologyKey: "kubernetes.io/hostname"
-                      labelSelector:
-                        matchLabels:
-                          risingwave/component: meta
+              resources:
+                limits:
+                  cpu: 1
+                  memory: 1Gi
+                requests:
+                  cpu: 100m
+                  memory: 100Mi

@@ -45,22 +45,4 @@ jobs:
         working-directory: ./
         if: ${{ always() }}
         run: |
-          make e2e-test
-      - name: Test Minio RisingWave
-        shell: bash
-        working-directory: ./
-        if: ${{ always() }}
-        run: |
-          kubectl create namespace risingwave-etcd-minio
-          kubectl apply -f docs/manifests/risingwave/risingwave-etcd-minio.yaml -n risingwave-etcd-minio
-          kubectl wait --for=condition=Running RisingWave --all --namespace risingwave-etcd-minio --timeout=5m
-          kubectl delete -f docs/manifests/risingwave/risingwave-etcd-minio.yaml -n risingwave-etcd-minio
-      - name: Test HDFS RisingWave
-        shell: bash
-        working-directory: ./
-        if: ${{ always() }}
-        run: |
-          kubectl create namespace risingwave-etcd-hdfs
-          kubectl apply -f docs/manifests/risingwave/risingwave-etcd-hdfs.yaml -n risingwave-etcd-hdfs
-          kubectl wait --for=condition=Running RisingWave --all --namespace risingwave-etcd-hdfs --timeout=5m
-          kubectl delete -f docs/manifests/risingwave/risingwave-etcd-hdfs.yaml -n risingwave-etcd-hdfs
+          make manifest-test

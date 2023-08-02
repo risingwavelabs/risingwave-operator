@@ -175,6 +175,9 @@ build-e2e-image:
 e2e-test: generate-test-yaml vendor build-e2e-image
 	E2E_KUBERNETES_RUNTIME=kind ./test/e2e/e2e.sh
 
+manifest-test:
+	./test/e2e/e2e.sh -m
+
 docker-cross-build: test buildx## Build docker image with the manager.
 	docker buildx build -f build/Dockerfile --build-arg USE_VENDOR=false --build-arg VERSION="$(shell git describe --tags)" --platform=linux/amd64,linux/arm64 -t ${IMG} . --push
 

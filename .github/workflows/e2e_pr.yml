@@ -1,0 +1,42 @@
+name: E2E Test (PR)
+
+on:
+  workflow_dispatch:    # For manually triggering workflow
+  pull_request:
+    branches: [ main ]
+  merge_group:
+    branches: [ main ]
+
+jobs:
+  e2e-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Create Kind Cluster
+        uses: helm/kind-action@v1.8.0
+      - name: Install Cert Manager
+        shell: bash
+        working-directory: ./
+        run: |
+          kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.12.0/cert-manager.yaml
+      - name: Wait Cert Manager
+        working-directory: ./
+        if: ${{ always() }}
+        run: |
+          curl -sSL -o cmctl.tar.gz https://github.com/cert-manager/cert-manager/releases/download/v1.12.0/cmctl-linux-amd64.tar.gz
+          tar xzf cmctl.tar.gz
+          sudo mv cmctl /usr/local/bin
+          cmctl check api --wait=2m
+      - name: Install Operator
+        shell: bash
+        working-directory: ./
+        if: ${{ always() }}
+        run: |
+          kubectl apply --server-side -f config/risingwave-operator.yaml
+      - name: Apply Minio RisingWave
+        shell: bash
+        working-directory: ./
+        if: ${{ always() }}
+        run: |
+          kubectl apply -f docs/manifests/risingwave/risingwave-etcd-minio.yaml

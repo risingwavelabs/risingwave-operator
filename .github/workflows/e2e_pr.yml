@@ -1,4 +1,4 @@
-name: E2E Test (PR)
+name: E2E Manifest Test (PR)
 
 on:
   workflow_dispatch:    # For manually triggering workflow
@@ -40,7 +40,7 @@ jobs:
         if: ${{ always() }}
         run: |
           kubectl wait --for=condition=Ready Pods --all --namespace risingwave-operator-system --timeout=5m
-      - name: E2E Test
+      - name: E2E Manifest Test
         shell: bash
         working-directory: ./
         if: ${{ always() }}

@@ -323,7 +323,7 @@ spec:
     hdfs:
       nameNode: hadoop-hdfs-master:9000
       root: risingwave
-  image: ghcr.io/risingwavelabs/risingwave:v1.0.0
+  image: ghcr.io/risingwavelabs/risingwave:YOUR_LATEST_HDFS_TAG
   components:
     meta:
       nodeGroups:

@@ -193,6 +193,8 @@ spec:
 
 ## Apache HDFS / WebHDFS
 
+(Note: The standard image do not support HDFS. Please get in touch with us to get the latest available image tag)
+
 ```yamlex
 spec:
   stateStore:

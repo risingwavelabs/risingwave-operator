@@ -388,7 +388,7 @@ kind: RisingWave
 metadata:
   name: risingwave-etcd-hdfs
 spec:
-  image: ghcr.io/risingwavelabs/risingwave:v1.0.0
+  image: ghcr.io/risingwavelabs/risingwave:YOUR_LATEST_HDFS_TAG
   metaStore:
     etcd:
       endpoint: risingwave-etcd:2388

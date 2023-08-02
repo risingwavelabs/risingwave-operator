@@ -45,10 +45,10 @@ spec:
     # Declaration of the MinIO state store backend.
     minio:
       # Endpoint of the MinIO service.
-      endpoint: minio-endpoint:2388
+      endpoint: risingwave-minio:9301
       
       # Name of the MinIO bucket.
-      bucket: risingwave
+      bucket: hummock001
       
       # Credentials to access the MinIO bucket.
       credentials:

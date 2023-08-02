@@ -3,11 +3,10 @@ kind: RisingWave
 metadata:
   name: risingwave-in-memory
 spec:
-  storages:
-    meta:
-      memory: true
-    object:
-      memory: true
+  metaStore:
+    memory: true
+  stateStore:
+    memory: true
   image: ghcr.io/risingwavelabs/risingwave:v1.0.0
   components:
     meta:

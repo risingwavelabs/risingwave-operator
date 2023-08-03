@@ -126,6 +126,7 @@ func (mpl *MetaPodRoleLabeler) getEndpointFromArgs(pod *corev1.Pod, args []strin
 
 	endpoint = strings.ReplaceAll(endpoint, "$(POD_IP)", pod.Status.PodIP)
 	endpoint = strings.ReplaceAll(endpoint, "$(POD_NAME)", pod.Name)
+	endpoint = strings.ReplaceAll(endpoint, "$(POD_NAMESPACE)", pod.Namespace)
 
 	return endpoint
 }
@@ -147,6 +148,7 @@ func (mpl *MetaPodRoleLabeler) getEndpointFromEnvVars(pod *corev1.Pod, envVars [
 
 	endpoint = strings.ReplaceAll(endpoint, "$(POD_IP)", pod.Status.PodIP)
 	endpoint = strings.ReplaceAll(endpoint, "$(POD_NAME)", pod.Name)
+	endpoint = strings.ReplaceAll(endpoint, "$(POD_NAMESPACE)", pod.Namespace)
 
 	return endpoint
 }

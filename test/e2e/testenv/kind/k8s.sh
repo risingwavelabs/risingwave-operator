@@ -21,7 +21,7 @@ _TEST_ENV_KIND_DEFAULT_IMAGE="kindest/node:v1.25.3@sha256:f52781bc0d7a19fb6c405c
 source "${_TEST_ENV_KIND_DIR}/../../common/lib.sh"
 
 function testenv::k8s::kind::_kind_cluster_exists() {
-  kind get clusters -q | grep -w -q "${_TEST_ENV_KIND_CLUSTER_NAME}"
+	kind get clusters -q | grep -w -q "${_TEST_ENV_KIND_CLUSTER_NAME}"
 }
 
 #######################################
@@ -34,25 +34,25 @@ function testenv::k8s::kind::_kind_cluster_exists() {
 #   0 on successful, non-zero otherwise.
 #######################################
 function testenv::k8s::kind::provision() {
-  # shellcheck disable=SC2034
-  local LOGGING_TAGS=(testenv "k8s/kind: ${_TEST_ENV_KIND_CLUSTER_NAME}")
+	# shellcheck disable=SC2034
+	local LOGGING_TAGS=(testenv "k8s/kind: ${_TEST_ENV_KIND_CLUSTER_NAME}")
 
-  local kind_image=${KIND_CLUSTER_IMAGE:-${_TEST_ENV_KIND_DEFAULT_IMAGE}}
+	local kind_image=${KIND_CLUSTER_IMAGE:-${_TEST_ENV_KIND_DEFAULT_IMAGE}}
 
-  if ! testenv::k8s::kind::_kind_cluster_exists; then
-    logging::info "Start the Kind cluster..."
-    if ! shell::run kind create cluster \
-      --name="${_TEST_ENV_KIND_CLUSTER_NAME}" \
-      --image="${kind_image}" \
-      --wait=300s \
-      --config="${_TEST_ENV_KIND_DIR}/config.yaml"; then
-      logging::error "Failed to start!"
-      return 1
-    fi
-    logging::info "Started!"
-  else
-    logging::warn "Kind cluster found, skip!"
-  fi
+	if ! testenv::k8s::kind::_kind_cluster_exists; then
+		logging::info "Start the Kind cluster..."
+		if ! shell::run kind create cluster \
+			--name="${_TEST_ENV_KIND_CLUSTER_NAME}" \
+			--image="${kind_image}" \
+			--wait=300s \
+			--config="${_TEST_ENV_KIND_DIR}/config.yaml"; then
+			logging::error "Failed to start!"
+			return 1
+		fi
+		logging::info "Started!"
+	else
+		logging::warn "Kind cluster found, skip!"
+	fi
 }
 
 #######################################
@@ -65,19 +65,19 @@ function testenv::k8s::kind::provision() {
 #   0 on successful, non-zero otherwise.
 #######################################
 function testenv::k8s::kind::teardown() {
-  # shellcheck disable=SC2034
-  local LOGGING_TAGS=(testenv "k8s/kind: ${_TEST_ENV_KIND_CLUSTER_NAME}")
+	# shellcheck disable=SC2034
+	local LOGGING_TAGS=(testenv "k8s/kind: ${_TEST_ENV_KIND_CLUSTER_NAME}")
 
-  if testenv::k8s::kind::_kind_cluster_exists; then
-    logging::info "Stop the Kind cluster..."
-    if ! shell::run kind delete cluster --name="${_TEST_ENV_KIND_CLUSTER_NAME}"; then
-      logging::error "Failed to stop!"
-      return 1
-    fi
-    logging::info "Stopped!"
-  else
-    logging::warn "Kind cluster not found, skip!"
-  fi
+	if testenv::k8s::kind::_kind_cluster_exists; then
+		logging::info "Stop the Kind cluster..."
+		if ! shell::run kind delete cluster --name="${_TEST_ENV_KIND_CLUSTER_NAME}"; then
+			logging::error "Failed to stop!"
+			return 1
+		fi
+		logging::info "Stopped!"
+	else
+		logging::warn "Kind cluster not found, skip!"
+	fi
 }
 
 #######################################
@@ -90,24 +90,24 @@ function testenv::k8s::kind::teardown() {
 #   0 on successful, non-zero otherwise.
 #######################################
 function testenv::k8s::kind::load_docker_image() {
-  # shellcheck disable=SC2034
-  local LOGGING_TAGS=(testenv "k8s/kind: ${_TEST_ENV_KIND_CLUSTER_NAME}")
+	# shellcheck disable=SC2034
+	local LOGGING_TAGS=(testenv "k8s/kind: ${_TEST_ENV_KIND_CLUSTER_NAME}")
 
-  if ! testenv::k8s::kind::_kind_cluster_exists; then
-    logging::error "Kind cluster doesn't exist!"
-    return 1
-  fi
+	if ! testenv::k8s::kind::_kind_cluster_exists; then
+		logging::error "Kind cluster doesn't exist!"
+		return 1
+	fi
 
-  local image_names_in_lines=""
-  IFS=$'\n  ' image_names_in_lines="$*" && unset IFS
+	local image_names_in_lines=""
+	IFS=$'\n  ' image_names_in_lines="$*" && unset IFS
 
-  logging::infof "Loading local Docker images:\n  %s\n" "${image_names_in_lines}"
+	logging::infof "Loading local Docker images:\n  %s\n" "${image_names_in_lines}"
 
-  if shell::run kind load docker-image --name="${_TEST_ENV_KIND_CLUSTER_NAME}" "$@"; then
-    logging::info "Successfully loaded!"
-  else
-    logging::error "Failed to load!"
-  fi
+	if shell::run kind load docker-image --name="${_TEST_ENV_KIND_CLUSTER_NAME}" "$@"; then
+		logging::info "Successfully loaded!"
+	else
+		logging::error "Failed to load!"
+	fi
 }
 
 #######################################
@@ -120,19 +120,19 @@ function testenv::k8s::kind::load_docker_image() {
 #   0 on successful, non-zero otherwise.
 #######################################
 function testenv::k8s::kind::load_image_archive() {
-  # shellcheck disable=SC2034
-  local LOGGING_TAGS=(testenv "k8s/kind: ${_TEST_ENV_KIND_CLUSTER_NAME}")
+	# shellcheck disable=SC2034
+	local LOGGING_TAGS=(testenv "k8s/kind: ${_TEST_ENV_KIND_CLUSTER_NAME}")
 
-  if ! testenv::k8s::kind::_kind_cluster_exists; then
-    logging::error "Kind cluster doesn't exist!"
-    return 1
-  fi
+	if ! testenv::k8s::kind::_kind_cluster_exists; then
+		logging::error "Kind cluster doesn't exist!"
+		return 1
+	fi
 
-  logging::infof "Loading image archive:\n  %s\n" "$1"
+	logging::infof "Loading image archive:\n  %s\n" "$1"
 
-  if shell::run kind load docker-image --name="${_TEST_ENV_KIND_CLUSTER_NAME}" "$1"; then
-    logging::info "Successfully loaded!"
-  else
-    logging::error "Failed to load!"
-  fi
+	if shell::run kind load docker-image --name="${_TEST_ENV_KIND_CLUSTER_NAME}" "$1"; then
+		logging::info "Successfully loaded!"
+	else
+		logging::error "Failed to load!"
+	fi
 }

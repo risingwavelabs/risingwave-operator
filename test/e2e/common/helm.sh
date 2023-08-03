@@ -26,9 +26,9 @@ source "$(dirname "${BASH_SOURCE[0]}")/shell.sh"
 #   Code that helm returns.
 #######################################
 function helm::helm() {
-  local extra_args=()
-  [[ -n "${HELM_NAMESPACE}" ]] && extra_args+=(--namespace "${HELM_NAMESPACE}")
-  helm "${extra_args[@]}" "$@"
+	local extra_args=()
+	[[ -n ${HELM_NAMESPACE} ]] && extra_args+=(--namespace "${HELM_NAMESPACE}")
+	helm "${extra_args[@]}" "$@"
 }
 
 #######################################
@@ -41,7 +41,7 @@ function helm::helm() {
 #   0 if it is, non-zero otherwise.
 #######################################
 function helm::release::is_deployed() {
-  helm::helm list --deployed -q | grep -w -q "$1"
+	helm::helm list --deployed -q | grep -w -q "$1"
 }
 
 #######################################
@@ -54,7 +54,7 @@ function helm::release::is_deployed() {
 #   0 if it is, non-zero otherwise.
 #######################################
 function helm::release::exists() {
-  helm::helm list -q | grep -w -q "$1"
+	helm::helm list -q | grep -w -q "$1"
 }
 
 #######################################
@@ -67,5 +67,5 @@ function helm::release::exists() {
 #   0 if it is, non-zero otherwise.
 #######################################
 function helm::repo::exists() {
-  helm::helm repo list | awk 'NR>1 {print $1}' | grep -w -q "$1"
+	helm::helm repo list | awk 'NR>1 {print $1}' | grep -w -q "$1"
 }

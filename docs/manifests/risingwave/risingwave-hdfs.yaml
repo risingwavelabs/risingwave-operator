@@ -316,18 +316,64 @@ kind: RisingWave
 metadata:
   name: risingwave-hdfs
 spec:
-  storages:
+  metaStore:
+    memory: true
+  stateStore:
+    dataDirectory: hummock
+    hdfs:
+      nameNode: hadoop-hdfs-master:9000
+      root: risingwave
+  image: ghcr.io/risingwavelabs/risingwave:YOUR_LATEST_HDFS_TAG
+  components:
     meta:
-      memory: true
-    object:
-      hdfs:
-        nameNode: hadoop-hdfs-master:9000
-        root: risingwave
-  global:
-    image: ghcr.io/risingwavelabs/risingwave:git-4e93d7061b66f8f12c4e89e097d950dfd3a5963a
-    imagePullPolicy: IfNotPresent
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
-      compactor: 1
+      nodeGroups:
+        - replicas: 1
+          name: ""
+          template:
+            spec:
+              resources:
+                limits:
+                  cpu: 1
+                  memory: 1Gi
+                requests:
+                  cpu: 100m
+                  memory: 100Mi
+    frontend:
+      nodeGroups:
+        - replicas: 1
+          name: ""
+          template:
+            spec:
+              resources:
+                limits:
+                  cpu: 1
+                  memory: 1Gi
+                requests:
+                  cpu: 100m
+                  memory: 100Mi
+    compute:
+      nodeGroups:
+        - replicas: 1
+          name: ""
+          template:
+            spec:
+              resources:
+                limits:
+                  cpu: 1
+                  memory: 1Gi
+                requests:
+                  cpu: 100m
+                  memory: 100Mi
+    compactor:
+      nodeGroups:
+        - replicas: 1
+          name: ""
+          template:
+            spec:
+              resources:
+                limits:
+                  cpu: 1
+                  memory: 1Gi
+                requests:
+                  cpu: 100m
+                  memory: 100Mi

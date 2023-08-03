@@ -32,21 +32,21 @@ source "${_TEST_ENV_MINIKUBE_DIR}/../../common/lib.sh"
 #   0 on successful, non-zero otherwise.
 #######################################
 function testenv::k8s::minikube::provision() {
-  # shellcheck disable=SC2034
-  local LOGGING_TAGS=(testenv "k8s/minikube: ${_TEST_ENV_MINIKUBE_PROFILE}")
+	# shellcheck disable=SC2034
+	local LOGGING_TAGS=(testenv "k8s/minikube: ${_TEST_ENV_MINIKUBE_PROFILE}")
 
-  local nodes=${MINIKUBE_NODES:-${_TEST_ENV_MINIKUBE_DEFAULT_NODES}}
-  local kubernetes_version=${MINIKUBE_KUBERNETES_VERSION:-${_TEST_ENV_MINIKUBE_DEFAULT_KUBERNETES_VERSION}}
+	local nodes=${MINIKUBE_NODES:-${_TEST_ENV_MINIKUBE_DEFAULT_NODES}}
+	local kubernetes_version=${MINIKUBE_KUBERNETES_VERSION:-${_TEST_ENV_MINIKUBE_DEFAULT_KUBERNETES_VERSION}}
 
-  logging::info "Start minikube cluster..."
-  if shell::run minikube --profile="${_TEST_ENV_MINIKUBE_PROFILE}" start \
-    --nodes="${nodes}" \
-    --kubernetes-version="${kubernetes_version}"; then
-    logging::info "Started!"
-  else
-    logging::error "Failed to start!"
-    return 1
-  fi
+	logging::info "Start minikube cluster..."
+	if shell::run minikube --profile="${_TEST_ENV_MINIKUBE_PROFILE}" start \
+		--nodes="${nodes}" \
+		--kubernetes-version="${kubernetes_version}"; then
+		logging::info "Started!"
+	else
+		logging::error "Failed to start!"
+		return 1
+	fi
 }
 
 #######################################
@@ -59,16 +59,16 @@ function testenv::k8s::minikube::provision() {
 #   0 on successful, non-zero otherwise.
 #######################################
 function testenv::k8s::minikube::teardown() {
-  # shellcheck disable=SC2034
-  local LOGGING_TAGS=(testenv "k8s/minikube: ${_TEST_ENV_MINIKUBE_PROFILE}")
+	# shellcheck disable=SC2034
+	local LOGGING_TAGS=(testenv "k8s/minikube: ${_TEST_ENV_MINIKUBE_PROFILE}")
 
-  logging::info "Stop minikube cluster..."
-  if shell::run minikube --profile="${_TEST_ENV_MINIKUBE_PROFILE}" delete; then
-    logging::info "Stopped!"
-  else
-    logging::error "Failed to stop!"
-    return 1
-  fi
+	logging::info "Stop minikube cluster..."
+	if shell::run minikube --profile="${_TEST_ENV_MINIKUBE_PROFILE}" delete; then
+		logging::info "Stopped!"
+	else
+		logging::error "Failed to stop!"
+		return 1
+	fi
 }
 
 #######################################
@@ -81,14 +81,14 @@ function testenv::k8s::minikube::teardown() {
 #   0 on successful, non-zero otherwise.
 #######################################
 function testenv::k8s::minikube::load_docker_image() {
-  # shellcheck disable=SC2034
-  local LOGGING_TAGS=(testenv "k8s/minikube: ${_TEST_ENV_MINIKUBE_PROFILE}")
+	# shellcheck disable=SC2034
+	local LOGGING_TAGS=(testenv "k8s/minikube: ${_TEST_ENV_MINIKUBE_PROFILE}")
 
-  logging::infof "Loading local Docker images:\n  %s\n" "$1"
+	logging::infof "Loading local Docker images:\n  %s\n" "$1"
 
-  if shell::run minikube --profile="${_TEST_ENV_MINIKUBE_PROFILE}" image load "$1"; then
-    logging::info "Successfully loaded!"
-  else
-    logging::error "Failed to load!"
-  fi
+	if shell::run minikube --profile="${_TEST_ENV_MINIKUBE_PROFILE}" image load "$1"; then
+		logging::info "Successfully loaded!"
+	else
+		logging::error "Failed to load!"
+	fi
 }

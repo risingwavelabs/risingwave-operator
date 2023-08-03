@@ -16,45 +16,45 @@
 #
 
 usage() {
-    {
-        echo "This script installs the kube-prometheus-stack stack"
-        echo ""
-        echo "Usage:"
-        echo "$0 [-h] [-d] [-n <namespace>]"
-        echo ""
-        echo "-d    Dry-run. Print what would be done without executing"
-        echo "-h    Show this help message"
-        echo "-n    The namespace in which to install the monitoring stack. Defaults to 'monitoring'"
-    } 1>&2
+	{
+		echo "This script installs the kube-prometheus-stack stack"
+		echo ""
+		echo "Usage:"
+		echo "$0 [-h] [-d] [-n <namespace>]"
+		echo ""
+		echo "-d    Dry-run. Print what would be done without executing"
+		echo "-h    Show this help message"
+		echo "-n    The namespace in which to install the monitoring stack. Defaults to 'monitoring'"
+	} 1>&2
 
-    exit 1
+	exit 1
 }
 
 dry=false
 ns="monitoring"
 
 while getopts ":n:hd" o; do
-    case "${o}" in
-        h)
-            usage
-            ;;
-        d)
-            dry=true
-            ;;
-        n)
-            ns=${OPTARG}
-            ;;
-        *)
-            usage
-            ;;
-    esac
+	case "${o}" in
+	h)
+		usage
+		;;
+	d)
+		dry=true
+		;;
+	n)
+		ns=${OPTARG}
+		;;
+	*)
+		usage
+		;;
+	esac
 done
-shift $((OPTIND-1))
+shift $((OPTIND - 1))
 
 dryParam=""
-if [[ $dry = true ]]; then 
-    echo "Dry-run modus activated in $0"
-    dryParam="--dry-run"
+if [[ $dry == true ]]; then
+	echo "Dry-run modus activated in $0"
+	dryParam="--dry-run"
 fi
 
 _SCRIPT_BASEDIR=$(dirname "$0")
@@ -64,5 +64,5 @@ echo $msg
 
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm --namespace $ns upgrade --install --create-namespace prometheus prometheus-community/kube-prometheus-stack \
-  -f "${_SCRIPT_BASEDIR}"/kube-prometheus-stack.yaml \
-  $dryParam
+	-f "${_SCRIPT_BASEDIR}"/kube-prometheus-stack.yaml \
+	$dryParam

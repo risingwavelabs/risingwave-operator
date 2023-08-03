@@ -388,19 +388,65 @@ kind: RisingWave
 metadata:
   name: risingwave-etcd-hdfs
 spec:
-  storages:
+  image: ghcr.io/risingwavelabs/risingwave:YOUR_LATEST_HDFS_TAG
+  metaStore:
+    etcd:
+      endpoint: risingwave-etcd:2388
+  stateStore:
+    dataDirectory: hummock
+    hdfs:
+      nameNode: hadoop-hdfs-master:9000
+      root: risingwave
+  components:
     meta:
-      etcd: 
-        endpoint: risingwave-etcd:2388
-    object:
-      hdfs:
-        nameNode: hadoop-hdfs-master:9000
-        root: risingwave
-  global:
-    image: ghcr.io/risingwavelabs/risingwave:v1.0.0
-    imagePullPolicy: IfNotPresent
-    replicas:
-      meta: 1
-      frontend: 1
-      compute: 1
-      compactor: 1
+      nodeGroups:
+        - replicas: 1
+          name: ""
+          template:
+            spec:
+              resources:
+                limits:
+                  cpu: 1
+                  memory: 1Gi
+                requests:
+                  cpu: 100m
+                  memory: 100Mi
+    frontend:
+      nodeGroups:
+        - replicas: 1
+          name: ""
+          template:
+            spec:
+              resources:
+                limits:
+                  cpu: 1
+                  memory: 1Gi
+                requests:
+                  cpu: 100m
+                  memory: 100Mi
+    compute:
+      nodeGroups:
+        - replicas: 1
+          name: ""
+          template:
+            spec:
+              resources:
+                limits:
+                  cpu: 1
+                  memory: 1Gi
+                requests:
+                  cpu: 100m
+                  memory: 100Mi
+    compactor:
+      nodeGroups:
+        - replicas: 1
+          name: ""
+          template:
+            spec:
+              resources:
+                limits:
+                  cpu: 1
+                  memory: 1Gi
+                requests:
+                  cpu: 100m
+                  memory: 100Mi

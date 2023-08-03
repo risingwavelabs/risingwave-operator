@@ -27,9 +27,9 @@ source "$(dirname "${BASH_SOURCE[0]}")/logging.sh"
 #   Code that awscli returns.
 #######################################
 function awscli::aws() {
-  local -a extra_args=()
-  [[ -v "AWSCLI_PROFILE" && -n "${AWSCLI_PROFILE}" ]] && extra_args+=("--profile" "${AWSCLI_PROFILE}")
-  aws "${extra_args[@]}" "$@"
+	local -a extra_args=()
+	[[ -v "AWSCLI_PROFILE" && -n ${AWSCLI_PROFILE} ]] && extra_args+=("--profile" "${AWSCLI_PROFILE}")
+	aws "${extra_args[@]}" "$@"
 }
 
 #######################################
@@ -45,20 +45,20 @@ function awscli::aws() {
 #   0 if supported, non-zero otherwise.
 #######################################
 function awscli::profile::_hash() {
-  # shellcheck disable=SC2155
-  local os=$(uname -s)
-  case "${os}" in
-  Linux)
-    md5sum <<<"$1$2" | awk '{print $1}'
-    ;;
-  Darwin)
-    md5 <<<"$1$2"
-    ;;
-  *)
-    logging:error "Unsupported platform ${os}"
-    return 1
-    ;;
-  esac
+	# shellcheck disable=SC2155
+	local os=$(uname -s)
+	case "${os}" in
+	Linux)
+		md5sum <<<"$1$2" | awk '{print $1}'
+		;;
+	Darwin)
+		md5 <<<"$1$2"
+		;;
+	*)
+		logging:error "Unsupported platform ${os}"
+		return 1
+		;;
+	esac
 }
 
 #######################################
@@ -74,24 +74,24 @@ function awscli::profile::_hash() {
 #   Code that awscli returns.
 #######################################
 function awscli::configure() {
-  (($# == 3)) || { echo >&2 "not enough arguments" && return 1; }
-  [[ -n "$2" ]] || { echo >&2 "access key must be provided" && return 1; }
-  [[ -n "$3" ]] || { echo >&2 "secret access key must be provided" && return 1; }
+	(($# == 3)) || { echo >&2 "not enough arguments" && return 1; }
+	[[ -n $2 ]] || { echo >&2 "access key must be provided" && return 1; }
+	[[ -n $3 ]] || { echo >&2 "secret access key must be provided" && return 1; }
 
-  local region=$1
-  local access_key=$2
-  local secret_access_key=$3
-  local profile
+	local region=$1
+	local access_key=$2
+	local secret_access_key=$3
+	local profile
 
-  profile=$(awscli::profile::_hash "${access_key}" "${secret_access_key}")
+	profile=$(awscli::profile::_hash "${access_key}" "${secret_access_key}")
 
-  [[ -n ${region} ]] && aws configure --profile "${profile}" set region "${region}"
+	[[ -n ${region} ]] && aws configure --profile "${profile}" set region "${region}"
 
-  common::run aws configure --profile "${profile}" set aws_access_key_id "${access_key}"
-  common::run aws configure --profile "${profile}" set aws_secret_access_key "${secret_access_key}"
+	common::run aws configure --profile "${profile}" set aws_access_key_id "${access_key}"
+	common::run aws configure --profile "${profile}" set aws_secret_access_key "${secret_access_key}"
 
-  # Set the global var AWSCLI_PROFILE.
-  export AWSCLI_PROFILE="${profile}"
+	# Set the global var AWSCLI_PROFILE.
+	export AWSCLI_PROFILE="${profile}"
 }
 
 #######################################
@@ -105,17 +105,17 @@ function awscli::configure() {
 #   0 if true, non-zero otherwise.
 #######################################
 function awscli::configure::profile_exists() {
-  (($# == 2)) || { echo >&2 "not enough arguments" && return 1; }
-  [[ -n "$1" ]] || { echo >&2 "access key must be provided" && return 1; }
-  [[ -n "$2" ]] || { echo >&2 "secret access key must be provided" && return 1; }
+	(($# == 2)) || { echo >&2 "not enough arguments" && return 1; }
+	[[ -n $1 ]] || { echo >&2 "access key must be provided" && return 1; }
+	[[ -n $2 ]] || { echo >&2 "secret access key must be provided" && return 1; }
 
-  local access_key=$1
-  local secret_access_key=$2
-  local profile
+	local access_key=$1
+	local secret_access_key=$2
+	local profile
 
-  profile=$(awscli::profile::_hash "${access_key}" "${secret_access_key}")
+	profile=$(awscli::profile::_hash "${access_key}" "${secret_access_key}")
 
-  aws configure list-profiles | grep -w -q "${profile}"
+	aws configure list-profiles | grep -w -q "${profile}"
 }
 
 #######################################
@@ -129,22 +129,22 @@ function awscli::configure::profile_exists() {
 #   0 if exists, non-zero otherwise.
 #######################################
 function awscli::configure::use_profile() {
-  (($# == 2)) || { echo >&2 "not enough arguments" && return 1; }
-  [[ -n "$1" ]] || { echo >&2 "access key must be provided" && return 1; }
-  [[ -n "$2" ]] || { echo >&2 "secret access key must be provided" && return 1; }
+	(($# == 2)) || { echo >&2 "not enough arguments" && return 1; }
+	[[ -n $1 ]] || { echo >&2 "access key must be provided" && return 1; }
+	[[ -n $2 ]] || { echo >&2 "secret access key must be provided" && return 1; }
 
-  local access_key=$1
-  local secret_access_key=$2
-  local profile
+	local access_key=$1
+	local secret_access_key=$2
+	local profile
 
-  profile=$(awscli::profile::_hash "${access_key}" "${secret_access_key}")
+	profile=$(awscli::profile::_hash "${access_key}" "${secret_access_key}")
 
-  if aws configure list-profiles | grep -w -q "${profile}"; then
-    # Set the global var AWSCLI_PROFILE.
-    export AWSCLI_PROFILE="${profile}"
-  else
-    return 1
-  fi
+	if aws configure list-profiles | grep -w -q "${profile}"; then
+		# Set the global var AWSCLI_PROFILE.
+		export AWSCLI_PROFILE="${profile}"
+	else
+		return 1
+	fi
 }
 
 #######################################
@@ -157,12 +157,12 @@ function awscli::configure::use_profile() {
 #   0 if the bucket exists, non-zero else or on error.
 #######################################
 function awscli::s3api::bucket_exists() {
-  (($# == 1)) || { echo >&2 "not enough arguments" && return 1; }
-  [[ -n "$1" ]] || { echo >&2 "bucket must be provided" && return 1; }
+	(($# == 1)) || { echo >&2 "not enough arguments" && return 1; }
+	[[ -n $1 ]] || { echo >&2 "bucket must be provided" && return 1; }
 
-  local bucket=$1
+	local bucket=$1
 
-  common::run awscli::aws s3api head-bucket --bucket "${bucket}"
+	common::run awscli::aws s3api head-bucket --bucket "${bucket}"
 }
 
 #######################################
@@ -176,18 +176,18 @@ function awscli::s3api::bucket_exists() {
 #   0 if the bucket is created, non-zero on error.
 #######################################
 function awscli::s3api::create_bucket() {
-  (($# == 2)) || { echo >&2 "not enough arguments" && return 1; }
-  [[ -n "$1" && -n "$2" ]] || { echo >&2 "either region or bucket must be provided" && return 1; }
+	(($# == 2)) || { echo >&2 "not enough arguments" && return 1; }
+	[[ -n $1 && -n $2 ]] || { echo >&2 "either region or bucket must be provided" && return 1; }
 
-  local region=$1
-  local bucket=$2
+	local region=$1
+	local bucket=$2
 
-  local -a location_constraint_arg=()
-  if [[ "${region}" != "us-east-1" ]]; then
-    location_constraint_arg=(--create-bucket-configuration "LocationConstraint=${region}")
-  fi
+	local -a location_constraint_arg=()
+	if [[ ${region} != "us-east-1" ]]; then
+		location_constraint_arg=(--create-bucket-configuration "LocationConstraint=${region}")
+	fi
 
-  common::run awscli::aws s3api create-bucket --bucket "${bucket}" --region "${region}" "${location_constraint_arg[@]}"
+	common::run awscli::aws s3api create-bucket --bucket "${bucket}" --region "${region}" "${location_constraint_arg[@]}"
 }
 
 #######################################
@@ -201,14 +201,14 @@ function awscli::s3api::create_bucket() {
 #   0 if the bucket is deleted, non-zero on error.
 #######################################
 function awscli::s3api::delete_bucket() {
-  (($# == 1)) || { echo >&2 "not enough arguments" && return 1; }
-  [[ -n "$1" ]] || { echo >&2 "bucket must be provided" && return 1; }
+	(($# == 1)) || { echo >&2 "not enough arguments" && return 1; }
+	[[ -n $1 ]] || { echo >&2 "bucket must be provided" && return 1; }
 
-  local bucket=$1
+	local bucket=$1
 
-  if [[ "${AWSCLI_S3API_FORCE_DELETE_BUCKET}" == "true" ]]; then
-    common::run awscli::aws s3 rb s3://"${bucket}" --force
-  else
-    common::run awscli::aws s3api delete-bucket --bucket "${bucket}"
-  fi
+	if [[ ${AWSCLI_S3API_FORCE_DELETE_BUCKET} == "true" ]]; then
+		common::run awscli::aws s3 rb s3://"${bucket}" --force
+	else
+		common::run awscli::aws s3api delete-bucket --bucket "${bucket}"
+	fi
 }

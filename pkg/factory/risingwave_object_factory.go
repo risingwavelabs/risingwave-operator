@@ -186,10 +186,6 @@ func (f *RisingWaveObjectFactory) componentName(component, group string) string 
 
 func (f *RisingWaveObjectFactory) componentAddr(component, group string) string {
 	componentName := f.componentName(component, group)
-	// TODO according to @arkbriar, update compute advertise-addr may cause compatibility issue
-	if component == consts.ComponentCompute {
-		return componentName
-	}
 	if f.isFullKubernetesAddr() {
 		return fmt.Sprintf("%s.$(POD_NAMESPACE).svc", componentName)
 	}

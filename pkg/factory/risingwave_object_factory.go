@@ -192,9 +192,8 @@ func (f *RisingWaveObjectFactory) componentAddr(component, group string) string 
 	}
 	if f.isFullKubernetesAddr() {
 		return fmt.Sprintf("%s.$(POD_NAMESPACE).svc", componentName)
-	} else {
-		return componentName
 	}
+	return componentName
 }
 
 func (f *RisingWaveObjectFactory) getObjectMetaForGeneralResources(name string, sync bool) metav1.ObjectMeta {

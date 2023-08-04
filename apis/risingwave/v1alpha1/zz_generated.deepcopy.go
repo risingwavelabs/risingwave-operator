@@ -1076,6 +1076,11 @@ func (in *RisingWaveSpec) DeepCopyInto(out *RisingWaveSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.EnableFullKubernetesAddr != nil {
+		in, out := &in.EnableFullKubernetesAddr, &out.EnableFullKubernetesAddr
+		*out = new(bool)
+		**out = **in
+	}
 	in.AdditionalFrontendServiceMetadata.DeepCopyInto(&out.AdditionalFrontendServiceMetadata)
 	in.MetaStore.DeepCopyInto(&out.MetaStore)
 	in.StateStore.DeepCopyInto(&out.StateStore)

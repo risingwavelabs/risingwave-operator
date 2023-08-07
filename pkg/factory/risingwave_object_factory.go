@@ -1005,7 +1005,17 @@ func basicSetupRisingWaveContainer(container *corev1.Container, component *risin
 	}
 
 	// Set the default probes.
-	container.StartupProbe = nil
+	container.StartupProbe = &corev1.Probe{
+		InitialDelaySeconds: 5,
+		PeriodSeconds:       5,
+		TimeoutSeconds:      5,
+		FailureThreshold:    12,
+		ProbeHandler: corev1.ProbeHandler{
+			TCPSocket: &corev1.TCPSocketAction{
+				Port: intstr.FromString(consts.PortService),
+			},
+		},
+	}
 	container.LivenessProbe = &corev1.Probe{
 		InitialDelaySeconds: 2,
 		PeriodSeconds:       10,

@@ -118,6 +118,10 @@ func (f *RisingWaveObjectFactory) isMetaStoreEtcd() bool {
 	return f.risingwave.Spec.MetaStore.Etcd != nil
 }
 
+func (f *RisingWaveObjectFactory) isFullKubernetesAddr() bool {
+	return pointer.BoolDeref(f.risingwave.Spec.EnableFullKubernetesAddr, false)
+}
+
 func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 	stateStore := f.risingwave.Spec.StateStore
 	switch {
@@ -178,6 +182,14 @@ func (f *RisingWaveObjectFactory) componentName(component, group string) string 
 	default:
 		panic("never reach here")
 	}
+}
+
+func (f *RisingWaveObjectFactory) componentAddr(component, group string) string {
+	componentName := f.componentName(component, group)
+	if f.isFullKubernetesAddr() {
+		return fmt.Sprintf("%s.$(POD_NAMESPACE).svc", componentName)
+	}
+	return componentName
 }
 
 func (f *RisingWaveObjectFactory) getObjectMetaForGeneralResources(name string, sync bool) metav1.ObjectMeta {
@@ -326,7 +338,7 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWAdvertiseAddr,
-			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentMeta, ""), consts.MetaServicePort),
+			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWStateStore,
@@ -346,7 +358,7 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWConnectorRPCEndPoint,
-			Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), consts.ConnectorServicePort),
+			Value: fmt.Sprintf("%s:%d", f.componentAddr(consts.ComponentConnector, ""), consts.ConnectorServicePort),
 		},
 	}
 
@@ -397,11 +409,11 @@ func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWMetaAddr,
-			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), consts.MetaServicePort),
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWMetaAddrLegacy,
-			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), consts.MetaServicePort),
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWMetricsLevel,
@@ -426,15 +438,15 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 		},
 		{
 			Name:  envs.RWAdvertiseAddr,
-			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentName(consts.ComponentCompute, ""), consts.ComputeServicePort),
+			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentAddr(consts.ComponentCompute, ""), consts.ComputeServicePort),
 		},
 		{
 			Name:  envs.RWMetaAddr,
-			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), consts.MetaServicePort),
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWMetaAddrLegacy,
-			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), consts.MetaServicePort),
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWMetricsLevel,
@@ -442,7 +454,7 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 		},
 		{
 			Name:  envs.RWConnectorRPCEndPoint,
-			Value: fmt.Sprintf("%s:%d", f.componentName(consts.ComponentConnector, ""), consts.ConnectorServicePort),
+			Value: fmt.Sprintf("%s:%d", f.componentAddr(consts.ComponentConnector, ""), consts.ConnectorServicePort),
 		},
 		{
 			Name:  envs.RWPrometheusListenerAddr,
@@ -487,11 +499,11 @@ func (f *RisingWaveObjectFactory) envsForCompactorArgs() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWMetaAddr,
-			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), consts.MetaServicePort),
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWMetaAddrLegacy,
-			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentName(consts.ComponentMeta, ""), consts.MetaServicePort),
+			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWMetricsLevel,
@@ -966,6 +978,15 @@ func basicSetupRisingWaveContainer(container *corev1.Container, component *risin
 			},
 		},
 	}, func(env *corev1.EnvVar) bool { return env.Name == envs.PodName })
+
+	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
+		Name: envs.PodNamespace,
+		ValueFrom: &corev1.EnvVarSource{
+			FieldRef: &corev1.ObjectFieldSelector{
+				FieldPath: "metadata.namespace",
+			},
+		},
+	}, func(env *corev1.EnvVar) bool { return env.Name == envs.PodNamespace })
 
 	// Set RUST_BACKTRACE=1 if printing stack traces is enabled.
 	if !pointer.BoolDeref(component.DisallowPrintStackTraces, false) {

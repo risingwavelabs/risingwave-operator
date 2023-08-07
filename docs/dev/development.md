@@ -320,7 +320,7 @@ Change the `imagePullPolicy` to `Always`.
 Apply your local operator via. 
 
 ```bash 
-kubectl apply config/risingwave-operator-test.yaml 
+kubectl apply --server-side=true -f config/risingwave-operator-test.yaml 
 ```
 
 Be advised: It may be necessary to load your local images into your cluster if you are using `kind`. 

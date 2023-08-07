@@ -16,6 +16,7 @@ package envs
 
 // System reserved envs.
 const (
-	PodIP   = "POD_IP"
-	PodName = "POD_NAME"
+	PodIP        = "POD_IP"
+	PodName      = "POD_NAME"
+	PodNamespace = "POD_NAMESPACE"
 )

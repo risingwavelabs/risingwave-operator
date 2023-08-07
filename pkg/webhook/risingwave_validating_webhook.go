@@ -57,6 +57,7 @@ func isImageValid(image string) bool {
 var systemEnv = map[string]bool{
 	envs.PodIP:                  true,
 	envs.PodName:                true,
+	envs.PodNamespace:           true,
 	envs.RustBacktrace:          true,
 	envs.RWWorkerThreads:        true,
 	envs.RWConnectorRPCEndPoint: true,

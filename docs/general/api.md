@@ -555,6 +555,20 @@ the controller will determine if it can create the resource by checking if the C
 </tr>
 <tr>
 <td>
+<code>enableFullKubernetesAddr</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to indicate if full kubernetes address should be enabled for components.
+If enabled, address will be [<pod>.]<service>.<namespace>.svc. Otherwise, it will be [<pod>.]<service>.
+Enabling this flag on existing RisingWave will cause incompatibility.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>image</code><br/>
 <em>
 string
@@ -4036,6 +4050,20 @@ bool
 <p>Flag to indicate if a default ServiceMonitor (from Prometheus operator) should be created by the controller.
 False and an empty value means the ServiceMonitor won&rsquo;t be created automatically. But even if it&rsquo;s set to true,
 the controller will determine if it can create the resource by checking if the CRDs are installed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableFullKubernetesAddr</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to indicate if full kubernetes address should be enabled for components.
+If enabled, address will be [<pod>.]<service>.<namespace>.svc. Otherwise, it will be [<pod>.]<service>.
+Enabling this flag on existing RisingWave will cause incompatibility.</p>
 </td>
 </tr>
 <tr>

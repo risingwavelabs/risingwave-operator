@@ -96,6 +96,13 @@ type RisingWaveSpec struct {
 	// +optional
 	EnableDefaultServiceMonitor *bool `json:"enableDefaultServiceMonitor,omitempty"`
 
+	// Flag to indicate if full kubernetes address should be enabled for components.
+	// If enabled, address will be [<pod>.]<service>.<namespace>.svc. Otherwise, it will be [<pod>.]<service>.
+	// Enabling this flag on existing RisingWave will cause incompatibility.
+	// +optional
+	// +kubebuilder:default=false
+	EnableFullKubernetesAddr *bool `json:"enableFullKubernetesAddr,omitempty"`
+
 	// Image for RisingWave component.
 	Image string `json:"image"`
 

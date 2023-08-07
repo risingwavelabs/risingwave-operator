@@ -41269,6 +41269,13 @@ spec:
                   even if it's set to true, the controller will determine if it can
                   create the resource by checking if the CRDs are installed.
                 type: boolean
+              enableFullKubernetesAddr:
+                default: false
+                description: Flag to indicate if full kubernetes address should be
+                  enabled for components. If enabled, address will be [<pod>.]<service>.<namespace>.svc.
+                  Otherwise, it will be [<pod>.]<service>. Enabling this flag on existing
+                  RisingWave will cause incompatibility.
+                type: boolean
               enableOpenKruise:
                 default: false
                 description: Flag to indicate if OpenKruise should be enabled for

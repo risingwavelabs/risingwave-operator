@@ -1045,7 +1045,15 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 	container.Name = "meta"
 	container.Args = []string{"meta-node"}
 	container.Ports = f.portsForMetaContainer()
-	container.Env = append(container.Env, f.envsForMetaArgs()...)
+
+	// merge the vars, and use the container env vars(set in template) to replace the generated default vars, if key equals.
+	mergedVars := f.envsForMetaArgs()
+	for _, env := range container.Env {
+		mergedVars = mergeListWhenKeyEquals(mergedVars, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
+	}
+	container.Env = mergedVars
 
 	for _, env := range f.envsForStateStore() {
 		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
@@ -1364,7 +1372,15 @@ func (f *RisingWaveObjectFactory) portsForFrontendContainer() []corev1.Container
 func (f *RisingWaveObjectFactory) setupFrontendContainer(container *corev1.Container) {
 	container.Name = "frontend"
 	container.Args = []string{"frontend-node"}
-	container.Env = append(container.Env, f.envsForFrontendArgs()...)
+
+	// merge the vars, and use the container env vars(set in template) to replace the generated default vars, if key equals.
+	mergedVars := f.envsForFrontendArgs()
+	for _, env := range container.Env {
+		mergedVars = mergeListWhenKeyEquals(mergedVars, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
+	}
+	container.Env = mergedVars
 	container.Ports = f.portsForFrontendContainer()
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
@@ -1393,7 +1409,15 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Contai
 
 	cpuLimit := int64(math.Ceil(container.Resources.Limits.Cpu().AsApproximateFloat64()))
 	memLimit, _ := container.Resources.Limits.Memory().AsInt64()
-	container.Env = append(container.Env, f.envsForComputeArgs(cpuLimit, memLimit)...)
+
+	// merge the vars, and use the container env vars(set in template) to replace the generated default vars, if key equals.
+	mergedVars := f.envsForComputeArgs(cpuLimit, memLimit)
+	for _, env := range container.Env {
+		mergedVars = mergeListWhenKeyEquals(mergedVars, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
+	}
+	container.Env = mergedVars
 	container.Ports = f.portsForComputeContainer()
 
 	for _, env := range f.envsForStateStore() {
@@ -1425,7 +1449,15 @@ func (f *RisingWaveObjectFactory) portsForCompactorContainer() []corev1.Containe
 func (f *RisingWaveObjectFactory) setupCompactorContainer(container *corev1.Container) {
 	container.Name = "compactor"
 	container.Args = []string{"compactor-node"}
-	container.Env = append(container.Env, f.envsForCompactorArgs()...)
+
+	// merge the vars, and use the container env vars(set in template) to replace the generated default vars, if key equals.
+	mergedVars := f.envsForCompactorArgs()
+	for _, env := range container.Env {
+		mergedVars = mergeListWhenKeyEquals(mergedVars, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
+	}
+	container.Env = mergedVars
 	container.Ports = f.portsForCompactorContainer()
 
 	for _, env := range f.envsForStateStore() {
@@ -1468,14 +1500,26 @@ func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Cont
 
 	memLimits := container.Resources.Limits.Memory().Value()
 	if memLimits != 0 {
-		container.Env = append(container.Env, corev1.EnvVar{
-			Name:  envs.JavaOpts,
-			Value: fmt.Sprintf("-Xmx%d", memLimits),
-		})
-		container.Env = append(container.Env, corev1.EnvVar{
-			Name:  envs.RWConnectorNodePrometheusPort,
-			Value: fmt.Sprintf("%d", consts.ConnectorMetricsPort),
-		})
+
+		var mergedVars = []corev1.EnvVar{
+			{
+				Name:  envs.JavaOpts,
+				Value: fmt.Sprintf("-Xmx%d", memLimits),
+			},
+			{
+				Name:  envs.RWConnectorNodePrometheusPort,
+				Value: fmt.Sprintf("%d", consts.ConnectorMetricsPort),
+			},
+		}
+
+		// ensure the container env not override by generated env.
+		for _, env := range container.Env {
+			mergedVars = mergeListWhenKeyEquals(mergedVars, env, func(a, b *corev1.EnvVar) bool {
+				return a.Name == b.Name
+			})
+		}
+
+		container.Env = mergedVars
 	}
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {

@@ -1,4 +1,4 @@
-FROM golang:1.20
+FROM golang:1.21
 
 RUN apt-get update && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash && \

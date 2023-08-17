@@ -5,7 +5,7 @@
 You can install the monitoring stack manually or via the install script.
 
 ```shell
-./monitoring/install.sh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/monitoring/install.sh)"
 ```
 
 It will create the `monitoring` namespace and deploy everything inside it.

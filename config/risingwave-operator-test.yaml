@@ -41401,7 +41401,6 @@ spec:
                     required:
                     - bucket
                     - credentials
-                    - root
                     type: object
                   azureBlob:
                     description: Azure Blob storage spec.
@@ -41443,7 +41442,6 @@ spec:
                     - container
                     - credentials
                     - endpoint
-                    - root
                     type: object
                   dataDirectory:
                     default: hummock
@@ -41482,7 +41480,6 @@ spec:
                         type: string
                     required:
                     - bucket
-                    - root
                     type: object
                   hdfs:
                     description: HDFS storage spec.
@@ -41495,7 +41492,6 @@ spec:
                         type: string
                     required:
                     - nameNode
-                    - root
                     type: object
                   localDisk:
                     description: Local indicates to store the data in local disk.
@@ -41506,8 +41502,6 @@ spec:
                         description: Root is the root directory to store the data
                           in the object storage.
                         type: string
-                    required:
-                    - root
                     type: object
                   memory:
                     description: Memory indicates to store the data in memory. It's
@@ -41611,7 +41605,6 @@ spec:
                         type: string
                     required:
                     - nameNode
-                    - root
                     type: object
                 type: object
             required:

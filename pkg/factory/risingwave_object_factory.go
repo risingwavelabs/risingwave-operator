@@ -137,22 +137,21 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 		minio := stateStore.MinIO
 		return fmt.Sprintf("hummock+minio://$(%s):$(%s)@%s/%s", envs.MinIOUsername, envs.MinIOPassword, minio.Endpoint, minio.Bucket)
 	case f.isStateStoreGCS():
-		return fmt.Sprintf("hummock+gcs://%s@%s", stateStore.GCS.Bucket, stateStore.GCS.Root)
+		return fmt.Sprintf("hummock+gcs://%s", stateStore.GCS.Bucket)
 	case f.isStateStoreAliyunOSS():
 		aliyunOSS := stateStore.AliyunOSS
-		return fmt.Sprintf("hummock+oss://%s@%s", aliyunOSS.Bucket, aliyunOSS.Root)
+		return fmt.Sprintf("hummock+oss://%s", aliyunOSS.Bucket)
 	case f.isStateStoreAzureBlob():
 		azureBlob := stateStore.AzureBlob
-		return fmt.Sprintf("hummock+azblob://%s@%s", azureBlob.Container, azureBlob.Root)
+		return fmt.Sprintf("hummock+azblob://%s", azureBlob.Container)
 	case f.isStateStoreHDFS():
 		hdfs := stateStore.HDFS
-		return fmt.Sprintf("hummock+hdfs://%s@%s", hdfs.NameNode, hdfs.Root)
+		return fmt.Sprintf("hummock+hdfs://%s", hdfs.NameNode)
 	case f.isStateStoreWebHDFS():
 		webhdfs := stateStore.WebHDFS
-		return fmt.Sprintf("hummock+webhdfs://%s@%s", webhdfs.NameNode, webhdfs.Root)
+		return fmt.Sprintf("hummock+webhdfs://%s", webhdfs.NameNode)
 	case f.isStateStoreLocalDisk():
-		localDisk := stateStore.LocalDisk
-		return fmt.Sprintf("hummock+fs://@%s", localDisk.Root)
+		return fmt.Sprintf("hummock+fs://")
 	default:
 		panic("unrecognized storage type")
 	}
@@ -323,9 +322,28 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 	}
 }
 
+func (f *RisingWaveObjectFactory) getDataDirectory() string {
+	stateStore := f.risingwave.Spec.StateStore
+	switch {
+	case f.isStateStoreHDFS():
+		return path.Join(stateStore.HDFS.Root, stateStore.DataDirectory)
+	case f.isStateStoreGCS():
+		return path.Join(stateStore.GCS.Root, stateStore.DataDirectory)
+	case f.isStateStoreLocalDisk():
+		return path.Join(stateStore.LocalDisk.Root, stateStore.DataDirectory)
+	case f.isStateStoreWebHDFS():
+		return path.Join(stateStore.WebHDFS.Root, stateStore.DataDirectory)
+	case f.isStateStoreAzureBlob():
+		return path.Join(stateStore.AzureBlob.Root, stateStore.DataDirectory)
+	case f.isStateStoreAliyunOSS():
+		return path.Join(stateStore.AliyunOSS.Root, stateStore.DataDirectory)
+	default:
+		return stateStore.DataDirectory
+	}
+}
+
 func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 	metaStore := &f.risingwave.Spec.MetaStore
-	stateStore := f.risingwave.Spec.StateStore
 
 	envVars := []corev1.EnvVar{
 		{
@@ -346,7 +364,7 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWDataDirectory,
-			Value: stateStore.DataDirectory,
+			Value: f.getDataDirectory(),
 		},
 		{
 			Name:  envs.RWDashboardHost,

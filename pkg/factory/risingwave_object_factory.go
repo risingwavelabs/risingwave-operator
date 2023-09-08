@@ -360,10 +360,6 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 			Name:  envs.RWConnectorRPCEndPoint,
 			Value: fmt.Sprintf("%s:%d", f.componentAddr(consts.ComponentConnector, ""), consts.ConnectorServicePort),
 		},
-		{
-			Name:  envs.RWMetricsLevel,
-			Value: "info",
-		},
 	}
 
 	switch {
@@ -420,10 +416,6 @@ func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
 			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
-			Name:  envs.RWMetricsLevel,
-			Value: "info",
-		},
-		{
 			Name:  envs.RWPrometheusListenerAddr,
 			Value: fmt.Sprintf("0.0.0.0:%d", consts.FrontendMetricsPort),
 		},
@@ -451,10 +443,6 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 		{
 			Name:  envs.RWMetaAddrLegacy,
 			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
-		},
-		{
-			Name:  envs.RWMetricsLevel,
-			Value: "info",
 		},
 		{
 			Name:  envs.RWConnectorRPCEndPoint,
@@ -508,10 +496,6 @@ func (f *RisingWaveObjectFactory) envsForCompactorArgs() []corev1.EnvVar {
 		{
 			Name:  envs.RWMetaAddrLegacy,
 			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
-		},
-		{
-			Name:  envs.RWMetricsLevel,
-			Value: "info",
 		},
 	}
 }

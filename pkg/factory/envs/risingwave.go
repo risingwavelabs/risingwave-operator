@@ -38,7 +38,6 @@ const (
 	RWBackend                     = "RW_BACKEND"
 	RWMetaAddr                    = "RW_META_ADDR"
 	RWMetaAddrLegacy              = "RW_META_ADDRESS" // Will deprecate soon.
-	RWMetricsLevel                = "RW_METRICS_LEVEL"
 	RWPrometheusListenerAddr      = "RW_PROMETHEUS_LISTENER_ADDR"
 	RWParallelism                 = "RW_PARALLELISM"
 	RWTotalMemoryBytes            = "RW_TOTAL_MEMORY_BYTES"

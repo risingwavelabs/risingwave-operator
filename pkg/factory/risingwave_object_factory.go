@@ -417,7 +417,7 @@ func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWMetricsLevel,
-			Value: "1",
+			Value: "info",
 		},
 		{
 			Name:  envs.RWPrometheusListenerAddr,
@@ -450,7 +450,7 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 		},
 		{
 			Name:  envs.RWMetricsLevel,
-			Value: "1",
+			Value: "info",
 		},
 		{
 			Name:  envs.RWConnectorRPCEndPoint,
@@ -507,7 +507,7 @@ func (f *RisingWaveObjectFactory) envsForCompactorArgs() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWMetricsLevel,
-			Value: "1",
+			Value: "info",
 		},
 	}
 }

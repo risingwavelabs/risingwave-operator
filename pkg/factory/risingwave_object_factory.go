@@ -360,6 +360,10 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 			Name:  envs.RWConnectorRPCEndPoint,
 			Value: fmt.Sprintf("%s:%d", f.componentAddr(consts.ComponentConnector, ""), consts.ConnectorServicePort),
 		},
+		{
+			Name:  envs.RWMetricsLevel,
+			Value: "info",
+		},
 	}
 
 	switch {

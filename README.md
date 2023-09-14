@@ -108,6 +108,10 @@ NAME                                                     READY   STATUS    RESTA
 risingwave-operator-controller-manager-b5d5f585d-6npn5   2/2     Running   0          60s
 ```
 
+### Helm chart
+
+You can also use [Helm chart](https://github.com/risingwavelabs/helm-charts/tree/main/charts/risingwave-operator) to install the operator.
+
 ## Usage
 
 RisingWave Kubernetes Operator extends the Kubernetes with CRDs (Custom Resource Definitions) to manage RisingWave. That

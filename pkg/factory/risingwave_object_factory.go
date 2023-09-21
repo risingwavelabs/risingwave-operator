@@ -1766,8 +1766,8 @@ func (f *RisingWaveObjectFactory) NewConfigConfigMap(val string) *corev1.ConfigM
 // NewServiceMonitor creates a new ServiceMonitor.
 func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonitor {
 	const (
-		interval      = 5 * time.Second
-		scrapeTimeout = 5 * time.Second
+		interval      = 15 * time.Second
+		scrapeTimeout = 15 * time.Second
 	)
 
 	serviceMonitor := &prometheusv1.ServiceMonitor{

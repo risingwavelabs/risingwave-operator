@@ -10,7 +10,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: risingwave-operator-system/risingwave-operator-serving-cert
-    controller-gen.kubebuilder.io/version: v0.9.2
+    controller-gen.kubebuilder.io/version: v0.13.0
   name: risingwaves.risingwave.risingwavelabs.com
 spec:
   conversion:
@@ -34812,8 +34812,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.9.2
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.13.0
   name: risingwavescaleviews.risingwave.risingwavelabs.com
 spec:
   group: risingwave.risingwavelabs.com
@@ -34996,7 +34995,6 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: risingwave-operator-manager-role
 rules:
 - apiGroups:

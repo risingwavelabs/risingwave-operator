@@ -237,7 +237,7 @@ The Pods will be deleted in a few minutes.
 > ```shell
 > kubectl delete -f risingwave.yaml   # Delete all resources defined in the risingwave.yaml that you used above.
 > kubectl delete pvc -l app=etcd      # Delete the PVCs of etcd.
-> kubectl delete pvc -l app=minio    # Delete the PVCs of MinIO.
+> kubectl delete pvc -l app=minio     # Delete the PVCs of MinIO.
 > ```
 
 ### Customize the RisingWave cluster

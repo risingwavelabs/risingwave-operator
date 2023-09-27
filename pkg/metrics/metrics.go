@@ -75,7 +75,7 @@ var (
 	// Controller metrics vectors have the following attributes
 	// group: The target resource group of the webhook, e.g., risingwave.risingwavelabs.com
 	// version: The target API version, e.g., v1alpha1
-	// kind: The target API kind, e.g., risingwave, risingwavepodtemplate
+	// kind: The target API kind, e.g., risingwave
 	// namespace: The namespace of the object, e.g., default
 	// name: The name of the object
 	// TODO: verb: The verb (action) on the object which triggers the webhook, the value should be one of "create", "update", and "delete".

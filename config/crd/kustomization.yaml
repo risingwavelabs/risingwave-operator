@@ -3,7 +3,6 @@
 # It should be run by config/default
 resources:
 - bases/risingwave.risingwavelabs.com_risingwaves.yaml
-- bases/risingwave.risingwavelabs.com_risingwavepodtemplates.yaml
 - bases/risingwave.risingwavelabs.com_risingwavescaleviews.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 

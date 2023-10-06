@@ -45,16 +45,16 @@ type RisingWaveScaleViewValidatingWebhook struct {
 }
 
 func getScaleViewMaxConstraints(obj *risingwavev1alpha1.RisingWaveScaleView) int32 {
-	max := int32(0)
+	maxValue := int32(0)
 	for _, scalePolicy := range obj.Spec.ScalePolicy {
 		if scalePolicy.MaxReplicas == nil {
-			max = math.MaxInt32
+			maxValue = math.MaxInt32
 			break
 		}
-		max += *scalePolicy.MaxReplicas
+		maxValue += *scalePolicy.MaxReplicas
 	}
 
-	return max
+	return maxValue
 }
 
 func (w *RisingWaveScaleViewValidatingWebhook) validateObject(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) (warnings admission.Warnings, err error) {

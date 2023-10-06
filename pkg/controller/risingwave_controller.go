@@ -53,6 +53,8 @@ import (
 )
 
 // Pre-defined actions. Import from manager package.
+//
+//goland:noinspection GoSnakeCaseUsage
 const (
 	RisingWaveAction_SyncMetaService                            = manager.RisingWaveAction_SyncMetaService
 	RisingWaveAction_SyncMetaStatefulSets                       = manager.RisingWaveAction_SyncMetaStatefulSets

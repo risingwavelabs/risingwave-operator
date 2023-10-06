@@ -96,11 +96,11 @@ func SplitReplicas(sv *risingwavev1alpha1.RisingWaveScaleView) map[string]int32 
 		//     to help take the replicas.
 		for i := 0; i < len(groups); i++ {
 			g := groups[i]
-			max := int(*g.MaxReplicas)
+			maxValue := int(*g.MaxReplicas)
 
-			if max*(len(groups)-i) <= totalLeft {
-				replicas[g.Group] = int32(max)
-				totalLeft -= max
+			if maxValue*(len(groups)-i) <= totalLeft {
+				replicas[g.Group] = int32(maxValue)
+				totalLeft -= maxValue
 			} else {
 				taken := split(totalLeft, len(groups)-i)
 				replicas[g.Group] = int32(taken)

@@ -291,7 +291,7 @@ func TestRisingWaveControllerManagerImpl_SyncObject(t *testing.T) {
 
 	key := types.NamespacedName{Namespace: "", Name: "t"}
 	factory := func() *corev1.Service {
-		return newObjectFromKey[corev1.Service](key, map[string]string{
+		return newObjectFromKey[corev1.Service, *corev1.Service](key, map[string]string{
 			consts.LabelRisingWaveGeneration: strconv.FormatInt(fakeRisingwave.Generation, 10),
 		})
 	}
@@ -307,21 +307,21 @@ func TestRisingWaveControllerManagerImpl_SyncObject(t *testing.T) {
 		},
 		"current-nosync": {
 			key: key,
-			obj: newObjectFromKey[corev1.Service](key, map[string]string{
+			obj: newObjectFromKey[corev1.Service, *corev1.Service](key, map[string]string{
 				consts.LabelRisingWaveGeneration: consts.NoSync,
 			}),
 			factory: factory,
 		},
 		"current-synced": {
 			key: key,
-			obj: newObjectFromKey[corev1.Service](key, map[string]string{
+			obj: newObjectFromKey[corev1.Service, *corev1.Service](key, map[string]string{
 				consts.LabelRisingWaveGeneration: strconv.FormatInt(fakeRisingwave.Generation+1, 10),
 			}),
 			factory: factory,
 		},
 		"current-not-synced": {
 			key: key,
-			obj: newObjectFromKey[corev1.Service](key, map[string]string{
+			obj: newObjectFromKey[corev1.Service, *corev1.Service](key, map[string]string{
 				consts.LabelRisingWaveGeneration: strconv.FormatInt(fakeRisingwave.Generation-1, 10),
 			}),
 			factory: factory,
@@ -329,7 +329,7 @@ func TestRisingWaveControllerManagerImpl_SyncObject(t *testing.T) {
 	})
 }
 
-func testRisingWaveControllerManagerImplSyncSingleObject[T any, TP ptrAsObject[T]](t *testing.T, key types.NamespacedName, sync func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj *T) (ctrl.Result, error), hooks ...func(t *testing.T, obj *T)) {
+func testRisingWaveControllerManagerImplSyncSingleObject[T any, TP ptrAsObject[T]](t *testing.T, key types.NamespacedName, sync func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj TP) (ctrl.Result, error), hooks ...func(t *testing.T, obj TP)) {
 	fakeRisingwave := testutils.FakeRisingWave()
 
 	testcases := map[string]struct {
@@ -354,7 +354,7 @@ func testRisingWaveControllerManagerImplSyncSingleObject[T any, TP ptrAsObject[T
 				return !isObjectNil(obj)
 			})
 			managerImpl := newRisingWaveControllerManagerImplForTest(testutils.FakeRisingWave(), initObjs...)
-			r, err := sync(managerImpl, context.Background(), logr.Discard(), (*T)(tc.origin))
+			r, err := sync(managerImpl, context.Background(), logr.Discard(), tc.origin)
 			if ctrlkit.NeedsRequeue(r, err) {
 				t.Fatal("sync failed", r, err)
 			}
@@ -472,8 +472,8 @@ func testRisingWaveControllerManagerImplSyncObjectGroups[T any, TL any, TP ptrAs
 	groups []string,
 	labelSelector map[string]string,
 	syncGroups func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []T) (ctrl.Result, error),
-	getItems func(*TL) []T,
-	hooks ...func(t *testing.T, obj *T)) {
+	getItems func(TLP) []T,
+	hooks ...func(t *testing.T, obj TP)) {
 	testcases := map[string]struct {
 		origin []T
 	}{
@@ -869,7 +869,7 @@ func Test_WaitComponentGroupWorkloadsReady(t *testing.T) {
 				"": 1,
 			},
 			objects: []appsv1.Deployment{
-				newGroupObjectFromGroup[appsv1.Deployment]("", "", "", map[string]string{}),
+				newGroupObjectFromGroup[appsv1.Deployment, *appsv1.Deployment]("", "", "", map[string]string{}),
 			},
 			ready: false,
 		},
@@ -878,7 +878,7 @@ func Test_WaitComponentGroupWorkloadsReady(t *testing.T) {
 				"": 1,
 			},
 			objects: []appsv1.Deployment{
-				newGroupObjectFromGroup[appsv1.Deployment]("", "", "", map[string]string{
+				newGroupObjectFromGroup[appsv1.Deployment, *appsv1.Deployment]("", "", "", map[string]string{
 					"ready": "1",
 				}),
 			},
@@ -890,10 +890,10 @@ func Test_WaitComponentGroupWorkloadsReady(t *testing.T) {
 				testutils.GetNodeGroupName(0): 1,
 			},
 			objects: []appsv1.Deployment{
-				newGroupObjectFromGroup[appsv1.Deployment]("", "", "", map[string]string{
+				newGroupObjectFromGroup[appsv1.Deployment, *appsv1.Deployment]("", "", "", map[string]string{
 					"ready": "1",
 				}),
-				newGroupObjectFromGroup[appsv1.Deployment]("", "", testutils.GetNodeGroupName(0), map[string]string{}),
+				newGroupObjectFromGroup[appsv1.Deployment, *appsv1.Deployment]("", "", testutils.GetNodeGroupName(0), map[string]string{}),
 			},
 			ready: false,
 		},
@@ -902,10 +902,10 @@ func Test_WaitComponentGroupWorkloadsReady(t *testing.T) {
 				"": 1,
 			},
 			objects: []appsv1.Deployment{
-				newGroupObjectFromGroup[appsv1.Deployment]("", "", "123", map[string]string{
+				newGroupObjectFromGroup[appsv1.Deployment, *appsv1.Deployment]("", "", "123", map[string]string{
 					"ready": "1",
 				}),
-				newGroupObjectFromGroup[appsv1.Deployment]("", "", testutils.GetNodeGroupName(0), map[string]string{
+				newGroupObjectFromGroup[appsv1.Deployment, *appsv1.Deployment]("", "", testutils.GetNodeGroupName(0), map[string]string{
 					"ready": "1",
 				}),
 			},

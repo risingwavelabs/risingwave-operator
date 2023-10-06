@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
@@ -107,7 +107,7 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 			)
 		}
 	}
-	obj.Spec.Replicas = pointer.Int32(replicas)
+	obj.Spec.Replicas = ptr.To(replicas)
 
 	return fieldErrs.ToAggregate()
 }

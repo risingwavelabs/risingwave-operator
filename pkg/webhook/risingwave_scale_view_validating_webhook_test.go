@@ -24,7 +24,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/rand"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -64,7 +64,7 @@ func Test_RisingWaveScaleViewValidatingWebhook_ValidateObject(t *testing.T) {
 					},
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{Group: ""},
-						{Group: "a", MaxReplicas: pointer.Int32(2)},
+						{Group: "a", MaxReplicas: ptr.To(int32(2))},
 					},
 				},
 			},
@@ -104,7 +104,7 @@ func Test_RisingWaveScaleViewValidatingWebhook_ValidateObject(t *testing.T) {
 						UID:       "uid",
 					},
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
-						{Group: "", MaxReplicas: pointer.Int32(1)},
+						{Group: "", MaxReplicas: ptr.To(int32(1))},
 					},
 				},
 			},
@@ -252,7 +252,7 @@ func Test_RisingWaveScaleViewValidatingWebhook_ValidateUpdate(t *testing.T) {
 		"update-max-replicas": {
 			scaleView: goodScaleView(),
 			mutate: func(view *risingwavev1alpha1.RisingWaveScaleView) {
-				view.Spec.ScalePolicy[0].MaxReplicas = pointer.Int32(int32(rand.Int()))
+				view.Spec.ScalePolicy[0].MaxReplicas = ptr.To(int32(rand.Int()))
 			},
 			returnErr: true,
 		},

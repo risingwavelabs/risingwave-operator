@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
@@ -34,7 +34,7 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 		"one": {
 			sv: risingwavev1alpha1.RisingWaveScaleView{
 				Spec: risingwavev1alpha1.RisingWaveScaleViewSpec{
-					Replicas: pointer.Int32(10),
+					Replicas: ptr.To(int32(10)),
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
 							Group: "",
@@ -49,7 +49,7 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 		"two-unlimited": {
 			sv: risingwavev1alpha1.RisingWaveScaleView{
 				Spec: risingwavev1alpha1.RisingWaveScaleViewSpec{
-					Replicas: pointer.Int32(9),
+					Replicas: ptr.To(int32(9)),
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
 							Group: "a",
@@ -68,14 +68,14 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 		"two-but-one-limited": {
 			sv: risingwavev1alpha1.RisingWaveScaleView{
 				Spec: risingwavev1alpha1.RisingWaveScaleViewSpec{
-					Replicas: pointer.Int32(9),
+					Replicas: ptr.To(int32(9)),
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
 							Group: "a",
 						},
 						{
 							Group:       "b",
-							MaxReplicas: pointer.Int32(2),
+							MaxReplicas: ptr.To(int32(2)),
 						},
 					},
 				},
@@ -88,17 +88,17 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 		"three-with-priorities-1": {
 			sv: risingwavev1alpha1.RisingWaveScaleView{
 				Spec: risingwavev1alpha1.RisingWaveScaleViewSpec{
-					Replicas: pointer.Int32(9),
+					Replicas: ptr.To(int32(9)),
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
 							Group:       "a",
 							Priority:    10,
-							MaxReplicas: pointer.Int32(3),
+							MaxReplicas: ptr.To(int32(3)),
 						},
 						{
 							Group:       "b",
 							Priority:    5,
-							MaxReplicas: pointer.Int32(2),
+							MaxReplicas: ptr.To(int32(2)),
 						},
 						{
 							Group:    "c",
@@ -116,7 +116,7 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 		"three-with-priorities-2": {
 			sv: risingwavev1alpha1.RisingWaveScaleView{
 				Spec: risingwavev1alpha1.RisingWaveScaleViewSpec{
-					Replicas: pointer.Int32(9),
+					Replicas: ptr.To(int32(9)),
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
 							Group:    "a",
@@ -125,7 +125,7 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 						{
 							Group:       "b",
 							Priority:    5,
-							MaxReplicas: pointer.Int32(2),
+							MaxReplicas: ptr.To(int32(2)),
 						},
 						{
 							Group:    "c",
@@ -143,17 +143,17 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 		"three-with-priorities-3": {
 			sv: risingwavev1alpha1.RisingWaveScaleView{
 				Spec: risingwavev1alpha1.RisingWaveScaleViewSpec{
-					Replicas: pointer.Int32(4),
+					Replicas: ptr.To(int32(4)),
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
 							Group:       "a",
 							Priority:    10,
-							MaxReplicas: pointer.Int32(3),
+							MaxReplicas: ptr.To(int32(3)),
 						},
 						{
 							Group:       "b",
 							Priority:    5,
-							MaxReplicas: pointer.Int32(2),
+							MaxReplicas: ptr.To(int32(2)),
 						},
 						{
 							Group:    "c",
@@ -171,17 +171,17 @@ func TestScaleViewLockManager_splitReplicasIntoGroups(t *testing.T) {
 		"three-with-priorities-4": {
 			sv: risingwavev1alpha1.RisingWaveScaleView{
 				Spec: risingwavev1alpha1.RisingWaveScaleViewSpec{
-					Replicas: pointer.Int32(4),
+					Replicas: ptr.To(int32(4)),
 					ScalePolicy: []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 						{
 							Group:       "a",
 							Priority:    5,
-							MaxReplicas: pointer.Int32(3),
+							MaxReplicas: ptr.To(int32(3)),
 						},
 						{
 							Group:       "b",
 							Priority:    5,
-							MaxReplicas: pointer.Int32(2),
+							MaxReplicas: ptr.To(int32(2)),
 						},
 						{
 							Group:    "c",

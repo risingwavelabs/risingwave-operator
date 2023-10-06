@@ -34,6 +34,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	kruiseappsv1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
@@ -100,8 +101,10 @@ func main() {
 	config := ctrl.GetConfigOrDie()
 
 	mgr, err := ctrl.NewManager(config, ctrl.Options{
-		Scheme:                 scheme,
-		MetricsBindAddress:     metricsAddr,
+		Scheme: scheme,
+		Metrics: metricsserver.Options{
+			BindAddress: metricsAddr,
+		},
 		WebhookServer:          webhook.NewServer(webhook.Options{}),
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,

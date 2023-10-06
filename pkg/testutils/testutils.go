@@ -31,7 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
@@ -51,14 +51,14 @@ func init() {
 // FakeRisingWaveOpenKruiseEnabled returns a new fake RisingWave with OpenKruise enabled.
 func FakeRisingWaveOpenKruiseEnabled() *risingwavev1alpha1.RisingWave {
 	risingwaveCopy := fakeRisingWave.DeepCopy()
-	risingwaveCopy.Spec.EnableOpenKruise = pointer.Bool(true)
+	risingwaveCopy.Spec.EnableOpenKruise = ptr.To(true)
 	return risingwaveCopy
 }
 
 // FakeRisingWaveOpenKruiseDisabled returns a new fake RisingWave with OpenKruise disabled.
 func FakeRisingWaveOpenKruiseDisabled() *risingwavev1alpha1.RisingWave {
 	risingwaveCopy := fakeRisingWave.DeepCopy()
-	risingwaveCopy.Spec.EnableOpenKruise = pointer.Bool(false)
+	risingwaveCopy.Spec.EnableOpenKruise = ptr.To(false)
 	return risingwaveCopy
 }
 
@@ -80,10 +80,10 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 	},
 	Spec: risingwavev1alpha1.RisingWaveSpec{
 		MetaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
-			Memory: pointer.Bool(true),
+			Memory: ptr.To(true),
 		},
 		StateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
-			Memory: pointer.Bool(true),
+			Memory: ptr.To(true),
 		},
 		FrontendServiceType: corev1.ServiceTypeClusterIP,
 		Image:               "ghcr.io/risingwavelabs/risingwave:latest",

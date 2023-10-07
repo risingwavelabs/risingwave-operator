@@ -175,7 +175,7 @@ func (m *FeatureManager) GetNumOfFeatures() int {
 
 // ListFeatures lists all features, returns a copy of the list of feature structs.
 func (m *FeatureManager) ListFeatures() []Feature {
-	var featureList = []Feature{}
+	var featureList []Feature
 	for _, feature := range m.featureMap {
 		// make a deep copy of the feature
 		featureList = append(featureList, *feature.DeepCopy())
@@ -185,7 +185,7 @@ func (m *FeatureManager) ListFeatures() []Feature {
 
 // ListEnabledFeatures lists all enabled features, returns a copy of the list of feature structs.
 func (m *FeatureManager) ListEnabledFeatures() []Feature {
-	var featureList = []Feature{}
+	var featureList []Feature
 	for _, feature := range m.featureMap {
 		if feature.Enabled {
 			// make a copy of the feature
@@ -197,7 +197,7 @@ func (m *FeatureManager) ListEnabledFeatures() []Feature {
 
 // ListDisabledFeatures lists all disabled features, returns a copy of list of feature structs.
 func (m *FeatureManager) ListDisabledFeatures() []Feature {
-	var featureList = []Feature{}
+	var featureList []Feature
 	for _, feature := range m.featureMap {
 		if !feature.Enabled {
 			// make a deep copy of the feature

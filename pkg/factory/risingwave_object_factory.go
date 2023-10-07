@@ -1203,7 +1203,7 @@ func (f *RisingWaveObjectFactory) newDeployment(component string, nodeGroup *ris
 	return &appsv1.Deployment{
 		ObjectMeta: f.getObjectMetaForComponentGroupLevelResources(component, nodeGroup.Name, true),
 		Spec: appsv1.DeploymentSpec{
-			Replicas: ptr.To(int32(nodeGroup.Replicas)),
+			Replicas: ptr.To(nodeGroup.Replicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: f.podLabelsOrSelectorsForComponentGroup(component, nodeGroup.Name),
 			},
@@ -1224,7 +1224,7 @@ func (f *RisingWaveObjectFactory) newCloneSet(component string, nodeGroup *risin
 	return &kruiseappsv1alpha1.CloneSet{
 		ObjectMeta: f.getObjectMetaForComponentGroupLevelResources(component, nodeGroup.Name, true),
 		Spec: kruiseappsv1alpha1.CloneSetSpec{
-			Replicas: ptr.To(int32(nodeGroup.Replicas)),
+			Replicas: ptr.To(nodeGroup.Replicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: f.podLabelsOrSelectorsForComponentGroup(component, nodeGroup.Name),
 			},
@@ -1262,7 +1262,7 @@ func (f *RisingWaveObjectFactory) newStatefulSet(component string, nodeGroup *ri
 		ObjectMeta: f.getObjectMetaForComponentGroupLevelResources(component, nodeGroup.Name, true),
 		Spec: appsv1.StatefulSetSpec{
 			ServiceName:    f.componentName(component, ""),
-			Replicas:       ptr.To(int32(nodeGroup.Replicas)),
+			Replicas:       ptr.To(nodeGroup.Replicas),
 			UpdateStrategy: buildUpgradeStrategyForStatefulSet(nodeGroup.UpgradeStrategy),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: f.podLabelsOrSelectorsForComponentGroup(component, nodeGroup.Name),
@@ -1285,7 +1285,7 @@ func (f *RisingWaveObjectFactory) newAdvancedStatefulSet(component string, nodeG
 	return &kruiseappsv1beta1.StatefulSet{
 		ObjectMeta: f.getObjectMetaForComponentGroupLevelResources(component, nodeGroup.Name, true),
 		Spec: kruiseappsv1beta1.StatefulSetSpec{
-			Replicas:       ptr.To(int32(nodeGroup.Replicas)),
+			Replicas:       ptr.To(nodeGroup.Replicas),
 			ServiceName:    f.componentName(component, ""),
 			UpdateStrategy: buildUpgradeStrategyForAdvancedStatefulSet(nodeGroup.UpgradeStrategy),
 			Selector: &metav1.LabelSelector{
@@ -1722,9 +1722,9 @@ func buildUpgradeStrategyForAdvancedStatefulSet(strategy risingwavev1alpha1.Risi
 			if err != nil {
 				panic(err)
 			}
-			advancedStatefulSetUpgradeStrategy.RollingUpdate.Partition = ptr.To(int32(int32(intValue)))
+			advancedStatefulSetUpgradeStrategy.RollingUpdate.Partition = ptr.To(int32(intValue))
 		} else {
-			advancedStatefulSetUpgradeStrategy.RollingUpdate.Partition = ptr.To(int32(rollingUpdateOrDefault(strategy.RollingUpdate).Partition.IntVal))
+			advancedStatefulSetUpgradeStrategy.RollingUpdate.Partition = ptr.To(rollingUpdateOrDefault(strategy.RollingUpdate).Partition.IntVal)
 		}
 	}
 

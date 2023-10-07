@@ -2,7 +2,7 @@
 
 ## Install the `kube-prometheus-stack`
 
-You can install the monitoring stack manually or via the install script.
+You can install the monitoring stack manually or via the installation script.
 
 ```shell
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/risingwavelabs/risingwave-operator/main/monitoring/install.sh)"

@@ -162,7 +162,7 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasStatusFrom
 		runningReplicas := readRunningReplicas(targetObj, mgr.scaleView.Spec.TargetRef.Component, group)
 		replicas += runningReplicas
 	}
-	mgr.scaleView.Status.Replicas = ptr.To(int32(replicas))
+	mgr.scaleView.Status.Replicas = ptr.To(replicas)
 	return ctrlkit.Continue()
 }
 

@@ -49,7 +49,7 @@ func newRisingWaveSupportedFeatureListForTest() []Feature {
 }
 
 func getNonExistentFeatureName() FeatureName {
-	return FeatureName("feature-4")
+	return "feature-4"
 }
 func isFeatureEqual(f1 Feature, f2 Feature) bool {
 	return reflect.DeepEqual(f1, f2)
@@ -393,7 +393,9 @@ func TestParseFromFeatureGateString(t *testing.T) {
 	// we test by enabling all of them, in our featureGate string and check if all are enabled in list of features.
 	AllFeatureEnabledString := "feature-1=true,feature-2=TRUE,feature-3=1"
 	fakeRisingWaveFeatureManager = InitFeatureManagerWithSupportedFeatures(newRisingWaveSupportedFeatureListForTest())
-	fakeRisingWaveFeatureManager.ParseFromFeatureGateString(AllFeatureEnabledString)
+	if err := fakeRisingWaveFeatureManager.ParseFromFeatureGateString(AllFeatureEnabledString); err != nil {
+		t.Fatal(err)
+	}
 	if fakeRisingWaveFeatureManager.GetNumOfFeatures() != len(strings.Split(AllFeatureEnabledString, ",")) {
 		t.Fatal("Error in parsing the correct number of features")
 	}
@@ -407,7 +409,9 @@ func TestParseFromFeatureGateString(t *testing.T) {
 	// we test by disabling all of them, in our featureGate string and check if all are disabled in list of features.
 	AllFeatureDisabledString := "feature-1=false,feature-2=FALSE,feature-3=0"
 	fakeRisingWaveFeatureManager = InitFeatureManagerWithSupportedFeatures(newRisingWaveSupportedFeatureListForTest())
-	fakeRisingWaveFeatureManager.ParseFromFeatureGateString(AllFeatureDisabledString)
+	if err := fakeRisingWaveFeatureManager.ParseFromFeatureGateString(AllFeatureDisabledString); err != nil {
+		t.Fatal(err)
+	}
 	if fakeRisingWaveFeatureManager.GetNumOfFeatures() != len(strings.Split(AllFeatureDisabledString, ",")) {
 		t.Fatal("Error in parsing the correct number of features")
 	}
@@ -421,7 +425,9 @@ func TestParseFromFeatureGateString(t *testing.T) {
 	// we test by enabling all of them, in our featureGate string and check if all are enabled in list of features.
 	AllFeatureEnabledStringWithUnsupportedFeatures := fmt.Sprintf("feature-1=true,feature-2=TRUE,feature-3=1,%s=True", getNonExistentFeatureName())
 	fakeRisingWaveFeatureManager = InitFeatureManagerWithSupportedFeatures(newRisingWaveSupportedFeatureListForTest())
-	fakeRisingWaveFeatureManager.ParseFromFeatureGateString(AllFeatureEnabledStringWithUnsupportedFeatures)
+	if err := fakeRisingWaveFeatureManager.ParseFromFeatureGateString(AllFeatureEnabledStringWithUnsupportedFeatures); err != nil {
+		t.Fatal(err)
+	}
 	for _, feature := range fakeRisingWaveFeatureManager.ListFeatures() {
 		if !fakeRisingWaveFeatureManager.IsFeatureEnabled(feature.Name) {
 			t.Fatal("Parsing has failed, not all features were enabled")

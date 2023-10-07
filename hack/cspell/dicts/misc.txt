@@ -54,3 +54,4 @@ golint
 nolint
 azblob
 metricsserver
+goland

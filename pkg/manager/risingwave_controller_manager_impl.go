@@ -33,7 +33,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -57,7 +57,7 @@ type risingWaveControllerManagerImpl struct {
 	forceUpdateEnabled bool
 }
 
-func buildNodeGroupStatus[T any, TP ptrAsObject[T], G any](groups []G, nameAndReplicas func(*G) (string, int32), workloads []T, groupAndReadyReplicas func(*T) (string, int32)) risingwavev1alpha1.ComponentReplicasStatus {
+func buildNodeGroupStatus[T any, TP ptrAsObject[T], G any](groups []G, nameAndReplicas func(*G) (string, int32), workloads []T, groupAndReadyReplicas func(TP) (string, int32)) risingwavev1alpha1.ComponentReplicasStatus {
 	status := risingwavev1alpha1.ComponentReplicasStatus{
 		Target: 0,
 	}
@@ -129,7 +129,7 @@ func buildMetaStoreType(metaStore *risingwavev1alpha1.RisingWaveMetaStoreBackend
 
 func buildStateStoreType(stateStore *risingwavev1alpha1.RisingWaveStateStoreBackend) risingwavev1alpha1.RisingWaveStateStoreBackendType {
 	switch {
-	case pointer.BoolDeref(stateStore.Memory, false):
+	case ptr.Deref(stateStore.Memory, false):
 		return risingwavev1alpha1.RisingWaveStateStoreBackendTypeMemory
 	case stateStore.MinIO != nil:
 		return risingwavev1alpha1.RisingWaveStateStoreBackendTypeMinIO
@@ -584,7 +584,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncMetaAdvancedStatefulSets(ctx con
 }
 
 func waitComponentGroupWorkloadsReady[T any, TP ptrAsObject[T]](ctx context.Context, logger logr.Logger, component string,
-	groups map[string]int, objects []T, isReady func(*T) bool) (reconcile.Result, error) {
+	groups map[string]int, objects []T, isReady func(TP) bool) (reconcile.Result, error) {
 	logger = logger.WithValues("component", component)
 
 	foundGroups := make(map[string]int)

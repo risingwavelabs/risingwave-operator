@@ -24,10 +24,10 @@ import (
 	kruisepubs "github.com/openkruise/kruise-api/apps/pub"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/utils/pointer"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
@@ -51,14 +51,14 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"openKruise-enabled-and-available": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.EnableOpenKruise = pointer.Bool(true)
+				r.Spec.EnableOpenKruise = ptr.To(true)
 			},
 			pass:                true,
 			openKruiseAvailable: true,
 		},
 		"invalid-enable-openKruise-not-available": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.EnableOpenKruise = pointer.Bool(true)
+				r.Spec.EnableOpenKruise = ptr.To(true)
 			},
 			pass: false,
 		},
@@ -225,7 +225,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"upgrade-strategy-partition-valid-string": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.EnableOpenKruise = pointer.Bool(true)
+				r.Spec.EnableOpenKruise = ptr.To(true)
 				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy = risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
 					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
 					RollingUpdate: &risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{
@@ -241,7 +241,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"upgrade-strategy-InPlaceOnly-openKruise-enabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.EnableOpenKruise = pointer.Bool(true)
+				r.Spec.EnableOpenKruise = ptr.To(true)
 				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy = risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
 					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly,
 				}
@@ -251,7 +251,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"upgrade-strategy-InPlaceIfPossible-openKruise-enabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.EnableOpenKruise = pointer.Bool(true)
+				r.Spec.EnableOpenKruise = ptr.To(true)
 				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy = risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
 					Type: risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
 				}
@@ -261,7 +261,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"inPlace-strategy-openKruise-disabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.EnableOpenKruise = pointer.Bool(false)
+				r.Spec.EnableOpenKruise = ptr.To(false)
 				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy = risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
 					Type:                  risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible,
 					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{},
@@ -272,7 +272,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		},
 		"inPlace-strategy-Recreate-openKruise-enabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.EnableOpenKruise = pointer.Bool(true)
+				r.Spec.EnableOpenKruise = ptr.To(true)
 				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy = risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy{
 					Type:                  risingwavev1alpha1.RisingWaveUpgradeStrategyTypeRecreate,
 					InPlaceUpdateStrategy: &kruisepubs.InPlaceUpdateStrategy{},
@@ -300,7 +300,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		"meta-storage-with-default-values-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.MetaStore = risingwavev1alpha1.RisingWaveMetaStoreBackend{
-					Memory: pointer.Bool(false),
+					Memory: ptr.To(false),
 					Etcd:   &risingwavev1alpha1.RisingWaveMetaStoreBackendEtcd{},
 				}
 			},
@@ -309,7 +309,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		"multiple-meta-storages-fail": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.MetaStore = risingwavev1alpha1.RisingWaveMetaStoreBackend{
-					Memory: pointer.Bool(true),
+					Memory: ptr.To(true),
 					Etcd: &risingwavev1alpha1.RisingWaveMetaStoreBackendEtcd{
 						Endpoint: "etcd",
 					},
@@ -350,7 +350,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 					S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 						Bucket: "hummock",
 						RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
-							UseServiceAccount: pointer.Bool(true),
+							UseServiceAccount: ptr.To(true),
 						},
 					},
 				}
@@ -363,7 +363,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 					S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
 						Bucket: "hummock",
 						RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
-							UseServiceAccount: pointer.Bool(true),
+							UseServiceAccount: ptr.To(true),
 							SecretName:        "s3-creds",
 						},
 					},
@@ -402,7 +402,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 						Bucket:   "hummock",
 						Endpoint: "123",
 						RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
-							UseServiceAccount: pointer.Bool(true),
+							UseServiceAccount: ptr.To(true),
 						},
 					},
 				}
@@ -414,7 +414,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 						RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
-							UseWorkloadIdentity: pointer.Bool(true),
+							UseWorkloadIdentity: ptr.To(true),
 						},
 						Bucket: "gcs-bucket",
 						Root:   "gcs-root",
@@ -428,7 +428,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 						RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
-							UseWorkloadIdentity: pointer.Bool(true),
+							UseWorkloadIdentity: ptr.To(true),
 							SecretName:          "gcs-creds",
 						},
 						Bucket: "gcs-bucket",
@@ -539,7 +539,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		"multiple-state-stores-fail-1": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
-					Memory: pointer.Bool(true),
+					Memory: ptr.To(true),
 					MinIO:  &risingwavev1alpha1.RisingWaveStateStoreBackendMinIO{},
 				}
 			},
@@ -548,7 +548,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 		"multiple-state-stores-fail-2": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
-					Memory: pointer.Bool(true),
+					Memory: ptr.To(true),
 					S3:     &risingwavev1alpha1.RisingWaveStateStoreBackendS3{},
 				}
 			},
@@ -822,24 +822,24 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 		},
 		"enable-openKruise-when-disabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.EnableOpenKruise = pointer.Bool(true)
+				r.Spec.EnableOpenKruise = ptr.To(true)
 			},
 			pass: false,
 		},
 		"enable-openKruise-when-enabled": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.EnableOpenKruise = pointer.Bool(true)
+				r.Spec.EnableOpenKruise = ptr.To(true)
 			},
 			openKruiseAvailable: true,
 			pass:                true,
 		},
 		"disabled-openKruise-when-not-available": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.EnableOpenKruise = pointer.Bool(false)
+				r.Spec.EnableOpenKruise = ptr.To(false)
 			},
 			pass: true,
 			oldObjMutation: func(r *risingwavev1alpha1.RisingWave) {
-				r.Spec.EnableOpenKruise = pointer.Bool(true)
+				r.Spec.EnableOpenKruise = ptr.To(true)
 				r.Spec.Components.Meta.NodeGroups[0].UpgradeStrategy.Type = risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly
 			},
 		},

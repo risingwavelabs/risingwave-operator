@@ -34,7 +34,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
@@ -71,7 +71,7 @@ func (f *RisingWaveObjectFactory) namespace() string {
 }
 
 func (f *RisingWaveObjectFactory) isStateStoreMemory() bool {
-	return pointer.BoolDeref(f.risingwave.Spec.StateStore.Memory, false)
+	return ptr.Deref(f.risingwave.Spec.StateStore.Memory, false)
 }
 
 func (f *RisingWaveObjectFactory) isStateStoreS3() bool {
@@ -111,7 +111,7 @@ func (f *RisingWaveObjectFactory) isStateStoreLocalDisk() bool {
 }
 
 func (f *RisingWaveObjectFactory) isMetaStoreMemory() bool {
-	return pointer.BoolDeref(f.risingwave.Spec.MetaStore.Memory, false)
+	return ptr.Deref(f.risingwave.Spec.MetaStore.Memory, false)
 }
 
 func (f *RisingWaveObjectFactory) isMetaStoreEtcd() bool {
@@ -119,7 +119,7 @@ func (f *RisingWaveObjectFactory) isMetaStoreEtcd() bool {
 }
 
 func (f *RisingWaveObjectFactory) isFullKubernetesAddr() bool {
-	return pointer.BoolDeref(f.risingwave.Spec.EnableFullKubernetesAddr, false)
+	return ptr.Deref(f.risingwave.Spec.EnableFullKubernetesAddr, false)
 }
 
 func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
@@ -550,7 +550,7 @@ func envsForAWSS3(region, bucket string, credentials risingwavev1alpha1.RisingWa
 		},
 	}
 
-	if !pointer.BoolDeref(credentials.UseServiceAccount, false) {
+	if !ptr.Deref(credentials.UseServiceAccount, false) {
 		secretRef := corev1.LocalObjectReference{
 			Name: credentials.SecretName,
 		}
@@ -665,7 +665,7 @@ func envsForS3Compatible(region, endpoint, bucket string, credentials risingwave
 
 func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
 	gcs := f.risingwave.Spec.StateStore.GCS
-	useWorkloadIdentity := pointer.BoolDeref(gcs.UseWorkloadIdentity, false)
+	useWorkloadIdentity := ptr.Deref(gcs.UseWorkloadIdentity, false)
 	if useWorkloadIdentity {
 		return []corev1.EnvVar{}
 	}
@@ -977,7 +977,7 @@ func basicSetupRisingWaveContainer(container *corev1.Container, component *risin
 	}, func(env *corev1.EnvVar) bool { return env.Name == envs.PodNamespace })
 
 	// Set RUST_BACKTRACE=1 if printing stack traces is enabled.
-	if !pointer.BoolDeref(component.DisallowPrintStackTraces, false) {
+	if !ptr.Deref(component.DisallowPrintStackTraces, false) {
 		container.Env = mergeListByKey(container.Env, corev1.EnvVar{
 			Name:  envs.RustBacktrace,
 			Value: "full",
@@ -1140,7 +1140,7 @@ func newPodSpecFromNodeGroupTemplate(template *risingwavev1alpha1.RisingWaveNode
 				SecurityContext: template.Spec.RisingWaveNodeContainer.SecurityContext,
 			},
 		}, template.Spec.AdditionalContainers...),
-		EnableServiceLinks:            pointer.Bool(false),
+		EnableServiceLinks:            ptr.To(false),
 		Volumes:                       template.Spec.Volumes,
 		ActiveDeadlineSeconds:         template.Spec.ActiveDeadlineSeconds,
 		TerminationGracePeriodSeconds: template.Spec.TerminationGracePeriodSeconds,
@@ -1203,7 +1203,7 @@ func (f *RisingWaveObjectFactory) newDeployment(component string, nodeGroup *ris
 	return &appsv1.Deployment{
 		ObjectMeta: f.getObjectMetaForComponentGroupLevelResources(component, nodeGroup.Name, true),
 		Spec: appsv1.DeploymentSpec{
-			Replicas: pointer.Int32(nodeGroup.Replicas),
+			Replicas: ptr.To(int32(nodeGroup.Replicas)),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: f.podLabelsOrSelectorsForComponentGroup(component, nodeGroup.Name),
 			},
@@ -1224,7 +1224,7 @@ func (f *RisingWaveObjectFactory) newCloneSet(component string, nodeGroup *risin
 	return &kruiseappsv1alpha1.CloneSet{
 		ObjectMeta: f.getObjectMetaForComponentGroupLevelResources(component, nodeGroup.Name, true),
 		Spec: kruiseappsv1alpha1.CloneSetSpec{
-			Replicas: pointer.Int32(nodeGroup.Replicas),
+			Replicas: ptr.To(int32(nodeGroup.Replicas)),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: f.podLabelsOrSelectorsForComponentGroup(component, nodeGroup.Name),
 			},
@@ -1262,7 +1262,7 @@ func (f *RisingWaveObjectFactory) newStatefulSet(component string, nodeGroup *ri
 		ObjectMeta: f.getObjectMetaForComponentGroupLevelResources(component, nodeGroup.Name, true),
 		Spec: appsv1.StatefulSetSpec{
 			ServiceName:    f.componentName(component, ""),
-			Replicas:       pointer.Int32(nodeGroup.Replicas),
+			Replicas:       ptr.To(int32(nodeGroup.Replicas)),
 			UpdateStrategy: buildUpgradeStrategyForStatefulSet(nodeGroup.UpgradeStrategy),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: f.podLabelsOrSelectorsForComponentGroup(component, nodeGroup.Name),
@@ -1285,7 +1285,7 @@ func (f *RisingWaveObjectFactory) newAdvancedStatefulSet(component string, nodeG
 	return &kruiseappsv1beta1.StatefulSet{
 		ObjectMeta: f.getObjectMetaForComponentGroupLevelResources(component, nodeGroup.Name, true),
 		Spec: kruiseappsv1beta1.StatefulSetSpec{
-			Replicas:       pointer.Int32(nodeGroup.Replicas),
+			Replicas:       ptr.To(int32(nodeGroup.Replicas)),
 			ServiceName:    f.componentName(component, ""),
 			UpdateStrategy: buildUpgradeStrategyForAdvancedStatefulSet(nodeGroup.UpgradeStrategy),
 			Selector: &metav1.LabelSelector{
@@ -1722,9 +1722,9 @@ func buildUpgradeStrategyForAdvancedStatefulSet(strategy risingwavev1alpha1.Risi
 			if err != nil {
 				panic(err)
 			}
-			advancedStatefulSetUpgradeStrategy.RollingUpdate.Partition = pointer.Int32(int32(intValue))
+			advancedStatefulSetUpgradeStrategy.RollingUpdate.Partition = ptr.To(int32(int32(intValue)))
 		} else {
-			advancedStatefulSetUpgradeStrategy.RollingUpdate.Partition = pointer.Int32(rollingUpdateOrDefault(strategy.RollingUpdate).Partition.IntVal)
+			advancedStatefulSetUpgradeStrategy.RollingUpdate.Partition = ptr.To(int32(rollingUpdateOrDefault(strategy.RollingUpdate).Partition.IntVal))
 		}
 	}
 

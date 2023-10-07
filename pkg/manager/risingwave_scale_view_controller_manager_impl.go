@@ -24,7 +24,7 @@ import (
 	"github.com/risingwavelabs/ctrlkit"
 	"github.com/samber/lo"
 	"k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -152,7 +152,7 @@ func readRunningReplicas(obj *risingwavev1alpha1.RisingWave, component, group st
 // SyncGroupReplicasStatusFromRisingWave implementsRisingWaveScaleViewControllerManagerImpl.
 func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasStatusFromRisingWave(ctx context.Context, logger logr.Logger, targetObj *risingwavev1alpha1.RisingWave) (ctrl.Result, error) {
 	if !mgr.isTargetObjMatched(targetObj) {
-		mgr.scaleView.Status.Replicas = pointer.Int32(0)
+		mgr.scaleView.Status.Replicas = ptr.To(int32(0))
 		mgr.scaleView.Status.Locked = false
 		return ctrlkit.Continue()
 	}
@@ -162,7 +162,7 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasStatusFrom
 		runningReplicas := readRunningReplicas(targetObj, mgr.scaleView.Spec.TargetRef.Component, group)
 		replicas += runningReplicas
 	}
-	mgr.scaleView.Status.Replicas = pointer.Int32(replicas)
+	mgr.scaleView.Status.Replicas = ptr.To(int32(replicas))
 	return ctrlkit.Continue()
 }
 

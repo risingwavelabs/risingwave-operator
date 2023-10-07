@@ -53,3 +53,4 @@ protoreflect
 golint
 nolint
 azblob
+metricsserver

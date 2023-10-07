@@ -22,13 +22,14 @@ import (
 	"strconv"
 	"strings"
 
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	"github.com/risingwavelabs/risingwave-operator/pkg/factory/envs"
 
-	"github.com/distribution/distribution/reference"
+	"github.com/distribution/reference"
 	"github.com/samber/lo"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -37,7 +38,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
@@ -192,14 +192,14 @@ func (v *RisingWaveValidatingWebhook) validateMetaStoreAndStateStore(path *field
 			}
 		} else {
 			// AWS S3.
-			if !pointer.BoolDeref(stateStore.S3.UseServiceAccount, false) && stateStore.S3.RisingWaveS3Credentials.SecretName == "" {
+			if !ptr.Deref(stateStore.S3.UseServiceAccount, false) && stateStore.S3.RisingWaveS3Credentials.SecretName == "" {
 				fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore", "s3", "credentials"), stateStore.S3.SecretName, "either secretName or useServiceAccount must be specified"))
 			}
 		}
 	}
 
 	if isStateGCS {
-		if !pointer.BoolDeref(stateStore.GCS.UseWorkloadIdentity, false) && (stateStore.GCS.RisingWaveGCSCredentials.SecretName == "") {
+		if !ptr.Deref(stateStore.GCS.UseWorkloadIdentity, false) && (stateStore.GCS.RisingWaveGCSCredentials.SecretName == "") {
 			fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore", "gcs", "credentials"), stateStore.GCS.RisingWaveGCSCredentials.SecretName, "either secretName or useWorkloadIdentity must be specified"))
 		}
 	}
@@ -269,7 +269,7 @@ func (v *RisingWaveValidatingWebhook) validateComponents(path *field.Path, compo
 
 func (v *RisingWaveValidatingWebhook) validateMetaReplicas(obj *risingwavev1alpha1.RisingWave) field.ErrorList {
 	// When the meta storage isn't memory, there's no limitation on the replicas.
-	if !pointer.BoolDeref(obj.Spec.MetaStore.Memory, false) {
+	if !ptr.Deref(obj.Spec.MetaStore.Memory, false) {
 		return nil
 	}
 
@@ -306,7 +306,7 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 	}
 
 	// Validate to make sure open kruise cannot be set to true when it is disabled at operator level.
-	if !v.openKruiseAvailable && pointer.BoolDeref(obj.Spec.EnableOpenKruise, false) {
+	if !v.openKruiseAvailable && ptr.Deref(obj.Spec.EnableOpenKruise, false) {
 		fieldErrs = append(fieldErrs, field.Forbidden(field.NewPath("spec", "enableOpenKruise"), "OpenKruise is disabled."))
 	}
 
@@ -321,7 +321,7 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 	fieldErrs = append(fieldErrs, v.validateComponents(
 		field.NewPath("spec", "components"),
 		&obj.Spec.Components,
-		v.openKruiseAvailable && pointer.BoolDeref(obj.Spec.EnableOpenKruise, false),
+		v.openKruiseAvailable && ptr.Deref(obj.Spec.EnableOpenKruise, false),
 	)...)
 
 	// Validate the meta replicas.

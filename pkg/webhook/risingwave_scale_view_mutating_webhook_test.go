@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -72,7 +72,7 @@ func Test_RisingWaveScaleViewMutatingWebhook_Default(t *testing.T) {
 				view.Spec.ScalePolicy = []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 					{
 						Group:       "",
-						MaxReplicas: pointer.Int32(0),
+						MaxReplicas: ptr.To(int32(0)),
 					},
 				}
 			},

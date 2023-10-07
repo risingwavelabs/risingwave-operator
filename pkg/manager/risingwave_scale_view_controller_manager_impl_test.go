@@ -24,7 +24,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -37,7 +37,7 @@ import (
 func TestRisingWaveScaleViewControllerManagerImpl_GrabOrUpdateScaleViewLock(t *testing.T) {
 	scaleView := testutils.NewFakeRisingWaveScaleViewFor(testutils.FakeRisingWave(), consts.ComponentFrontend)
 	scaleView.ResourceVersion = "1234"
-	scaleView.Spec.Replicas = pointer.Int32(1)
+	scaleView.Spec.Replicas = ptr.To(int32(1))
 	scaleView.Spec.ScalePolicy = []risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy{
 		{
 			Group: "",
@@ -75,7 +75,7 @@ func TestRisingWaveScaleViewControllerManagerImpl_GrabOrUpdateScaleViewLock(t *t
 
 	// Change the scale view, try updating lock.
 	scaleView.Generation = 2
-	scaleView.Spec.Replicas = pointer.Int32(2)
+	scaleView.Spec.Replicas = ptr.To(int32(2))
 
 	r, err = impl.GrabOrUpdateScaleViewLock(context.Background(), logr.Discard(), risingwave)
 	assert.Nil(t, err, "should be nil")

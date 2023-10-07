@@ -21,7 +21,7 @@ import (
 	"sort"
 
 	"github.com/samber/lo"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 )
@@ -37,7 +37,7 @@ func split(total, n int) int {
 func canonizeScalePolicy(p risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy) risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy {
 	r := p
 	if r.MaxReplicas == nil {
-		r.MaxReplicas = pointer.Int32(math.MaxInt32)
+		r.MaxReplicas = ptr.To(int32(math.MaxInt32))
 	}
 	return r
 }
@@ -74,7 +74,7 @@ func SplitReplicas(sv *risingwavev1alpha1.RisingWaveScaleView) map[string]int32 
 		return priorities[i] > priorities[j]
 	})
 
-	totalLeft := int(pointer.Int32Deref(sv.Spec.Replicas, 0))
+	totalLeft := int(ptr.Deref(sv.Spec.Replicas, 0))
 	replicas := make(map[string]int32)
 
 	for _, priority := range priorities {
@@ -114,7 +114,7 @@ func SplitReplicas(sv *risingwavev1alpha1.RisingWaveScaleView) map[string]int32 
 	for _, r := range replicas {
 		sum += r
 	}
-	if sum != pointer.Int32Deref(sv.Spec.Replicas, 0) {
+	if sum != ptr.Deref(sv.Spec.Replicas, 0) {
 		panic("algorithm has bug")
 	}
 

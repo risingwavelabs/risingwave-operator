@@ -31,7 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/rand"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
@@ -240,7 +240,7 @@ func deploymentTestCases() map[string]deploymentTestCase {
 						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
 							Image: rand.String(20),
 						},
-						TerminationGracePeriodSeconds: pointer.Int64(5),
+						TerminationGracePeriodSeconds: ptr.To(int64(5)),
 					},
 				},
 			},
@@ -538,7 +538,7 @@ func metaStatefulSetTestCases() map[string]metaStatefulSetTestCase {
 						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
 							Image: rand.String(20),
 						},
-						TerminationGracePeriodSeconds: pointer.Int64(5),
+						TerminationGracePeriodSeconds: ptr.To(int64(5)),
 					},
 				},
 			},
@@ -839,7 +839,7 @@ func computeStatefulSetTestCases() map[string]computeStatefulSetTestCase {
 						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
 							Image: rand.String(20),
 						},
-						TerminationGracePeriodSeconds: pointer.Int64(5),
+						TerminationGracePeriodSeconds: ptr.To(int64(5)),
 					},
 				},
 			},
@@ -1157,7 +1157,7 @@ func cloneSetTestCases() map[string]cloneSetTestCase {
 						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
 							Image: rand.String(20),
 						},
-						TerminationGracePeriodSeconds: pointer.Int64(5),
+						TerminationGracePeriodSeconds: ptr.To(int64(5)),
 					},
 				},
 			},
@@ -1803,7 +1803,7 @@ func metaAdvancedSTSTestCases() map[string]metaAdvancedSTSTestCase {
 						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
 							Image: rand.String(20),
 						},
-						TerminationGracePeriodSeconds: pointer.Int64(5),
+						TerminationGracePeriodSeconds: ptr.To(int64(5)),
 					},
 				},
 			},
@@ -1999,7 +1999,7 @@ func metaAdvancedSTSTestCases() map[string]metaAdvancedSTSTestCase {
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
 					PodUpdatePolicy: kruiseappsv1beta1.InPlaceOnlyPodUpdateStrategyType,
-					Partition:       pointer.Int32(50),
+					Partition:       ptr.To(int32(50)),
 				},
 			},
 		},
@@ -2110,7 +2110,7 @@ func metaAdvancedSTSTestCases() map[string]metaAdvancedSTSTestCase {
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
 					PodUpdatePolicy: kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType,
-					Partition:       pointer.Int32(50),
+					Partition:       ptr.To(int32(50)),
 				},
 			},
 		},
@@ -2331,7 +2331,7 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 						RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
 							Image: rand.String(20),
 						},
-						TerminationGracePeriodSeconds: pointer.Int64(5),
+						TerminationGracePeriodSeconds: ptr.To(int64(5)),
 					},
 				},
 			},
@@ -2527,7 +2527,7 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
 					PodUpdatePolicy: kruiseappsv1beta1.InPlaceOnlyPodUpdateStrategyType,
-					Partition:       pointer.Int32(50),
+					Partition:       ptr.To(int32(50)),
 				},
 			},
 		},
@@ -2638,7 +2638,7 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
 					PodUpdatePolicy: kruiseappsv1beta1.InPlaceIfPossiblePodUpdateStrategyType,
-					Partition:       pointer.Int32(50),
+					Partition:       ptr.To(int32(50)),
 				},
 			},
 		},
@@ -2889,7 +2889,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 		"empty_data_directory": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				DataDirectory: "",
-				Memory:        pointer.Bool(true),
+				Memory:        ptr.To(true),
 			},
 			envs: []corev1.EnvVar{
 				{
@@ -2901,7 +2901,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 		"some_data_directory": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				DataDirectory: "1234",
-				Memory:        pointer.Bool(true),
+				Memory:        ptr.To(true),
 			},
 			envs: []corev1.EnvVar{
 				{
@@ -2912,7 +2912,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 		},
 		"memory": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
-				Memory: pointer.Bool(true),
+				Memory: ptr.To(true),
 			},
 			envs: []corev1.EnvVar{
 				{
@@ -3015,7 +3015,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 					RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
-						UseWorkloadIdentity: pointer.Bool(true),
+						UseWorkloadIdentity: ptr.To(true),
 					},
 					Bucket: "gcs-bucket",
 					Root:   "gcs-root",
@@ -3605,7 +3605,7 @@ func metaStoreTestCases() map[string]metaStoreTestCase {
 	return map[string]metaStoreTestCase{
 		"memory": {
 			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
-				Memory: pointer.Bool(true),
+				Memory: ptr.To(true),
 			},
 			envs: []corev1.EnvVar{
 				{

@@ -57,6 +57,9 @@ type RisingWaveGlobalReplicas struct {
 
 // RisingWaveComponentsSpec is the spec for RisingWave components.
 type RisingWaveComponentsSpec struct {
+	// Standalone contains configuration of the standalone component.
+	Standalone *RisingWaveStandaloneComponent `json:"standalone,omitempty"`
+
 	// Meta contains configuration of the meta component.
 	Meta RisingWaveComponent `json:"meta,omitempty"`
 
@@ -102,6 +105,11 @@ type RisingWaveSpec struct {
 	// +optional
 	// +kubebuilder:default=false
 	EnableFullKubernetesAddr *bool `json:"enableFullKubernetesAddr,omitempty"`
+
+	// Flag to control whether to deploy in standalone mode or distributed mode. If standalone mode is used,
+	// spec.components will be ignored. Standalone mode can be turned on/off dynamically.
+	// +optional
+	EnableStandaloneMode *bool `json:"enableStandaloneMode,omitempty"`
 
 	// Image for RisingWave component.
 	Image string `json:"image"`

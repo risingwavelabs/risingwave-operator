@@ -144,6 +144,8 @@ func readRunningReplicas(obj *risingwavev1alpha1.RisingWave, component, group st
 	case consts.ComponentCompute:
 		g, _ := lo.Find(obj.Status.ComponentReplicas.Compute.Groups, pred)
 		return g.Running
+	case consts.ComponentStandalone:
+		panic("not supported")
 	default:
 		panic("unexpected")
 	}

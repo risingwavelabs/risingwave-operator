@@ -474,6 +474,69 @@ func (s *RisingWaveControllerManagerState) GetServiceMonitor(ctx context.Context
 	return &serviceMonitor, nil
 }
 
+// GetStandaloneAdvancedStatefulSet gets standaloneAdvancedStatefulSet with name equals to ${target.Name}.
+func (s *RisingWaveControllerManagerState) GetStandaloneAdvancedStatefulSet(ctx context.Context) (*appsv1beta1.StatefulSet, error) {
+	var standaloneAdvancedStatefulSet appsv1beta1.StatefulSet
+
+	err := s.Get(ctx, types.NamespacedName{
+		Namespace: s.target.Namespace,
+		Name:      s.target.Name,
+	}, &standaloneAdvancedStatefulSet)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to get state 'standaloneAdvancedStatefulSet': %w", err)
+	}
+	if !ctrlkit.ValidateOwnership(&standaloneAdvancedStatefulSet, s.target) {
+		return nil, fmt.Errorf("unable to get state 'standaloneAdvancedStatefulSet': object not owned by target")
+	}
+
+	return &standaloneAdvancedStatefulSet, nil
+}
+
+// GetStandaloneService gets standaloneService with name equals to ${target.Name}.
+func (s *RisingWaveControllerManagerState) GetStandaloneService(ctx context.Context) (*corev1.Service, error) {
+	var standaloneService corev1.Service
+
+	err := s.Get(ctx, types.NamespacedName{
+		Namespace: s.target.Namespace,
+		Name:      s.target.Name,
+	}, &standaloneService)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to get state 'standaloneService': %w", err)
+	}
+	if !ctrlkit.ValidateOwnership(&standaloneService, s.target) {
+		return nil, fmt.Errorf("unable to get state 'standaloneService': object not owned by target")
+	}
+
+	return &standaloneService, nil
+}
+
+// GetStandaloneStatefulSet gets standaloneStatefulSet with name equals to ${target.Name}.
+func (s *RisingWaveControllerManagerState) GetStandaloneStatefulSet(ctx context.Context) (*appsv1.StatefulSet, error) {
+	var standaloneStatefulSet appsv1.StatefulSet
+
+	err := s.Get(ctx, types.NamespacedName{
+		Namespace: s.target.Namespace,
+		Name:      s.target.Name,
+	}, &standaloneStatefulSet)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to get state 'standaloneStatefulSet': %w", err)
+	}
+	if !ctrlkit.ValidateOwnership(&standaloneStatefulSet, s.target) {
+		return nil, fmt.Errorf("unable to get state 'standaloneStatefulSet': object not owned by target")
+	}
+
+	return &standaloneStatefulSet, nil
+}
+
 // NewRisingWaveControllerManagerState returns a RisingWaveControllerManagerState (target is not copied).
 func NewRisingWaveControllerManagerState(reader client.Reader, target *risingwavev1alpha1.RisingWave) RisingWaveControllerManagerState {
 	return RisingWaveControllerManagerState{
@@ -565,6 +628,21 @@ type RisingWaveControllerManagerImpl interface {
 	// SyncConfigConfigMap creates or updates the configmap for RisingWave configs.
 	SyncConfigConfigMap(ctx context.Context, logger logr.Logger, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 
+	// SyncStandaloneService creates or updates the service for standalone RisingWave.
+	SyncStandaloneService(ctx context.Context, logger logr.Logger, standaloneService *corev1.Service) (ctrl.Result, error)
+
+	// SyncStandaloneStatefulSet creates or updates the StatefulSet for standalone RisingWave.
+	SyncStandaloneStatefulSet(ctx context.Context, logger logr.Logger, standaloneStatefulSet *appsv1.StatefulSet) (ctrl.Result, error)
+
+	// SyncStandaloneAdvancedStatefulSet creates or updates the advanced StatefulSet for standalone RisingWave.
+	SyncStandaloneAdvancedStatefulSet(ctx context.Context, logger logr.Logger, standaloneAdvancedStatefulSet *appsv1beta1.StatefulSet) (ctrl.Result, error)
+
+	// WaitBeforeStandaloneStatefulSetReady waits (aborts the workflow) before the standalone StatefulSet is ready.
+	WaitBeforeStandaloneStatefulSetReady(ctx context.Context, logger logr.Logger, standaloneStatefulSet *appsv1.StatefulSet) (ctrl.Result, error)
+
+	// WaitBeforeStandaloneAdvancedStatefulSetReady waits (aborts the workflow) before the standalone advanced StatefulSet is ready.
+	WaitBeforeStandaloneAdvancedStatefulSetReady(ctx context.Context, logger logr.Logger, standaloneAdvancedStatefulSet *appsv1beta1.StatefulSet) (ctrl.Result, error)
+
 	// SyncServiceMonitor creates or updates the service monitor for RisingWave.
 	SyncServiceMonitor(ctx context.Context, logger logr.Logger, serviceMonitor *monitoringv1.ServiceMonitor) (ctrl.Result, error)
 
@@ -572,40 +650,52 @@ type RisingWaveControllerManagerImpl interface {
 	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, connectorService *corev1.Service, metaStatefulSets []appsv1.StatefulSet, frontendDeployments []appsv1.Deployment, computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, connectorDeployments []appsv1.Deployment, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 
 	CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, connectorService *corev1.Service, metaAdvancedStatefulSets []appsv1beta1.StatefulSet, frontendCloneSets []appsv1alpha1.CloneSet, computeAdvancedStatefulSets []appsv1beta1.StatefulSet, compactorCloneSets []appsv1alpha1.CloneSet, connectorCloneSets []appsv1alpha1.CloneSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
+
+	// CollectRunningStatisticsAndSyncStatusForStandalone collects running statistics and sync them into the status.
+	CollectRunningStatisticsAndSyncStatusForStandalone(ctx context.Context, logger logr.Logger, standaloneService *corev1.Service, standaloneStatefulSet *appsv1.StatefulSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
+
+	CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone(ctx context.Context, logger logr.Logger, standaloneService *corev1.Service, standaloneAdvancedStatefulSet *appsv1beta1.StatefulSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 }
 
 // Pre-defined actions in RisingWaveControllerManager.
 const (
-	RisingWaveAction_SyncMetaService                                 = "SyncMetaService"
-	RisingWaveAction_SyncMetaStatefulSets                            = "SyncMetaStatefulSets"
-	RisingWaveAction_SyncMetaAdvancedStatefulSets                    = "SyncMetaAdvancedStatefulSets"
-	RisingWaveAction_WaitBeforeMetaServiceIsAvailable                = "WaitBeforeMetaServiceIsAvailable"
-	RisingWaveAction_WaitBeforeMetaStatefulSetsReady                 = "WaitBeforeMetaStatefulSetsReady"
-	RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady         = "WaitBeforeMetaAdvancedStatefulSetsReady"
-	RisingWaveAction_SyncFrontendService                             = "SyncFrontendService"
-	RisingWaveAction_SyncFrontendDeployments                         = "SyncFrontendDeployments"
-	RisingWaveAction_SyncFrontendCloneSets                           = "SyncFrontendCloneSets"
-	RisingWaveAction_WaitBeforeFrontendDeploymentsReady              = "WaitBeforeFrontendDeploymentsReady"
-	RisingWaveAction_WaitBeforeFrontendCloneSetsReady                = "WaitBeforeFrontendCloneSetsReady"
-	RisingWaveAction_SyncComputeService                              = "SyncComputeService"
-	RisingWaveAction_SyncComputeStatefulSets                         = "SyncComputeStatefulSets"
-	RisingWaveAction_SyncComputeAdvancedStatefulSets                 = "SyncComputeAdvancedStatefulSets"
-	RisingWaveAction_WaitBeforeComputeStatefulSetsReady              = "WaitBeforeComputeStatefulSetsReady"
-	RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady      = "WaitBeforeComputeAdvancedStatefulSetsReady"
-	RisingWaveAction_SyncCompactorService                            = "SyncCompactorService"
-	RisingWaveAction_SyncCompactorDeployments                        = "SyncCompactorDeployments"
-	RisingWaveAction_SyncCompactorCloneSets                          = "SyncCompactorCloneSets"
-	RisingWaveAction_WaitBeforeCompactorDeploymentsReady             = "WaitBeforeCompactorDeploymentsReady"
-	RisingWaveAction_WaitBeforeCompactorCloneSetsReady               = "WaitBeforeCompactorCloneSetsReady"
-	RisingWaveAction_SyncConnectorService                            = "SyncConnectorService"
-	RisingWaveAction_SyncConnectorDeployments                        = "SyncConnectorDeployments"
-	RisingWaveAction_SyncConnectorCloneSets                          = "SyncConnectorCloneSets"
-	RisingWaveAction_WaitBeforeConnectorDeploymentsReady             = "WaitBeforeConnectorDeploymentsReady"
-	RisingWaveAction_WaitBeforeConnectorCloneSetsReady               = "WaitBeforeConnectorCloneSetsReady"
-	RisingWaveAction_SyncConfigConfigMap                             = "SyncConfigConfigMap"
-	RisingWaveAction_SyncServiceMonitor                              = "SyncServiceMonitor"
-	RisingWaveAction_CollectRunningStatisticsAndSyncStatus           = "CollectRunningStatisticsAndSyncStatus"
-	RisingWaveAction_CollectOpenKruiseRunningStatisticsAndSyncStatus = "CollectOpenKruiseRunningStatisticsAndSyncStatus"
+	RisingWaveAction_SyncMetaService                                              = "SyncMetaService"
+	RisingWaveAction_SyncMetaStatefulSets                                         = "SyncMetaStatefulSets"
+	RisingWaveAction_SyncMetaAdvancedStatefulSets                                 = "SyncMetaAdvancedStatefulSets"
+	RisingWaveAction_WaitBeforeMetaServiceIsAvailable                             = "WaitBeforeMetaServiceIsAvailable"
+	RisingWaveAction_WaitBeforeMetaStatefulSetsReady                              = "WaitBeforeMetaStatefulSetsReady"
+	RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady                      = "WaitBeforeMetaAdvancedStatefulSetsReady"
+	RisingWaveAction_SyncFrontendService                                          = "SyncFrontendService"
+	RisingWaveAction_SyncFrontendDeployments                                      = "SyncFrontendDeployments"
+	RisingWaveAction_SyncFrontendCloneSets                                        = "SyncFrontendCloneSets"
+	RisingWaveAction_WaitBeforeFrontendDeploymentsReady                           = "WaitBeforeFrontendDeploymentsReady"
+	RisingWaveAction_WaitBeforeFrontendCloneSetsReady                             = "WaitBeforeFrontendCloneSetsReady"
+	RisingWaveAction_SyncComputeService                                           = "SyncComputeService"
+	RisingWaveAction_SyncComputeStatefulSets                                      = "SyncComputeStatefulSets"
+	RisingWaveAction_SyncComputeAdvancedStatefulSets                              = "SyncComputeAdvancedStatefulSets"
+	RisingWaveAction_WaitBeforeComputeStatefulSetsReady                           = "WaitBeforeComputeStatefulSetsReady"
+	RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady                   = "WaitBeforeComputeAdvancedStatefulSetsReady"
+	RisingWaveAction_SyncCompactorService                                         = "SyncCompactorService"
+	RisingWaveAction_SyncCompactorDeployments                                     = "SyncCompactorDeployments"
+	RisingWaveAction_SyncCompactorCloneSets                                       = "SyncCompactorCloneSets"
+	RisingWaveAction_WaitBeforeCompactorDeploymentsReady                          = "WaitBeforeCompactorDeploymentsReady"
+	RisingWaveAction_WaitBeforeCompactorCloneSetsReady                            = "WaitBeforeCompactorCloneSetsReady"
+	RisingWaveAction_SyncConnectorService                                         = "SyncConnectorService"
+	RisingWaveAction_SyncConnectorDeployments                                     = "SyncConnectorDeployments"
+	RisingWaveAction_SyncConnectorCloneSets                                       = "SyncConnectorCloneSets"
+	RisingWaveAction_WaitBeforeConnectorDeploymentsReady                          = "WaitBeforeConnectorDeploymentsReady"
+	RisingWaveAction_WaitBeforeConnectorCloneSetsReady                            = "WaitBeforeConnectorCloneSetsReady"
+	RisingWaveAction_SyncConfigConfigMap                                          = "SyncConfigConfigMap"
+	RisingWaveAction_SyncStandaloneService                                        = "SyncStandaloneService"
+	RisingWaveAction_SyncStandaloneStatefulSet                                    = "SyncStandaloneStatefulSet"
+	RisingWaveAction_SyncStandaloneAdvancedStatefulSet                            = "SyncStandaloneAdvancedStatefulSet"
+	RisingWaveAction_WaitBeforeStandaloneStatefulSetReady                         = "WaitBeforeStandaloneStatefulSetReady"
+	RisingWaveAction_WaitBeforeStandaloneAdvancedStatefulSetReady                 = "WaitBeforeStandaloneAdvancedStatefulSetReady"
+	RisingWaveAction_SyncServiceMonitor                                           = "SyncServiceMonitor"
+	RisingWaveAction_CollectRunningStatisticsAndSyncStatus                        = "CollectRunningStatisticsAndSyncStatus"
+	RisingWaveAction_CollectOpenKruiseRunningStatisticsAndSyncStatus              = "CollectOpenKruiseRunningStatisticsAndSyncStatus"
+	RisingWaveAction_CollectRunningStatisticsAndSyncStatusForStandalone           = "CollectRunningStatisticsAndSyncStatusForStandalone"
+	RisingWaveAction_CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone = "CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone"
 )
 
 // RisingWaveControllerManager encapsulates the states and actions used by RisingWaveController.
@@ -1255,6 +1345,125 @@ func (m *RisingWaveControllerManager) SyncConfigConfigMap() ctrlkit.Action {
 	})
 }
 
+// SyncStandaloneService generates the action of "SyncStandaloneService".
+func (m *RisingWaveControllerManager) SyncStandaloneService() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_SyncStandaloneService, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_SyncStandaloneService)
+
+		// Get states.
+		standaloneService, err := m.state.GetStandaloneService(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncStandaloneService, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncStandaloneService, map[string]runtime.Object{
+				"standaloneService": standaloneService,
+			})
+		}
+
+		return m.impl.SyncStandaloneService(ctx, logger, standaloneService)
+	})
+}
+
+// SyncStandaloneStatefulSet generates the action of "SyncStandaloneStatefulSet".
+func (m *RisingWaveControllerManager) SyncStandaloneStatefulSet() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_SyncStandaloneStatefulSet, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_SyncStandaloneStatefulSet)
+
+		// Get states.
+		standaloneStatefulSet, err := m.state.GetStandaloneStatefulSet(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncStandaloneStatefulSet, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncStandaloneStatefulSet, map[string]runtime.Object{
+				"standaloneStatefulSet": standaloneStatefulSet,
+			})
+		}
+
+		return m.impl.SyncStandaloneStatefulSet(ctx, logger, standaloneStatefulSet)
+	})
+}
+
+// SyncStandaloneAdvancedStatefulSet generates the action of "SyncStandaloneAdvancedStatefulSet".
+func (m *RisingWaveControllerManager) SyncStandaloneAdvancedStatefulSet() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_SyncStandaloneAdvancedStatefulSet, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_SyncStandaloneAdvancedStatefulSet)
+
+		// Get states.
+		standaloneAdvancedStatefulSet, err := m.state.GetStandaloneAdvancedStatefulSet(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncStandaloneAdvancedStatefulSet, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncStandaloneAdvancedStatefulSet, map[string]runtime.Object{
+				"standaloneAdvancedStatefulSet": standaloneAdvancedStatefulSet,
+			})
+		}
+
+		return m.impl.SyncStandaloneAdvancedStatefulSet(ctx, logger, standaloneAdvancedStatefulSet)
+	})
+}
+
+// WaitBeforeStandaloneStatefulSetReady generates the action of "WaitBeforeStandaloneStatefulSetReady".
+func (m *RisingWaveControllerManager) WaitBeforeStandaloneStatefulSetReady() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeStandaloneStatefulSetReady, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeStandaloneStatefulSetReady)
+
+		// Get states.
+		standaloneStatefulSet, err := m.state.GetStandaloneStatefulSet(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() {
+				m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeStandaloneStatefulSetReady, result, err)
+			}()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeStandaloneStatefulSetReady, map[string]runtime.Object{
+				"standaloneStatefulSet": standaloneStatefulSet,
+			})
+		}
+
+		return m.impl.WaitBeforeStandaloneStatefulSetReady(ctx, logger, standaloneStatefulSet)
+	})
+}
+
+// WaitBeforeStandaloneAdvancedStatefulSetReady generates the action of "WaitBeforeStandaloneAdvancedStatefulSetReady".
+func (m *RisingWaveControllerManager) WaitBeforeStandaloneAdvancedStatefulSetReady() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeStandaloneAdvancedStatefulSetReady, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeStandaloneAdvancedStatefulSetReady)
+
+		// Get states.
+		standaloneAdvancedStatefulSet, err := m.state.GetStandaloneAdvancedStatefulSet(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() {
+				m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeStandaloneAdvancedStatefulSetReady, result, err)
+			}()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeStandaloneAdvancedStatefulSetReady, map[string]runtime.Object{
+				"standaloneAdvancedStatefulSet": standaloneAdvancedStatefulSet,
+			})
+		}
+
+		return m.impl.WaitBeforeStandaloneAdvancedStatefulSetReady(ctx, logger, standaloneAdvancedStatefulSet)
+	})
+}
+
 // SyncServiceMonitor generates the action of "SyncServiceMonitor".
 func (m *RisingWaveControllerManager) SyncServiceMonitor() ctrlkit.Action {
 	return ctrlkit.NewAction(RisingWaveAction_SyncServiceMonitor, func(ctx context.Context) (result ctrl.Result, err error) {
@@ -1445,6 +1654,80 @@ func (m *RisingWaveControllerManager) CollectOpenKruiseRunningStatisticsAndSyncS
 		}
 
 		return m.impl.CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, connectorService, metaAdvancedStatefulSets, frontendCloneSets, computeAdvancedStatefulSets, compactorCloneSets, connectorCloneSets, configConfigMap)
+	})
+}
+
+// CollectRunningStatisticsAndSyncStatusForStandalone generates the action of "CollectRunningStatisticsAndSyncStatusForStandalone".
+func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatusForStandalone() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_CollectRunningStatisticsAndSyncStatusForStandalone, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_CollectRunningStatisticsAndSyncStatusForStandalone)
+
+		// Get states.
+		standaloneService, err := m.state.GetStandaloneService(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		standaloneStatefulSet, err := m.state.GetStandaloneStatefulSet(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		configConfigMap, err := m.state.GetConfigConfigMap(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() {
+				m.hook.PostRun(ctx, logger, RisingWaveAction_CollectRunningStatisticsAndSyncStatusForStandalone, result, err)
+			}()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_CollectRunningStatisticsAndSyncStatusForStandalone, map[string]runtime.Object{
+				"standaloneService":     standaloneService,
+				"standaloneStatefulSet": standaloneStatefulSet,
+				"configConfigMap":       configConfigMap,
+			})
+		}
+
+		return m.impl.CollectRunningStatisticsAndSyncStatusForStandalone(ctx, logger, standaloneService, standaloneStatefulSet, configConfigMap)
+	})
+}
+
+// CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone generates the action of "CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone".
+func (m *RisingWaveControllerManager) CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone)
+
+		// Get states.
+		standaloneService, err := m.state.GetStandaloneService(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		standaloneAdvancedStatefulSet, err := m.state.GetStandaloneAdvancedStatefulSet(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		configConfigMap, err := m.state.GetConfigConfigMap(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() {
+				m.hook.PostRun(ctx, logger, RisingWaveAction_CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone, result, err)
+			}()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone, map[string]runtime.Object{
+				"standaloneService":             standaloneService,
+				"standaloneAdvancedStatefulSet": standaloneAdvancedStatefulSet,
+				"configConfigMap":               configConfigMap,
+			})
+		}
+
+		return m.impl.CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone(ctx, logger, standaloneService, standaloneAdvancedStatefulSet, configConfigMap)
 	})
 }
 

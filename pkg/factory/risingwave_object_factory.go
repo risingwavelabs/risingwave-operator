@@ -52,6 +52,8 @@ const (
 	risingwaveConfigFileName  = "risingwave.toml"
 )
 
+var risingwaveConfigPath = path.Join(risingwaveConfigMountPath, risingwaveConfigFileName)
+
 var (
 	aliyunOSSEndpoint         = fmt.Sprintf("https://oss-$(%s).aliyuncs.com", envs.AliyunOSSRegion)
 	internalAliyunOSSEndpoint = fmt.Sprintf("https://oss-$(%s)-internal.aliyuncs.com", envs.AliyunOSSRegion)
@@ -177,6 +179,8 @@ func (f *RisingWaveObjectFactory) componentName(component, group string) string 
 		return f.risingwave.Name + "-compactor" + groupSuffix(group)
 	case consts.ComponentConnector:
 		return f.risingwave.Name + "-connector" + groupSuffix(group)
+	case consts.ComponentStandalone:
+		return f.risingwave.Name
 	case consts.ComponentConfig:
 		return f.risingwave.Name + "-default-config"
 	default:
@@ -323,23 +327,11 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 	}
 }
 
-func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
+func (f *RisingWaveObjectFactory) coreEnvsForMeta() []corev1.EnvVar {
 	metaStore := &f.risingwave.Spec.MetaStore
 	stateStore := f.risingwave.Spec.StateStore
 
 	envVars := []corev1.EnvVar{
-		{
-			Name:  envs.RWConfigPath,
-			Value: path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
-		},
-		{
-			Name:  envs.RWListenAddr,
-			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaServicePort),
-		},
-		{
-			Name:  envs.RWAdvertiseAddr,
-			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
-		},
 		{
 			Name:  envs.RWStateStore,
 			Value: f.hummockConnectionStr(),
@@ -347,22 +339,6 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		{
 			Name:  envs.RWDataDirectory,
 			Value: stateStore.DataDirectory,
-		},
-		{
-			Name:  envs.RWDashboardHost,
-			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaDashboardPort),
-		},
-		{
-			Name:  envs.RWMetaAddr,
-			Value: fmt.Sprintf("http://127.0.0.1:%d", consts.MetaServicePort),
-		},
-		{
-			Name:  envs.RWPrometheusHost,
-			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaMetricsPort),
-		},
-		{
-			Name:  envs.RWConnectorRPCEndPoint,
-			Value: fmt.Sprintf("%s:%d", f.componentAddr(consts.ComponentConnector, ""), consts.ConnectorServicePort),
 		},
 	}
 
@@ -393,6 +369,39 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 	default:
 		panic("unsupported meta storage type")
 	}
+
+	return envVars
+}
+
+func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
+	envVars := []corev1.EnvVar{
+		{
+			Name:  envs.RWConfigPath,
+			Value: path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
+		},
+		{
+			Name:  envs.RWListenAddr,
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaServicePort),
+		},
+		{
+			Name:  envs.RWAdvertiseAddr,
+			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
+		},
+		{
+			Name:  envs.RWDashboardHost,
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaDashboardPort),
+		},
+		{
+			Name:  envs.RWPrometheusHost,
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaMetricsPort),
+		},
+		{
+			Name:  envs.RWConnectorRPCEndPoint,
+			Value: fmt.Sprintf("%s:%d", f.componentAddr(consts.ComponentConnector, ""), consts.ConnectorServicePort),
+		},
+	}
+
+	envVars = append(envVars, f.coreEnvsForMeta()...)
 
 	return envVars
 }
@@ -1303,6 +1312,20 @@ func (f *RisingWaveObjectFactory) newAdvancedStatefulSet(component string, nodeG
 	}
 }
 
+func (f *RisingWaveObjectFactory) convertStandaloneSpecIntoComponent() *risingwavev1alpha1.RisingWaveComponent {
+	standaloneSpec := f.risingwave.Spec.Components.Standalone
+	if standaloneSpec != nil {
+		return &risingwavev1alpha1.RisingWaveComponent{
+			LogLevel:                 standaloneSpec.LogLevel,
+			DisallowPrintStackTraces: standaloneSpec.DisallowPrintStackTraces,
+		}
+	}
+
+	return &risingwavev1alpha1.RisingWaveComponent{
+		LogLevel: "INFO",
+	}
+}
+
 func (f *RisingWaveObjectFactory) newPodTemplateSpecFromNodeGroupByComponent(component string, nodeGroup *risingwavev1alpha1.RisingWaveNodeGroup) corev1.PodTemplateSpec {
 	var containerModifier func(container *corev1.Container)
 	var componentPtr *risingwavev1alpha1.RisingWaveComponent
@@ -1322,6 +1345,9 @@ func (f *RisingWaveObjectFactory) newPodTemplateSpecFromNodeGroupByComponent(com
 	case consts.ComponentConnector:
 		containerModifier = f.setupConnectorContainer
 		componentPtr = &f.risingwave.Spec.Components.Connector
+	case consts.ComponentStandalone:
+		containerModifier = f.setupStandaloneContainer
+		componentPtr = f.convertStandaloneSpecIntoComponent()
 	default:
 		panic("invalid component")
 	}
@@ -1519,6 +1545,159 @@ func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Cont
 	})
 }
 
+func (f *RisingWaveObjectFactory) argsForStandalone() []string {
+	return []string{
+		"--meta-opts=" + strings.Join([]string{
+			fmt.Sprintf("--listen-addr 127.0.0.1:%d", consts.MetaServicePort),
+			fmt.Sprintf("--advertise-addr 127.0.0.1:%d", consts.MetaServicePort),
+			fmt.Sprintf("--dashboard-host 0.0.0.0:%d", consts.MetaDashboardPort),
+			fmt.Sprintf("--prometheus-host 0.0.0.0:%d", consts.MetaMetricsPort),
+			"--backend $(RW_BACKEND)",
+			"--state-store $(RW_STATE_STORE)",
+			"--data-directory $(RW_DATA_DIRECTORY)",
+			"--config-path " + risingwaveConfigPath,
+		}, " "),
+		"--compute-opts=" + strings.Join([]string{
+			fmt.Sprintf("--listen-addr 127.0.0.1:%d", consts.ComputeServicePort),
+			fmt.Sprintf("--advertise-addr 127.0.0.1:%d", consts.ComputeServicePort),
+			fmt.Sprintf("--prometheus-listener-addr 0.0.0.0:%d", consts.ComputeMetricsPort),
+			fmt.Sprintf("--meta-address http://127.0.0.1:%d", consts.MetaServicePort),
+			"--config-path " + risingwaveConfigPath,
+		}, " "),
+		"--frontend-opts=" + strings.Join([]string{
+			fmt.Sprintf("--listen-addr 0.0.0.0:%d", consts.FrontendServicePort),
+			fmt.Sprintf("--advertise-addr 127.0.0.1:%d", consts.FrontendServicePort),
+			fmt.Sprintf("--prometheus-listener-addr 0.0.0.0:%d", consts.FrontendMetricsPort),
+			fmt.Sprintf("--meta-addr http://127.0.0.1:%d", consts.MetaServicePort),
+			"--config-path " + risingwaveConfigPath,
+		}, " "),
+		"--compactor-opts=" + strings.Join([]string{
+			fmt.Sprintf("--listen-addr 127.0.0.1:%d", consts.CompactorServicePort),
+			fmt.Sprintf("--advertise-addr 127.0.0.1:%d", consts.CompactorServicePort),
+			fmt.Sprintf("--prometheus-listener-addr 0.0.0.0:%d", consts.CompactorMetricsPort),
+			fmt.Sprintf("--meta-address http://127.0.0.1:%d", consts.MetaServicePort),
+			"--config-path " + risingwaveConfigPath,
+		}, " "),
+	}
+}
+
+func (f *RisingWaveObjectFactory) portsForStandaloneContainer() []corev1.ContainerPort {
+	// TODO: either expose each metrics port, or combine them into one.
+	return []corev1.ContainerPort{
+		{
+			Name:          consts.PortMetrics,
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: consts.MetaMetricsPort,
+		},
+		{
+			Name:          consts.PortService,
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: consts.FrontendServicePort,
+		},
+		{
+			Name:          consts.PortDashboard,
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: consts.MetaDashboardPort,
+		},
+	}
+}
+
+func (f *RisingWaveObjectFactory) setupStandaloneContainer(container *corev1.Container) {
+	container.Name = "standalone"
+	container.Command = []string{
+		risingwaveExecutablePath,
+		"standalone",
+	}
+	container.Args = f.argsForStandalone()
+	container.Ports = f.portsForStandaloneContainer()
+
+	for _, env := range f.coreEnvsForMeta() {
+		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
+	}
+
+	for _, env := range f.envsForStateStore() {
+		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
+	}
+
+	if f.isMetaStoreEtcd() {
+		for _, env := range f.envsForEtcd() {
+			container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+				return a.Name == b.Name
+			})
+		}
+	}
+
+	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
+		return a.MountPath == b.MountPath
+	})
+}
+
+func (f *RisingWaveObjectFactory) convertStandaloneIntoNodeGroup() *risingwavev1alpha1.RisingWaveNodeGroup {
+	standaloneSpec := f.risingwave.Spec.Components.Standalone
+	if standaloneSpec == nil {
+		return &risingwavev1alpha1.RisingWaveNodeGroup{
+			Replicas: 1,
+		}
+	}
+
+	return &risingwavev1alpha1.RisingWaveNodeGroup{
+		Replicas:                             standaloneSpec.Replicas,
+		RestartAt:                            standaloneSpec.RestartAt,
+		UpgradeStrategy:                      standaloneSpec.UpgradeStrategy,
+		MinReadySeconds:                      standaloneSpec.MinReadySeconds,
+		VolumeClaimTemplates:                 standaloneSpec.VolumeClaimTemplates,
+		PersistentVolumeClaimRetentionPolicy: standaloneSpec.PersistentVolumeClaimRetentionPolicy,
+		ProgressDeadlineSeconds:              standaloneSpec.ProgressDeadlineSeconds,
+		Template:                             standaloneSpec.Template,
+	}
+}
+
+// NewStandaloneStatefulSet creates a StatefulSet for standalone component.
+func (f *RisingWaveObjectFactory) NewStandaloneStatefulSet() *appsv1.StatefulSet {
+	nodeGroup := f.convertStandaloneIntoNodeGroup()
+	template := f.newPodTemplateSpecFromNodeGroupByComponent(consts.ComponentStandalone, f.overrideFieldsOfNodeGroup(nodeGroup))
+	workloadObj := f.newStatefulSet(consts.ComponentStandalone, nodeGroup, &template)
+	return mustSetControllerReference(f.risingwave, workloadObj, f.scheme)
+}
+
+// NewStandaloneAdvancedStatefulSet creates an advanced StatefulSet for standalone component.
+func (f *RisingWaveObjectFactory) NewStandaloneAdvancedStatefulSet() *kruiseappsv1beta1.StatefulSet {
+	nodeGroup := f.convertStandaloneIntoNodeGroup()
+	template := f.newPodTemplateSpecFromNodeGroupByComponent(consts.ComponentStandalone, f.overrideFieldsOfNodeGroup(nodeGroup))
+	workloadObj := f.newAdvancedStatefulSet(consts.ComponentStandalone, nodeGroup, &template)
+	return mustSetControllerReference(f.risingwave, workloadObj, f.scheme)
+}
+
+// NewStandaloneService creates a Service for standalone component.
+func (f *RisingWaveObjectFactory) NewStandaloneService() *corev1.Service {
+	standaloneSvc := f.newService(consts.ComponentStandalone, f.risingwave.Spec.FrontendServiceType, []corev1.ServicePort{
+		{
+			Name:       consts.PortService,
+			Protocol:   corev1.ProtocolTCP,
+			Port:       consts.FrontendServicePort,
+			TargetPort: intstr.FromString(consts.PortService),
+		},
+		{
+			Name:       consts.PortMetrics,
+			Protocol:   corev1.ProtocolTCP,
+			Port:       consts.MetaMetricsPort,
+			TargetPort: intstr.FromString(consts.PortMetrics),
+		},
+		{
+			Name:       consts.PortDashboard,
+			Protocol:   corev1.ProtocolTCP,
+			Port:       consts.MetaDashboardPort,
+			TargetPort: intstr.FromString(consts.PortDashboard),
+		},
+	})
+
+	return mustSetControllerReference(f.risingwave, standaloneSvc, f.scheme)
+}
+
 // NewMetaService creates a new Service for the meta.
 func (f *RisingWaveObjectFactory) NewMetaService() *corev1.Service {
 	metaSvc := f.newService(consts.ComponentMeta, corev1.ServiceTypeClusterIP, []corev1.ServicePort{
@@ -1564,6 +1743,11 @@ func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 			TargetPort: intstr.FromString(consts.PortMetrics),
 		},
 	})
+
+	// Hijack selector if it's standalone mode.
+	if object.NewRisingWaveReader(f.risingwave).IsStandaloneModeEnabled() {
+		frontendSvc.Spec.Selector[consts.LabelRisingWaveComponent] = consts.ComponentStandalone
+	}
 
 	// Inject additional metadata.
 	frontendSvc.ObjectMeta.Labels = mergeMap(frontendSvc.ObjectMeta.Labels, f.risingwave.Spec.AdditionalFrontendServiceMetadata.Labels)
@@ -1804,8 +1988,17 @@ func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonit
 				},
 			},
 			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					consts.LabelRisingWaveName: f.risingwave.Name,
+				MatchExpressions: []metav1.LabelSelectorRequirement{
+					{
+						Key:      consts.LabelRisingWaveName,
+						Operator: metav1.LabelSelectorOpIn,
+						Values:   []string{f.risingwave.Name},
+					},
+					{
+						Key:      consts.LabelRisingWaveComponent,
+						Operator: metav1.LabelSelectorOpNotIn,
+						Values:   []string{consts.ComponentStandalone},
+					},
 				},
 			},
 		},

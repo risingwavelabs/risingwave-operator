@@ -1,6 +1,6 @@
 # RisingWave Kubernetes Operator
 
-[![Slack](https://badgen.net/badge/Slack/Join%20RisingWave/0abd59?icon=slack)](https://join.slack.com/t/risingwave-community/shared_invite/zt-120rft0mr-d8uGk3d~NZiZAQWPnElOfw)
+[![Slack](https://badgen.net/badge/Slack/Join%20RisingWave/0abd59?icon=slack)](https://risingwave-community.slack.com/join/shared_invite/zt-1afreobhd-5Npy1oIpUWvDA~Od6zPxTA#/shared-invite/email)
 [![Build status](https://badge.buildkite.com/db2c3f749ff1696b9ca22b23990f144133a1f74685e3285ad4.svg)](https://buildkite.com/risingwave-operator/main)
 [![codecov](https://codecov.io/gh/risingwavelabs/risingwave-operator/branch/main/graph/badge.svg?token=D08wi9hnt4)](https://codecov.io/gh/risingwavelabs/risingwave-operator)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)

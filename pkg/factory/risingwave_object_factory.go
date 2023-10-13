@@ -353,6 +353,10 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaDashboardPort),
 		},
 		{
+			Name:  envs.RWMetaAddr,
+			Value: fmt.Sprintf("http://127.0.0.1:%d", consts.MetaServicePort),
+		},
+		{
 			Name:  envs.RWPrometheusHost,
 			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaMetricsPort),
 		},

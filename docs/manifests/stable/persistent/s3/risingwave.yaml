@@ -110,6 +110,15 @@ spec:
       nodeGroups:
       - replicas: 1
         name: ''
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
     compactor:
       nodeGroups:
       - replicas: 1
@@ -118,12 +127,39 @@ spec:
       nodeGroups:
       - replicas: 1
         name: ''
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
     compute:
       nodeGroups:
       - replicas: 1
         name: ''
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 8
+                memory: 32Gi # Memory limit will be set to `RW_TOTAL_MEMORY_BYTES`
+              requests:
+                cpu: 8
+                memory: 32Gi
     # Please comment out the following if you do not need connector node
     connector:
       nodeGroups:
       - replicas: 1
         name: ''
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 4
+                memory: 8Gi
+              requests:
+                cpu: 4
+                memory: 8Gi

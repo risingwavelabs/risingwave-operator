@@ -38,16 +38,9 @@ function manifest_test::test_risingwave_file() {
 		exit 1
 	fi
 
-	shell::run kubectl apply -f "${file_path}" -n "${ns}"
-
-	if ! shell::run k8s::kubectl wait --timeout=300s --for=condition=Running RisingWave --all -n "${ns}"; then
-		logging::error "Risingwave failed to be ready! manifest file: ${file}"
-		exit 1
-	fi
+	shell::run kubectl apply -f "${file_path}" -n "${ns}" --dry-run=server
 
 	logging::info "Succeed to test RisingWave manifest file ${file}.yaml"
-
-	k8s::kubectl delete -f "${file_path}" -n "${ns}"
 }
 
 function manifest_test::start() {

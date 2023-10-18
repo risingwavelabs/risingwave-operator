@@ -55,3 +55,6 @@ nolint
 azblob
 metricsserver
 goland
+malloc
+coredump
+

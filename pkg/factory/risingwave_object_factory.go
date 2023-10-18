@@ -269,6 +269,20 @@ func (f *RisingWaveObjectFactory) newService(component string, serviceType corev
 	}
 }
 
+// getMallocEnv returns the environment variables for triggering heap dump without interval-triggered-dumps.
+func (f *RisingWaveObjectFactory) getMallocEnv() []corev1.EnvVar {
+	return []corev1.EnvVar{
+		{
+			Name:  envs.RWMallocConf,
+			Value: "prof:true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix:/var/mnt/coredump/heap",
+		},
+		{
+			Name:  envs.RWHeapProfilingDir,
+			Value: "/var/mnt/coredump/",
+		},
+	}
+}
+
 func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 	credentials := f.risingwave.Spec.MetaStore.Etcd.RisingWaveEtcdCredentials
 
@@ -366,6 +380,8 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		},
 	}
 
+	envVars = append(envVars, f.getMallocEnv()...)
+
 	switch {
 	case f.isMetaStoreMemory():
 		envVars = append(envVars, corev1.EnvVar{
@@ -398,7 +414,7 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 }
 
 func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
-	return []corev1.EnvVar{
+	envVars := []corev1.EnvVar{
 		{
 			Name:  envs.RWListenAddr,
 			Value: fmt.Sprintf("0.0.0.0:%d", consts.FrontendServicePort),
@@ -424,6 +440,7 @@ func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
 			Value: fmt.Sprintf("0.0.0.0:%d", consts.FrontendMetricsPort),
 		},
 	}
+	return append(envVars, f.getMallocEnv()...)
 }
 
 func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit int64) []corev1.EnvVar {
@@ -458,6 +475,8 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 		},
 	}
 
+	envVars = append(envVars, f.getMallocEnv()...)
+
 	if cpuLimit != 0 {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  envs.RWParallelism,
@@ -476,7 +495,7 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 }
 
 func (f *RisingWaveObjectFactory) envsForCompactorArgs() []corev1.EnvVar {
-	return []corev1.EnvVar{
+	envVars := []corev1.EnvVar{
 		{
 			Name:  envs.RWConfigPath,
 			Value: path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
@@ -502,6 +521,7 @@ func (f *RisingWaveObjectFactory) envsForCompactorArgs() []corev1.EnvVar {
 			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 	}
+	return append(envVars, f.getMallocEnv()...)
 }
 
 func (f *RisingWaveObjectFactory) envsForMinIO() []corev1.EnvVar {
@@ -1594,6 +1614,8 @@ func (f *RisingWaveObjectFactory) NewComputeService() *corev1.Service {
 
 	return mustSetControllerReference(f.risingwave, computeSvc, f.scheme)
 }
+
+// TODO: Guess it is in this file
 
 // NewCompactorService creates a new Service for the compactor.
 func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {

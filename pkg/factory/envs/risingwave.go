@@ -43,7 +43,7 @@ const (
 	RWTotalMemoryBytes            = "RW_TOTAL_MEMORY_BYTES"
 	RWConnectorNodePrometheusPort = "RW_CONNECTOR_NODE_PROMETHEUS_PORT"
 	RWMallocConf                  = "MALLOC_CONF"
-	RWHeapProfilingDir            = "MALLOC_CONF"
+	RWHeapProfilingDir            = "RW_HEAP_PROFILING_DIR"
 )
 
 // MinIO.

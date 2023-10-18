@@ -1534,6 +1534,8 @@ func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Cont
 		container.Env = mergedVars
 	}
 
+	container.Env = append(container.Env, f.getMallocEnv()...)
+
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
 		return a.MountPath == b.MountPath
 	})

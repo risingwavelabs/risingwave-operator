@@ -1617,8 +1617,6 @@ func (f *RisingWaveObjectFactory) NewComputeService() *corev1.Service {
 	return mustSetControllerReference(f.risingwave, computeSvc, f.scheme)
 }
 
-// TODO: Guess it is in this file
-
 // NewCompactorService creates a new Service for the compactor.
 func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 	compactorSvc := f.newService(consts.ComponentCompactor, corev1.ServiceTypeClusterIP, []corev1.ServicePort{

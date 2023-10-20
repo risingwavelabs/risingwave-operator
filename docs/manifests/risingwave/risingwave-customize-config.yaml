@@ -37,7 +37,7 @@ spec:
     memory: true
   stateStore:
     memory: true
-  image: ghcr.io/risingwavelabs/risingwave:v1.2.0
+  image: ghcr.io/risingwavelabs/risingwave:v1.3.0
   components:
     meta:
       nodeGroups:

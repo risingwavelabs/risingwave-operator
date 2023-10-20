@@ -19,7 +19,7 @@ spec:
       credentials:
         secretName: gcs-credentials
         serviceAccountCredentialsKeyRef: ServiceAccountCredentials
-  image: ghcr.io/risingwavelabs/risingwave:v1.2.0
+  image: ghcr.io/risingwavelabs/risingwave:v1.3.0
   components:
     meta:
       nodeGroups:

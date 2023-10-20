@@ -3021,10 +3021,16 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					Root:   "gcs-root",
 				},
 			},
-			envs: []corev1.EnvVar{{
-				Name:  "RW_STATE_STORE",
-				Value: "hummock+gcs://gcs-bucket@gcs-root",
-			}},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "gcs-root",
+				},
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+gcs://gcs-bucket",
+				},
+			},
 		},
 		"gcs-secret": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
@@ -3039,8 +3045,12 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			},
 			envs: []corev1.EnvVar{
 				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "gcs-root",
+				},
+				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+gcs://gcs-bucket@gcs-root",
+					Value: "hummock+gcs://gcs-bucket",
 				},
 				{
 					Name: "GOOGLE_APPLICATION_CREDENTIALS",
@@ -3071,8 +3081,12 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			},
 			envs: []corev1.EnvVar{
 				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "aliyun-oss-root",
+				},
+				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+oss://aliyun-oss-hummock01@aliyun-oss-root",
+					Value: "hummock+oss://aliyun-oss-hummock01",
 				},
 				{
 					Name: "OSS_ACCESS_KEY_ID",
@@ -3118,8 +3132,12 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			},
 			envs: []corev1.EnvVar{
 				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "aliyun-oss-root",
+				},
+				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+oss://aliyun-oss-hummock01@aliyun-oss-root",
+					Value: "hummock+oss://aliyun-oss-hummock01",
 				},
 				{
 					Name: "OSS_ACCESS_KEY_ID",
@@ -3368,7 +3386,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
 					Container: "azure-blob-hummock01",
-					Root:      "/azure-blob-root",
+					Root:      "azure-blob-root",
 					Endpoint:  "https://accountName.blob.core.windows.net",
 					RisingWaveAzureBlobCredentials: risingwavev1alpha1.RisingWaveAzureBlobCredentials{
 						SecretName:     "azure-blob-creds",
@@ -3379,8 +3397,12 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			},
 			envs: []corev1.EnvVar{
 				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "azure-blob-root",
+				},
+				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+azblob://azure-blob-hummock01@/azure-blob-root",
+					Value: "hummock+azblob://azure-blob-hummock01",
 				},
 				{
 					Name: "AZBLOB_ACCOUNT_NAME",
@@ -3417,10 +3439,16 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					Root:     "root",
 				},
 			},
-			envs: []corev1.EnvVar{{
-				Name:  "RW_STATE_STORE",
-				Value: "hummock+hdfs://name-node@root",
-			}},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "root",
+				},
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+hdfs://name-node",
+				},
+			},
 		},
 		"webhdfs": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
@@ -3429,10 +3457,16 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					Root:     "root",
 				},
 			},
-			envs: []corev1.EnvVar{{
-				Name:  "RW_STATE_STORE",
-				Value: "hummock+webhdfs://name-node@root",
-			}},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "root",
+				},
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+webhdfs://name-node",
+				},
+			},
 		},
 		"local-disk": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
@@ -3440,10 +3474,16 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					Root: "root",
 				},
 			},
-			envs: []corev1.EnvVar{{
-				Name:  "RW_STATE_STORE",
-				Value: "hummock+fs://@root",
-			}},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "root",
+				},
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+fs://",
+				},
+			},
 		},
 	}
 }

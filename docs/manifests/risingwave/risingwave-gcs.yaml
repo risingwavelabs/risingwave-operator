@@ -27,6 +27,16 @@ spec:
         name: ""
         template:
           spec:
+            volumes:
+            - name: heap
+              emptyDir:
+                sizeLimit: 1Gi
+            volumeMounts:
+            - mountPath: /heap
+              name: heap
+            env:
+            - name: MALLOC_CONF
+              value: prof:true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix:/heap/
             resources:
               limits:
                 cpu: 1
@@ -53,6 +63,16 @@ spec:
         name: ""
         template:
           spec:
+            volumes:
+            - name: heap
+              emptyDir:
+                sizeLimit: 1Gi
+            volumeMounts:
+            - mountPath: /heap
+              name: heap
+            env:
+            - name: MALLOC_CONF
+              value: prof:true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix:/heap/
             resources:
               limits:
                 cpu: 8
@@ -66,6 +86,16 @@ spec:
         name: ""
         template:
           spec:
+            volumes:
+            - name: heap
+              emptyDir:
+                sizeLimit: 1Gi
+            volumeMounts:
+            - mountPath: /heap
+              name: heap
+            env:
+            - name: MALLOC_CONF
+              value: prof:true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix:/heap/
             resources:
               limits:
                 cpu: 4

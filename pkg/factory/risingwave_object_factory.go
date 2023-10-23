@@ -180,7 +180,7 @@ func (f *RisingWaveObjectFactory) componentName(component, group string) string 
 	case consts.ComponentConnector:
 		return f.risingwave.Name + "-connector" + groupSuffix(group)
 	case consts.ComponentStandalone:
-		return f.risingwave.Name
+		return f.risingwave.Name + "-standalone"
 	case consts.ComponentConfig:
 		return f.risingwave.Name + "-default-config"
 	default:
@@ -851,23 +851,23 @@ func (f *RisingWaveObjectFactory) risingWaveConfigVolume(nodeGroup *risingwavev1
 				},
 			},
 		}
-	} else {
-		return corev1.Volume{
-			Name: risingWaveConfigVolume,
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: f.componentName(consts.ComponentConfig, ""),
-					},
-					Items: []corev1.KeyToPath{
-						{
-							Key:  risingWaveConfigMapKey,
-							Path: risingwaveConfigFileName,
-						},
+	}
+
+	return corev1.Volume{
+		Name: risingWaveConfigVolume,
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: f.componentName(consts.ComponentConfig, ""),
+				},
+				Items: []corev1.KeyToPath{
+					{
+						Key:  risingWaveConfigMapKey,
+						Path: risingwaveConfigFileName,
 					},
 				},
 			},
-		}
+		},
 	}
 }
 
@@ -1545,18 +1545,40 @@ func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Cont
 	})
 }
 
+func (f *RisingWaveObjectFactory) argsForStandaloneMetaStore() []string {
+	args := []string{
+		"--backend $(RW_BACKEND)",
+	}
+
+	if f.isMetaStoreEtcd() {
+		args = append(args, "--etcd-endpoints $(RW_ETCD_ENDPOINTS)")
+
+		credentials := f.risingwave.Spec.MetaStore.Etcd.RisingWaveEtcdCredentials
+		if credentials != nil && credentials.SecretName != "" {
+			args = append(args, "--etcd-auth",
+				"--etcd-username $(RW_ETCD_USERNAME)",
+				"--etcd-password $(RW_ETCD_PASSWORD)")
+		}
+	}
+
+	return args
+}
+
 func (f *RisingWaveObjectFactory) argsForStandalone() []string {
 	return []string{
-		"--meta-opts=" + strings.Join([]string{
-			fmt.Sprintf("--listen-addr 127.0.0.1:%d", consts.MetaServicePort),
-			fmt.Sprintf("--advertise-addr 127.0.0.1:%d", consts.MetaServicePort),
-			fmt.Sprintf("--dashboard-host 0.0.0.0:%d", consts.MetaDashboardPort),
-			fmt.Sprintf("--prometheus-host 0.0.0.0:%d", consts.MetaMetricsPort),
-			"--backend $(RW_BACKEND)",
-			"--state-store $(RW_STATE_STORE)",
-			"--data-directory $(RW_DATA_DIRECTORY)",
-			"--config-path " + risingwaveConfigPath,
-		}, " "),
+		"--meta-opts=" + strings.Join(append(
+			[]string{
+				fmt.Sprintf("--listen-addr 127.0.0.1:%d", consts.MetaServicePort),
+				fmt.Sprintf("--advertise-addr 127.0.0.1:%d", consts.MetaServicePort),
+				fmt.Sprintf("--dashboard-host 0.0.0.0:%d", consts.MetaDashboardPort),
+				fmt.Sprintf("--prometheus-host 0.0.0.0:%d", consts.MetaMetricsPort),
+				"--state-store $(RW_STATE_STORE)",
+				"--data-directory $(RW_DATA_DIRECTORY)",
+				"--config-path " + risingwaveConfigPath,
+			},
+			// Arguments for meta stores.
+			f.argsForStandaloneMetaStore()...,
+		), " "),
 		"--compute-opts=" + strings.Join([]string{
 			fmt.Sprintf("--listen-addr 127.0.0.1:%d", consts.ComputeServicePort),
 			fmt.Sprintf("--advertise-addr 127.0.0.1:%d", consts.ComputeServicePort),

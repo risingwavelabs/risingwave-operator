@@ -109,6 +109,7 @@ type RisingWaveSpec struct {
 	// Flag to control whether to deploy in standalone mode or distributed mode. If standalone mode is used,
 	// spec.components will be ignored. Standalone mode can be turned on/off dynamically.
 	// +optional
+	// +kubebuilder:default=false
 	EnableStandaloneMode *bool `json:"enableStandaloneMode,omitempty"`
 
 	// Image for RisingWave component.

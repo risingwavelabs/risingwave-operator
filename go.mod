@@ -7,7 +7,7 @@ require (
 	github.com/fatih/color v1.15.0
 	github.com/go-logr/logr v1.2.4
 	github.com/google/uuid v1.3.1
-	github.com/openkruise/kruise-api v1.4.0
+	github.com/openkruise/kruise-api v1.5.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.68.0
 	github.com/prometheus/client_golang v1.17.0
 	github.com/prometheus/client_model v0.5.0

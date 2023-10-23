@@ -40338,6 +40338,7 @@ spec:
                   nodes and Advanced StateFulSets will be used for compute nodes.
                 type: boolean
               enableStandaloneMode:
+                default: false
                 description: Flag to control whether to deploy in standalone mode
                   or distributed mode. If standalone mode is used, spec.components
                   will be ignored. Standalone mode can be turned on/off dynamically.

@@ -87,10 +87,13 @@ func (s *RisingWaveComputeSTSUpdateStrategy) Reconcile(ctx context.Context, requ
 		return ctrlkit.RequeueIfErrorAndWrap("unable to list pods", err)
 	}
 
-	// A pod is considered up-to-date if and only if its revision is greater than or equal to the update revision.
+	// A Pod is considered up-to-date if and only if its revision equals to the update revision.
+	// Note this could be a false positive when the observed StatefulSet is outdated (has been updated)
+	// and the observed Pod is created by the new StatefulSet. AFAIK, there's no way to guarantee it
+	// because there's no atomic operation that can be leveraged to get the mapping relations between
+	// the generations and the Pods.
 	isPodUpToDate := func(pod *corev1.Pod) bool {
 		controllerRevisionHash := pod.GetLabels()[appsv1.StatefulSetRevisionLabel]
-
 		return controllerRevisionHash == sts.Status.UpdateRevision
 	}
 

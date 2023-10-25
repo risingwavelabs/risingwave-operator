@@ -61,6 +61,8 @@ func (r *RisingWaveScaleViewHelper) findReplicaPtrGroup(group string) (*int32, i
 		return r.findReplicaPtrFromNodeGroups(r.risingwave.Spec.Components.Connector.NodeGroups, group)
 	case consts.ComponentCompute:
 		return r.findReplicaPtrFromNodeGroups(r.risingwave.Spec.Components.Compute.NodeGroups, group)
+	case consts.ComponentStandalone:
+		panic("not supported")
 	default:
 		panic(fmt.Sprintf("Unknown component %v", r.component))
 	}

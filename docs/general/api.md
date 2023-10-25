@@ -178,7 +178,7 @@ map[string]string
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.PersistentVolumeClaim">PersistentVolumeClaim
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStandaloneComponent">RisingWaveStandaloneComponent</a>)
 </p>
 <div>
 <p>PersistentVolumeClaim used by RisingWave.</p>
@@ -569,6 +569,19 @@ Enabling this flag on existing RisingWave will cause incompatibility.</p>
 </tr>
 <tr>
 <td>
+<code>enableStandaloneMode</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to control whether to deploy in standalone mode or distributed mode. If standalone mode is used,
+spec.components will be ignored. Standalone mode can be turned on/off dynamically.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>image</code><br/>
 <em>
 string
@@ -955,6 +968,19 @@ ComponentReplicasStatus
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>standalone</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStandaloneComponent">
+RisingWaveStandaloneComponent
+</a>
+</em>
+</td>
+<td>
+<p>Standalone contains configuration of the standalone component.</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>meta</code><br/>
@@ -2208,7 +2234,7 @@ bool
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupUpgradeStrategy">RisingWaveNodeGroupUpgradeStrategy
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStandaloneComponent">RisingWaveStandaloneComponent</a>)
 </p>
 <div>
 <p>RisingWaveNodeGroupUpgradeStrategy is the spec of upgrade strategy used by RisingWave.</p>
@@ -2291,7 +2317,7 @@ github.com/openkruise/kruise-api/apps/pub.InPlaceUpdateStrategy
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodePodTemplate">RisingWaveNodePodTemplate
 </h3>
 <p>
-(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup</a>)
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroup">RisingWaveNodeGroup</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStandaloneComponent">RisingWaveStandaloneComponent</a>)
 </p>
 <div>
 <p>RisingWaveNodePodTemplate determines the Pod specs of a RisingWave node.</p>
@@ -4068,6 +4094,19 @@ Enabling this flag on existing RisingWave will cause incompatibility.</p>
 </tr>
 <tr>
 <td>
+<code>enableStandaloneMode</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to control whether to deploy in standalone mode or distributed mode. If standalone mode is used,
+spec.components will be ignored. Standalone mode can be turned on/off dynamically.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>image</code><br/>
 <em>
 string
@@ -4131,6 +4170,173 @@ RisingWaveStateStoreBackend
 <td>
 <p>StateStore determines which backend the state store will use and the parameters for it. Defaults to memory.
 But keep in mind that memory backend is not recommended in production.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStandaloneComponent">RisingWaveStandaloneComponent
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec</a>)
+</p>
+<div>
+<p>RisingWaveStandaloneComponent contains the spec for standalone component.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>logLevel</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>LogLevel controls the log level of the running nodes. It can be in any format that the underlying component supports,
+e.g., in the RUST_LOG format for Rust programs. Defaults to INFO.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>disallowPrintStackTraces</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>DisallowPrintStackTraces determines if the stack traces are allowed to print when panic happens. This options applies
+to both Rust and Java programs. Defaults to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>restartAt</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#time-v1-meta">
+Kubernetes meta/v1.Time
+</a>
+</em>
+</td>
+<td>
+<p>RestartAt is the time that the Pods under the group should be restarted. Setting a value on this field will
+trigger a full recreation of the Pods. Defaults to nil.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>replicas</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Replicas is the number of the standalone Pods. Maximum is 1. Defaults to 1.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>upgradeStrategy</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodeGroupUpgradeStrategy">
+RisingWaveNodeGroupUpgradeStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Upgrade strategy for the components. By default, it is the same as the
+workload&rsquo;s default strategy that the component is deployed with.
+Note: the maxSurge will not take effect for the compute component.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>minReadySeconds</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum number of seconds for which a newly created pod should be ready
+without any of its container crashing for it to be considered available.
+Defaults to 0 (pod will be considered available as soon as it is ready)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumeClaimTemplates</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.PersistentVolumeClaim">
+[]PersistentVolumeClaim
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>volumeClaimTemplates is a list of claims that pods are allowed to reference.
+The StatefulSet controller is responsible for mapping network identities to
+claims in a way that maintains the identity of a pod. Every claim in
+this list must have at least one matching (by name) volumeMount in one
+container in the template. A claim in this list takes precedence over
+any volumes in the template, with the same name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>persistentVolumeClaimRetentionPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#statefulsetpersistentvolumeclaimretentionpolicy-v1-apps">
+Kubernetes apps/v1.StatefulSetPersistentVolumeClaimRetentionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>persistentVolumeClaimRetentionPolicy describes the lifecycle of persistent
+volume claims created from volumeClaimTemplates. By default, all persistent
+volume claims are created as needed and retained until manually deleted. This
+policy allows the lifecycle to be altered, for example by deleting persistent
+volume claims when their stateful set is deleted, or when their pod is scaled
+down. This requires the StatefulSetAutoDeletePVC feature gate to be enabled,
+which is alpha.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>progressDeadlineSeconds</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>The maximum time in seconds for a deployment to make progress before it
+is considered to be failed. The deployment controller will continue to
+process failed deployments and a condition with a ProgressDeadlineExceeded
+reason will be surfaced in the deployment status. Note that progress will
+not be estimated during the time a deployment is paused. Defaults to 600s.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>template</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveNodePodTemplate">
+RisingWaveNodePodTemplate
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Template tells how the Pod should be started. It is an optional field. If it&rsquo;s empty, then the pod template in
+the first-level fields under spec will be used.</p>
 </td>
 </tr>
 </tbody>

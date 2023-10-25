@@ -61,12 +61,13 @@ const (
 
 // Label values of LabelRisingWaveComponent.
 const (
-	ComponentMeta      = "meta"
-	ComponentFrontend  = "frontend"
-	ComponentCompute   = "compute"
-	ComponentCompactor = "compactor"
-	ComponentConnector = "connector"
-	ComponentConfig    = "config"
+	ComponentMeta       = "meta"
+	ComponentFrontend   = "frontend"
+	ComponentCompute    = "compute"
+	ComponentCompactor  = "compactor"
+	ComponentConnector  = "connector"
+	ComponentStandalone = "standalone"
+	ComponentConfig     = "config"
 )
 
 // Credential keys for MinIO.

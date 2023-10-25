@@ -1,0 +1,15 @@
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-standalone
+spec:
+  image: ghcr.io/risingwavelabs/risingwave:nightly-20231016
+  enableStandaloneMode: true
+  components:
+    standalone:
+      template:
+        spec:
+          resources:
+            limits:
+              cpu: 8
+              memory: 32Gi

@@ -53,6 +53,12 @@ decl RisingWaveControllerManager for RisingWave {
             owned
         }
 
+        // Service for standalone node.
+        standaloneService Service {
+            name=${target.Name}
+            owned
+        }
+
         // ConfigMap for RisingWave configs.
         configConfigMap ConfigMap {
             name=${target.Name}-default-config
@@ -125,6 +131,22 @@ decl RisingWaveControllerManager for RisingWave {
         connectorCloneSets []CloneSet {
             labels/risingwave/name=${target.Name}
             labels/risingwave/component=connector
+            owned
+        }
+
+        // StatefulSet for standalone node.
+        standaloneStatefulSet StatefulSet {
+            name=${target.Name}
+            labels/risingwave/name=${target.Name}
+            labels/risingwave/component=standalone
+            owned
+        }
+
+        // Advanced StatefulSet for standalone node.
+        standaloneAdvancedStatefulSet AdvancedStatefulSet {
+            name=${target.Name}
+            labels/risingwave/name=${target.Name}
+            labels/risingwave/component=standalone
             owned
         }
     }
@@ -210,6 +232,21 @@ decl RisingWaveControllerManager for RisingWave {
 
         // SyncConfigConfigMap creates or updates the configmap for RisingWave configs.
         SyncConfigConfigMap(configConfigMap)
+
+        // SyncStandaloneService creates or updates the service for standalone RisingWave.
+        SyncStandaloneService(standaloneService)
+
+        // SyncStandaloneStatefulSet creates or updates the StatefulSet for standalone RisingWave.
+        SyncStandaloneStatefulSet(standaloneStatefulSet)
+
+        // SyncStandaloneAdvancedStatefulSet creates or updates the advanced StatefulSet for standalone RisingWave.
+        SyncStandaloneAdvancedStatefulSet(standaloneAdvancedStatefulSet)
+
+        // WaitBeforeStandaloneStatefulSetReady waits (aborts the workflow) before the standalone StatefulSet is ready.
+        WaitBeforeStandaloneStatefulSetReady(standaloneStatefulSet)
+
+        // WaitBeforeStandaloneAdvancedStatefulSetReady waits (aborts the workflow) before the standalone advanced StatefulSet is ready.
+        WaitBeforeStandaloneAdvancedStatefulSetReady(standaloneAdvancedStatefulSet)
     }
 
     // ===================================================
@@ -238,5 +275,9 @@ decl RisingWaveControllerManager for RisingWave {
         // CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
         CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, connectorService, metaStatefulSets, frontendDeployments, computeStatefulSets, compactorDeployments, connectorDeployments, configConfigMap)
         CollectOpenKruiseRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, connectorService, metaAdvancedStatefulSets, frontendCloneSets, computeAdvancedStatefulSets, compactorCloneSets, connectorCloneSets, configConfigMap)
+
+        // CollectRunningStatisticsAndSyncStatusForStandalone collects running statistics and sync them into the status.
+        CollectRunningStatisticsAndSyncStatusForStandalone(standaloneService, standaloneStatefulSet, configConfigMap)
+        CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone(standaloneService, standaloneAdvancedStatefulSet, configConfigMap)
     }
 }

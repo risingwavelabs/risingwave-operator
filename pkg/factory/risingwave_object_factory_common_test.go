@@ -66,15 +66,15 @@ func mapEquals[K, V comparable](a, b map[K]V) bool {
 		return true
 	} else if len(a) == 0 || len(b) == 0 || len(a) != len(b) {
 		return false
-	} else {
-		for k, v := range a {
-			vb, ok := b[k]
-			if !ok || v != vb {
-				return false
-			}
-		}
-		return true
 	}
+
+	for k, v := range a {
+		vb, ok := b[k]
+		if !ok || v != vb {
+			return false
+		}
+	}
+	return true
 }
 
 func hasLabels[T client.Object](obj T, labels map[string]string, exact bool) bool {

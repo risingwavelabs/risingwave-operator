@@ -333,8 +333,18 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		mgr.WaitBeforeConnectorDeploymentsReady(),
 		ctrlkit.If(c.openKruiseAvailable, otherOpenKruiseComponentsReadyBarrier),
 	)
-	syncAllComponents := ctrlkit.ParallelJoin(syncConfigs, syncMetaComponent, syncOtherComponents)
-	allComponentsReadyBarrier := ctrlkit.Join(metaComponentReadyBarrier, otherComponentsReadyBarrier)
+
+	syncStandaloneComponent := ctrlkit.Join(
+		mgr.SyncStandaloneService(),
+		mgr.SyncStandaloneStatefulSet(),
+		ctrlkit.If(c.openKruiseAvailable, mgr.SyncStandaloneAdvancedStatefulSet()),
+	)
+	standaloneReadyBarrier := ctrlkit.Join(
+		mgr.WaitBeforeStandaloneStatefulSetReady(),
+		ctrlkit.If(c.openKruiseAvailable, mgr.WaitBeforeStandaloneAdvancedStatefulSetReady()),
+	)
+	syncAllComponents := ctrlkit.ParallelJoin(syncConfigs, syncMetaComponent, syncOtherComponents, syncStandaloneComponent)
+	allComponentsReadyBarrier := ctrlkit.Join(metaComponentReadyBarrier, otherComponentsReadyBarrier, standaloneReadyBarrier)
 
 	observedGenerationOutdatedBarrier := mgr.NewAction(RisingWaveAction_BarrierObservedGenerationOutdated, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
 		return ctrlkit.ExitIf(!risingwaveManger.IsObservedGenerationOutdated())
@@ -343,7 +353,16 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		risingwaveManger.SyncObservedGeneration()
 		return ctrlkit.Continue()
 	})
-	syncRunningStatus := ctrlkit.IfElse(risingwaveManger.IsOpenKruiseEnabled(), mgr.CollectOpenKruiseRunningStatisticsAndSyncStatus(), mgr.CollectRunningStatisticsAndSyncStatus())
+	syncRunningStatus := ctrlkit.IfElse(risingwaveManger.IsStandaloneModeEnabled(),
+		ctrlkit.IfElse(risingwaveManger.IsOpenKruiseEnabled(),
+			mgr.CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone(),
+			mgr.CollectRunningStatisticsAndSyncStatusForStandalone(),
+		),
+		ctrlkit.IfElse(risingwaveManger.IsOpenKruiseEnabled(),
+			mgr.CollectOpenKruiseRunningStatisticsAndSyncStatus(),
+			mgr.CollectRunningStatisticsAndSyncStatus(),
+		),
+	)
 	syncAllAndWait := ctrlkit.Sequential(
 		// Set .status.observedGeneration = .metadata.generation
 		syncObservedGeneration,

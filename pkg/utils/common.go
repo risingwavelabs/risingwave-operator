@@ -19,6 +19,7 @@ package utils
 import (
 	"strings"
 
+	"github.com/samber/lo"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -83,4 +84,16 @@ func GetPortFromContainer(container *corev1.Container, name string) (int32, bool
 	}
 
 	return 0, false
+}
+
+type ptrAsObject[T any] interface {
+	client.Object
+	*T
+}
+
+// MapObjectsToNames converts a list of k8s objects to their names.
+func MapObjectsToNames[T any, TP ptrAsObject[T]](objects []T) []string {
+	return lo.Map(objects, func(item T, _ int) string {
+		return TP(&item).GetName()
+	})
 }

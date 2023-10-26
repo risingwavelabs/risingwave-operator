@@ -119,7 +119,7 @@ func (s *RisingWaveComputeSTSUpdateStrategy) Reconcile(ctx context.Context, requ
 	return ctrlkit.NoRequeue()
 }
 
-// SetupWithManager register itself with the given manager.
+// SetupWithManager registers itself with the given manager.
 func (s *RisingWaveComputeSTSUpdateStrategy) SetupWithManager(mgr ctrl.Manager) error {
 	gvk, err := apiutil.GVKForObject(&risingwavev1alpha1.RisingWave{}, s.client.Scheme())
 	if err != nil {

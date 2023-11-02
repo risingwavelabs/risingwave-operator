@@ -55,7 +55,7 @@ decl RisingWaveControllerManager for RisingWave {
 
         // Service for standalone node.
         standaloneService Service {
-            name=${target.Name}
+            name=${target.Name}-standalone
             owned
         }
 
@@ -136,7 +136,7 @@ decl RisingWaveControllerManager for RisingWave {
 
         // StatefulSet for standalone node.
         standaloneStatefulSet StatefulSet {
-            name=${target.Name}
+            name=${target.Name}-standalone
             labels/risingwave/name=${target.Name}
             labels/risingwave/component=standalone
             owned
@@ -144,7 +144,7 @@ decl RisingWaveControllerManager for RisingWave {
 
         // Advanced StatefulSet for standalone node.
         standaloneAdvancedStatefulSet AdvancedStatefulSet {
-            name=${target.Name}
+            name=${target.Name}-standalone
             labels/risingwave/name=${target.Name}
             labels/risingwave/component=standalone
             owned

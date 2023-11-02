@@ -982,7 +982,7 @@ func (mgr *risingWaveControllerManagerImpl) SyncStandaloneAdvancedStatefulSet(ct
 // WaitBeforeStandaloneStatefulSetReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeStandaloneStatefulSetReady(ctx context.Context, logger logr.Logger, standaloneStatefulSet *appsv1.StatefulSet) (ctrl.Result, error) {
 	if mgr.risingwaveManager.IsStandaloneModeEnabled() && !mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		if mgr.isObjectSynced(standaloneStatefulSet) {
+		if mgr.isObjectSynced(standaloneStatefulSet) && utils.IsStatefulSetRolledOut(standaloneStatefulSet) {
 			return ctrlkit.NoRequeue()
 		}
 		logger.Info("Standalone StatefulSet hasn't been ready!")
@@ -997,7 +997,7 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeStandaloneStatefulSetReady
 // WaitBeforeStandaloneAdvancedStatefulSetReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeStandaloneAdvancedStatefulSetReady(ctx context.Context, logger logr.Logger, standaloneAdvancedStatefulSet *kruiseappsv1beta1.StatefulSet) (ctrl.Result, error) {
 	if mgr.risingwaveManager.IsStandaloneModeEnabled() && mgr.risingwaveManager.IsOpenKruiseEnabled() {
-		if mgr.isObjectSynced(standaloneAdvancedStatefulSet) {
+		if mgr.isObjectSynced(standaloneAdvancedStatefulSet) && utils.IsAdvancedStatefulSetRolledOut(standaloneAdvancedStatefulSet) {
 			return ctrlkit.NoRequeue()
 		}
 		logger.Info("Standalone advanced StatefulSet hasn't been ready!")

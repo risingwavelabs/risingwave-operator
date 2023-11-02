@@ -474,13 +474,13 @@ func (s *RisingWaveControllerManagerState) GetServiceMonitor(ctx context.Context
 	return &serviceMonitor, nil
 }
 
-// GetStandaloneAdvancedStatefulSet gets standaloneAdvancedStatefulSet with name equals to ${target.Name}.
+// GetStandaloneAdvancedStatefulSet gets standaloneAdvancedStatefulSet with name equals to ${target.Name}-standalone.
 func (s *RisingWaveControllerManagerState) GetStandaloneAdvancedStatefulSet(ctx context.Context) (*appsv1beta1.StatefulSet, error) {
 	var standaloneAdvancedStatefulSet appsv1beta1.StatefulSet
 
 	err := s.Get(ctx, types.NamespacedName{
 		Namespace: s.target.Namespace,
-		Name:      s.target.Name,
+		Name:      s.target.Name + "-standalone",
 	}, &standaloneAdvancedStatefulSet)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -495,13 +495,13 @@ func (s *RisingWaveControllerManagerState) GetStandaloneAdvancedStatefulSet(ctx 
 	return &standaloneAdvancedStatefulSet, nil
 }
 
-// GetStandaloneService gets standaloneService with name equals to ${target.Name}.
+// GetStandaloneService gets standaloneService with name equals to ${target.Name}-standalone.
 func (s *RisingWaveControllerManagerState) GetStandaloneService(ctx context.Context) (*corev1.Service, error) {
 	var standaloneService corev1.Service
 
 	err := s.Get(ctx, types.NamespacedName{
 		Namespace: s.target.Namespace,
-		Name:      s.target.Name,
+		Name:      s.target.Name + "-standalone",
 	}, &standaloneService)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -516,13 +516,13 @@ func (s *RisingWaveControllerManagerState) GetStandaloneService(ctx context.Cont
 	return &standaloneService, nil
 }
 
-// GetStandaloneStatefulSet gets standaloneStatefulSet with name equals to ${target.Name}.
+// GetStandaloneStatefulSet gets standaloneStatefulSet with name equals to ${target.Name}-standalone.
 func (s *RisingWaveControllerManagerState) GetStandaloneStatefulSet(ctx context.Context) (*appsv1.StatefulSet, error) {
 	var standaloneStatefulSet appsv1.StatefulSet
 
 	err := s.Get(ctx, types.NamespacedName{
 		Namespace: s.target.Namespace,
-		Name:      s.target.Name,
+		Name:      s.target.Name + "-standalone",
 	}, &standaloneStatefulSet)
 	if err != nil {
 		if apierrors.IsNotFound(err) {

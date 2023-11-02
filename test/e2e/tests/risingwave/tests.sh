@@ -188,6 +188,10 @@ function test::risingwave::storage_support::_run_with_manifest() {
 	logging::info "Stopped!"
 }
 
+function test::run::risingwave::standalone() {
+  test::risingwave::storage_support::_run_with_manifest standalone/standalone.yaml
+}
+
 function test::run::risingwave::storage_support::meta_memory_object_memory() {
 	test::risingwave::storage_support::_run_with_manifest storages/meta-memory-object-memory.yaml
 }

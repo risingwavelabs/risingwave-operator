@@ -375,6 +375,11 @@ func (f *RisingWaveObjectFactory) coreEnvsForMeta() []corev1.EnvVar {
 
 func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 	envVars := []corev1.EnvVar{
+		// Env var for local risectl access.
+		{
+			Name:  envs.RWMetaAddr,
+			Value: fmt.Sprintf("127.0.0.1:%d", consts.MetaServicePort),
+		},
 		{
 			Name:  envs.RWConfigPath,
 			Value: path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
@@ -1638,6 +1643,12 @@ func (f *RisingWaveObjectFactory) setupStandaloneContainer(container *corev1.Con
 			return a.Name == b.Name
 		})
 	}
+
+	// Env var for local risectl access.
+	container.Env = append(container.Env, corev1.EnvVar{
+		Name:  envs.RWMetaAddr,
+		Value: fmt.Sprintf("127.0.0.1:%d", consts.MetaServicePort),
+	})
 
 	for _, env := range f.envsForStateStore() {
 		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {

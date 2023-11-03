@@ -1577,6 +1577,8 @@ func (f *RisingWaveObjectFactory) argsForStandaloneMetaStore() []string {
 
 func (f *RisingWaveObjectFactory) argsForStandalone() []string {
 	return []string{
+		"--config-path=$(RW_CONFIG_PATH)",
+		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", consts.MetaMetricsPort),
 		"--meta-opts=" + strings.Join(append(
 			[]string{
 				fmt.Sprintf("--listen-addr 127.0.0.1:%d", consts.MetaServicePort),
@@ -1585,7 +1587,6 @@ func (f *RisingWaveObjectFactory) argsForStandalone() []string {
 				fmt.Sprintf("--prometheus-host 0.0.0.0:%d", consts.MetaMetricsPort),
 				"--state-store $(RW_STATE_STORE)",
 				"--data-directory $(RW_DATA_DIRECTORY)",
-				"--config-path " + risingwaveConfigPath,
 			},
 			// Arguments for meta stores.
 			f.argsForStandaloneMetaStore()...,
@@ -1593,23 +1594,17 @@ func (f *RisingWaveObjectFactory) argsForStandalone() []string {
 		"--compute-opts=" + strings.Join([]string{
 			fmt.Sprintf("--listen-addr 127.0.0.1:%d", consts.ComputeServicePort),
 			fmt.Sprintf("--advertise-addr 127.0.0.1:%d", consts.ComputeServicePort),
-			fmt.Sprintf("--prometheus-listener-addr 0.0.0.0:%d", consts.ComputeMetricsPort),
 			fmt.Sprintf("--meta-address http://127.0.0.1:%d", consts.MetaServicePort),
-			"--config-path " + risingwaveConfigPath,
 		}, " "),
 		"--frontend-opts=" + strings.Join([]string{
 			fmt.Sprintf("--listen-addr 0.0.0.0:%d", consts.FrontendServicePort),
 			fmt.Sprintf("--advertise-addr 127.0.0.1:%d", consts.FrontendServicePort),
-			fmt.Sprintf("--prometheus-listener-addr 0.0.0.0:%d", consts.FrontendMetricsPort),
 			fmt.Sprintf("--meta-addr http://127.0.0.1:%d", consts.MetaServicePort),
-			"--config-path " + risingwaveConfigPath,
 		}, " "),
 		"--compactor-opts=" + strings.Join([]string{
 			fmt.Sprintf("--listen-addr 127.0.0.1:%d", consts.CompactorServicePort),
 			fmt.Sprintf("--advertise-addr 127.0.0.1:%d", consts.CompactorServicePort),
-			fmt.Sprintf("--prometheus-listener-addr 0.0.0.0:%d", consts.CompactorMetricsPort),
 			fmt.Sprintf("--meta-address http://127.0.0.1:%d", consts.MetaServicePort),
-			"--config-path " + risingwaveConfigPath,
 		}, " "),
 	}
 }

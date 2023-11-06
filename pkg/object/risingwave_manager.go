@@ -204,6 +204,11 @@ func (r *RisingWaveReader) IsStandaloneModeEnabled() bool {
 	return ptr.Deref(r.risingwave.Spec.EnableStandaloneMode, false)
 }
 
+// IsEmbeddedConnectorEnabled returns true when the embedded connector is enabled.
+func (r *RisingWaveReader) IsEmbeddedConnectorEnabled() bool {
+	return ptr.Deref(r.risingwave.Spec.EnableEmbeddedConnector, false)
+}
+
 // KeepLock resets the current scale views record in the status with the given array.
 func (mgr *RisingWaveManager) KeepLock(aliveScaleView []risingwavev1alpha1.RisingWaveScaleViewLock) {
 	mgr.mu.Lock()

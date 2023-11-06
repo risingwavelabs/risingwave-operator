@@ -395,10 +395,13 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 			Name:  envs.RWPrometheusHost,
 			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaMetricsPort),
 		},
-		{
+	}
+
+	if !ptr.Deref(f.risingwave.Spec.EnableEmbeddedConnector, false) {
+		envVars = append(envVars, corev1.EnvVar{
 			Name:  envs.RWConnectorRPCEndPoint,
 			Value: fmt.Sprintf("%s:%d", f.componentAddr(consts.ComponentConnector, ""), consts.ConnectorServicePort),
-		},
+		})
 	}
 
 	envVars = append(envVars, f.coreEnvsForMeta()...)
@@ -458,13 +461,16 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 			Value: fmt.Sprintf("load-balance+http://%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
 		},
 		{
-			Name:  envs.RWConnectorRPCEndPoint,
-			Value: fmt.Sprintf("%s:%d", f.componentAddr(consts.ComponentConnector, ""), consts.ConnectorServicePort),
-		},
-		{
 			Name:  envs.RWPrometheusListenerAddr,
 			Value: fmt.Sprintf("0.0.0.0:%d", consts.ComputeMetricsPort),
 		},
+	}
+
+	if !ptr.Deref(f.risingwave.Spec.EnableEmbeddedConnector, false) {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  envs.RWConnectorRPCEndPoint,
+			Value: fmt.Sprintf("%s:%d", f.componentAddr(consts.ComponentConnector, ""), consts.ConnectorServicePort),
+		})
 	}
 
 	if cpuLimit != 0 {

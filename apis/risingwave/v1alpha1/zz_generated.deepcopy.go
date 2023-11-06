@@ -1090,6 +1090,11 @@ func (in *RisingWaveSpec) DeepCopyInto(out *RisingWaveSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.EnableEmbeddedConnector != nil {
+		in, out := &in.EnableEmbeddedConnector, &out.EnableEmbeddedConnector
+		*out = new(bool)
+		**out = **in
+	}
 	in.AdditionalFrontendServiceMetadata.DeepCopyInto(&out.AdditionalFrontendServiceMetadata)
 	in.MetaStore.DeepCopyInto(&out.MetaStore)
 	in.StateStore.DeepCopyInto(&out.StateStore)

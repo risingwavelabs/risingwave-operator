@@ -161,6 +161,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 	computeStatefulSets []kruiseappsv1beta1.StatefulSet, compactorCloneSets []kruiseappsv1alpha1.CloneSet, connectorCloneSets []kruiseappsv1alpha1.CloneSet,
 	configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
+	embeddedConnectorEnabled := mgr.risingwaveManager.IsEmbeddedConnectorEnabled()
 
 	componentsSpec := &risingwave.Spec.Components
 
@@ -223,7 +224,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 			component: "Service(compactor)",
 		},
 		{
-			cond:      connectorService == nil,
+			cond:      !embeddedConnectorEnabled && connectorService == nil,
 			component: "Service(connector)",
 		},
 		{
@@ -247,7 +248,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 			component: "CloneSets(compactor)",
 		},
 		{
-			cond:      lo.ContainsBy(componentReplicas.Connector.Groups, isGroupMissing),
+			cond:      !embeddedConnectorEnabled && lo.ContainsBy(componentReplicas.Connector.Groups, isGroupMissing),
 			component: "CloneSets(connector)",
 		},
 	}
@@ -282,6 +283,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 	computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, connectorDeployments []appsv1.Deployment,
 	configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
+	embeddedConnectorEnabled := mgr.risingwaveManager.IsEmbeddedConnectorEnabled()
 
 	componentsSpec := &risingwave.Spec.Components
 
@@ -344,7 +346,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 			component: "Service(compactor)",
 		},
 		{
-			cond:      connectorService == nil,
+			cond:      !embeddedConnectorEnabled && connectorService == nil,
 			component: "Service(connector)",
 		},
 		{
@@ -368,7 +370,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 			component: "Deployments(compactor)",
 		},
 		{
-			cond:      lo.ContainsBy(componentReplicas.Connector.Groups, isGroupMissing),
+			cond:      !embeddedConnectorEnabled && lo.ContainsBy(componentReplicas.Connector.Groups, isGroupMissing),
 			component: "Deployments(connector)",
 		},
 	}

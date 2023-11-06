@@ -112,6 +112,13 @@ type RisingWaveSpec struct {
 	// +kubebuilder:default=false
 	EnableStandaloneMode *bool `json:"enableStandaloneMode,omitempty"`
 
+	// Flag to control whether to use the embedded connector (recommended). If embedded connector is enabled,
+	// the dedicated connectors won't be deployed and used anymore and the corresponding fields will be ignored.
+	// The dedicated connector will be deprecated soon because of its error proneness.
+	// +optional
+	// +kubebuilder:default=false
+	EnableEmbeddedConnector *bool `json:"enableEmbeddedConnector,omitempty"`
+
 	// Image for RisingWave component.
 	Image string `json:"image"`
 

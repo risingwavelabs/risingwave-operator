@@ -40324,6 +40324,14 @@ spec:
                   even if it's set to true, the controller will determine if it can
                   create the resource by checking if the CRDs are installed.
                 type: boolean
+              enableEmbeddedConnector:
+                default: false
+                description: Flag to control whether to use the embedded connector
+                  (recommended). If embedded connector is enabled, the dedicated connectors
+                  won't be deployed and used anymore and the corresponding fields
+                  will be ignored. The dedicated connector will be deprecated soon
+                  because of its error proneness.
+                type: boolean
               enableFullKubernetesAddr:
                 default: false
                 description: Flag to indicate if full kubernetes address should be

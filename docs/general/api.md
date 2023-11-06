@@ -582,6 +582,20 @@ spec.components will be ignored. Standalone mode can be turned on/off dynamicall
 </tr>
 <tr>
 <td>
+<code>enableEmbeddedConnector</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to control whether to use the embedded connector (recommended). If embedded connector is enabled,
+the dedicated connectors won&rsquo;t be deployed and used anymore and the corresponding fields will be ignored.
+The dedicated connector will be deprecated soon because of its error proneness.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>image</code><br/>
 <em>
 string
@@ -4103,6 +4117,20 @@ bool
 <em>(Optional)</em>
 <p>Flag to control whether to deploy in standalone mode or distributed mode. If standalone mode is used,
 spec.components will be ignored. Standalone mode can be turned on/off dynamically.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableEmbeddedConnector</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to control whether to use the embedded connector (recommended). If embedded connector is enabled,
+the dedicated connectors won&rsquo;t be deployed and used anymore and the corresponding fields will be ignored.
+The dedicated connector will be deprecated soon because of its error proneness.</p>
 </td>
 </tr>
 <tr>

@@ -52,8 +52,6 @@ const (
 	risingwaveConfigFileName  = "risingwave.toml"
 )
 
-var risingwaveConfigPath = path.Join(risingwaveConfigMountPath, risingwaveConfigFileName)
-
 var (
 	aliyunOSSEndpoint         = fmt.Sprintf("https://oss-$(%s).aliyuncs.com", envs.AliyunOSSRegion)
 	internalAliyunOSSEndpoint = fmt.Sprintf("https://oss-$(%s)-internal.aliyuncs.com", envs.AliyunOSSRegion)
@@ -1577,6 +1575,8 @@ func (f *RisingWaveObjectFactory) argsForStandaloneMetaStore() []string {
 
 func (f *RisingWaveObjectFactory) argsForStandalone() []string {
 	return []string{
+		"--config-path=$(RW_CONFIG_PATH)",
+		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", consts.MetaMetricsPort),
 		"--meta-opts=" + strings.Join(append(
 			[]string{
 				fmt.Sprintf("--listen-addr 127.0.0.1:%d", consts.MetaServicePort),
@@ -1585,7 +1585,6 @@ func (f *RisingWaveObjectFactory) argsForStandalone() []string {
 				fmt.Sprintf("--prometheus-host 0.0.0.0:%d", consts.MetaMetricsPort),
 				"--state-store $(RW_STATE_STORE)",
 				"--data-directory $(RW_DATA_DIRECTORY)",
-				"--config-path " + risingwaveConfigPath,
 			},
 			// Arguments for meta stores.
 			f.argsForStandaloneMetaStore()...,
@@ -1593,23 +1592,17 @@ func (f *RisingWaveObjectFactory) argsForStandalone() []string {
 		"--compute-opts=" + strings.Join([]string{
 			fmt.Sprintf("--listen-addr 127.0.0.1:%d", consts.ComputeServicePort),
 			fmt.Sprintf("--advertise-addr 127.0.0.1:%d", consts.ComputeServicePort),
-			fmt.Sprintf("--prometheus-listener-addr 0.0.0.0:%d", consts.ComputeMetricsPort),
 			fmt.Sprintf("--meta-address http://127.0.0.1:%d", consts.MetaServicePort),
-			"--config-path " + risingwaveConfigPath,
 		}, " "),
 		"--frontend-opts=" + strings.Join([]string{
 			fmt.Sprintf("--listen-addr 0.0.0.0:%d", consts.FrontendServicePort),
 			fmt.Sprintf("--advertise-addr 127.0.0.1:%d", consts.FrontendServicePort),
-			fmt.Sprintf("--prometheus-listener-addr 0.0.0.0:%d", consts.FrontendMetricsPort),
 			fmt.Sprintf("--meta-addr http://127.0.0.1:%d", consts.MetaServicePort),
-			"--config-path " + risingwaveConfigPath,
 		}, " "),
 		"--compactor-opts=" + strings.Join([]string{
 			fmt.Sprintf("--listen-addr 127.0.0.1:%d", consts.CompactorServicePort),
 			fmt.Sprintf("--advertise-addr 127.0.0.1:%d", consts.CompactorServicePort),
-			fmt.Sprintf("--prometheus-listener-addr 0.0.0.0:%d", consts.CompactorMetricsPort),
 			fmt.Sprintf("--meta-address http://127.0.0.1:%d", consts.MetaServicePort),
-			"--config-path " + risingwaveConfigPath,
 		}, " "),
 	}
 }
@@ -1644,35 +1637,36 @@ func (f *RisingWaveObjectFactory) setupStandaloneContainer(container *corev1.Con
 	container.Args = f.argsForStandalone()
 	container.Ports = f.portsForStandaloneContainer()
 
+	container.Env = mergeListWhenKeyEquals(container.Env, corev1.EnvVar{
+		Name:  envs.RWConfigPath,
+		Value: path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
+	}, func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
+
 	for _, env := range f.coreEnvsForMeta() {
-		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-			return a.Name == b.Name
-		})
+		container.Env = mergeListWhenKeyEquals(container.Env, env,
+			func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
 	}
 
 	// Env var for local risectl access.
-	container.Env = append(container.Env, corev1.EnvVar{
+	container.Env = mergeListWhenKeyEquals(container.Env, corev1.EnvVar{
 		Name:  envs.RWMetaAddr,
 		Value: fmt.Sprintf("127.0.0.1:%d", consts.MetaServicePort),
-	})
+	}, func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
 
 	for _, env := range f.envsForStateStore() {
-		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-			return a.Name == b.Name
-		})
+		container.Env = mergeListWhenKeyEquals(container.Env, env,
+			func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
 	}
 
 	if f.isMetaStoreEtcd() {
 		for _, env := range f.envsForEtcd() {
-			container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-				return a.Name == b.Name
-			})
+			container.Env = mergeListWhenKeyEquals(container.Env, env,
+				func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
 		}
 	}
 
-	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
-		return a.MountPath == b.MountPath
-	})
+	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(),
+		func(a, b *corev1.VolumeMount) bool { return a.MountPath == b.MountPath })
 }
 
 func (f *RisingWaveObjectFactory) convertStandaloneIntoNodeGroup() *risingwavev1alpha1.RisingWaveNodeGroup {

@@ -52,8 +52,6 @@ const (
 	risingwaveConfigFileName  = "risingwave.toml"
 )
 
-var risingwaveConfigPath = path.Join(risingwaveConfigMountPath, risingwaveConfigFileName)
-
 var (
 	aliyunOSSEndpoint         = fmt.Sprintf("https://oss-$(%s).aliyuncs.com", envs.AliyunOSSRegion)
 	internalAliyunOSSEndpoint = fmt.Sprintf("https://oss-$(%s)-internal.aliyuncs.com", envs.AliyunOSSRegion)

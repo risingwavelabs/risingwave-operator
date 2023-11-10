@@ -1637,35 +1637,36 @@ func (f *RisingWaveObjectFactory) setupStandaloneContainer(container *corev1.Con
 	container.Args = f.argsForStandalone()
 	container.Ports = f.portsForStandaloneContainer()
 
+	container.Env = mergeListWhenKeyEquals(container.Env, corev1.EnvVar{
+		Name:  envs.RWConfigPath,
+		Value: path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
+	}, func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
+
 	for _, env := range f.coreEnvsForMeta() {
-		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-			return a.Name == b.Name
-		})
+		container.Env = mergeListWhenKeyEquals(container.Env, env,
+			func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
 	}
 
 	// Env var for local risectl access.
-	container.Env = append(container.Env, corev1.EnvVar{
+	container.Env = mergeListWhenKeyEquals(container.Env, corev1.EnvVar{
 		Name:  envs.RWMetaAddr,
 		Value: fmt.Sprintf("127.0.0.1:%d", consts.MetaServicePort),
-	})
+	}, func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
 
 	for _, env := range f.envsForStateStore() {
-		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-			return a.Name == b.Name
-		})
+		container.Env = mergeListWhenKeyEquals(container.Env, env,
+			func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
 	}
 
 	if f.isMetaStoreEtcd() {
 		for _, env := range f.envsForEtcd() {
-			container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-				return a.Name == b.Name
-			})
+			container.Env = mergeListWhenKeyEquals(container.Env, env,
+				func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
 		}
 	}
 
-	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
-		return a.MountPath == b.MountPath
-	})
+	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(),
+		func(a, b *corev1.VolumeMount) bool { return a.MountPath == b.MountPath })
 }
 
 func (f *RisingWaveObjectFactory) convertStandaloneIntoNodeGroup() *risingwavev1alpha1.RisingWaveNodeGroup {

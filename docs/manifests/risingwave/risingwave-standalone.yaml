@@ -3,7 +3,7 @@ kind: RisingWave
 metadata:
   name: risingwave-standalone
 spec:
-  image: ghcr.io/risingwavelabs/risingwave:nightly-20231016
+  image: ghcr.io/risingwavelabs/risingwave:v1.4.0
   enableStandaloneMode: true
   components:
     standalone:

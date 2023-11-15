@@ -6,6 +6,7 @@ prometheus-node-exporter:
 prometheus:
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
   additionalServiceMonitors:
   - name: prometheus-service-monitor-rw-operator
     namespaceSelector: 

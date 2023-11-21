@@ -168,7 +168,7 @@ spec:
     # Prefix to objects in the object stores or directory in file system. Default to "hummock".
     dataDirectory: hummock
     
-    # Declaration of the Google Cloud Storage state store backend.
+    # Declaration of the Azure Blob Storage state store backend.
     azureBlob:
       # Endpoint of the Azure Blob service.
       endpoint: https://you-blob-service.blob.core.windows.net
@@ -179,10 +179,10 @@ spec:
       # Container name of the Azure Blob service.
       container: risingwave
     
-      # Credentials to access the Google Cloud Storage bucket.
+      # Credentials to access the Azure Blob Storage container.
       credentials:
         # Name of the Kubernetes secret that stores the credentials.
-        secretName: gcs-credentials
+        secretName: azure-credentials
         
         # Key of the account name in the secret.
         accountNameRef: AccountName

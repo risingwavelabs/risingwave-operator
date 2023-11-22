@@ -137,6 +137,9 @@ func (s *RisingWaveComputeSTSUpdateStrategy) SetupWithManager(mgr ctrl.Manager) 
 
 				// Owned by RisingWave.
 				ownerRef := metav1.GetControllerOfNoCopy(object)
+				if ownerRef == nil {
+					return nil
+				}
 				if ownerRef.APIVersion != gvk.GroupVersion().String() || ownerRef.Kind != gvk.Kind {
 					return nil
 				}

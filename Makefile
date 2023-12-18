@@ -94,11 +94,11 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 generate-manager: ctrlkit-gen goimports-reviser ## Generate codes of controller managers.
 	@$(CTRLKIT-GEN) -o pkg/manager/ -p "github.com/risingwavelabs/ctrlkit" -b hack/boilerplate.go.txt pkg/manager/risingwave_controller_manager.cm
 	@mv pkg/manager/risingwave_controller_manager.go pkg/manager/risingwave_controller_manager_generated.go
-	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_controller_manager_generated.go -local "github.com/risingwavelabs/risingwave-operator"
+	@$(GOIMPORTS-REVISER) -apply-to-generated-files -format -rm-unused -set-alias -company-prefixes "github.com/risingwavelabs/risingwave-operator" pkg/manager/risingwave_controller_manager_generated.go
 
 	@$(CTRLKIT-GEN) -o pkg/manager/ -p "github.com/risingwavelabs/ctrlkit" -b hack/boilerplate.go.txt pkg/manager/risingwave_scale_view_controller_manager.cm
 	@mv pkg/manager/risingwave_scale_view_controller_manager.go pkg/manager/risingwave_scale_view_controller_manager_generated.go
-	@$(GOIMPORTS-REVISER) -file-path pkg/manager/risingwave_scale_view_controller_manager_generated.go -local "github.com/risingwavelabs/risingwave-operator"
+	@$(GOIMPORTS-REVISER) -apply-to-generated-files -format -rm-unused -set-alias -company-prefixes "github.com/risingwavelabs/risingwave-operator" pkg/manager/risingwave_scale_view_controller_manager_generated.go
 
 fmt: ## Run go fmt against code.
 	@go fmt ./...
@@ -135,9 +135,9 @@ buildx:
 proto: 
 	cd pkg/controller/proto ; \
 	protoc --go_out=. --go_opt=paths=source_relative \
-     	--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-     	--experimental_allow_proto3_optional \
- 	   	meta.proto common.proto
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		--experimental_allow_proto3_optional \
+		meta.proto common.proto
 
 build: build-manager
 
@@ -237,7 +237,7 @@ ctrlkit-gen: ## Download ctrlkit locally if necessary.
 
 GOIMPORTS-REVISER = $(shell pwd)/bin/$(OS)/goimports-reviser
 goimports-reviser: ## Download goimports-reviser locally if necessary.
-	$(call go-get-tool,$(GOIMPORTS-REVISER),github.com/incu6us/goimports-reviser/v2@v2.5.1)
+	$(call go-get-tool,$(GOIMPORTS-REVISER),github.com/incu6us/goimports-reviser/v3@v3.6.0)
 
 GEN_CRD_API_REFERENCE_DOCS = $(shell pwd)/bin/$(OS)/gen-crd-api-reference-docs
 gen-crd-api-reference-docs: ## Download gen-crd-api-reference-docs locally if necessary

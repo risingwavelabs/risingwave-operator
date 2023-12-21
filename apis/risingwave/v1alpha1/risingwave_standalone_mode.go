@@ -39,7 +39,7 @@ type RisingWaveStandaloneComponent struct {
 	// +kubebuilder:default=1
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1
-	Replicas int32 `json:"replicas,omitempty"`
+	Replicas int32 `json:"replicas"`
 
 	// Upgrade strategy for the components. By default, it is the same as the
 	// workload's default strategy that the component is deployed with.

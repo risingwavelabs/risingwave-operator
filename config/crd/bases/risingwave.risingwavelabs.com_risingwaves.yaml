@@ -42678,6 +42678,8 @@ spec:
                               type: object
                           type: object
                         type: array
+                    required:
+                    - replicas
                     type: object
                 type: object
               configuration:

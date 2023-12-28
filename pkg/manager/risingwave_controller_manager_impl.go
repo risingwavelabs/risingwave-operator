@@ -58,9 +58,55 @@ type risingWaveControllerManagerImpl struct {
 	forceUpdateEnabled bool
 }
 
+// TODO: is this the correct return type? I do not need the groups here
+func getStandaloneStatus[T any, TP ptrAsObject[T]](rw *risingwavev1alpha1.RisingWave, standaloneStatefulSets []kruiseappsv1beta1.StatefulSet, groupAndReadyReplicas func(TP) (string, int32), logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
+	status := risingwavev1alpha1.ComponentReplicasStatus{
+		Running: 0,
+		Target:  0,
+	}
+
+	// we only expect one replica, if standalone mode is enabled
+	invalidMsg := fmt.Sprintf("warn: Standalone mode enabled, but invalid replica value of %d", rw.Spec.Components.Standalone.Replicas)
+	if ptr.Deref(rw.Spec.EnableStandaloneMode, false) {
+		status.Target = 1
+		if rw.Spec.Components.Standalone.Replicas != 1 {
+			logger.Info(invalidMsg)
+		}
+	} else {
+		if rw.Spec.Components.Standalone.Replicas != 0 {
+			logger.Info(invalidMsg)
+		}
+	}
+
+	// We only expect 1 group. All other groups should have target 0
+	for _, obj := range standaloneStatefulSets {
+		// TODO: use function to get ready and name
+		readyReplicas := obj.Status.Replicas
+		name := obj.Labels[consts.LabelRisingWaveGroup]
+		status.Running += readyReplicas
+		status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
+			Name:    name,
+			Target:  0,
+			Running: readyReplicas,
+			Exists:  true,
+		})
+	}
+	if len(status.Groups) > 0 {
+		status.Groups[0].Target = status.Target
+	}
+
+	// Sort the groups in status.
+	sort.Slice(status.Groups, func(i, j int) bool {
+		return status.Groups[i].Name < status.Groups[j].Name
+	})
+
+	return status
+}
+
 func buildNodeGroupStatus[T any, TP ptrAsObject[T], G any](groups []G, nameAndReplicas func(*G) (string, int32), workloads []T, groupAndReadyReplicas func(TP) (string, int32)) risingwavev1alpha1.ComponentReplicasStatus {
 	status := risingwavev1alpha1.ComponentReplicasStatus{
-		Target: 0,
+		Running: 0,
+		Target:  0,
 	}
 
 	expectedGroups := make(map[string]int32)
@@ -154,12 +200,21 @@ func buildStateStoreType(stateStore *risingwavev1alpha1.RisingWaveStateStoreBack
 }
 
 // CollectOpenKruiseRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger,
-	frontendService *corev1.Service, metaService *corev1.Service,
-	computeService *corev1.Service, compactorService *corev1.Service, connectorService *corev1.Service,
-	metaAdvancedStatefulSets []kruiseappsv1beta1.StatefulSet, frontendCloneSets []kruiseappsv1alpha1.CloneSet,
-	computeStatefulSets []kruiseappsv1beta1.StatefulSet, compactorCloneSets []kruiseappsv1alpha1.CloneSet, connectorCloneSets []kruiseappsv1alpha1.CloneSet,
+func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context,
+	logger logr.Logger,
+	frontendService *corev1.Service,
+	metaService *corev1.Service,
+	computeService *corev1.Service,
+	compactorService *corev1.Service,
+	connectorService *corev1.Service,
+	metaAdvancedStatefulSets []kruiseappsv1beta1.StatefulSet,
+	frontendCloneSets []kruiseappsv1alpha1.CloneSet,
+	computeStatefulSets []kruiseappsv1beta1.StatefulSet,
+	compactorCloneSets []kruiseappsv1alpha1.CloneSet,
+	connectorCloneSets []kruiseappsv1alpha1.CloneSet,
+	standaloneStatefulSets []kruiseappsv1beta1.StatefulSet,
 	configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
+
 	risingwave := mgr.risingwaveManager.RisingWave()
 	embeddedConnectorEnabled := mgr.risingwaveManager.IsEmbeddedConnectorEnabled()
 
@@ -176,11 +231,12 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
 	componentReplicas := risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
-		Meta:      buildNodeGroupStatus(componentsSpec.Meta.NodeGroups, getNameAndReplicasFromNodeGroup, metaAdvancedStatefulSets, getGroupAndReadyReplicasForStatefulSet),
-		Frontend:  buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendCloneSets, getGroupAndReadyReplicasForCloneSets),
-		Compactor: buildNodeGroupStatus(componentsSpec.Compactor.NodeGroups, getNameAndReplicasFromNodeGroup, compactorCloneSets, getGroupAndReadyReplicasForCloneSets),
-		Connector: buildNodeGroupStatus(componentsSpec.Connector.NodeGroups, getNameAndReplicasFromNodeGroup, connectorCloneSets, getGroupAndReadyReplicasForCloneSets),
-		Compute:   buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
+		Meta:       buildNodeGroupStatus(componentsSpec.Meta.NodeGroups, getNameAndReplicasFromNodeGroup, metaAdvancedStatefulSets, getGroupAndReadyReplicasForStatefulSet),
+		Frontend:   buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendCloneSets, getGroupAndReadyReplicasForCloneSets),
+		Compactor:  buildNodeGroupStatus(componentsSpec.Compactor.NodeGroups, getNameAndReplicasFromNodeGroup, compactorCloneSets, getGroupAndReadyReplicasForCloneSets),
+		Connector:  buildNodeGroupStatus(componentsSpec.Connector.NodeGroups, getNameAndReplicasFromNodeGroup, connectorCloneSets, getGroupAndReadyReplicasForCloneSets),
+		Compute:    buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
+		Standalone: getStandaloneStatus(risingwave, standaloneStatefulSets, getGroupAndReadyReplicasForStatefulSet, logger), // TODO: fix this. TODO: where else do we call this?
 	}
 	// THis may be interesting
 	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
@@ -303,6 +359,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 		Compactor: buildNodeGroupStatus(componentsSpec.Compactor.NodeGroups, getNameAndReplicasFromNodeGroup, compactorDeployments, getGroupAndReadyReplicasForDeployment),
 		Connector: buildNodeGroupStatus(componentsSpec.Connector.NodeGroups, getNameAndReplicasFromNodeGroup, connectorDeployments, getGroupAndReadyReplicasForDeployment),
 		Compute:   buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
+		// TODO: standalone here
 	}
 
 	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {

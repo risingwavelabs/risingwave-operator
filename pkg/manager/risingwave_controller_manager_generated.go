@@ -654,6 +654,7 @@ type RisingWaveControllerManagerImpl interface {
 	// CollectRunningStatisticsAndSyncStatusForStandalone collects running statistics and sync them into the status.
 	CollectRunningStatisticsAndSyncStatusForStandalone(ctx context.Context, logger logr.Logger, standaloneService *corev1.Service, standaloneStatefulSet *appsv1.StatefulSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 
+	// TODO: change this here
 	CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone(ctx context.Context, logger logr.Logger, standaloneService *corev1.Service, standaloneAdvancedStatefulSet *appsv1beta1.StatefulSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 }
 

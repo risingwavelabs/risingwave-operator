@@ -167,6 +167,7 @@ func (mgr *RisingWaveManager) UpdateCondition(condition risingwavev1alpha1.Risin
 	}
 }
 
+// TODO: this may be useful
 // UpdateStatus receives a function to mutate the RisingWaveStatus and runs it within a lock.
 func (mgr *RisingWaveManager) UpdateStatus(f func(*risingwavev1alpha1.RisingWaveStatus)) {
 	mgr.mu.Lock()
@@ -175,6 +176,7 @@ func (mgr *RisingWaveManager) UpdateStatus(f func(*risingwavev1alpha1.RisingWave
 	f(&mgr.mutableRisingWave.Status)
 }
 
+// TODO: this may be useful
 // UpdateRemoteRisingWaveStatus updates the remote RisingWave object with the mutable copy.
 func (mgr *RisingWaveManager) UpdateRemoteRisingWaveStatus(ctx context.Context) error {
 	mgr.mu.RLock()

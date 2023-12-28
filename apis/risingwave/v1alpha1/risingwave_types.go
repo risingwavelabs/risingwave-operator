@@ -186,6 +186,8 @@ type RisingWaveComponentsReplicasStatus struct {
 
 	// Running status of connector.
 	Connector ComponentReplicasStatus `json:"connector"`
+
+	// TODO: standalone is missing here
 }
 
 // RisingWaveConditionType is the condition type of RisingWave.
@@ -264,6 +266,7 @@ type RisingWaveStatus struct {
 	// Version of the Global Image
 	Version string `json:"version,omitempty"`
 
+	// This is the one we are interested in
 	// Replica status of components.
 	ComponentReplicas RisingWaveComponentsReplicasStatus `json:"componentReplicas,omitempty"`
 

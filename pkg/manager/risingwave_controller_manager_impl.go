@@ -182,6 +182,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 		Connector: buildNodeGroupStatus(componentsSpec.Connector.NodeGroups, getNameAndReplicasFromNodeGroup, connectorCloneSets, getGroupAndReadyReplicasForCloneSets),
 		Compute:   buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
 	}
+	// THis may be interesting
 	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
 		// Report meta storage status.
 		metaStore := &risingwave.Spec.MetaStore
@@ -1011,6 +1012,7 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeStandaloneAdvancedStateful
 	return ctrlkit.NoRequeue()
 }
 
+// this is the one that is called, because open kurise disabled and standalone enabled
 // CollectRunningStatisticsAndSyncStatusForStandalone implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatusForStandalone(ctx context.Context, logger logr.Logger, standaloneService *corev1.Service, standaloneStatefulSet *appsv1.StatefulSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
@@ -1075,6 +1077,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 	return ctrlkit.Continue()
 }
 
+// is this one not called?
 // CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone(ctx context.Context, logger logr.Logger, standaloneService *corev1.Service, standaloneAdvancedStatefulSet *kruiseappsv1beta1.StatefulSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()

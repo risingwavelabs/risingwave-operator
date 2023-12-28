@@ -100,6 +100,11 @@ generate-manager: ctrlkit-gen goimports-reviser ## Generate codes of controller 
 	@mv pkg/manager/risingwave_scale_view_controller_manager.go pkg/manager/risingwave_scale_view_controller_manager_generated.go
 	@$(GOIMPORTS-REVISER) -apply-to-generated-files -format -rm-unused -set-alias -company-prefixes "github.com/risingwavelabs/risingwave-operator" pkg/manager/risingwave_scale_view_controller_manager_generated.go
 
+go-work: ## create a new go.work file for this project. Will fix error 'gopls was not able to find modules in your workspace'
+	rm -f go.work
+	go work init
+	go work use -r .
+
 fmt: ## Run go fmt against code.
 	@go fmt ./...
 

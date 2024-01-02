@@ -58,33 +58,77 @@ type risingWaveControllerManagerImpl struct {
 	forceUpdateEnabled bool
 }
 
-// TODO: is this the correct return type? I do not need the groups here
-func getStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSets *kruiseappsv1beta1.StatefulSet, logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
+// TODO: Maybe I could also just template this to allow for different statefulsets
+// TODO: maybe introduce a helper func for the 2 get status functions
+func getStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSet *appsv1.StatefulSet, logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
 	status := risingwavev1alpha1.ComponentReplicasStatus{
 		Running: 0,
 		Target:  0,
 	}
 
-	// we only expect one replica, if standalone mode is enabled
-	invalidMsg := fmt.Sprintf("warn: Standalone mode enabled, but invalid replica value of %d", rw.Spec.Components.Standalone.Replicas)
 	if ptr.Deref(rw.Spec.EnableStandaloneMode, false) {
 		status.Target = 1
-		if rw.Spec.Components.Standalone.Replicas != 1 {
-			logger.Info(invalidMsg)
+	}
+
+	// we only expect one replica, if standalone mode is enabled
+	if rw.Spec.Components.Standalone != nil {
+		invalidMsg := fmt.Sprintf("warn: Standalone mode enabled, but invalid replica value of %d", rw.Spec.Components.Standalone.Replicas)
+		if ptr.Deref(rw.Spec.EnableStandaloneMode, false) {
+			if rw.Spec.Components.Standalone.Replicas != 1 {
+				logger.Info(invalidMsg)
+			}
+		} else {
+			if rw.Spec.Components.Standalone.Replicas != 0 {
+				logger.Info(invalidMsg)
+			}
 		}
-	} else {
-		if rw.Spec.Components.Standalone.Replicas != 0 {
-			logger.Info(invalidMsg)
+	}
+
+	readyReplicas := standaloneStatefulSet.Status.ReadyReplicas
+	name := standaloneStatefulSet.Labels[consts.LabelRisingWaveGroup]
+	status.Running = readyReplicas
+	status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
+		Name:    name,
+		Target:  standaloneStatefulSet.Status.Replicas,
+		Running: readyReplicas,
+		Exists:  true,
+	})
+
+	return status
+}
+
+// TODO: is this the correct return type? I do not need the groups here.
+func getOpenKruiseStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSets *kruiseappsv1beta1.StatefulSet, logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
+	status := risingwavev1alpha1.ComponentReplicasStatus{
+		Running: 0,
+		Target:  0,
+	}
+
+	if ptr.Deref(rw.Spec.EnableStandaloneMode, false) {
+		status.Target = 1
+	}
+
+	// we only expect one replica, if standalone mode is enabled
+	if rw.Spec.Components.Standalone != nil {
+		invalidMsg := fmt.Sprintf("warn: Standalone mode enabled, but invalid replica value of %d", rw.Spec.Components.Standalone.Replicas)
+		if ptr.Deref(rw.Spec.EnableStandaloneMode, false) {
+			if rw.Spec.Components.Standalone.Replicas != 1 {
+				logger.Info(invalidMsg)
+			}
+		} else {
+			if rw.Spec.Components.Standalone.Replicas != 0 {
+				logger.Info(invalidMsg)
+			}
 		}
 	}
 
 	// TODO: use function to get ready and name
-	readyReplicas := standaloneStatefulSets.Status.Replicas
+	readyReplicas := standaloneStatefulSets.Status.ReadyReplicas
 	name := standaloneStatefulSets.Labels[consts.LabelRisingWaveGroup]
-	status.Running += readyReplicas
+	status.Running = readyReplicas
 	status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
 		Name:    name,
-		Target:  0,
+		Target:  standaloneStatefulSets.Status.Replicas,
 		Running: readyReplicas,
 		Exists:  true,
 	})
@@ -1080,7 +1124,17 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 		status.Version = utils.GetVersionFromImage(mgr.risingwaveManager.RisingWave().Spec.Image)
 
 		// Report component replicas.
-		status.ComponentReplicas = risingwavev1alpha1.RisingWaveComponentsReplicasStatus{}
+		// TODO: should default to 0
+		//	untracked := risingwavev1alpha1.ComponentReplicasStatus{Target: 0, Running: 0}
+		status.ComponentReplicas = risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
+			Standalone: getStandaloneStatus(risingwave, standaloneStatefulSet, logger),
+			// Set all other components to untracked
+			// Meta:      untracked,
+			// Compute:   untracked,
+			// Frontend:  untracked,
+			// Compactor: untracked,
+			// Connector: untracked,
+		}
 	})
 
 	recoverConditionAndReasons := []struct {
@@ -1150,15 +1204,16 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 		status.Version = utils.GetVersionFromImage(mgr.risingwaveManager.RisingWave().Spec.Image)
 
 		// Report component replicas.
-		untracked := risingwavev1alpha1.ComponentReplicasStatus{Target: -1, Running: -1}
+		// TODO: should default to 0
+		//	untracked := risingwavev1alpha1.ComponentReplicasStatus{Target: 0, Running: 0}
 		status.ComponentReplicas = risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
-			Standalone: getStandaloneStatus(risingwave, standaloneAdvancedStatefulSet, logger),
+			Standalone: getOpenKruiseStandaloneStatus(risingwave, standaloneAdvancedStatefulSet, logger),
 			// Set all other components to untracked
-			Meta:      untracked,
-			Compute:   untracked,
-			Frontend:  untracked,
-			Compactor: untracked,
-			Connector: untracked,
+			// Meta:      untracked,
+			// Compute:   untracked,
+			// Frontend:  untracked,
+			// Compactor: untracked,
+			// Connector: untracked,
 		}
 	})
 

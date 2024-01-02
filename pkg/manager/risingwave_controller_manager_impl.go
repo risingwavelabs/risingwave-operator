@@ -1119,7 +1119,6 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 	return ctrlkit.Continue()
 }
 
-// is this one not called?
 // CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone(
 	ctx context.Context,

@@ -55,6 +55,7 @@ const (
 var (
 	aliyunOSSEndpoint         = fmt.Sprintf("https://oss-$(%s).aliyuncs.com", envs.AliyunOSSRegion)
 	internalAliyunOSSEndpoint = fmt.Sprintf("https://oss-$(%s)-internal.aliyuncs.com", envs.AliyunOSSRegion)
+	huaweiCloudOBSEndpoint    = fmt.Sprintf("https://obs.$(%s).myhuaweicloud.com", envs.HuaweiCloudOBSRegion)
 )
 
 // RisingWaveObjectFactory is the object factory to help create owned objects like Deployments, StatefulSets, Services, etc.
@@ -110,6 +111,10 @@ func (f *RisingWaveObjectFactory) isStateStoreLocalDisk() bool {
 	return f.risingwave.Spec.StateStore.LocalDisk != nil
 }
 
+func (f *RisingWaveObjectFactory) isStateStoreHuaweiCloudOBS() bool {
+	return f.risingwave.Spec.StateStore.HuaweiCloudOBS != nil
+}
+
 func (f *RisingWaveObjectFactory) isMetaStoreMemory() bool {
 	return ptr.Deref(f.risingwave.Spec.MetaStore.Memory, false)
 }
@@ -153,6 +158,8 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 	case f.isStateStoreLocalDisk():
 		localDisk := stateStore.LocalDisk
 		return fmt.Sprintf("hummock+fs://@%s", localDisk.Root)
+	case f.isStateStoreHuaweiCloudOBS():
+		return fmt.Sprintf("hummock+obs://%s", stateStore.HuaweiCloudOBS.Bucket)
 	default:
 		panic("unrecognized storage type")
 	}
@@ -728,7 +735,7 @@ func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 			Value: stateStore.AliyunOSS.Region,
 		},
 		{
-			Name: envs.AliyunOSSAccountName,
+			Name: envs.AliyunOSSAccessKeyID,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -737,7 +744,7 @@ func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 			},
 		},
 		{
-			Name: envs.AliyunOSSAccountKey,
+			Name: envs.AliyunOSSSecretAccessKey,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: secretRef,
@@ -815,6 +822,8 @@ func (f *RisingWaveObjectFactory) envsForStateStore() []corev1.EnvVar {
 		return f.envsForWebHDFS()
 	case f.isStateStoreLocalDisk():
 		return f.envsForLocalDisk()
+	case f.isStateStoreHuaweiCloudOBS():
+		return f.envsForHuaweiCloudOBS()
 	default:
 		return nil
 	}
@@ -2038,6 +2047,41 @@ func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonit
 	}
 
 	return mustSetControllerReference(f.risingwave, serviceMonitor, f.scheme)
+}
+
+func (f *RisingWaveObjectFactory) envsForHuaweiCloudOBS() []corev1.EnvVar {
+	obs := f.risingwave.Spec.StateStore.HuaweiCloudOBS
+	credentials := obs.RisingWaveHuaweiCloudOBSCredentials
+	secretRef := corev1.LocalObjectReference{Name: credentials.SecretName}
+
+	return []corev1.EnvVar{
+		{
+			Name:  envs.HuaweiCloudOBSRegion,
+			Value: obs.Region,
+		},
+		{
+			Name:  envs.HuaweiCloudOBSEndpoint,
+			Value: huaweiCloudOBSEndpoint,
+		},
+		{
+			Name: envs.HuaweiCloudOBSAccessKeyID,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  credentials.AccessKeyIDRef,
+				},
+			},
+		},
+		{
+			Name: envs.HuaweiCloudOBSSecretAccessKey,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: secretRef,
+					Key:                  credentials.AccessKeySecretRef,
+				},
+			},
+		},
+	}
 }
 
 // NewRisingWaveObjectFactory creates a new RisingWaveObjectFactory.

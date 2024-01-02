@@ -148,6 +148,8 @@ func buildStateStoreType(stateStore *risingwavev1alpha1.RisingWaveStateStoreBack
 		return risingwavev1alpha1.RisingWaveStateStoreBackendTypeWebHDFS
 	case stateStore.LocalDisk != nil:
 		return risingwavev1alpha1.RisingWaveStateStoreBackendTypeLocalDisk
+	case stateStore.HuaweiCloudOBS != nil:
+		return risingwavev1alpha1.RisingWaveStateStoreBackendTypeHuaweiCloudOBS
 	default:
 		return risingwavev1alpha1.RisingWaveStateStoreBackendTypeUnknown
 	}

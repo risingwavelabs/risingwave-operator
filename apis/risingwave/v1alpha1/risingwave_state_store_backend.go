@@ -19,16 +19,17 @@ type RisingWaveStateStoreBackendType string
 
 // All valid state store backend types.
 const (
-	RisingWaveStateStoreBackendTypeMemory    RisingWaveStateStoreBackendType = "Memory"
-	RisingWaveStateStoreBackendTypeMinIO     RisingWaveStateStoreBackendType = "MinIO"
-	RisingWaveStateStoreBackendTypeS3        RisingWaveStateStoreBackendType = "S3"
-	RisingWaveStateStoreBackendTypeHDFS      RisingWaveStateStoreBackendType = "HDFS"
-	RisingWaveStateStoreBackendTypeWebHDFS   RisingWaveStateStoreBackendType = "WebHDFS"
-	RisingWaveStateStoreBackendTypeGCS       RisingWaveStateStoreBackendType = "GCS"
-	RisingWaveStateStoreBackendTypeAliyunOSS RisingWaveStateStoreBackendType = "AliyunOSS"
-	RisingWaveStateStoreBackendTypeAzureBlob RisingWaveStateStoreBackendType = "AzureBlob"
-	RisingWaveStateStoreBackendTypeLocalDisk RisingWaveStateStoreBackendType = "LocalDisk"
-	RisingWaveStateStoreBackendTypeUnknown   RisingWaveStateStoreBackendType = "Unknown"
+	RisingWaveStateStoreBackendTypeMemory         RisingWaveStateStoreBackendType = "Memory"
+	RisingWaveStateStoreBackendTypeMinIO          RisingWaveStateStoreBackendType = "MinIO"
+	RisingWaveStateStoreBackendTypeS3             RisingWaveStateStoreBackendType = "S3"
+	RisingWaveStateStoreBackendTypeHDFS           RisingWaveStateStoreBackendType = "HDFS"
+	RisingWaveStateStoreBackendTypeWebHDFS        RisingWaveStateStoreBackendType = "WebHDFS"
+	RisingWaveStateStoreBackendTypeGCS            RisingWaveStateStoreBackendType = "GCS"
+	RisingWaveStateStoreBackendTypeAliyunOSS      RisingWaveStateStoreBackendType = "AliyunOSS"
+	RisingWaveStateStoreBackendTypeAzureBlob      RisingWaveStateStoreBackendType = "AzureBlob"
+	RisingWaveStateStoreBackendTypeLocalDisk      RisingWaveStateStoreBackendType = "LocalDisk"
+	RisingWaveStateStoreBackendTypeHuaweiCloudOBS RisingWaveStateStoreBackendType = "HuaweiCloudOBS"
+	RisingWaveStateStoreBackendTypeUnknown        RisingWaveStateStoreBackendType = "Unknown"
 )
 
 // RisingWaveStateStoreStatus is the status of the state store.
@@ -234,6 +235,36 @@ type RisingWaveStateStoreBackendLocalDisk struct {
 	Root string `json:"root"`
 }
 
+// RisingWaveHuaweiCloudOBSCredentials is the reference and keys selector to the HuaweiCloudOBS access credentials stored in a local secret.
+type RisingWaveHuaweiCloudOBSCredentials struct {
+	// The name of the secret in the pod's namespace to select from.
+	SecretName string `json:"secretName"`
+
+	// AccessKeyIDRef is the key of the secret to be the access key. Must be a valid secret key.
+	// Defaults to "AccessKeyIDRef".
+	// +kubebuilder:default=AccessKeyIDRef
+	AccessKeyIDRef string `json:"accessKeyIDRef,omitempty"`
+
+	// AccessKeySecretRef is the key of the secret to be the secret access key. Must be a valid secret key.
+	// Defaults to "AccessKeySecretRef".
+	// +kubebuilder:default=AccessKeySecretRef
+	AccessKeySecretRef string `json:"accessKeySecretRef,omitempty"`
+}
+
+// RisingWaveStateStoreBackendHuaweiCloudOBS is the details of HuaweiCloudOBS for compute and compactor components.
+type RisingWaveStateStoreBackendHuaweiCloudOBS struct {
+	// RisingWaveHuaweiCloudOBSCredentials is the credentials provider from a Secret.
+	RisingWaveHuaweiCloudOBSCredentials `json:"credentials"`
+
+	// Bucket name.
+	// +kubebuilder:validation:Required
+	Bucket string `json:"bucket"`
+
+	// Region of Huawei Cloud OBS.
+	// +kubebuilder:validation:Required
+	Region string `json:"region,omitempty"`
+}
+
 // RisingWaveStateStoreBackend is the collection of parameters for the state store that RisingWave uses. Note that one
 // and only one of the first-level fields could be set.
 type RisingWaveStateStoreBackend struct {
@@ -280,4 +311,8 @@ type RisingWaveStateStoreBackend struct {
 	// WebHDFS storage spec.
 	// +optional
 	WebHDFS *RisingWaveStateStoreBackendHDFS `json:"webhdfs,omitempty"`
+
+	// HuaweiCloudOBS storage spec.
+	// +optional
+	HuaweiCloudOBS *RisingWaveStateStoreBackendHuaweiCloudOBS `json:"huaweiCloudOBS,omitempty"`
 }

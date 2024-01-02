@@ -1421,6 +1421,59 @@ int32
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveHuaweiCloudOBSCredentials">RisingWaveHuaweiCloudOBSCredentials
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendHuaweiCloudOBS">RisingWaveStateStoreBackendHuaweiCloudOBS</a>)
+</p>
+<div>
+<p>RisingWaveHuaweiCloudOBSCredentials is the reference and keys selector to the HuaweiCloudOBS access credentials stored in a local secret.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The name of the secret in the pod&rsquo;s namespace to select from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>accessKeyIDRef</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>AccessKeyIDRef is the key of the secret to be the access key. Must be a valid secret key.
+Defaults to &ldquo;AccessKeyIDRef&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>accessKeySecretRef</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>AccessKeySecretRef is the key of the secret to be the secret access key. Must be a valid secret key.
+Defaults to &ldquo;AccessKeySecretRef&rdquo;.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackend">RisingWaveMetaStoreBackend
 </h3>
 <p>
@@ -4547,6 +4600,20 @@ RisingWaveStateStoreBackendHDFS
 <p>WebHDFS storage spec.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>huaweiCloudOBS</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendHuaweiCloudOBS">
+RisingWaveStateStoreBackendHuaweiCloudOBS
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HuaweiCloudOBS storage spec.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendAliyunOSS">RisingWaveStateStoreBackendAliyunOSS
@@ -4783,6 +4850,59 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendHuaweiCloudOBS">RisingWaveStateStoreBackendHuaweiCloudOBS
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackend">RisingWaveStateStoreBackend</a>)
+</p>
+<div>
+<p>RisingWaveStateStoreBackendHuaweiCloudOBS is the details of HuaweiCloudOBS for compute and compactor components.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>credentials</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveHuaweiCloudOBSCredentials">
+RisingWaveHuaweiCloudOBSCredentials
+</a>
+</em>
+</td>
+<td>
+<p>RisingWaveHuaweiCloudOBSCredentials is the credentials provider from a Secret.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bucket</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Bucket name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region of Huawei Cloud OBS.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendLocalDisk">RisingWaveStateStoreBackendLocalDisk
 </h3>
 <p>
@@ -4955,6 +5075,8 @@ ${BUCKET}.s3.${REGION}.amazonaws.com</p>
 </tr><tr><td><p>&#34;GCS&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;HDFS&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;HuaweiCloudOBS&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;LocalDisk&#34;</p></td>
 <td></td>

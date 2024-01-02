@@ -58,9 +58,7 @@ type risingWaveControllerManagerImpl struct {
 	forceUpdateEnabled bool
 }
 
-// TODO: Maybe I could also just template this to allow for different statefulsets
-// TODO: maybe introduce a helper func for the 2 get status functions
-func getStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSet *appsv1.StatefulSet, logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
+func getStandaloneStatusUtil(rw *risingwavev1alpha1.RisingWave, logger logr.Logger, readyReplicas, requiredReplicas int32, statefulSetName string) risingwavev1alpha1.ComponentReplicasStatus {
 	status := risingwavev1alpha1.ComponentReplicasStatus{
 		Running: 0,
 		Target:  0,
@@ -84,12 +82,10 @@ func getStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSe
 		}
 	}
 
-	readyReplicas := standaloneStatefulSet.Status.ReadyReplicas
-	name := standaloneStatefulSet.Labels[consts.LabelRisingWaveGroup]
 	status.Running = readyReplicas
 	status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
-		Name:    name,
-		Target:  standaloneStatefulSet.Status.Replicas,
+		Name:    statefulSetName,
+		Target:  requiredReplicas,
 		Running: readyReplicas,
 		Exists:  true,
 	})
@@ -97,43 +93,12 @@ func getStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSe
 	return status
 }
 
-// TODO: is this the correct return type? I do not need the groups here.
-func getOpenKruiseStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSets *kruiseappsv1beta1.StatefulSet, logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
-	status := risingwavev1alpha1.ComponentReplicasStatus{
-		Running: 0,
-		Target:  0,
-	}
+func getStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSet *appsv1.StatefulSet, logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
+	return getStandaloneStatusUtil(rw, logger, standaloneStatefulSet.Status.ReadyReplicas, standaloneStatefulSet.Status.Replicas, standaloneStatefulSet.Name)
+}
 
-	if ptr.Deref(rw.Spec.EnableStandaloneMode, false) {
-		status.Target = 1
-	}
-
-	// we only expect one replica, if standalone mode is enabled
-	if rw.Spec.Components.Standalone != nil {
-		invalidMsg := fmt.Sprintf("warn: Standalone mode enabled, but invalid replica value of %d", rw.Spec.Components.Standalone.Replicas)
-		if ptr.Deref(rw.Spec.EnableStandaloneMode, false) {
-			if rw.Spec.Components.Standalone.Replicas != 1 {
-				logger.Info(invalidMsg)
-			}
-		} else {
-			if rw.Spec.Components.Standalone.Replicas != 0 {
-				logger.Info(invalidMsg)
-			}
-		}
-	}
-
-	// TODO: use function to get ready and name
-	readyReplicas := standaloneStatefulSets.Status.ReadyReplicas
-	name := standaloneStatefulSets.Labels[consts.LabelRisingWaveGroup]
-	status.Running = readyReplicas
-	status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
-		Name:    name,
-		Target:  standaloneStatefulSets.Status.Replicas,
-		Running: readyReplicas,
-		Exists:  true,
-	})
-
-	return status
+func getOpenKruiseStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSet *kruiseappsv1beta1.StatefulSet, logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
+	return getStandaloneStatusUtil(rw, logger, standaloneStatefulSet.Status.ReadyReplicas, standaloneStatefulSet.Status.Replicas, standaloneStatefulSet.Name)
 }
 
 func buildNodeGroupStatus[T any, TP ptrAsObject[T], G any](groups []G, nameAndReplicas func(*G) (string, int32), workloads []T, groupAndReadyReplicas func(TP) (string, int32)) risingwavev1alpha1.ComponentReplicasStatus {
@@ -1102,7 +1067,6 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeStandaloneAdvancedStateful
 	return ctrlkit.NoRequeue()
 }
 
-// this is the one that is called, because open kurise disabled and standalone enabled
 // CollectRunningStatisticsAndSyncStatusForStandalone implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatusForStandalone(ctx context.Context, logger logr.Logger, standaloneService *corev1.Service, standaloneStatefulSet *appsv1.StatefulSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()

@@ -987,6 +987,19 @@ ComponentReplicasStatus
 <p>Running status of connector.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>standalone</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.ComponentReplicasStatus">
+ComponentReplicasStatus
+</a>
+</em>
+</td>
+<td>
+<p>Running status of standalone component.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponentsSpec">RisingWaveComponentsSpec
@@ -5050,7 +5063,8 @@ RisingWaveComponentsReplicasStatus
 </em>
 </td>
 <td>
-<p>Replica status of components.</p>
+<p>This is the one we are interested in
+Replica status of components.</p>
 </td>
 </tr>
 <tr>

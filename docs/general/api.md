@@ -5063,8 +5063,7 @@ RisingWaveComponentsReplicasStatus
 </em>
 </td>
 <td>
-<p>This is the one we are interested in
-Replica status of components.</p>
+<p>Replica status of components.</p>
 </td>
 </tr>
 <tr>

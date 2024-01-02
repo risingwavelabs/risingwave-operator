@@ -357,11 +357,8 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		return ctrlkit.Continue()
 	})
 	syncRunningStatus := ctrlkit.IfElse(risingwaveManger.IsStandaloneModeEnabled(),
-		// standalone is enabled
-		// open kruise is disabled
 		ctrlkit.IfElse(risingwaveManger.IsOpenKruiseEnabled(),
 			mgr.CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone(),
-			// below should be called
 			mgr.CollectRunningStatisticsAndSyncStatusForStandalone(),
 		),
 		ctrlkit.IfElse(risingwaveManger.IsOpenKruiseEnabled(),

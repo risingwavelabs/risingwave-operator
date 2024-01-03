@@ -290,9 +290,9 @@ type composedAssertion[T kubeObject, testcase testCaseType] struct {
 	predicates []predicate[T, testcase]
 }
 
-func (a *composedAssertion[T, K]) assertTest(Obj T, testcase K) {
+func (a *composedAssertion[T, K]) assertTest(obj T, testcase K) {
 	for _, pred := range a.predicates {
-		if !pred.Fn(Obj, testcase) {
+		if !pred.Fn(obj, testcase) {
 			a.t.Errorf("Assertion %s failed", pred.Name)
 		}
 	}

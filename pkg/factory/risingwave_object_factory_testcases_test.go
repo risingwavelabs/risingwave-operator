@@ -3445,6 +3445,55 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 				Value: "hummock+fs://@root",
 			}},
 		},
+		"huawei-cloud-obs": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				HuaweiCloudOBS: &risingwavev1alpha1.RisingWaveStateStoreBackendHuaweiCloudOBS{
+					Bucket: "obs-hummock01",
+					Region: "ap-southeast-2",
+					RisingWaveHuaweiCloudOBSCredentials: risingwavev1alpha1.RisingWaveHuaweiCloudOBSCredentials{
+						SecretName:         "obs-creds",
+						AccessKeyIDRef:     consts.SecretKeyHuaweiCloudOBSAccessKeyID,
+						AccessKeySecretRef: consts.SecretKeyHuaweiCloudOBSAccessKeySecret,
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+obs://obs-hummock01",
+				},
+				{
+					Name:  "OBS_REGION",
+					Value: "ap-southeast-2",
+				},
+				{
+					Name: "OBS_ACCESS_KEY_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "obs-creds",
+							},
+							Key: consts.SecretKeyHuaweiCloudOBSAccessKeyID,
+						},
+					},
+				},
+				{
+					Name: "OBS_SECRET_ACCESS_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "obs-creds",
+							},
+							Key: consts.SecretKeyHuaweiCloudOBSAccessKeySecret,
+						},
+					},
+				},
+				{
+					Name:  "OBS_ENDPOINT",
+					Value: "https://obs.$(OBS_REGION).myhuaweicloud.com",
+				},
+			},
+		},
 	}
 }
 

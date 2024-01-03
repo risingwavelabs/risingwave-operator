@@ -85,11 +85,19 @@ const (
 
 // AliyunOSS.
 const (
-	AliyunOSSRegion      = "OSS_REGION"
-	AliyunOSSBucket      = "OSS_S3_BUCKET"
-	AliyunOSSEndpoint    = "OSS_ENDPOINT"
-	AliyunOSSAccountName = "OSS_ACCESS_KEY_ID"
-	AliyunOSSAccountKey  = "OSS_ACCESS_KEY_SECRET"
+	AliyunOSSRegion          = "OSS_REGION"
+	AliyunOSSBucket          = "OSS_S3_BUCKET"
+	AliyunOSSEndpoint        = "OSS_ENDPOINT"
+	AliyunOSSAccessKeyID     = "OSS_ACCESS_KEY_ID"
+	AliyunOSSSecretAccessKey = "OSS_ACCESS_KEY_SECRET"
+)
+
+// HuaweiCloudOBS.
+const (
+	HuaweiCloudOBSRegion          = "OBS_REGION"
+	HuaweiCloudOBSEndpoint        = "OBS_ENDPOINT"
+	HuaweiCloudOBSAccessKeyID     = "OBS_ACCESS_KEY_ID"
+	HuaweiCloudOBSSecretAccessKey = "OBS_SECRET_ACCESS_KEY"
 )
 
 const (

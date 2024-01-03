@@ -1,0 +1,111 @@
+apiVersion: v1
+kind: Secret
+metadata: 
+  name: risingwave-huaweicloud-obs-credentials
+stringData:
+  AccessKeyIDRef: your-huaweicloud-obs-access-key
+  AccessKeySecretRef: your-huaweicloud-obs-access-secret
+---
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-in-memory-huaweicloud-obs
+spec:
+  metaStore:
+    memory: true
+  stateStore:
+    huaweiCloudOBS:
+      bucket: hummock001
+      region: ap-southeast-2
+      credentials:
+        secretName: risingwave-huaweicloud-obs-credentials
+  image: ghcr.io/risingwavelabs/risingwave:v1.5.1
+  components:
+    meta:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            volumes:
+            - name: heap
+              emptyDir:
+                sizeLimit: 1Gi
+            volumeMounts:
+            - mountPath: /heap
+              name: heap
+            env:
+            - name: MALLOC_CONF
+              value: prof:true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix:/heap/
+            - name: RW_HEAP_PROFILING_DIR
+              value: /heap
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+    frontend:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+    compute:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            volumes:
+            - name: heap
+              emptyDir:
+                sizeLimit: 1Gi
+            volumeMounts:
+            - mountPath: /heap
+              name: heap
+            env:
+            - name: MALLOC_CONF
+              value: prof:true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix:/heap/
+            - name: RW_HEAP_PROFILING_DIR
+              value: /heap
+            resources:
+              limits:
+                cpu: 8
+                memory: 32Gi # Memory limit will be set to `RW_TOTAL_MEMORY_BYTES`
+              requests:
+                cpu: 8
+                memory: 32Gi
+    compactor:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            volumes:
+            - name: heap
+              emptyDir:
+                sizeLimit: 1Gi
+            volumeMounts:
+            - mountPath: /heap
+              name: heap
+            env:
+            - name: MALLOC_CONF
+              value: prof:true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix:/heap/
+            - name: RW_HEAP_PROFILING_DIR
+              value: /heap
+            resources:
+              limits:
+                cpu: 4
+                memory: 8Gi
+              requests:
+                cpu: 4
+                memory: 8Gi

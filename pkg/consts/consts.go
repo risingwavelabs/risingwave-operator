@@ -101,6 +101,12 @@ const (
 	SecretKeyAliyunOSSAccessKeySecret string = "AccessKeySecret"
 )
 
+// Credential keys for HuaweiCloudOBS.
+const (
+	SecretKeyHuaweiCloudOBSAccessKeyID     string = "AccessKeyID"
+	SecretKeyHuaweiCloudOBSAccessKeySecret string = "AccessKeySecret"
+)
+
 // Credentials for GCS.
 const (
 	SecretKeyGCSServiceAccountCredentials string = "ServiceAccountCredentials"

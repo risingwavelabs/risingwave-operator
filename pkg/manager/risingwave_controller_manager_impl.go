@@ -58,33 +58,15 @@ type risingWaveControllerManagerImpl struct {
 	forceUpdateEnabled bool
 }
 
-func getStandaloneStatusUtil(rw *risingwavev1alpha1.RisingWave, logger logr.Logger, readyReplicas, requiredReplicas int32, statefulSetName string) risingwavev1alpha1.ComponentReplicasStatus {
+func getStandaloneStatusUtil(rw *risingwavev1alpha1.RisingWave, logger logr.Logger, readyReplicas int32, statefulSetName string) risingwavev1alpha1.ComponentReplicasStatus {
+	requiredReplicas := rw.Spec.Components.Standalone.Replicas
 	status := risingwavev1alpha1.ComponentReplicasStatus{
 		Running: 0,
-		Target:  0,
-	}
-
-	if ptr.Deref(rw.Spec.EnableStandaloneMode, false) {
-		status.Target = 1
-	}
-
-	// we only expect one replica, if standalone mode is enabled
-	if rw.Spec.Components.Standalone != nil {
-		invalidMsg := fmt.Sprintf("warn: Standalone mode enabled, but invalid replica value of %d", rw.Spec.Components.Standalone.Replicas)
-		if ptr.Deref(rw.Spec.EnableStandaloneMode, false) {
-			if rw.Spec.Components.Standalone.Replicas != 1 {
-				logger.Info(invalidMsg)
-			}
-		} else {
-			if rw.Spec.Components.Standalone.Replicas != 0 {
-				logger.Info(invalidMsg)
-			}
-		}
+		Target:  requiredReplicas,
 	}
 
 	status.Running = readyReplicas
 	status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
-		Name:    statefulSetName,
 		Target:  requiredReplicas,
 		Running: readyReplicas,
 		Exists:  true,
@@ -94,11 +76,11 @@ func getStandaloneStatusUtil(rw *risingwavev1alpha1.RisingWave, logger logr.Logg
 }
 
 func getStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSet *appsv1.StatefulSet, logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
-	return getStandaloneStatusUtil(rw, logger, standaloneStatefulSet.Status.ReadyReplicas, standaloneStatefulSet.Status.Replicas, standaloneStatefulSet.Name)
+	return getStandaloneStatusUtil(rw, logger, standaloneStatefulSet.Status.ReadyReplicas, standaloneStatefulSet.Name)
 }
 
 func getOpenKruiseStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSet *kruiseappsv1beta1.StatefulSet, logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
-	return getStandaloneStatusUtil(rw, logger, standaloneStatefulSet.Status.ReadyReplicas, standaloneStatefulSet.Status.Replicas, standaloneStatefulSet.Name)
+	return getStandaloneStatusUtil(rw, logger, standaloneStatefulSet.Status.ReadyReplicas, standaloneStatefulSet.Name)
 }
 
 func buildNodeGroupStatus[T any, TP ptrAsObject[T], G any](groups []G, nameAndReplicas func(*G) (string, int32), workloads []T, groupAndReadyReplicas func(TP) (string, int32)) risingwavev1alpha1.ComponentReplicasStatus {

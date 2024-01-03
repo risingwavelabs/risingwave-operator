@@ -43355,12 +43355,54 @@ spec:
                     - running
                     - target
                     type: object
+                  standalone:
+                    description: Running status of standalone component.
+                    properties:
+                      groups:
+                        description: List of running status of each group.
+                        items:
+                          description: ComponentGroupReplicasStatus are the running
+                            status of Pods in group.
+                          properties:
+                            exists:
+                              description: Existence status of the group.
+                              type: boolean
+                            name:
+                              description: Name of the group.
+                              type: string
+                            running:
+                              description: Running replicas in the group.
+                              format: int32
+                              type: integer
+                            target:
+                              description: Target replicas of the group.
+                              format: int32
+                              type: integer
+                          required:
+                          - name
+                          - running
+                          - target
+                          type: object
+                        type: array
+                      running:
+                        description: Total running replicas of the component.
+                        format: int32
+                        type: integer
+                      target:
+                        description: Total target replicas of the component.
+                        format: int32
+                        type: integer
+                    required:
+                    - running
+                    - target
+                    type: object
                 required:
                 - compactor
                 - compute
                 - connector
                 - frontend
                 - meta
+                - standalone
                 type: object
               conditions:
                 description: Conditions of the RisingWave.

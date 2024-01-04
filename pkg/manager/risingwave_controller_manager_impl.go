@@ -59,7 +59,11 @@ type risingWaveControllerManagerImpl struct {
 }
 
 func getStandaloneStatusUtil(rw *risingwavev1alpha1.RisingWave, logger logr.Logger, readyReplicas int32) risingwavev1alpha1.ComponentReplicasStatus {
-	requiredReplicas := rw.Spec.Components.Standalone.Replicas
+	requiredReplicas := int32(1)
+	if rw.Spec.Components.Standalone != nil {
+		requiredReplicas = rw.Spec.Components.Standalone.Replicas
+	}
+
 	status := risingwavev1alpha1.ComponentReplicasStatus{
 		Running: 0,
 		Target:  requiredReplicas,

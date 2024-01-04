@@ -161,3 +161,12 @@ spec:
   components:
     standalone:
       replicas: 1
+      template: 
+        spec:
+          resources:
+            limits:
+              cpu: "2"
+              memory: 8Gi
+            requests:
+              cpu: 1500m
+              memory: 4Gi

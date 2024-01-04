@@ -1716,7 +1716,7 @@ func (f *RisingWaveObjectFactory) NewStandaloneAdvancedStatefulSet() *kruiseapps
 
 // NewStandaloneService creates a Service for standalone component.
 func (f *RisingWaveObjectFactory) NewStandaloneService() *corev1.Service {
-	standaloneSvc := f.newService(consts.ComponentStandalone, f.risingwave.Spec.FrontendServiceType, []corev1.ServicePort{
+	standaloneSvc := f.newService(consts.ComponentStandalone, corev1.ServiceTypeClusterIP, []corev1.ServicePort{
 		{
 			Name:       consts.PortService,
 			Protocol:   corev1.ProtocolTCP,
@@ -1771,20 +1771,27 @@ func (f *RisingWaveObjectFactory) NewMetaService() *corev1.Service {
 
 // NewFrontendService creates a new Service for the frontend.
 func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
-	frontendSvc := f.newService(consts.ComponentFrontend, f.risingwave.Spec.FrontendServiceType, []corev1.ServicePort{
+	svcPorts := []corev1.ServicePort{
 		{
 			Name:       consts.PortService,
 			Protocol:   corev1.ProtocolTCP,
 			Port:       consts.FrontendServicePort,
 			TargetPort: intstr.FromString(consts.PortService),
 		},
-		{
+	}
+
+	// Disable metrics port when RisingWave is in standalone mode. This makes it
+	// easier to write a single telemetry configuration to cover all running RisingWaves.
+	if !ptr.Deref(f.risingwave.Spec.EnableStandaloneMode, false) {
+		svcPorts = append(svcPorts, corev1.ServicePort{
 			Name:       consts.PortMetrics,
 			Protocol:   corev1.ProtocolTCP,
 			Port:       consts.FrontendMetricsPort,
 			TargetPort: intstr.FromString(consts.PortMetrics),
-		},
-	})
+		})
+	}
+
+	frontendSvc := f.newService(consts.ComponentFrontend, f.risingwave.Spec.FrontendServiceType, svcPorts)
 
 	// Hijack selector if it's standalone mode.
 	if object.NewRisingWaveReader(f.risingwave).IsStandaloneModeEnabled() {
@@ -2035,11 +2042,6 @@ func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonit
 						Key:      consts.LabelRisingWaveName,
 						Operator: metav1.LabelSelectorOpIn,
 						Values:   []string{f.risingwave.Name},
-					},
-					{
-						Key:      consts.LabelRisingWaveComponent,
-						Operator: metav1.LabelSelectorOpNotIn,
-						Values:   []string{consts.ComponentStandalone},
 					},
 				},
 			},

@@ -2694,10 +2694,12 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 
 type servicesTestCase struct {
 	baseTestCase
-	component         string
-	ports             map[string]int32
-	globalServiceType corev1.ServiceType
-	expectServiceType corev1.ServiceType
+	component            string
+	selectorComponent    string // Empty means equals to component.
+	ports                map[string]int32
+	enableStandaloneMode bool
+	globalServiceType    corev1.ServiceType
+	expectServiceType    corev1.ServiceType
 }
 
 func servicesTestCases() map[string]servicesTestCase {
@@ -2772,6 +2774,27 @@ func servicesTestCases() map[string]servicesTestCase {
 			component:         consts.ComponentConnector,
 			globalServiceType: corev1.ServiceTypeNodePort,
 			expectServiceType: corev1.ServiceTypeClusterIP,
+		},
+		"standalone-ports": {
+			component:            consts.ComponentStandalone,
+			enableStandaloneMode: true,
+			globalServiceType:    corev1.ServiceTypeNodePort,
+			expectServiceType:    corev1.ServiceTypeClusterIP,
+			ports: map[string]int32{
+				consts.PortService:   consts.FrontendServicePort,
+				consts.PortMetrics:   consts.MetaMetricsPort,
+				consts.PortDashboard: consts.MetaDashboardPort,
+			},
+		},
+		"standalone-frontend-ports": {
+			component:            consts.ComponentFrontend,
+			selectorComponent:    consts.ComponentStandalone,
+			enableStandaloneMode: true,
+			globalServiceType:    corev1.ServiceTypeNodePort,
+			expectServiceType:    corev1.ServiceTypeNodePort,
+			ports: map[string]int32{
+				consts.PortService: consts.FrontendServicePort,
+			},
 		},
 	}
 

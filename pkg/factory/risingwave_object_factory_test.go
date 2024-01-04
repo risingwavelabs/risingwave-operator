@@ -34,6 +34,7 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 
 	for name, tc := range servicesTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+			r.Spec.EnableStandaloneMode = ptr.To(tc.enableStandaloneMode)
 			r.Spec.FrontendServiceType = tc.globalServiceType
 		})
 
@@ -51,6 +52,8 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 			svc = factory.NewCompactorService()
 		case consts.ComponentConnector:
 			svc = factory.NewConnectorService()
+		case consts.ComponentStandalone:
+			svc = factory.NewStandaloneService()
 		default:
 			t.Fatal("bad test")
 		}
@@ -83,6 +86,8 @@ func Test_RisingWaveObjectFactory_ServicesMeta(t *testing.T) {
 			svc = factory.NewCompactorService()
 		case consts.ComponentConnector:
 			svc = factory.NewConnectorService()
+		case consts.ComponentStandalone:
+			svc = factory.NewStandaloneService()
 		default:
 			t.Fatal("bad test")
 		}

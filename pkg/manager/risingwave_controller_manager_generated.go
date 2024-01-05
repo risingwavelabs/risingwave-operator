@@ -1678,6 +1678,10 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatusForSt
 			return ctrlkit.RequeueIfError(err)
 		}
 
+		if standaloneService == nil || standaloneStatefulSet == nil || configConfigMap == nil {
+			return ctrlkit.RequeueIfError(fmt.Errorf("standaloneService, standaloneStatefulSet, configConfigMap cannot be nil"))
+		}
+
 		// Invoke action.
 		if m.hook != nil {
 			defer func() {

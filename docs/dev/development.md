@@ -188,7 +188,7 @@ Modify the [config/local/webhook.yaml](/config/local/webhook.yaml) to match your
 1. Replace the `webhooks.*.clientConfig.caBundle` with the base64 encoded CA certs, which can be obtained by running the following command:
 
 ```bash
-base64 ${TMPDIR}/k8s-webhook-server/serving-certs/tls.crt
+base64 -i ${TMPDIR}/k8s-webhook-server/serving-certs/tls.crt
 ```
 
 2. Replace the `host.docker.internal` in `webhooks.*.clientConfig.url` with your host IP or hostname used above, like this:

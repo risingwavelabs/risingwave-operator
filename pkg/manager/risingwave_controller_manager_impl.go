@@ -58,9 +58,39 @@ type risingWaveControllerManagerImpl struct {
 	forceUpdateEnabled bool
 }
 
+func getStandaloneStatusUtil(rw *risingwavev1alpha1.RisingWave, logger logr.Logger, readyReplicas int32) risingwavev1alpha1.ComponentReplicasStatus {
+	requiredReplicas := int32(1)
+	if rw.Spec.Components.Standalone != nil {
+		requiredReplicas = rw.Spec.Components.Standalone.Replicas
+	}
+
+	status := risingwavev1alpha1.ComponentReplicasStatus{
+		Running: 0,
+		Target:  requiredReplicas,
+	}
+
+	status.Running = readyReplicas
+	status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
+		Target:  requiredReplicas,
+		Running: readyReplicas,
+		Exists:  true,
+	})
+
+	return status
+}
+
+func getStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSet *appsv1.StatefulSet, logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
+	return getStandaloneStatusUtil(rw, logger, standaloneStatefulSet.Status.ReadyReplicas)
+}
+
+func getOpenKruiseStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSet *kruiseappsv1beta1.StatefulSet, logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
+	return getStandaloneStatusUtil(rw, logger, standaloneStatefulSet.Status.ReadyReplicas)
+}
+
 func buildNodeGroupStatus[T any, TP ptrAsObject[T], G any](groups []G, nameAndReplicas func(*G) (string, int32), workloads []T, groupAndReadyReplicas func(TP) (string, int32)) risingwavev1alpha1.ComponentReplicasStatus {
 	status := risingwavev1alpha1.ComponentReplicasStatus{
-		Target: 0,
+		Running: 0,
+		Target:  0,
 	}
 
 	expectedGroups := make(map[string]int32)
@@ -156,12 +186,8 @@ func buildStateStoreType(stateStore *risingwavev1alpha1.RisingWaveStateStoreBack
 }
 
 // CollectOpenKruiseRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger,
-	frontendService *corev1.Service, metaService *corev1.Service,
-	computeService *corev1.Service, compactorService *corev1.Service, connectorService *corev1.Service,
-	metaAdvancedStatefulSets []kruiseappsv1beta1.StatefulSet, frontendCloneSets []kruiseappsv1alpha1.CloneSet,
-	computeStatefulSets []kruiseappsv1beta1.StatefulSet, compactorCloneSets []kruiseappsv1alpha1.CloneSet, connectorCloneSets []kruiseappsv1alpha1.CloneSet,
-	configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
+func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, connectorService *corev1.Service, metaAdvancedStatefulSets []kruiseappsv1beta1.StatefulSet, frontendCloneSets []kruiseappsv1alpha1.CloneSet, computeStatefulSets []kruiseappsv1beta1.StatefulSet, compactorCloneSets []kruiseappsv1alpha1.CloneSet, connectorCloneSets []kruiseappsv1alpha1.CloneSet, configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
+
 	risingwave := mgr.risingwaveManager.RisingWave()
 	embeddedConnectorEnabled := mgr.risingwaveManager.IsEmbeddedConnectorEnabled()
 
@@ -178,11 +204,12 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
 	componentReplicas := risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
-		Meta:      buildNodeGroupStatus(componentsSpec.Meta.NodeGroups, getNameAndReplicasFromNodeGroup, metaAdvancedStatefulSets, getGroupAndReadyReplicasForStatefulSet),
-		Frontend:  buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendCloneSets, getGroupAndReadyReplicasForCloneSets),
-		Compactor: buildNodeGroupStatus(componentsSpec.Compactor.NodeGroups, getNameAndReplicasFromNodeGroup, compactorCloneSets, getGroupAndReadyReplicasForCloneSets),
-		Connector: buildNodeGroupStatus(componentsSpec.Connector.NodeGroups, getNameAndReplicasFromNodeGroup, connectorCloneSets, getGroupAndReadyReplicasForCloneSets),
-		Compute:   buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
+		Meta:       buildNodeGroupStatus(componentsSpec.Meta.NodeGroups, getNameAndReplicasFromNodeGroup, metaAdvancedStatefulSets, getGroupAndReadyReplicasForStatefulSet),
+		Frontend:   buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendCloneSets, getGroupAndReadyReplicasForCloneSets),
+		Compactor:  buildNodeGroupStatus(componentsSpec.Compactor.NodeGroups, getNameAndReplicasFromNodeGroup, compactorCloneSets, getGroupAndReadyReplicasForCloneSets),
+		Connector:  buildNodeGroupStatus(componentsSpec.Connector.NodeGroups, getNameAndReplicasFromNodeGroup, connectorCloneSets, getGroupAndReadyReplicasForCloneSets),
+		Compute:    buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
+		Standalone: risingwavev1alpha1.ComponentReplicasStatus{Target: 0, Running: 0},
 	}
 	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
 		// Report meta storage status.
@@ -299,11 +326,12 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
 	componentReplicas := risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
-		Meta:      buildNodeGroupStatus(componentsSpec.Meta.NodeGroups, getNameAndReplicasFromNodeGroup, metaStatefulSets, getGroupAndReadyReplicasForStatefulSet),
-		Frontend:  buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendDeployments, getGroupAndReadyReplicasForDeployment),
-		Compactor: buildNodeGroupStatus(componentsSpec.Compactor.NodeGroups, getNameAndReplicasFromNodeGroup, compactorDeployments, getGroupAndReadyReplicasForDeployment),
-		Connector: buildNodeGroupStatus(componentsSpec.Connector.NodeGroups, getNameAndReplicasFromNodeGroup, connectorDeployments, getGroupAndReadyReplicasForDeployment),
-		Compute:   buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
+		Meta:       buildNodeGroupStatus(componentsSpec.Meta.NodeGroups, getNameAndReplicasFromNodeGroup, metaStatefulSets, getGroupAndReadyReplicasForStatefulSet),
+		Frontend:   buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendDeployments, getGroupAndReadyReplicasForDeployment),
+		Compactor:  buildNodeGroupStatus(componentsSpec.Compactor.NodeGroups, getNameAndReplicasFromNodeGroup, compactorDeployments, getGroupAndReadyReplicasForDeployment),
+		Connector:  buildNodeGroupStatus(componentsSpec.Connector.NodeGroups, getNameAndReplicasFromNodeGroup, connectorDeployments, getGroupAndReadyReplicasForDeployment),
+		Compute:    buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
+		Standalone: risingwavev1alpha1.ComponentReplicasStatus{Target: 0, Running: 0},
 	}
 
 	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
@@ -1034,7 +1062,9 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 		status.Version = utils.GetVersionFromImage(mgr.risingwaveManager.RisingWave().Spec.Image)
 
 		// Report component replicas.
-		status.ComponentReplicas = risingwavev1alpha1.RisingWaveComponentsReplicasStatus{}
+		status.ComponentReplicas = risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
+			Standalone: getStandaloneStatus(risingwave, standaloneStatefulSet, logger),
+		}
 	})
 
 	recoverConditionAndReasons := []struct {
@@ -1078,7 +1108,12 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 }
 
 // CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone(ctx context.Context, logger logr.Logger, standaloneService *corev1.Service, standaloneAdvancedStatefulSet *kruiseappsv1beta1.StatefulSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error) {
+func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatusForStandalone(
+	ctx context.Context,
+	logger logr.Logger,
+	standaloneService *corev1.Service,
+	standaloneAdvancedStatefulSet *kruiseappsv1beta1.StatefulSet,
+	configConfigMap *corev1.ConfigMap) (ctrl.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
@@ -1098,7 +1133,9 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 		status.Version = utils.GetVersionFromImage(mgr.risingwaveManager.RisingWave().Spec.Image)
 
 		// Report component replicas.
-		status.ComponentReplicas = risingwavev1alpha1.RisingWaveComponentsReplicasStatus{}
+		status.ComponentReplicas = risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
+			Standalone: getOpenKruiseStandaloneStatus(risingwave, standaloneAdvancedStatefulSet, logger),
+		}
 	})
 
 	recoverConditionAndReasons := []struct {

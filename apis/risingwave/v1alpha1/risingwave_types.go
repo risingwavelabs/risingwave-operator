@@ -186,6 +186,9 @@ type RisingWaveComponentsReplicasStatus struct {
 
 	// Running status of connector.
 	Connector ComponentReplicasStatus `json:"connector"`
+
+	// Running status of standalone component.
+	Standalone ComponentReplicasStatus `json:"standalone"`
 }
 
 // RisingWaveConditionType is the condition type of RisingWave.

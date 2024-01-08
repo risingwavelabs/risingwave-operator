@@ -32,11 +32,6 @@ prometheus:
     - bearerTokenSecret:
         key: ""
       interval: 5s
-      metricRelabelings:
-        - action: drop
-          regex: stream_exchange_.+
-          sourceLabels:
-            - __name__
       port: metrics
       scrapeTimeout: 5s
     jobLabel: risingwave/risingwave

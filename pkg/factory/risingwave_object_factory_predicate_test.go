@@ -934,7 +934,8 @@ func servicesPredicates() []predicate[*corev1.Service, servicesTestCase] {
 		{
 			Name: "selector-equals",
 			Fn: func(obj *corev1.Service, testcase servicesTestCase) bool {
-				return hasServiceSelector(obj, podSelector(testcase.risingwave, testcase.component, nil))
+				selectorComponent := lo.If(testcase.selectorComponent == "", testcase.component).Else(testcase.selectorComponent)
+				return hasServiceSelector(obj, podSelector(testcase.risingwave, selectorComponent, nil))
 			},
 		},
 	}

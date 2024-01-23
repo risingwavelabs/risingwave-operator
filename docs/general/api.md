@@ -605,20 +605,6 @@ spec.components will be ignored. Standalone mode can be turned on/off dynamicall
 </tr>
 <tr>
 <td>
-<code>enableEmbeddedConnector</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Flag to control whether to use the embedded connector (recommended). If embedded connector is enabled,
-the dedicated connectors won&rsquo;t be deployed and used anymore and the corresponding fields will be ignored.
-The dedicated connector will be deprecated soon because of its error proneness.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>image</code><br/>
 <em>
 string
@@ -976,19 +962,6 @@ ComponentReplicasStatus
 </tr>
 <tr>
 <td>
-<code>connector</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.ComponentReplicasStatus">
-ComponentReplicasStatus
-</a>
-</em>
-</td>
-<td>
-<p>Running status of connector.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>standalone</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.ComponentReplicasStatus">
@@ -1081,19 +1054,6 @@ RisingWaveComponent
 </td>
 <td>
 <p>Compactor contains configuration of the compactor component.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>connector</code><br/>
-<em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponent">
-RisingWaveComponent
-</a>
-</em>
-</td>
-<td>
-<p>Connector contains configuration of the connector component.</p>
 </td>
 </tr>
 </tbody>
@@ -1418,18 +1378,6 @@ int32
 <td>
 <em>(Optional)</em>
 <p>Replicas of compactor component. Replicas specified here is in a default group (with empty name &ldquo;).</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>connector</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Replicas of connector component. Replicas specified here is in a default group (with empty name &ldquo;).</p>
 </td>
 </tr>
 </tbody>
@@ -4206,20 +4154,6 @@ bool
 <em>(Optional)</em>
 <p>Flag to control whether to deploy in standalone mode or distributed mode. If standalone mode is used,
 spec.components will be ignored. Standalone mode can be turned on/off dynamically.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>enableEmbeddedConnector</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Flag to control whether to use the embedded connector (recommended). If embedded connector is enabled,
-the dedicated connectors won&rsquo;t be deployed and used anymore and the corresponding fields will be ignored.
-The dedicated connector will be deprecated soon because of its error proneness.</p>
 </td>
 </tr>
 <tr>

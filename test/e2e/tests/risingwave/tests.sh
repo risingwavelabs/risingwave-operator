@@ -224,18 +224,6 @@ function test::run::risingwave::openkruise_integration() {
 	fi
 }
 
-function test::run::risingwave::connector_test() {
-	logging::info "Starting RisingWave..."
-	if ! test::risingwave::start connector/connector-test.yaml; then
-		return 1
-	fi
-	logging::info "Started!"
-
-	logging::info "Stopping RisingWave..."
-	test::risingwave::stop connector/connector-test.yaml
-	logging::info "Stopped!"
-}
-
 # Export the test case only when the required parameters exists.
 if [[ -v "E2E_AWS_ACCESS_KEY_ID" && -v "E2E_AWS_SECRET_ACCESS_KEY_ID" && -v "E2E_AWS_S3_REGION" && -v "E2E_AWS_S3_BUCKET" ]]; then
 	function test::run::risingwave::storage_support::object_aws_s3() {

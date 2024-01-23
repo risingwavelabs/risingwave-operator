@@ -55,13 +55,12 @@ func isImageValid(image string) bool {
 }
 
 var systemEnv = map[string]bool{
-	envs.PodIP:                  true,
-	envs.PodName:                true,
-	envs.PodNamespace:           true,
-	envs.RustBacktrace:          true,
-	envs.RWWorkerThreads:        true,
-	envs.RWConnectorRPCEndPoint: true,
-	envs.JavaOpts:               true,
+	envs.PodIP:           true,
+	envs.PodName:         true,
+	envs.PodNamespace:    true,
+	envs.RustBacktrace:   true,
+	envs.RWWorkerThreads: true,
+	envs.JavaOpts:        true,
 }
 
 func (v *RisingWaveValidatingWebhook) isBypassed(obj client.Object) bool {
@@ -254,11 +253,6 @@ func (v *RisingWaveValidatingWebhook) validateComponents(path *field.Path, compo
 	compactorGroupsPath := path.Child("compactor", "nodeGroups")
 	for i, ng := range components.Compactor.NodeGroups {
 		fieldErrs = append(fieldErrs, v.validateNodeGroup(compactorGroupsPath.Index(i), &ng, openKruiseEnabled)...)
-	}
-
-	connectorGroupsPath := path.Child("connector", "nodeGroups")
-	for i, ng := range components.Connector.NodeGroups {
-		fieldErrs = append(fieldErrs, v.validateNodeGroup(connectorGroupsPath.Index(i), &ng, openKruiseEnabled)...)
 	}
 
 	computeGroupsPath := path.Child("compute", "nodeGroups")

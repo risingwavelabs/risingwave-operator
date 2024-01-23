@@ -77,11 +77,6 @@ const (
 	RisingWaveAction_SyncCompactorCloneSets                     = manager.RisingWaveAction_SyncCompactorCloneSets
 	RisingWaveAction_WaitBeforeCompactorDeploymentsReady        = manager.RisingWaveAction_WaitBeforeCompactorDeploymentsReady
 	RisingWaveAction_WaitBeforeCompactorCloneSetsReady          = manager.RisingWaveAction_WaitBeforeCompactorCloneSetsReady
-	RisingWaveAction_SyncConnectorService                       = manager.RisingWaveAction_SyncConnectorService
-	RisingWaveAction_SyncConnectorDeployments                   = manager.RisingWaveAction_SyncConnectorDeployments
-	RisingWaveAction_SyncConnectorCloneSets                     = manager.RisingWaveAction_SyncConnectorCloneSets
-	RisingWaveAction_WaitBeforeConnectorDeploymentsReady        = manager.RisingWaveAction_WaitBeforeConnectorDeploymentsReady
-	RisingWaveAction_WaitBeforeConnectorCloneSetsReady          = manager.RisingWaveAction_WaitBeforeConnectorCloneSetsReady
 	RisingWaveAction_SyncConfigConfigMap                        = manager.RisingWaveAction_SyncConfigConfigMap
 	RisingWaveAction_CollectRunningStatisticsAndSyncStatus      = manager.RisingWaveAction_CollectRunningStatisticsAndSyncStatus
 	RisingWaveAction_SyncServiceMonitor                         = manager.RisingWaveAction_SyncServiceMonitor
@@ -313,27 +308,17 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			mgr.SyncFrontendDeployments(),
 			ctrlkit.If(c.openKruiseAvailable, mgr.SyncFrontendCloneSets()),
 		),
-		// Sync only when embedded connector is disabled.
-		ctrlkit.If(!risingwaveManger.IsEmbeddedConnectorEnabled(),
-			ctrlkit.ParallelJoin(
-				mgr.SyncConnectorService(),
-				mgr.SyncConnectorDeployments(),
-				ctrlkit.If(c.openKruiseAvailable, mgr.SyncConnectorCloneSets()),
-			),
-		),
 	)
 	otherOpenKruiseComponentsReadyBarrier := ctrlkit.ParallelJoin(
 		mgr.WaitBeforeFrontendCloneSetsReady(),
 		mgr.WaitBeforeComputeAdvancedStatefulSetsReady(),
 		mgr.WaitBeforeCompactorCloneSetsReady(),
-		ctrlkit.If(!risingwaveManger.IsEmbeddedConnectorEnabled(), mgr.WaitBeforeConnectorCloneSetsReady()),
 	)
 
 	otherComponentsReadyBarrier := ctrlkit.Join(
 		mgr.WaitBeforeFrontendDeploymentsReady(),
 		mgr.WaitBeforeComputeStatefulSetsReady(),
 		mgr.WaitBeforeCompactorDeploymentsReady(),
-		ctrlkit.If(!risingwaveManger.IsEmbeddedConnectorEnabled(), mgr.WaitBeforeConnectorDeploymentsReady()),
 		ctrlkit.If(c.openKruiseAvailable, otherOpenKruiseComponentsReadyBarrier),
 	)
 

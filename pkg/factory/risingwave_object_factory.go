@@ -182,8 +182,6 @@ func (f *RisingWaveObjectFactory) componentName(component, group string) string 
 		return f.risingwave.Name + "-frontend" + groupSuffix(group)
 	case consts.ComponentCompactor:
 		return f.risingwave.Name + "-compactor" + groupSuffix(group)
-	case consts.ComponentConnector:
-		return f.risingwave.Name + "-connector" + groupSuffix(group)
 	case consts.ComponentStandalone:
 		return f.risingwave.Name + "-standalone"
 	case consts.ComponentConfig:
@@ -407,13 +405,6 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		},
 	}
 
-	if !ptr.Deref(f.risingwave.Spec.EnableEmbeddedConnector, false) {
-		envVars = append(envVars, corev1.EnvVar{
-			Name:  envs.RWConnectorRPCEndPoint,
-			Value: fmt.Sprintf("%s:%d", f.componentAddr(consts.ComponentConnector, ""), consts.ConnectorServicePort),
-		})
-	}
-
 	envVars = append(envVars, f.coreEnvsForMeta()...)
 
 	return envVars
@@ -474,13 +465,6 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 			Name:  envs.RWPrometheusListenerAddr,
 			Value: fmt.Sprintf("0.0.0.0:%d", consts.ComputeMetricsPort),
 		},
-	}
-
-	if !ptr.Deref(f.risingwave.Spec.EnableEmbeddedConnector, false) {
-		envVars = append(envVars, corev1.EnvVar{
-			Name:  envs.RWConnectorRPCEndPoint,
-			Value: fmt.Sprintf("%s:%d", f.componentAddr(consts.ComponentConnector, ""), consts.ConnectorServicePort),
-		})
 	}
 
 	if cpuLimit != 0 {
@@ -1360,9 +1344,6 @@ func (f *RisingWaveObjectFactory) newPodTemplateSpecFromNodeGroupByComponent(com
 	case consts.ComponentCompute:
 		containerModifier = f.setupComputeContainer
 		componentPtr = &f.risingwave.Spec.Components.Compute
-	case consts.ComponentConnector:
-		containerModifier = f.setupConnectorContainer
-		componentPtr = &f.risingwave.Spec.Components.Connector
 	case consts.ComponentStandalone:
 		containerModifier = f.setupStandaloneContainer
 		componentPtr = f.convertStandaloneSpecIntoComponent()
@@ -1500,62 +1481,6 @@ func (f *RisingWaveObjectFactory) setupCompactorContainer(container *corev1.Cont
 		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
 			return a.Name == b.Name
 		})
-	}
-
-	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
-		return a.MountPath == b.MountPath
-	})
-}
-
-func (f *RisingWaveObjectFactory) portsForConnectorContainer() []corev1.ContainerPort {
-	return []corev1.ContainerPort{
-		{
-			Name:          consts.PortService,
-			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: consts.ConnectorServicePort,
-		},
-		{
-			Name:          consts.PortMetrics,
-			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: consts.ConnectorMetricsPort,
-		},
-	}
-}
-
-func (f *RisingWaveObjectFactory) argsForConnector() []string {
-	return []string{
-		"-p", fmt.Sprintf("%d", consts.ConnectorServicePort),
-	}
-}
-
-func (f *RisingWaveObjectFactory) setupConnectorContainer(container *corev1.Container) {
-	container.Name = "connector"
-	container.Args = f.argsForConnector()
-	container.Ports = f.portsForConnectorContainer()
-	container.Command = []string{"/risingwave/bin/connector-node/start-service.sh"}
-
-	memLimits := container.Resources.Limits.Memory().Value()
-	if memLimits != 0 {
-
-		var mergedVars = []corev1.EnvVar{
-			{
-				Name:  envs.JavaOpts,
-				Value: fmt.Sprintf("-Xmx%d", memLimits),
-			},
-			{
-				Name:  envs.RWConnectorNodePrometheusPort,
-				Value: fmt.Sprintf("%d", consts.ConnectorMetricsPort),
-			},
-		}
-
-		// ensure the container env not override by generated env.
-		for _, env := range container.Env {
-			mergedVars = mergeListWhenKeyEquals(mergedVars, env, func(a, b *corev1.EnvVar) bool {
-				return a.Name == b.Name
-			})
-		}
-
-		container.Env = mergedVars
 	}
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
@@ -1851,26 +1776,6 @@ func (f *RisingWaveObjectFactory) NewCompactorService() *corev1.Service {
 	return mustSetControllerReference(f.risingwave, compactorSvc, f.scheme)
 }
 
-// NewConnectorService creates a new Service for the connector.
-func (f *RisingWaveObjectFactory) NewConnectorService() *corev1.Service {
-	connectorSvc := f.newService(consts.ComponentConnector, corev1.ServiceTypeClusterIP, []corev1.ServicePort{
-		{
-			Name:       consts.PortService,
-			Protocol:   corev1.ProtocolTCP,
-			Port:       consts.ConnectorServicePort,
-			TargetPort: intstr.FromString(consts.PortService),
-		},
-		{
-			Name:       consts.PortMetrics,
-			Protocol:   corev1.ProtocolTCP,
-			Port:       consts.ConnectorMetricsPort,
-			TargetPort: intstr.FromString(consts.PortMetrics),
-		},
-	})
-
-	return mustSetControllerReference(f.risingwave, connectorSvc, f.scheme)
-}
-
 // NewMetaStatefulSet creates a new StatefulSet for the meta component and specified group.
 func (f *RisingWaveObjectFactory) NewMetaStatefulSet(group string) *appsv1.StatefulSet {
 	return newWorkloadObjectForComponentNodeGroup(f, consts.ComponentMeta, group, f.newStatefulSet)
@@ -1909,16 +1814,6 @@ func (f *RisingWaveObjectFactory) NewCompactorDeployment(group string) *appsv1.D
 // NewCompactorCloneSet creates a new CloneSet for the compactor component and specified group.
 func (f *RisingWaveObjectFactory) NewCompactorCloneSet(group string) *kruiseappsv1alpha1.CloneSet {
 	return newWorkloadObjectForComponentNodeGroup(f, consts.ComponentCompactor, group, f.newCloneSet)
-}
-
-// NewConnectorDeployment creates a new Deployment for the connector component and specified group.
-func (f *RisingWaveObjectFactory) NewConnectorDeployment(group string) *appsv1.Deployment {
-	return newWorkloadObjectForComponentNodeGroup(f, consts.ComponentConnector, group, f.newDeployment)
-}
-
-// NewConnectorCloneSet creates a new CloneSet for the connector component and specified group.
-func (f *RisingWaveObjectFactory) NewConnectorCloneSet(group string) *kruiseappsv1alpha1.CloneSet {
-	return newWorkloadObjectForComponentNodeGroup(f, consts.ComponentConnector, group, f.newCloneSet)
 }
 
 func buildUpgradeStrategyForStatefulSet(strategy risingwavev1alpha1.RisingWaveNodeGroupUpgradeStrategy) appsv1.StatefulSetUpdateStrategy {

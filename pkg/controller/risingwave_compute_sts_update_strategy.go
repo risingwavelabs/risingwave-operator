@@ -46,6 +46,9 @@ type RisingWaveComputeSTSUpdateStrategy struct {
 	client client.Client
 }
 
+// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;delete
+// +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch
+
 // Reconcile implements reconcile.Reconciler.
 func (s *RisingWaveComputeSTSUpdateStrategy) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	logger := log.FromContext(ctx)

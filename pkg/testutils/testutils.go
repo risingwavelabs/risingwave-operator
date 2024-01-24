@@ -180,29 +180,6 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 					},
 				},
 			},
-			Connector: risingwavev1alpha1.RisingWaveComponent{
-				NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
-					{
-						Replicas: 1,
-						Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
-							Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
-								RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{
-									Resources: corev1.ResourceRequirements{
-										Limits: corev1.ResourceList{
-											corev1.ResourceCPU:    resource.MustParse("1"),
-											corev1.ResourceMemory: resource.MustParse("1Gi"),
-										},
-										Requests: corev1.ResourceList{
-											corev1.ResourceCPU:    resource.MustParse("100m"),
-											corev1.ResourceMemory: resource.MustParse("100Mi"),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 		},
 	},
 	Status: risingwavev1alpha1.RisingWaveStatus{
@@ -255,17 +232,6 @@ var fakeRisingWave = &risingwavev1alpha1.RisingWave{
 				},
 			},
 			Compactor: risingwavev1alpha1.ComponentReplicasStatus{
-				Target:  1,
-				Running: 1,
-				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{
-					{
-						Name:    "",
-						Target:  1,
-						Running: 1,
-					},
-				},
-			},
-			Connector: risingwavev1alpha1.ComponentReplicasStatus{
 				Target:  1,
 				Running: 1,
 				Groups: []risingwavev1alpha1.ComponentGroupReplicasStatus{

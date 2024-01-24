@@ -222,83 +222,6 @@ func (s *RisingWaveControllerManagerState) GetConfigConfigMap(ctx context.Contex
 	return &configConfigMap, nil
 }
 
-// GetConnectorCloneSets lists connectorCloneSets with the following selectors:
-//   - labels/risingwave/component=connector
-//   - labels/risingwave/name=${target.Name}
-//   - owned
-func (s *RisingWaveControllerManagerState) GetConnectorCloneSets(ctx context.Context) ([]appsv1alpha1.CloneSet, error) {
-	var connectorCloneSetsList appsv1alpha1.CloneSetList
-
-	matchingLabels := map[string]string{
-		"risingwave/component": "connector",
-		"risingwave/name":      s.target.Name,
-	}
-
-	err := s.List(ctx, &connectorCloneSetsList, client.InNamespace(s.target.Namespace),
-		client.MatchingLabels(matchingLabels))
-	if err != nil {
-		return nil, fmt.Errorf("unable to get state 'connectorCloneSets': %w", err)
-	}
-
-	var validated []appsv1alpha1.CloneSet
-	for _, obj := range connectorCloneSetsList.Items {
-		if ctrlkit.ValidateOwnership(&obj, s.target) {
-			validated = append(validated, obj)
-		}
-	}
-
-	return validated, nil
-}
-
-// GetConnectorDeployments lists connectorDeployments with the following selectors:
-//   - labels/risingwave/component=connector
-//   - labels/risingwave/name=${target.Name}
-//   - owned
-func (s *RisingWaveControllerManagerState) GetConnectorDeployments(ctx context.Context) ([]appsv1.Deployment, error) {
-	var connectorDeploymentsList appsv1.DeploymentList
-
-	matchingLabels := map[string]string{
-		"risingwave/component": "connector",
-		"risingwave/name":      s.target.Name,
-	}
-
-	err := s.List(ctx, &connectorDeploymentsList, client.InNamespace(s.target.Namespace),
-		client.MatchingLabels(matchingLabels))
-	if err != nil {
-		return nil, fmt.Errorf("unable to get state 'connectorDeployments': %w", err)
-	}
-
-	var validated []appsv1.Deployment
-	for _, obj := range connectorDeploymentsList.Items {
-		if ctrlkit.ValidateOwnership(&obj, s.target) {
-			validated = append(validated, obj)
-		}
-	}
-
-	return validated, nil
-}
-
-// GetConnectorService gets connectorService with name equals to ${target.Name}-connector.
-func (s *RisingWaveControllerManagerState) GetConnectorService(ctx context.Context) (*corev1.Service, error) {
-	var connectorService corev1.Service
-
-	err := s.Get(ctx, types.NamespacedName{
-		Namespace: s.target.Namespace,
-		Name:      s.target.Name + "-connector",
-	}, &connectorService)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to get state 'connectorService': %w", err)
-	}
-	if !ctrlkit.ValidateOwnership(&connectorService, s.target) {
-		return nil, fmt.Errorf("unable to get state 'connectorService': object not owned by target")
-	}
-
-	return &connectorService, nil
-}
-
 // GetFrontendCloneSets lists frontendCloneSets with the following selectors:
 //   - labels/risingwave/component=frontend
 //   - labels/risingwave/name=${target.Name}
@@ -610,21 +533,6 @@ type RisingWaveControllerManagerImpl interface {
 	// WaitBeforeCompactorDeploymentsReady waits (aborts the workflow) before the compactor CloneSets are ready.
 	WaitBeforeCompactorCloneSetsReady(ctx context.Context, logger logr.Logger, compactorCloneSets []appsv1alpha1.CloneSet) (ctrl.Result, error)
 
-	// SyncConnectorService creates or updates the service for connector nodes.
-	SyncConnectorService(ctx context.Context, logger logr.Logger, connectorService *corev1.Service) (ctrl.Result, error)
-
-	// SyncConnectorDeployments creates or updates the Deployments for connector nodes.
-	SyncConnectorDeployments(ctx context.Context, logger logr.Logger, connectorDeployments []appsv1.Deployment) (ctrl.Result, error)
-
-	// SyncConnectorCloneSets creates or updates the Deployments for connector nodes.
-	SyncConnectorCloneSets(ctx context.Context, logger logr.Logger, connectorCloneSets []appsv1alpha1.CloneSet) (ctrl.Result, error)
-
-	// WaitBeforeConnectorDeploymentsReady waits (aborts the workflow) before the connector Deployments are ready.
-	WaitBeforeConnectorDeploymentsReady(ctx context.Context, logger logr.Logger, connectorDeployments []appsv1.Deployment) (ctrl.Result, error)
-
-	// WaitBeforeConnectorDeploymentsReady waits (aborts the workflow) before the connector CloneSets are ready.
-	WaitBeforeConnectorCloneSetsReady(ctx context.Context, logger logr.Logger, connectorCloneSets []appsv1alpha1.CloneSet) (ctrl.Result, error)
-
 	// SyncConfigConfigMap creates or updates the configmap for RisingWave configs.
 	SyncConfigConfigMap(ctx context.Context, logger logr.Logger, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 
@@ -647,9 +555,9 @@ type RisingWaveControllerManagerImpl interface {
 	SyncServiceMonitor(ctx context.Context, logger logr.Logger, serviceMonitor *monitoringv1.ServiceMonitor) (ctrl.Result, error)
 
 	// CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
-	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, connectorService *corev1.Service, metaStatefulSets []appsv1.StatefulSet, frontendDeployments []appsv1.Deployment, computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, connectorDeployments []appsv1.Deployment, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
+	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaStatefulSets []appsv1.StatefulSet, frontendDeployments []appsv1.Deployment, computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 
-	CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, connectorService *corev1.Service, metaAdvancedStatefulSets []appsv1beta1.StatefulSet, frontendCloneSets []appsv1alpha1.CloneSet, computeAdvancedStatefulSets []appsv1beta1.StatefulSet, compactorCloneSets []appsv1alpha1.CloneSet, connectorCloneSets []appsv1alpha1.CloneSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
+	CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaAdvancedStatefulSets []appsv1beta1.StatefulSet, frontendCloneSets []appsv1alpha1.CloneSet, computeAdvancedStatefulSets []appsv1beta1.StatefulSet, compactorCloneSets []appsv1alpha1.CloneSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 
 	// CollectRunningStatisticsAndSyncStatusForStandalone collects running statistics and sync them into the status.
 	CollectRunningStatisticsAndSyncStatusForStandalone(ctx context.Context, logger logr.Logger, standaloneService *corev1.Service, standaloneStatefulSet *appsv1.StatefulSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
@@ -680,11 +588,6 @@ const (
 	RisingWaveAction_SyncCompactorCloneSets                                       = "SyncCompactorCloneSets"
 	RisingWaveAction_WaitBeforeCompactorDeploymentsReady                          = "WaitBeforeCompactorDeploymentsReady"
 	RisingWaveAction_WaitBeforeCompactorCloneSetsReady                            = "WaitBeforeCompactorCloneSetsReady"
-	RisingWaveAction_SyncConnectorService                                         = "SyncConnectorService"
-	RisingWaveAction_SyncConnectorDeployments                                     = "SyncConnectorDeployments"
-	RisingWaveAction_SyncConnectorCloneSets                                       = "SyncConnectorCloneSets"
-	RisingWaveAction_WaitBeforeConnectorDeploymentsReady                          = "WaitBeforeConnectorDeploymentsReady"
-	RisingWaveAction_WaitBeforeConnectorCloneSetsReady                            = "WaitBeforeConnectorCloneSetsReady"
 	RisingWaveAction_SyncConfigConfigMap                                          = "SyncConfigConfigMap"
 	RisingWaveAction_SyncStandaloneService                                        = "SyncStandaloneService"
 	RisingWaveAction_SyncStandaloneStatefulSet                                    = "SyncStandaloneStatefulSet"
@@ -1207,121 +1110,6 @@ func (m *RisingWaveControllerManager) WaitBeforeCompactorCloneSetsReady() ctrlki
 	})
 }
 
-// SyncConnectorService generates the action of "SyncConnectorService".
-func (m *RisingWaveControllerManager) SyncConnectorService() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_SyncConnectorService, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_SyncConnectorService)
-
-		// Get states.
-		connectorService, err := m.state.GetConnectorService(ctx)
-		if err != nil {
-			return ctrlkit.RequeueIfError(err)
-		}
-
-		// Invoke action.
-		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncConnectorService, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncConnectorService, map[string]runtime.Object{
-				"connectorService": connectorService,
-			})
-		}
-
-		return m.impl.SyncConnectorService(ctx, logger, connectorService)
-	})
-}
-
-// SyncConnectorDeployments generates the action of "SyncConnectorDeployments".
-func (m *RisingWaveControllerManager) SyncConnectorDeployments() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_SyncConnectorDeployments, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_SyncConnectorDeployments)
-
-		// Get states.
-		connectorDeployments, err := m.state.GetConnectorDeployments(ctx)
-		if err != nil {
-			return ctrlkit.RequeueIfError(err)
-		}
-
-		// Invoke action.
-		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncConnectorDeployments, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncConnectorDeployments, map[string]runtime.Object{
-				"connectorDeployments": &appsv1.DeploymentList{Items: connectorDeployments},
-			})
-		}
-
-		return m.impl.SyncConnectorDeployments(ctx, logger, connectorDeployments)
-	})
-}
-
-// SyncConnectorCloneSets generates the action of "SyncConnectorCloneSets".
-func (m *RisingWaveControllerManager) SyncConnectorCloneSets() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_SyncConnectorCloneSets, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_SyncConnectorCloneSets)
-
-		// Get states.
-		connectorCloneSets, err := m.state.GetConnectorCloneSets(ctx)
-		if err != nil {
-			return ctrlkit.RequeueIfError(err)
-		}
-
-		// Invoke action.
-		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncConnectorCloneSets, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncConnectorCloneSets, map[string]runtime.Object{
-				"connectorCloneSets": &appsv1alpha1.CloneSetList{Items: connectorCloneSets},
-			})
-		}
-
-		return m.impl.SyncConnectorCloneSets(ctx, logger, connectorCloneSets)
-	})
-}
-
-// WaitBeforeConnectorDeploymentsReady generates the action of "WaitBeforeConnectorDeploymentsReady".
-func (m *RisingWaveControllerManager) WaitBeforeConnectorDeploymentsReady() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeConnectorDeploymentsReady, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeConnectorDeploymentsReady)
-
-		// Get states.
-		connectorDeployments, err := m.state.GetConnectorDeployments(ctx)
-		if err != nil {
-			return ctrlkit.RequeueIfError(err)
-		}
-
-		// Invoke action.
-		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeConnectorDeploymentsReady, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeConnectorDeploymentsReady, map[string]runtime.Object{
-				"connectorDeployments": &appsv1.DeploymentList{Items: connectorDeployments},
-			})
-		}
-
-		return m.impl.WaitBeforeConnectorDeploymentsReady(ctx, logger, connectorDeployments)
-	})
-}
-
-// WaitBeforeConnectorCloneSetsReady generates the action of "WaitBeforeConnectorCloneSetsReady".
-func (m *RisingWaveControllerManager) WaitBeforeConnectorCloneSetsReady() ctrlkit.Action {
-	return ctrlkit.NewAction(RisingWaveAction_WaitBeforeConnectorCloneSetsReady, func(ctx context.Context) (result ctrl.Result, err error) {
-		logger := m.logger.WithValues("action", RisingWaveAction_WaitBeforeConnectorCloneSetsReady)
-
-		// Get states.
-		connectorCloneSets, err := m.state.GetConnectorCloneSets(ctx)
-		if err != nil {
-			return ctrlkit.RequeueIfError(err)
-		}
-
-		// Invoke action.
-		if m.hook != nil {
-			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_WaitBeforeConnectorCloneSetsReady, result, err) }()
-			m.hook.PreRun(ctx, logger, RisingWaveAction_WaitBeforeConnectorCloneSetsReady, map[string]runtime.Object{
-				"connectorCloneSets": &appsv1alpha1.CloneSetList{Items: connectorCloneSets},
-			})
-		}
-
-		return m.impl.WaitBeforeConnectorCloneSetsReady(ctx, logger, connectorCloneSets)
-	})
-}
-
 // SyncConfigConfigMap generates the action of "SyncConfigConfigMap".
 func (m *RisingWaveControllerManager) SyncConfigConfigMap() ctrlkit.Action {
 	return ctrlkit.NewAction(RisingWaveAction_SyncConfigConfigMap, func(ctx context.Context) (result ctrl.Result, err error) {
@@ -1513,11 +1301,6 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 			return ctrlkit.RequeueIfError(err)
 		}
 
-		connectorService, err := m.state.GetConnectorService(ctx)
-		if err != nil {
-			return ctrlkit.RequeueIfError(err)
-		}
-
 		metaStatefulSets, err := m.state.GetMetaStatefulSets(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
@@ -1538,11 +1321,6 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 			return ctrlkit.RequeueIfError(err)
 		}
 
-		connectorDeployments, err := m.state.GetConnectorDeployments(ctx)
-		if err != nil {
-			return ctrlkit.RequeueIfError(err)
-		}
-
 		configConfigMap, err := m.state.GetConfigConfigMap(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
@@ -1558,17 +1336,15 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 				"metaService":          metaService,
 				"computeService":       computeService,
 				"compactorService":     compactorService,
-				"connectorService":     connectorService,
 				"metaStatefulSets":     &appsv1.StatefulSetList{Items: metaStatefulSets},
 				"frontendDeployments":  &appsv1.DeploymentList{Items: frontendDeployments},
 				"computeStatefulSets":  &appsv1.StatefulSetList{Items: computeStatefulSets},
 				"compactorDeployments": &appsv1.DeploymentList{Items: compactorDeployments},
-				"connectorDeployments": &appsv1.DeploymentList{Items: connectorDeployments},
 				"configConfigMap":      configConfigMap,
 			})
 		}
 
-		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, connectorService, metaStatefulSets, frontendDeployments, computeStatefulSets, compactorDeployments, connectorDeployments, configConfigMap)
+		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaStatefulSets, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
 	})
 }
 
@@ -1598,11 +1374,6 @@ func (m *RisingWaveControllerManager) CollectOpenKruiseRunningStatisticsAndSyncS
 			return ctrlkit.RequeueIfError(err)
 		}
 
-		connectorService, err := m.state.GetConnectorService(ctx)
-		if err != nil {
-			return ctrlkit.RequeueIfError(err)
-		}
-
 		metaAdvancedStatefulSets, err := m.state.GetMetaAdvancedStatefulSets(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
@@ -1623,11 +1394,6 @@ func (m *RisingWaveControllerManager) CollectOpenKruiseRunningStatisticsAndSyncS
 			return ctrlkit.RequeueIfError(err)
 		}
 
-		connectorCloneSets, err := m.state.GetConnectorCloneSets(ctx)
-		if err != nil {
-			return ctrlkit.RequeueIfError(err)
-		}
-
 		configConfigMap, err := m.state.GetConfigConfigMap(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
@@ -1643,17 +1409,15 @@ func (m *RisingWaveControllerManager) CollectOpenKruiseRunningStatisticsAndSyncS
 				"metaService":                 metaService,
 				"computeService":              computeService,
 				"compactorService":            compactorService,
-				"connectorService":            connectorService,
 				"metaAdvancedStatefulSets":    &appsv1beta1.StatefulSetList{Items: metaAdvancedStatefulSets},
 				"frontendCloneSets":           &appsv1alpha1.CloneSetList{Items: frontendCloneSets},
 				"computeAdvancedStatefulSets": &appsv1beta1.StatefulSetList{Items: computeAdvancedStatefulSets},
 				"compactorCloneSets":          &appsv1alpha1.CloneSetList{Items: compactorCloneSets},
-				"connectorCloneSets":          &appsv1alpha1.CloneSetList{Items: connectorCloneSets},
 				"configConfigMap":             configConfigMap,
 			})
 		}
 
-		return m.impl.CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, connectorService, metaAdvancedStatefulSets, frontendCloneSets, computeAdvancedStatefulSets, compactorCloneSets, connectorCloneSets, configConfigMap)
+		return m.impl.CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaAdvancedStatefulSets, frontendCloneSets, computeAdvancedStatefulSets, compactorCloneSets, configConfigMap)
 	})
 }
 
@@ -1676,10 +1440,6 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatusForSt
 		configConfigMap, err := m.state.GetConfigConfigMap(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
-		}
-
-		if standaloneService == nil || standaloneStatefulSet == nil || configConfigMap == nil {
-			return ctrlkit.RequeueIfError(fmt.Errorf("standaloneService, standaloneStatefulSet, configConfigMap cannot be nil"))
 		}
 
 		// Invoke action.

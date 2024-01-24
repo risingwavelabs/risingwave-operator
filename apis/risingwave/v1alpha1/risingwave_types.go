@@ -48,11 +48,6 @@ type RisingWaveGlobalReplicas struct {
 	// +optional
 	// +kubebuilder:validation:Minimum=0
 	Compactor int32 `json:"compactor,omitempty"`
-
-	// Replicas of connector component. Replicas specified here is in a default group (with empty name '').
-	// +optional
-	// +kubebuilder:validation:Minimum=0
-	Connector int32 `json:"connector,omitempty"`
 }
 
 // RisingWaveComponentsSpec is the spec for RisingWave components.
@@ -71,9 +66,6 @@ type RisingWaveComponentsSpec struct {
 
 	// Compactor contains configuration of the compactor component.
 	Compactor RisingWaveComponent `json:"compactor,omitempty"`
-
-	// Connector contains configuration of the connector component.
-	Connector RisingWaveComponent `json:"connector,omitempty"`
 }
 
 // RisingWaveSpec is the overall spec.
@@ -111,13 +103,6 @@ type RisingWaveSpec struct {
 	// +optional
 	// +kubebuilder:default=false
 	EnableStandaloneMode *bool `json:"enableStandaloneMode,omitempty"`
-
-	// Flag to control whether to use the embedded connector (recommended). If embedded connector is enabled,
-	// the dedicated connectors won't be deployed and used anymore and the corresponding fields will be ignored.
-	// The dedicated connector will be deprecated soon because of its error proneness.
-	// +optional
-	// +kubebuilder:default=false
-	EnableEmbeddedConnector *bool `json:"enableEmbeddedConnector,omitempty"`
 
 	// Image for RisingWave component.
 	Image string `json:"image"`
@@ -183,9 +168,6 @@ type RisingWaveComponentsReplicasStatus struct {
 
 	// Running status of compactor.
 	Compactor ComponentReplicasStatus `json:"compactor"`
-
-	// Running status of connector.
-	Connector ComponentReplicasStatus `json:"connector"`
 
 	// Running status of standalone component.
 	Standalone ComponentReplicasStatus `json:"standalone"`

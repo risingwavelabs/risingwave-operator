@@ -2761,20 +2761,6 @@ func servicesTestCases() map[string]servicesTestCase {
 			globalServiceType: corev1.ServiceTypeNodePort,
 			expectServiceType: corev1.ServiceTypeClusterIP,
 		},
-		"connector-ports": {
-			component:         consts.ComponentConnector,
-			globalServiceType: corev1.ServiceTypeClusterIP,
-			expectServiceType: corev1.ServiceTypeClusterIP,
-			ports: map[string]int32{
-				consts.PortService: consts.ConnectorServicePort,
-				consts.PortMetrics: consts.ConnectorMetricsPort,
-			},
-		},
-		"connector-ports-node-port": {
-			component:         consts.ComponentConnector,
-			globalServiceType: corev1.ServiceTypeNodePort,
-			expectServiceType: corev1.ServiceTypeClusterIP,
-		},
 		"standalone-ports": {
 			component:            consts.ComponentStandalone,
 			enableStandaloneMode: true,
@@ -2873,24 +2859,6 @@ func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
 		},
 		"random-compactor-annotations": {
 			component: consts.ComponentCompactor,
-			globalServiceMeta: risingwavev1alpha1.PartialObjectMeta{
-				Annotations: map[string]string{
-					"key1": "value1",
-					"key2": "value2",
-				},
-			},
-		},
-		"random-connector-labels": {
-			component: consts.ComponentConnector,
-			globalServiceMeta: risingwavev1alpha1.PartialObjectMeta{
-				Labels: map[string]string{
-					"key1": "value1",
-					"key2": "value2",
-				},
-			},
-		},
-		"random-connector-annotations": {
-			component: consts.ComponentConnector,
 			globalServiceMeta: risingwavev1alpha1.PartialObjectMeta{
 				Annotations: map[string]string{
 					"key1": "value1",

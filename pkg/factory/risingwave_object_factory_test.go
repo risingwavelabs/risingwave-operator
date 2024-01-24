@@ -50,8 +50,6 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 			svc = factory.NewComputeService()
 		case consts.ComponentCompactor:
 			svc = factory.NewCompactorService()
-		case consts.ComponentConnector:
-			svc = factory.NewConnectorService()
 		case consts.ComponentStandalone:
 			svc = factory.NewStandaloneService()
 		default:
@@ -84,8 +82,6 @@ func Test_RisingWaveObjectFactory_ServicesMeta(t *testing.T) {
 			svc = factory.NewComputeService()
 		case consts.ComponentCompactor:
 			svc = factory.NewCompactorService()
-		case consts.ComponentConnector:
-			svc = factory.NewConnectorService()
 		case consts.ComponentStandalone:
 			svc = factory.NewStandaloneService()
 		default:

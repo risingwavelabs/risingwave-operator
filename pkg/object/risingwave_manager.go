@@ -75,8 +75,6 @@ func (r *RisingWaveReader) GetNodeGroups(component string) []risingwavev1alpha1.
 		return r.risingwave.Spec.Components.Compactor.NodeGroups
 	case consts.ComponentFrontend:
 		return r.risingwave.Spec.Components.Frontend.NodeGroups
-	case consts.ComponentConnector:
-		return r.risingwave.Spec.Components.Connector.NodeGroups
 	case consts.ComponentCompute:
 		return r.risingwave.Spec.Components.Compute.NodeGroups
 	case consts.ComponentStandalone:
@@ -202,11 +200,6 @@ func (mgr *RisingWaveManager) IsOpenKruiseEnabled() bool {
 // IsStandaloneModeEnabled returns true when the standalone mode is enabled.
 func (r *RisingWaveReader) IsStandaloneModeEnabled() bool {
 	return ptr.Deref(r.risingwave.Spec.EnableStandaloneMode, false)
-}
-
-// IsEmbeddedConnectorEnabled returns true when the embedded connector is enabled.
-func (r *RisingWaveReader) IsEmbeddedConnectorEnabled() bool {
-	return ptr.Deref(r.risingwave.Spec.EnableEmbeddedConnector, false)
 }
 
 // KeepLock resets the current scale views record in the status with the given array.

@@ -269,10 +269,6 @@ func Test_SortEnvVarSlice(t *testing.T) {
 					Value: "0.0.0.0:1250",
 				},
 				{
-					Name:  "RW_CONNECTOR_RPC_ENDPOINT",
-					Value: "sv-example-connector:50051",
-				},
-				{
 					Name:  "RW_BACKEND",
 					Value: "mem",
 				},
@@ -302,10 +298,6 @@ func Test_SortEnvVarSlice(t *testing.T) {
 				{
 					Name:  "RW_CONFIG_PATH",
 					Value: "/risingwave/config/risingwave.toml",
-				},
-				{
-					Name:  "RW_CONNECTOR_RPC_ENDPOINT",
-					Value: "sv-example-connector:50051",
 				},
 				{
 					Name:  "RW_DASHBOARD_HOST",
@@ -351,9 +343,6 @@ func Test_SortEnvVarSlice(t *testing.T) {
 				},
 				{
 					Name: "RW_CONFIG_PATH",
-				},
-				{
-					Name: "RW_CONNECTOR_RPC_ENDPOINT",
 				},
 				{
 					Name: "RW_DASHBOARD_HOST",
@@ -415,9 +404,6 @@ func Test_SortEnvVarSlice(t *testing.T) {
 				},
 				{
 					Name: "RW_CONFIG_PATH",
-				},
-				{
-					Name: "RW_CONNECTOR_RPC_ENDPOINT",
 				},
 				{
 					Name: "RW_DASHBOARD_HOST",

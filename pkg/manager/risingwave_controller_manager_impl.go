@@ -188,10 +188,9 @@ func buildStateStoreType(stateStore *risingwavev1alpha1.RisingWaveStateStoreBack
 }
 
 // CollectOpenKruiseRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, connectorService *corev1.Service, metaAdvancedStatefulSets []kruiseappsv1beta1.StatefulSet, frontendCloneSets []kruiseappsv1alpha1.CloneSet, computeStatefulSets []kruiseappsv1beta1.StatefulSet, compactorCloneSets []kruiseappsv1alpha1.CloneSet, connectorCloneSets []kruiseappsv1alpha1.CloneSet, configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
+func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaAdvancedStatefulSets []kruiseappsv1beta1.StatefulSet, frontendCloneSets []kruiseappsv1alpha1.CloneSet, computeStatefulSets []kruiseappsv1beta1.StatefulSet, compactorCloneSets []kruiseappsv1alpha1.CloneSet, configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
 
 	risingwave := mgr.risingwaveManager.RisingWave()
-	embeddedConnectorEnabled := mgr.risingwaveManager.IsEmbeddedConnectorEnabled()
 
 	componentsSpec := &risingwave.Spec.Components
 
@@ -209,7 +208,6 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 		Meta:       buildNodeGroupStatus(componentsSpec.Meta.NodeGroups, getNameAndReplicasFromNodeGroup, metaAdvancedStatefulSets, getGroupAndReadyReplicasForStatefulSet),
 		Frontend:   buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendCloneSets, getGroupAndReadyReplicasForCloneSets),
 		Compactor:  buildNodeGroupStatus(componentsSpec.Compactor.NodeGroups, getNameAndReplicasFromNodeGroup, compactorCloneSets, getGroupAndReadyReplicasForCloneSets),
-		Connector:  buildNodeGroupStatus(componentsSpec.Connector.NodeGroups, getNameAndReplicasFromNodeGroup, connectorCloneSets, getGroupAndReadyReplicasForCloneSets),
 		Compute:    buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
 		Standalone: risingwavev1alpha1.ComponentReplicasStatus{Target: 0, Running: 0},
 	}
@@ -255,10 +253,6 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 			component: "Service(compactor)",
 		},
 		{
-			cond:      !embeddedConnectorEnabled && connectorService == nil,
-			component: "Service(connector)",
-		},
-		{
 			cond:      configConfigMap == nil,
 			component: "ConfigMap(config)",
 		},
@@ -277,10 +271,6 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 		{
 			cond:      lo.ContainsBy(componentReplicas.Compactor.Groups, isGroupMissing),
 			component: "CloneSets(compactor)",
-		},
-		{
-			cond:      !embeddedConnectorEnabled && lo.ContainsBy(componentReplicas.Connector.Groups, isGroupMissing),
-			component: "CloneSets(connector)",
 		},
 	}
 
@@ -309,12 +299,11 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 // CollectRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger,
 	frontendService *corev1.Service, metaService *corev1.Service,
-	computeService *corev1.Service, compactorService *corev1.Service, connectorService *corev1.Service,
+	computeService *corev1.Service, compactorService *corev1.Service,
 	metaStatefulSets []appsv1.StatefulSet, frontendDeployments []appsv1.Deployment,
-	computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, connectorDeployments []appsv1.Deployment,
+	computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment,
 	configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
-	embeddedConnectorEnabled := mgr.risingwaveManager.IsEmbeddedConnectorEnabled()
 
 	componentsSpec := &risingwave.Spec.Components
 
@@ -331,7 +320,6 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 		Meta:       buildNodeGroupStatus(componentsSpec.Meta.NodeGroups, getNameAndReplicasFromNodeGroup, metaStatefulSets, getGroupAndReadyReplicasForStatefulSet),
 		Frontend:   buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendDeployments, getGroupAndReadyReplicasForDeployment),
 		Compactor:  buildNodeGroupStatus(componentsSpec.Compactor.NodeGroups, getNameAndReplicasFromNodeGroup, compactorDeployments, getGroupAndReadyReplicasForDeployment),
-		Connector:  buildNodeGroupStatus(componentsSpec.Connector.NodeGroups, getNameAndReplicasFromNodeGroup, connectorDeployments, getGroupAndReadyReplicasForDeployment),
 		Compute:    buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
 		Standalone: risingwavev1alpha1.ComponentReplicasStatus{Target: 0, Running: 0},
 	}
@@ -378,10 +366,6 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 			component: "Service(compactor)",
 		},
 		{
-			cond:      !embeddedConnectorEnabled && connectorService == nil,
-			component: "Service(connector)",
-		},
-		{
 			cond:      configConfigMap == nil,
 			component: "ConfigMap(config)",
 		},
@@ -400,10 +384,6 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 		{
 			cond:      lo.ContainsBy(componentReplicas.Compactor.Groups, isGroupMissing),
 			component: "Deployments(compactor)",
-		},
-		{
-			cond:      !embeddedConnectorEnabled && lo.ContainsBy(componentReplicas.Connector.Groups, isGroupMissing),
-			component: "Deployments(connector)",
 		},
 	}
 
@@ -538,26 +518,6 @@ func (mgr *risingWaveControllerManagerImpl) SyncCompactorCloneSets(ctx context.C
 	)
 }
 
-// SyncConnectorDeployments implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) SyncConnectorDeployments(ctx context.Context, logger logr.Logger, connectorDeployments []appsv1.Deployment) (reconcile.Result, error) {
-	return syncComponentGroupWorkloads(mgr, ctx, logger,
-		consts.ComponentConnector,
-		connectorDeployments, mgr.objectFactory.NewConnectorDeployment,
-		// Only sync if Open Kruise is disabled.
-		!mgr.risingwaveManager.IsOpenKruiseEnabled() && !mgr.risingwaveManager.IsStandaloneModeEnabled(),
-	)
-}
-
-// SyncConnectorCloneSets implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) SyncConnectorCloneSets(ctx context.Context, logger logr.Logger, connectorCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
-	return syncComponentGroupWorkloads(mgr, ctx, logger,
-		consts.ComponentConnector,
-		connectorCloneSets, mgr.objectFactory.NewConnectorCloneSet,
-		// Only sync if Open Kruise is enabled.
-		mgr.risingwaveManager.IsOpenKruiseEnabled() && !mgr.risingwaveManager.IsStandaloneModeEnabled(),
-	)
-}
-
 // SyncComputeStatefulSets implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncComputeStatefulSets(ctx context.Context, logger logr.Logger, computeStatefulSets []appsv1.StatefulSet) (reconcile.Result, error) {
 	return syncComponentGroupWorkloads(mgr, ctx, logger,
@@ -668,28 +628,6 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeCompactorCloneSetsReady(ct
 		lo.If(mgr.risingwaveManager.IsOpenKruiseEnabled() && !mgr.risingwaveManager.IsStandaloneModeEnabled(),
 			mgr.buildExpectedGroupSet(consts.ComponentCompactor)).Else(nil),
 		compactorCloneSets,
-		func(t *kruiseappsv1alpha1.CloneSet) bool {
-			return mgr.isObjectSynced(t) && utils.IsCloneSetRolledOut(t)
-		},
-	)
-}
-
-// WaitBeforeConnectorDeploymentsReady implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) WaitBeforeConnectorDeploymentsReady(ctx context.Context, logger logr.Logger, connectorDeployments []appsv1.Deployment) (reconcile.Result, error) {
-	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentConnector,
-		lo.If(!mgr.risingwaveManager.IsOpenKruiseEnabled() && !mgr.risingwaveManager.IsStandaloneModeEnabled(),
-			mgr.buildExpectedGroupSet(consts.ComponentConnector)).Else(nil),
-		connectorDeployments,
-		func(t *appsv1.Deployment) bool { return mgr.isObjectSynced(t) && utils.IsDeploymentRolledOut(t) },
-	)
-}
-
-// WaitBeforeConnectorCloneSetsReady implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) WaitBeforeConnectorCloneSetsReady(ctx context.Context, logger logr.Logger, connectorCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
-	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentConnector,
-		lo.If(mgr.risingwaveManager.IsOpenKruiseEnabled() && !mgr.risingwaveManager.IsStandaloneModeEnabled(),
-			mgr.buildExpectedGroupSet(consts.ComponentConnector)).Else(nil),
-		connectorCloneSets,
 		func(t *kruiseappsv1alpha1.CloneSet) bool {
 			return mgr.isObjectSynced(t) && utils.IsCloneSetRolledOut(t)
 		},
@@ -889,19 +827,6 @@ func (mgr *risingWaveControllerManagerImpl) SyncCompactorService(ctx context.Con
 	if compactorService != nil {
 		err := mgr.client.Delete(ctx, compactorService, client.Preconditions{UID: &compactorService.UID})
 		return ctrlkit.RequeueIfErrorAndWrap("unable to sync compactor service", err)
-	}
-	return ctrlkit.NoRequeue()
-}
-
-// SyncConnectorService implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) SyncConnectorService(ctx context.Context, logger logr.Logger, connectorService *corev1.Service) (reconcile.Result, error) {
-	if !mgr.risingwaveManager.IsStandaloneModeEnabled() {
-		err := syncObject(mgr, ctx, connectorService, mgr.objectFactory.NewConnectorService, logger)
-		return ctrlkit.RequeueIfErrorAndWrap("unable to sync connector service", err)
-	}
-	if connectorService != nil {
-		err := mgr.client.Delete(ctx, connectorService, client.Preconditions{UID: &connectorService.UID})
-		return ctrlkit.RequeueIfErrorAndWrap("unable to sync connector service", err)
 	}
 	return ctrlkit.NoRequeue()
 }

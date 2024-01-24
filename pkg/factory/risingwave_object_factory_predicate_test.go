@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
-	"github.com/risingwavelabs/risingwave-operator/pkg/factory/envs"
 )
 
 type predicate[T kubeObject, k testCaseType] struct {
@@ -300,16 +299,6 @@ func metaStatefulSetPredicates() []predicate[*appsv1.StatefulSet, metaStatefulSe
 				return container.LivenessProbe != nil && container.ReadinessProbe != nil
 			},
 		},
-		{
-			Name: "envs-contains-connector-rpc-endpoint",
-			Fn: func(obj *appsv1.StatefulSet, tc metaStatefulSetTestCase) bool {
-				container := &obj.Spec.Template.Spec.Containers[0]
-				return container.Env != nil && lo.Contains(container.Env, corev1.EnvVar{
-					Name:  envs.RWConnectorRPCEndPoint,
-					Value: tc.risingwave.Name + "-connector:50051",
-				})
-			},
-		},
 	}
 }
 
@@ -455,18 +444,7 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 // This function returns the predicates used for to compare stateful objects for the compute component.
 // It inherits from the base statefulset predicates and further additional predicates can be added for compute.
 func computeStatefulSetPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestCase] {
-	return append(getSTSPredicates(), []predicate[*appsv1.StatefulSet, computeStatefulSetTestCase]{
-		{
-			Name: "envs-contains-connector-rpc-endpoint",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
-				container := &obj.Spec.Template.Spec.Containers[0]
-				return container.Env != nil && lo.Contains(container.Env, corev1.EnvVar{
-					Name:  envs.RWConnectorRPCEndPoint,
-					Value: tc.risingwave.Name + "-connector:50051",
-				})
-			},
-		},
-	}...)
+	return getSTSPredicates()
 }
 
 // This function returns the base predicates used for the CloneSet objects.
@@ -743,16 +721,6 @@ func getAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, comp
 				return container.LivenessProbe != nil && container.ReadinessProbe != nil
 			},
 		},
-		{
-			Name: "envs-contains-connector-rpc-endpoint",
-			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
-				container := &obj.Spec.Template.Spec.Containers[0]
-				return container.Env != nil && lo.Contains(container.Env, corev1.EnvVar{
-					Name:  envs.RWConnectorRPCEndPoint,
-					Value: tc.risingwave.Name + "-connector:50051",
-				})
-			},
-		},
 	}
 }
 
@@ -884,16 +852,6 @@ func metaAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, met
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestCase) bool {
 				container := &obj.Spec.Template.Spec.Containers[0]
 				return container.LivenessProbe != nil && container.ReadinessProbe != nil
-			},
-		},
-		{
-			Name: "envs-contains-connector-rpc-endpoint",
-			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestCase) bool {
-				container := &obj.Spec.Template.Spec.Containers[0]
-				return container.Env != nil && lo.Contains(container.Env, corev1.EnvVar{
-					Name:  envs.RWConnectorRPCEndPoint,
-					Value: tc.risingwave.Name + "-connector:50051",
-				})
 			},
 		},
 	}

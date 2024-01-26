@@ -381,7 +381,7 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		// Env var for local risectl access.
 		{
 			Name:  envs.RWMetaAddr,
-			Value: fmt.Sprintf("127.0.0.1:%d", consts.MetaServicePort),
+			Value: fmt.Sprintf("http://127.0.0.1:%d", consts.MetaServicePort),
 		},
 		{
 			Name:  envs.RWConfigPath,
@@ -1584,7 +1584,7 @@ func (f *RisingWaveObjectFactory) setupStandaloneContainer(container *corev1.Con
 	// Env var for local risectl access.
 	container.Env = mergeListWhenKeyEquals(container.Env, corev1.EnvVar{
 		Name:  envs.RWMetaAddr,
-		Value: fmt.Sprintf("127.0.0.1:%d", consts.MetaServicePort),
+		Value: fmt.Sprintf("http://127.0.0.1:%d", consts.MetaServicePort),
 	}, func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
 
 	for _, env := range f.envsForStateStore() {

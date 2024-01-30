@@ -8,7 +8,7 @@ require (
 	github.com/distribution/reference v0.5.0
 	github.com/fatih/color v1.16.0
 	github.com/go-logr/logr v1.4.1
-	github.com/google/uuid v1.5.0
+	github.com/google/uuid v1.6.0
 	github.com/openkruise/kruise-api v1.5.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.71.0
 	github.com/prometheus/client_golang v1.18.0

@@ -157,7 +157,7 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 		return fmt.Sprintf("hummock+webhdfs://%s@%s", webhdfs.NameNode, webhdfs.Root)
 	case f.isStateStoreLocalDisk():
 		localDisk := stateStore.LocalDisk
-		return fmt.Sprintf("hummock+fs://@%s", localDisk.Root)
+		return fmt.Sprintf("hummock+fs://%s", localDisk.Root)
 	case f.isStateStoreHuaweiCloudOBS():
 		return fmt.Sprintf("hummock+obs://%s", stateStore.HuaweiCloudOBS.Bucket)
 	default:

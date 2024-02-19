@@ -3433,7 +3433,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			},
 			envs: []corev1.EnvVar{{
 				Name:  "RW_STATE_STORE",
-				Value: "hummock+fs://@root",
+				Value: "hummock+fs://root",
 			}},
 		},
 		"huawei-cloud-obs": {

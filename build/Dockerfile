@@ -1,7 +1,7 @@
 ARG USE_VENDOR=false
 
 # Build the manager binary
-FROM golang:1.21 as base
+FROM golang:1.22 as base
 
 WORKDIR /workspace
 # Copy the Go Modules manifests

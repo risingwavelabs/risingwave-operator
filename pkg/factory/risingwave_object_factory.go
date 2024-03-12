@@ -1546,7 +1546,7 @@ func (f *RisingWaveObjectFactory) argsForStandaloneV2() []string {
 	return []string{
 		"--config-path=$(RW_CONFIG_PATH)",
 		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", consts.MetaMetricsPort),
-		fmt.Sprintf("--listen-addr 0.0.0.0:%d", consts.FrontendServicePort),
+		fmt.Sprintf("--listen-addr=0.0.0.0:%d", consts.FrontendServicePort),
 	}
 }
 

@@ -1575,7 +1575,7 @@ func (f *RisingWaveObjectFactory) setupStandaloneContainer(container *corev1.Con
 	container.Name = "standalone"
 
 	var imageVersion = utils.GetVersionFromImage(f.risingwave.Spec.Image)
-        // `standalone` subcommand is only supported in versions 1.3 - 1.7, and was deprecated in 1.8.
+	// `standalone` subcommand is only supported in versions 1.3 - 1.7, and was deprecated in 1.8.
 	if strings.HasPrefix(imageVersion, "v1.3.") ||
 		strings.HasPrefix(imageVersion, "v1.4.") ||
 		strings.HasPrefix(imageVersion, "v1.5.") ||

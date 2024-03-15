@@ -746,34 +746,40 @@ func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 func (f *RisingWaveObjectFactory) envsForAzureBlob() []corev1.EnvVar {
 	stateStore := &f.risingwave.Spec.StateStore
 	credentials := stateStore.AzureBlob.RisingWaveAzureBlobCredentials
-	secretRef := corev1.LocalObjectReference{
-		Name: credentials.SecretName,
-	}
-	return []corev1.EnvVar{
-
-		{
-			Name: envs.AzureBlobAccountName,
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: secretRef,
-					Key:                  credentials.AccountNameRef,
-				},
-			},
-		},
-		{
-			Name: envs.AzureBlobAccountKey,
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: secretRef,
-					Key:                  credentials.AccountKeyRef,
-				},
-			},
-		},
+	envVars := []corev1.EnvVar{
 		{
 			Name:  envs.AzureBlobEndpoint,
 			Value: stateStore.AzureBlob.Endpoint,
 		},
 	}
+
+	if !ptr.Deref(credentials.UseServiceAccount, false) {
+		secretRef := corev1.LocalObjectReference{
+			Name: credentials.SecretName,
+		}
+		envVars = append(envVars, []corev1.EnvVar{
+			{
+				Name: envs.AzureBlobAccountName,
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: secretRef,
+						Key:                  credentials.AccountNameRef,
+					},
+				},
+			},
+			{
+				Name: envs.AzureBlobAccountKey,
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: secretRef,
+						Key:                  credentials.AccountKeyRef,
+					},
+				},
+			},
+		}...)
+	}
+
+	return envVars
 }
 
 func (f *RisingWaveObjectFactory) envsForHDFS() []corev1.EnvVar {

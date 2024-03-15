@@ -157,6 +157,11 @@ type RisingWaveAzureBlobCredentials struct {
 	// Defaults to "AccountKey".
 	// +kubebuilder:default=AccountKey
 	AccountKeyRef string `json:"accountKeyRef,omitempty"`
+
+	// UseServiceAccount indicates whether to use the service account token mounted in the pod.
+	// If this is enabled, secret and keys are ignored. Defaults to false.
+	// +optional
+	UseServiceAccount *bool `json:"useServiceAccount,omitempty"`
 }
 
 // RisingWaveAliyunOSSCredentials is the reference and keys selector to the AliyunOSS access credentials stored in a local secret.

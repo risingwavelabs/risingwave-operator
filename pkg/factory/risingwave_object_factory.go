@@ -344,6 +344,10 @@ func (f *RisingWaveObjectFactory) coreEnvsForMeta() []corev1.EnvVar {
 			Name:  envs.RWDataDirectory,
 			Value: stateStore.DataDirectory,
 		},
+		{
+			Name:  envs.RWDashboardHost,
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaDashboardPort),
+		},
 	}
 
 	switch {
@@ -395,10 +399,6 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		{
 			Name:  envs.RWAdvertiseAddr,
 			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
-		},
-		{
-			Name:  envs.RWDashboardHost,
-			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaDashboardPort),
 		},
 		{
 			Name:  envs.RWPrometheusHost,

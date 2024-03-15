@@ -146,7 +146,7 @@ type RisingWaveStateStoreBackendGCS struct {
 // RisingWaveAzureBlobCredentials is the reference and keys selector to the AzureBlob access credentials stored in a local secret.
 type RisingWaveAzureBlobCredentials struct {
 	// The name of the secret in the pod's namespace to select from.
-	SecretName string `json:"secretName"`
+	SecretName string `json:"secretName,omitempty"`
 
 	// AccountNameKeyRef is the key of the secret to be the account name. Must be a valid secret key.
 	// Defaults to "AccountName".

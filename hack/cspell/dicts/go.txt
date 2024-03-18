@@ -29,6 +29,7 @@ lresult
 rresult
 lresults
 struct
+rwsql*
 
 # Packages
 intstr

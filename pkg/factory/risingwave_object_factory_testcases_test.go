@@ -3715,5 +3715,214 @@ func metaStoreTestCases() map[string]metaStoreTestCase {
 				},
 			},
 		},
+		"sqlite": {
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+				SQLite: &risingwavev1alpha1.RisingWaveMetaStoreBackendSQLite{
+					Path: "/data/risingwave.db",
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_BACKEND",
+					Value: "sql",
+				},
+				{
+					Name:  "RW_SQL_ENDPOINT",
+					Value: "sqlite:///data/risingwave.db?mode=rwc",
+				},
+			},
+		},
+		"mysql-no-options": {
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+				MySQL: &risingwavev1alpha1.RisingWaveMetaStoreBackendMySQL{
+					Host:     "mysql",
+					Port:     3307,
+					Database: "risingwave",
+					RisingWaveDBCredentials: risingwavev1alpha1.RisingWaveDBCredentials{
+						SecretName:     "s",
+						UsernameKeyRef: "username",
+						PasswordKeyRef: "password",
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_BACKEND",
+					Value: "sql",
+				},
+				{
+					Name:  "RW_SQL_ENDPOINT",
+					Value: "mysql://$(RW_MYSQL_USERNAME):$(RW_MYSQL_PASSWORD)@mysql:3307/risingwave",
+				},
+				{
+					Name: "RW_MYSQL_USERNAME",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "username",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+				{
+					Name: "RW_MYSQL_PASSWORD",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "password",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+			},
+		},
+		"mysql-with-options": {
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+				MySQL: &risingwavev1alpha1.RisingWaveMetaStoreBackendMySQL{
+					Host:     "mysql",
+					Port:     3307,
+					Database: "risingwave",
+					Options: map[string]string{
+						"a": "b",
+						"c": "d=e",
+					},
+					RisingWaveDBCredentials: risingwavev1alpha1.RisingWaveDBCredentials{
+						SecretName:     "s",
+						UsernameKeyRef: "username",
+						PasswordKeyRef: "password",
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_BACKEND",
+					Value: "sql",
+				},
+				{
+					Name:  "RW_SQL_ENDPOINT",
+					Value: "mysql://$(RW_MYSQL_USERNAME):$(RW_MYSQL_PASSWORD)@mysql:3307/risingwave?a=b&c=d%3De",
+				},
+				{
+					Name: "RW_MYSQL_USERNAME",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "username",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+				{
+					Name: "RW_MYSQL_PASSWORD",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "password",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+			},
+		},
+		"pg-no-options": {
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+				PostgreSQL: &risingwavev1alpha1.RisingWaveMetaStoreBackendPostgreSQL{
+					Host:     "postgresql",
+					Port:     3307,
+					Database: "risingwave",
+					RisingWaveDBCredentials: risingwavev1alpha1.RisingWaveDBCredentials{
+						SecretName:     "s",
+						UsernameKeyRef: "username",
+						PasswordKeyRef: "password",
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_BACKEND",
+					Value: "sql",
+				},
+				{
+					Name:  "RW_SQL_ENDPOINT",
+					Value: "postgres://$(RW_POSTGRES_USERNAME):$(RW_POSTGRES_PASSWORD)@postgresql:3307/risingwave",
+				},
+				{
+					Name: "RW_POSTGRES_USERNAME",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "username",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+				{
+					Name: "RW_POSTGRES_PASSWORD",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "password",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+			},
+		},
+		"pg-with-options": {
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+				PostgreSQL: &risingwavev1alpha1.RisingWaveMetaStoreBackendPostgreSQL{
+					Host:     "postgresql",
+					Port:     3307,
+					Database: "risingwave",
+					Options: map[string]string{
+						"a": "b",
+						"c": "d=e",
+					},
+					RisingWaveDBCredentials: risingwavev1alpha1.RisingWaveDBCredentials{
+						SecretName:     "s",
+						UsernameKeyRef: "username",
+						PasswordKeyRef: "password",
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_BACKEND",
+					Value: "sql",
+				},
+				{
+					Name:  "RW_SQL_ENDPOINT",
+					Value: "postgres://$(RW_POSTGRES_USERNAME):$(RW_POSTGRES_PASSWORD)@postgresql:3307/risingwave?a=b&c=d%3De",
+				},
+				{
+					Name: "RW_POSTGRES_USERNAME",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "username",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+				{
+					Name: "RW_POSTGRES_PASSWORD",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "password",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 }

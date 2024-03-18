@@ -19,9 +19,12 @@ type RisingWaveMetaStoreBackendType string
 
 // All valid meta store backend types.
 const (
-	RisingWaveMetaStoreBackendTypeMemory  RisingWaveMetaStoreBackendType = "Memory"
-	RisingWaveMetaStoreBackendTypeEtcd    RisingWaveMetaStoreBackendType = "Etcd"
-	RisingWaveMetaStoreBackendTypeUnknown RisingWaveMetaStoreBackendType = "Unknown"
+	RisingWaveMetaStoreBackendTypeMemory     RisingWaveMetaStoreBackendType = "Memory"
+	RisingWaveMetaStoreBackendTypeEtcd       RisingWaveMetaStoreBackendType = "Etcd"
+	RisingWaveMetaStoreBackendTypePostgreSQL RisingWaveMetaStoreBackendType = "PostgreSQL"
+	RisingWaveMetaStoreBackendTypeMySQL      RisingWaveMetaStoreBackendType = "MySQL"
+	RisingWaveMetaStoreBackendTypeSQLite     RisingWaveMetaStoreBackendType = "SQLite"
+	RisingWaveMetaStoreBackendTypeUnknown    RisingWaveMetaStoreBackendType = "Unknown"
 )
 
 // RisingWaveMetaStoreStatus is the status of the meta store.
@@ -65,6 +68,70 @@ type RisingWaveMetaStoreBackendEtcd struct {
 	Secret string `json:"secret,omitempty"`
 }
 
+// RisingWaveMetaStoreBackendSQLite describes the options of SQLite DB backend.
+type RisingWaveMetaStoreBackendSQLite struct {
+	// Path of the DB file.
+	Path string `json:"path"`
+}
+
+// RisingWaveDBCredentials is the reference and keys selector to the DB access credentials stored in a local secret.
+type RisingWaveDBCredentials struct {
+	// The name of the secret in the pod's namespace to select from.
+	SecretName string `json:"secretName"`
+
+	// UsernameKeyRef is the key of the secret to be the username. Must be a valid secret key.
+	// Defaults to "username".
+	// +kubebuilder:default=username
+	UsernameKeyRef string `json:"usernameKeyRef,omitempty"`
+
+	// PasswordKeyRef is the key of the secret to be the password. Must be a valid secret key.
+	// Defaults to "password".
+	// +kubebuilder:default=password
+	PasswordKeyRef string `json:"passwordKeyRef,omitempty"`
+}
+
+// RisingWaveMetaStoreBackendMySQL describes the options of MySQL DB backend.
+type RisingWaveMetaStoreBackendMySQL struct {
+	// RisingWaveDBCredentials is the reference credentials. User must provide a secret contains
+	// `username` and `password` (or one can customize the key references) keys and the correct values.
+	RisingWaveDBCredentials `json:"credentials"`
+
+	// Host of the MySQL DB.
+	Host string `json:"host"`
+
+	// Port of the MySQL DB. Defaults to 3306.
+	// +kubebuilder:default=3306
+	Port uint32 `json:"port"`
+
+	// Database of the MySQL DB.
+	Database string `json:"database"`
+
+	// Options when connecting to the MySQL DB. Optional.
+	// +optional
+	Options map[string]string `json:"options,omitempty"`
+}
+
+// RisingWaveMetaStoreBackendPostgreSQL describes the options of PostgreSQL DB backend.
+type RisingWaveMetaStoreBackendPostgreSQL struct {
+	// RisingWaveDBCredentials is the reference credentials. User must provide a secret contains
+	// `username` and `password` (or one can customize the key references) keys and the correct values.
+	RisingWaveDBCredentials `json:"credentials"`
+
+	// Host of the PostgreSQL DB.
+	Host string `json:"host"`
+
+	// Port of the PostgreSQL DB. Defaults to 5432.
+	// +kubebuilder:default=5432
+	Port uint32 `json:"port"`
+
+	// Database of the PostgreSQL DB.
+	Database string `json:"database"`
+
+	// Options when connecting to the PostgreSQL DB. Optional.
+	// +optional
+	Options map[string]string `json:"options,omitempty"`
+}
+
 // RisingWaveMetaStoreBackend is the collection of parameters for the meta store that RisingWave uses. Note that one
 // and only one of the first-level fields could be set.
 type RisingWaveMetaStoreBackend struct {
@@ -75,7 +142,19 @@ type RisingWaveMetaStoreBackend struct {
 	// +optional
 	Memory *bool `json:"memory,omitempty"`
 
-	// Endpoint of the etcd service for storing the metadata.
+	// Stores metadata in etcd.
 	// +optional
 	Etcd *RisingWaveMetaStoreBackendEtcd `json:"etcd,omitempty"`
+
+	// SQLite stores metadata in a SQLite DB file.
+	// +optional
+	SQLite *RisingWaveMetaStoreBackendSQLite `json:"sqlite,omitempty"`
+
+	// MySQL stores metadata in a MySQL DB.
+	// +optional
+	MySQL *RisingWaveMetaStoreBackendMySQL `json:"mysql,omitempty"`
+
+	// PostgreSQL stores metadata in a PostgreSQL DB.
+	// +optional
+	PostgreSQL *RisingWaveMetaStoreBackendPostgreSQL `json:"postgresql,omitempty"`
 }

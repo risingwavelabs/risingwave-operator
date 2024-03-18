@@ -1,0 +1,113 @@
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave-mysql-s3
+spec:
+  metaStore:
+    mysql:
+      credentials:
+        secretName: mysql-credentials
+        usernameKeyRef: username
+        passwordKeyRef: password
+      database: risingwave
+      host: mysql.example.com
+      port: 3306
+  stateStore:
+    dataDirectory: hummock001-directory
+    s3:
+      bucket: hummock001
+      credentials:
+        secretName: s3-credentials
+        accessKeyRef: AccessKeyID
+        secretAccessKeyRef: SecretAccessKey
+      region: ap-southeast-1
+  image: ghcr.io/risingwavelabs/risingwave:v1.6.0
+  components:
+    meta:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            volumes:
+            - name: heap
+              emptyDir:
+                sizeLimit: 1Gi
+            volumeMounts:
+            - mountPath: /heap
+              name: heap
+            env:
+            - name: MALLOC_CONF
+              value: prof:true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix:/heap/
+            - name: RW_HEAP_PROFILING_DIR
+              value: /heap
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+    frontend:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+    compute:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            volumes:
+            - name: heap
+              emptyDir:
+                sizeLimit: 1Gi
+            volumeMounts:
+            - mountPath: /heap
+              name: heap
+            env:
+            - name: MALLOC_CONF
+              value: prof:true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix:/heap/
+            - name: RW_HEAP_PROFILING_DIR
+              value: /heap
+            resources:
+              limits:
+                cpu: 8
+                memory: 32Gi # Memory limit will be set to `RW_TOTAL_MEMORY_BYTES`
+              requests:
+                cpu: 8
+                memory: 32Gi
+    compactor:
+      nodeGroups:
+      - replicas: 1
+        name: ""
+        template:
+          spec:
+            volumes:
+            - name: heap
+              emptyDir:
+                sizeLimit: 1Gi
+            volumeMounts:
+            - mountPath: /heap
+              name: heap
+            env:
+            - name: MALLOC_CONF
+              value: prof:true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix:/heap/
+            - name: RW_HEAP_PROFILING_DIR
+              value: /heap
+            resources:
+              limits:
+                cpu: 4
+                memory: 8Gi
+              requests:
+                cpu: 4
+                memory: 8Gi

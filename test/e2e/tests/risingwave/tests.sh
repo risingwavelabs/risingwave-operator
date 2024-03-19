@@ -188,6 +188,10 @@ function test::risingwave::storage_support::_run_with_manifest() {
 	logging::info "Stopped!"
 }
 
+function test::run::risingwave::meta_sqlite_standalone() {
+  test::risingwave::storage_support::_run_with_manifest sqlite/sqlite.yaml
+}
+
 function test::run::risingwave::standalone() {
   test::risingwave::storage_support::_run_with_manifest standalone/standalone.yaml
 }

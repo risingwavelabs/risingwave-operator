@@ -28853,7 +28853,7 @@ spec:
                   But keep in mind that memory backend is not recommended in production.
                 properties:
                   etcd:
-                    description: Endpoint of the etcd service for storing the metadata.
+                    description: Stores metadata in etcd.
                     properties:
                       credentials:
                         description: |-
@@ -28900,6 +28900,114 @@ spec:
                       replicas will not work because they are not going to share the same metadata and any kinds
                       exit of the process will cause a permanent loss of the data.
                     type: boolean
+                  mysql:
+                    description: MySQL stores metadata in a MySQL DB.
+                    properties:
+                      credentials:
+                        description: |-
+                          RisingWaveDBCredentials is the reference credentials. User must provide a secret contains
+                          `username` and `password` (or one can customize the key references) keys and the correct values.
+                        properties:
+                          passwordKeyRef:
+                            default: password
+                            description: |-
+                              PasswordKeyRef is the key of the secret to be the password. Must be a valid secret key.
+                              Defaults to "password".
+                            type: string
+                          secretName:
+                            description: The name of the secret in the pod's namespace
+                              to select from.
+                            type: string
+                          usernameKeyRef:
+                            default: username
+                            description: |-
+                              UsernameKeyRef is the key of the secret to be the username. Must be a valid secret key.
+                              Defaults to "username".
+                            type: string
+                        required:
+                        - secretName
+                        type: object
+                      database:
+                        description: Database of the MySQL DB.
+                        type: string
+                      host:
+                        description: Host of the MySQL DB.
+                        type: string
+                      options:
+                        additionalProperties:
+                          type: string
+                        description: Options when connecting to the MySQL DB. Optional.
+                        type: object
+                      port:
+                        default: 3306
+                        description: Port of the MySQL DB. Defaults to 3306.
+                        format: int32
+                        type: integer
+                    required:
+                    - credentials
+                    - database
+                    - host
+                    - port
+                    type: object
+                  postgresql:
+                    description: PostgreSQL stores metadata in a PostgreSQL DB.
+                    properties:
+                      credentials:
+                        description: |-
+                          RisingWaveDBCredentials is the reference credentials. User must provide a secret contains
+                          `username` and `password` (or one can customize the key references) keys and the correct values.
+                        properties:
+                          passwordKeyRef:
+                            default: password
+                            description: |-
+                              PasswordKeyRef is the key of the secret to be the password. Must be a valid secret key.
+                              Defaults to "password".
+                            type: string
+                          secretName:
+                            description: The name of the secret in the pod's namespace
+                              to select from.
+                            type: string
+                          usernameKeyRef:
+                            default: username
+                            description: |-
+                              UsernameKeyRef is the key of the secret to be the username. Must be a valid secret key.
+                              Defaults to "username".
+                            type: string
+                        required:
+                        - secretName
+                        type: object
+                      database:
+                        description: Database of the PostgreSQL DB.
+                        type: string
+                      host:
+                        description: Host of the PostgreSQL DB.
+                        type: string
+                      options:
+                        additionalProperties:
+                          type: string
+                        description: Options when connecting to the PostgreSQL DB.
+                          Optional.
+                        type: object
+                      port:
+                        default: 5432
+                        description: Port of the PostgreSQL DB. Defaults to 5432.
+                        format: int32
+                        type: integer
+                    required:
+                    - credentials
+                    - database
+                    - host
+                    - port
+                    type: object
+                  sqlite:
+                    description: SQLite stores metadata in a SQLite DB file.
+                    properties:
+                      path:
+                        description: Path of the DB file.
+                        type: string
+                    required:
+                    - path
+                    type: object
                 type: object
               stateStore:
                 default:

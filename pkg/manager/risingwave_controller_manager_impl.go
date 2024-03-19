@@ -155,6 +155,12 @@ func buildMetaStoreType(metaStore *risingwavev1alpha1.RisingWaveMetaStoreBackend
 		return risingwavev1alpha1.RisingWaveMetaStoreBackendTypeMemory
 	case metaStore.Etcd != nil:
 		return risingwavev1alpha1.RisingWaveMetaStoreBackendTypeEtcd
+	case metaStore.SQLite != nil:
+		return risingwavev1alpha1.RisingWaveMetaStoreBackendTypeSQLite
+	case metaStore.MySQL != nil:
+		return risingwavev1alpha1.RisingWaveMetaStoreBackendTypeMySQL
+	case metaStore.PostgreSQL != nil:
+		return risingwavev1alpha1.RisingWaveMetaStoreBackendTypePostgreSQL
 	default:
 		return risingwavev1alpha1.RisingWaveMetaStoreBackendTypeUnknown
 	}

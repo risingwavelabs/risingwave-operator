@@ -2,6 +2,7 @@ module github.com/risingwavelabs/risingwave-operator
 
 go 1.21
 
+toolchain go1.21.5
 
 require (
 	github.com/distribution/reference v0.5.0

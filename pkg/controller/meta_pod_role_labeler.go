@@ -32,8 +32,11 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -73,25 +76,6 @@ func (mpl *MetaPodRoleLabeler) getMetaRole(ctx context.Context, host string, por
 	logger.Info("No role recognized from the current member list!", "members", resp.Members, "address", fmt.Sprintf("%s:%d", host, port), "endpoint", endpoint)
 
 	return consts.MetaRoleUnknown, nil
-}
-
-func (mpl *MetaPodRoleLabeler) isRisingWaveMetaPod(pod *corev1.Pod) bool {
-	if pod == nil {
-		return false
-	}
-
-	if _, ok := pod.Labels[consts.LabelRisingWaveName]; !ok {
-		return false
-	}
-	if pod.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
-		return false
-	}
-
-	if utils.GetContainerFromPod(pod, "meta") == nil {
-		return false
-	}
-
-	return true
 }
 
 func (mpl *MetaPodRoleLabeler) getEndpointFromArgs(pod *corev1.Pod, args []string) string {
@@ -239,21 +223,30 @@ func (mpl *MetaPodRoleLabeler) syncRoleLabels(ctx context.Context, pod *corev1.P
 	}
 }
 
+func (mpl *MetaPodRoleLabeler) isRisingWaveMetaPod(pod *corev1.Pod) bool {
+	if pod == nil {
+		return false
+	}
+
+	if _, ok := pod.Labels[consts.LabelRisingWaveName]; !ok {
+		return false
+	}
+	if pod.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
+		return false
+	}
+
+	if utils.GetContainerFromPod(pod, "meta") == nil {
+		return false
+	}
+
+	return true
+}
+
 // Reconcile handles the pods of the meta service. Will add the metaLeaderLabel to the pods.
 func (mpl *MetaPodRoleLabeler) Reconcile(ctx context.Context, req ctrl.Request) (res ctrl.Result, e error) {
 	var pod corev1.Pod
 	if err := mpl.Get(ctx, req.NamespacedName, &pod); err != nil {
 		return ctrlkit.RequeueIfError(client.IgnoreNotFound(err))
-	}
-
-	// If Pod is deleted or not running, then no need to sync.
-	if utils.IsDeleted(&pod) || !utils.IsPodRunning(&pod) {
-		return ctrlkit.NoRequeue()
-	}
-
-	// Ignore non-meta or non-running Pods.
-	if pod.Status.PodIP == "" || !mpl.isRisingWaveMetaPod(&pod) {
-		return ctrlkit.NoRequeue()
 	}
 
 	// Sync the label for the current Pod. If the current Pod is the new leader, then
@@ -266,9 +259,20 @@ func (mpl *MetaPodRoleLabeler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 // SetupWithManager sets up the controller with the Manager.
 func (mpl *MetaPodRoleLabeler) SetupWithManager(mgr ctrl.Manager) error {
+	podFilterFunc := func(object client.Object) bool {
+		pod, ok := object.(*corev1.Pod)
+		if !ok {
+			return false
+		}
+		// Ignore non-meta or non-running Pods, deleted pods or pods with no IP assigned yet
+		if pod.Status.PodIP == "" || !mpl.isRisingWaveMetaPod(pod) || utils.IsDeleted(pod) || !utils.IsPodRunning(pod) {
+			return false
+		}
+		return true
+	}
 	return ctrl.NewControllerManagedBy(mgr).
 		Named("meta-pod-role-labeler").
-		For(&corev1.Pod{}).
+		Watches(&corev1.Pod{}, &handler.EnqueueRequestForObject{}, builder.WithPredicates(predicate.NewPredicateFuncs(podFilterFunc))).
 		Complete(mpl)
 }
 

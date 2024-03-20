@@ -93,7 +93,7 @@ spec:
       container: your-azure-container-name
       root: risingwave
       endpoint: https://your-azure-account-name.blob.core.windows.net
-  image: ghcr.io/risingwavelabs/risingwave:v1.7.1
+  image: risingwavelabs/risingwave:v1.7.2
   components:
     meta:
       nodeGroups:

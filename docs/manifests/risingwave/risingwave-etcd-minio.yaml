@@ -154,7 +154,7 @@ spec:
         usernameKeyRef: username
         passwordKeyRef: password
       endpoint: risingwave-minio:9301
-  image: ghcr.io/risingwavelabs/risingwave:v1.7.1
+  image: risingwavelabs/risingwave:v1.7.2
   components:
     meta:
       nodeGroups:

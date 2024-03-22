@@ -1576,22 +1576,22 @@ func (f *RisingWaveObjectFactory) setupStandaloneContainer(container *corev1.Con
 
 	var imageVersion = utils.GetVersionFromImage(f.risingwave.Spec.Image)
 
-	var use_v2_style = false
+	var useV2Style = false
 	switch f.risingwave.Spec.StandaloneMode {
 	case 0:
 		// `standalone` subcommand is only supported in versions 1.3 - 1.7, and was deprecated in 1.8.
-		use_v2_style = !(strings.HasPrefix(imageVersion, "v1.3.") ||
+		useV2Style = !(strings.HasPrefix(imageVersion, "v1.3.") ||
 			strings.HasPrefix(imageVersion, "v1.4.") ||
 			strings.HasPrefix(imageVersion, "v1.5.") ||
 			strings.HasPrefix(imageVersion, "v1.6.") ||
 			strings.HasPrefix(imageVersion, "v1.7."))
 	case 1:
-		use_v2_style = false
+		useV2Style = false
 	case 2:
-		use_v2_style = true
+		useV2Style = true
 	}
 
-	if !use_v2_style {
+	if !useV2Style {
 		container.Command = []string{
 			risingwaveExecutablePath,
 			"standalone",

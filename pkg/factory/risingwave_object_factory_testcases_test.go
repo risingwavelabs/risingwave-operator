@@ -3401,6 +3401,29 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 				},
 			},
 		},
+		"azure-blob-use-sa": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
+					Container: "azure-blob-hummock01",
+					Root:      "/azure-blob-root",
+					Endpoint:  "https://accountName.blob.core.windows.net",
+					RisingWaveAzureBlobCredentials: risingwavev1alpha1.RisingWaveAzureBlobCredentials{
+						SecretName:        "azure-blob-creds",
+						UseServiceAccount: ptr.To(true),
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+azblob://azure-blob-hummock01@/azure-blob-root",
+				},
+				{
+					Name:  "AZBLOB_ENDPOINT",
+					Value: "https://accountName.blob.core.windows.net",
+				},
+			},
+		},
 		"hdfs": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				HDFS: &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{

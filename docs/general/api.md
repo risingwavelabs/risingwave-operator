@@ -791,6 +791,19 @@ string
 Defaults to &ldquo;AccountKey&rdquo;.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>useServiceAccount</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>UseServiceAccount indicates whether to use the service account token mounted in the pod.
+If this is enabled, secret and keys are ignored. Defaults to false.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveComponent">RisingWaveComponent

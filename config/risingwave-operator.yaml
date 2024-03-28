@@ -29331,6 +29331,15 @@ spec:
                     - root
                     type: object
                 type: object
+              tls:
+                description: TLS configures the TLS/SSL certificates for SQL access.
+                properties:
+                  secretName:
+                    description: |-
+                      SecretName that contains the certificates. The keys must be `tls.key` and `tls.crt`.
+                      If the secret name isn't provided, then TLS/SSL won't be enabled.
+                    type: string
+                type: object
             required:
             - image
             type: object

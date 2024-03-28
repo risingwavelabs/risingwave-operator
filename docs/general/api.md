@@ -670,6 +670,19 @@ RisingWaveStateStoreBackend
 But keep in mind that memory backend is not recommended in production.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>tls</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfiguration">
+RisingWaveTLSConfiguration
+</a>
+</em>
+</td>
+<td>
+<p>TLS configures the TLS/SSL certificates for SQL access.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -4520,6 +4533,19 @@ RisingWaveStateStoreBackend
 But keep in mind that memory backend is not recommended in production.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>tls</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfiguration">
+RisingWaveTLSConfiguration
+</a>
+</em>
+</td>
+<td>
+<p>TLS configures the TLS/SSL certificates for SQL access.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStandaloneComponent">RisingWaveStandaloneComponent
@@ -5469,6 +5495,37 @@ RisingWaveStateStoreStatus
 </td>
 <td>
 <p>Status of the state store.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfiguration">RisingWaveTLSConfiguration
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
+</p>
+<div>
+<p>RisingWaveTLSConfiguration is the TLS/SSL configuration for RisingWave&rsquo;s SQL access.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecretName that contains the certificates. The keys must be <code>tls.key</code> and <code>tls.crt</code>.
+If the secret name isn&rsquo;t provided, then TLS/SSL won&rsquo;t be enabled.</p>
 </td>
 </tr>
 </tbody>

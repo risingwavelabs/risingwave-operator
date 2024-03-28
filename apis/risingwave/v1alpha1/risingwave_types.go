@@ -126,6 +126,9 @@ type RisingWaveSpec struct {
 	// But keep in mind that memory backend is not recommended in production.
 	// +kubebuilder:default={memory: true}
 	StateStore RisingWaveStateStoreBackend `json:"stateStore,omitempty"`
+
+	// TLS configures the TLS/SSL certificates for SQL access.
+	TLS *RisingWaveTLSConfiguration `json:"tls,omitempty"`
 }
 
 // ComponentGroupReplicasStatus are the running status of Pods in group.

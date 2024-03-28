@@ -45,6 +45,8 @@ const (
 	RWPrometheusListenerAddr = "RW_PROMETHEUS_LISTENER_ADDR"
 	RWParallelism            = "RW_PARALLELISM"
 	RWTotalMemoryBytes       = "RW_TOTAL_MEMORY_BYTES"
+	RWSslCert                = "RW_SSL_CERT"
+	RWSslKey                 = "RW_SSL_KEY"
 )
 
 // MinIO.

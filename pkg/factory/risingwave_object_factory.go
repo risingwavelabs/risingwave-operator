@@ -42,6 +42,7 @@ import (
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	"github.com/risingwavelabs/risingwave-operator/pkg/factory/envs"
 	"github.com/risingwavelabs/risingwave-operator/pkg/object"
+	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
 const (
@@ -446,6 +447,10 @@ func (f *RisingWaveObjectFactory) coreEnvsForMeta() []corev1.EnvVar {
 			Name:  envs.RWDataDirectory,
 			Value: stateStore.DataDirectory,
 		},
+		{
+			Name:  envs.RWDashboardHost,
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaDashboardPort),
+		},
 	}
 
 	switch {
@@ -534,10 +539,6 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		{
 			Name:  envs.RWAdvertiseAddr,
 			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
-		},
-		{
-			Name:  envs.RWDashboardHost,
-			Value: fmt.Sprintf("0.0.0.0:%d", consts.MetaDashboardPort),
 		},
 		{
 			Name:  envs.RWPrometheusHost,
@@ -1686,6 +1687,14 @@ func (f *RisingWaveObjectFactory) argsForStandalone() []string {
 	}
 }
 
+func (f *RisingWaveObjectFactory) argsForStandaloneV2() []string {
+	return []string{
+		"--config-path=$(RW_CONFIG_PATH)",
+		fmt.Sprintf("--prometheus-listener-addr=0.0.0.0:%d", consts.MetaMetricsPort),
+		fmt.Sprintf("--listen-addr=0.0.0.0:%d", consts.FrontendServicePort),
+	}
+}
+
 func (f *RisingWaveObjectFactory) portsForStandaloneContainer() []corev1.ContainerPort {
 	// TODO: either expose each metrics port, or combine them into one.
 	return []corev1.ContainerPort{
@@ -1709,11 +1718,38 @@ func (f *RisingWaveObjectFactory) portsForStandaloneContainer() []corev1.Contain
 
 func (f *RisingWaveObjectFactory) setupStandaloneContainer(container *corev1.Container) {
 	container.Name = "standalone"
-	container.Command = []string{
-		risingwaveExecutablePath,
-		"standalone",
+
+	var imageVersion = utils.GetVersionFromImage(f.risingwave.Spec.Image)
+
+	var useV2Style = false
+	switch f.risingwave.Spec.StandaloneMode {
+	case 0:
+		// `standalone` subcommand is only supported in versions 1.3 - 1.7, and was deprecated in 1.8.
+		useV2Style = !(strings.HasPrefix(imageVersion, "v1.3.") ||
+			strings.HasPrefix(imageVersion, "v1.4.") ||
+			strings.HasPrefix(imageVersion, "v1.5.") ||
+			strings.HasPrefix(imageVersion, "v1.6.") ||
+			strings.HasPrefix(imageVersion, "v1.7."))
+	case 1:
+		useV2Style = false
+	case 2:
+		useV2Style = true
 	}
-	container.Args = f.argsForStandalone()
+
+	if !useV2Style {
+		container.Command = []string{
+			risingwaveExecutablePath,
+			"standalone",
+		}
+		container.Args = f.argsForStandalone()
+	} else {
+		container.Command = []string{
+			risingwaveExecutablePath,
+			"single-node",
+		}
+		container.Args = f.argsForStandaloneV2()
+	}
+
 	container.Ports = f.portsForStandaloneContainer()
 
 	container.Env = mergeListWhenKeyEquals(container.Env, corev1.EnvVar{

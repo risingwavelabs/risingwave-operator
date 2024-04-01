@@ -1005,3 +1005,38 @@ func serviceMonitorPredicates() []predicate[*prometheusv1.ServiceMonitor, baseTe
 		},
 	}
 }
+
+func tlsPredicates() []predicate[*corev1.PodTemplateSpec, tlsTestcase] {
+	return []predicate[*corev1.PodTemplateSpec, tlsTestcase]{
+		{
+			Name: "envs-contain",
+			Fn: func(obj *corev1.PodTemplateSpec, testcase tlsTestcase) bool {
+				if len(testcase.expectedEnvs) == 0 {
+					return true
+				}
+				if len(obj.Spec.Containers) == 0 {
+					return false
+				}
+				envs := obj.Spec.Containers[0].Env
+				// Contains all expected envs.
+				return listContainsByKey(envs, testcase.expectedEnvs, func(t *corev1.EnvVar) string { return t.Name }, deepEqual[corev1.EnvVar])
+			},
+		},
+		{
+			Name: "envs-not-contain",
+			Fn: func(obj *corev1.PodTemplateSpec, testcase tlsTestcase) bool {
+				if len(testcase.unexpectedEnvs) == 0 {
+					return true
+				}
+				if len(obj.Spec.Containers) == 0 {
+					return false
+				}
+				envs := obj.Spec.Containers[0].Env
+				// Contains none of unexpected envs.
+				return !lo.ContainsBy(envs, func(item corev1.EnvVar) bool {
+					return lo.Contains(testcase.unexpectedEnvs, item.Name)
+				})
+			},
+		},
+	}
+}

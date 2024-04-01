@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.21.5
 
 require (
-	github.com/distribution/reference v0.5.0
+	github.com/distribution/reference v0.6.0
 	github.com/fatih/color v1.16.0
 	github.com/go-logr/logr v1.4.1
 	github.com/google/uuid v1.6.0

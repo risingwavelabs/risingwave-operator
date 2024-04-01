@@ -61,7 +61,8 @@ type testCaseType interface {
 		computeArgsTestCase |
 		metaStoreTestCase |
 		metaStatefulSetTestCase |
-		metaAdvancedSTSTestCase
+		metaAdvancedSTSTestCase |
+		tlsTestcase
 }
 
 type kubeObject interface {
@@ -75,7 +76,8 @@ type kubeObject interface {
 		*appsv1.StatefulSet |
 		*kruiseappsv1beta1.StatefulSet |
 		*kruiseappsv1alpha1.CloneSet |
-		*prometheusv1.ServiceMonitor
+		*prometheusv1.ServiceMonitor |
+		*corev1.PodTemplateSpec
 }
 
 type baseTestCase struct {
@@ -3942,6 +3944,111 @@ func metaStoreTestCases() map[string]metaStoreTestCase {
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "s",
 							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+type tlsTestcase struct {
+	standalone     bool
+	tls            *risingwavev1alpha1.RisingWaveTLSConfiguration
+	expectedEnvs   []corev1.EnvVar
+	unexpectedEnvs []string
+}
+
+func tlsTestcases() map[string]tlsTestcase {
+	return map[string]tlsTestcase{
+		"tls-disabled-nil": {
+			tls: nil,
+			unexpectedEnvs: []string{
+				"RW_SSL_KEY",
+				"RW_SSL_CERT",
+			},
+		},
+		"tls-disabled-empty": {
+			tls: &risingwavev1alpha1.RisingWaveTLSConfiguration{
+				SecretName: "",
+			},
+			unexpectedEnvs: []string{
+				"RW_SSL_KEY",
+				"RW_SSL_CERT",
+			},
+		},
+		"tls-enabled": {
+			tls: &risingwavev1alpha1.RisingWaveTLSConfiguration{
+				SecretName: "tls",
+			},
+			expectedEnvs: []corev1.EnvVar{
+				{
+					Name: "RW_SSL_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "tls",
+							},
+							Key: "tls.key",
+						},
+					},
+				},
+				{
+					Name: "RW_SSL_CERT",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "tls",
+							},
+							Key: "tls.crt",
+						},
+					},
+				},
+			},
+		},
+		"tls-disabled-nil-standalone": {
+			standalone: true,
+			tls:        nil,
+			unexpectedEnvs: []string{
+				"RW_SSL_KEY",
+				"RW_SSL_CERT",
+			},
+		},
+		"tls-disabled-empty-standalone": {
+			standalone: true,
+			tls: &risingwavev1alpha1.RisingWaveTLSConfiguration{
+				SecretName: "",
+			},
+			unexpectedEnvs: []string{
+				"RW_SSL_KEY",
+				"RW_SSL_CERT",
+			},
+		},
+		"tls-enabled-standalone": {
+			standalone: true,
+			tls: &risingwavev1alpha1.RisingWaveTLSConfiguration{
+				SecretName: "tls",
+			},
+			expectedEnvs: []corev1.EnvVar{
+				{
+					Name: "RW_SSL_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "tls",
+							},
+							Key: "tls.key",
+						},
+					},
+				},
+				{
+					Name: "RW_SSL_CERT",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "tls",
+							},
+							Key: "tls.crt",
 						},
 					},
 				},

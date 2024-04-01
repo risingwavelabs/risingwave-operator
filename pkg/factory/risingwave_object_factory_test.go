@@ -19,6 +19,7 @@ package factory
 import (
 	"testing"
 
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -401,6 +402,30 @@ func TestRisingWaveObjectFactory_ComputeArgs(t *testing.T) {
 					t.Errorf("Env not found or value not expected, expects \"%s\"", testutils.JSONMustPrettyPrint(expectEnv))
 				}
 			}
+		})
+	}
+}
+
+func TestRisingWaveObjectFactory_TlsSupport(t *testing.T) {
+	predicates := tlsPredicates()
+
+	for name, tc := range tlsTestcases() {
+		t.Run(name, func(t *testing.T) {
+			factory := NewRisingWaveObjectFactory(newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.MetaStore.Memory = ptr.To(true)
+				r.Spec.StateStore.Memory = ptr.To(true)
+				r.Spec.EnableStandaloneMode = ptr.To(tc.standalone)
+				r.Spec.TLS = tc.tls
+				r.Spec.Components.Frontend.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+					{
+						Name: "",
+					},
+				}
+			}), testutils.Scheme, "")
+
+			template := lo.If(tc.standalone, factory.NewStandaloneStatefulSet().Spec.Template).
+				Else(factory.NewFrontendDeployment("").Spec.Template)
+			composeAssertions(predicates, t).assertTest(&template, tc)
 		})
 	}
 }

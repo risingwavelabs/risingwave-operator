@@ -550,8 +550,39 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 	return envVars
 }
 
+func (f *RisingWaveObjectFactory) envsForTLS() []corev1.EnvVar {
+	tls := f.risingwave.Spec.TLS
+	if tls != nil && tls.SecretName != "" {
+		return []corev1.EnvVar{
+			{
+				Name: envs.RWSslKey,
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: tls.SecretName,
+						},
+						Key: corev1.TLSPrivateKeyKey,
+					},
+				},
+			},
+			{
+				Name: envs.RWSslCert,
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: tls.SecretName,
+						},
+						Key: corev1.TLSCertKey,
+					},
+				},
+			},
+		}
+	}
+	return nil
+}
+
 func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
-	return []corev1.EnvVar{
+	envVars := []corev1.EnvVar{
 		{
 			Name:  envs.RWListenAddr,
 			Value: fmt.Sprintf("0.0.0.0:%d", consts.FrontendServicePort),
@@ -577,6 +608,8 @@ func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
 			Value: fmt.Sprintf("0.0.0.0:%d", consts.FrontendMetricsPort),
 		},
 	}
+
+	return append(envVars, f.envsForTLS()...)
 }
 
 func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit int64) []corev1.EnvVar {
@@ -1715,6 +1748,8 @@ func (f *RisingWaveObjectFactory) setupStandaloneContainer(container *corev1.Con
 	}
 	container.Args = f.argsForStandalone()
 	container.Ports = f.portsForStandaloneContainer()
+
+	container.Env = append(container.Env, f.envsForTLS()...)
 
 	container.Env = mergeListWhenKeyEquals(container.Env, corev1.EnvVar{
 		Name:  envs.RWConfigPath,

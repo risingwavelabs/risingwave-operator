@@ -45,6 +45,27 @@ func (r *RisingWaveReader) RisingWave() *risingwavev1alpha1.RisingWave {
 	return r.risingwave.DeepCopy()
 }
 
+// StateStoreSubPath returns the value of `Root` fields of state stores if defined.
+//
+//nolint:all
+func (r *RisingWaveReader) StateStoreSubPath() string {
+	stateStore := r.risingwave.Spec.StateStore
+	switch {
+	case stateStore.AzureBlob != nil:
+		return stateStore.AzureBlob.Root
+	case stateStore.AliyunOSS != nil:
+		return stateStore.AliyunOSS.Root
+	case stateStore.GCS != nil:
+		return stateStore.GCS.Root
+	case stateStore.HDFS != nil:
+		return stateStore.HDFS.Root
+	case stateStore.WebHDFS != nil:
+		return stateStore.WebHDFS.Root
+	default:
+		return ""
+	}
+}
+
 // IsObservedGenerationOutdated tells whether the observed generation is outdated.
 func (r *RisingWaveReader) IsObservedGenerationOutdated() bool {
 	return r.risingwave.Status.ObservedGeneration < r.risingwave.Generation

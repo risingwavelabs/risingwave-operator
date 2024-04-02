@@ -155,19 +155,19 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 		minio := stateStore.MinIO
 		return fmt.Sprintf("hummock+minio://$(%s):$(%s)@%s/%s", envs.MinIOUsername, envs.MinIOPassword, minio.Endpoint, minio.Bucket)
 	case f.isStateStoreGCS():
-		return fmt.Sprintf("hummock+gcs://%s@%s", stateStore.GCS.Bucket, stateStore.GCS.Root)
+		return fmt.Sprintf("hummock+gcs://%s", stateStore.GCS.Bucket)
 	case f.isStateStoreAliyunOSS():
 		aliyunOSS := stateStore.AliyunOSS
-		return fmt.Sprintf("hummock+oss://%s@%s", aliyunOSS.Bucket, aliyunOSS.Root)
+		return fmt.Sprintf("hummock+oss://%s", aliyunOSS.Bucket)
 	case f.isStateStoreAzureBlob():
 		azureBlob := stateStore.AzureBlob
-		return fmt.Sprintf("hummock+azblob://%s@%s", azureBlob.Container, azureBlob.Root)
+		return fmt.Sprintf("hummock+azblob://%s", azureBlob.Container)
 	case f.isStateStoreHDFS():
 		hdfs := stateStore.HDFS
-		return fmt.Sprintf("hummock+hdfs://%s@%s", hdfs.NameNode, hdfs.Root)
+		return fmt.Sprintf("hummock+hdfs://%s", hdfs.NameNode)
 	case f.isStateStoreWebHDFS():
 		webhdfs := stateStore.WebHDFS
-		return fmt.Sprintf("hummock+webhdfs://%s@%s", webhdfs.NameNode, webhdfs.Root)
+		return fmt.Sprintf("hummock+webhdfs://%s", webhdfs.NameNode)
 	case f.isStateStoreLocalDisk():
 		localDisk := stateStore.LocalDisk
 		return fmt.Sprintf("hummock+fs://%s", localDisk.Root)
@@ -437,6 +437,13 @@ func (f *RisingWaveObjectFactory) coreEnvsForMeta() []corev1.EnvVar {
 	metaStore := &f.risingwave.Spec.MetaStore
 	stateStore := f.risingwave.Spec.StateStore
 
+	// In terms of compatibility, the sub path is either the path in the internal status,
+	// or the deprecated data path.
+	dataDirectorySubPath := f.risingwave.Status.Internal.StateStoreSubPath
+	if dataDirectorySubPath == "" {
+		dataDirectorySubPath = object.NewRisingWaveReader(f.risingwave).StateStoreSubPath()
+	}
+
 	envVars := []corev1.EnvVar{
 		{
 			Name:  envs.RWStateStore,
@@ -444,7 +451,7 @@ func (f *RisingWaveObjectFactory) coreEnvsForMeta() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWDataDirectory,
-			Value: stateStore.DataDirectory,
+			Value: path.Join(stateStore.DataDirectory, dataDirectorySubPath),
 		},
 	}
 

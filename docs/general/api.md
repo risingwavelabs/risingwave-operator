@@ -1514,6 +1514,35 @@ Defaults to &ldquo;AccessKeySecretRef&rdquo;.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveInternalStatus">RisingWaveInternalStatus
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>)
+</p>
+<div>
+<p>RisingWaveInternalStatus stores some internal status of RisingWave, such as internal states.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>stateStoreSubPath</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>StateStoreSubPath stores the sub path of the state store data directory.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackend">RisingWaveMetaStoreBackend
 </h3>
 <p>
@@ -4923,7 +4952,7 @@ string
 </em>
 </td>
 <td>
-<p>Bucket name of your AliyunOSS</p>
+<p>Bucket name of your Aliyun OSS.</p>
 </td>
 </tr>
 <tr>
@@ -4934,7 +4963,10 @@ string
 </em>
 </td>
 <td>
-<p>Working directory root of the Aliyun OSS.</p>
+<em>(Optional)</em>
+<p>Root directory of the Aliyun OSS bucket.</p>
+<p>Deprecated: the field is redundant since there&rsquo;s already the data directory.
+Mark it as optional now and will deprecate it in the future.</p>
 </td>
 </tr>
 <tr>
@@ -5010,7 +5042,10 @@ string
 </em>
 </td>
 <td>
-<p>Working directory root of the Azure Blob service.</p>
+<em>(Optional)</em>
+<p>Root directory of the Azure Blob container.</p>
+<p>Deprecated: the field is redundant since there&rsquo;s already the data directory.
+Mark it as optional now and will deprecate it in the future.</p>
 </td>
 </tr>
 <tr>
@@ -5075,7 +5110,10 @@ string
 </em>
 </td>
 <td>
-<p>Working directory root of the GCS bucket</p>
+<em>(Optional)</em>
+<p>Root directory of the GCS bucket.</p>
+<p>Deprecated: the field is redundant since there&rsquo;s already the data directory.
+Mark it as optional now and will deprecate it in the future.</p>
 </td>
 </tr>
 </tbody>
@@ -5115,7 +5153,10 @@ string
 </em>
 </td>
 <td>
-<p>Working directory root of the HDFS</p>
+<em>(Optional)</em>
+<p>Root directory of the HDFS.</p>
+<p>Deprecated: the field is redundant since there&rsquo;s already the data directory.
+Mark it as optional now and will deprecate it in the future.</p>
 </td>
 </tr>
 </tbody>
@@ -5197,7 +5238,7 @@ string
 </em>
 </td>
 <td>
-<p>Root is the root directory to store the data in the object storage.</p>
+<p>Root is the root directory to store the data in the object storage. It shadows the data directory.</p>
 </td>
 </tr>
 </tbody>
@@ -5469,6 +5510,19 @@ RisingWaveComponentsReplicasStatus
 </td>
 <td>
 <p>Scale view locks.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>internal</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveInternalStatus">
+RisingWaveInternalStatus
+</a>
+</em>
+</td>
+<td>
+<p>Internal status.</p>
 </td>
 </tr>
 <tr>

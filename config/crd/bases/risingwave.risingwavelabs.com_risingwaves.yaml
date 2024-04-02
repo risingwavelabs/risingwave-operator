@@ -29020,7 +29020,7 @@ spec:
                     description: AliyunOSS storage spec.
                     properties:
                       bucket:
-                        description: Bucket name of your AliyunOSS
+                        description: Bucket name of your Aliyun OSS.
                         type: string
                       credentials:
                         description: RisingWaveAliyunOSSCredentials is the credentials
@@ -29054,12 +29054,16 @@ spec:
                         description: Region of Aliyun OSS service
                         type: string
                       root:
-                        description: Working directory root of the Aliyun OSS.
+                        description: |-
+                          Root directory of the Aliyun OSS bucket.
+
+
+                          Deprecated: the field is redundant since there's already the data directory.
+                          Mark it as optional now and will deprecate it in the future.
                         type: string
                     required:
                     - bucket
                     - credentials
-                    - root
                     type: object
                   azureBlob:
                     description: Azure Blob storage spec.
@@ -29100,13 +29104,17 @@ spec:
                         pattern: ^(?:https://)?(?:[^/.\s]+\.)*(?:[^/\s]+)*$
                         type: string
                       root:
-                        description: Working directory root of the Azure Blob service.
+                        description: |-
+                          Root directory of the Azure Blob container.
+
+
+                          Deprecated: the field is redundant since there's already the data directory.
+                          Mark it as optional now and will deprecate it in the future.
                         type: string
                     required:
                     - container
                     - credentials
                     - endpoint
-                    - root
                     type: object
                   dataDirectory:
                     default: hummock
@@ -29142,11 +29150,15 @@ spec:
                             type: boolean
                         type: object
                       root:
-                        description: Working directory root of the GCS bucket
+                        description: |-
+                          Root directory of the GCS bucket.
+
+
+                          Deprecated: the field is redundant since there's already the data directory.
+                          Mark it as optional now and will deprecate it in the future.
                         type: string
                     required:
                     - bucket
-                    - root
                     type: object
                   hdfs:
                     description: HDFS storage spec.
@@ -29155,11 +29167,15 @@ spec:
                         description: Name node of the HDFS
                         type: string
                       root:
-                        description: Working directory root of the HDFS
+                        description: |-
+                          Root directory of the HDFS.
+
+
+                          Deprecated: the field is redundant since there's already the data directory.
+                          Mark it as optional now and will deprecate it in the future.
                         type: string
                     required:
                     - nameNode
-                    - root
                     type: object
                   huaweiCloudOBS:
                     description: HuaweiCloudOBS storage spec.
@@ -29204,7 +29220,7 @@ spec:
                     properties:
                       root:
                         description: Root is the root directory to store the data
-                          in the object storage.
+                          in the object storage. It shadows the data directory.
                         type: string
                     required:
                     - root
@@ -29307,11 +29323,15 @@ spec:
                         description: Name node of the HDFS
                         type: string
                       root:
-                        description: Working directory root of the HDFS
+                        description: |-
+                          Root directory of the HDFS.
+
+
+                          Deprecated: the field is redundant since there's already the data directory.
+                          Mark it as optional now and will deprecate it in the future.
                         type: string
                     required:
                     - nameNode
-                    - root
                     type: object
                 type: object
               tls:
@@ -29576,6 +29596,14 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              internal:
+                description: Internal status.
+                properties:
+                  stateStoreSubPath:
+                    description: StateStoreSubPath stores the sub path of the state
+                      store data directory.
+                    type: string
+                type: object
               metaStore:
                 description: Status of the meta store.
                 properties:

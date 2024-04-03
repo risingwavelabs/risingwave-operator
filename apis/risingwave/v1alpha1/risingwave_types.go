@@ -243,6 +243,13 @@ type RisingWaveScaleViewLock struct {
 	GroupLocks []RisingWaveScaleViewLockGroupLock `json:"groupLocks,omitempty"`
 }
 
+// RisingWaveInternalStatus stores some internal status of RisingWave, such as internal states.
+type RisingWaveInternalStatus struct {
+	// StateStoreRootPath stores the root path of the state store data directory. It's for compatibility purpose and
+	// should not be updated in most cases.
+	StateStoreRootPath string `json:"stateStoreRootPath,omitempty"`
+}
+
 // RisingWaveStatus is the status of RisingWave.
 type RisingWaveStatus struct {
 	// Observed generation by controller. It will be updated
@@ -266,6 +273,9 @@ type RisingWaveStatus struct {
 	// +listType=map
 	// +listMapKey=name
 	ScaleViews []RisingWaveScaleViewLock `json:"scaleViews,omitempty"`
+
+	// Internal status.
+	Internal RisingWaveInternalStatus `json:"internal,omitempty"`
 
 	// -----------------------------------v1alpha2 features ------------------------------------------ //
 

@@ -100,6 +100,7 @@ const (
 	RisingWaveAction_SyncObservedGeneration             = "SyncObservedGeneration"
 	RisingWaveAction_BarrierPrometheusCRDsInstalled     = "BarrierPrometheusCRDsInstalled"
 	RisingWaveAction_ReleaseScaleViewLock               = "ReleaseScaleViewLock"
+	RisingWaveAction_SyncInternalStatus                 = "SyncInternalStatus"
 )
 
 // +kubebuilder:rbac:groups=risingwave.risingwavelabs.com,resources=risingwaves,verbs=get;list;watch;create;update;patch;delete
@@ -394,7 +395,21 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		return ctrlkit.Continue()
 	})
 
+	syncInternalStatus := mgr.NewAction(RisingWaveAction_SyncInternalStatus, func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
+		path := risingwaveManger.RisingWaveReader.StateStoreRootPath()
+		risingwaveManger.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
+			// Set once and never update.
+			if status.Internal.StateStoreRootPath != "" {
+				status.Internal.StateStoreRootPath = path
+			}
+		})
+		return ctrlkit.Continue()
+	})
+
 	return ctrlkit.ParallelJoin(
+		// Always sync internal status.
+		syncInternalStatus,
+
 		// => Initializing (Running=false)
 		ctrlkit.Sequential(
 			firstTimeObservedBarrier,

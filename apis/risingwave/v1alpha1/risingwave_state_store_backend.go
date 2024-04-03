@@ -138,9 +138,12 @@ type RisingWaveStateStoreBackendGCS struct {
 	// +kubebuilder:validation:Required
 	Bucket string `json:"bucket"`
 
-	// Working directory root of the GCS bucket
-	// +kubebuilder:validation:Required
-	Root string `json:"root"`
+	// Root directory of the GCS bucket.
+	//
+	// Deprecated: the field is redundant since there's already the data directory.
+	// Mark it as optional now and will deprecate it in the future.
+	// +optional
+	Root string `json:"root,omitempty"`
 }
 
 // RisingWaveAzureBlobCredentials is the reference and keys selector to the AzureBlob access credentials stored in a local secret.
@@ -189,9 +192,12 @@ type RisingWaveStateStoreBackendAzureBlob struct {
 	// +kubebuilder:validation:Required
 	Container string `json:"container"`
 
-	// Working directory root of the Azure Blob service.
-	// +kubebuilder:validation:Required
-	Root string `json:"root"`
+	// Root directory of the Azure Blob container.
+	//
+	// Deprecated: the field is redundant since there's already the data directory.
+	// Mark it as optional now and will deprecate it in the future.
+	// +optional
+	Root string `json:"root,omitempty"`
 
 	// Endpoint of the Azure Blob service.
 	// e.g. https://yufantest.blob.core.windows.net
@@ -204,13 +210,16 @@ type RisingWaveStateStoreBackendAliyunOSS struct {
 	// RisingWaveAliyunOSSCredentials is the credentials provider from a Secret.
 	RisingWaveAliyunOSSCredentials `json:"credentials"`
 
-	// Bucket name of your AliyunOSS
+	// Bucket name of your Aliyun OSS.
 	// +kubebuilder:validation:Required
 	Bucket string `json:"bucket"`
 
-	// Working directory root of the Aliyun OSS.
-	// +kubebuilder:validation:Required
-	Root string `json:"root"`
+	// Root directory of the Aliyun OSS bucket.
+	//
+	// Deprecated: the field is redundant since there's already the data directory.
+	// Mark it as optional now and will deprecate it in the future.
+	// +optional
+	Root string `json:"root,omitempty"`
 
 	// Region of Aliyun OSS service
 	// +kubebuilder:validation:Required
@@ -228,14 +237,17 @@ type RisingWaveStateStoreBackendHDFS struct {
 	// +kubebuilder:validation:Required
 	NameNode string `json:"nameNode"`
 
-	// Working directory root of the HDFS
-	// +kubebuilder:validation:Required
-	Root string `json:"root"`
+	// Root directory of the HDFS.
+	//
+	// Deprecated: the field is redundant since there's already the data directory.
+	// Mark it as optional now and will deprecate it in the future.
+	// +optional
+	Root string `json:"root,omitempty"`
 }
 
 // RisingWaveStateStoreBackendLocalDisk is the details of local storage for compute and compactor components.
 type RisingWaveStateStoreBackendLocalDisk struct {
-	// Root is the root directory to store the data in the object storage.
+	// Root is the root directory to store the data in the object storage. It shadows the data directory.
 	// +kubebuilder:validation:Required
 	Root string `json:"root"`
 }

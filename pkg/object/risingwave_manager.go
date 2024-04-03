@@ -45,10 +45,10 @@ func (r *RisingWaveReader) RisingWave() *risingwavev1alpha1.RisingWave {
 	return r.risingwave.DeepCopy()
 }
 
-// StateStoreSubPath returns the value of `Root` fields of state stores if defined.
+// StateStoreRootPath returns the value of `Root` fields of state stores if defined.
 //
 //nolint:all
-func (r *RisingWaveReader) StateStoreSubPath() string {
+func (r *RisingWaveReader) StateStoreRootPath() string {
 	stateStore := r.risingwave.Spec.StateStore
 	switch {
 	case stateStore.AzureBlob != nil:

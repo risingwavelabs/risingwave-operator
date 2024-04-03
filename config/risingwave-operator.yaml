@@ -29616,9 +29616,10 @@ spec:
               internal:
                 description: Internal status.
                 properties:
-                  stateStoreSubPath:
-                    description: StateStoreSubPath stores the sub path of the state
-                      store data directory.
+                  stateStoreRootPath:
+                    description: |-
+                      StateStoreRootPath stores the root path of the state store data directory. It's for compatibility purpose and
+                      should not be updated in most cases.
                     type: string
                 type: object
               metaStore:

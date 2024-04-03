@@ -1532,13 +1532,14 @@ Defaults to &ldquo;AccessKeySecretRef&rdquo;.</p>
 <tbody>
 <tr>
 <td>
-<code>stateStoreSubPath</code><br/>
+<code>stateStoreRootPath</code><br/>
 <em>
 string
 </em>
 </td>
 <td>
-<p>StateStoreSubPath stores the sub path of the state store data directory.</p>
+<p>StateStoreRootPath stores the root path of the state store data directory. It&rsquo;s for compatibility purpose and
+should not be updated in most cases.</p>
 </td>
 </tr>
 </tbody>

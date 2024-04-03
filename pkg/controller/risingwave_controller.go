@@ -396,11 +396,11 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	})
 
 	syncInternalStatus := mgr.NewAction(RisingWaveAction_SyncInternalStatus, func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
-		path := risingwaveManger.RisingWaveReader.StateStoreSubPath()
+		path := risingwaveManger.RisingWaveReader.StateStoreRootPath()
 		risingwaveManger.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
 			// Set once and never update.
-			if status.Internal.StateStoreSubPath != "" {
-				status.Internal.StateStoreSubPath = path
+			if status.Internal.StateStoreRootPath != "" {
+				status.Internal.StateStoreRootPath = path
 			}
 		})
 		return ctrlkit.Continue()

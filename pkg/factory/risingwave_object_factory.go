@@ -433,16 +433,20 @@ func formatConnectionOptions(opts map[string]string) string {
 	return "?" + val.Encode()
 }
 
+func (f *RisingWaveObjectFactory) getDataDirectory() string {
+	stateStore := f.risingwave.Spec.StateStore
+	// In terms of compatibility, the root path is either the path in the internal status,
+	// or the deprecated data path.
+	rootPath := f.risingwave.Status.Internal.StateStoreRootPath
+	if rootPath == "" {
+		rootPath = object.NewRisingWaveReader(f.risingwave).StateStoreRootPath()
+	}
+
+	return path.Join(rootPath, stateStore.DataDirectory)
+}
+
 func (f *RisingWaveObjectFactory) coreEnvsForMeta() []corev1.EnvVar {
 	metaStore := &f.risingwave.Spec.MetaStore
-	stateStore := f.risingwave.Spec.StateStore
-
-	// In terms of compatibility, the sub path is either the path in the internal status,
-	// or the deprecated data path.
-	dataDirectorySubPath := f.risingwave.Status.Internal.StateStoreSubPath
-	if dataDirectorySubPath == "" {
-		dataDirectorySubPath = object.NewRisingWaveReader(f.risingwave).StateStoreSubPath()
-	}
 
 	envVars := []corev1.EnvVar{
 		{
@@ -451,7 +455,7 @@ func (f *RisingWaveObjectFactory) coreEnvsForMeta() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWDataDirectory,
-			Value: path.Join(stateStore.DataDirectory, dataDirectorySubPath),
+			Value: f.getDataDirectory(),
 		},
 	}
 

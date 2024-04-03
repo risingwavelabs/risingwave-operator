@@ -245,8 +245,9 @@ type RisingWaveScaleViewLock struct {
 
 // RisingWaveInternalStatus stores some internal status of RisingWave, such as internal states.
 type RisingWaveInternalStatus struct {
-	// StateStoreSubPath stores the sub path of the state store data directory.
-	StateStoreSubPath string `json:"stateStoreSubPath,omitempty"`
+	// StateStoreRootPath stores the root path of the state store data directory. It's for compatibility purpose and
+	// should not be updated in most cases.
+	StateStoreRootPath string `json:"stateStoreRootPath,omitempty"`
 }
 
 // RisingWaveStatus is the status of RisingWave.

@@ -429,3 +429,95 @@ func TestRisingWaveObjectFactory_TlsSupport(t *testing.T) {
 		})
 	}
 }
+
+func TestRisingWaveObjectFactory_DataDirectory(t *testing.T) {
+	testcases := map[string]struct {
+		stateStore   risingwavev1alpha1.RisingWaveStateStoreBackend
+		internalRoot string
+		expect       string
+	}{
+		"gcs-without-root": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				GCS:           &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{},
+			},
+			internalRoot: "",
+			expect:       "hummock",
+		},
+		"gcs-with-root": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
+					Root: "root",
+				},
+			},
+			internalRoot: "",
+			expect:       "root/hummock",
+		},
+		"gcs-with-internal-root": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
+					Root: "root",
+				},
+			},
+			internalRoot: "root",
+			expect:       "root/hummock",
+		},
+		"gcs-with-internal-root-only": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				GCS:           &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{},
+			},
+			internalRoot: "root",
+			expect:       "root/hummock",
+		},
+		"azblob-without-root": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				AzureBlob:     &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{},
+			},
+			internalRoot: "",
+			expect:       "hummock",
+		},
+		"azblob-with-root": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
+					Root: "root",
+				},
+			},
+			internalRoot: "",
+			expect:       "root/hummock",
+		},
+		"azblob-with-internal-root": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
+					Root: "root",
+				},
+			},
+			internalRoot: "root",
+			expect:       "root/hummock",
+		},
+		"azblob-with-internal-root-only": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				AzureBlob:     &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{},
+			},
+			internalRoot: "root",
+			expect:       "root/hummock",
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			factory := NewRisingWaveObjectFactory(newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore = tc.stateStore
+				r.Status.Internal.StateStoreRootPath = tc.internalRoot
+			}), testutils.Scheme, "")
+
+			assert.Equal(t, tc.expect, factory.getDataDirectory())
+		})
+	}
+}

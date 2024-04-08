@@ -12,7 +12,7 @@ require (
 	github.com/openkruise/kruise-api v1.6.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.73.0
 	github.com/prometheus/client_golang v1.19.0
-	github.com/prometheus/client_model v0.6.0
+	github.com/prometheus/client_model v0.6.1
 	github.com/risingwavelabs/ctrlkit v1.0.1
 	github.com/samber/lo v1.39.0
 	github.com/stretchr/testify v1.9.0

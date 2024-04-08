@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -53,7 +54,10 @@ type MetaPodRoleLabeler struct {
 // to identify the meta node. If the node isn't found in the response, an unknown will be returned.
 func (mpl *MetaPodRoleLabeler) getMetaRole(ctx context.Context, host string, port uint, endpoint string) (string, error) {
 	addr := fmt.Sprintf("%s:%v", host, port)
-	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(addr, grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
+		var d net.Dialer
+		return d.DialContext(ctx, "tcp", s)
+	}), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return "", fmt.Errorf("unable to connect: %w", err)
 	}

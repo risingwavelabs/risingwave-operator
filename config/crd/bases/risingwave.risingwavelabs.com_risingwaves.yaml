@@ -29305,7 +29305,8 @@ spec:
                           You can reference the `REGION` and `BUCKET` variables in the endpoint with `${BUCKET}` and `${REGION}`, e.g.,
                             s3.${REGION}.amazonaws.com
                             ${BUCKET}.s3.${REGION}.amazonaws.com
-                        pattern: ^(?:https://)?(?:[^/.\s]+\.)*(?:[^/\s]+)*$
+                          Both HTTP and HTTPS are allowed. The default scheme is HTTPS if not specified.
+                        pattern: ^(?:https?://)?(?:[^/.\s]+\.)*(?:[^/\s]+)*$
                         type: string
                       region:
                         default: us-east-1

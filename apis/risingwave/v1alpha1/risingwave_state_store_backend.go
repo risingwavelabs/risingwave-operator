@@ -107,8 +107,9 @@ type RisingWaveStateStoreBackendS3 struct {
 	// You can reference the `REGION` and `BUCKET` variables in the endpoint with `${BUCKET}` and `${REGION}`, e.g.,
 	//   s3.${REGION}.amazonaws.com
 	//   ${BUCKET}.s3.${REGION}.amazonaws.com
+	// Both HTTP and HTTPS are allowed. The default scheme is HTTPS if not specified.
 	// +optional
-	// +kubebuilder:validation:Pattern="^(?:https://)?(?:[^/.\\s]+\\.)*(?:[^/\\s]+)*$"
+	// +kubebuilder:validation:Pattern="^(?:https?://)?(?:[^/.\\s]+\\.)*(?:[^/\\s]+)*$"
 	Endpoint string `json:"endpoint,omitempty"`
 }
 

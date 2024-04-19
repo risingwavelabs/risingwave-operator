@@ -5360,7 +5360,8 @@ string
 <p>Endpoint of the AWS (or other vendor&rsquo;s S3-compatible) service. Leave it empty when using AWS S3 service.
 You can reference the <code>REGION</code> and <code>BUCKET</code> variables in the endpoint with <code>${BUCKET}</code> and <code>${REGION}</code>, e.g.,
 s3.${REGION}.amazonaws.com
-${BUCKET}.s3.${REGION}.amazonaws.com</p>
+${BUCKET}.s3.${REGION}.amazonaws.com
+Both HTTP and HTTPS are allowed. The default scheme is HTTPS if not specified.</p>
 </td>
 </tr>
 </tbody>

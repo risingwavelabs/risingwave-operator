@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # Create a directory to store the environment variables
-mkdir -p ci/run && env | grep "BUILDKITE\|CI\|AWS" >ci/run/env.list
+mkdir -p ci/run && env | grep "^BUILDKITE\|^CI\|^AWS" >ci/run/env.list
 echo CI_ENV=1 >> ci/run/env.list
 
 # Get environment variables from the command line

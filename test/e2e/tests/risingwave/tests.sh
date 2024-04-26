@@ -160,9 +160,32 @@ function test::run::risingwave::multi_meta_failover() {
 	logging::info "Stopped!"
 }
 
+function test::risingwave::wait_before_compute_registered() {
+  local frontend_service_port
+  frontend_service_port=$(k8s::kubectl get svc/"${E2E_RISINGWAVE_NAME}-frontend" -o jsonpath='{.spec.ports[?(@.name=="service")].port}')
+
+  # Ensure at least one worker has been registered.
+  for _ in {0..10}; do
+    if testenv::util::psql -X -v ON_ERROR_STOP=1 -h "${E2E_RISINGWAVE_NAME}-frontend.${E2E_NAMESPACE}" \
+      -p "${frontend_service_port}" -d dev -U root \
+      -t -c "select * from rw_worker_nodes where type='WORKER_TYPE_COMPUTE_NODE' and state='RUNNING'" | grep -q "."; then
+      return 0
+    else
+      logging::warn "No compute node registered yet!"
+      sleep 3
+    fi
+  done
+
+  logging::error "No compute node registered!"
+  sleep 100000
+  return 1
+}
+
 function test::risingwave::check_status_with_simple_queries() {
 	local frontend_service_port
 	frontend_service_port=$(k8s::kubectl get svc/"${E2E_RISINGWAVE_NAME}-frontend" -o jsonpath='{.spec.ports[?(@.name=="service")].port}')
+
+	test::risingwave::wait_before_compute_registered || return 1
 
 	# shellcheck disable=SC2034
 	local PSQL_SCRIPT_FILE="${_E2E_RISINGWAVE_TEST_PATH}/query.sql"

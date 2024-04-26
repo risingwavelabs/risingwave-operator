@@ -66,7 +66,7 @@ function testenv::util::uninstall() {
 }
 
 function testenv::util::psql() {
-	if [[ -n ${PSQL_SCRIPT_FILE} ]]; then
+	if [[ -n ${PSQL_SCRIPT_FILE+x} ]]; then
 		kubectl -n "${_UTIL_NAMESPACE}" exec -i psql -c psql -- psql "$@" <"${PSQL_SCRIPT_FILE}"
 	else
 		kubectl -n "${_UTIL_NAMESPACE}" exec -i psql -c psql -- psql "$@"

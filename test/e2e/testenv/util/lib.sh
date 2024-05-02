@@ -109,7 +109,7 @@ function testenv::util::network::is_k8s_service_up() {
 }
 
 function testenv::util::network::wait_before_service_up() {
-	local threshold=60
+	local threshold=120
 	local current_epoch=0
 	local interval=5
   local namespace=$1

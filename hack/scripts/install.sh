@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CERT_MANAGER_VERSION=${CERT_MANAGER_VERSION:-v1.11.0}
+CERT_MANAGER_VERSION=${CERT_MANAGER_VERSION:-v1.14.5}
 RISINGWAVE_OPERATOR_VERSION=${RISINGWAVE_OPERATOR_VERSION:-latest}
 
 function link_to_risingwave_operator_manifests() {

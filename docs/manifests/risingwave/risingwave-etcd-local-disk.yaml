@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
       - name: etcd
-        image: quay.io/coreos/etcd:latest
+        image: quay.io/coreos/etcd:v3.4.32
         imagePullPolicy: IfNotPresent
         command:
         - /usr/local/bin/etcd
@@ -105,7 +105,7 @@ kind: RisingWave
 metadata:
   name: risingwave
 spec:
-  image: risingwavelabs/risingwave:v1.7.3
+  image: risingwavelabs/risingwave:v1.8.2
   metaStore:
     etcd:
       endpoint: etcd:2388

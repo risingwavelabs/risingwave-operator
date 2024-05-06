@@ -169,8 +169,8 @@ function test::risingwave::wait_before_compute_registered() {
     if testenv::util::psql -X -v ON_ERROR_STOP=1 -h "${E2E_RISINGWAVE_NAME}-frontend.${E2E_NAMESPACE}" \
       -p "${frontend_service_port}" -d dev -U root \
       -t -c "select * from rw_worker_nodes where type='WORKER_TYPE_COMPUTE_NODE' and state='RUNNING'" | grep -q "."; then
-      # sleep 3 more seconds for DNS to be propagated
-      sleep 3
+      # sleep 30 more seconds for DNS to be propagated
+      sleep 30
       return 0
     else
       logging::warn "No compute node registered yet!"

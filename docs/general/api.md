@@ -605,6 +605,19 @@ spec.components will be ignored. Standalone mode can be turned on/off dynamicall
 </tr>
 <tr>
 <td>
+<code>enableEmbeddedServingMode</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to control whether to enable embedded serving mode. If enabled, the frontend nodes will be created
+with embedded serving node enabled, and the compute nodes will serve streaming workload only.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>image</code><br/>
 <em>
 string
@@ -4494,6 +4507,19 @@ bool
 <em>(Optional)</em>
 <p>Flag to control whether to deploy in standalone mode or distributed mode. If standalone mode is used,
 spec.components will be ignored. Standalone mode can be turned on/off dynamically.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableEmbeddedServingMode</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to control whether to enable embedded serving mode. If enabled, the frontend nodes will be created
+with embedded serving node enabled, and the compute nodes will serve streaming workload only.</p>
 </td>
 </tr>
 <tr>

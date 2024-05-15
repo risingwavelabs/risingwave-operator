@@ -623,6 +623,26 @@ func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
 	return append(envVars, f.envsForTLS()...)
 }
 
+func (f *RisingWaveObjectFactory) envsForResourceLimits(cpuLimit int64, memLimit int64) []corev1.EnvVar {
+	var envVars []corev1.EnvVar
+
+	if cpuLimit != 0 {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  envs.RWParallelism,
+			Value: strconv.FormatInt(cpuLimit, 10),
+		})
+	}
+
+	if memLimit != 0 {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  envs.RWTotalMemoryBytes,
+			Value: strconv.FormatInt(memLimit, 10),
+		})
+	}
+
+	return envVars
+}
+
 func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit int64) []corev1.EnvVar {
 	envVars := []corev1.EnvVar{
 		{
@@ -651,19 +671,7 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 		},
 	}
 
-	if cpuLimit != 0 {
-		envVars = append(envVars, corev1.EnvVar{
-			Name:  envs.RWParallelism,
-			Value: strconv.FormatInt(cpuLimit, 10),
-		})
-	}
-
-	if memLimit != 0 {
-		envVars = append(envVars, corev1.EnvVar{
-			Name:  envs.RWTotalMemoryBytes,
-			Value: strconv.FormatInt(memLimit, 10),
-		})
-	}
+	envVars = append(envVars, f.envsForResourceLimits(cpuLimit, memLimit)...)
 
 	return envVars
 }
@@ -1575,12 +1583,47 @@ func (f *RisingWaveObjectFactory) portsForFrontendContainer() []corev1.Container
 	}
 }
 
+func (f *RisingWaveObjectFactory) isEmbeddedServingModeEnabled() bool {
+	return ptr.Deref(f.risingwave.Spec.EnableEmbeddedServingMode, false)
+}
+
 func (f *RisingWaveObjectFactory) setupFrontendContainer(container *corev1.Container) {
 	container.Name = "frontend"
-	container.Args = []string{"frontend-node"}
+
+	if f.isEmbeddedServingModeEnabled() {
+		container.Args = []string{
+			"standalone",
+			fmt.Sprintf("--compute-opts=--listen-addr 0.0.0.0:%d --advertise-addr $(%s):%d --role=serving",
+				consts.ComputeServicePort, envs.PodIP, consts.ComputeServicePort),
+			fmt.Sprintf("--frontend-opts=--listen-addr 0.0.0.0:%d --advertise-addr $(%s):%d",
+				consts.FrontendServicePort, envs.PodIP, consts.FrontendServicePort),
+		}
+		container.Lifecycle = &corev1.Lifecycle{
+			PreStop: &corev1.LifecycleHandler{
+				Exec: &corev1.ExecAction{
+					Command: []string{
+						"bash",
+						"-c",
+						fmt.Sprintf("%s ctl meta unregister-workers --yes --workers ${%s}:%d",
+							risingwaveExecutablePath, envs.PodIP, consts.ComputeServicePort),
+					},
+				},
+			},
+		}
+	} else {
+		container.Args = []string{"frontend-node"}
+	}
 
 	// merge the vars, and use the container env vars(set in template) to replace the generated default vars, if key equals.
 	mergedVars := f.envsForFrontendArgs()
+
+	if f.isEmbeddedServingModeEnabled() {
+		cpuLimit := int64(math.Ceil(container.Resources.Limits.Cpu().AsApproximateFloat64()))
+		memLimit, _ := container.Resources.Limits.Memory().AsInt64()
+		mergedVars = append(mergedVars, f.envsForResourceLimits(cpuLimit, memLimit)...)
+		mergedVars = append(mergedVars, f.envsForStateStore()...)
+	}
+
 	for _, env := range container.Env {
 		mergedVars = mergeListWhenKeyEquals(mergedVars, env, func(a, b *corev1.EnvVar) bool {
 			return a.Name == b.Name
@@ -1612,6 +1655,10 @@ func (f *RisingWaveObjectFactory) portsForComputeContainer() []corev1.ContainerP
 func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Container) {
 	container.Name = "compute"
 	container.Args = []string{"compute-node"}
+
+	if f.isEmbeddedServingModeEnabled() {
+		container.Args = append(container.Args, "--role=streaming")
+	}
 
 	cpuLimit := int64(math.Ceil(container.Resources.Limits.Cpu().AsApproximateFloat64()))
 	memLimit, _ := container.Resources.Limits.Memory().AsInt64()

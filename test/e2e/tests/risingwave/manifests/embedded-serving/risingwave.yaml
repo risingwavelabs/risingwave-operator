@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: ${E2E_NAMESPACE}
+  labels:
+    app: minio
+spec:
+  ports:
+  - port: 9301
+    name: service
+  - port: 9400
+    name: console
+  selector:
+    app: minio
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-credentials
+  namespace: ${E2E_NAMESPACE}
+stringData:
+  username: hummockadmin
+  password: hummockadmin
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: minio
+  name: minio
+  namespace: ${E2E_NAMESPACE}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  serviceName: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+      - name: minio
+        image: quay.io/minio/minio:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        args:
+        - -c
+        - mkdir -p /data/hummock001; /usr/bin/docker-entrypoint.sh server --address 0.0.0.0:9301 --console-address 0.0.0.0:9400 /data
+        env:
+        - name: MINIO_ROOT_USER
+          valueFrom:
+            secretKeyRef:
+              name: minio-credentials
+              key: username
+        - name: MINIO_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: minio-credentials
+              key: password
+        ports:
+        - name: service
+          containerPort: 9301
+          protocol: TCP
+        - name: console
+          containerPort: 9400
+          protocol: TCP
+---
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: ${E2E_RISINGWAVE_NAME}
+  namespace: ${E2E_NAMESPACE}
+spec:
+  image: ${E2E_RISINGWAVE_IMAGE}
+  enableEmbeddedServingMode: true
+  components:
+    meta:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    compactor:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    frontend:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    compute:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+  metaStore:
+    memory: true
+  stateStore:
+    minio:
+      endpoint: minio:9301
+      bucket: hummock001
+      credentials:
+        secretName: minio-credentials

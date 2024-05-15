@@ -29844,6 +29844,12 @@ spec:
                   False and an empty value means the ServiceMonitor won't be created automatically. But even if it's set to true,
                   the controller will determine if it can create the resource by checking if the CRDs are installed.
                 type: boolean
+              enableEmbeddedServingMode:
+                default: false
+                description: |-
+                  Flag to control whether to enable embedded serving mode. If enabled, the frontend nodes will be created
+                  with embedded serving node enabled, and the compute nodes will serve streaming workload only.
+                type: boolean
               enableFullKubernetesAddr:
                 default: false
                 description: |-

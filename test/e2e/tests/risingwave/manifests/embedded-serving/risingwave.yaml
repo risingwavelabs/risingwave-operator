@@ -1,0 +1,29 @@
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: ${E2E_RISINGWAVE_NAME}
+  namespace: ${E2E_NAMESPACE}
+spec:
+  image: ${E2E_RISINGWAVE_IMAGE}
+  enableEmbeddedServingMode: true
+  components:
+    meta:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    compactor:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    frontend:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+    compute:
+      nodeGroups:
+      - replicas: 1
+        name: ''
+  metaStore:
+    memory: true
+  stateStore:
+    memory: true

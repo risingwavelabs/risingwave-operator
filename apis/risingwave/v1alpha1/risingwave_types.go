@@ -104,6 +104,12 @@ type RisingWaveSpec struct {
 	// +kubebuilder:default=false
 	EnableStandaloneMode *bool `json:"enableStandaloneMode,omitempty"`
 
+	// Flag to control whether to enable embedded serving mode. If enabled, the frontend nodes will be created
+	// with embedded serving node enabled, and the compute nodes will serve streaming workload only.
+	// +optional
+	// +kubebuilder:default=false
+	EnableEmbeddedServingMode *bool `json:"enableEmbeddedServingMode,omitempty"`
+
 	// Image for RisingWave component.
 	Image string `json:"image"`
 

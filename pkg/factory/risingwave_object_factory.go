@@ -1197,11 +1197,14 @@ func basicSetupRisingWaveContainer(container *corev1.Container, component *risin
 		}, func(env *corev1.EnvVar) bool { return env.Name == envs.RustBacktrace })
 	}
 
-	// Set the RW_WORKER_THREADS to the cpu limit.
+	// Set the RW_WORKER_THREADS based on the cpu limit.
+	// Always ensure that the worker threads are at least 4 to reduce the risk of
+	// unexpected blocking by synchronous operations.
+	// https://github.com/risingwavelabs/risingwave/issues/16693
 	if cpuLimit, ok := container.Resources.Limits[corev1.ResourceCPU]; ok {
 		container.Env = mergeListByKey(container.Env, corev1.EnvVar{
 			Name:  envs.RWWorkerThreads,
-			Value: strconv.FormatInt(cpuLimit.Value(), 10),
+			Value: strconv.FormatInt(max(cpuLimit.Value(), 4), 10),
 		}, func(env *corev1.EnvVar) bool { return env.Name == envs.RWWorkerThreads })
 	}
 

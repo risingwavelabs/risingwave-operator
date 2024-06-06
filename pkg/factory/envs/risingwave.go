@@ -20,6 +20,7 @@ package envs
 const (
 	RustBacktrace = "RUST_BACKTRACE"
 	RustLog       = "RUST_LOG"
+	RustMinStack  = "RUST_MIN_STACK"
 	JavaOpts      = "JAVA_OPTS"
 
 	RWListenAddr             = "RW_LISTEN_ADDR"

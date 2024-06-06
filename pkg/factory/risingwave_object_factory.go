@@ -1189,6 +1189,12 @@ func basicSetupRisingWaveContainer(container *corev1.Container, component *risin
 		},
 	}, func(env *corev1.EnvVar) bool { return env.Name == envs.PodNamespace })
 
+	// Set RUST_MIN_STACK to 4M to allow more stack space for threads.
+	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
+		Name:  envs.RustMinStack,
+		Value: strconv.Itoa(4 << 20),
+	}, func(e *corev1.EnvVar) bool { return e.Name == envs.RustMinStack })
+
 	// Set RUST_BACKTRACE=1 if printing stack traces is enabled.
 	if !ptr.Deref(component.DisallowPrintStackTraces, false) {
 		container.Env = mergeListByKey(container.Env, corev1.EnvVar{

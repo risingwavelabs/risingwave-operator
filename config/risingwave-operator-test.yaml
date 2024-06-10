@@ -30573,6 +30573,14 @@ spec:
                     - path
                     type: object
                 type: object
+              standaloneMode:
+                default: 0
+                description: |-
+                  StandaloneMode determines which style of command-line args should be used for the standalone mode.
+                  0 - auto detect by image version, 1 - the old standalone mode, 2 - standalone mode V2 (single-node).
+                  This is only for backward compatibility and will be deprecated in the future.
+                format: int32
+                type: integer
               stateStore:
                 default:
                   memory: true

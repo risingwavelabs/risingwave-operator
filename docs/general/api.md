@@ -696,6 +696,19 @@ RisingWaveTLSConfiguration
 <p>TLS configures the TLS/SSL certificates for SQL access.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>standaloneMode</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>StandaloneMode determines which style of command-line args should be used for the standalone mode.
+0 - auto detect by image version, 1 - the old standalone mode, 2 - standalone mode V2 (single-node).
+This is only for backward compatibility and will be deprecated in the future.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -4600,6 +4613,19 @@ RisingWaveTLSConfiguration
 </td>
 <td>
 <p>TLS configures the TLS/SSL certificates for SQL access.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>standaloneMode</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>StandaloneMode determines which style of command-line args should be used for the standalone mode.
+0 - auto detect by image version, 1 - the old standalone mode, 2 - standalone mode V2 (single-node).
+This is only for backward compatibility and will be deprecated in the future.</p>
 </td>
 </tr>
 </tbody>

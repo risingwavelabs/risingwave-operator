@@ -1,78 +1,6 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: etcd
-  namespace: ${E2E_NAMESPACE}
-  labels:
-    app: etcd
-spec:
-  ports:
-  - port: 2388
-    name: client
-  - port: 2389
-    name: peer
-  selector:
-    app: etcd
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  labels:
-    app: etcd
-  name: etcd
-  namespace: ${E2E_NAMESPACE}
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: etcd
-  serviceName: etcd
-  template:
-    metadata:
-      labels:
-        app: etcd
-    spec:
-      containers:
-      - name: etcd
-        image: quay.io/coreos/etcd:v3.4.32
-        imagePullPolicy: IfNotPresent
-        command:
-        - /usr/local/bin/etcd
-        args:
-        - "--listen-client-urls"
-        - "http://0.0.0.0:2388"
-        - "--advertise-client-urls"
-        - "http://etcd-0:2388"
-        - "--listen-peer-urls"
-        - "http://0.0.0.0:2389"
-        - "--initial-advertise-peer-urls"
-        - "http://etcd-0:2389"
-        - "--listen-metrics-urls"
-        - "http://0.0.0.0:2379"
-        - "--name"
-        - "etcd"
-        - "--max-txn-ops"
-        - "999999"
-        - "--auto-compaction-mode"
-        - periodic
-        - "--auto-compaction-retention"
-        - 1m
-        - "--snapshot-count"
-        - "10000"
-        env:
-        - name: ALLOW_NONE_AUTHENTICATION
-          value: "1"
-        ports:
-        - containerPort: 2389
-          name: peer
-          protocol: TCP
-        - containerPort: 2388
-          name: client
-          protocol: TCP
----
-apiVersion: v1
-kind: Service
-metadata:
   name: minio
   namespace: ${E2E_NAMESPACE}
   labels:
@@ -92,8 +20,8 @@ metadata:
   name: minio-credentials
   namespace: ${E2E_NAMESPACE}
 stringData:
-  username: "hummockadmin"
-  password: "hummockadmin"
+  username: hummockadmin
+  password: hummockadmin
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -148,10 +76,11 @@ metadata:
   namespace: ${E2E_NAMESPACE}
 spec:
   image: ${E2E_RISINGWAVE_IMAGE}
+  enableEmbeddedServingMode: true
   components:
     meta:
       nodeGroups:
-      - replicas: 2
+      - replicas: 1
         name: ''
     compactor:
       nodeGroups:
@@ -166,8 +95,7 @@ spec:
       - replicas: 1
         name: ''
   metaStore:
-    etcd:
-      endpoint: etcd:2388
+    memory: true
   stateStore:
     minio:
       endpoint: minio:9301

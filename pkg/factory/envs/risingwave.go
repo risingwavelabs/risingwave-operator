@@ -20,6 +20,7 @@ package envs
 const (
 	RustBacktrace = "RUST_BACKTRACE"
 	RustLog       = "RUST_LOG"
+	RustMinStack  = "RUST_MIN_STACK"
 	JavaOpts      = "JAVA_OPTS"
 
 	RWListenAddr             = "RW_LISTEN_ADDR"
@@ -27,9 +28,14 @@ const (
 	RWDashboardHost          = "RW_DASHBOARD_HOST"
 	RWPrometheusHost         = "RW_PROMETHEUS_HOST"
 	RWEtcdEndpoints          = "RW_ETCD_ENDPOINTS"
+	RWSQLEndpoint            = "RW_SQL_ENDPOINT"
 	RWEtcdAuth               = "RW_ETCD_AUTH"
 	RWEtcdUsername           = "RW_ETCD_USERNAME"
 	RWEtcdPassword           = "RW_ETCD_PASSWORD"
+	RWMySQLUsername          = "RW_MYSQL_USERNAME"
+	RWMySQLPassword          = "RW_MYSQL_PASSWORD"
+	RWPostgresUsername       = "RW_POSTGRES_USERNAME"
+	RWPostgresPassword       = "RW_POSTGRES_PASSWORD"
 	RWConfigPath             = "RW_CONFIG_PATH"
 	RWStateStore             = "RW_STATE_STORE"
 	RWDataDirectory          = "RW_DATA_DIRECTORY"
@@ -40,6 +46,8 @@ const (
 	RWPrometheusListenerAddr = "RW_PROMETHEUS_LISTENER_ADDR"
 	RWParallelism            = "RW_PARALLELISM"
 	RWTotalMemoryBytes       = "RW_TOTAL_MEMORY_BYTES"
+	RWSslCert                = "RW_SSL_CERT"
+	RWSslKey                 = "RW_SSL_KEY"
 )
 
 // MinIO.

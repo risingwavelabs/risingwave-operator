@@ -382,7 +382,7 @@ will be set by the persistentvolume controller if it exists.
 If the resource referred to by volumeAttributesClass does not exist, this PersistentVolumeClaim will be
 set to a Pending state, as reflected by the modifyVolumeStatus field, until such as a resource
 exists.
-More info: <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes#volumeattributesclass">https://kubernetes.io/docs/concepts/storage/persistent-volumes#volumeattributesclass</a>
+More info: <a href="https://kubernetes.io/docs/concepts/storage/volume-attributes-classes/">https://kubernetes.io/docs/concepts/storage/volume-attributes-classes/</a>
 (Alpha) Using this field requires the VolumeAttributesClass feature gate to be enabled.</p>
 </td>
 </tr>
@@ -605,6 +605,19 @@ spec.components will be ignored. Standalone mode can be turned on/off dynamicall
 </tr>
 <tr>
 <td>
+<code>enableEmbeddedServingMode</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to control whether to enable embedded serving mode. If enabled, the frontend nodes will be created
+with embedded serving node enabled, and the compute nodes will serve streaming workload only.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>image</code><br/>
 <em>
 string
@@ -668,6 +681,19 @@ RisingWaveStateStoreBackend
 <td>
 <p>StateStore determines which backend the state store will use and the parameters for it. Defaults to memory.
 But keep in mind that memory backend is not recommended in production.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tls</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfiguration">
+RisingWaveTLSConfiguration
+</a>
+</em>
+</td>
+<td>
+<p>TLS configures the TLS/SSL certificates for SQL access.</p>
 </td>
 </tr>
 </table>
@@ -789,6 +815,19 @@ string
 <td>
 <p>AccountKeyRef is the key of the secret to be the secret account key. Must be a valid secret key.
 Defaults to &ldquo;AccountKey&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>useServiceAccount</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>UseServiceAccount indicates whether to use the service account token mounted in the pod.
+If this is enabled, secret and keys are ignored. Defaults to false.</p>
 </td>
 </tr>
 </tbody>
@@ -1211,6 +1250,59 @@ RisingWaveNodeConfigurationSecretSource
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveDBCredentials">RisingWaveDBCredentials
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackendMySQL">RisingWaveMetaStoreBackendMySQL</a>, <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackendPostgreSQL">RisingWaveMetaStoreBackendPostgreSQL</a>)
+</p>
+<div>
+<p>RisingWaveDBCredentials is the reference and keys selector to the DB access credentials stored in a local secret.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The name of the secret in the pod&rsquo;s namespace to select from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>usernameKeyRef</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>UsernameKeyRef is the key of the secret to be the username. Must be a valid secret key.
+Defaults to &ldquo;username&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>passwordKeyRef</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>PasswordKeyRef is the key of the secret to be the password. Must be a valid secret key.
+Defaults to &ldquo;password&rdquo;.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveEtcdCredentials">RisingWaveEtcdCredentials
 </h3>
 <p>
@@ -1435,6 +1527,36 @@ Defaults to &ldquo;AccessKeySecretRef&rdquo;.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveInternalStatus">RisingWaveInternalStatus
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveStatus">RisingWaveStatus</a>)
+</p>
+<div>
+<p>RisingWaveInternalStatus stores some internal status of RisingWave, such as internal states.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>stateStoreRootPath</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>StateStoreRootPath stores the root path of the state store data directory. It&rsquo;s for compatibility purpose and
+should not be updated in most cases.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackend">RisingWaveMetaStoreBackend
 </h3>
 <p>
@@ -1478,7 +1600,49 @@ RisingWaveMetaStoreBackendEtcd
 </td>
 <td>
 <em>(Optional)</em>
-<p>Endpoint of the etcd service for storing the metadata.</p>
+<p>Stores metadata in etcd.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sqlite</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackendSQLite">
+RisingWaveMetaStoreBackendSQLite
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SQLite stores metadata in a SQLite DB file.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>mysql</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackendMySQL">
+RisingWaveMetaStoreBackendMySQL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MySQL stores metadata in a MySQL DB.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>postgresql</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackendPostgreSQL">
+RisingWaveMetaStoreBackendPostgreSQL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PostgreSQL stores metadata in a PostgreSQL DB.</p>
 </td>
 </tr>
 </tbody>
@@ -1543,6 +1707,189 @@ Deprecated: Please use &ldquo;credentials&rdquo; field instead. The &ldquo;Secre
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackendMySQL">RisingWaveMetaStoreBackendMySQL
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackend">RisingWaveMetaStoreBackend</a>)
+</p>
+<div>
+<p>RisingWaveMetaStoreBackendMySQL describes the options of MySQL DB backend.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>credentials</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveDBCredentials">
+RisingWaveDBCredentials
+</a>
+</em>
+</td>
+<td>
+<p>RisingWaveDBCredentials is the reference credentials. User must provide a secret contains
+<code>username</code> and <code>password</code> (or one can customize the key references) keys and the correct values.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>host</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Host of the MySQL DB.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>port</code><br/>
+<em>
+uint32
+</em>
+</td>
+<td>
+<p>Port of the MySQL DB. Defaults to 3306.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>database</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Database of the MySQL DB.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>options</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Options when connecting to the MySQL DB. Optional.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackendPostgreSQL">RisingWaveMetaStoreBackendPostgreSQL
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackend">RisingWaveMetaStoreBackend</a>)
+</p>
+<div>
+<p>RisingWaveMetaStoreBackendPostgreSQL describes the options of PostgreSQL DB backend.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>credentials</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveDBCredentials">
+RisingWaveDBCredentials
+</a>
+</em>
+</td>
+<td>
+<p>RisingWaveDBCredentials is the reference credentials. User must provide a secret contains
+<code>username</code> and <code>password</code> (or one can customize the key references) keys and the correct values.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>host</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Host of the PostgreSQL DB.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>port</code><br/>
+<em>
+uint32
+</em>
+</td>
+<td>
+<p>Port of the PostgreSQL DB. Defaults to 5432.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>database</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Database of the PostgreSQL DB.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>options</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Options when connecting to the PostgreSQL DB. Optional.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackendSQLite">RisingWaveMetaStoreBackendSQLite
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackend">RisingWaveMetaStoreBackend</a>)
+</p>
+<div>
+<p>RisingWaveMetaStoreBackendSQLite describes the options of SQLite DB backend.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>path</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Path of the DB file.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackendType">RisingWaveMetaStoreBackendType
 (<code>string</code> alias)</h3>
 <p>
@@ -1561,6 +1908,12 @@ Deprecated: Please use &ldquo;credentials&rdquo; field instead. The &ldquo;Secre
 <tbody><tr><td><p>&#34;Etcd&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;Memory&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;MySQL&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;PostgreSQL&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;SQLite&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;Unknown&#34;</p></td>
 <td></td>
@@ -4158,6 +4511,19 @@ spec.components will be ignored. Standalone mode can be turned on/off dynamicall
 </tr>
 <tr>
 <td>
+<code>enableEmbeddedServingMode</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to control whether to enable embedded serving mode. If enabled, the frontend nodes will be created
+with embedded serving node enabled, and the compute nodes will serve streaming workload only.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>image</code><br/>
 <em>
 string
@@ -4221,6 +4587,19 @@ RisingWaveStateStoreBackend
 <td>
 <p>StateStore determines which backend the state store will use and the parameters for it. Defaults to memory.
 But keep in mind that memory backend is not recommended in production.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tls</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfiguration">
+RisingWaveTLSConfiguration
+</a>
+</em>
+</td>
+<td>
+<p>TLS configures the TLS/SSL certificates for SQL access.</p>
 </td>
 </tr>
 </tbody>
@@ -4600,7 +4979,7 @@ string
 </em>
 </td>
 <td>
-<p>Bucket name of your AliyunOSS</p>
+<p>Bucket name of your Aliyun OSS.</p>
 </td>
 </tr>
 <tr>
@@ -4611,7 +4990,10 @@ string
 </em>
 </td>
 <td>
-<p>Working directory root of the Aliyun OSS.</p>
+<em>(Optional)</em>
+<p>Root directory of the Aliyun OSS bucket.</p>
+<p>Deprecated: the field is redundant since there&rsquo;s already the data directory.
+Mark it as optional now and will deprecate it in the future.</p>
 </td>
 </tr>
 <tr>
@@ -4687,7 +5069,10 @@ string
 </em>
 </td>
 <td>
-<p>Working directory root of the Azure Blob service.</p>
+<em>(Optional)</em>
+<p>Root directory of the Azure Blob container.</p>
+<p>Deprecated: the field is redundant since there&rsquo;s already the data directory.
+Mark it as optional now and will deprecate it in the future.</p>
 </td>
 </tr>
 <tr>
@@ -4752,7 +5137,10 @@ string
 </em>
 </td>
 <td>
-<p>Working directory root of the GCS bucket</p>
+<em>(Optional)</em>
+<p>Root directory of the GCS bucket.</p>
+<p>Deprecated: the field is redundant since there&rsquo;s already the data directory.
+Mark it as optional now and will deprecate it in the future.</p>
 </td>
 </tr>
 </tbody>
@@ -4792,7 +5180,10 @@ string
 </em>
 </td>
 <td>
-<p>Working directory root of the HDFS</p>
+<em>(Optional)</em>
+<p>Root directory of the HDFS.</p>
+<p>Deprecated: the field is redundant since there&rsquo;s already the data directory.
+Mark it as optional now and will deprecate it in the future.</p>
 </td>
 </tr>
 </tbody>
@@ -4874,7 +5265,7 @@ string
 </em>
 </td>
 <td>
-<p>Root is the root directory to store the data in the object storage.</p>
+<p>Root is the root directory to store the data in the object storage. It shadows the data directory.</p>
 </td>
 </tr>
 </tbody>
@@ -4995,7 +5386,8 @@ string
 <p>Endpoint of the AWS (or other vendor&rsquo;s S3-compatible) service. Leave it empty when using AWS S3 service.
 You can reference the <code>REGION</code> and <code>BUCKET</code> variables in the endpoint with <code>${BUCKET}</code> and <code>${REGION}</code>, e.g.,
 s3.${REGION}.amazonaws.com
-${BUCKET}.s3.${REGION}.amazonaws.com</p>
+${BUCKET}.s3.${REGION}.amazonaws.com
+Both HTTP and HTTPS are allowed. The default scheme is HTTPS if not specified.</p>
 </td>
 </tr>
 </tbody>
@@ -5150,6 +5542,19 @@ RisingWaveComponentsReplicasStatus
 </tr>
 <tr>
 <td>
+<code>internal</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveInternalStatus">
+RisingWaveInternalStatus
+</a>
+</em>
+</td>
+<td>
+<p>Internal status.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>metaStore</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreStatus">
@@ -5172,6 +5577,37 @@ RisingWaveStateStoreStatus
 </td>
 <td>
 <p>Status of the state store.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveTLSConfiguration">RisingWaveTLSConfiguration
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
+</p>
+<div>
+<p>RisingWaveTLSConfiguration is the TLS/SSL configuration for RisingWave&rsquo;s SQL access.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecretName that contains the certificates. The keys must be <code>tls.key</code> and <code>tls.crt</code>.
+If the secret name isn&rsquo;t provided, then TLS/SSL won&rsquo;t be enabled.</p>
 </td>
 </tr>
 </tbody>

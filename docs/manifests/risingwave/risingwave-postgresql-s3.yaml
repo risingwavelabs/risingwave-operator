@@ -1,26 +1,27 @@
-apiVersion: v1
-kind: Secret
-metadata:
-  name: cos-credentials
-stringData:
-  AccessKeyID: your-access-key
-  SecretAccessKey: your-access-secret
----
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
-  name: risingwave-s3-compatible
+  name: risingwave-postgresql-s3
 spec:
   metaStore:
-    memory: true
-  stateStore:
-    s3:
-      endpoint: ${BUCKET}.cos.${REGION}.myqcloud.com
-      bucket: cos-credentials
-      region: ap-guangzhou
+    postgresql:
       credentials:
-        secretName: cos-credentials
-  image: risingwavelabs/risingwave:v1.9.1
+        secretName: postgres-credentials
+        usernameKeyRef: username
+        passwordKeyRef: password
+      database: risingwave
+      host: postgres.example.com
+      port: 5432
+  stateStore:
+    dataDirectory: hummock001-directory
+    s3:
+      bucket: hummock001
+      credentials:
+        secretName: s3-credentials
+        accessKeyRef: AccessKeyID
+        secretAccessKeyRef: SecretAccessKey
+      region: ap-southeast-1
+  image: ghcr.io/risingwavelabs/risingwave:v1.6.0
   components:
     meta:
       nodeGroups:

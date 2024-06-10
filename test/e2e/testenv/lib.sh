@@ -117,14 +117,14 @@ function testenv::k8s::load_docker_image() {
 }
 
 function testenv::k8s::cert_manager::install() {
-	local version=${CERT_MANAGER_VERSION:-v1.9.1}
+	local version=${CERT_MANAGER_VERSION:-v1.14.5}
 	shell::run k8s::kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/"${version}"/cert-manager.yaml
 
 	testenv::k8s::cert_manager::_wait
 }
 
 function testenv::k8s::cert_manager::uninstall() {
-	local version=${CERT_MANAGER_VERSION:-v1.9.1}
+	local version=${CERT_MANAGER_VERSION:-v1.14.5}
 	shell::run k8s::kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/"${version}"/cert-manager.yaml
 }
 

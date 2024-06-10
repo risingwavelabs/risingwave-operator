@@ -33,7 +33,7 @@ spec:
       enableServiceLinks: false
       containers:
       - name: etcd
-        image: quay.io/coreos/etcd:latest
+        image: quay.io/coreos/etcd:v3.4.32
         imagePullPolicy: IfNotPresent
         lifecycle:
           postStart:
@@ -97,7 +97,7 @@ spec:
         passwordKeyRef: password
   stateStore:
     memory: true
-  image: ghcr.io/risingwavelabs/risingwave:v1.6.0
+  image: risingwavelabs/risingwave:v1.9.1
   components:
     meta:
       nodeGroups:

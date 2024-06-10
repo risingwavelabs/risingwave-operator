@@ -221,7 +221,7 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 
 CONTROLLER_GEN = $(shell pwd)/bin/$(OS)/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0)
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.15.0)
 
 KUSTOMIZE = $(shell pwd)/bin/$(OS)/kustomize
 kustomize: ## Download kustomize locally if necessary.
@@ -234,7 +234,7 @@ envtest: ## Download envtest-setup locally if necessary.
 GOLANGCI-LINT = $(shell pwd)/bin/$(OS)/golangci-lint
 golangci-lint: ## Download envtest-setup locally if necessary.
 # $(call get-golangci-lint)
-	$(call go-get-tool,$(GOLANGCI-LINT),github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2)
+	$(call go-get-tool,$(GOLANGCI-LINT),github.com/golangci/golangci-lint/cmd/golangci-lint@v1.56.2)
 
 CTRLKIT-GEN = $(shell pwd)/bin/$(OS)/ctrlkit-gen
 ctrlkit-gen: ## Download ctrlkit locally if necessary.
@@ -246,7 +246,7 @@ goimports-reviser: ## Download goimports-reviser locally if necessary.
 
 GEN_CRD_API_REFERENCE_DOCS = $(shell pwd)/bin/$(OS)/gen-crd-api-reference-docs
 gen-crd-api-reference-docs: ## Download gen-crd-api-reference-docs locally if necessary
-	$(call go-get-tool,$(GEN_CRD_API_REFERENCE_DOCS),github.com/arkbriar/gen-crd-api-reference-docs@cd878bb3)
+	$(call go-get-tool,$(GEN_CRD_API_REFERENCE_DOCS),github.com/ahmetb/gen-crd-api-reference-docs@6cf1ede4da6128d8d489215698525e8289e707c4)
 
 TYPES_V1ALPHA1_TARGET := $(shell find apis/risingwave/v1alpha1/ -name "*_types.go")
 

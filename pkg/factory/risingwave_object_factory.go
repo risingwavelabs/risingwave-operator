@@ -19,6 +19,7 @@ package factory
 import (
 	"fmt"
 	"math"
+	"net/url"
 	"path"
 	"strconv"
 	"strings"
@@ -124,6 +125,18 @@ func (f *RisingWaveObjectFactory) isMetaStoreEtcd() bool {
 	return f.risingwave.Spec.MetaStore.Etcd != nil
 }
 
+func (f *RisingWaveObjectFactory) isMetaStoreSQLite() bool {
+	return f.risingwave.Spec.MetaStore.SQLite != nil
+}
+
+func (f *RisingWaveObjectFactory) isMetaStoreMySQL() bool {
+	return f.risingwave.Spec.MetaStore.MySQL != nil
+}
+
+func (f *RisingWaveObjectFactory) isMetaStorePostgreSQL() bool {
+	return f.risingwave.Spec.MetaStore.PostgreSQL != nil
+}
+
 func (f *RisingWaveObjectFactory) isFullKubernetesAddr() bool {
 	return ptr.Deref(f.risingwave.Spec.EnableFullKubernetesAddr, false)
 }
@@ -143,19 +156,19 @@ func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 		minio := stateStore.MinIO
 		return fmt.Sprintf("hummock+minio://$(%s):$(%s)@%s/%s", envs.MinIOUsername, envs.MinIOPassword, minio.Endpoint, minio.Bucket)
 	case f.isStateStoreGCS():
-		return fmt.Sprintf("hummock+gcs://%s@%s", stateStore.GCS.Bucket, stateStore.GCS.Root)
+		return fmt.Sprintf("hummock+gcs://%s", stateStore.GCS.Bucket)
 	case f.isStateStoreAliyunOSS():
 		aliyunOSS := stateStore.AliyunOSS
-		return fmt.Sprintf("hummock+oss://%s@%s", aliyunOSS.Bucket, aliyunOSS.Root)
+		return fmt.Sprintf("hummock+oss://%s", aliyunOSS.Bucket)
 	case f.isStateStoreAzureBlob():
 		azureBlob := stateStore.AzureBlob
-		return fmt.Sprintf("hummock+azblob://%s@%s", azureBlob.Container, azureBlob.Root)
+		return fmt.Sprintf("hummock+azblob://%s", azureBlob.Container)
 	case f.isStateStoreHDFS():
 		hdfs := stateStore.HDFS
-		return fmt.Sprintf("hummock+hdfs://%s@%s", hdfs.NameNode, hdfs.Root)
+		return fmt.Sprintf("hummock+hdfs://%s", hdfs.NameNode)
 	case f.isStateStoreWebHDFS():
 		webhdfs := stateStore.WebHDFS
-		return fmt.Sprintf("hummock+webhdfs://%s@%s", webhdfs.NameNode, webhdfs.Root)
+		return fmt.Sprintf("hummock+webhdfs://%s", webhdfs.NameNode)
 	case f.isStateStoreLocalDisk():
 		localDisk := stateStore.LocalDisk
 		return fmt.Sprintf("hummock+fs://%s", localDisk.Root)
@@ -331,9 +344,110 @@ func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 	}
 }
 
+func (f *RisingWaveObjectFactory) envsForSQLite() []corev1.EnvVar {
+	return nil
+}
+
+func (f *RisingWaveObjectFactory) envsForMySQL() []corev1.EnvVar {
+	creds := &f.risingwave.Spec.MetaStore.MySQL.RisingWaveDBCredentials
+
+	return []corev1.EnvVar{
+		{
+			Name: envs.RWMySQLUsername,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: creds.UsernameKeyRef,
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: creds.SecretName,
+					},
+				},
+			},
+		},
+		{
+			Name: envs.RWMySQLPassword,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: creds.PasswordKeyRef,
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: creds.SecretName,
+					},
+				},
+			},
+		},
+	}
+}
+
+func (f *RisingWaveObjectFactory) envsForPostgreSQL() []corev1.EnvVar {
+	creds := &f.risingwave.Spec.MetaStore.PostgreSQL.RisingWaveDBCredentials
+
+	return []corev1.EnvVar{
+		{
+			Name: envs.RWPostgresUsername,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: creds.UsernameKeyRef,
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: creds.SecretName,
+					},
+				},
+			},
+		},
+		{
+			Name: envs.RWPostgresPassword,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: creds.PasswordKeyRef,
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: creds.SecretName,
+					},
+				},
+			},
+		},
+	}
+}
+
+func (f *RisingWaveObjectFactory) envsForMetaStore() []corev1.EnvVar {
+	switch {
+	case f.isMetaStoreMemory():
+		return nil
+	case f.isMetaStoreEtcd():
+		return f.envsForEtcd()
+	case f.isMetaStoreSQLite():
+		return f.envsForSQLite()
+	case f.isMetaStoreMySQL():
+		return f.envsForMySQL()
+	case f.isMetaStorePostgreSQL():
+		return f.envsForPostgreSQL()
+	default:
+		panic("unsupported meta storage type")
+	}
+}
+
+func formatConnectionOptions(opts map[string]string) string {
+	if len(opts) == 0 {
+		return ""
+	}
+	val := url.Values{}
+	for k, v := range opts {
+		val.Add(k, v)
+	}
+	return "?" + val.Encode()
+}
+
+func (f *RisingWaveObjectFactory) getDataDirectory() string {
+	stateStore := f.risingwave.Spec.StateStore
+	// In terms of compatibility, the root path is either the path in the internal status,
+	// or the deprecated data path.
+	rootPath := f.risingwave.Status.Internal.StateStoreRootPath
+	if rootPath == "" {
+		rootPath = object.NewRisingWaveReader(f.risingwave).StateStoreRootPath()
+	}
+
+	return path.Join(rootPath, stateStore.DataDirectory)
+}
+
 func (f *RisingWaveObjectFactory) coreEnvsForMeta() []corev1.EnvVar {
 	metaStore := &f.risingwave.Spec.MetaStore
-	stateStore := f.risingwave.Spec.StateStore
 
 	envVars := []corev1.EnvVar{
 		{
@@ -342,7 +456,7 @@ func (f *RisingWaveObjectFactory) coreEnvsForMeta() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWDataDirectory,
-			Value: stateStore.DataDirectory,
+			Value: f.getDataDirectory(),
 		},
 		{
 			Name:  envs.RWDashboardHost,
@@ -374,6 +488,43 @@ func (f *RisingWaveObjectFactory) coreEnvsForMeta() []corev1.EnvVar {
 				Value: "true",
 			})
 		}
+	case f.isMetaStoreSQLite():
+		envVars = append(envVars, []corev1.EnvVar{
+			{
+				Name:  envs.RWBackend,
+				Value: "sql",
+			},
+			{
+				Name:  envs.RWSQLEndpoint,
+				Value: fmt.Sprintf("sqlite://%s?mode=rwc", metaStore.SQLite.Path),
+			},
+		}...)
+	case f.isMetaStoreMySQL():
+		envVars = append(envVars, []corev1.EnvVar{
+			{
+				Name:  envs.RWBackend,
+				Value: "sql",
+			},
+			{
+				Name: envs.RWSQLEndpoint,
+				Value: fmt.Sprintf("mysql://$(%s):$(%s)@%s:%d/%s%s", envs.RWMySQLUsername, envs.RWMySQLPassword,
+					metaStore.MySQL.Host, metaStore.MySQL.Port, metaStore.MySQL.Database,
+					formatConnectionOptions(metaStore.MySQL.Options)),
+			},
+		}...)
+	case f.isMetaStorePostgreSQL():
+		envVars = append(envVars, []corev1.EnvVar{
+			{
+				Name:  envs.RWBackend,
+				Value: "sql",
+			},
+			{
+				Name: envs.RWSQLEndpoint,
+				Value: fmt.Sprintf("postgres://$(%s):$(%s)@%s:%d/%s%s", envs.RWPostgresUsername,
+					envs.RWPostgresPassword, metaStore.PostgreSQL.Host, metaStore.PostgreSQL.Port,
+					metaStore.PostgreSQL.Database, formatConnectionOptions(metaStore.PostgreSQL.Options)),
+			},
+		}...)
 	default:
 		panic("unsupported meta storage type")
 	}
@@ -411,8 +562,39 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 	return envVars
 }
 
+func (f *RisingWaveObjectFactory) envsForTLS() []corev1.EnvVar {
+	tls := f.risingwave.Spec.TLS
+	if tls != nil && tls.SecretName != "" {
+		return []corev1.EnvVar{
+			{
+				Name: envs.RWSslKey,
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: tls.SecretName,
+						},
+						Key: corev1.TLSPrivateKeyKey,
+					},
+				},
+			},
+			{
+				Name: envs.RWSslCert,
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: tls.SecretName,
+						},
+						Key: corev1.TLSCertKey,
+					},
+				},
+			},
+		}
+	}
+	return nil
+}
+
 func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
-	return []corev1.EnvVar{
+	envVars := []corev1.EnvVar{
 		{
 			Name:  envs.RWListenAddr,
 			Value: fmt.Sprintf("0.0.0.0:%d", consts.FrontendServicePort),
@@ -438,6 +620,28 @@ func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
 			Value: fmt.Sprintf("0.0.0.0:%d", consts.FrontendMetricsPort),
 		},
 	}
+
+	return append(envVars, f.envsForTLS()...)
+}
+
+func (f *RisingWaveObjectFactory) envsForResourceLimits(cpuLimit int64, memLimit int64) []corev1.EnvVar {
+	var envVars []corev1.EnvVar
+
+	if cpuLimit != 0 {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  envs.RWParallelism,
+			Value: strconv.FormatInt(cpuLimit, 10),
+		})
+	}
+
+	if memLimit != 0 {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  envs.RWTotalMemoryBytes,
+			Value: strconv.FormatInt(memLimit, 10),
+		})
+	}
+
+	return envVars
 }
 
 func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit int64) []corev1.EnvVar {
@@ -468,19 +672,7 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 		},
 	}
 
-	if cpuLimit != 0 {
-		envVars = append(envVars, corev1.EnvVar{
-			Name:  envs.RWParallelism,
-			Value: strconv.FormatInt(cpuLimit, 10),
-		})
-	}
-
-	if memLimit != 0 {
-		envVars = append(envVars, corev1.EnvVar{
-			Name:  envs.RWTotalMemoryBytes,
-			Value: strconv.FormatInt(memLimit, 10),
-		})
-	}
+	envVars = append(envVars, f.envsForResourceLimits(cpuLimit, memLimit)...)
 
 	return envVars
 }
@@ -747,34 +939,40 @@ func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 func (f *RisingWaveObjectFactory) envsForAzureBlob() []corev1.EnvVar {
 	stateStore := &f.risingwave.Spec.StateStore
 	credentials := stateStore.AzureBlob.RisingWaveAzureBlobCredentials
-	secretRef := corev1.LocalObjectReference{
-		Name: credentials.SecretName,
-	}
-	return []corev1.EnvVar{
-
-		{
-			Name: envs.AzureBlobAccountName,
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: secretRef,
-					Key:                  credentials.AccountNameRef,
-				},
-			},
-		},
-		{
-			Name: envs.AzureBlobAccountKey,
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: secretRef,
-					Key:                  credentials.AccountKeyRef,
-				},
-			},
-		},
+	envVars := []corev1.EnvVar{
 		{
 			Name:  envs.AzureBlobEndpoint,
 			Value: stateStore.AzureBlob.Endpoint,
 		},
 	}
+
+	if !ptr.Deref(credentials.UseServiceAccount, false) {
+		secretRef := corev1.LocalObjectReference{
+			Name: credentials.SecretName,
+		}
+		envVars = append(envVars, []corev1.EnvVar{
+			{
+				Name: envs.AzureBlobAccountName,
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: secretRef,
+						Key:                  credentials.AccountNameRef,
+					},
+				},
+			},
+			{
+				Name: envs.AzureBlobAccountKey,
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: secretRef,
+						Key:                  credentials.AccountKeyRef,
+					},
+				},
+			},
+		}...)
+	}
+
+	return envVars
 }
 
 func (f *RisingWaveObjectFactory) envsForHDFS() []corev1.EnvVar {
@@ -992,6 +1190,12 @@ func basicSetupRisingWaveContainer(container *corev1.Container, component *risin
 		},
 	}, func(env *corev1.EnvVar) bool { return env.Name == envs.PodNamespace })
 
+	// Set RUST_MIN_STACK to 4M to allow more stack space for threads.
+	container.Env = mergeListByKey(container.Env, corev1.EnvVar{
+		Name:  envs.RustMinStack,
+		Value: strconv.Itoa(4 << 20),
+	}, func(e *corev1.EnvVar) bool { return e.Name == envs.RustMinStack })
+
 	// Set RUST_BACKTRACE=1 if printing stack traces is enabled.
 	if !ptr.Deref(component.DisallowPrintStackTraces, false) {
 		container.Env = mergeListByKey(container.Env, corev1.EnvVar{
@@ -1000,11 +1204,14 @@ func basicSetupRisingWaveContainer(container *corev1.Container, component *risin
 		}, func(env *corev1.EnvVar) bool { return env.Name == envs.RustBacktrace })
 	}
 
-	// Set the RW_WORKER_THREADS to the cpu limit.
+	// Set the RW_WORKER_THREADS based on the cpu limit.
+	// Always ensure that the worker threads are at least 4 to reduce the risk of
+	// unexpected blocking by synchronous operations.
+	// https://github.com/risingwavelabs/risingwave/issues/16693
 	if cpuLimit, ok := container.Resources.Limits[corev1.ResourceCPU]; ok {
 		container.Env = mergeListByKey(container.Env, corev1.EnvVar{
 			Name:  envs.RWWorkerThreads,
-			Value: strconv.FormatInt(cpuLimit.Value(), 10),
+			Value: strconv.FormatInt(max(cpuLimit.Value(), 4), 10),
 		}, func(env *corev1.EnvVar) bool { return env.Name == envs.RWWorkerThreads })
 	}
 
@@ -1064,12 +1271,11 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 			return a.Name == b.Name
 		})
 	}
-	if f.isMetaStoreEtcd() {
-		for _, env := range f.envsForEtcd() {
-			container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
-				return a.Name == b.Name
-			})
-		}
+
+	for _, env := range f.envsForMetaStore() {
+		container.Env = mergeListWhenKeyEquals(container.Env, env, func(a, b *corev1.EnvVar) bool {
+			return a.Name == b.Name
+		})
 	}
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
@@ -1387,12 +1593,47 @@ func (f *RisingWaveObjectFactory) portsForFrontendContainer() []corev1.Container
 	}
 }
 
+func (f *RisingWaveObjectFactory) isEmbeddedServingModeEnabled() bool {
+	return ptr.Deref(f.risingwave.Spec.EnableEmbeddedServingMode, false)
+}
+
 func (f *RisingWaveObjectFactory) setupFrontendContainer(container *corev1.Container) {
 	container.Name = "frontend"
-	container.Args = []string{"frontend-node"}
+
+	if f.isEmbeddedServingModeEnabled() {
+		container.Args = []string{
+			"standalone",
+			fmt.Sprintf("--compute-opts=--listen-addr 0.0.0.0:%d --advertise-addr $(%s):%d --role=serving",
+				consts.ComputeServicePort, envs.PodIP, consts.ComputeServicePort),
+			fmt.Sprintf("--frontend-opts=--listen-addr 0.0.0.0:%d --advertise-addr $(%s):%d",
+				consts.FrontendServicePort, envs.PodIP, consts.FrontendServicePort),
+		}
+		container.Lifecycle = &corev1.Lifecycle{
+			PreStop: &corev1.LifecycleHandler{
+				Exec: &corev1.ExecAction{
+					Command: []string{
+						"bash",
+						"-c",
+						fmt.Sprintf("%s ctl meta unregister-workers --yes --workers ${%s}:%d",
+							risingwaveExecutablePath, envs.PodIP, consts.ComputeServicePort),
+					},
+				},
+			},
+		}
+	} else {
+		container.Args = []string{"frontend-node"}
+	}
 
 	// merge the vars, and use the container env vars(set in template) to replace the generated default vars, if key equals.
 	mergedVars := f.envsForFrontendArgs()
+
+	if f.isEmbeddedServingModeEnabled() {
+		cpuLimit := int64(math.Ceil(container.Resources.Limits.Cpu().AsApproximateFloat64()))
+		memLimit, _ := container.Resources.Limits.Memory().AsInt64()
+		mergedVars = append(mergedVars, f.envsForResourceLimits(cpuLimit, memLimit)...)
+		mergedVars = append(mergedVars, f.envsForStateStore()...)
+	}
+
 	for _, env := range container.Env {
 		mergedVars = mergeListWhenKeyEquals(mergedVars, env, func(a, b *corev1.EnvVar) bool {
 			return a.Name == b.Name
@@ -1424,6 +1665,10 @@ func (f *RisingWaveObjectFactory) portsForComputeContainer() []corev1.ContainerP
 func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Container) {
 	container.Name = "compute"
 	container.Args = []string{"compute-node"}
+
+	if f.isEmbeddedServingModeEnabled() {
+		container.Args = append(container.Args, "--role=streaming")
+	}
 
 	cpuLimit := int64(math.Ceil(container.Resources.Limits.Cpu().AsApproximateFloat64()))
 	memLimit, _ := container.Resources.Limits.Memory().AsInt64()
@@ -1607,6 +1852,8 @@ func (f *RisingWaveObjectFactory) setupStandaloneContainer(container *corev1.Con
 
 	container.Ports = f.portsForStandaloneContainer()
 
+	container.Env = append(container.Env, f.envsForTLS()...)
+
 	container.Env = mergeListWhenKeyEquals(container.Env, corev1.EnvVar{
 		Name:  envs.RWConfigPath,
 		Value: path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
@@ -1628,11 +1875,9 @@ func (f *RisingWaveObjectFactory) setupStandaloneContainer(container *corev1.Con
 			func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
 	}
 
-	if f.isMetaStoreEtcd() {
-		for _, env := range f.envsForEtcd() {
-			container.Env = mergeListWhenKeyEquals(container.Env, env,
-				func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
-		}
+	for _, env := range f.envsForMetaStore() {
+		container.Env = mergeListWhenKeyEquals(container.Env, env,
+			func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
 	}
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(),
@@ -1953,7 +2198,7 @@ func (f *RisingWaveObjectFactory) NewServiceMonitor() *prometheusv1.ServiceMonit
 					Interval:      prometheusv1.Duration(fmt.Sprintf("%.0fs", interval.Seconds())),
 					ScrapeTimeout: prometheusv1.Duration(fmt.Sprintf("%.0fs", scrapeTimeout.Seconds())),
 					// we need to drop some metrics which maybe will produce too many series.
-					MetricRelabelConfigs: []*prometheusv1.RelabelConfig{
+					MetricRelabelConfigs: []prometheusv1.RelabelConfig{
 						{
 							SourceLabels: []prometheusv1.LabelName{"__name__"},
 							Action:       "drop",

@@ -19,6 +19,7 @@ package factory
 import (
 	"testing"
 
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -401,6 +402,122 @@ func TestRisingWaveObjectFactory_ComputeArgs(t *testing.T) {
 					t.Errorf("Env not found or value not expected, expects \"%s\"", testutils.JSONMustPrettyPrint(expectEnv))
 				}
 			}
+		})
+	}
+}
+
+func TestRisingWaveObjectFactory_TlsSupport(t *testing.T) {
+	predicates := tlsPredicates()
+
+	for name, tc := range tlsTestcases() {
+		t.Run(name, func(t *testing.T) {
+			factory := NewRisingWaveObjectFactory(newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.MetaStore.Memory = ptr.To(true)
+				r.Spec.StateStore.Memory = ptr.To(true)
+				r.Spec.EnableStandaloneMode = ptr.To(tc.standalone)
+				r.Spec.TLS = tc.tls
+				r.Spec.Components.Frontend.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+					{
+						Name: "",
+					},
+				}
+			}), testutils.Scheme, "")
+
+			template := lo.If(tc.standalone, factory.NewStandaloneStatefulSet().Spec.Template).
+				Else(factory.NewFrontendDeployment("").Spec.Template)
+			composeAssertions(predicates, t).assertTest(&template, tc)
+		})
+	}
+}
+
+func TestRisingWaveObjectFactory_DataDirectory(t *testing.T) {
+	testcases := map[string]struct {
+		stateStore   risingwavev1alpha1.RisingWaveStateStoreBackend
+		internalRoot string
+		expect       string
+	}{
+		"gcs-without-root": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				GCS:           &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{},
+			},
+			internalRoot: "",
+			expect:       "hummock",
+		},
+		"gcs-with-root": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
+					Root: "root",
+				},
+			},
+			internalRoot: "",
+			expect:       "root/hummock",
+		},
+		"gcs-with-internal-root": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
+					Root: "root",
+				},
+			},
+			internalRoot: "root",
+			expect:       "root/hummock",
+		},
+		"gcs-with-internal-root-only": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				GCS:           &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{},
+			},
+			internalRoot: "root",
+			expect:       "root/hummock",
+		},
+		"azblob-without-root": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				AzureBlob:     &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{},
+			},
+			internalRoot: "",
+			expect:       "hummock",
+		},
+		"azblob-with-root": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
+					Root: "root",
+				},
+			},
+			internalRoot: "",
+			expect:       "root/hummock",
+		},
+		"azblob-with-internal-root": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
+					Root: "root",
+				},
+			},
+			internalRoot: "root",
+			expect:       "root/hummock",
+		},
+		"azblob-with-internal-root-only": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				DataDirectory: "hummock",
+				AzureBlob:     &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{},
+			},
+			internalRoot: "root",
+			expect:       "root/hummock",
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			factory := NewRisingWaveObjectFactory(newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.StateStore = tc.stateStore
+				r.Status.Internal.StateStoreRootPath = tc.internalRoot
+			}), testutils.Scheme, "")
+
+			assert.Equal(t, tc.expect, factory.getDataDirectory())
 		})
 	}
 }

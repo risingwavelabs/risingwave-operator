@@ -104,6 +104,12 @@ type RisingWaveSpec struct {
 	// +kubebuilder:default=false
 	EnableStandaloneMode *bool `json:"enableStandaloneMode,omitempty"`
 
+	// Flag to control whether to enable embedded serving mode. If enabled, the frontend nodes will be created
+	// with embedded serving node enabled, and the compute nodes will serve streaming workload only.
+	// +optional
+	// +kubebuilder:default=false
+	EnableEmbeddedServingMode *bool `json:"enableEmbeddedServingMode,omitempty"`
+
 	// Image for RisingWave component.
 	Image string `json:"image"`
 
@@ -126,6 +132,9 @@ type RisingWaveSpec struct {
 	// But keep in mind that memory backend is not recommended in production.
 	// +kubebuilder:default={memory: true}
 	StateStore RisingWaveStateStoreBackend `json:"stateStore,omitempty"`
+
+	// TLS configures the TLS/SSL certificates for SQL access.
+	TLS *RisingWaveTLSConfiguration `json:"tls,omitempty"`
 
 	// StandaloneMode determines which style of command-line args should be used for the standalone mode.
 	// 0 - auto detect by image version, 1 - the old standalone mode, 2 - standalone mode V2 (single-node).
@@ -246,6 +255,13 @@ type RisingWaveScaleViewLock struct {
 	GroupLocks []RisingWaveScaleViewLockGroupLock `json:"groupLocks,omitempty"`
 }
 
+// RisingWaveInternalStatus stores some internal status of RisingWave, such as internal states.
+type RisingWaveInternalStatus struct {
+	// StateStoreRootPath stores the root path of the state store data directory. It's for compatibility purpose and
+	// should not be updated in most cases.
+	StateStoreRootPath string `json:"stateStoreRootPath,omitempty"`
+}
+
 // RisingWaveStatus is the status of RisingWave.
 type RisingWaveStatus struct {
 	// Observed generation by controller. It will be updated
@@ -269,6 +285,9 @@ type RisingWaveStatus struct {
 	// +listType=map
 	// +listMapKey=name
 	ScaleViews []RisingWaveScaleViewLock `json:"scaleViews,omitempty"`
+
+	// Internal status.
+	Internal RisingWaveInternalStatus `json:"internal,omitempty"`
 
 	// -----------------------------------v1alpha2 features ------------------------------------------ //
 

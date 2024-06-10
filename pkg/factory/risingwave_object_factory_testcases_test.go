@@ -61,7 +61,8 @@ type testCaseType interface {
 		computeArgsTestCase |
 		metaStoreTestCase |
 		metaStatefulSetTestCase |
-		metaAdvancedSTSTestCase
+		metaAdvancedSTSTestCase |
+		tlsTestcase
 }
 
 type kubeObject interface {
@@ -75,7 +76,8 @@ type kubeObject interface {
 		*appsv1.StatefulSet |
 		*kruiseappsv1beta1.StatefulSet |
 		*kruiseappsv1alpha1.CloneSet |
-		*prometheusv1.ServiceMonitor
+		*prometheusv1.ServiceMonitor |
+		*corev1.PodTemplateSpec
 }
 
 type baseTestCase struct {
@@ -3012,10 +3014,16 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					Root:   "gcs-root",
 				},
 			},
-			envs: []corev1.EnvVar{{
-				Name:  "RW_STATE_STORE",
-				Value: "hummock+gcs://gcs-bucket@gcs-root",
-			}},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+gcs://gcs-bucket",
+				},
+				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "gcs-root",
+				},
+			},
 		},
 		"gcs-secret": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
@@ -3031,7 +3039,11 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			envs: []corev1.EnvVar{
 				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+gcs://gcs-bucket@gcs-root",
+					Value: "hummock+gcs://gcs-bucket",
+				},
+				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "gcs-root",
 				},
 				{
 					Name: "GOOGLE_APPLICATION_CREDENTIALS",
@@ -3063,7 +3075,11 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			envs: []corev1.EnvVar{
 				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+oss://aliyun-oss-hummock01@aliyun-oss-root",
+					Value: "hummock+oss://aliyun-oss-hummock01",
+				},
+				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "aliyun-oss-root",
 				},
 				{
 					Name: "OSS_ACCESS_KEY_ID",
@@ -3110,7 +3126,11 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			envs: []corev1.EnvVar{
 				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+oss://aliyun-oss-hummock01@aliyun-oss-root",
+					Value: "hummock+oss://aliyun-oss-hummock01",
+				},
+				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "aliyun-oss-root",
 				},
 				{
 					Name: "OSS_ACCESS_KEY_ID",
@@ -3371,7 +3391,11 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			envs: []corev1.EnvVar{
 				{
 					Name:  "RW_STATE_STORE",
-					Value: "hummock+azblob://azure-blob-hummock01@/azure-blob-root",
+					Value: "hummock+azblob://azure-blob-hummock01",
+				},
+				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "/azure-blob-root",
 				},
 				{
 					Name: "AZBLOB_ACCOUNT_NAME",
@@ -3401,6 +3425,33 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 				},
 			},
 		},
+		"azure-blob-use-sa": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
+					Container: "azure-blob-hummock01",
+					Root:      "/azure-blob-root",
+					Endpoint:  "https://accountName.blob.core.windows.net",
+					RisingWaveAzureBlobCredentials: risingwavev1alpha1.RisingWaveAzureBlobCredentials{
+						SecretName:        "azure-blob-creds",
+						UseServiceAccount: ptr.To(true),
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+azblob://azure-blob-hummock01",
+				},
+				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "/azure-blob-root",
+				},
+				{
+					Name:  "AZBLOB_ENDPOINT",
+					Value: "https://accountName.blob.core.windows.net",
+				},
+			},
+		},
 		"hdfs": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				HDFS: &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{
@@ -3408,10 +3459,16 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					Root:     "root",
 				},
 			},
-			envs: []corev1.EnvVar{{
-				Name:  "RW_STATE_STORE",
-				Value: "hummock+hdfs://name-node@root",
-			}},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+hdfs://name-node",
+				},
+				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "root",
+				},
+			},
 		},
 		"webhdfs": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
@@ -3420,10 +3477,16 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 					Root:     "root",
 				},
 			},
-			envs: []corev1.EnvVar{{
-				Name:  "RW_STATE_STORE",
-				Value: "hummock+webhdfs://name-node@root",
-			}},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+webhdfs://name-node",
+				},
+				{
+					Name:  "RW_DATA_DIRECTORY",
+					Value: "root",
+				},
+			},
 		},
 		"local-disk": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
@@ -3710,6 +3773,320 @@ func metaStoreTestCases() map[string]metaStoreTestCase {
 								Name: "etcd-credentials",
 							},
 							Key: consts.SecretKeyEtcdPassword,
+						},
+					},
+				},
+			},
+		},
+		"sqlite": {
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+				SQLite: &risingwavev1alpha1.RisingWaveMetaStoreBackendSQLite{
+					Path: "/data/risingwave.db",
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_BACKEND",
+					Value: "sql",
+				},
+				{
+					Name:  "RW_SQL_ENDPOINT",
+					Value: "sqlite:///data/risingwave.db?mode=rwc",
+				},
+			},
+		},
+		"mysql-no-options": {
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+				MySQL: &risingwavev1alpha1.RisingWaveMetaStoreBackendMySQL{
+					Host:     "mysql",
+					Port:     3307,
+					Database: "risingwave",
+					RisingWaveDBCredentials: risingwavev1alpha1.RisingWaveDBCredentials{
+						SecretName:     "s",
+						UsernameKeyRef: "username",
+						PasswordKeyRef: "password",
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_BACKEND",
+					Value: "sql",
+				},
+				{
+					Name:  "RW_SQL_ENDPOINT",
+					Value: "mysql://$(RW_MYSQL_USERNAME):$(RW_MYSQL_PASSWORD)@mysql:3307/risingwave",
+				},
+				{
+					Name: "RW_MYSQL_USERNAME",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "username",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+				{
+					Name: "RW_MYSQL_PASSWORD",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "password",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+			},
+		},
+		"mysql-with-options": {
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+				MySQL: &risingwavev1alpha1.RisingWaveMetaStoreBackendMySQL{
+					Host:     "mysql",
+					Port:     3307,
+					Database: "risingwave",
+					Options: map[string]string{
+						"a": "b",
+						"c": "d=e",
+					},
+					RisingWaveDBCredentials: risingwavev1alpha1.RisingWaveDBCredentials{
+						SecretName:     "s",
+						UsernameKeyRef: "username",
+						PasswordKeyRef: "password",
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_BACKEND",
+					Value: "sql",
+				},
+				{
+					Name:  "RW_SQL_ENDPOINT",
+					Value: "mysql://$(RW_MYSQL_USERNAME):$(RW_MYSQL_PASSWORD)@mysql:3307/risingwave?a=b&c=d%3De",
+				},
+				{
+					Name: "RW_MYSQL_USERNAME",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "username",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+				{
+					Name: "RW_MYSQL_PASSWORD",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "password",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+			},
+		},
+		"pg-no-options": {
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+				PostgreSQL: &risingwavev1alpha1.RisingWaveMetaStoreBackendPostgreSQL{
+					Host:     "postgresql",
+					Port:     3307,
+					Database: "risingwave",
+					RisingWaveDBCredentials: risingwavev1alpha1.RisingWaveDBCredentials{
+						SecretName:     "s",
+						UsernameKeyRef: "username",
+						PasswordKeyRef: "password",
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_BACKEND",
+					Value: "sql",
+				},
+				{
+					Name:  "RW_SQL_ENDPOINT",
+					Value: "postgres://$(RW_POSTGRES_USERNAME):$(RW_POSTGRES_PASSWORD)@postgresql:3307/risingwave",
+				},
+				{
+					Name: "RW_POSTGRES_USERNAME",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "username",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+				{
+					Name: "RW_POSTGRES_PASSWORD",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "password",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+			},
+		},
+		"pg-with-options": {
+			metaStore: risingwavev1alpha1.RisingWaveMetaStoreBackend{
+				PostgreSQL: &risingwavev1alpha1.RisingWaveMetaStoreBackendPostgreSQL{
+					Host:     "postgresql",
+					Port:     3307,
+					Database: "risingwave",
+					Options: map[string]string{
+						"a": "b",
+						"c": "d=e",
+					},
+					RisingWaveDBCredentials: risingwavev1alpha1.RisingWaveDBCredentials{
+						SecretName:     "s",
+						UsernameKeyRef: "username",
+						PasswordKeyRef: "password",
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_BACKEND",
+					Value: "sql",
+				},
+				{
+					Name:  "RW_SQL_ENDPOINT",
+					Value: "postgres://$(RW_POSTGRES_USERNAME):$(RW_POSTGRES_PASSWORD)@postgresql:3307/risingwave?a=b&c=d%3De",
+				},
+				{
+					Name: "RW_POSTGRES_USERNAME",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "username",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+				{
+					Name: "RW_POSTGRES_PASSWORD",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key: "password",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+type tlsTestcase struct {
+	standalone     bool
+	tls            *risingwavev1alpha1.RisingWaveTLSConfiguration
+	expectedEnvs   []corev1.EnvVar
+	unexpectedEnvs []string
+}
+
+func tlsTestcases() map[string]tlsTestcase {
+	return map[string]tlsTestcase{
+		"tls-disabled-nil": {
+			tls: nil,
+			unexpectedEnvs: []string{
+				"RW_SSL_KEY",
+				"RW_SSL_CERT",
+			},
+		},
+		"tls-disabled-empty": {
+			tls: &risingwavev1alpha1.RisingWaveTLSConfiguration{
+				SecretName: "",
+			},
+			unexpectedEnvs: []string{
+				"RW_SSL_KEY",
+				"RW_SSL_CERT",
+			},
+		},
+		"tls-enabled": {
+			tls: &risingwavev1alpha1.RisingWaveTLSConfiguration{
+				SecretName: "tls",
+			},
+			expectedEnvs: []corev1.EnvVar{
+				{
+					Name: "RW_SSL_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "tls",
+							},
+							Key: "tls.key",
+						},
+					},
+				},
+				{
+					Name: "RW_SSL_CERT",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "tls",
+							},
+							Key: "tls.crt",
+						},
+					},
+				},
+			},
+		},
+		"tls-disabled-nil-standalone": {
+			standalone: true,
+			tls:        nil,
+			unexpectedEnvs: []string{
+				"RW_SSL_KEY",
+				"RW_SSL_CERT",
+			},
+		},
+		"tls-disabled-empty-standalone": {
+			standalone: true,
+			tls: &risingwavev1alpha1.RisingWaveTLSConfiguration{
+				SecretName: "",
+			},
+			unexpectedEnvs: []string{
+				"RW_SSL_KEY",
+				"RW_SSL_CERT",
+			},
+		},
+		"tls-enabled-standalone": {
+			standalone: true,
+			tls: &risingwavev1alpha1.RisingWaveTLSConfiguration{
+				SecretName: "tls",
+			},
+			expectedEnvs: []corev1.EnvVar{
+				{
+					Name: "RW_SSL_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "tls",
+							},
+							Key: "tls.key",
+						},
+					},
+				},
+				{
+					Name: "RW_SSL_CERT",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "tls",
+							},
+							Key: "tls.crt",
 						},
 					},
 				},

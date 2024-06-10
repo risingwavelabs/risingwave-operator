@@ -19,6 +19,7 @@ package webhook
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -154,23 +155,26 @@ func (v *RisingWaveValidatingWebhook) validateNodeGroup(path *field.Path, nodeGr
 	return fieldErrs
 }
 
-func ptrValueNotZero[T comparable](ptr *T) bool {
+func ptrValueNotZero[T any](ptr *T) bool {
 	var zero T
-	return ptr != nil && *ptr != zero
+	return ptr != nil && !reflect.DeepEqual(ptr, &zero)
 }
 
 func (v *RisingWaveValidatingWebhook) validateMetaStoreAndStateStore(path *field.Path, metaStore *risingwavev1alpha1.RisingWaveMetaStoreBackend, stateStore *risingwavev1alpha1.RisingWaveStateStoreBackend) field.ErrorList {
 	fieldErrs := field.ErrorList{}
 
-	isMetaMemory, isMetaEtcd := ptrValueNotZero(metaStore.Memory), ptrValueNotZero(metaStore.Etcd)
-	if isMetaMemory {
-		if isMetaEtcd {
-			fieldErrs = append(fieldErrs, field.Forbidden(path.Child("metaStore", "etcd"), "must not specified when type is memory"))
-		}
-	} else {
-		if !isMetaEtcd {
-			fieldErrs = append(fieldErrs, field.Invalid(path.Child("metaStore"), metaStore, "either memory or etcd must be specified"))
-		}
+	isMetaMemory := ptrValueNotZero(metaStore.Memory)
+	isMetaEtcd := ptrValueNotZero(metaStore.Etcd)
+	isMetaSQLite := ptrValueNotZero(metaStore.SQLite)
+	isMetaMySQL := ptrValueNotZero(metaStore.MySQL)
+	isMetaPG := ptrValueNotZero(metaStore.PostgreSQL)
+
+	validMetaStoreTypeCount := lo.CountBy([]bool{isMetaMemory, isMetaEtcd, isMetaSQLite,
+		isMetaMySQL, isMetaPG}, func(x bool) bool { return x })
+	if validMetaStoreTypeCount == 0 {
+		fieldErrs = append(fieldErrs, field.Invalid(path.Child("metaStore"), stateStore, "must configure the meta store"))
+	} else if validMetaStoreTypeCount > 1 {
+		fieldErrs = append(fieldErrs, field.Invalid(path.Child("metaStore"), stateStore, "multiple meta store types"))
 	}
 
 	isStateMemory := ptrValueNotZero(stateStore.Memory)
@@ -195,6 +199,13 @@ func (v *RisingWaveValidatingWebhook) validateMetaStoreAndStateStore(path *field
 			if !ptr.Deref(stateStore.S3.UseServiceAccount, false) && stateStore.S3.RisingWaveS3Credentials.SecretName == "" {
 				fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore", "s3", "credentials"), stateStore.S3.SecretName, "either secretName or useServiceAccount must be specified"))
 			}
+		}
+	}
+
+	if isStateAzureBlob {
+		if !ptr.Deref(stateStore.AzureBlob.UseServiceAccount, false) &&
+			stateStore.AzureBlob.RisingWaveAzureBlobCredentials.SecretName == "" {
+			fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore", "azureBlob", "credentials"), stateStore.S3.SecretName, "either secretName or useServiceAccount must be specified"))
 		}
 	}
 

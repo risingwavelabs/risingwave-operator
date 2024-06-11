@@ -135,6 +135,12 @@ type RisingWaveSpec struct {
 
 	// TLS configures the TLS/SSL certificates for SQL access.
 	TLS *RisingWaveTLSConfiguration `json:"tls,omitempty"`
+
+	// StandaloneMode determines which style of command-line args should be used for the standalone mode.
+	// 0 - auto detect by image version, 1 - the old standalone mode, 2 - standalone mode V2 (single-node).
+	// This is only for backward compatibility and will be deprecated in the future.
+	// +kubebuilder:default=0
+	StandaloneMode int32 `json:"standaloneMode,omitempty"`
 }
 
 // ComponentGroupReplicasStatus are the running status of Pods in group.

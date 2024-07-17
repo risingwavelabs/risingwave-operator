@@ -30365,6 +30365,11 @@ spec:
                         type: boolean
                     type: object
                 type: object
+              enableAdvertisingWithIP:
+                description: |-
+                  Flag to control whether to enable advertising with IP. If enabled, the meta and compute nodes will be advertised
+                  with their IP addresses. This is useful when one wants to avoid the DNS resolution overhead and latency.
+                type: boolean
               enableDefaultServiceMonitor:
                 description: |-
                   Flag to indicate if a default ServiceMonitor (from Prometheus operator) should be created by the controller.

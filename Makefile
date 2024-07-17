@@ -158,8 +158,10 @@ build-local-certs:
 		-out ${TMPDIR}/k8s-webhook-server/serving-certs/tls.crt -subj "/CN=localhost" \
 		-extensions san -config <(echo '[req]'; echo 'distinguished_name=req'; echo '[san]'; echo 'subjectAltName=DNS:host.docker.internal')
 
+K8S_LOCAL_CONTEXT ?= docker-desktop
+
 use-local-context:
-	kubectl config use docker-desktop
+	kubectl config use $(K8S_LOCAL_CONTEXT)
 
 install-local: use-local-context kustomize manifests
 	$(KUSTOMIZE) build config/local | kubectl apply --server-side --force-conflicts -f - >/dev/null

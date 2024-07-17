@@ -618,6 +618,18 @@ with embedded serving node enabled, and the compute nodes will serve streaming w
 </tr>
 <tr>
 <td>
+<code>enableAdvertisingWithIP</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Flag to control whether to enable advertising with IP. If enabled, the meta and compute nodes will be advertised
+with their IP addresses. This is useful when one wants to avoid the DNS resolution overhead and latency.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>image</code><br/>
 <em>
 string
@@ -4533,6 +4545,18 @@ bool
 <em>(Optional)</em>
 <p>Flag to control whether to enable embedded serving mode. If enabled, the frontend nodes will be created
 with embedded serving node enabled, and the compute nodes will serve streaming workload only.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableAdvertisingWithIP</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Flag to control whether to enable advertising with IP. If enabled, the meta and compute nodes will be advertised
+with their IP addresses. This is useful when one wants to avoid the DNS resolution overhead and latency.</p>
 </td>
 </tr>
 <tr>

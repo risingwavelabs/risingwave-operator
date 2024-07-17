@@ -1220,6 +1220,11 @@ func (in *RisingWaveSpec) DeepCopyInto(out *RisingWaveSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.EnableAdvertisingWithIP != nil {
+		in, out := &in.EnableAdvertisingWithIP, &out.EnableAdvertisingWithIP
+		*out = new(bool)
+		**out = **in
+	}
 	in.AdditionalFrontendServiceMetadata.DeepCopyInto(&out.AdditionalFrontendServiceMetadata)
 	in.MetaStore.DeepCopyInto(&out.MetaStore)
 	in.StateStore.DeepCopyInto(&out.StateStore)

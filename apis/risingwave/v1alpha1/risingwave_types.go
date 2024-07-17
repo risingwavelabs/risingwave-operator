@@ -110,6 +110,10 @@ type RisingWaveSpec struct {
 	// +kubebuilder:default=false
 	EnableEmbeddedServingMode *bool `json:"enableEmbeddedServingMode,omitempty"`
 
+	// Flag to control whether to enable advertising with IP. If enabled, the meta and compute nodes will be advertised
+	// with their IP addresses. This is useful when one wants to avoid the DNS resolution overhead and latency.
+	EnableAdvertisingWithIP *bool `json:"enableAdvertisingWithIP,omitempty"`
+
 	// Image for RisingWave component.
 	Image string `json:"image"`
 

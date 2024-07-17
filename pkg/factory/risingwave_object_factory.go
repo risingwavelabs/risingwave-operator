@@ -533,6 +533,13 @@ func (f *RisingWaveObjectFactory) coreEnvsForMeta() []corev1.EnvVar {
 }
 
 func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
+	var advertiseAddr string
+	if ptr.Deref(f.risingwave.Spec.EnableAdvertisingWithIP, false) {
+		advertiseAddr = fmt.Sprintf("$(POD_IP):%d", consts.MetaServicePort)
+	} else {
+		advertiseAddr = fmt.Sprintf("$(POD_NAME).%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort)
+	}
+
 	envVars := []corev1.EnvVar{
 		// Env var for local risectl access.
 		{
@@ -549,7 +556,7 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		},
 		{
 			Name:  envs.RWAdvertiseAddr,
-			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentAddr(consts.ComponentMeta, ""), consts.MetaServicePort),
+			Value: advertiseAddr,
 		},
 		{
 			Name:  envs.RWPrometheusHost,
@@ -645,6 +652,13 @@ func (f *RisingWaveObjectFactory) envsForResourceLimits(cpuLimit int64, memLimit
 }
 
 func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit int64) []corev1.EnvVar {
+	var advertiseAddr string
+	if ptr.Deref(f.risingwave.Spec.EnableAdvertisingWithIP, false) {
+		advertiseAddr = fmt.Sprintf("$(POD_IP):%d", consts.ComputeServicePort)
+	} else {
+		advertiseAddr = fmt.Sprintf("$(POD_NAME).%s:%d", f.componentAddr(consts.ComponentCompute, ""), consts.ComputeServicePort)
+	}
+
 	envVars := []corev1.EnvVar{
 		{
 			Name:  envs.RWConfigPath,
@@ -656,7 +670,7 @@ func (f *RisingWaveObjectFactory) envsForComputeArgs(cpuLimit int64, memLimit in
 		},
 		{
 			Name:  envs.RWAdvertiseAddr,
-			Value: fmt.Sprintf("$(POD_NAME).%s:%d", f.componentAddr(consts.ComponentCompute, ""), consts.ComputeServicePort),
+			Value: advertiseAddr,
 		},
 		{
 			Name:  envs.RWMetaAddr,

@@ -223,6 +223,11 @@ func (r *RisingWaveReader) IsStandaloneModeEnabled() bool {
 	return ptr.Deref(r.risingwave.Spec.EnableStandaloneMode, false)
 }
 
+// IsAdvertisingWithIP returns true when the advertising with IP is enabled.
+func (r *RisingWaveReader) IsAdvertisingWithIP() bool {
+	return ptr.Deref(r.risingwave.Spec.EnableAdvertisingWithIP, false)
+}
+
 // KeepLock resets the current scale views record in the status with the given array.
 func (mgr *RisingWaveManager) KeepLock(aliveScaleView []risingwavev1alpha1.RisingWaveScaleViewLock) {
 	mgr.mu.Lock()

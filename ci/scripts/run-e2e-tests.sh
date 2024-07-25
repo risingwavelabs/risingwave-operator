@@ -13,4 +13,6 @@ kind delete cluster --name e2e
 
 echo "--- Running e2e tests"
 
+export RW_VERSION=${RW_VERSION:-"v1.9.1"}
+
 make e2e-test

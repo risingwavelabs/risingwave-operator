@@ -19,7 +19,7 @@ export E2E_RISINGWAVE_NAME="${E2E_RISINGWAVE_NAME:=e2e}"
 if [[ -v "RW_VERSION" ]]; then
   E2E_RISINGWAVE_IMAGE="ghcr.io/risingwavelabs/risingwave:${RW_VERSION}"
 fi
-export E2E_RISINGWAVE_IMAGE="${E2E_RISINGWAVE_IMAGE:=risingwavelabs/risingwave:v1.9.1}"
+export E2E_RISINGWAVE_IMAGE="${E2E_RISINGWAVE_IMAGE:=risingwavelabs/risingwave:v1.10.0}"
 
 source "$(dirname "${BASH_SOURCE[0]}")/risingwave/tests.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/risingwavescaleview/tests.sh"

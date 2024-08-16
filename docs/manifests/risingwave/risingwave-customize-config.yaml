@@ -54,7 +54,7 @@ spec:
               name: heap
             env:
             - name: MALLOC_CONF
-              value: prof:true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix:/heap/
+              value: prof=true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix=/heap/
             - name: RW_HEAP_PROFILING_DIR
               value: /heap
             resources:
@@ -92,7 +92,7 @@ spec:
               name: heap
             env:
             - name: MALLOC_CONF
-              value: prof:true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix:/heap/
+              value: prof=true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix=/heap/
             - name: RW_HEAP_PROFILING_DIR
               value: /heap
             resources:
@@ -117,7 +117,7 @@ spec:
               name: heap
             env:
             - name: MALLOC_CONF
-              value: prof:true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix:/heap/
+              value: prof=true,lg_prof_interval=-1,lg_prof_sample=20,prof_prefix=/heap/
             - name: RW_HEAP_PROFILING_DIR
               value: /heap
             resources:

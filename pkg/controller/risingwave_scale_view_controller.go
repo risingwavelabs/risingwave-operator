@@ -117,11 +117,11 @@ func (c *RisingWaveScaleViewController) SetupWithManager(mgr ctrl.Manager) error
 	return ctrl.NewControllerManagedBy(mgr).
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: 64,
-			RateLimiter: workqueue.NewMaxOfRateLimiter(
+			RateLimiter: workqueue.NewTypedMaxOfRateLimiter[reconcile.Request](
 				// Exponential rate limiter, for immediate requeue (result.Requeue == true || err != nil).
-				workqueue.NewItemExponentialFailureRateLimiter(5*time.Millisecond, 10*time.Second),
+				workqueue.NewTypedItemExponentialFailureRateLimiter[reconcile.Request](5*time.Millisecond, 10*time.Second),
 				// Bucket limiter of 10 qps, 100 bucket size.
-				&workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(10), 100)},
+				&workqueue.TypedBucketRateLimiter[reconcile.Request]{Limiter: rate.NewLimiter(rate.Limit(10), 100)},
 			),
 		}).
 		For(&risingwavev1alpha1.RisingWaveScaleView{}).

@@ -22,4 +22,3 @@ fi
 export E2E_RISINGWAVE_IMAGE="${E2E_RISINGWAVE_IMAGE:=risingwavelabs/risingwave:v1.10.1}"
 
 source "$(dirname "${BASH_SOURCE[0]}")/risingwave/tests.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/risingwavescaleview/tests.sh"

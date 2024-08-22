@@ -23,17 +23,6 @@ rules:
   - apps
   resources:
   - deployments
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - apps
-  resources:
   - statefulsets
   verbs:
   - create
@@ -47,17 +36,6 @@ rules:
   - apps.kruise.io
   resources:
   - clonesets
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - apps.kruise.io
-  resources:
   - statefulsets
   verbs:
   - create
@@ -71,17 +49,6 @@ rules:
   - ""
   resources:
   - configmaps
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
   - pods
   verbs:
   - create
@@ -118,6 +85,7 @@ rules:
   - risingwave.risingwavelabs.com
   resources:
   - risingwaves
+  - risingwavescaleviews
   verbs:
   - create
   - delete
@@ -136,25 +104,6 @@ rules:
   - risingwave.risingwavelabs.com
   resources:
   - risingwaves/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - risingwave.risingwavelabs.com
-  resources:
-  - risingwavescaleviews
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - risingwave.risingwavelabs.com
-  resources:
   - risingwavescaleviews/status
   verbs:
   - get

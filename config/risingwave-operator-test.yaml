@@ -6154,7 +6154,6 @@ spec:
                               type: array
                           required:
                           - name
-                          - replicas
                           type: object
                         type: array
                         x-kubernetes-list-map-keys:
@@ -12215,7 +12214,6 @@ spec:
                               type: array
                           required:
                           - name
-                          - replicas
                           type: object
                         type: array
                         x-kubernetes-list-map-keys:
@@ -18276,7 +18274,6 @@ spec:
                               type: array
                           required:
                           - name
-                          - replicas
                           type: object
                         type: array
                         x-kubernetes-list-map-keys:
@@ -24337,7 +24334,6 @@ spec:
                               type: array
                           required:
                           - name
-                          - replicas
                           type: object
                         type: array
                         x-kubernetes-list-map-keys:

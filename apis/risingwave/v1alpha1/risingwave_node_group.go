@@ -364,7 +364,6 @@ type RisingWaveNodeGroup struct {
 	Name string `json:"name"`
 
 	// Replicas of Pods in this group.
-	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum=0
 	Replicas int32 `json:"replicas,omitempty"`
 

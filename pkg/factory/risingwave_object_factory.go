@@ -30,6 +30,7 @@ import (
 	kruiseappsv1beta1 "github.com/openkruise/kruise-api/apps/v1beta1"
 	prometheusv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/samber/lo"
+	"golang.org/x/mod/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -59,6 +60,17 @@ var (
 	internalAliyunOSSEndpoint = fmt.Sprintf("https://oss-$(%s)-internal.aliyuncs.com", envs.AliyunOSSRegion)
 	huaweiCloudOBSEndpoint    = fmt.Sprintf("https://obs.$(%s).myhuaweicloud.com", envs.HuaweiCloudOBSRegion)
 )
+
+// The minimum version that supports specifying username and password separately for SQL meta stores.
+// Refer to https://github.com/risingwavelabs/risingwave/pull/17530 for more details.
+const minVersionForSQLCredentialsViaEnv = "v1.10.1"
+
+func isSQLCredentialsViaEnvSupported(version string) bool {
+	// Either the version is greater than or equal to the minimum version,
+	// or it is a nightly version after the date when the feature was introduced.
+	return semver.Compare(version, minVersionForSQLCredentialsViaEnv) >= 0 ||
+		utils.IsRisingWaveNightlyVersionAfter(version, utils.Date(2023, 7, 14))
+}
 
 // RisingWaveObjectFactory is the object factory to help create owned objects like Deployments, StatefulSets, Services, etc.
 type RisingWaveObjectFactory struct {
@@ -364,7 +376,29 @@ func (f *RisingWaveObjectFactory) envsForMySQL() []corev1.EnvVar {
 			},
 		},
 		{
+			Name: envs.RWSQLUsername,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: creds.UsernameKeyRef,
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: creds.SecretName,
+					},
+				},
+			},
+		},
+		{
 			Name: envs.RWMySQLPassword,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: creds.PasswordKeyRef,
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: creds.SecretName,
+					},
+				},
+			},
+		},
+		{
+			Name: envs.RWSQLPassword,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					Key: creds.PasswordKeyRef,
@@ -394,6 +428,28 @@ func (f *RisingWaveObjectFactory) envsForPostgreSQL() []corev1.EnvVar {
 		},
 		{
 			Name: envs.RWPostgresPassword,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: creds.PasswordKeyRef,
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: creds.SecretName,
+					},
+				},
+			},
+		},
+		{
+			Name: envs.RWSQLUsername,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: creds.UsernameKeyRef,
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: creds.SecretName,
+					},
+				},
+			},
+		},
+		{
+			Name: envs.RWSQLPassword,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					Key: creds.PasswordKeyRef,
@@ -446,8 +502,9 @@ func (f *RisingWaveObjectFactory) getDataDirectory() string {
 	return path.Join(rootPath, stateStore.DataDirectory)
 }
 
-func (f *RisingWaveObjectFactory) coreEnvsForMeta() []corev1.EnvVar {
+func (f *RisingWaveObjectFactory) coreEnvsForMeta(image string) []corev1.EnvVar {
 	metaStore := &f.risingwave.Spec.MetaStore
+	version := utils.GetVersionFromImage(image)
 
 	envVars := []corev1.EnvVar{
 		{
@@ -489,42 +546,91 @@ func (f *RisingWaveObjectFactory) coreEnvsForMeta() []corev1.EnvVar {
 			})
 		}
 	case f.isMetaStoreSQLite():
-		envVars = append(envVars, []corev1.EnvVar{
-			{
-				Name:  envs.RWBackend,
-				Value: "sql",
-			},
-			{
-				Name:  envs.RWSQLEndpoint,
-				Value: fmt.Sprintf("sqlite://%s?mode=rwc", metaStore.SQLite.Path),
-			},
-		}...)
+		if isSQLCredentialsViaEnvSupported(version) {
+			envVars = append(envVars, []corev1.EnvVar{
+				{
+					Name:  envs.RWBackend,
+					Value: "sqlite",
+				},
+				{
+					Name:  envs.RWSQLEndpoint,
+					Value: fmt.Sprintf("%s?mode=rwc", metaStore.SQLite.Path),
+				},
+			}...)
+		} else {
+			envVars = append(envVars, []corev1.EnvVar{
+				{
+					Name:  envs.RWBackend,
+					Value: "sql",
+				},
+				{
+					Name:  envs.RWSQLEndpoint,
+					Value: fmt.Sprintf("sqlite://%s?mode=rwc", metaStore.SQLite.Path),
+				},
+			}...)
+		}
 	case f.isMetaStoreMySQL():
-		envVars = append(envVars, []corev1.EnvVar{
-			{
-				Name:  envs.RWBackend,
-				Value: "sql",
-			},
-			{
-				Name: envs.RWSQLEndpoint,
-				Value: fmt.Sprintf("mysql://$(%s):$(%s)@%s:%d/%s%s", envs.RWMySQLUsername, envs.RWMySQLPassword,
-					metaStore.MySQL.Host, metaStore.MySQL.Port, metaStore.MySQL.Database,
-					formatConnectionOptions(metaStore.MySQL.Options)),
-			},
-		}...)
+		if isSQLCredentialsViaEnvSupported(version) {
+			envVars = append(envVars, []corev1.EnvVar{
+				{
+					Name:  envs.RWBackend,
+					Value: "mysql",
+				},
+				{
+					Name: envs.RWSQLEndpoint,
+					Value: fmt.Sprintf("%s:%d%s", metaStore.MySQL.Host, metaStore.MySQL.Port,
+						formatConnectionOptions(metaStore.MySQL.Options)),
+				},
+				{
+					Name:  envs.RWSQLDatabase,
+					Value: metaStore.MySQL.Database,
+				},
+			}...)
+		} else {
+			envVars = append(envVars, []corev1.EnvVar{
+				{
+					Name:  envs.RWBackend,
+					Value: "sql",
+				},
+				{
+					Name: envs.RWSQLEndpoint,
+					Value: fmt.Sprintf("mysql://$(%s):$(%s)@%s:%d/%s%s", envs.RWMySQLUsername, envs.RWMySQLPassword,
+						metaStore.MySQL.Host, metaStore.MySQL.Port, metaStore.MySQL.Database,
+						formatConnectionOptions(metaStore.MySQL.Options)),
+				},
+			}...)
+		}
 	case f.isMetaStorePostgreSQL():
-		envVars = append(envVars, []corev1.EnvVar{
-			{
-				Name:  envs.RWBackend,
-				Value: "sql",
-			},
-			{
-				Name: envs.RWSQLEndpoint,
-				Value: fmt.Sprintf("postgres://$(%s):$(%s)@%s:%d/%s%s", envs.RWPostgresUsername,
-					envs.RWPostgresPassword, metaStore.PostgreSQL.Host, metaStore.PostgreSQL.Port,
-					metaStore.PostgreSQL.Database, formatConnectionOptions(metaStore.PostgreSQL.Options)),
-			},
-		}...)
+		if isSQLCredentialsViaEnvSupported(version) {
+			envVars = append(envVars, []corev1.EnvVar{
+				{
+					Name:  envs.RWBackend,
+					Value: "postgres",
+				},
+				{
+					Name: envs.RWSQLEndpoint,
+					Value: fmt.Sprintf("%s:%d%s", metaStore.PostgreSQL.Host, metaStore.PostgreSQL.Port,
+						formatConnectionOptions(metaStore.PostgreSQL.Options)),
+				},
+				{
+					Name:  envs.RWSQLDatabase,
+					Value: metaStore.PostgreSQL.Database,
+				},
+			}...)
+		} else {
+			envVars = append(envVars, []corev1.EnvVar{
+				{
+					Name:  envs.RWBackend,
+					Value: "sql",
+				},
+				{
+					Name: envs.RWSQLEndpoint,
+					Value: fmt.Sprintf("postgres://$(%s):$(%s)@%s:%d/%s%s", envs.RWPostgresUsername,
+						envs.RWPostgresPassword, metaStore.PostgreSQL.Host, metaStore.PostgreSQL.Port,
+						metaStore.PostgreSQL.Database, formatConnectionOptions(metaStore.PostgreSQL.Options)),
+				},
+			}...)
+		}
 	default:
 		panic("unsupported meta storage type")
 	}
@@ -532,7 +638,7 @@ func (f *RisingWaveObjectFactory) coreEnvsForMeta() []corev1.EnvVar {
 	return envVars
 }
 
-func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
+func (f *RisingWaveObjectFactory) envsForMetaArgs(image string) []corev1.EnvVar {
 	var advertiseAddr string
 	if ptr.Deref(f.risingwave.Spec.EnableAdvertisingWithIP, false) {
 		advertiseAddr = fmt.Sprintf("$(POD_IP):%d", consts.MetaServicePort)
@@ -564,7 +670,7 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs() []corev1.EnvVar {
 		},
 	}
 
-	envVars = append(envVars, f.coreEnvsForMeta()...)
+	envVars = append(envVars, f.coreEnvsForMeta(image)...)
 
 	return envVars
 }
@@ -1272,7 +1378,7 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 	container.Ports = f.portsForMetaContainer()
 
 	// merge the vars, and use the container env vars(set in template) to replace the generated default vars, if key equals.
-	mergedVars := f.envsForMetaArgs()
+	mergedVars := f.envsForMetaArgs(container.Image)
 	for _, env := range container.Env {
 		mergedVars = mergeListWhenKeyEquals(mergedVars, env, func(a, b *corev1.EnvVar) bool {
 			return a.Name == b.Name
@@ -1873,7 +1979,7 @@ func (f *RisingWaveObjectFactory) setupStandaloneContainer(container *corev1.Con
 		Value: path.Join(risingwaveConfigMountPath, risingwaveConfigFileName),
 	}, func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
 
-	for _, env := range f.coreEnvsForMeta() {
+	for _, env := range f.coreEnvsForMeta(container.Image) {
 		container.Env = mergeListWhenKeyEquals(container.Env, env,
 			func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
 	}

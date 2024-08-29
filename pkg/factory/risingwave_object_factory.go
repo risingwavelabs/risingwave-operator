@@ -554,7 +554,7 @@ func (f *RisingWaveObjectFactory) coreEnvsForMeta(image string) []corev1.EnvVar 
 				},
 				{
 					Name:  envs.RWSQLEndpoint,
-					Value: fmt.Sprintf("%s?mode=rwc", metaStore.SQLite.Path),
+					Value: metaStore.SQLite.Path,
 				},
 			}...)
 		} else {

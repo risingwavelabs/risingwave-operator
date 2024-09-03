@@ -502,6 +502,26 @@ func (f *RisingWaveObjectFactory) getDataDirectory() string {
 	return path.Join(rootPath, stateStore.DataDirectory)
 }
 
+func (f *RisingWaveObjectFactory) envsForLicense() []corev1.EnvVar {
+	license := f.risingwave.Spec.License
+	if license != nil && license.SecretName != "" {
+		return []corev1.EnvVar{
+			{
+				Name: envs.RWLicense,
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: license.SecretName,
+						},
+						Key: corev1.LicenseKey,
+					},
+				},
+			},
+		}
+	}
+	return nil
+}
+
 func (f *RisingWaveObjectFactory) coreEnvsForMeta(image string) []corev1.EnvVar {
 	metaStore := &f.risingwave.Spec.MetaStore
 	version := utils.GetVersionFromImage(image)
@@ -634,6 +654,8 @@ func (f *RisingWaveObjectFactory) coreEnvsForMeta(image string) []corev1.EnvVar 
 	default:
 		panic("unsupported meta storage type")
 	}
+
+	envVars = append(envVars, f.envsForLicense()...)
 
 	return envVars
 }

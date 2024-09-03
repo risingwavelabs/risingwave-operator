@@ -51,6 +51,7 @@ const (
 	RWTotalMemoryBytes       = "RW_TOTAL_MEMORY_BYTES"
 	RWSslCert                = "RW_SSL_CERT"
 	RWSslKey                 = "RW_SSL_KEY"
+	RWLicense                = "RW_LICENSE"
 )
 
 // MinIO.

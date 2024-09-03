@@ -62,7 +62,8 @@ type testCaseType interface {
 		metaStoreTestCase |
 		metaStatefulSetTestCase |
 		metaAdvancedSTSTestCase |
-		tlsTestcase
+		tlsTestcase |
+		licenseTestCase
 }
 
 type kubeObject interface {
@@ -4087,6 +4088,49 @@ func tlsTestcases() map[string]tlsTestcase {
 								Name: "tls",
 							},
 							Key: "tls.crt",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+type licenseTestCase struct {
+	license        *risingwavev1alpha1.RisingWaveLicense
+	expectedEnvs   []corev1.EnvVar
+	unexpectedEnvs []string
+}
+
+func licenseTestCases() map[string]licenseTestCase {
+	return map[string]licenseTestCase{
+		"no-license": {
+			license: nil,
+			unexpectedEnvs: []string{
+				"RW_LICENSE",
+			},
+		},
+		"empty-license": {
+			license: &risingwavev1alpha1.RisingWaveLicense{
+				SecretName: "",
+			},
+			unexpectedEnvs: []string{
+				"RW_LICENSE",
+			},
+		},
+		"with-license": {
+			license: &risingwavev1alpha1.RisingWaveLicense{
+				SecretName: "the-license-secret",
+			},
+			expectedEnvs: []corev1.EnvVar{
+				{
+					Name: "RW_LICENSE",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "the-license-secret",
+							},
+							Key: "license",
 						},
 					},
 				},

@@ -507,7 +507,7 @@ func (f *RisingWaveObjectFactory) envsForLicense() []corev1.EnvVar {
 	if license != nil && license.SecretName != "" {
 		return []corev1.EnvVar{
 			{
-				Name: envs.RWLicense,
+				Name: envs.RWLicenseKey,
 				ValueFrom: &corev1.EnvVarSource{
 					SecretKeyRef: &corev1.SecretKeySelector{
 						LocalObjectReference: corev1.LocalObjectReference{

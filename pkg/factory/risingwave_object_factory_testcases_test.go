@@ -4107,7 +4107,7 @@ func licenseTestCases() map[string]licenseTestCase {
 		"no-license": {
 			license: nil,
 			unexpectedEnvs: []string{
-				"RW_LICENSE",
+				"RW_LICENSE_KEY",
 			},
 		},
 		"empty-license": {
@@ -4115,7 +4115,7 @@ func licenseTestCases() map[string]licenseTestCase {
 				SecretName: "",
 			},
 			unexpectedEnvs: []string{
-				"RW_LICENSE",
+				"RW_LICENSE_KEY",
 			},
 		},
 		"with-license": {
@@ -4124,7 +4124,7 @@ func licenseTestCases() map[string]licenseTestCase {
 			},
 			expectedEnvs: []corev1.EnvVar{
 				{
-					Name: "RW_LICENSE",
+					Name: "RW_LICENSE_KEY",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{

@@ -4097,7 +4097,7 @@ func tlsTestcases() map[string]tlsTestcase {
 }
 
 type licenseTestCase struct {
-	license        *risingwavev1alpha1.RisingWaveLicense
+	license        *risingwavev1alpha1.RisingWaveLicenseKey
 	expectedEnvs   []corev1.EnvVar
 	unexpectedEnvs []string
 }
@@ -4111,7 +4111,7 @@ func licenseTestCases() map[string]licenseTestCase {
 			},
 		},
 		"empty-license": {
-			license: &risingwavev1alpha1.RisingWaveLicense{
+			license: &risingwavev1alpha1.RisingWaveLicenseKey{
 				SecretName: "",
 			},
 			unexpectedEnvs: []string{
@@ -4119,7 +4119,7 @@ func licenseTestCases() map[string]licenseTestCase {
 			},
 		},
 		"with-license": {
-			license: &risingwavev1alpha1.RisingWaveLicense{
+			license: &risingwavev1alpha1.RisingWaveLicenseKey{
 				SecretName: "the-license-secret",
 			},
 			expectedEnvs: []corev1.EnvVar{
@@ -4130,7 +4130,7 @@ func licenseTestCases() map[string]licenseTestCase {
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "the-license-secret",
 							},
-							Key: "license",
+							Key: "licenseKey",
 						},
 					},
 				},

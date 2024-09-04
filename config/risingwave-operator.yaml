@@ -30340,12 +30340,12 @@ spec:
               image:
                 description: Image for RisingWave component.
                 type: string
-              license:
-                description: License to enable paid features of RisingWave.
+              licenseKey:
+                description: LicenseKey to enable paid features of RisingWave.
                 properties:
                   secretName:
                     description: SecretName that contains the license. The license
-                      must be JWT formatted JSON.
+                      must be JWT formatted JSON and stored with key `licenseKey`.
                     type: string
                 type: object
               metaStore:

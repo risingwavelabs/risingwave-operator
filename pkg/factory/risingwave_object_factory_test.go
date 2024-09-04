@@ -430,7 +430,7 @@ func TestRisingWaveObjectFactory_TlsSupport(t *testing.T) {
 	}
 }
 
-func TestRisingWaveObjectFactory_Lisense(t *testing.T) {
+func TestRisingWaveObjectFactory_LisenseKey(t *testing.T) {
 	predicates := licensePredicates()
 
 	for name, tc := range licenseTestCases() {
@@ -444,7 +444,7 @@ func TestRisingWaveObjectFactory_Lisense(t *testing.T) {
 						Name: "",
 					},
 				}
-				r.Spec.License = tc.license
+				r.Spec.LicenseKey = tc.license
 			}), testutils.Scheme, "")
 
 			template := factory.NewMetaStatefulSet("").Spec.Template

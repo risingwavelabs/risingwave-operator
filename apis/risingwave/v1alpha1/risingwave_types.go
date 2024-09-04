@@ -146,8 +146,8 @@ type RisingWaveSpec struct {
 	// +kubebuilder:default=0
 	StandaloneMode int32 `json:"standaloneMode,omitempty"`
 
-	// License to enable paid features of RisingWave.
-	License *RisingWaveLicense `json:"license,omitempty"`
+	// LicenseKey to enable paid features of RisingWave.
+	LicenseKey *RisingWaveLicenseKey `json:"licenseKey,omitempty"`
 }
 
 // ComponentGroupReplicasStatus are the running status of Pods in group.

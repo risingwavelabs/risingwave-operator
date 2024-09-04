@@ -723,15 +723,15 @@ This is only for backward compatibility and will be deprecated in the future.</p
 </tr>
 <tr>
 <td>
-<code>license</code><br/>
+<code>licenseKey</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveLicense">
-RisingWaveLicense
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveLicenseKey">
+RisingWaveLicenseKey
 </a>
 </em>
 </td>
 <td>
-<p>License to enable paid features of RisingWave.</p>
+<p>LicenseKey to enable paid features of RisingWave.</p>
 </td>
 </tr>
 </table>
@@ -1595,13 +1595,13 @@ should not be updated in most cases.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveLicense">RisingWaveLicense
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveLicenseKey">RisingWaveLicenseKey
 </h3>
 <p>
 (<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
 </p>
 <div>
-<p>RisingWaveLicense is the license configuration for RisingWave.</p>
+<p>RisingWaveLicenseKey is the license configuration for RisingWave.</p>
 </div>
 <table>
 <thead>
@@ -1620,7 +1620,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>SecretName that contains the license. The license must be JWT formatted JSON.</p>
+<p>SecretName that contains the license. The license must be JWT formatted JSON and stored with key <code>licenseKey</code>.</p>
 </td>
 </tr>
 </tbody>
@@ -4697,15 +4697,15 @@ This is only for backward compatibility and will be deprecated in the future.</p
 </tr>
 <tr>
 <td>
-<code>license</code><br/>
+<code>licenseKey</code><br/>
 <em>
-<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveLicense">
-RisingWaveLicense
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveLicenseKey">
+RisingWaveLicenseKey
 </a>
 </em>
 </td>
 <td>
-<p>License to enable paid features of RisingWave.</p>
+<p>LicenseKey to enable paid features of RisingWave.</p>
 </td>
 </tr>
 </tbody>

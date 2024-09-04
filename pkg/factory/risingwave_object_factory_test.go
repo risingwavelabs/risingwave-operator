@@ -430,7 +430,7 @@ func TestRisingWaveObjectFactory_TlsSupport(t *testing.T) {
 	}
 }
 
-func TestRisingWaveObjectFactory_LisenseKey(t *testing.T) {
+func TestRisingWaveObjectFactory_LicenseKey(t *testing.T) {
 	predicates := licensePredicates()
 
 	for name, tc := range licenseTestCases() {

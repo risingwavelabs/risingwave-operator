@@ -513,7 +513,7 @@ func (f *RisingWaveObjectFactory) envsForLicense() []corev1.EnvVar {
 						LocalObjectReference: corev1.LocalObjectReference{
 							Name: license.SecretName,
 						},
-						Key: corev1.LicenseKey,
+						Key: risingwavev1alpha1.RisingWaveLicenseLicenseSecretKey,
 					},
 				},
 			},

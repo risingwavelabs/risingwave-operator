@@ -14,9 +14,11 @@
 
 package v1alpha1
 
+const RisingWaveLicenseLicenseSecretKey = "license"
+
 // RisingWaveLicense is the license configuration for RisingWave.
 type RisingWaveLicense struct {
-	// SecretName that contains the license. The license must be JWT formatted JSON.
+	// SecretName that contains the license. The license must be JWT formatted JSON and stored with key `license`.
 	// +optional
 	SecretName string `json:"secretName,omitempty"`
 }

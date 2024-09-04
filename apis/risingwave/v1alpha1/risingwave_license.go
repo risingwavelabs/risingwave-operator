@@ -14,7 +14,7 @@
 
 package v1alpha1
 
-const RisingWaveLicenseLicenseSecretKey = "licenseKey"
+const RisingWaveLicenseKeySecretKey = "licenseKey"
 
 // RisingWaveLicenseKey is the license configuration for RisingWave.
 type RisingWaveLicenseKey struct {

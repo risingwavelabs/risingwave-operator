@@ -145,6 +145,9 @@ type RisingWaveSpec struct {
 	// This is only for backward compatibility and will be deprecated in the future.
 	// +kubebuilder:default=0
 	StandaloneMode int32 `json:"standaloneMode,omitempty"`
+
+	// LicenseKey to enable paid features of RisingWave.
+	LicenseKey *RisingWaveLicenseKey `json:"licenseKey,omitempty"`
 }
 
 // ComponentGroupReplicasStatus are the running status of Pods in group.

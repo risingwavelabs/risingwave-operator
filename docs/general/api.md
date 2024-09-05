@@ -721,6 +721,19 @@ int32
 This is only for backward compatibility and will be deprecated in the future.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>licenseKey</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveLicenseKey">
+RisingWaveLicenseKey
+</a>
+</em>
+</td>
+<td>
+<p>LicenseKey to enable paid features of RisingWave.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -1578,6 +1591,36 @@ string
 <td>
 <p>StateStoreRootPath stores the root path of the state store data directory. It&rsquo;s for compatibility purpose and
 should not be updated in most cases.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveLicenseKey">RisingWaveLicenseKey
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
+</p>
+<div>
+<p>RisingWaveLicenseKey is the license configuration for RisingWave.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecretName that contains the license. The license must be JWT formatted JSON and stored with key <code>licenseKey</code>.</p>
 </td>
 </tr>
 </tbody>
@@ -4650,6 +4693,19 @@ int32
 <p>StandaloneMode determines which style of command-line args should be used for the standalone mode.
 0 - auto detect by image version, 1 - the old standalone mode, 2 - standalone mode V2 (single-node).
 This is only for backward compatibility and will be deprecated in the future.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>licenseKey</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveLicenseKey">
+RisingWaveLicenseKey
+</a>
+</em>
+</td>
+<td>
+<p>LicenseKey to enable paid features of RisingWave.</p>
 </td>
 </tr>
 </tbody>

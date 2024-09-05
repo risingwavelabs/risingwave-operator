@@ -430,6 +430,29 @@ func TestRisingWaveObjectFactory_TlsSupport(t *testing.T) {
 	}
 }
 
+func TestRisingWaveObjectFactory_LicenseKey(t *testing.T) {
+	predicates := licensePredicates()
+
+	for name, tc := range licenseTestCases() {
+		t.Run(name, func(t *testing.T) {
+			factory := NewRisingWaveObjectFactory(newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.MetaStore.Memory = ptr.To(true)
+				r.Spec.StateStore.Memory = ptr.To(true)
+				r.Spec.EnableStandaloneMode = ptr.To(false)
+				r.Spec.Components.Meta.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+					{
+						Name: "",
+					},
+				}
+				r.Spec.LicenseKey = tc.license
+			}), testutils.Scheme, "")
+
+			template := factory.NewMetaStatefulSet("").Spec.Template
+			composeAssertions(predicates, t).assertTest(&template, tc)
+		})
+	}
+}
+
 func TestRisingWaveObjectFactory_DataDirectory(t *testing.T) {
 	testcases := map[string]struct {
 		stateStore   risingwavev1alpha1.RisingWaveStateStoreBackend

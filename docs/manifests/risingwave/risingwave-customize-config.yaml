@@ -37,7 +37,7 @@ spec:
     memory: true
   stateStore:
     memory: true
-  image: risingwavelabs/risingwave:v1.10.1
+  image: risingwavelabs/risingwave:v2.0.0
   components:
     meta:
       nodeGroups:

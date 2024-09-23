@@ -13,6 +13,7 @@ kind delete cluster --name e2e
 
 echo "--- Running e2e tests"
 
+export TRACE_COMMAND=true
 export SHOW_COMMAND_OUTPUT=true
 
 make e2e-test

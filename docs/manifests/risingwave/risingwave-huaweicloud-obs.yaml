@@ -19,7 +19,7 @@ spec:
       region: ap-southeast-2
       credentials:
         secretName: risingwave-huaweicloud-obs-credentials
-  image: risingwavelabs/risingwave:v2.0.0
+  image: risingwavelabs/risingwave:v1.10.2
   components:
     meta:
       nodeGroups:

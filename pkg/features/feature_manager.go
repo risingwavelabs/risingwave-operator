@@ -55,7 +55,7 @@ var (
 		{
 			Name:          EnableForceUpdate,
 			Description:   "This feature enables force resolve version conflict due to operator update",
-			DefaultEnable: false,
+			DefaultEnable: true,
 			Stage:         Beta,
 		},
 	}

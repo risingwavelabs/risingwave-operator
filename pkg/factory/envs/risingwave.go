@@ -52,6 +52,7 @@ const (
 	RWSslCert                = "RW_SSL_CERT"
 	RWSslKey                 = "RW_SSL_KEY"
 	RWLicenseKey             = "RW_LICENSE_KEY"
+	RWLicenseKeyPath         = "RW_LICENSE_KEY_PATH"
 )
 
 // MinIO.

@@ -53,6 +53,7 @@ const (
 	risingwaveExecutablePath  = "/risingwave/bin/risingwave"
 	risingwaveConfigMountPath = "/risingwave/config"
 	risingwaveConfigFileName  = "risingwave.toml"
+	risingwaveLicenseKeyPath  = "/license/license.jwt"
 )
 
 var (
@@ -502,24 +503,107 @@ func (f *RisingWaveObjectFactory) getDataDirectory() string {
 	return path.Join(rootPath, stateStore.DataDirectory)
 }
 
-func (f *RisingWaveObjectFactory) envsForLicenseKey() []corev1.EnvVar {
+func (f *RisingWaveObjectFactory) useLicenseFile() bool {
+	// If PassAsFile is set, use it.
 	licenseKey := f.risingwave.Spec.LicenseKey
-	if licenseKey != nil && licenseKey.SecretName != "" {
-		return []corev1.EnvVar{
-			{
-				Name: envs.RWLicenseKey,
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: licenseKey.SecretName,
+	if licenseKey != nil && licenseKey.PassAsFile != nil {
+		return *licenseKey.PassAsFile
+	}
+
+	var imageVersion = utils.GetVersionFromImage(f.risingwave.Spec.Image)
+
+	// Cases:
+	//   v0.x is not supported.
+	//   v1.x is not supported.
+	//   v2.0.x uses the license key in the environment variable.
+	return !(strings.HasPrefix(imageVersion, "v0.") ||
+		strings.HasPrefix(imageVersion, "v1.") ||
+		strings.HasPrefix(imageVersion, "v2.0."))
+}
+
+func (f *RisingWaveObjectFactory) setupVolumeAndVolumeMountForLicenseKey(podSpec *corev1.PodSpec, container *corev1.Container) {
+	volumes, volumeMounts := f.volumeAndVolumeMountForLicenseKey()
+	container.VolumeMounts = append(container.VolumeMounts, volumeMounts...)
+	podSpec.Volumes = append(podSpec.Volumes, volumes...)
+}
+
+func (f *RisingWaveObjectFactory) volumeAndVolumeMountForLicenseKey() ([]corev1.Volume, []corev1.VolumeMount) {
+	licenseKey := f.risingwave.Spec.LicenseKey
+	if licenseKey == nil || licenseKey.SecretName == "" {
+		return nil, nil
+	}
+	if !f.useLicenseFile() {
+		return nil, nil
+	}
+
+	const volumeName = "license"
+
+	secretKey := licenseKey.SecretKey
+	if secretKey == "" {
+		secretKey = risingwavev1alpha1.RisingWaveLicenseKeySecretKey
+	}
+	volumes := []corev1.Volume{
+		{
+			Name: volumeName,
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: licenseKey.SecretName,
+					Items: []corev1.KeyToPath{
+						{
+							Key:  secretKey,
+							Path: path.Base(risingwaveLicenseKeyPath),
 						},
-						Key: risingwavev1alpha1.RisingWaveLicenseKeySecretKey,
 					},
 				},
 			},
+		},
+	}
+
+	volumeMounts := []corev1.VolumeMount{
+		{
+			Name:      volumeName,
+			ReadOnly:  true,
+			MountPath: path.Dir(risingwaveLicenseKeyPath),
+		},
+	}
+
+	return volumes, volumeMounts
+}
+
+func (f *RisingWaveObjectFactory) envsForLicenseKey() []corev1.EnvVar {
+	licenseKey := f.risingwave.Spec.LicenseKey
+	if licenseKey == nil || licenseKey.SecretName == "" {
+		return nil
+	}
+
+	// License key in path. Applicable for versions >= 2.1.0.
+	if f.useLicenseFile() {
+		return []corev1.EnvVar{
+			{
+				Name:  envs.RWLicenseKeyPath,
+				Value: risingwaveLicenseKeyPath,
+			},
 		}
 	}
-	return nil
+
+	// License key in environment variable. Applicable only for v2.0.x.
+	secretKey := licenseKey.SecretKey
+	if secretKey == "" {
+		secretKey = risingwavev1alpha1.RisingWaveLicenseKeySecretKey
+	}
+	return []corev1.EnvVar{
+		{
+			Name: envs.RWLicenseKey,
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: licenseKey.SecretName,
+					},
+					Key: secretKey,
+				},
+			},
+		},
+	}
 }
 
 func (f *RisingWaveObjectFactory) coreEnvsForMeta(image string) []corev1.EnvVar {
@@ -1394,7 +1478,7 @@ func basicSetupRisingWaveContainer(container *corev1.Container, component *risin
 	container.TTY = false
 }
 
-func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container) {
+func (f *RisingWaveObjectFactory) setupMetaContainer(podSpec *corev1.PodSpec, container *corev1.Container) {
 	container.Name = "meta"
 	container.Args = []string{"meta-node"}
 	container.Ports = f.portsForMetaContainer()
@@ -1423,6 +1507,9 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(container *corev1.Container
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
 		return a.MountPath == b.MountPath
 	})
+
+	// Set the license key.
+	f.setupVolumeAndVolumeMountForLicenseKey(podSpec, container)
 }
 
 func rollingUpdateOrDefault(rollingUpdate *risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate) risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate {
@@ -1535,7 +1622,7 @@ func newPodSpecFromNodeGroupTemplate(template *risingwavev1alpha1.RisingWaveNode
 	return podTemplateSpec
 }
 
-func (f *RisingWaveObjectFactory) buildPodTemplateFromNodeGroup(component string, nodeGroup *risingwavev1alpha1.RisingWaveNodeGroup, setupRisingWaveContainer func(container *corev1.Container)) corev1.PodTemplateSpec {
+func (f *RisingWaveObjectFactory) buildPodTemplateFromNodeGroup(component string, nodeGroup *risingwavev1alpha1.RisingWaveNodeGroup, setupRisingWaveContainer func(podSpec *corev1.PodSpec, container *corev1.Container)) corev1.PodTemplateSpec {
 	podTemplate := newPodSpecFromNodeGroupTemplate(&nodeGroup.Template)
 
 	// Inject system labels.
@@ -1555,7 +1642,7 @@ func (f *RisingWaveObjectFactory) buildPodTemplateFromNodeGroup(component string
 	})
 
 	// Run container setup for RisingWave's container.
-	setupRisingWaveContainer(&podTemplate.Spec.Containers[0])
+	setupRisingWaveContainer(&podTemplate.Spec, &podTemplate.Spec.Containers[0])
 
 	// Keep the pod spec consistent.
 	keepPodSpecConsistent(&podTemplate.Spec)
@@ -1678,7 +1765,7 @@ func (f *RisingWaveObjectFactory) convertStandaloneSpecIntoComponent() *risingwa
 }
 
 func (f *RisingWaveObjectFactory) newPodTemplateSpecFromNodeGroupByComponent(component string, nodeGroup *risingwavev1alpha1.RisingWaveNodeGroup) corev1.PodTemplateSpec {
-	var containerModifier func(container *corev1.Container)
+	var containerModifier func(podSpec *corev1.PodSpec, container *corev1.Container)
 	var componentPtr *risingwavev1alpha1.RisingWaveComponent
 	switch component {
 	case consts.ComponentMeta:
@@ -1700,9 +1787,9 @@ func (f *RisingWaveObjectFactory) newPodTemplateSpecFromNodeGroupByComponent(com
 		panic("invalid component")
 	}
 
-	return f.buildPodTemplateFromNodeGroup(component, nodeGroup, func(container *corev1.Container) {
+	return f.buildPodTemplateFromNodeGroup(component, nodeGroup, func(podSpec *corev1.PodSpec, container *corev1.Container) {
 		basicSetupRisingWaveContainer(container, componentPtr)
-		containerModifier(container)
+		containerModifier(podSpec, container)
 	})
 }
 
@@ -1739,7 +1826,7 @@ func (f *RisingWaveObjectFactory) isEmbeddedServingModeEnabled() bool {
 	return ptr.Deref(f.risingwave.Spec.EnableEmbeddedServingMode, false)
 }
 
-func (f *RisingWaveObjectFactory) setupFrontendContainer(container *corev1.Container) {
+func (f *RisingWaveObjectFactory) setupFrontendContainer(podSpec *corev1.PodSpec, container *corev1.Container) {
 	container.Name = "frontend"
 
 	if f.isEmbeddedServingModeEnabled() {
@@ -1804,7 +1891,7 @@ func (f *RisingWaveObjectFactory) portsForComputeContainer() []corev1.ContainerP
 	}
 }
 
-func (f *RisingWaveObjectFactory) setupComputeContainer(container *corev1.Container) {
+func (f *RisingWaveObjectFactory) setupComputeContainer(podSpec *corev1.PodSpec, container *corev1.Container) {
 	container.Name = "compute"
 	container.Args = []string{"compute-node"}
 
@@ -1851,7 +1938,7 @@ func (f *RisingWaveObjectFactory) portsForCompactorContainer() []corev1.Containe
 	}
 }
 
-func (f *RisingWaveObjectFactory) setupCompactorContainer(container *corev1.Container) {
+func (f *RisingWaveObjectFactory) setupCompactorContainer(podSpec *corev1.PodSpec, container *corev1.Container) {
 	container.Name = "compactor"
 	container.Args = []string{"compactor-node"}
 
@@ -1958,7 +2045,7 @@ func (f *RisingWaveObjectFactory) portsForStandaloneContainer() []corev1.Contain
 	}
 }
 
-func (f *RisingWaveObjectFactory) setupStandaloneContainer(container *corev1.Container) {
+func (f *RisingWaveObjectFactory) setupStandaloneContainer(podSpec *corev1.PodSpec, container *corev1.Container) {
 	container.Name = "standalone"
 
 	var imageVersion = utils.GetVersionFromImage(f.risingwave.Spec.Image)
@@ -2024,6 +2111,9 @@ func (f *RisingWaveObjectFactory) setupStandaloneContainer(container *corev1.Con
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(),
 		func(a, b *corev1.VolumeMount) bool { return a.MountPath == b.MountPath })
+
+	// Set the license key.
+	f.setupVolumeAndVolumeMountForLicenseKey(podSpec, container)
 }
 
 func (f *RisingWaveObjectFactory) convertStandaloneIntoNodeGroup() *risingwavev1alpha1.RisingWaveNodeGroup {

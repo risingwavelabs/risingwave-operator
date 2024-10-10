@@ -1041,6 +1041,41 @@ func tlsPredicates() []predicate[*corev1.PodTemplateSpec, tlsTestcase] {
 	}
 }
 
+func legacyLicensePredicates() []predicate[*corev1.PodTemplateSpec, legacyLicenseTestCase] {
+	return []predicate[*corev1.PodTemplateSpec, legacyLicenseTestCase]{
+		{
+			Name: "envs-contain",
+			Fn: func(obj *corev1.PodTemplateSpec, testcase legacyLicenseTestCase) bool {
+				if len(testcase.expectedEnvs) == 0 {
+					return true
+				}
+				if len(obj.Spec.Containers) == 0 {
+					return false
+				}
+				envs := obj.Spec.Containers[0].Env
+				// Contains all expected envs.
+				return listContainsByKey(envs, testcase.expectedEnvs, func(t *corev1.EnvVar) string { return t.Name }, deepEqual[corev1.EnvVar])
+			},
+		},
+		{
+			Name: "envs-not-contain",
+			Fn: func(obj *corev1.PodTemplateSpec, testcase legacyLicenseTestCase) bool {
+				if len(testcase.unexpectedEnvs) == 0 {
+					return true
+				}
+				if len(obj.Spec.Containers) == 0 {
+					return false
+				}
+				envs := obj.Spec.Containers[0].Env
+				// Contains none of unexpected envs.
+				return !lo.ContainsBy(envs, func(item corev1.EnvVar) bool {
+					return lo.Contains(testcase.unexpectedEnvs, item.Name)
+				})
+			},
+		},
+	}
+}
+
 func licensePredicates() []predicate[*corev1.PodTemplateSpec, licenseTestCase] {
 	return []predicate[*corev1.PodTemplateSpec, licenseTestCase]{
 		{
@@ -1070,6 +1105,62 @@ func licensePredicates() []predicate[*corev1.PodTemplateSpec, licenseTestCase] {
 				// Contains none of unexpected envs.
 				return !lo.ContainsBy(envs, func(item corev1.EnvVar) bool {
 					return lo.Contains(testcase.unexpectedEnvs, item.Name)
+				})
+			},
+		},
+		{
+			Name: "volumes-contain",
+			Fn: func(obj *corev1.PodTemplateSpec, testcase licenseTestCase) bool {
+				if len(testcase.expectedVolumes) == 0 {
+					return true
+				}
+				if len(obj.Spec.Volumes) == 0 {
+					return false
+				}
+				// Contains all expected volumes.
+				return listContainsByKey(obj.Spec.Volumes, testcase.expectedVolumes, func(t *corev1.Volume) string { return t.Name }, deepEqual[corev1.Volume])
+			},
+		},
+		{
+			Name: "volumes-not-contain",
+			Fn: func(obj *corev1.PodTemplateSpec, testcase licenseTestCase) bool {
+				if len(testcase.unexpectedVolumes) == 0 {
+					return true
+				}
+				if len(obj.Spec.Volumes) == 0 {
+					return false
+				}
+				// Contains none of unexpected volumes.
+				return !lo.ContainsBy(obj.Spec.Volumes, func(item corev1.Volume) bool {
+					return lo.Contains(testcase.unexpectedVolumes, item.Name)
+				})
+			},
+		},
+		{
+			Name: "volume-mounts-contain",
+			Fn: func(obj *corev1.PodTemplateSpec, testcase licenseTestCase) bool {
+				if len(testcase.expectedVolumeMounts) == 0 {
+					return true
+				}
+				if len(obj.Spec.Containers) == 0 {
+					return false
+				}
+				// Contains all expected volume mounts.
+				return listContainsByKey(obj.Spec.Containers[0].VolumeMounts, testcase.expectedVolumeMounts, func(t *corev1.VolumeMount) string { return t.Name }, deepEqual[corev1.VolumeMount])
+			},
+		},
+		{
+			Name: "volume-mounts-not-contain",
+			Fn: func(obj *corev1.PodTemplateSpec, testcase licenseTestCase) bool {
+				if len(testcase.unexpectedVolumeMounts) == 0 {
+					return true
+				}
+				if len(obj.Spec.Containers) == 0 {
+					return false
+				}
+				// Contains none of unexpected volume mounts.
+				return !lo.ContainsBy(obj.Spec.Containers[0].VolumeMounts, func(item corev1.VolumeMount) bool {
+					return lo.Contains(testcase.unexpectedVolumeMounts, item.Name)
 				})
 			},
 		},

@@ -1620,7 +1620,35 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>SecretName that contains the license. The license must be JWT formatted JSON and stored with key <code>licenseKey</code>.</p>
+<p>SecretName that contains the license. The license must be JWT formatted JSON.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secretKey</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SecretKey to the license in the Secret above. Defaults to <code>licenseKey</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>passAsFile</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PassAsFile will pass the license as a file to the RisingWave process.
+The feature is only available in the RisingWave v2.1 and later. See
+<a href="https://github.com/risingwavelabs/risingwave/pull/18768">https://github.com/risingwavelabs/risingwave/pull/18768</a> for more information.</p>
+<p>It&rsquo;s optional to set this field. If not set, the operator will deduce the value
+based on the RisingWave version. But when it comes to non-semver versions, it&rsquo;s
+recommended to set this field explicitly.</p>
 </td>
 </tr>
 </tbody>

@@ -18,7 +18,21 @@ const RisingWaveLicenseKeySecretKey = "licenseKey"
 
 // RisingWaveLicenseKey is the license configuration for RisingWave.
 type RisingWaveLicenseKey struct {
-	// SecretName that contains the license. The license must be JWT formatted JSON and stored with key `licenseKey`.
+	// SecretName that contains the license. The license must be JWT formatted JSON.
 	// +optional
 	SecretName string `json:"secretName,omitempty"`
+
+	// SecretKey to the license in the Secret above. Defaults to `licenseKey`.
+	// +kubebuilder:default=licenseKey
+	SecretKey string `json:"secretKey,omitempty"`
+
+	// PassAsFile will pass the license as a file to the RisingWave process.
+	// The feature is only available in the RisingWave v2.1 and later. See
+	// https://github.com/risingwavelabs/risingwave/pull/18768 for more information.
+	//
+	// It's optional to set this field. If not set, the operator will deduce the value
+	// based on the RisingWave version. But when it comes to non-semver versions, it's
+	// recommended to set this field explicitly.
+	// +optional
+	PassAsFile *bool `json:"passAsFile,omitempty"`
 }

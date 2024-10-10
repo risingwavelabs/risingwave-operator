@@ -30343,9 +30343,24 @@ spec:
               licenseKey:
                 description: LicenseKey to enable paid features of RisingWave.
                 properties:
+                  passAsFile:
+                    description: |-
+                      PassAsFile will pass the license as a file to the RisingWave process.
+                      The feature is only available in the RisingWave v2.1 and later. See
+                      https://github.com/risingwavelabs/risingwave/pull/18768 for more information.
+
+                      It's optional to set this field. If not set, the operator will deduce the value
+                      based on the RisingWave version. But when it comes to non-semver versions, it's
+                      recommended to set this field explicitly.
+                    type: boolean
+                  secretKey:
+                    default: licenseKey
+                    description: SecretKey to the license in the Secret above. Defaults
+                      to `licenseKey`.
+                    type: string
                   secretName:
                     description: SecretName that contains the license. The license
-                      must be JWT formatted JSON and stored with key `licenseKey`.
+                      must be JWT formatted JSON.
                     type: string
                 type: object
               metaStore:

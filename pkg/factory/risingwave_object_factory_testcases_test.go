@@ -63,6 +63,7 @@ type testCaseType interface {
 		metaStatefulSetTestCase |
 		metaAdvancedSTSTestCase |
 		tlsTestcase |
+		legacyLicenseTestCase |
 		licenseTestCase
 }
 
@@ -4096,14 +4097,14 @@ func tlsTestcases() map[string]tlsTestcase {
 	}
 }
 
-type licenseTestCase struct {
+type legacyLicenseTestCase struct {
 	license        *risingwavev1alpha1.RisingWaveLicenseKey
 	expectedEnvs   []corev1.EnvVar
 	unexpectedEnvs []string
 }
 
-func licenseTestCases() map[string]licenseTestCase {
-	return map[string]licenseTestCase{
+func legacyLicenseTestCases() map[string]legacyLicenseTestCase {
+	return map[string]legacyLicenseTestCase{
 		"no-license": {
 			license: nil,
 			unexpectedEnvs: []string{
@@ -4135,6 +4136,181 @@ func licenseTestCases() map[string]licenseTestCase {
 					},
 				},
 			},
+		},
+	}
+}
+
+type licenseTestCase struct {
+	license                *risingwavev1alpha1.RisingWaveLicenseKey
+	expectedEnvs           []corev1.EnvVar
+	unexpectedEnvs         []string
+	expectedVolumes        []corev1.Volume
+	unexpectedVolumes      []string
+	expectedVolumeMounts   []corev1.VolumeMount
+	unexpectedVolumeMounts []string
+}
+
+func licenseTestCases() map[string]licenseTestCase {
+	return map[string]licenseTestCase{
+		"no-license": {
+			license: nil,
+			unexpectedEnvs: []string{
+				"RW_LICENSE_KEY",
+				"RW_LICENSE_KEY_PATH",
+			},
+			unexpectedVolumes:      []string{"license"},
+			unexpectedVolumeMounts: []string{"license"},
+		},
+		"empty-license": {
+			license: &risingwavev1alpha1.RisingWaveLicenseKey{
+				SecretName: "",
+			},
+			unexpectedEnvs: []string{
+				"RW_LICENSE_KEY",
+				"RW_LICENSE_KEY_PATH",
+			},
+			unexpectedVolumes:      []string{"license"},
+			unexpectedVolumeMounts: []string{"license"},
+		},
+		"with-license": {
+			license: &risingwavev1alpha1.RisingWaveLicenseKey{
+				SecretName: "the-license-secret",
+				SecretKey:  "licenseKey",
+			},
+			expectedEnvs: []corev1.EnvVar{
+				{
+					Name:  "RW_LICENSE_KEY_PATH",
+					Value: "/license/license.jwt",
+				},
+			},
+			unexpectedEnvs: []string{
+				"RW_LICENSE_KEY",
+			},
+			expectedVolumes: []corev1.Volume{
+				{
+					Name: "license",
+					VolumeSource: corev1.VolumeSource{
+						Secret: &corev1.SecretVolumeSource{
+							SecretName: "the-license-secret",
+							Items: []corev1.KeyToPath{
+								{
+									Key:  "licenseKey",
+									Path: "license.jwt",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedVolumeMounts: []corev1.VolumeMount{
+				{
+					Name:      "license",
+					MountPath: "/license",
+					ReadOnly:  true,
+				},
+			},
+		},
+		"with-secret-key": {
+			license: &risingwavev1alpha1.RisingWaveLicenseKey{
+				SecretName: "the-license-secret",
+				SecretKey:  "a",
+			},
+			expectedEnvs: []corev1.EnvVar{
+				{
+					Name:  "RW_LICENSE_KEY_PATH",
+					Value: "/license/license.jwt",
+				},
+			},
+			unexpectedEnvs: []string{
+				"RW_LICENSE_KEY",
+			},
+			expectedVolumes: []corev1.Volume{
+				{
+					Name: "license",
+					VolumeSource: corev1.VolumeSource{
+						Secret: &corev1.SecretVolumeSource{
+							SecretName: "the-license-secret",
+							Items: []corev1.KeyToPath{
+								{
+									Key:  "a",
+									Path: "license.jwt",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedVolumeMounts: []corev1.VolumeMount{
+				{
+					Name:      "license",
+					MountPath: "/license",
+					ReadOnly:  true,
+				},
+			},
+		},
+		"enforce-passing-as-file": {
+			license: &risingwavev1alpha1.RisingWaveLicenseKey{
+				SecretName: "the-license-secret",
+				SecretKey:  "licenseKey",
+				PassAsFile: ptr.To(true),
+			},
+			expectedEnvs: []corev1.EnvVar{
+				{
+					Name:  "RW_LICENSE_KEY_PATH",
+					Value: "/license/license.jwt",
+				},
+			},
+			unexpectedEnvs: []string{
+				"RW_LICENSE_KEY",
+			},
+			expectedVolumes: []corev1.Volume{
+				{
+					Name: "license",
+					VolumeSource: corev1.VolumeSource{
+						Secret: &corev1.SecretVolumeSource{
+							SecretName: "the-license-secret",
+							Items: []corev1.KeyToPath{
+								{
+									Key:  "licenseKey",
+									Path: "license.jwt",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedVolumeMounts: []corev1.VolumeMount{
+				{
+					Name:      "license",
+					MountPath: "/license",
+					ReadOnly:  true,
+				},
+			},
+		},
+		"enforce-not-passing-as-file": {
+			license: &risingwavev1alpha1.RisingWaveLicenseKey{
+				SecretName: "the-license-secret",
+				SecretKey:  "licenseKey",
+				PassAsFile: ptr.To(false),
+			},
+			expectedEnvs: []corev1.EnvVar{
+				{
+					Name: "RW_LICENSE_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "the-license-secret",
+							},
+							Key: "licenseKey",
+						},
+					},
+				},
+			},
+			unexpectedEnvs: []string{
+				"RW_LICENSE_KEY_PATH",
+			},
+			unexpectedVolumes:      []string{"license"},
+			unexpectedVolumeMounts: []string{"license"},
 		},
 	}
 }

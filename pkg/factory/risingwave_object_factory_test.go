@@ -430,12 +430,13 @@ func TestRisingWaveObjectFactory_TlsSupport(t *testing.T) {
 	}
 }
 
-func TestRisingWaveObjectFactory_LicenseKey(t *testing.T) {
-	predicates := licensePredicates()
+func TestRisingWaveObjectFactory_LegacyLicenseKey(t *testing.T) {
+	predicates := legacyLicensePredicates()
 
-	for name, tc := range licenseTestCases() {
+	for name, tc := range legacyLicenseTestCases() {
 		t.Run(name, func(t *testing.T) {
 			factory := NewRisingWaveObjectFactory(newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Image = "risingwave/risingwave:v2.0.1"
 				r.Spec.MetaStore.Memory = ptr.To(true)
 				r.Spec.StateStore.Memory = ptr.To(true)
 				r.Spec.EnableStandaloneMode = ptr.To(false)
@@ -448,6 +449,49 @@ func TestRisingWaveObjectFactory_LicenseKey(t *testing.T) {
 			}), testutils.Scheme, "")
 
 			template := factory.NewMetaStatefulSet("").Spec.Template
+			composeAssertions(predicates, t).assertTest(&template, tc)
+		})
+	}
+}
+
+func TestRisingWaveObjectFactory_LicenseKey(t *testing.T) {
+	predicates := licensePredicates()
+
+	for name, tc := range licenseTestCases() {
+		t.Run(name, func(t *testing.T) {
+			factory := NewRisingWaveObjectFactory(newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Image = "risingwave/risingwave:v2.1"
+				r.Spec.MetaStore.Memory = ptr.To(true)
+				r.Spec.StateStore.Memory = ptr.To(true)
+				r.Spec.EnableStandaloneMode = ptr.To(false)
+				r.Spec.Components.Meta.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+					{
+						Name: "",
+					},
+				}
+				r.Spec.LicenseKey = tc.license
+			}), testutils.Scheme, "")
+
+			template := factory.NewMetaStatefulSet("").Spec.Template
+			composeAssertions(predicates, t).assertTest(&template, tc)
+		})
+	}
+}
+
+func TestRisingWaveObjectFactory_LicenseKey_Standalone(t *testing.T) {
+	predicates := licensePredicates()
+
+	for name, tc := range licenseTestCases() {
+		t.Run(name, func(t *testing.T) {
+			factory := NewRisingWaveObjectFactory(newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Image = "risingwave/risingwave:v2.1"
+				r.Spec.MetaStore.Memory = ptr.To(true)
+				r.Spec.StateStore.Memory = ptr.To(true)
+				r.Spec.EnableStandaloneMode = ptr.To(true)
+				r.Spec.LicenseKey = tc.license
+			}), testutils.Scheme, "")
+
+			template := factory.NewStandaloneStatefulSet().Spec.Template
 			composeAssertions(predicates, t).assertTest(&template, tc)
 		})
 	}

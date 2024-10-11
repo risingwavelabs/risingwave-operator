@@ -1027,14 +1027,15 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 		if !strings.HasPrefix(endpoint, "https://") {
 			endpoint = "https://" + endpoint
 		}
-		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials)
+		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials,
+			ptr.Deref(s3Spec.DisableAutomaticVirtualHostStyle, false))
 	}
 
 	// AWS S3 mode.
 	return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials)
 }
 
-func envsForS3Compatible(region, endpoint, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials) []corev1.EnvVar {
+func envsForS3Compatible(region, endpoint, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials, enforcePathStyle bool) []corev1.EnvVar {
 	secretRef := corev1.LocalObjectReference{
 		Name: credentials.SecretName,
 	}
@@ -1057,7 +1058,7 @@ func envsForS3Compatible(region, endpoint, bucket string, credentials risingwave
 		}
 	}
 
-	return []corev1.EnvVar{
+	envVars := []corev1.EnvVar{
 		{
 			// Disable auto region loading. Refer to the original source for more information.
 			// https://github.com/awslabs/aws-sdk-rust/blob/main/sdk/aws-config/src/imds/region.rs
@@ -1093,6 +1094,16 @@ func envsForS3Compatible(region, endpoint, bucket string, credentials risingwave
 			Value: endpoint,
 		},
 	}
+
+	if enforcePathStyle {
+		// Set RW_IS_FORCE_PATH_STYLE to counter the endpoint mutation when using S3 compatible storage.
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  envs.RWIsForcePathStyle,
+			Value: "true",
+		})
+	}
+
+	return envVars
 }
 
 func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {

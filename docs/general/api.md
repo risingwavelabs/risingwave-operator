@@ -5524,6 +5524,21 @@ ${BUCKET}.s3.${REGION}.amazonaws.com
 Both HTTP and HTTPS are allowed. The default scheme is HTTPS if not specified.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>disableAutomaticVirtualHostStyle</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>DisableAutomaticVirtualHostStyle disables the automatic virtual host style endpoint mutation. If the endpoint is
+not in the virtual host style, RisingWave will tend to mutate the endpoint to the virtual host style. This may
+sometimes cause confusion and connection failure. In that cases, you can disable the endpoint mutation by setting
+this field to true.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendType">RisingWaveStateStoreBackendType

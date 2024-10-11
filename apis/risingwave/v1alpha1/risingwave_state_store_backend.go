@@ -111,6 +111,14 @@ type RisingWaveStateStoreBackendS3 struct {
 	// +optional
 	// +kubebuilder:validation:Pattern="^(?:https?://)?(?:[^/.\\s]+\\.)*(?:[^/\\s]+)*$"
 	Endpoint string `json:"endpoint,omitempty"`
+
+	// DisableAutomaticVirtualHostStyle disables the automatic virtual host style endpoint mutation. If the endpoint is
+	// not in the virtual host style, RisingWave will tend to mutate the endpoint to the virtual host style. This may
+	// sometimes cause confusion and connection failure. In that cases, you can disable the endpoint mutation by setting
+	// this field to true.
+	//
+	// +optional
+	DisableAutomaticVirtualHostStyle *bool `json:"disableAutomaticVirtualHostStyle,omitempty"`
 }
 
 // RisingWaveGCSCredentials is the reference and keys selector to the GCS access credentials stored in a local secret.

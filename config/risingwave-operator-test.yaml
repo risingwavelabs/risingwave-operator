@@ -30824,6 +30824,13 @@ spec:
                               the AWS S3. If this is enabled, secret and keys are ignored. Defaults to false.
                             type: boolean
                         type: object
+                      disableAutomaticVirtualHostStyle:
+                        description: |-
+                          DisableAutomaticVirtualHostStyle disables the automatic virtual host style endpoint mutation. If the endpoint is
+                          not in the virtual host style, RisingWave will tend to mutate the endpoint to the virtual host style. This may
+                          sometimes cause confusion and connection failure. In that cases, you can disable the endpoint mutation by setting
+                          this field to true.
+                        type: boolean
                       endpoint:
                         description: |-
                           Endpoint of the AWS (or other vendor's S3-compatible) service. Leave it empty when using AWS S3 service.

@@ -53,6 +53,7 @@ const (
 	RWSslKey                 = "RW_SSL_KEY"
 	RWLicenseKey             = "RW_LICENSE_KEY"
 	RWLicenseKeyPath         = "RW_LICENSE_KEY_PATH"
+	RWIsForcePathStyle       = "RW_IS_FORCE_PATH_STYLE"
 )
 
 // MinIO.

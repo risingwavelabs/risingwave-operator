@@ -1,0 +1,126 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: risingwave-data
+  labels:
+    app: risingwave
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: risingwave.risingwavelabs.com/v1alpha1
+kind: RisingWave
+metadata:
+  name: risingwave
+spec:
+  image: risingwavelabs/risingwave:v2.0.1
+  metaStore:
+    postgresql:
+      credentials:
+        secretName: postgres-credentials
+        usernameKeyRef: username
+        passwordKeyRef: password
+      database: risingwave
+      host: postgres.example.com
+      port: 5432
+  stateStore:
+    localDisk:
+      root: /var/lib/risingwave/data
+  components:
+    meta:
+      nodeGroups:
+      - name: ""
+        replicas: 1
+        template:
+          spec:
+            volumes:
+            - name: risingwave-data
+              persistentVolumeClaim:
+                claimName: risingwave-data
+            volumeMounts:
+            - mountPath: /var/lib/risingwave/data
+              name: risingwave-data
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+    frontend:
+      nodeGroups:
+      - name: ""
+        replicas: 1
+        template:
+          spec:
+            affinity:
+              podAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                - topologyKey: "kubernetes.io/hostname"
+                  labelSelector:
+                    matchLabels:
+                      risingwave/component: meta
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+    compute:
+      nodeGroups:
+      - name: ""
+        replicas: 1
+        template:
+          spec:
+            volumes:
+            - name: risingwave-data
+              persistentVolumeClaim:
+                claimName: risingwave-data
+            volumeMounts:
+            - mountPath: /var/lib/risingwave/data
+              name: risingwave-data
+            affinity:
+              podAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                - topologyKey: "kubernetes.io/hostname"
+                  labelSelector:
+                    matchLabels:
+                      risingwave/component: meta
+            resources:
+              limits:
+                cpu: 8
+                memory: 32Gi # Memory limit will be set to `RW_TOTAL_MEMORY_BYTES`
+              requests:
+                cpu: 8
+                memory: 32Gi
+    compactor:
+      nodeGroups:
+      - name: ""
+        replicas: 1
+        template:
+          spec:
+            volumes:
+            - name: risingwave-data
+              persistentVolumeClaim:
+                claimName: risingwave-data
+            volumeMounts:
+            - mountPath: /var/lib/risingwave/data
+              name: risingwave-data
+            affinity:
+              podAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                - topologyKey: "kubernetes.io/hostname"
+                  labelSelector:
+                    matchLabels:
+                      risingwave/component: meta
+            resources:
+              limits:
+                cpu: 4
+                memory: 8Gi
+              requests:
+                cpu: 4
+                memory: 8Gi

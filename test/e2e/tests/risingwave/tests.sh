@@ -224,8 +224,8 @@ function test::run::risingwave::storage_support::meta_memory_object_memory() {
 	test::risingwave::storage_support::_run_with_manifest storages/meta-memory-object-memory.yaml
 }
 
-function test::run::risingwave::storage_support::meta_etcd() {
-	test::risingwave::storage_support::_run_with_manifest storages/meta-etcd.yaml
+function test::run::risingwave::storage_support::meta_postgres() {
+	test::risingwave::storage_support::_run_with_manifest storages/meta-postgres.yaml
 }
 
 function test::run::risingwave::storage_support::object_minio() {

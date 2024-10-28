@@ -80,7 +80,7 @@ type RisingWaveSpec struct {
 
 	// Flag to indicate if OpenKruise should be enabled for components.
 	// If enabled, CloneSets will be used for meta/frontend/compactor nodes
-	// and Advanced StateFulSets will be used for compute nodes.
+	// and Advanced StatefulSets will be used for compute nodes.
 	// +optional
 	// +kubebuilder:default=false
 	EnableOpenKruise *bool `json:"enableOpenKruise,omitempty"`

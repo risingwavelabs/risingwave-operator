@@ -559,7 +559,7 @@ bool
 <em>(Optional)</em>
 <p>Flag to indicate if OpenKruise should be enabled for components.
 If enabled, CloneSets will be used for meta/frontend/compactor nodes
-and Advanced StateFulSets will be used for compute nodes.</p>
+and Advanced StatefulSets will be used for compute nodes.</p>
 </td>
 </tr>
 <tr>
@@ -4561,7 +4561,7 @@ bool
 <em>(Optional)</em>
 <p>Flag to indicate if OpenKruise should be enabled for components.
 If enabled, CloneSets will be used for meta/frontend/compactor nodes
-and Advanced StateFulSets will be used for compute nodes.</p>
+and Advanced StatefulSets will be used for compute nodes.</p>
 </td>
 </tr>
 <tr>

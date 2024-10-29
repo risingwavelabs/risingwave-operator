@@ -148,6 +148,9 @@ type RisingWaveSpec struct {
 
 	// LicenseKey to enable paid features of RisingWave.
 	LicenseKey *RisingWaveLicenseKey `json:"licenseKey,omitempty"`
+
+	// SecretStore is the configuration of the secret store.
+	SecretStore RisingWaveSecretStore `json:"secretStore,omitempty"`
 }
 
 // ComponentGroupReplicasStatus are the running status of Pods in group.

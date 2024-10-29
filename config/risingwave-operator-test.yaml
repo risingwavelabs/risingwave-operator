@@ -30527,6 +30527,37 @@ spec:
                     - path
                     type: object
                 type: object
+              secretStore:
+                description: SecretStore is the configuration of the secret store.
+                properties:
+                  privateKey:
+                    description: PrivateKey is the private key used to encrypt and
+                      decrypt the secrets.
+                    properties:
+                      secretRef:
+                        description: |-
+                          SecretRef is a reference to a secret that contains the private key. If this is set, Value must be nil.
+                          Note that the value in the secret must be a 128-bit key encoded in hex.
+                        properties:
+                          key:
+                            description: Key is the key in the secret that contains
+                              the private key.
+                            type: string
+                          name:
+                            description: Name is the name of the secret.
+                            type: string
+                        required:
+                        - key
+                        - name
+                        type: object
+                      value:
+                        description: |-
+                          Value is the private key. It must be a 128-bit key encoded in hex. If both Value and SecretRef are set,
+                          SecretRef will be used. If neither is set, the private key will be generated randomly.
+                        pattern: ^[0-9a-f]{32}$
+                        type: string
+                    type: object
+                type: object
               standaloneMode:
                 default: 0
                 description: |-

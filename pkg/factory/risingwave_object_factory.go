@@ -606,6 +606,34 @@ func (f *RisingWaveObjectFactory) envsForLicenseKey() []corev1.EnvVar {
 	}
 }
 
+func (f *RisingWaveObjectFactory) envsForSecretStore() []corev1.EnvVar {
+	secretStore := f.risingwave.Spec.SecretStore
+	if secretStore.PrivateKey.SecretRef != nil {
+		return []corev1.EnvVar{
+			{
+				Name: envs.RWSecretStorePrivateKeyHex,
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: secretStore.PrivateKey.SecretRef.Name,
+						},
+						Key: secretStore.PrivateKey.SecretRef.Key,
+					},
+				},
+			},
+		}
+	}
+	if secretStore.PrivateKey.Value != nil {
+		return []corev1.EnvVar{
+			{
+				Name:  envs.RWSecretStorePrivateKeyHex,
+				Value: *secretStore.PrivateKey.Value,
+			},
+		}
+	}
+	return nil
+}
+
 func (f *RisingWaveObjectFactory) coreEnvsForMeta(image string) []corev1.EnvVar {
 	metaStore := &f.risingwave.Spec.MetaStore
 	version := utils.GetVersionFromImage(image)
@@ -740,6 +768,7 @@ func (f *RisingWaveObjectFactory) coreEnvsForMeta(image string) []corev1.EnvVar 
 	}
 
 	envVars = append(envVars, f.envsForLicenseKey()...)
+	envVars = append(envVars, f.envsForSecretStore()...)
 
 	return envVars
 }

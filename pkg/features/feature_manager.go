@@ -31,8 +31,9 @@ type FeatureName string
 
 // Valid feature names.
 const (
-	EnableOpenKruiseFeature FeatureName = "EnableOpenKruise"
-	EnableForceUpdate       FeatureName = "EnableForceUpdate"
+	EnableOpenKruiseFeature     FeatureName = "EnableOpenKruise"
+	EnableForceUpdate           FeatureName = "EnableForceUpdate"
+	RandomSecretStorePrivateKey FeatureName = "RandomSecretStorePrivateKey"
 )
 
 // Valid feature stages.
@@ -57,6 +58,13 @@ var (
 			Description:   "This feature enables force resolve version conflict due to operator update",
 			DefaultEnable: true,
 			Stage:         Beta,
+		},
+		{
+			Name:          RandomSecretStorePrivateKey,
+			Description:   "This feature enables the random generation of a secret store private key if it is not set",
+			DefaultEnable: false,
+			Enabled:       false,
+			Stage:         Alpha,
 		},
 	}
 )

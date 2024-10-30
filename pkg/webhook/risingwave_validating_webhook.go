@@ -294,6 +294,14 @@ func (v *RisingWaveValidatingWebhook) validateMetaReplicas(obj *risingwavev1alph
 	return fieldErrs
 }
 
+func (v *RisingWaveValidatingWebhook) validateSecretStore(obj *risingwavev1alpha1.RisingWave) field.ErrorList {
+	fieldErrs := field.ErrorList{}
+	if obj.Spec.SecretStore.PrivateKey.Value != nil && obj.Spec.SecretStore.PrivateKey.SecretRef != nil {
+		fieldErrs = append(fieldErrs, field.Forbidden(field.NewPath("spec", "secretStore", "privateKey"), "both value and secretRef are set"))
+	}
+	return fieldErrs
+}
+
 func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *risingwavev1alpha1.RisingWave) error {
 	gvk := obj.GroupVersionKind()
 
@@ -334,6 +342,9 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 	// Validate the meta replicas.
 	fieldErrs = append(fieldErrs, v.validateMetaReplicas(obj)...)
 
+	// Validate the secret store.
+	fieldErrs = append(fieldErrs, v.validateSecretStore(obj)...)
+
 	if len(fieldErrs) > 0 {
 		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, fieldErrs)
 	}
@@ -368,6 +379,24 @@ func pathForGroupReplicas(obj *risingwavev1alpha1.RisingWave, component, group s
 	return field.NewPath("spec", "components", component, "nodeGroups").Index(index).Child("replicas")
 }
 
+func (v *RisingWaveValidatingWebhook) isSecretStoreChangeAllowed(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
+	oldStore, newStore := oldObj.Spec.SecretStore, newObj.Spec.SecretStore
+
+	isPrivateKeySet := func(store *risingwavev1alpha1.RisingWaveSecretStore) bool {
+		return store.PrivateKey.Value != nil || store.PrivateKey.SecretRef != nil
+	}
+
+	// Not set to set is allowed.
+	if !isPrivateKeySet(&oldStore) {
+		return true
+	}
+
+	// Changes on the private key are not allowed.
+	oldPk, newPk := oldStore.PrivateKey, newStore.PrivateKey
+
+	return equality.Semantic.DeepEqual(oldPk, newPk)
+}
+
 func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWave) error {
 	gvk := oldObj.GroupVersionKind()
 
@@ -385,6 +414,14 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			oldObj.Name,
 			field.Forbidden(field.NewPath("spec", "stateStore"), "state store must be kept consistent"),
+		)
+	}
+
+	if !v.isSecretStoreChangeAllowed(oldObj, newObj) {
+		return apierrors.NewForbidden(
+			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
+			oldObj.Name,
+			field.Forbidden(field.NewPath("spec", "secretStore"), "secret store must be kept consistent"),
 		)
 	}
 

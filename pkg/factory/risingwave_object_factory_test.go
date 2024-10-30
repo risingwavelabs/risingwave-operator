@@ -588,3 +588,43 @@ func TestRisingWaveObjectFactory_DataDirectory(t *testing.T) {
 		})
 	}
 }
+
+func TestRisingWaveObjectFactory_SecretStore(t *testing.T) {
+	predicates := secretStorePredicates()
+
+	for name, tc := range secretStoreTestCases() {
+		t.Run(name, func(t *testing.T) {
+			factory := NewRisingWaveObjectFactory(newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore = tc.secretStore
+				r.Spec.MetaStore.Memory = ptr.To(true)
+				r.Spec.StateStore.Memory = ptr.To(true)
+				r.Spec.Components.Meta.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+					{
+						Name: "",
+					},
+				}
+			}), testutils.Scheme, "")
+
+			template := factory.NewMetaStatefulSet("").Spec.Template
+			composeAssertions(predicates, t).assertTest(&template, tc)
+		})
+	}
+}
+
+func TestRisingWaveObjectFactory_SecretStore_Standalone(t *testing.T) {
+	predicates := secretStorePredicates()
+
+	for name, tc := range secretStoreTestCases() {
+		t.Run(name, func(t *testing.T) {
+			factory := NewRisingWaveObjectFactory(newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore = tc.secretStore
+				r.Spec.MetaStore.Memory = ptr.To(true)
+				r.Spec.StateStore.Memory = ptr.To(true)
+				r.Spec.EnableStandaloneMode = ptr.To(true)
+			}), testutils.Scheme, "")
+
+			template := factory.NewStandaloneStatefulSet().Spec.Template
+			composeAssertions(predicates, t).assertTest(&template, tc)
+		})
+	}
+}

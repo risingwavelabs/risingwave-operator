@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
+	"github.com/risingwavelabs/risingwave-operator/pkg/features"
 	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
@@ -38,10 +39,12 @@ func (m *RisingWaveMutatingWebhook) Default(ctx context.Context, obj runtime.Obj
 	risingwave := obj.(*risingwavev1alpha1.RisingWave)
 	risingwave.Spec.StateStore.DataDirectory = strings.TrimRight(strings.TrimSpace(risingwave.Spec.StateStore.DataDirectory), "/")
 
-	// Generate a random private key if it is not set.
-	secretStorePrivateKey := &risingwave.Spec.SecretStore.PrivateKey
-	if secretStorePrivateKey.Value == nil && secretStorePrivateKey.SecretRef == nil {
-		secretStorePrivateKey.Value = ptr.To(lo.Must(utils.RandomHex(16)))
+	if features.GetFeatureManager().IsFeatureEnabled(features.RandomSecretStorePrivateKey) {
+		// Generate a random private key if it is not set.
+		secretStorePrivateKey := &risingwave.Spec.SecretStore.PrivateKey
+		if secretStorePrivateKey.Value == nil && secretStorePrivateKey.SecretRef == nil {
+			secretStorePrivateKey.Value = ptr.To(lo.Must(utils.RandomHex(16)))
+		}
 	}
 
 	return nil

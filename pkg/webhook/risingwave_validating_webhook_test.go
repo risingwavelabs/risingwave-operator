@@ -789,6 +789,43 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
+		"empty-secret-store-private-key": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey = risingwavev1alpha1.RisingWaveSecretStorePrivateKey{}
+			},
+			pass: true,
+		},
+		"secret-store-private-key-value-set": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey = risingwavev1alpha1.RisingWaveSecretStorePrivateKey{
+					Value: ptr.To("123"),
+				}
+			},
+			pass: true,
+		},
+		"secret-store-private-key-ref-set": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey = risingwavev1alpha1.RisingWaveSecretStorePrivateKey{
+					SecretRef: &risingwavev1alpha1.RisingWaveSecretStorePrivateKeySecretReference{
+						Name: "test",
+						Key:  "test",
+					},
+				}
+			},
+			pass: true,
+		},
+		"secret-store-private-key-both-set": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey = risingwavev1alpha1.RisingWaveSecretStorePrivateKey{
+					Value: ptr.To("123"),
+					SecretRef: &risingwavev1alpha1.RisingWaveSecretStorePrivateKeySecretReference{
+						Name: "test",
+						Key:  "test",
+					},
+				}
+			},
+			pass: false,
+		},
 	}
 
 	for name, tc := range testcases {
@@ -927,6 +964,21 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 			},
 			pass: true,
 		},
+		"secret-store-unchanged-from-ref-to-ref-success": {
+			init: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.SecretRef = &risingwavev1alpha1.RisingWaveSecretStorePrivateKeySecretReference{
+					Name: "test",
+					Key:  "test",
+				}
+			},
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.SecretRef = &risingwavev1alpha1.RisingWaveSecretStorePrivateKeySecretReference{
+					Name: "test",
+					Key:  "test",
+				}
+			},
+			pass: true,
+		},
 		"secret-store-changed-from-value-to-value-fail": {
 			init: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.SecretStore.PrivateKey.Value = ptr.To("123")
@@ -936,7 +988,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 			},
 			pass: false,
 		},
-		"secret-store-changed-from-value-to-secret-success": {
+		"secret-store-changed-from-value-to-secret-fail": {
 			init: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.SecretStore.PrivateKey.Value = ptr.To("123")
 			},
@@ -946,9 +998,9 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 					Key:  "test",
 				}
 			},
-			pass: true,
+			pass: false,
 		},
-		"secret-store-changed-from-secret-to-value-success": {
+		"secret-store-changed-from-secret-to-value-fail": {
 			init: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.SecretStore.PrivateKey.SecretRef = &risingwavev1alpha1.RisingWaveSecretStorePrivateKeySecretReference{
 					Name: "test",
@@ -958,7 +1010,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.SecretStore.PrivateKey.Value = ptr.To("123")
 			},
-			pass: true,
+			pass: false,
 		},
 	}
 

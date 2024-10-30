@@ -434,3 +434,9 @@ func TestParseFromFeatureGateString(t *testing.T) {
 		}
 	}
 }
+
+func TestRandomSecretStorePrivateKeyIsDisabledByDefault(t *testing.T) {
+	if newRisingWaveFeatureManagerForTest("").IsFeatureEnabled(RandomSecretStorePrivateKey) {
+		t.Fatal("RandomSecretStorePrivateKey should be disabled by default")
+	}
+}

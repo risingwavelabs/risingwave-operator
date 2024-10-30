@@ -4575,8 +4575,9 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Value is the private key. It must be a 128-bit key encoded in hex. If both Value and SecretRef are set,
-SecretRef will be used. If neither is set, the private key will be generated randomly.</p>
+<p>Value is the private key. It must be a 128-bit key encoded in hex. If this is set, SecretRef must be nil.
+When the feature gate RandomSecretStorePrivateKey is enabled and neither is set, the private key will be
+generated randomly.</p>
 </td>
 </tr>
 <tr>

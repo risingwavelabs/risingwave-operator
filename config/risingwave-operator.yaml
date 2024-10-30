@@ -30552,8 +30552,9 @@ spec:
                         type: object
                       value:
                         description: |-
-                          Value is the private key. It must be a 128-bit key encoded in hex. If both Value and SecretRef are set,
-                          SecretRef will be used. If neither is set, the private key will be generated randomly.
+                          Value is the private key. It must be a 128-bit key encoded in hex. If this is set, SecretRef must be nil.
+                          When the feature gate RandomSecretStorePrivateKey is enabled and neither is set, the private key will be
+                          generated randomly.
                         pattern: ^[0-9a-f]{32}$
                         type: string
                     type: object

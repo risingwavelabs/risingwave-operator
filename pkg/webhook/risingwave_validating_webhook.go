@@ -294,6 +294,14 @@ func (v *RisingWaveValidatingWebhook) validateMetaReplicas(obj *risingwavev1alph
 	return fieldErrs
 }
 
+func (v *RisingWaveValidatingWebhook) validateSecretStore(obj *risingwavev1alpha1.RisingWave) field.ErrorList {
+	fieldErrs := field.ErrorList{}
+	if obj.Spec.SecretStore.PrivateKey.Value != nil && obj.Spec.SecretStore.PrivateKey.SecretRef != nil {
+		fieldErrs = append(fieldErrs, field.Forbidden(field.NewPath("spec", "secretStore", "privateKey"), "both value and secretRef are set"))
+	}
+	return fieldErrs
+}
+
 func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *risingwavev1alpha1.RisingWave) error {
 	gvk := obj.GroupVersionKind()
 
@@ -333,6 +341,9 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 
 	// Validate the meta replicas.
 	fieldErrs = append(fieldErrs, v.validateMetaReplicas(obj)...)
+
+	// Validate the secret store.
+	fieldErrs = append(fieldErrs, v.validateSecretStore(obj)...)
 
 	if len(fieldErrs) > 0 {
 		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, fieldErrs)
@@ -375,35 +386,15 @@ func (v *RisingWaveValidatingWebhook) isSecretStoreChangeAllowed(oldObj, newObj 
 		return store.PrivateKey.Value != nil || store.PrivateKey.SecretRef != nil
 	}
 
-	trim := func(pk *risingwavev1alpha1.RisingWaveSecretStorePrivateKey) *risingwavev1alpha1.RisingWaveSecretStorePrivateKey {
-		if pk == nil {
-			return nil
-		}
-		if pk.SecretRef != nil {
-			pk.Value = nil
-		}
-		return pk
-	}
-
 	// Not set to set is allowed.
 	if !isPrivateKeySet(&oldStore) {
 		return true
 	}
 
-	// Set to not set is disallowed.
-	if !isPrivateKeySet(&newStore) {
-		return false
-	}
+	// Changes on the private key are not allowed.
+	oldPk, newPk := oldStore.PrivateKey, newStore.PrivateKey
 
-	// Both are set, disallow only when both are raw and different.
-	oldPk, newPk := oldStore.PrivateKey.DeepCopy(), newStore.PrivateKey.DeepCopy()
-	oldPk, newPk = trim(oldPk), trim(newPk)
-
-	if oldPk.Value != nil && newPk.Value != nil {
-		return *oldPk.Value == *newPk.Value
-	}
-
-	return true
+	return equality.Semantic.DeepEqual(oldPk, newPk)
 }
 
 func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWave) error {

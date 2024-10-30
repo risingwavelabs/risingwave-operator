@@ -25,8 +25,9 @@ type RisingWaveSecretStorePrivateKeySecretReference struct {
 
 // RisingWaveSecretStorePrivateKey is a private key that can be stored in a secret or directly in the resource.
 type RisingWaveSecretStorePrivateKey struct {
-	// Value is the private key. It must be a 128-bit key encoded in hex. If both Value and SecretRef are set,
-	// SecretRef will be used. If neither is set, the private key will be generated randomly.
+	// Value is the private key. It must be a 128-bit key encoded in hex. If this is set, SecretRef must be nil.
+	// When the feature gate RandomSecretStorePrivateKey is enabled and neither is set, the private key will be
+	// generated randomly.
 	// +kubebuilder:validation:Pattern="^[0-9a-f]{32}$"
 	// +optional
 	Value *string `json:"value,omitempty"`

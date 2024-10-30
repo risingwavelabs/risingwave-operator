@@ -368,6 +368,44 @@ func pathForGroupReplicas(obj *risingwavev1alpha1.RisingWave, component, group s
 	return field.NewPath("spec", "components", component, "nodeGroups").Index(index).Child("replicas")
 }
 
+func (v *RisingWaveValidatingWebhook) isSecretStoreChangeAllowed(oldObj, newObj *risingwavev1alpha1.RisingWave) bool {
+	oldStore, newStore := oldObj.Spec.SecretStore, newObj.Spec.SecretStore
+
+	isPrivateKeySet := func(store *risingwavev1alpha1.RisingWaveSecretStore) bool {
+		return store.PrivateKey.Value != nil || store.PrivateKey.SecretRef != nil
+	}
+
+	trim := func(pk *risingwavev1alpha1.RisingWaveSecretStorePrivateKey) *risingwavev1alpha1.RisingWaveSecretStorePrivateKey {
+		if pk == nil {
+			return nil
+		}
+		if pk.SecretRef != nil {
+			pk.Value = nil
+		}
+		return pk
+	}
+
+	// Not set to set is allowed.
+	if !isPrivateKeySet(&oldStore) {
+		return true
+	}
+
+	// Set to not set is disallowed.
+	if !isPrivateKeySet(&newStore) {
+		return false
+	}
+
+	// Both are set, disallow only when both are raw and different.
+	oldPk, newPk := oldStore.PrivateKey.DeepCopy(), newStore.PrivateKey.DeepCopy()
+	oldPk, newPk = trim(oldPk), trim(newPk)
+
+	if oldPk.Value != nil && newPk.Value != nil {
+		return *oldPk.Value == *newPk.Value
+	}
+
+	return true
+}
+
 func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWave) error {
 	gvk := oldObj.GroupVersionKind()
 
@@ -385,6 +423,14 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			oldObj.Name,
 			field.Forbidden(field.NewPath("spec", "stateStore"), "state store must be kept consistent"),
+		)
+	}
+
+	if !v.isSecretStoreChangeAllowed(oldObj, newObj) {
+		return apierrors.NewForbidden(
+			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
+			oldObj.Name,
+			field.Forbidden(field.NewPath("spec", "secretStore"), "secret store must be kept consistent"),
 		)
 	}
 

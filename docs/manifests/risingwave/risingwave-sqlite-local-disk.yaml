@@ -1,7 +1,20 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: risingwave-data
+  labels:
+    app: risingwave
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave
 metadata:
-  name: risingwave-sqlite-local-disk
+  name: risingwave
 spec:
   image: risingwavelabs/risingwave:v2.1.0
   metaStore:

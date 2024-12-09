@@ -20,10 +20,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/risingwavelabs/risingwave-operator/pkg/features"
 	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
 
 func Test_RisingWaveMutatingWebhook_Default(t *testing.T) {
+	features.InitFeatureManager(features.SupportedFeatureList, "")
+
 	mutatingWebhook := NewRisingWaveMutatingWebhook()
 	err := mutatingWebhook.Default(context.Background(), testutils.FakeRisingWave())
 	if err != nil {

@@ -64,7 +64,8 @@ type testCaseType interface {
 		metaAdvancedSTSTestCase |
 		tlsTestcase |
 		legacyLicenseTestCase |
-		licenseTestCase
+		licenseTestCase |
+		secretStoreTestCase
 }
 
 type kubeObject interface {
@@ -4311,6 +4312,57 @@ func licenseTestCases() map[string]licenseTestCase {
 			},
 			unexpectedVolumes:      []string{"license"},
 			unexpectedVolumeMounts: []string{"license"},
+		},
+	}
+}
+
+type secretStoreTestCase struct {
+	secretStore    risingwavev1alpha1.RisingWaveSecretStore
+	envs           []corev1.EnvVar
+	unexpectedEnvs []string
+}
+
+func secretStoreTestCases() map[string]secretStoreTestCase {
+	return map[string]secretStoreTestCase{
+		"no-secret-store": {
+			secretStore:    risingwavev1alpha1.RisingWaveSecretStore{},
+			unexpectedEnvs: []string{"RW_SECRET_STORE_PRIVATE_KEY_HEX"},
+		},
+		"with-secret-store": {
+			secretStore: risingwavev1alpha1.RisingWaveSecretStore{
+				PrivateKey: risingwavev1alpha1.RisingWaveSecretStorePrivateKey{
+					Value: ptr.To("0123456789abcdef0123456789abcdef"),
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_SECRET_STORE_PRIVATE_KEY_HEX",
+					Value: "0123456789abcdef0123456789abcdef",
+				},
+			},
+		},
+		"with-secret-store-secret-ref": {
+			secretStore: risingwavev1alpha1.RisingWaveSecretStore{
+				PrivateKey: risingwavev1alpha1.RisingWaveSecretStorePrivateKey{
+					SecretRef: &risingwavev1alpha1.RisingWaveSecretStorePrivateKeySecretReference{
+						Name: "pk",
+						Key:  "pk-key",
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name: "RW_SECRET_STORE_PRIVATE_KEY_HEX",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "pk",
+							},
+							Key: "pk-key",
+						},
+					},
+				},
+			},
 		},
 	}
 }

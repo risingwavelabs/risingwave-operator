@@ -802,8 +802,11 @@ func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj 
 		if !apierrors.IsInvalid(err) {
 			return err
 		}
-		if !mgr.forceUpdateEnabled ||
-			obj.GetLabels()[consts.LabelRisingWaveOperatorVersion] == newObj.GetLabels()[consts.LabelRisingWaveOperatorVersion] {
+
+		operatorVersionUnchanged := obj.GetLabels()[consts.LabelRisingWaveOperatorVersion] == newObj.GetLabels()[consts.LabelRisingWaveOperatorVersion]
+		// When operator isn't upgraded and force update isn't enabled, return the error. Otherwise, delete and create
+		// to avoid inconsistent state.
+		if !mgr.forceUpdateEnabled && operatorVersionUnchanged {
 			return err
 		}
 		if err := mgr.client.Delete(ctx, obj); err != nil {

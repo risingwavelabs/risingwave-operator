@@ -80,7 +80,7 @@ type RisingWaveSpec struct {
 
 	// Flag to indicate if OpenKruise should be enabled for components.
 	// If enabled, CloneSets will be used for meta/frontend/compactor nodes
-	// and Advanced StateFulSets will be used for compute nodes.
+	// and Advanced StatefulSets will be used for compute nodes.
 	// +optional
 	// +kubebuilder:default=false
 	EnableOpenKruise *bool `json:"enableOpenKruise,omitempty"`
@@ -148,6 +148,9 @@ type RisingWaveSpec struct {
 
 	// LicenseKey to enable paid features of RisingWave.
 	LicenseKey *RisingWaveLicenseKey `json:"licenseKey,omitempty"`
+
+	// SecretStore is the configuration of the secret store.
+	SecretStore RisingWaveSecretStore `json:"secretStore,omitempty"`
 }
 
 // ComponentGroupReplicasStatus are the running status of Pods in group.

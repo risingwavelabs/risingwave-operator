@@ -559,7 +559,7 @@ bool
 <em>(Optional)</em>
 <p>Flag to indicate if OpenKruise should be enabled for components.
 If enabled, CloneSets will be used for meta/frontend/compactor nodes
-and Advanced StateFulSets will be used for compute nodes.</p>
+and Advanced StatefulSets will be used for compute nodes.</p>
 </td>
 </tr>
 <tr>
@@ -732,6 +732,19 @@ RisingWaveLicenseKey
 </td>
 <td>
 <p>LicenseKey to enable paid features of RisingWave.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secretStore</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecretStore">
+RisingWaveSecretStore
+</a>
+</em>
+</td>
+<td>
+<p>SecretStore is the configuration of the secret store.</p>
 </td>
 </tr>
 </table>
@@ -4506,6 +4519,124 @@ k8s.io/apimachinery/pkg/types.UID
 </tr>
 </tbody>
 </table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecretStore">RisingWaveSecretStore
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec</a>)
+</p>
+<div>
+<p>RisingWaveSecretStore is the configuration of the secret store.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>privateKey</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecretStorePrivateKey">
+RisingWaveSecretStorePrivateKey
+</a>
+</em>
+</td>
+<td>
+<p>PrivateKey is the private key used to encrypt and decrypt the secrets.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecretStorePrivateKey">RisingWaveSecretStorePrivateKey
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecretStore">RisingWaveSecretStore</a>)
+</p>
+<div>
+<p>RisingWaveSecretStorePrivateKey is a private key that can be stored in a secret or directly in the resource.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>value</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Value is the private key. It must be a 128-bit key encoded in hex. If this is set, SecretRef must be nil.
+When the feature gate RandomSecretStorePrivateKey is enabled and neither is set, the private key will be
+generated randomly.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secretRef</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecretStorePrivateKeySecretReference">
+RisingWaveSecretStorePrivateKeySecretReference
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecretRef is a reference to a secret that contains the private key. If this is set, Value must be nil.
+Note that the value in the secret must be a 128-bit key encoded in hex.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecretStorePrivateKeySecretReference">RisingWaveSecretStorePrivateKeySecretReference
+</h3>
+<p>
+(<em>Appears on:</em><a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecretStorePrivateKey">RisingWaveSecretStorePrivateKey</a>)
+</p>
+<div>
+<p>RisingWaveSecretStorePrivateKeySecretReference is a reference to a secret that contains a private key.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the name of the secret.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>key</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Key is the key in the secret that contains the private key.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveSpec">RisingWaveSpec
 </h3>
 <p>
@@ -4561,7 +4692,7 @@ bool
 <em>(Optional)</em>
 <p>Flag to indicate if OpenKruise should be enabled for components.
 If enabled, CloneSets will be used for meta/frontend/compactor nodes
-and Advanced StateFulSets will be used for compute nodes.</p>
+and Advanced StatefulSets will be used for compute nodes.</p>
 </td>
 </tr>
 <tr>
@@ -4734,6 +4865,19 @@ RisingWaveLicenseKey
 </td>
 <td>
 <p>LicenseKey to enable paid features of RisingWave.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secretStore</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveSecretStore">
+RisingWaveSecretStore
+</a>
+</em>
+</td>
+<td>
+<p>SecretStore is the configuration of the secret store.</p>
 </td>
 </tr>
 </tbody>

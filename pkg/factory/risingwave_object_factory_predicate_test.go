@@ -1166,3 +1166,38 @@ func licensePredicates() []predicate[*corev1.PodTemplateSpec, licenseTestCase] {
 		},
 	}
 }
+
+func secretStorePredicates() []predicate[*corev1.PodTemplateSpec, secretStoreTestCase] {
+	return []predicate[*corev1.PodTemplateSpec, secretStoreTestCase]{
+		{
+			Name: "envs-contain",
+			Fn: func(obj *corev1.PodTemplateSpec, testcase secretStoreTestCase) bool {
+				if len(testcase.envs) == 0 {
+					return true
+				}
+				if len(obj.Spec.Containers) == 0 {
+					return false
+				}
+				envs := obj.Spec.Containers[0].Env
+				// Contains all expected envs.
+				return listContainsByKey(envs, testcase.envs, func(t *corev1.EnvVar) string { return t.Name }, deepEqual[corev1.EnvVar])
+			},
+		},
+		{
+			Name: "envs-not-contain",
+			Fn: func(obj *corev1.PodTemplateSpec, testcase secretStoreTestCase) bool {
+				if len(testcase.unexpectedEnvs) == 0 {
+					return true
+				}
+				if len(obj.Spec.Containers) == 0 {
+					return false
+				}
+				envs := obj.Spec.Containers[0].Env
+				// Contains none of unexpected envs.
+				return !lo.ContainsBy(envs, func(item corev1.EnvVar) bool {
+					return lo.Contains(testcase.unexpectedEnvs, item.Name)
+				})
+			},
+		},
+	}
+}

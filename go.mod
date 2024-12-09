@@ -6,26 +6,26 @@ toolchain go1.23.1
 
 require (
 	github.com/distribution/reference v0.6.0
-	github.com/fatih/color v1.17.0
+	github.com/fatih/color v1.18.0
 	github.com/go-logr/logr v1.4.2
 	github.com/google/uuid v1.6.0
 	github.com/openkruise/kruise-api v1.7.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.77.1
-	github.com/prometheus/client_golang v1.20.4
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.78.2
+	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/client_model v0.6.1
 	github.com/risingwavelabs/ctrlkit v1.0.1
 	github.com/samber/lo v1.47.0
-	github.com/stretchr/testify v1.9.0
-	golang.org/x/mod v0.21.0
-	golang.org/x/time v0.7.0
-	google.golang.org/grpc v1.67.1
-	google.golang.org/protobuf v1.35.1
-	k8s.io/api v0.31.1
-	k8s.io/apiextensions-apiserver v0.31.1
-	k8s.io/apimachinery v0.31.1
-	k8s.io/client-go v0.31.1
+	github.com/stretchr/testify v1.10.0
+	golang.org/x/mod v0.22.0
+	golang.org/x/time v0.8.0
+	google.golang.org/grpc v1.68.0
+	google.golang.org/protobuf v1.35.2
+	k8s.io/api v0.31.3
+	k8s.io/apiextensions-apiserver v0.31.3
+	k8s.io/apimachinery v0.31.3
+	k8s.io/client-go v0.31.3
 	k8s.io/utils v0.0.0-20240902221715-702e33fdd3c3
-	sigs.k8s.io/controller-runtime v0.19.0
+	sigs.k8s.io/controller-runtime v0.19.2
 )
 
 require (
@@ -68,12 +68,12 @@ require (
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/exp v0.0.0-20231005195138-3e424a577f31 // indirect
 	golang.org/x/net v0.29.0 // indirect
-	golang.org/x/oauth2 v0.22.0 // indirect
+	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/term v0.24.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

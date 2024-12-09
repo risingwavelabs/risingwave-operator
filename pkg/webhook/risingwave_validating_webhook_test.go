@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	kruisepubs "github.com/openkruise/kruise-api/apps/pub"
+	"github.com/samber/lo"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -32,6 +33,7 @@ import (
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
 	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
+	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
 )
 
 func Test_RisingWaveValidatingWebhook_ValidateDelete(t *testing.T) {
@@ -787,6 +789,43 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: true,
 		},
+		"empty-secret-store-private-key": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey = risingwavev1alpha1.RisingWaveSecretStorePrivateKey{}
+			},
+			pass: true,
+		},
+		"secret-store-private-key-value-set": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey = risingwavev1alpha1.RisingWaveSecretStorePrivateKey{
+					Value: ptr.To("123"),
+				}
+			},
+			pass: true,
+		},
+		"secret-store-private-key-ref-set": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey = risingwavev1alpha1.RisingWaveSecretStorePrivateKey{
+					SecretRef: &risingwavev1alpha1.RisingWaveSecretStorePrivateKeySecretReference{
+						Name: "test",
+						Key:  "test",
+					},
+				}
+			},
+			pass: true,
+		},
+		"secret-store-private-key-both-set": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey = risingwavev1alpha1.RisingWaveSecretStorePrivateKey{
+					Value: ptr.To("123"),
+					SecretRef: &risingwavev1alpha1.RisingWaveSecretStorePrivateKeySecretReference{
+						Name: "test",
+						Key:  "test",
+					},
+				}
+			},
+			pass: false,
+		},
 	}
 
 	for name, tc := range testcases {
@@ -809,6 +848,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 
 func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 	testcases := map[string]struct {
+		init                func(r *risingwavev1alpha1.RisingWave)
 		patch               func(r *risingwavev1alpha1.RisingWave)
 		pass                bool
 		openKruiseAvailable bool
@@ -875,6 +915,103 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 			},
 			pass: false,
 		},
+		"secret-store-nil-unchanged-success": { // nil secret store
+			patch: func(r *risingwavev1alpha1.RisingWave) {},
+			pass:  true,
+		},
+		"secret-store-changed-from-nil-success-0": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.Value = ptr.To(lo.Must(utils.RandomHex(32)))
+			},
+			pass: true,
+		},
+		"secret-store-changed-from-nil-success-1": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.SecretRef = &risingwavev1alpha1.RisingWaveSecretStorePrivateKeySecretReference{
+					Name: "test",
+					Key:  "test",
+				}
+			},
+			pass: true,
+		},
+		"secret-store-changed-from-non-nil-to-nil-fail-0": {
+			init: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.Value = ptr.To(lo.Must(utils.RandomHex(32)))
+			},
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore = risingwavev1alpha1.RisingWaveSecretStore{}
+			},
+			pass: false,
+		},
+		"secret-store-changed-from-non-nil-to-nil-fail-1": {
+			init: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.SecretRef = &risingwavev1alpha1.RisingWaveSecretStorePrivateKeySecretReference{
+					Name: "test",
+					Key:  "test",
+				}
+			},
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore = risingwavev1alpha1.RisingWaveSecretStore{}
+			},
+			pass: false,
+		},
+		"secret-store-unchanged-from-value-to-value-success": {
+			init: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.Value = ptr.To("123")
+			},
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.Value = ptr.To("123")
+			},
+			pass: true,
+		},
+		"secret-store-unchanged-from-ref-to-ref-success": {
+			init: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.SecretRef = &risingwavev1alpha1.RisingWaveSecretStorePrivateKeySecretReference{
+					Name: "test",
+					Key:  "test",
+				}
+			},
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.SecretRef = &risingwavev1alpha1.RisingWaveSecretStorePrivateKeySecretReference{
+					Name: "test",
+					Key:  "test",
+				}
+			},
+			pass: true,
+		},
+		"secret-store-changed-from-value-to-value-fail": {
+			init: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.Value = ptr.To("123")
+			},
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.Value = ptr.To("456")
+			},
+			pass: false,
+		},
+		"secret-store-changed-from-value-to-secret-fail": {
+			init: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.Value = ptr.To("123")
+			},
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.SecretRef = &risingwavev1alpha1.RisingWaveSecretStorePrivateKeySecretReference{
+					Name: "test",
+					Key:  "test",
+				}
+			},
+			pass: false,
+		},
+		"secret-store-changed-from-secret-to-value-fail": {
+			init: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.SecretRef = &risingwavev1alpha1.RisingWaveSecretStorePrivateKeySecretReference{
+					Name: "test",
+					Key:  "test",
+				}
+			},
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.SecretStore.PrivateKey.Value = ptr.To("123")
+			},
+			pass: false,
+		},
 	}
 
 	for name, tc := range testcases {
@@ -883,6 +1020,10 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 			// We want to create two copies, so we can compare the old state and new state
 			// when transitioning from openkruise enabled to disabled with operator disabled.
 			risingwave := testutils.FakeRisingWave()
+			if tc.init != nil {
+				tc.init(risingwave)
+			}
+
 			oldObj := risingwave.DeepCopy()
 			if tc.oldObjMutation != nil {
 				tc.oldObjMutation(oldObj)

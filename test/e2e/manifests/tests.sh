@@ -20,9 +20,6 @@ MANIFEST_DIR="$(dirname "${BASH_SOURCE[0]}")/../../../docs/manifests/risingwave"
 
 test_file_list=(
 	"risingwave-customize-config"
-	"risingwave-etcd-auth"
-	"risingwave-etcd-local-disk"
-	"risingwave-etcd-minio"
 	"risingwave-in-memory"
 )
 

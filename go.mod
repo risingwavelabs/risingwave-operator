@@ -1,7 +1,8 @@
 module github.com/risingwavelabs/risingwave-operator
 
-go 1.23
-toolchain go1.23.1
+go 1.23.0
+
+toolchain go1.23.4
 
 require (
 	github.com/distribution/reference v0.6.0

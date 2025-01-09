@@ -21,7 +21,7 @@ spec:
       internalEndpoint: false
       credentials:
         secretName: risingwave-aliyun-oss-credentials
-  image: risingwavelabs/risingwave:v2.1.0
+  image: risingwavelabs/risingwave:v2.1.1
   components:
     meta:
       nodeGroups:

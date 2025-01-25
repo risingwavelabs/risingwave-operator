@@ -20,7 +20,7 @@ spec:
       container: your-azure-container-name
       root: risingwave
       endpoint: https://your-azure-account-name.blob.core.windows.net
-  image: risingwavelabs/risingwave:v2.1.2
+  image: risingwavelabs/risingwave:v2.2.0-rc.1
   components:
     meta:
       nodeGroups:

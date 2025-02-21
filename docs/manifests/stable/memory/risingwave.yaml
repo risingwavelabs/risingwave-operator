@@ -3,7 +3,7 @@ kind: RisingWave
 metadata:
   name: risingwave
 spec:
-  image: risingwavelabs/risingwave:v2.2.1
+  image: risingwavelabs/risingwave:v2.1.4
   metaStore:
     memory: true
   stateStore:

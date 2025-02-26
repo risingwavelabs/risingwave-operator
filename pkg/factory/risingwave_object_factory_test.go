@@ -17,6 +17,7 @@
 package factory
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/samber/lo"
@@ -401,6 +402,29 @@ func TestRisingWaveObjectFactory_ComputeArgs(t *testing.T) {
 				if !listContainsByKey(envs, []corev1.EnvVar{expectEnv}, func(t *corev1.EnvVar) string { return t.Name }, deepEqual[corev1.EnvVar]) {
 					t.Errorf("Env not found or value not expected, expects \"%s\"", testutils.JSONMustPrettyPrint(expectEnv))
 				}
+			}
+		})
+		t.Run(name, func(t *testing.T) {
+			factory := NewRisingWaveObjectFactory(&risingwavev1alpha1.RisingWave{
+				Spec: risingwavev1alpha1.RisingWaveSpec{
+					StateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+						Memory: ptr.To(true),
+					},
+				},
+			}, nil, "")
+			container := corev1.Container{}
+			rg := "resourceGroupName"
+			factory.setupComputeContainer(nil, &container, rg)
+			found := false
+			expected := fmt.Sprintf("--resource-group=%s", rg)
+			for _, arg := range container.Args {
+				if arg == expected {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("Expected \"%s\" in arguments, but go arguments %v", expected, container.Args)
 			}
 		})
 	}

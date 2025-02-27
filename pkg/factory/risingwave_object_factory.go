@@ -1665,6 +1665,12 @@ func (f *RisingWaveObjectFactory) buildPodTemplateFromNodeGroup(component string
 		})
 	}
 
+	// set resource group in compute component.
+	if component == consts.ComponentCompute {
+		container := &podTemplate.Spec.Containers[0]
+		container.Args = append(container.Args, fmt.Sprintf("--resource-group=%s", nodeGroup.Name))
+	}
+
 	// Inject RisingWave's config volume.
 	podTemplate.Spec.Volumes = mergeListWhenKeyEquals(podTemplate.Spec.Volumes, f.risingWaveConfigVolume(nodeGroup), func(a, b *corev1.Volume) bool {
 		return a.Name == b.Name
@@ -1807,12 +1813,8 @@ func (f *RisingWaveObjectFactory) newPodTemplateSpecFromNodeGroupByComponent(com
 		containerModifier = f.setupCompactorContainer
 		componentPtr = &f.risingwave.Spec.Components.Compactor
 	case consts.ComponentCompute:
+		containerModifier = f.setupComputeContainer
 		componentPtr = &f.risingwave.Spec.Components.Compute
-		return f.buildPodTemplateFromNodeGroup(component, nodeGroup, func(podSpec *corev1.PodSpec, container *corev1.Container) {
-			basicSetupRisingWaveContainer(container, componentPtr)
-			f.setupComputeContainer(podSpec, container, nodeGroup.Name)
-		})
-
 	case consts.ComponentStandalone:
 		containerModifier = f.setupStandaloneContainer
 		componentPtr = f.convertStandaloneSpecIntoComponent()
@@ -1924,15 +1926,13 @@ func (f *RisingWaveObjectFactory) portsForComputeContainer() []corev1.ContainerP
 	}
 }
 
-func (f *RisingWaveObjectFactory) setupComputeContainer(_ *corev1.PodSpec, container *corev1.Container, nodeGroupName string) {
+func (f *RisingWaveObjectFactory) setupComputeContainer(_ *corev1.PodSpec, container *corev1.Container) {
 	container.Name = "compute"
 	container.Args = []string{"compute-node"}
 
 	if f.isEmbeddedServingModeEnabled() {
 		container.Args = append(container.Args, "--role=streaming")
 	}
-
-	container.Args = append(container.Args, fmt.Sprintf("--resource-group=%s", nodeGroupName))
 
 	cpuLimit := int64(math.Ceil(container.Resources.Limits.Cpu().AsApproximateFloat64()))
 	memLimit, _ := container.Resources.Limits.Memory().AsInt64()

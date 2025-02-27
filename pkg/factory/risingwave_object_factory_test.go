@@ -17,7 +17,6 @@
 package factory
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/samber/lo"
@@ -28,6 +27,7 @@ import (
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
+	"github.com/risingwavelabs/risingwave-operator/pkg/factory/envs"
 	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
 
@@ -405,26 +405,45 @@ func TestRisingWaveObjectFactory_ComputeArgs(t *testing.T) {
 			}
 		})
 		t.Run(name, func(t *testing.T) {
+			ngName := "nodeGroupName"
 			factory := NewRisingWaveObjectFactory(&risingwavev1alpha1.RisingWave{
 				Spec: risingwavev1alpha1.RisingWaveSpec{
+					Components: risingwavev1alpha1.RisingWaveComponentsSpec{
+						Compute: risingwavev1alpha1.RisingWaveComponent{
+
+							NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
+								{
+									Name: ngName,
+									Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+										Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+											RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{},
+										},
+									},
+								},
+							},
+						},
+					},
 					StateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 						Memory: ptr.To(true),
 					},
 				},
 			}, nil, "")
-			container := corev1.Container{}
-			rg := "resourceGroupName"
-			factory.setupComputeContainer(nil, &container, rg)
+			setup := factory.setupComputeContainer
+			podTemplate := factory.buildPodTemplateFromNodeGroup(consts.ComponentCompute, &factory.risingwave.Spec.Components.Compute.NodeGroups[0], setup)
 			found := false
-			expected := fmt.Sprintf("--resource-group=%s", rg)
-			for _, arg := range container.Args {
-				if arg == expected {
+			expected := corev1.EnvVar{
+				Name:  envs.RWResourceGroup,
+				Value: ngName,
+			}
+			container := podTemplate.Spec.Containers[0]
+			for _, env := range container.Env {
+				if env.Name == expected.Name && env.Value == expected.Value {
 					found = true
 					break
 				}
 			}
 			if !found {
-				t.Errorf("Expected \"%s\" in arguments, but go arguments %v", expected, container.Args)
+				t.Errorf("Expected \"%#v\" in environment, but received environment %#v", expected, container.Env)
 			}
 		})
 	}

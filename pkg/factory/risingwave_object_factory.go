@@ -1668,7 +1668,10 @@ func (f *RisingWaveObjectFactory) buildPodTemplateFromNodeGroup(component string
 	// set resource group in compute component.
 	if component == consts.ComponentCompute {
 		container := &podTemplate.Spec.Containers[0]
-		container.Args = append(container.Args, fmt.Sprintf("--resource-group=%s", nodeGroup.Name))
+		container.Env = append(container.Env, corev1.EnvVar{
+			Name:  envs.RWResourceGroup,
+			Value: nodeGroup.Name,
+		})
 	}
 
 	// Inject RisingWave's config volume.
@@ -1926,7 +1929,7 @@ func (f *RisingWaveObjectFactory) portsForComputeContainer() []corev1.ContainerP
 	}
 }
 
-func (f *RisingWaveObjectFactory) setupComputeContainer(_ *corev1.PodSpec, container *corev1.Container) {
+func (f *RisingWaveObjectFactory) setupComputeContainer(podSpec *corev1.PodSpec, container *corev1.Container) {
 	container.Name = "compute"
 	container.Args = []string{"compute-node"}
 

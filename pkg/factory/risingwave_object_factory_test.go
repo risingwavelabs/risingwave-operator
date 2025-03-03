@@ -27,6 +27,7 @@ import (
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
+	"github.com/risingwavelabs/risingwave-operator/pkg/factory/envs"
 	"github.com/risingwavelabs/risingwave-operator/pkg/testutils"
 )
 
@@ -401,6 +402,48 @@ func TestRisingWaveObjectFactory_ComputeArgs(t *testing.T) {
 				if !listContainsByKey(envs, []corev1.EnvVar{expectEnv}, func(t *corev1.EnvVar) string { return t.Name }, deepEqual[corev1.EnvVar]) {
 					t.Errorf("Env not found or value not expected, expects \"%s\"", testutils.JSONMustPrettyPrint(expectEnv))
 				}
+			}
+		})
+		t.Run(name, func(t *testing.T) {
+			ngName := "nodeGroupName"
+			factory := NewRisingWaveObjectFactory(&risingwavev1alpha1.RisingWave{
+				Spec: risingwavev1alpha1.RisingWaveSpec{
+					Components: risingwavev1alpha1.RisingWaveComponentsSpec{
+						Compute: risingwavev1alpha1.RisingWaveComponent{
+
+							NodeGroups: []risingwavev1alpha1.RisingWaveNodeGroup{
+								{
+									Name: ngName,
+									Template: risingwavev1alpha1.RisingWaveNodePodTemplate{
+										Spec: risingwavev1alpha1.RisingWaveNodePodTemplateSpec{
+											RisingWaveNodeContainer: risingwavev1alpha1.RisingWaveNodeContainer{},
+										},
+									},
+								},
+							},
+						},
+					},
+					StateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+						Memory: ptr.To(true),
+					},
+				},
+			}, nil, "")
+			setup := factory.setupComputeContainer
+			podTemplate := factory.buildPodTemplateFromNodeGroup(consts.ComponentCompute, &factory.risingwave.Spec.Components.Compute.NodeGroups[0], setup)
+			found := false
+			expected := corev1.EnvVar{
+				Name:  envs.RWResourceGroup,
+				Value: ngName,
+			}
+			container := podTemplate.Spec.Containers[0]
+			for _, env := range container.Env {
+				if env.Name == expected.Name && env.Value == expected.Value {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("Expected \"%#v\" in environment, but received environment %#v", expected, container.Env)
 			}
 		})
 	}

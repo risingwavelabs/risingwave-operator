@@ -1665,6 +1665,15 @@ func (f *RisingWaveObjectFactory) buildPodTemplateFromNodeGroup(component string
 		})
 	}
 
+	// set RWC endpoint for frontend.
+	if component == consts.ComponentFrontend {
+		container := &podTemplate.Spec.Containers[0]
+		container.Env = append(container.Env, corev1.EnvVar{
+			Name:  envs.RWSbcAddr,
+			Value: "rpc://serverless-backfill-controller:1298",
+		})
+	}
+
 	// set resource group in compute component.
 	if component == consts.ComponentCompute && nodeGroup.Name != "" {
 		container := &podTemplate.Spec.Containers[0]

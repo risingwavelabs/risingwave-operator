@@ -55,6 +55,7 @@ const (
 	RWLicenseKeyPath           = "RW_LICENSE_KEY_PATH"
 	RWSecretStorePrivateKeyHex = "RW_SECRET_STORE_PRIVATE_KEY_HEX"
 	RWResourceGroup            = "RW_RESOURCE_GROUP"
+	RWSbcAddr                  = "RW_SBC_ADDR"
 )
 
 // MinIO.

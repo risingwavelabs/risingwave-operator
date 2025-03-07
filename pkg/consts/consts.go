@@ -130,3 +130,8 @@ const (
 	CompactorServicePort int32 = 6660
 	CompactorMetricsPort int32 = 1260
 )
+
+// Resource group values.
+const (
+	DefaultResourceGroupName string = "default"
+)

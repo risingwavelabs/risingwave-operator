@@ -1665,6 +1665,15 @@ func (f *RisingWaveObjectFactory) buildPodTemplateFromNodeGroup(component string
 		})
 	}
 
+	// set resource group in compute component.
+	if component == consts.ComponentCompute && nodeGroup.Name != "" {
+		container := &podTemplate.Spec.Containers[0]
+		container.Env = append(container.Env, corev1.EnvVar{
+			Name:  envs.RWResourceGroup,
+			Value: nodeGroup.Name,
+		})
+	}
+
 	// Inject RisingWave's config volume.
 	podTemplate.Spec.Volumes = mergeListWhenKeyEquals(podTemplate.Spec.Volumes, f.risingWaveConfigVolume(nodeGroup), func(a, b *corev1.Volume) bool {
 		return a.Name == b.Name

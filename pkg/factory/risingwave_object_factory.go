@@ -21,6 +21,7 @@ import (
 	"math"
 	"net/url"
 	"path"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -1665,13 +1666,17 @@ func (f *RisingWaveObjectFactory) buildPodTemplateFromNodeGroup(component string
 		})
 	}
 
-	// set resource group in compute component.
+	// Set resource group in compute component.
 	if component == consts.ComponentCompute && nodeGroup.Name != "" {
 		container := &podTemplate.Spec.Containers[0]
-		container.Env = append(container.Env, corev1.EnvVar{
-			Name:  envs.RWResourceGroup,
-			Value: nodeGroup.Name,
-		})
+		if !slices.ContainsFunc(container.Env, func(e corev1.EnvVar) bool {
+			return e.Name == envs.RWResourceGroup
+		}) {
+			container.Env = append(container.Env, corev1.EnvVar{
+				Name:  envs.RWResourceGroup,
+				Value: nodeGroup.Name,
+			})
+		}
 	}
 
 	// Inject RisingWave's config volume.

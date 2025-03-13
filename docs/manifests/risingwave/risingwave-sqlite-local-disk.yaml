@@ -16,7 +16,7 @@ kind: RisingWave
 metadata:
   name: risingwave
 spec:
-  image: risingwavelabs/risingwave:v2.2.2
+  image: risingwavelabs/risingwave:v2.2.3
   metaStore:
     sqlite:
       path: /risingwave/data/metastore/risingwave.db

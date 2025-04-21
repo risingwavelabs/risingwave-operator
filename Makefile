@@ -333,7 +333,7 @@ catalog-build: opm ## Build a catalog image.
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
 
-CI_RUNNER_IMAGE := public.ecr.aws/w6q9k3j5/rw-operator-ci-runner:$(shell date +'%Y%m%d')
+CI_RUNNER_IMAGE := public.ecr.aws/q7q2v8s0/ci/rw-operator-ci-runner:$(shell date +'%Y%m%d')
 
 build-ci-runner-image:
 	docker buildx build --platform linux/amd64,linux/arm64 -f ci/runner/Dockerfile -t $(CI_RUNNER_IMAGE) . --push

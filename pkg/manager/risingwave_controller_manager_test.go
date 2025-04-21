@@ -54,6 +54,7 @@ func newRisingWaveControllerManagerImplForTest(risingwave *risingwavev1alpha1.Ri
 		WithScheme(testutils.Scheme).
 		Build()
 	risingwaveManager := object.NewRisingWaveManager(fakeClient, risingwave.DeepCopy(), false)
+
 	return newRisingWaveControllerManagerImpl(fakeClient, risingwaveManager, event.NewMessageStore(), false, "")
 }
 
@@ -64,6 +65,7 @@ func newRisingWaveControllerManagerImplOpenKruiseAvailableForTest(risingwave *ri
 		WithScheme(testutils.Scheme).
 		Build()
 	risingwaveManager := object.NewRisingWaveManager(fakeClient, risingwave.DeepCopy(), true)
+
 	return newRisingWaveControllerManagerImpl(fakeClient, risingwaveManager, event.NewMessageStore(), false, "")
 }
 
@@ -157,6 +159,7 @@ func TestRisingWaveControllerManagerImpl_IsObjectSynced(t *testing.T) {
 	}
 
 	managerImpl := newRisingWaveControllerManagerImplForTest(testutils.FakeRisingWave())
+
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			if tc.expected != managerImpl.isObjectSynced(tc.obj) {
@@ -254,6 +257,7 @@ func testSyncObject[T any, TP ptrAsObject[T]](t *testing.T, testcases map[string
 			})
 			managerImpl := newRisingWaveControllerManagerImplForTest(testutils.FakeRisingWave(), initObjs...)
 			newObj := tc.factory()
+
 			if err := managerImpl.syncObject(context.Background(), tc.obj, func() (client.Object, error) {
 				return newObj, nil
 			}, logr.Discard()); err != nil {
@@ -280,9 +284,11 @@ func testSyncObject[T any, TP ptrAsObject[T]](t *testing.T, testcases map[string
 
 func newObjectFromKey[T any, TP ptrAsObject[T]](key types.NamespacedName, labels map[string]string) *T {
 	var t T
+
 	TP(&t).SetName(key.Name)
 	TP(&t).SetNamespace(key.Namespace)
 	TP(&t).SetLabels(labels)
+
 	return &t
 }
 
@@ -354,6 +360,7 @@ func testRisingWaveControllerManagerImplSyncSingleObject[T any, TP ptrAsObject[T
 				return !isObjectNil(obj)
 			})
 			managerImpl := newRisingWaveControllerManagerImplForTest(testutils.FakeRisingWave(), initObjs...)
+
 			r, err := sync(managerImpl, context.Background(), logr.Discard(), tc.origin)
 			if ctrlkit.NeedsRequeue(r, err) {
 				t.Fatal("sync failed", r, err)
@@ -458,9 +465,12 @@ func newGroupObjectFromGroup[T any, TP ptrAsObject[T]](namespace, base, group st
 	} else {
 		TP(&t).SetName(base + "-" + group)
 	}
+
 	TP(&t).SetNamespace(namespace)
+
 	labels[consts.LabelRisingWaveGroup] = group
 	TP(&t).SetLabels(labels)
+
 	return t
 }
 
@@ -495,12 +505,15 @@ func testRisingWaveControllerManagerImplSyncObjectGroups[T any, TL any, TP ptrAs
 					return !isObjectNil(obj)
 				},
 			)
+
 			var managerImpl *risingWaveControllerManagerImpl
+
 			if !openKruiseAvailable {
 				managerImpl = newRisingWaveControllerManagerImplForTest(risingwave, initObjs...)
 			} else {
 				managerImpl = newRisingWaveControllerManagerImplOpenKruiseAvailableForTest(risingwave, initObjs...)
 			}
+
 			r, err := syncGroups(managerImpl, context.Background(), logr.Discard(), tc.origin)
 			if ctrlkit.NeedsRequeue(r, err) {
 				t.Fatal("sync failed", r, err)
@@ -512,18 +525,22 @@ func testRisingWaveControllerManagerImplSyncObjectGroups[T any, TL any, TP ptrAs
 			}
 
 			currentGroups := make([]string, 0)
+
 			for _, obj := range getItems(&currentList) {
 				if !managerImpl.isObjectSynced(TP(&obj)) {
 					t.Fatal("object not synced after sync")
 				}
+
 				for _, hook := range hooks {
 					hook(t, &obj)
 				}
+
 				currentGroups = append(currentGroups, TP(&obj).GetLabels()[consts.LabelRisingWaveGroup])
 			}
 
 			sort.Strings(groups)
 			sort.Strings(currentGroups)
+
 			if !slices.Equal(groups, currentGroups) {
 				t.Fatal("groups not equal", groups, currentGroups)
 			}

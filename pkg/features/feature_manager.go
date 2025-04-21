@@ -105,23 +105,28 @@ func NewRisingWaveFeatureManager() *FeatureManager {
 // InitFeatureManagerWithSupportedFeatures initializes the FeatureManager with the current supported Features.
 func InitFeatureManagerWithSupportedFeatures(supportedFeatureList []Feature) *FeatureManager {
 	risingWaveFeatureManager = NewRisingWaveFeatureManager()
+
 	for _, supportedFeature := range supportedFeatureList {
 		supportedFeature.Enabled = supportedFeature.DefaultEnable
 		risingWaveFeatureManager.addFeature(&supportedFeature)
 	}
+
 	return risingWaveFeatureManager
 }
 
 // InitFeatureManager initializes the FeatureManager with the current supported Features and also parses the feature gate string.
 func InitFeatureManager(supportedFeatureList []Feature, featureGateString string) *FeatureManager {
 	risingWaveFeatureManager = NewRisingWaveFeatureManager()
+
 	for _, supportedFeature := range supportedFeatureList {
 		supportedFeature.Enabled = supportedFeature.DefaultEnable
 		risingWaveFeatureManager.addFeature(&supportedFeature)
 	}
+
 	if risingWaveFeatureManager.ParseFromFeatureGateString(featureGateString) != nil {
 		panic("Invalid value given to feature-gates argument")
 	}
+
 	return risingWaveFeatureManager
 }
 
@@ -139,6 +144,7 @@ func (m *FeatureManager) addFeature(feature *Feature) {
 // IsFeatureExist returns true if the feature exists in the featureManager, else returns false.
 func (m *FeatureManager) IsFeatureExist(featureName FeatureName) bool {
 	_, exist := m.featureMap[featureName]
+
 	return exist
 }
 
@@ -149,8 +155,10 @@ func (m *FeatureManager) setFeatureEnable(name FeatureName, enable bool) error {
 	_, featureExists := m.featureMap[name]
 	if featureExists {
 		m.featureMap[name].Enabled = enable
+
 		return nil
 	}
+
 	return fmt.Errorf("the following feature does not exist: %s", name)
 }
 
@@ -159,6 +167,7 @@ func (m *FeatureManager) setFeatureEnable(name FeatureName, enable bool) error {
 func (m *FeatureManager) IsFeatureEnabled(name FeatureName) bool {
 	// check for existence of feature in map
 	feature, featureExists := m.featureMap[name]
+
 	return featureExists && feature.Enabled
 }
 
@@ -183,35 +192,40 @@ func (m *FeatureManager) GetNumOfFeatures() int {
 
 // ListFeatures lists all features, returns a copy of the list of feature structs.
 func (m *FeatureManager) ListFeatures() []Feature {
-	var featureList []Feature
+	featureList := make([]Feature, 0, len(m.featureMap))
 	for _, feature := range m.featureMap {
 		// make a deep copy of the feature
 		featureList = append(featureList, *feature.DeepCopy())
 	}
+
 	return featureList
 }
 
 // ListEnabledFeatures lists all enabled features, returns a copy of the list of feature structs.
 func (m *FeatureManager) ListEnabledFeatures() []Feature {
 	var featureList []Feature
+
 	for _, feature := range m.featureMap {
 		if feature.Enabled {
 			// make a copy of the feature
 			featureList = append(featureList, *feature.DeepCopy())
 		}
 	}
+
 	return featureList
 }
 
 // ListDisabledFeatures lists all disabled features, returns a copy of list of feature structs.
 func (m *FeatureManager) ListDisabledFeatures() []Feature {
 	var featureList []Feature
+
 	for _, feature := range m.featureMap {
 		if !feature.Enabled {
 			// make a deep copy of the feature
 			featureList = append(featureList, *feature.DeepCopy())
 		}
 	}
+
 	return featureList
 }
 
@@ -233,22 +247,27 @@ func (m *FeatureManager) ParseFromFeatureGateString(featureGateString string) er
 	if len(featureGateString) == 0 {
 		return nil
 	}
+
 	featureGateString = strings.TrimSpace(featureGateString)
 	if !unicode.IsLetter([]rune(featureGateString[0:1])[0]) {
 		return fmt.Errorf("parsing error of feature gate string: %s", featureGateString)
 	}
+
 	featureGatesArgs := strings.Split(featureGateString, ",")
 	for _, featureString := range featureGatesArgs {
 		featureName, enabled, err := parseFeatureString(featureString)
 		if err != nil {
 			return err
 		}
+
 		_, featureExists := m.featureMap[featureName]
 		if !featureExists {
 			continue
 		}
+
 		m.featureMap[featureName].Enabled = enabled
 	}
+
 	return nil
 }
 
@@ -260,13 +279,16 @@ func parseFeatureString(featureString string) (FeatureName, bool, error) {
 	if len(featureStringSplit) != 2 {
 		return "", false, fmt.Errorf("invalid feature syntax given: %s", featureString)
 	}
+
 	featureName := strings.TrimSpace(featureStringSplit[0])
 	if len(featureName) == 0 {
 		return "", false, fmt.Errorf("invalid feature name given: %s", featureName)
 	}
+
 	enabled, err := strconv.ParseBool(strings.TrimSpace(featureStringSplit[1]))
 	if err != nil {
 		return "", false, fmt.Errorf("invalid feature status: %s, parse failed: %w", featureString, err)
 	}
+
 	return FeatureName(featureName), enabled, nil
 }

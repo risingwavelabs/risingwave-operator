@@ -2788,7 +2788,6 @@ func servicesTestCases() map[string]servicesTestCase {
 			},
 		},
 	}
-
 }
 
 type serviceMetadataTestCase struct {

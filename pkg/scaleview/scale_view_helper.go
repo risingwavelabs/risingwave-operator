@@ -37,6 +37,7 @@ func findNodeGroup[T any](groups []T, target string, name func(*T) string) (*T, 
 			return &groups[i], i
 		}
 	}
+
 	return nil, 0
 }
 
@@ -45,6 +46,7 @@ func (r *RisingWaveScaleViewHelper) findReplicaPtrFromNodeGroups(nodeGroups []ri
 	if ptr == nil {
 		return nil, 0
 	}
+
 	return &ptr.Replicas, i
 }
 
@@ -74,6 +76,7 @@ func (r *RisingWaveScaleViewHelper) getReplicasPtr(group string) (*int32, int) {
 // ListComponentGroups lists the groups under `.spec.components`.
 func (r *RisingWaveScaleViewHelper) ListComponentGroups() []string {
 	var nodeGroups []risingwavev1alpha1.RisingWaveNodeGroup
+
 	switch r.component {
 	case consts.ComponentMeta:
 		nodeGroups = r.risingwave.Spec.Components.Meta.NodeGroups
@@ -101,6 +104,7 @@ func (r *RisingWaveScaleViewHelper) GetGroupIndex(group string) (int, bool) {
 	if replicasPtr == nil {
 		return 0, false
 	}
+
 	return i, true
 }
 
@@ -110,6 +114,7 @@ func (r *RisingWaveScaleViewHelper) ReadReplicas(group string) (int32, bool) {
 	if replicasPtr == nil {
 		return 0, false
 	}
+
 	return *replicasPtr, true
 }
 
@@ -119,7 +124,9 @@ func (r *RisingWaveScaleViewHelper) WriteReplicas(group string, replicas int32) 
 	if replicasPtr == nil || *replicasPtr == replicas {
 		return false
 	}
+
 	*replicasPtr = replicas
+
 	return true
 }
 

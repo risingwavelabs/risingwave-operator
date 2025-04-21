@@ -24,5 +24,6 @@ func JSONMustPrettyPrint(x any) string {
 	if err != nil {
 		panic(err)
 	}
+
 	return string(r)
 }

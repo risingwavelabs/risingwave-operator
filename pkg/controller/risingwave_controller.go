@@ -133,25 +133,32 @@ func (c *RisingWaveController) runWorkflow(ctx context.Context, workflow ctrlkit
 
 func (c *RisingWaveController) managerOpts(risingwaveMgr *object.RisingWaveManager, messageStore *event.MessageStore) []manager.RisingWaveControllerManagerOption {
 	opts := make([]manager.RisingWaveControllerManagerOption, 0)
+
 	chainedHooks := ctrlkit.ChainActionHooks(NewEventHook(c.Recorder, risingwaveMgr, messageStore))
 	if c.ActionHookFactory != nil {
 		chainedHooks.Add(c.ActionHookFactory())
 	}
+
 	opts = append(opts, manager.RisingWaveControllerManager_WithActionHook(chainedHooks))
+
 	return opts
 }
 
 // Reconcile reconciles a request and also adds metrics information to prometheus.
 func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.Request) (res reconcile.Result, err error) {
 	logger := log.FromContext(ctx)
+
 	var risingwave risingwavev1alpha1.RisingWave
 
 	if err := c.Client.Get(ctx, request.NamespacedName, &risingwave); err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.V(1).Info("Not found, abort")
+
 			return ctrlkit.NoRequeue()
 		}
+
 		logger.Error(err, "Failed to get risingwave")
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to get risingwave", err)
 	}
 
@@ -160,12 +167,14 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 	// Pause and skip the reconciliation if the annotation is found.
 	if _, ok := risingwave.Annotations[consts.AnnotationPauseReconcile]; ok {
 		logger.Info("Found annotation " + consts.AnnotationPauseReconcile + ", pause reconciliation...")
+
 		return ctrlkit.NoRequeue()
 	}
 
 	// Abort if deleted.
 	if utils.IsDeleted(&risingwave) {
 		logger.Info("Deleted, abort")
+
 		return ctrlkit.NoRequeue()
 	}
 
@@ -184,9 +193,11 @@ func (c *RisingWaveController) Reconcile(ctx context.Context, request reconcile.
 
 	updateRisingWaveStatus := mgr.NewAction(RisingWaveAction_UpdateRisingWaveStatusViaClient, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
 		err := risingwaveManager.UpdateRemoteRisingWaveStatus(ctx)
+
 		switch {
 		case apierrors.IsNotFound(err):
 			logger.Info("Object not found, skip")
+
 			return ctrlkit.NoRequeue()
 		case apierrors.IsConflict(err):
 			logger.Info("Conflict detected while updating status, retry...")
@@ -212,6 +223,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			Type:   risingwavev1alpha1.RisingWaveConditionInitializing,
 			Status: metav1.ConditionTrue,
 		})
+
 		return ctrlkit.Continue()
 	})
 	markConditionRunningAsFalse := mgr.NewAction(RisingWaveAction_MarkConditionRunningAsFalse, func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
@@ -219,10 +231,12 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			Type:   risingwavev1alpha1.RisingWaveConditionRunning,
 			Status: metav1.ConditionFalse,
 		})
+
 		return ctrlkit.Continue()
 	})
 	conditionInitializingIsTrueBarrier := mgr.NewAction(RisingWaveAction_BarrierConditionInitializingIsTrue, func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
 		condition := risingwaveManger.GetCondition(risingwavev1alpha1.RisingWaveConditionInitializing)
+
 		return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
 	})
 	markConditionRunningAsTrue := mgr.NewAction(RisingWaveAction_MarkConditionRunningAsTrue, func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
@@ -230,19 +244,23 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			Type:   risingwavev1alpha1.RisingWaveConditionRunning,
 			Status: metav1.ConditionTrue,
 		})
+
 		return ctrlkit.Continue()
 	})
 	removeConditionInitializing := mgr.NewAction(RisingWaveAction_RemoveConditionInitializing, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
 		risingwaveManger.RemoveCondition(risingwavev1alpha1.RisingWaveConditionInitializing)
+
 		return ctrlkit.Continue()
 	})
 
 	conditionRunningIsTrueBarrier := mgr.NewAction(RisingWaveAction_BarrierConditionRunningIsTrue, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
 		condition := risingwaveManger.GetCondition(risingwavev1alpha1.RisingWaveConditionRunning)
+
 		return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
 	})
 	conditionRunningIsFalseBarrier := mgr.NewAction(RisingWaveAction_BarrierConditionRunningIsFalse, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
 		condition := risingwaveManger.GetCondition(risingwavev1alpha1.RisingWaveConditionRunning)
+
 		return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionFalse)
 	})
 	markConditionUpgradingAsTrue := mgr.NewAction(RisingWaveAction_MarkConditionUpgradingAsTrue, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
@@ -250,10 +268,12 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			Type:   risingwavev1alpha1.RisingWaveConditionUpgrading,
 			Status: metav1.ConditionTrue,
 		})
+
 		return ctrlkit.Continue()
 	})
 	conditionUpgradingIsTrueBarrier := mgr.NewAction(RisingWaveAction_BarrierConditionUpgradingIsTrue, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
 		condition := risingwaveManger.GetCondition(risingwavev1alpha1.RisingWaveConditionUpgrading)
+
 		return ctrlkit.ExitIf(condition == nil || condition.Status != metav1.ConditionTrue)
 	})
 	markConditionUpgradingAsFalse := mgr.NewAction(RisingWaveAction_MarkConditionUpgradingAsFalse, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
@@ -261,6 +281,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			Type:   risingwavev1alpha1.RisingWaveConditionUpgrading,
 			Status: metav1.ConditionFalse,
 		})
+
 		return ctrlkit.Continue()
 	})
 	syncConfigs := mgr.SyncConfigConfigMap()
@@ -284,8 +305,10 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			if apierrors.IsNotFound(err) {
 				return ctrlkit.Exit()
 			}
+
 			return ctrlkit.RequeueIfErrorAndWrap("unable to find CRD for ServiceMonitor", err)
 		}
+
 		return ctrlkit.ExitIf(!utils.IsVersionServingInCustomResourceDefinition(crd, "v1"))
 	})
 
@@ -340,6 +363,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	})
 	syncObservedGeneration := mgr.NewAction(RisingWaveAction_SyncObservedGeneration, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
 		risingwaveManger.SyncObservedGeneration()
+
 		return ctrlkit.Continue()
 	})
 	syncRunningStatus := ctrlkit.IfElse(risingwaveManger.IsStandaloneModeEnabled(),
@@ -365,7 +389,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 	sharedSyncAllAndWait := ctrlkit.Shared(syncAllAndWait)
 
 	releaseScaleViewLock := mgr.NewAction(RisingWaveAction_ReleaseScaleViewLock, func(ctx context.Context, l logr.Logger) (ctrl.Result, error) {
-		risingWave := risingwaveManger.RisingWaveReader.RisingWave()
+		risingWave := risingwaveManger.RisingWave()
 		scaleViews := risingWave.Status.ScaleViews
 		aliveScaleView := make([]risingwavev1alpha1.RisingWaveScaleViewLock, 0)
 
@@ -379,30 +403,36 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			if err != nil {
 				if apierrors.IsNotFound(err) {
 					l.Info("Not found, unlock", "scaleview", s.Name)
+
 					continue
 				} else {
 					l.Error(err, "Failed to get RisingWaveScaleView", "scaleview", s.Name)
+
 					return ctrlkit.RequeueIfErrorAndWrap("unable to get risingwavescaleview", err)
 				}
 			} else if s.Name == scaleView.Name && s.UID != scaleView.UID {
 				l.Info("Lock is outdated, unlock", "scaleview", s.Name)
+
 				continue
 			}
+
 			aliveScaleView = append(aliveScaleView, *s.DeepCopy())
 		}
 
 		risingwaveManger.KeepLock(aliveScaleView)
+
 		return ctrlkit.Continue()
 	})
 
 	syncInternalStatus := mgr.NewAction(RisingWaveAction_SyncInternalStatus, func(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
-		path := risingwaveManger.RisingWaveReader.StateStoreRootPath()
+		path := risingwaveManger.StateStoreRootPath()
 		risingwaveManger.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
 			// Set once and never update.
 			if status.Internal.StateStoreRootPath != "" {
 				status.Internal.StateStoreRootPath = path
 			}
 		})
+
 		return ctrlkit.Continue()
 	})
 
@@ -493,6 +523,7 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 			&risingwavev1alpha1.RisingWaveScaleView{},
 			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, object client.Object) []reconcile.Request {
 				obj := object.(*risingwavev1alpha1.RisingWaveScaleView)
+
 				return []reconcile.Request{
 					{
 						NamespacedName: types.NamespacedName{

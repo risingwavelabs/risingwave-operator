@@ -43,6 +43,7 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 
 		var svc *corev1.Service
+
 		switch tc.component {
 		case consts.ComponentMeta:
 			svc = factory.NewMetaService()
@@ -75,6 +76,7 @@ func Test_RisingWaveObjectFactory_ServicesMeta(t *testing.T) {
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 
 		var svc *corev1.Service
+
 		switch tc.component {
 		case consts.ComponentMeta:
 			svc = factory.NewMetaService()
@@ -436,12 +438,15 @@ func TestRisingWaveObjectFactory_ComputeArgs(t *testing.T) {
 				Value: ngName,
 			}
 			container := podTemplate.Spec.Containers[0]
+
 			for _, env := range container.Env {
 				if env.Name == expected.Name && env.Value == expected.Value {
 					found = true
+
 					break
 				}
 			}
+
 			if !found {
 				t.Errorf("Expected \"%#v\" in environment, but received environment %#v", expected, container.Env)
 			}

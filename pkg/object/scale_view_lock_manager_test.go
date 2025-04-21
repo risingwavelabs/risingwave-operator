@@ -117,6 +117,7 @@ func TestScaleViewLockManager_GrabOrUpdateScaleViewLockFor(t *testing.T) {
 			ok, err := lockMgr.GrabOrUpdateScaleViewLockFor(scaleView)
 			assert.Equal(t, ok, tc.grabbedOrUpdated, "grab or update status not match")
 			assert.Equal(t, tc.returnErr, err != nil, "error status not match: "+fmt.Sprintf("%v", err))
+
 			if ok {
 				assert.True(t, lockMgr.IsScaleViewLocked(scaleView), "must be locked")
 			}
@@ -306,6 +307,7 @@ func TestScaleViewLockManager_GrabScaleViewLockFor(t *testing.T) {
 			lockMgr := NewScaleViewLockManager(tc.risingwave)
 			err := lockMgr.GrabScaleViewLockFor(scaleView)
 			assert.Equal(t, tc.returnErr, err != nil, "error status not match: "+fmt.Sprintf("%v", err))
+
 			if err == nil {
 				assert.True(t, lockMgr.IsScaleViewLocked(scaleView), "must be locked")
 			}

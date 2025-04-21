@@ -44,7 +44,7 @@ type RisingWaveNodeContainer struct {
 	// +optional
 	// +patchMergeKey=name
 	// +patchStrategy=merge
-	Env []corev1.EnvVar `json:"env,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,7,rep,name=env"`
+	Env []corev1.EnvVar `json:"env,omitempty" patchMergeKey:"name" patchStrategy:"merge" protobuf:"bytes,7,rep,name=env"`
 
 	// Compute Resources required by this container.
 	// Cannot be updated.
@@ -57,13 +57,13 @@ type RisingWaveNodeContainer struct {
 	// +optional
 	// +patchMergeKey=mountPath
 	// +patchStrategy=merge
-	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty" patchStrategy:"merge" patchMergeKey:"mountPath" protobuf:"bytes,9,rep,name=volumeMounts"`
+	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty" patchMergeKey:"mountPath" patchStrategy:"merge" protobuf:"bytes,9,rep,name=volumeMounts"`
 
 	// volumeDevices is the list of block devices to be used by the container.
 	// +patchMergeKey=devicePath
 	// +patchStrategy=merge
 	// +optional
-	VolumeDevices []corev1.VolumeDevice `json:"volumeDevices,omitempty" patchStrategy:"merge" patchMergeKey:"devicePath" protobuf:"bytes,21,rep,name=volumeDevices"`
+	VolumeDevices []corev1.VolumeDevice `json:"volumeDevices,omitempty" patchMergeKey:"devicePath" patchStrategy:"merge" protobuf:"bytes,21,rep,name=volumeDevices"`
 
 	// Image pull policy.
 	// One of Always, Never, IfNotPresent.
@@ -89,7 +89,7 @@ type RisingWaveNodePodTemplateSpec struct {
 	// +optional
 	// +patchMergeKey=name
 	// +patchStrategy=merge,retainKeys
-	Volumes []corev1.Volume `json:"volumes,omitempty" patchStrategy:"merge,retainKeys" patchMergeKey:"name" protobuf:"bytes,1,rep,name=volumes"`
+	Volumes []corev1.Volume `json:"volumes,omitempty" patchMergeKey:"name" patchStrategy:"merge,retainKeys" protobuf:"bytes,1,rep,name=volumes"`
 
 	// Optional duration in seconds the pod may be active on the node relative to
 	// StartTime before the system will actively try to mark it failed and kill associated containers.
@@ -165,7 +165,7 @@ type RisingWaveNodePodTemplateSpec struct {
 	// +optional
 	// +patchMergeKey=name
 	// +patchStrategy=merge
-	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,15,rep,name=imagePullSecrets"`
+	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty" patchMergeKey:"name" patchStrategy:"merge" protobuf:"bytes,15,rep,name=imagePullSecrets"`
 
 	// If specified, the pod's scheduling constraints
 	// +optional
@@ -185,7 +185,7 @@ type RisingWaveNodePodTemplateSpec struct {
 	// +optional
 	// +patchMergeKey=ip
 	// +patchStrategy=merge
-	HostAliases []corev1.HostAlias `json:"hostAliases,omitempty" patchStrategy:"merge" patchMergeKey:"ip" protobuf:"bytes,23,rep,name=hostAliases"`
+	HostAliases []corev1.HostAlias `json:"hostAliases,omitempty" patchMergeKey:"ip" patchStrategy:"merge" protobuf:"bytes,23,rep,name=hostAliases"`
 
 	// If specified, indicates the pod's priority. "system-node-critical" and
 	// "system-cluster-critical" are two special keywords which indicate the
@@ -233,7 +233,7 @@ type RisingWaveNodePodTemplateSpec struct {
 	// +listType=map
 	// +listMapKey=topologyKey
 	// +listMapKey=whenUnsatisfiable
-	TopologySpreadConstraints []corev1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty" patchStrategy:"merge" patchMergeKey:"topologyKey" protobuf:"bytes,33,opt,name=topologySpreadConstraints"`
+	TopologySpreadConstraints []corev1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty" patchMergeKey:"topologyKey" patchStrategy:"merge" protobuf:"bytes,33,opt,name=topologySpreadConstraints"`
 
 	// If true the pod's hostname will be configured as the pod's FQDN, rather than the leaf name (the default).
 	// In Linux containers, this means setting the FQDN in the hostname field of the kernel (the nodename field of struct utsname).

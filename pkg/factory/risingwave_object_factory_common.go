@@ -40,7 +40,6 @@ func keepPodSpecConsistent(podSpec *corev1.PodSpec) {
 	//     - Env (sorted by name)
 	//     - VolumeMounts (sorted by name)
 	//     - VolumeDevices (sorted by name)
-
 	sort.Sort(utils.VolumeSlice(podSpec.Volumes))
 
 	for _, container := range podSpec.InitContainers {
@@ -61,6 +60,7 @@ func mergeMap[K comparable, V any](a, b map[K]V) map[K]V {
 	for k, v := range a {
 		r[k] = v
 	}
+
 	for k, v := range b {
 		r[k] = v
 	}
@@ -72,9 +72,11 @@ func mergeListWhenKeyEquals[T any](list []T, val T, equals func(a, b *T) bool) [
 	for i, v := range list {
 		if equals(&val, &v) {
 			list[i] = val
+
 			return list
 		}
 	}
+
 	return append(list, val)
 }
 
@@ -82,9 +84,11 @@ func mergeListByKey[T any](list []T, val T, keyPred func(*T) bool) []T {
 	for i, v := range list {
 		if keyPred(&v) {
 			list[i] = val
+
 			return list
 		}
 	}
+
 	return append(list, val)
 }
 
@@ -93,5 +97,6 @@ func mustSetControllerReference[T client.Object](owner client.Object, controlled
 	if err != nil {
 		panic(err)
 	}
+
 	return controlled
 }

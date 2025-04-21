@@ -88,13 +88,14 @@ func Test_RisingWaveManager_openKruiseAvailable(t *testing.T) {
 	risingwave := testutils.FakeRisingWave()
 	mgrWithOpenKruiseUnavailable := NewRisingWaveManager(nil, risingwave, false)
 	mgrWithOpenKruiseAvailable := NewRisingWaveManager(nil, risingwave, true)
+
 	if mgrWithOpenKruiseUnavailable.IsOpenKruiseAvailable() {
 		t.Fail()
 	}
+
 	if !mgrWithOpenKruiseAvailable.IsOpenKruiseAvailable() {
 		t.Fail()
 	}
-
 }
 
 func Test_RisingWaveManager_OpenKruiseEnabled(t *testing.T) {
@@ -136,6 +137,7 @@ func Test_RisingWaveManager_UpdateMemoryAndGet(t *testing.T) {
 
 	// SyncObservedGeneration
 	mgr.SyncObservedGeneration()
+
 	if mgr.mutableRisingWave.Status.ObservedGeneration != risingwave.Generation {
 		t.Fail()
 	}
@@ -145,18 +147,22 @@ func Test_RisingWaveManager_UpdateMemoryAndGet(t *testing.T) {
 		Type:   risingwavev1alpha1.RisingWaveConditionRunning,
 		Status: metav1.ConditionFalse,
 	})
+
 	if mgr.GetCondition(risingwavev1alpha1.RisingWaveConditionRunning).Status != metav1.ConditionTrue {
 		t.Fail()
 	}
+
 	if mgr.GetCondition(risingwavev1alpha1.RisingWaveConditionFailed) != nil {
 		t.Fail()
 	}
 
 	// RemoveCondition exists
 	mgr.RemoveCondition(risingwavev1alpha1.RisingWaveConditionRunning)
+
 	if mgr.GetCondition(risingwavev1alpha1.RisingWaveConditionRunning) == nil {
 		t.Fail()
 	}
+
 	if len(mgr.mutableRisingWave.Status.Conditions) != 0 {
 		t.Fail()
 	}
@@ -166,9 +172,11 @@ func Test_RisingWaveManager_UpdateMemoryAndGet(t *testing.T) {
 		Type:   risingwavev1alpha1.RisingWaveConditionFailed,
 		Status: metav1.ConditionTrue,
 	})
+
 	if len(mgr.mutableRisingWave.Status.Conditions) == 0 {
 		t.Fail()
 	}
+
 	if mgr.mutableRisingWave.Status.Conditions[0].Type != risingwavev1alpha1.RisingWaveConditionFailed ||
 		mgr.mutableRisingWave.Status.Conditions[0].Status != metav1.ConditionTrue ||
 		mgr.mutableRisingWave.Status.Conditions[0].LastTransitionTime.IsZero() {
@@ -179,6 +187,7 @@ func Test_RisingWaveManager_UpdateMemoryAndGet(t *testing.T) {
 	mgr.UpdateStatus(func(rws *risingwavev1alpha1.RisingWaveStatus) {
 		rws.ComponentReplicas.Meta.Running = 0
 	})
+
 	if mgr.mutableRisingWave.Status.ComponentReplicas.Meta.Running != 0 {
 		t.Fail()
 	}

@@ -54,14 +54,17 @@ type MetaPodRoleLabeler struct {
 // to identify the meta node. If the node isn't found in the response, an unknown will be returned.
 func (mpl *MetaPodRoleLabeler) getMetaRole(ctx context.Context, host string, port uint, endpoint string) (string, error) {
 	addr := fmt.Sprintf("%s:%v", host, port)
+
 	conn, err := grpc.NewClient(addr, grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
 		var d net.Dialer
+
 		return d.DialContext(ctx, "tcp", s)
 	}), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return "", fmt.Errorf("unable to connect: %w", err)
 	}
-	defer conn.Close()
+
+	defer conn.Close() //nolint:errcheck
 
 	metaClient := pb.NewMetaMemberServiceClient(conn)
 
@@ -70,14 +73,14 @@ func (mpl *MetaPodRoleLabeler) getMetaRole(ctx context.Context, host string, por
 		return "", fmt.Errorf("request failed: %w", err)
 	}
 
-	for _, member := range resp.Members {
-		if member.Address.Host == endpoint && member.Address.Port == int32(port) {
-			return lo.If(member.IsLeader, consts.MetaRoleLeader).Else(consts.MetaRoleFollower), nil
+	for _, member := range resp.GetMembers() {
+		if member.GetAddress().GetHost() == endpoint && member.GetAddress().GetPort() == int32(port) {
+			return lo.If(member.GetIsLeader(), consts.MetaRoleLeader).Else(consts.MetaRoleFollower), nil
 		}
 	}
 
 	logger := log.FromContext(ctx)
-	logger.Info("No role recognized from the current member list!", "members", resp.Members, "address", fmt.Sprintf("%s:%d", host, port), "endpoint", endpoint)
+	logger.Info("No role recognized from the current member list!", "members", resp.GetMembers(), "address", fmt.Sprintf("%s:%d", host, port), "endpoint", endpoint)
 
 	return consts.MetaRoleUnknown, nil
 }
@@ -92,6 +95,7 @@ func (mpl *MetaPodRoleLabeler) getEndpointFromArgs(pod *corev1.Pod, args []strin
 		}
 
 		arg := args[i]
+
 		switch {
 		case arg == "--host":
 			endpoint = args[i+1]
@@ -126,6 +130,7 @@ func (mpl *MetaPodRoleLabeler) getEndpointFromEnvVars(pod *corev1.Pod, envVars [
 	for _, envVar := range envVars {
 		if envVar.Name == envs.RWAdvertiseAddr {
 			endpoint = strings.Split(envVar.Value, ":")[0]
+
 			break
 		}
 	}
@@ -146,17 +151,21 @@ func (mpl *MetaPodRoleLabeler) syncRoleLabelForSinglePod(ctx context.Context, po
 	if !mpl.isRisingWaveMetaPod(pod) {
 		return "", errors.New("not a meta pod")
 	}
+
 	if pod.Status.PodIP == "" {
 		return "", errors.New("not running")
 	}
+
 	metaContainer := utils.GetContainerFromPod(pod, "meta")
 	if metaContainer == nil {
 		return "", errors.New("meta container not found")
 	}
+
 	svcPort, ok := utils.GetPortFromContainer(metaContainer, consts.PortService)
 	if !ok {
 		return "", errors.New("service port not found")
 	}
+
 	endpoint := mpl.getEndpointFromArgs(pod, metaContainer.Args)
 	if len(endpoint) == 0 {
 		if endpoint = mpl.getEndpointFromEnvVars(pod, metaContainer.Env); len(endpoint) == 0 {
@@ -170,6 +179,7 @@ func (mpl *MetaPodRoleLabeler) syncRoleLabelForSinglePod(ctx context.Context, po
 	role, err := func() (string, error) {
 		ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 		defer cancel()
+
 		return mpl.getMetaRole(ctx, pod.Status.PodIP, uint(svcPort), endpoint)
 	}()
 	if err != nil {
@@ -184,6 +194,7 @@ func (mpl *MetaPodRoleLabeler) syncRoleLabelForSinglePod(ctx context.Context, po
 		originalPod := pod.DeepCopy()
 		pod.Labels[consts.LabelRisingWaveMetaRole] = role
 		err := mpl.Patch(ctx, pod, client.StrategicMergeFrom(originalPod))
+
 		return role, err
 	}
 
@@ -194,9 +205,11 @@ func (mpl *MetaPodRoleLabeler) syncRoleLabels(ctx context.Context, pod *corev1.P
 	logger := log.FromContext(ctx)
 
 	beforeRole := pod.Labels[consts.LabelRisingWaveMetaRole]
+
 	role, err := mpl.syncRoleLabelForSinglePod(ctx, pod)
 	if err != nil {
 		logger.Info("Failed to sync the meta role label.", "pod", pod.Name, "error", err)
+
 		return
 	}
 
@@ -205,6 +218,7 @@ func (mpl *MetaPodRoleLabeler) syncRoleLabels(ctx context.Context, pod *corev1.P
 		currentPod := pod.Name
 
 		var leaderPodList corev1.PodList
+
 		err := mpl.List(ctx, &leaderPodList, client.InNamespace(pod.Namespace), client.MatchingLabels{
 			consts.LabelRisingWaveName:      risingwaveName,
 			consts.LabelRisingWaveComponent: consts.ComponentMeta,
@@ -235,6 +249,7 @@ func (mpl *MetaPodRoleLabeler) isRisingWaveMetaPod(pod *corev1.Pod) bool {
 	if _, ok := pod.Labels[consts.LabelRisingWaveName]; !ok {
 		return false
 	}
+
 	if pod.Labels[consts.LabelRisingWaveComponent] != consts.ComponentMeta {
 		return false
 	}
@@ -272,8 +287,10 @@ func (mpl *MetaPodRoleLabeler) SetupWithManager(mgr ctrl.Manager) error {
 		if pod.Status.PodIP == "" || !mpl.isRisingWaveMetaPod(pod) || utils.IsDeleted(pod) || !utils.IsPodRunning(pod) {
 			return false
 		}
+
 		return true
 	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		Named("meta-pod-role-labeler").
 		Watches(&corev1.Pod{}, &handler.EnqueueRequestForObject{}, builder.WithPredicates(predicate.NewPredicateFuncs(podFilterFunc))).

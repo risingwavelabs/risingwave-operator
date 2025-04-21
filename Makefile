@@ -236,7 +236,7 @@ envtest: ## Download envtest-setup locally if necessary.
 GOLANGCI-LINT = $(shell pwd)/bin/$(OS)/golangci-lint
 golangci-lint: ## Download envtest-setup locally if necessary.
 # $(call get-golangci-lint)
-	$(call go-get-tool,$(GOLANGCI-LINT),github.com/golangci/golangci-lint/cmd/golangci-lint@v1.60.1)
+	$(call go-get-tool,$(GOLANGCI-LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.2)
 
 CTRLKIT-GEN = $(shell pwd)/bin/$(OS)/ctrlkit-gen
 ctrlkit-gen: ## Download ctrlkit locally if necessary.

@@ -27,6 +27,7 @@ import (
 )
 
 var (
+	//nolint: promlinter
 	// ReceivingMetricsFromOperator is used to test if metric collection works.
 	ReceivingMetricsFromOperator = prometheus.NewCounter(
 		prometheus.CounterOpts{
@@ -45,28 +46,28 @@ var (
 	// TODO: verb: The verb (action) on the object which triggers the webhook, the value should be one of "create", "update", and "delete".
 	webhookRequestCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "webhook_request_count",
+			Name: "webhook_request_count_total",
 			Help: "Total number of validating and mutating webhook calls",
 		},
 		[]string{"type", "group", "version", "kind", "namespace", "name"},
 	)
 	webhookRequestPassCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "webhook_request_pass_count",
+			Name: "webhook_request_pass_count_total",
 			Help: "Total number of accepted validating and mutating webhook calls",
 		},
 		[]string{"type", "group", "version", "kind", "namespace", "name"},
 	)
 	webhookRequestRejectCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "webhook_request_reject_count",
+			Name: "webhook_request_reject_count_total",
 			Help: "Total number of rejected validating and mutating webhook calls",
 		},
 		[]string{"type", "group", "version", "kind", "namespace", "name"},
 	)
 	webhookRequestPanicCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "webhook_request_panic_count",
+			Name: "webhook_request_panic_count_total",
 			Help: "Total number of panics during validating and mutating webhook calls",
 		},
 		[]string{"type", "group", "version", "kind", "namespace", "name"},
@@ -81,21 +82,21 @@ var (
 	// TODO: verb: The verb (action) on the object which triggers the webhook, the value should be one of "create", "update", and "delete".
 	controllerReconcileCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "controller_reconcile_count",
+			Name: "controller_reconcile_count_total",
 			Help: "Total number of reconciles",
 		},
 		[]string{"group", "version", "kind", "namespace", "name"},
 	)
 	controllerReconcileRequeueCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "controller_reconcile_requeue_count",
+			Name: "controller_reconcile_requeue_count_total",
 			Help: "Total number of requeue",
 		},
 		[]string{"group", "version", "kind", "namespace", "name"},
 	)
 	controllerReconcileRequeueErrorCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "controller_reconcile_error_count",
+			Name: "controller_reconcile_error_count_total",
 			Help: "Total number of requeue errors",
 		},
 		[]string{"group", "version", "kind", "namespace", "name"},
@@ -117,7 +118,7 @@ var (
 	}, []string{"controller", "group", "version", "kind", "namespace", "name"})
 	controllerReconcilePanicCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "controller_reconcile_panic_count",
+			Name: "controller_reconcile_panic_count_total",
 			Help: "Total number of reconcile panics",
 		},
 		[]string{"group", "version", "kind", "namespace", "name"},
@@ -144,9 +145,11 @@ func getWebhooksWithLabelValues(metric prometheus.CounterVec, wt utils.WebhookTy
 		"type": wt.String(), "group": gvk.Group, "version": gvk.Version,
 		"kind": gvk.Version, "namespace": nn.Namespace, "name": nn.Name,
 	})
+
 	var m prometheusclient.Metric
 	_ = counter.Write(&m)
-	return int(*m.Counter.Value)
+
+	return int(m.GetCounter().GetValue())
 }
 
 // IncWebhookRequestCount increases the request count for the given webhook type and target object by 1.
@@ -233,6 +236,7 @@ func UpdateControllerReconcileDuration(timeInMilliSeconds int64, gvk schema.Grou
 // ResetMetrics resets all metrics. Use for testing only.
 func ResetMetrics() {
 	_ = ReceivingMetricsFromOperator.Write(&prometheusclient.Metric{})
+
 	controllerReconcileCount.Reset()
 	controllerReconcilePanicCount.Reset()
 	controllerReconcileRequeueAfter.Reset()

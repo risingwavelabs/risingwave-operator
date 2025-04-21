@@ -74,6 +74,7 @@ func mapEquals[K, V comparable](a, b map[K]V) bool {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -84,9 +85,11 @@ func hasLabels[T client.Object](obj T, labels map[string]string, exact bool) boo
 			return false
 		}
 	}
+
 	if exact && len(obj.GetLabels()) != len(labels) {
 		return false
 	}
+
 	return true
 }
 
@@ -97,9 +100,11 @@ func hasAnnotations[T client.Object](obj T, annotations map[string]string, exact
 			return false
 		}
 	}
+
 	if exact && len(obj.GetAnnotations()) != len(annotations) {
 		return false
 	}
+
 	return true
 }
 
@@ -176,6 +181,7 @@ func componentAnnotations(risingwave *risingwavev1alpha1.RisingWave, component s
 
 func componentGroupAnnotations(risingwave *risingwavev1alpha1.RisingWave, group *string) map[string]string {
 	annotations := map[string]string{}
+
 	return annotations
 }
 
@@ -187,6 +193,7 @@ func podSelector(risingwave *risingwavev1alpha1.RisingWave, component string, gr
 	if group != nil {
 		labels[consts.LabelRisingWaveGroup] = *group
 	}
+
 	return labels
 }
 
@@ -197,6 +204,7 @@ func controlledBy(owner, ownee client.Object) bool {
 	if !ok {
 		return false
 	}
+
 	return controllerRef.UID == owner.GetUID()
 }
 
@@ -212,6 +220,7 @@ func newTestRisingwave(patches ...func(r *risingwavev1alpha1.RisingWave)) *risin
 	for _, patch := range patches {
 		patch(r)
 	}
+
 	return r
 }
 
@@ -234,8 +243,10 @@ func listContains[T comparable](a, b []T) bool {
 		if c == 0 {
 			return false
 		}
+
 		m[x]--
 	}
+
 	return true
 }
 
@@ -244,6 +255,7 @@ func listContainsByKey[T any, K comparable](a, b []T, key func(*T) K, equals fun
 	for i, x := range a {
 		aKeys[key(&x)] = a[i]
 	}
+
 	for i, x := range b {
 		bKeys[key(&x)] = b[i]
 	}
@@ -251,32 +263,38 @@ func listContainsByKey[T any, K comparable](a, b []T, key func(*T) K, equals fun
 	return mapContainsWith(aKeys, bKeys, equals)
 }
 
-//nolint:golint,unused
+//nolint:unused
 func containsStringSlice(a, b []string) bool {
 	if len(a) < len(b) {
 		return false
 	}
+
 	if len(b) == 0 {
 		return true
 	}
+
 	for i := 0; i <= len(a)-len(b); i++ {
 		if a[i] == b[0] && slices.Equal(a[i:i+len(b)], b) {
 			return true
 		}
 	}
+
 	return false
 }
 
-//nolint:golint,unused
+//nolint:unused
 func containsSlice[T comparable](a, b []T) bool {
 	for i := 0; i <= len(a)-len(b); i++ {
 		match := true
+
 		for j, element := range b {
 			if a[i+j] != element {
 				match = false
+
 				break
 			}
 		}
+
 		if match {
 			return true
 		}

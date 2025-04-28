@@ -47,10 +47,12 @@ func GetVersionFromImage(image string) string {
 	}
 
 	lastRepoIdx := strings.LastIndex(image, "/")
+
 	lastTagIdx := strings.LastIndex(image[lastRepoIdx+1:], ":")
 	if lastTagIdx < 0 {
 		return "latest"
 	}
+
 	return image[lastRepoIdx+lastTagIdx+2:]
 }
 

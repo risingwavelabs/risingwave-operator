@@ -25,12 +25,15 @@ import (
 func IsNightlyVersionAfter(version string, format string, date time.Time) bool {
 	if strings.HasPrefix(version, "nightly-") {
 		version = strings.TrimPrefix(version, "nightly-")
+
 		t, err := time.Parse(format, version)
 		if err != nil {
 			return false
 		}
+
 		return t.After(date)
 	}
+
 	return false
 }
 

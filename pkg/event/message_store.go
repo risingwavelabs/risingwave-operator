@@ -48,6 +48,7 @@ func (s *MessageStore) IsMessageSet(event string) bool {
 	defer s.mu.RUnlock()
 
 	_, ok := s.messages[event]
+
 	return ok
 }
 

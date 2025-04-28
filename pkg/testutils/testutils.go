@@ -52,6 +52,7 @@ func init() {
 func FakeRisingWaveOpenKruiseEnabled() *risingwavev1alpha1.RisingWave {
 	risingwaveCopy := fakeRisingWave.DeepCopy()
 	risingwaveCopy.Spec.EnableOpenKruise = ptr.To(true)
+
 	return risingwaveCopy
 }
 
@@ -59,6 +60,7 @@ func FakeRisingWaveOpenKruiseEnabled() *risingwavev1alpha1.RisingWave {
 func FakeRisingWaveOpenKruiseDisabled() *risingwavev1alpha1.RisingWave {
 	risingwaveCopy := fakeRisingWave.DeepCopy()
 	risingwaveCopy.Spec.EnableOpenKruise = ptr.To(false)
+
 	return risingwaveCopy
 }
 
@@ -275,6 +277,7 @@ func NewFakeRisingWaveScaleViewFor(risingwave *risingwavev1alpha1.RisingWave, co
 	for _, m := range mutates {
 		m(risingwave, r)
 	}
+
 	return r
 }
 
@@ -282,6 +285,7 @@ func NewFakeRisingWaveScaleViewFor(risingwave *risingwavev1alpha1.RisingWave, co
 func FakeRisingWaveWithMutate(mutate func(wave *risingwavev1alpha1.RisingWave)) *risingwavev1alpha1.RisingWave {
 	r := FakeRisingWave()
 	mutate(r)
+
 	return r
 }
 
@@ -290,5 +294,6 @@ func GetNodeGroupName(i int) string {
 	if i == 0 {
 		return ""
 	}
+
 	return fmt.Sprintf("group-%d", i)
 }

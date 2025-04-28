@@ -40,8 +40,10 @@ func (r *webhookMetricsRecorder) afterInvoke(ctx context.Context, obj runtime.Ob
 		IncWebhookRequestPanicCount(r.webhookType, obj)
 		IncWebhookRequestRejectCount(r.webhookType, obj)
 		*err = apierrors.NewInternalError(fmt.Errorf("panic in %s webhook: %v", r.webhookType, rec))
+
 		return
 	}
+
 	if *err != nil {
 		IncWebhookRequestRejectCount(r.webhookType, obj)
 	} else {
@@ -58,8 +60,8 @@ type mutatingWebhookMetricsRecorder struct {
 func (r *mutatingWebhookMetricsRecorder) Default(ctx context.Context, obj runtime.Object) (err error) {
 	startTime := time.Now()
 
-	r.webhookMetricsRecorder.beforeInvoke(ctx, obj)
-	defer r.webhookMetricsRecorder.afterInvoke(ctx, obj, startTime, &err)
+	r.beforeInvoke(ctx, obj)
+	defer r.afterInvoke(ctx, obj, startTime, &err)
 
 	return r.inner.Default(ctx, obj)
 }
@@ -81,8 +83,8 @@ type validatingWebhookMetricsRecorder struct {
 func (r *validatingWebhookMetricsRecorder) ValidateCreate(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
 	startTime := time.Now()
 
-	r.webhookMetricsRecorder.beforeInvoke(ctx, obj)
-	defer r.webhookMetricsRecorder.afterInvoke(ctx, obj, startTime, &err)
+	r.beforeInvoke(ctx, obj)
+	defer r.afterInvoke(ctx, obj, startTime, &err)
 
 	return r.inner.ValidateCreate(ctx, obj)
 }
@@ -91,8 +93,8 @@ func (r *validatingWebhookMetricsRecorder) ValidateCreate(ctx context.Context, o
 func (r *validatingWebhookMetricsRecorder) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (warnings admission.Warnings, err error) {
 	startTime := time.Now()
 
-	r.webhookMetricsRecorder.beforeInvoke(ctx, newObj)
-	defer r.webhookMetricsRecorder.afterInvoke(ctx, newObj, startTime, &err)
+	r.beforeInvoke(ctx, newObj)
+	defer r.afterInvoke(ctx, newObj, startTime, &err)
 
 	return r.inner.ValidateUpdate(ctx, oldObj, newObj)
 }
@@ -101,8 +103,8 @@ func (r *validatingWebhookMetricsRecorder) ValidateUpdate(ctx context.Context, o
 func (r *validatingWebhookMetricsRecorder) ValidateDelete(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
 	startTime := time.Now()
 
-	r.webhookMetricsRecorder.beforeInvoke(ctx, obj)
-	defer r.webhookMetricsRecorder.afterInvoke(ctx, obj, startTime, &err)
+	r.beforeInvoke(ctx, obj)
+	defer r.afterInvoke(ctx, obj, startTime, &err)
 
 	return r.inner.ValidateDelete(ctx, obj)
 }

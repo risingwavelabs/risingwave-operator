@@ -25,5 +25,6 @@ func RandomHex(n int) (string, error) {
 	if _, err := rand.Read(b); err != nil {
 		return "", err
 	}
+
 	return hex.EncodeToString(b), nil
 }

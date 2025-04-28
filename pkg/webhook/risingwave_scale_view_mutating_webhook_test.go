@@ -105,6 +105,7 @@ func Test_RisingWaveScaleViewMutatingWebhook_Default(t *testing.T) {
 			}
 
 			obj := tc.origin.DeepCopy()
+
 			err := webhook.Default(context.Background(), obj)
 			if tc.returnErr && err == nil {
 				t.Fatal("error expected, but nil")

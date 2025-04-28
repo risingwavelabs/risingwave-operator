@@ -27,9 +27,11 @@ func IsDeploymentRolledOut(deploy *appsv1.Deployment) bool {
 	if deploy == nil {
 		return false
 	}
+
 	if deploy.Status.ObservedGeneration < deploy.Generation {
 		return false
 	}
+
 	for _, cond := range deploy.Status.Conditions {
 		if cond.Type == appsv1.DeploymentProgressing {
 			if cond.Reason == "ProgressDeadlineExceeded" {
@@ -37,15 +39,19 @@ func IsDeploymentRolledOut(deploy *appsv1.Deployment) bool {
 			}
 		}
 	}
+
 	if deploy.Spec.Replicas != nil && deploy.Status.UpdatedReplicas < *deploy.Spec.Replicas {
 		return false
 	}
+
 	if deploy.Status.Replicas > deploy.Status.UpdatedReplicas {
 		return false
 	}
+
 	if deploy.Status.AvailableReplicas < deploy.Status.UpdatedReplicas {
 		return false
 	}
+
 	return true
 }
 
@@ -54,18 +60,23 @@ func IsStatefulSetRolledOut(statefulSet *appsv1.StatefulSet) bool {
 	if statefulSet == nil {
 		return false
 	}
+
 	if statefulSet.Status.ObservedGeneration < statefulSet.Generation {
 		return false
 	}
+
 	if statefulSet.Spec.Replicas != nil && statefulSet.Status.UpdatedReplicas < *statefulSet.Spec.Replicas {
 		return false
 	}
+
 	if statefulSet.Status.Replicas > statefulSet.Status.UpdatedReplicas {
 		return false
 	}
+
 	if statefulSet.Status.AvailableReplicas < statefulSet.Status.UpdatedReplicas {
 		return false
 	}
+
 	return true
 }
 
@@ -74,23 +85,29 @@ func IsCloneSetRolledOut(cloneSet *kruiseappsv1alpha1.CloneSet) bool {
 	if cloneSet == nil {
 		return false
 	}
+
 	if cloneSet.Status.ObservedGeneration < cloneSet.Generation {
 		return false
 	}
+
 	for _, cond := range cloneSet.Status.Conditions {
 		if cond.Type == kruiseappsv1alpha1.CloneSetConditionFailedUpdate || cond.Type == kruiseappsv1alpha1.CloneSetConditionFailedScale {
 			return false
 		}
 	}
+
 	if cloneSet.Spec.Replicas != nil && cloneSet.Status.UpdatedReplicas < *cloneSet.Spec.Replicas {
 		return false
 	}
+
 	if cloneSet.Status.Replicas > cloneSet.Status.UpdatedReplicas {
 		return false
 	}
+
 	if cloneSet.Status.AvailableReplicas < cloneSet.Status.UpdatedReplicas {
 		return false
 	}
+
 	return true
 }
 
@@ -99,6 +116,7 @@ func IsAdvancedStatefulSetRolledOut(statefulSet *kruiseappsv1beta1.StatefulSet) 
 	if statefulSet == nil {
 		return false
 	}
+
 	if statefulSet.Status.ObservedGeneration < statefulSet.Generation {
 		return false
 	}
@@ -108,14 +126,18 @@ func IsAdvancedStatefulSetRolledOut(statefulSet *kruiseappsv1beta1.StatefulSet) 
 			return false
 		}
 	}
+
 	if statefulSet.Spec.Replicas != nil && statefulSet.Status.UpdatedReplicas < *statefulSet.Spec.Replicas {
 		return false
 	}
+
 	if statefulSet.Status.Replicas > statefulSet.Status.UpdatedReplicas {
 		return false
 	}
+
 	if statefulSet.Status.AvailableReplicas < statefulSet.Status.UpdatedReplicas {
 		return false
 	}
+
 	return true
 }

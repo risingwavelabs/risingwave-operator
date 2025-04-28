@@ -23,6 +23,7 @@ import (
 
 	kruisepubs "github.com/openkruise/kruise-api/apps/pub"
 	"github.com/samber/lo"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -38,7 +39,7 @@ import (
 
 func Test_RisingWaveValidatingWebhook_ValidateDelete(t *testing.T) {
 	_, err := NewRisingWaveValidatingWebhook(false).ValidateDelete(context.Background(), &risingwavev1alpha1.RisingWave{})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
@@ -1016,7 +1017,6 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-
 			// We want to create two copies, so we can compare the old state and new state
 			// when transitioning from openkruise enabled to disabled with operator disabled.
 			risingwave := testutils.FakeRisingWave()
@@ -1028,6 +1028,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 			if tc.oldObjMutation != nil {
 				tc.oldObjMutation(oldObj)
 			}
+
 			tc.patch(risingwave)
 
 			webhook := NewRisingWaveValidatingWebhook(tc.openKruiseAvailable)
@@ -1038,6 +1039,7 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate(t *testing.T) {
 					t.Fatal("Risingwave is not default")
 				}
 			}
+
 			_, err := webhook.ValidateUpdate(context.Background(), oldObj, risingwave)
 			if tc.pass != (err == nil) {
 				t.Fatal(tc.pass, err)
@@ -1170,9 +1172,9 @@ func Test_RisingWaveValidatingWebhook_ValidateUpdate_ScaleViews(t *testing.T) {
 
 			_, err := NewRisingWaveValidatingWebhook(false).ValidateUpdate(context.Background(), obj, newObj)
 			if tc.pass {
-				assert.Nil(t, err, "unexpected error")
+				require.NoError(t, err, "unexpected error")
 			} else {
-				assert.NotNil(t, err, "should be nil")
+				assert.Error(t, err, "should be nil")
 			}
 		})
 	}

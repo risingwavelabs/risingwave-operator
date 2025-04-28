@@ -39,6 +39,7 @@ func canonizeScalePolicy(p risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy
 	if r.MaxReplicas == nil {
 		r.MaxReplicas = ptr.To(int32(math.MaxInt32))
 	}
+
 	return r
 }
 
@@ -64,6 +65,7 @@ func SplitReplicas(sv *risingwavev1alpha1.RisingWaveScaleView) map[string]int32 
 			if *groups[i].MaxReplicas != *groups[j].MaxReplicas {
 				return *groups[i].MaxReplicas < *groups[j].MaxReplicas
 			}
+
 			return groups[i].Group < groups[j].Group
 		})
 	}
@@ -82,10 +84,11 @@ func SplitReplicas(sv *risingwavev1alpha1.RisingWaveScaleView) map[string]int32 
 
 		// Set the replicas of groups to the default zero when there are no left replicas.
 		if totalLeft <= 0 {
-			for i := 0; i < len(groups); i++ {
+			for i := range groups {
 				g := groups[i]
 				replicas[g.Group] = int32(0)
 			}
+
 			continue
 		}
 
@@ -94,7 +97,7 @@ func SplitReplicas(sv *risingwavev1alpha1.RisingWaveScaleView) map[string]int32 
 		//     just take that much.
 		//   - Otherwise, it means each group can at most get (totalLeft / leftGroupSize)  + 1 replicas, we use a split function
 		//     to help take the replicas.
-		for i := 0; i < len(groups); i++ {
+		for i := range groups {
 			g := groups[i]
 			maxValue := int(*g.MaxReplicas)
 
@@ -114,6 +117,7 @@ func SplitReplicas(sv *risingwavev1alpha1.RisingWaveScaleView) map[string]int32 
 	for _, r := range replicas {
 		sum += r
 	}
+
 	if sum != ptr.Deref(sv.Spec.Replicas, 0) {
 		panic("algorithm has bug")
 	}

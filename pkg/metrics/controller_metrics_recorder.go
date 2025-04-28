@@ -34,6 +34,7 @@ type controllerMetricsRecorder struct {
 // Reconcile implements the Reconciler.
 func (r *controllerMetricsRecorder) Reconcile(ctx context.Context, request reconcile.Request) (result reconcile.Result, err error) {
 	startTime := time.Now()
+
 	r.beforeReconcile(request.NamespacedName)
 	defer r.afterReconcile(ctx, request, &result, &err, startTime)
 
@@ -51,10 +52,13 @@ func (r *controllerMetricsRecorder) afterReconcile(ctx context.Context, request 
 	if rec := recover(); rec != nil {
 		IncControllerReconcilePanicCount(namespace, r.gvk)
 		log.FromContext(ctx).Error(fmt.Errorf("%v", rec), "Panic in reconciliation run\n")
+
 		*result, *err = reconcile.Result{}, nil
+
 		return
 	}
 
+	//nolint:gocritic
 	if *err != nil {
 		IncControllerReconcileRequeueErrorCount(namespace, r.gvk)
 	} else if result.RequeueAfter > 0 {

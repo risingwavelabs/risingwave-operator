@@ -60,9 +60,12 @@ func (s *RisingWaveComputeSTSUpdateStrategy) Reconcile(ctx context.Context, requ
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.V(10).Info("Not found, abort")
+
 			return ctrlkit.NoRequeue()
 		}
+
 		logger.Error(err, "Failed to get StatefulSet")
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to get statefulset", err)
 	}
 
@@ -79,14 +82,17 @@ func (s *RisingWaveComputeSTSUpdateStrategy) Reconcile(ctx context.Context, requ
 	labelSelector, err := metav1.LabelSelectorAsSelector(sts.Spec.Selector)
 	if err != nil {
 		logger.Error(err, "Failed to get label selector")
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to get label selector", err)
 	}
 
 	// Pods of the StatefulSet.
 	var podList corev1.PodList
+
 	err = s.client.List(ctx, &podList, client.InNamespace(request.Namespace), client.MatchingLabelsSelector{Selector: labelSelector})
 	if err != nil {
 		logger.Error(err, "Failed to list Pods")
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to list pods", err)
 	}
 
@@ -97,6 +103,7 @@ func (s *RisingWaveComputeSTSUpdateStrategy) Reconcile(ctx context.Context, requ
 	// the generations and the Pods.
 	isPodUpToDate := func(pod *corev1.Pod) bool {
 		controllerRevisionHash := pod.GetLabels()[appsv1.StatefulSetRevisionLabel]
+
 		return controllerRevisionHash == sts.Status.UpdateRevision
 	}
 
@@ -111,10 +118,12 @@ func (s *RisingWaveComputeSTSUpdateStrategy) Reconcile(ctx context.Context, requ
 	}
 
 	logger.V(1).Info("Deleting pods...", "pods", utils.MapObjectsToNames[corev1.Pod, *corev1.Pod](toDeletePods))
+
 	for _, pod := range toDeletePods {
 		err := s.client.Delete(ctx, &pod, client.Preconditions{UID: &pod.UID})
 		if client.IgnoreNotFound(err) != nil {
 			logger.V(10).Error(err, "Failed to delete pod", "pod", pod.Name)
+
 			return ctrlkit.RequeueIfErrorAndWrap("unable to delete pod", err)
 		}
 	}

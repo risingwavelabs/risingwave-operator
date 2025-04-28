@@ -80,6 +80,7 @@ func deploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestCase] 
 					})
 				}
 				_, ok := obj.Spec.Template.Annotations[consts.AnnotationRestartAt]
+
 				return !ok
 			},
 		},
@@ -97,6 +98,7 @@ func deploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestCase] 
 						return false
 					}
 				}
+
 				return true
 			},
 		},
@@ -142,6 +144,7 @@ func deploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestCase] 
 				if tc.group.Template.Spec.TerminationGracePeriodSeconds != nil {
 					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.Template.Spec.TerminationGracePeriodSeconds
 				}
+
 				return true
 			},
 		},
@@ -151,12 +154,14 @@ func deploymentPredicates() []predicate[*appsv1.Deployment, deploymentTestCase] 
 				if tc.expectedUpgradeStrategy == nil {
 					return equality.Semantic.DeepEqual(obj.Spec.Strategy, appsv1.DeploymentStrategy{})
 				}
+
 				return equality.Semantic.DeepEqual(obj.Spec.Strategy, *tc.expectedUpgradeStrategy)
 			},
 		}, {
 			Name: "first-container-must-have-probes",
 			Fn: func(obj *appsv1.Deployment, tc deploymentTestCase) bool {
 				container := &obj.Spec.Template.Spec.Containers[0]
+
 				return container.LivenessProbe != nil && container.ReadinessProbe != nil
 			},
 		},
@@ -218,6 +223,7 @@ func metaStatefulSetPredicates() []predicate[*appsv1.StatefulSet, metaStatefulSe
 					})
 				}
 				_, ok := obj.Spec.Template.Annotations[consts.AnnotationRestartAt]
+
 				return !ok
 			},
 		},
@@ -235,6 +241,7 @@ func metaStatefulSetPredicates() []predicate[*appsv1.StatefulSet, metaStatefulSe
 						return false
 					}
 				}
+
 				return true
 			},
 		},
@@ -280,6 +287,7 @@ func metaStatefulSetPredicates() []predicate[*appsv1.StatefulSet, metaStatefulSe
 				if tc.group.Template.Spec.TerminationGracePeriodSeconds != nil {
 					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.Template.Spec.TerminationGracePeriodSeconds
 				}
+
 				return true
 			},
 		},
@@ -289,6 +297,7 @@ func metaStatefulSetPredicates() []predicate[*appsv1.StatefulSet, metaStatefulSe
 				if tc.expectedUpgradeStrategy == nil {
 					return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, appsv1.StatefulSetUpdateStrategy{})
 				}
+
 				return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, *tc.expectedUpgradeStrategy)
 			},
 		},
@@ -296,6 +305,7 @@ func metaStatefulSetPredicates() []predicate[*appsv1.StatefulSet, metaStatefulSe
 			Name: "first-container-must-have-probes",
 			Fn: func(obj *appsv1.StatefulSet, tc metaStatefulSetTestCase) bool {
 				container := &obj.Spec.Template.Spec.Containers[0]
+
 				return container.LivenessProbe != nil && container.ReadinessProbe != nil
 			},
 		},
@@ -345,6 +355,7 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 					})
 				}
 				_, ok := obj.Spec.Template.Annotations[consts.AnnotationRestartAt]
+
 				return !ok
 			},
 		},
@@ -362,6 +373,7 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 						return false
 					}
 				}
+
 				return true
 			},
 		},
@@ -407,6 +419,7 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 				if tc.group.Template.Spec.TerminationGracePeriodSeconds != nil {
 					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.Template.Spec.TerminationGracePeriodSeconds
 				}
+
 				return true
 			},
 		},
@@ -416,12 +429,14 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 				if tc.expectedUpgradeStrategy == nil {
 					return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, appsv1.StatefulSetUpdateStrategy{})
 				}
+
 				return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, *tc.expectedUpgradeStrategy)
 			},
 		}, {
 			Name: "first-container-must-have-probes",
 			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
 				container := &obj.Spec.Template.Spec.Containers[0]
+
 				return container.LivenessProbe != nil && container.ReadinessProbe != nil
 			},
 		},
@@ -435,6 +450,7 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 			Name: "first-container-must-have-probes",
 			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
 				container := &obj.Spec.Template.Spec.Containers[0]
+
 				return container.LivenessProbe != nil && container.ReadinessProbe != nil
 			},
 		},
@@ -490,6 +506,7 @@ func getCloneSetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, cloneSetT
 					})
 				}
 				_, ok := obj.Spec.Template.Annotations[consts.AnnotationRestartAt]
+
 				return !ok
 			},
 		},
@@ -507,6 +524,7 @@ func getCloneSetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, cloneSetT
 						return false
 					}
 				}
+
 				return true
 			},
 		},
@@ -552,6 +570,7 @@ func getCloneSetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, cloneSetT
 				if tc.group.Template.Spec.TerminationGracePeriodSeconds != nil {
 					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.Template.Spec.TerminationGracePeriodSeconds
 				}
+
 				return true
 			},
 		},
@@ -561,12 +580,14 @@ func getCloneSetPredicates() []predicate[*kruiseappsv1alpha1.CloneSet, cloneSetT
 				if tc.expectedUpgradeStrategy == nil {
 					return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, kruiseappsv1alpha1.CloneSetUpdateStrategy{})
 				}
+
 				return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, *tc.expectedUpgradeStrategy)
 			},
 		}, {
 			Name: "first-container-must-have-probes",
 			Fn: func(obj *kruiseappsv1alpha1.CloneSet, tc cloneSetTestCase) bool {
 				container := &obj.Spec.Template.Spec.Containers[0]
+
 				return container.LivenessProbe != nil && container.ReadinessProbe != nil
 			},
 		},
@@ -628,6 +649,7 @@ func getAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, comp
 					})
 				}
 				_, ok := obj.Spec.Template.Annotations[consts.AnnotationRestartAt]
+
 				return !ok
 			},
 		},
@@ -645,6 +667,7 @@ func getAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, comp
 						return false
 					}
 				}
+
 				return true
 			},
 		},
@@ -690,6 +713,7 @@ func getAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, comp
 				if tc.group.Template.Spec.TerminationGracePeriodSeconds != nil {
 					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.Template.Spec.TerminationGracePeriodSeconds
 				}
+
 				return true
 			},
 		},
@@ -699,12 +723,14 @@ func getAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, comp
 				if tc.expectedUpgradeStrategy == nil {
 					return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, kruiseappsv1beta1.StatefulSetUpdateStrategy{})
 				}
+
 				return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, *tc.expectedUpgradeStrategy)
 			},
 		}, {
 			Name: "first-container-must-have-probes",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
 				container := &obj.Spec.Template.Spec.Containers[0]
+
 				return container.LivenessProbe != nil && container.ReadinessProbe != nil
 			},
 		},
@@ -718,6 +744,7 @@ func getAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, comp
 			Name: "first-container-must-have-probes",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
 				container := &obj.Spec.Template.Spec.Containers[0]
+
 				return container.LivenessProbe != nil && container.ReadinessProbe != nil
 			},
 		},
@@ -773,6 +800,7 @@ func metaAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, met
 					})
 				}
 				_, ok := obj.Spec.Template.Annotations[consts.AnnotationRestartAt]
+
 				return !ok
 			},
 		},
@@ -790,6 +818,7 @@ func metaAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, met
 						return false
 					}
 				}
+
 				return true
 			},
 		},
@@ -835,6 +864,7 @@ func metaAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, met
 				if tc.group.Template.Spec.TerminationGracePeriodSeconds != nil {
 					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.Template.Spec.TerminationGracePeriodSeconds
 				}
+
 				return true
 			},
 		},
@@ -844,6 +874,7 @@ func metaAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, met
 				if tc.expectedUpgradeStrategy == nil {
 					return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, kruiseappsv1beta1.StatefulSetUpdateStrategy{})
 				}
+
 				return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, *tc.expectedUpgradeStrategy)
 			},
 		},
@@ -851,6 +882,7 @@ func metaAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, met
 			Name: "first-container-must-have-probes",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc metaAdvancedSTSTestCase) bool {
 				container := &obj.Spec.Template.Spec.Containers[0]
+
 				return container.LivenessProbe != nil && container.ReadinessProbe != nil
 			},
 		},
@@ -893,6 +925,7 @@ func servicesPredicates() []predicate[*corev1.Service, servicesTestCase] {
 			Name: "selector-equals",
 			Fn: func(obj *corev1.Service, testcase servicesTestCase) bool {
 				selectorComponent := lo.If(testcase.selectorComponent == "", testcase.component).Else(testcase.selectorComponent)
+
 				return hasServiceSelector(obj, podSelector(testcase.risingwave, selectorComponent, nil))
 			},
 		},

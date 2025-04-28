@@ -31,10 +31,12 @@ import (
 // GetCustomResourceDefinition is the helper function to get the CRD for the given group kind.
 func GetCustomResourceDefinition(ctx context.Context, client client.Reader, gk metav1.GroupKind) (*apiextensionsv1.CustomResourceDefinition, error) {
 	var crd apiextensionsv1.CustomResourceDefinition
+
 	err := client.Get(ctx, types.NamespacedName{Name: fmt.Sprintf("%ss.%s", strings.ToLower(gk.Kind), gk.Group)}, &crd)
 	if err != nil {
 		return nil, err
 	}
+
 	return &crd, nil
 }
 
@@ -43,6 +45,7 @@ func IsVersionServingInCustomResourceDefinition(crd *apiextensionsv1.CustomResou
 	if crd == nil || version == "" {
 		return false
 	}
+
 	return lo.ContainsBy(crd.Spec.Versions, func(v apiextensionsv1.CustomResourceDefinitionVersion) bool {
 		return v.Name == version && v.Served && !v.Deprecated
 	})

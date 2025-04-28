@@ -28,6 +28,7 @@ func Test_RisingWaveMutatingWebhook_Default(t *testing.T) {
 	features.InitFeatureManager(features.SupportedFeatureList, "")
 
 	mutatingWebhook := NewRisingWaveMutatingWebhook()
+
 	err := mutatingWebhook.Default(context.Background(), testutils.FakeRisingWave())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)

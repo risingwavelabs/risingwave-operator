@@ -157,37 +157,46 @@ func (f *RisingWaveObjectFactory) isFullKubernetesAddr() bool {
 
 func (f *RisingWaveObjectFactory) hummockConnectionStr() string {
 	stateStore := f.risingwave.Spec.StateStore
+
 	switch {
 	case f.isStateStoreMemory():
 		return "hummock+memory"
 	case f.isStateStoreS3():
 		bucket := stateStore.S3.Bucket
-		return fmt.Sprintf("hummock+s3://%s", bucket)
+
+		return "hummock+s3://" + bucket
 	case f.isStateStoreS3Compatible():
 		bucket := stateStore.S3.Bucket
-		return fmt.Sprintf("hummock+s3://%s", bucket)
+
+		return "hummock+s3://" + bucket
 	case stateStore.MinIO != nil:
 		minio := stateStore.MinIO
+
 		return fmt.Sprintf("hummock+minio://$(%s):$(%s)@%s/%s", envs.MinIOUsername, envs.MinIOPassword, minio.Endpoint, minio.Bucket)
 	case f.isStateStoreGCS():
-		return fmt.Sprintf("hummock+gcs://%s", stateStore.GCS.Bucket)
+		return "hummock+gcs://" + stateStore.GCS.Bucket
 	case f.isStateStoreAliyunOSS():
 		aliyunOSS := stateStore.AliyunOSS
-		return fmt.Sprintf("hummock+oss://%s", aliyunOSS.Bucket)
+
+		return "hummock+oss://" + aliyunOSS.Bucket
 	case f.isStateStoreAzureBlob():
 		azureBlob := stateStore.AzureBlob
-		return fmt.Sprintf("hummock+azblob://%s", azureBlob.Container)
+
+		return "hummock+azblob://" + azureBlob.Container
 	case f.isStateStoreHDFS():
 		hdfs := stateStore.HDFS
-		return fmt.Sprintf("hummock+hdfs://%s", hdfs.NameNode)
+
+		return "hummock+hdfs://" + hdfs.NameNode
 	case f.isStateStoreWebHDFS():
 		webhdfs := stateStore.WebHDFS
-		return fmt.Sprintf("hummock+webhdfs://%s", webhdfs.NameNode)
+
+		return "hummock+webhdfs://" + webhdfs.NameNode
 	case f.isStateStoreLocalDisk():
 		localDisk := stateStore.LocalDisk
-		return fmt.Sprintf("hummock+fs://%s", localDisk.Root)
+
+		return "hummock+fs://" + localDisk.Root
 	case f.isStateStoreHuaweiCloudOBS():
-		return fmt.Sprintf("hummock+obs://%s", stateStore.HuaweiCloudOBS.Bucket)
+		return "hummock+obs://" + stateStore.HuaweiCloudOBS.Bucket
 	default:
 		panic("unrecognized storage type")
 	}
@@ -197,6 +206,7 @@ func groupSuffix(group string) string {
 	if group == "" {
 		return ""
 	}
+
 	return "-" + group
 }
 
@@ -222,8 +232,9 @@ func (f *RisingWaveObjectFactory) componentName(component, group string) string 
 func (f *RisingWaveObjectFactory) componentAddr(component, group string) string {
 	componentName := f.componentName(component, group)
 	if f.isFullKubernetesAddr() {
-		return fmt.Sprintf("%s.$(POD_NAMESPACE).svc", componentName)
+		return componentName + ".$(POD_NAMESPACE).svc"
 	}
+
 	return componentName
 }
 
@@ -485,10 +496,12 @@ func formatConnectionOptions(opts map[string]string) string {
 	if len(opts) == 0 {
 		return ""
 	}
+
 	val := url.Values{}
 	for k, v := range opts {
 		val.Add(k, v)
 	}
+
 	return "?" + val.Encode()
 }
 
@@ -517,9 +530,7 @@ func (f *RisingWaveObjectFactory) useLicenseFile() bool {
 	//   v0.x is not supported.
 	//   v1.x is not supported.
 	//   v2.0.x uses the license key in the environment variable.
-	return !(strings.HasPrefix(imageVersion, "v0.") ||
-		strings.HasPrefix(imageVersion, "v1.") ||
-		strings.HasPrefix(imageVersion, "v2.0."))
+	return !strings.HasPrefix(imageVersion, "v0.") && !strings.HasPrefix(imageVersion, "v1.") && !strings.HasPrefix(imageVersion, "v2.0.")
 }
 
 func (f *RisingWaveObjectFactory) setupVolumeAndVolumeMountForLicenseKey(podSpec *corev1.PodSpec, container *corev1.Container) {
@@ -533,6 +544,7 @@ func (f *RisingWaveObjectFactory) volumeAndVolumeMountForLicenseKey() ([]corev1.
 	if licenseKey == nil || licenseKey.SecretName == "" {
 		return nil, nil
 	}
+
 	if !f.useLicenseFile() {
 		return nil, nil
 	}
@@ -543,6 +555,7 @@ func (f *RisingWaveObjectFactory) volumeAndVolumeMountForLicenseKey() ([]corev1.
 	if secretKey == "" {
 		secretKey = risingwavev1alpha1.RisingWaveLicenseKeySecretKey
 	}
+
 	volumes := []corev1.Volume{
 		{
 			Name: volumeName,
@@ -592,6 +605,7 @@ func (f *RisingWaveObjectFactory) envsForLicenseKey() []corev1.EnvVar {
 	if secretKey == "" {
 		secretKey = risingwavev1alpha1.RisingWaveLicenseKeySecretKey
 	}
+
 	return []corev1.EnvVar{
 		{
 			Name: envs.RWLicenseKey,
@@ -624,6 +638,7 @@ func (f *RisingWaveObjectFactory) envsForSecretStore() []corev1.EnvVar {
 			},
 		}
 	}
+
 	if secretStore.PrivateKey.Value != nil {
 		return []corev1.EnvVar{
 			{
@@ -632,6 +647,7 @@ func (f *RisingWaveObjectFactory) envsForSecretStore() []corev1.EnvVar {
 			},
 		}
 	}
+
 	return nil
 }
 
@@ -672,6 +688,7 @@ func (f *RisingWaveObjectFactory) coreEnvsForMeta(image string) []corev1.EnvVar 
 			},
 		}...)
 		credentials := f.risingwave.Spec.MetaStore.Etcd.RisingWaveEtcdCredentials
+
 		if credentials != nil && credentials.SecretName != "" {
 			envVars = append(envVars, corev1.EnvVar{
 				Name:  envs.RWEtcdAuth,
@@ -839,6 +856,7 @@ func (f *RisingWaveObjectFactory) envsForTLS() []corev1.EnvVar {
 			},
 		}
 	}
+
 	return nil
 }
 
@@ -1057,6 +1075,7 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 		if !strings.HasPrefix(endpoint, "https://") {
 			endpoint = "https://" + endpoint
 		}
+
 		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials)
 	}
 
@@ -1127,6 +1146,7 @@ func envsForS3Compatible(region, endpoint, bucket string, credentials risingwave
 
 func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
 	gcs := f.risingwave.Spec.StateStore.GCS
+
 	useWorkloadIdentity := ptr.Deref(gcs.UseWorkloadIdentity, false)
 	if useWorkloadIdentity {
 		return []corev1.EnvVar{}
@@ -1136,6 +1156,7 @@ func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {
 	secretRef := corev1.LocalObjectReference{
 		Name: credentials.SecretName,
 	}
+
 	return []corev1.EnvVar{
 		{
 			Name: envs.GoogleApplicationCredentials,
@@ -1155,6 +1176,7 @@ func (f *RisingWaveObjectFactory) envsForAliyunOSS() []corev1.EnvVar {
 	secretRef := corev1.LocalObjectReference{
 		Name: credentials.SecretName,
 	}
+
 	var endpoint string
 	if stateStore.AliyunOSS.InternalEndpoint {
 		endpoint = internalAliyunOSSEndpoint
@@ -1347,6 +1369,7 @@ func captureInheritedLabels(risingwave *risingwavev1alpha1.RisingWave) map[strin
 	for i, prefix := range prefixes {
 		prefixes[i] = strings.TrimSpace(prefix)
 	}
+
 	prefixes = lo.Filter(prefixes, func(s string, _ int) bool {
 		return len(s) > 0 && s != "risingwave"
 	})
@@ -1362,10 +1385,12 @@ func captureInheritedLabels(risingwave *risingwavev1alpha1.RisingWave) map[strin
 				return true
 			}
 		}
+
 		return false
 	}
 
 	inheritedLabels := make(map[string]string)
+
 	for k, v := range risingwave.Labels {
 		if matchLabelKey(k) {
 			inheritedLabels[k] = v
@@ -1520,6 +1545,7 @@ func (f *RisingWaveObjectFactory) setupMetaContainer(podSpec *corev1.PodSpec, co
 			return a.Name == b.Name
 		})
 	}
+
 	container.Env = mergedVars
 
 	for _, env := range f.envsForStateStore() {
@@ -1546,6 +1572,7 @@ func rollingUpdateOrDefault(rollingUpdate *risingwavev1alpha1.RisingWaveNodeGrou
 	if rollingUpdate != nil {
 		return *rollingUpdate
 	}
+
 	return risingwavev1alpha1.RisingWaveNodeGroupRollingUpdate{}
 }
 
@@ -1571,6 +1598,7 @@ func inPlaceUpdateStrategyOrDefault(strategy *kruisepubs.InPlaceUpdateStrategy) 
 	if strategy != nil {
 		return strategy
 	}
+
 	return &kruisepubs.InPlaceUpdateStrategy{}
 }
 
@@ -1735,6 +1763,7 @@ func buildPersistentVolumeClaims(claims []risingwavev1alpha1.PersistentVolumeCla
 	}
 
 	result := make([]corev1.PersistentVolumeClaim, 0, len(claims))
+
 	for _, claim := range claims {
 		claim := *claim.DeepCopy()
 		result = append(result, corev1.PersistentVolumeClaim{
@@ -1809,7 +1838,9 @@ func (f *RisingWaveObjectFactory) convertStandaloneSpecIntoComponent() *risingwa
 
 func (f *RisingWaveObjectFactory) newPodTemplateSpecFromNodeGroupByComponent(component string, nodeGroup *risingwavev1alpha1.RisingWaveNodeGroup) corev1.PodTemplateSpec {
 	var containerModifier func(podSpec *corev1.PodSpec, container *corev1.Container)
+
 	var componentPtr *risingwavev1alpha1.RisingWaveComponent
+
 	switch component {
 	case consts.ComponentMeta:
 		containerModifier = f.setupMetaContainer
@@ -1840,6 +1871,7 @@ func (f *RisingWaveObjectFactory) overrideFieldsOfNodeGroup(nodeGroup *risingwav
 	if nodeGroup.Template.Spec.Image == "" {
 		nodeGroup.Template.Spec.Image = f.risingwave.Spec.Image
 	}
+
 	return nodeGroup
 }
 
@@ -1847,6 +1879,7 @@ func newWorkloadObjectForComponentNodeGroup[T client.Object](f *RisingWaveObject
 	nodeGroup := object.NewRisingWaveReader(f.risingwave).GetNodeGroup(component, group)
 	template := f.newPodTemplateSpecFromNodeGroupByComponent(component, f.overrideFieldsOfNodeGroup(nodeGroup))
 	workloadObj := builder(component, nodeGroup, &template)
+
 	return mustSetControllerReference(f.risingwave, workloadObj, f.scheme)
 }
 
@@ -1911,6 +1944,7 @@ func (f *RisingWaveObjectFactory) setupFrontendContainer(podSpec *corev1.PodSpec
 			return a.Name == b.Name
 		})
 	}
+
 	container.Env = mergedVars
 	container.Ports = f.portsForFrontendContainer()
 
@@ -1952,6 +1986,7 @@ func (f *RisingWaveObjectFactory) setupComputeContainer(podSpec *corev1.PodSpec,
 			return a.Name == b.Name
 		})
 	}
+
 	container.Env = mergedVars
 	container.Ports = f.portsForComputeContainer()
 
@@ -1992,6 +2027,7 @@ func (f *RisingWaveObjectFactory) setupCompactorContainer(podSpec *corev1.PodSpe
 			return a.Name == b.Name
 		})
 	}
+
 	container.Env = mergedVars
 	container.Ports = f.portsForCompactorContainer()
 
@@ -2094,14 +2130,11 @@ func (f *RisingWaveObjectFactory) setupStandaloneContainer(podSpec *corev1.PodSp
 	var imageVersion = utils.GetVersionFromImage(f.risingwave.Spec.Image)
 
 	var useV2Style = false
+
 	switch f.risingwave.Spec.StandaloneMode {
 	case 0:
 		// `standalone` subcommand is only supported in versions 1.3 - 1.7, and was deprecated in 1.8.
-		useV2Style = !(strings.HasPrefix(imageVersion, "v1.3.") ||
-			strings.HasPrefix(imageVersion, "v1.4.") ||
-			strings.HasPrefix(imageVersion, "v1.5.") ||
-			strings.HasPrefix(imageVersion, "v1.6.") ||
-			strings.HasPrefix(imageVersion, "v1.7."))
+		useV2Style = !strings.HasPrefix(imageVersion, "v1.3.") && !strings.HasPrefix(imageVersion, "v1.4.") && !strings.HasPrefix(imageVersion, "v1.5.") && !strings.HasPrefix(imageVersion, "v1.6.") && !strings.HasPrefix(imageVersion, "v1.7.")
 	case 1:
 		useV2Style = false
 	case 2:
@@ -2184,6 +2217,7 @@ func (f *RisingWaveObjectFactory) NewStandaloneStatefulSet() *appsv1.StatefulSet
 	nodeGroup := f.convertStandaloneIntoNodeGroup()
 	template := f.newPodTemplateSpecFromNodeGroupByComponent(consts.ComponentStandalone, f.overrideFieldsOfNodeGroup(nodeGroup))
 	workloadObj := f.newStatefulSet(consts.ComponentStandalone, nodeGroup, &template)
+
 	return mustSetControllerReference(f.risingwave, workloadObj, f.scheme)
 }
 
@@ -2192,6 +2226,7 @@ func (f *RisingWaveObjectFactory) NewStandaloneAdvancedStatefulSet() *kruiseapps
 	nodeGroup := f.convertStandaloneIntoNodeGroup()
 	template := f.newPodTemplateSpecFromNodeGroupByComponent(consts.ComponentStandalone, f.overrideFieldsOfNodeGroup(nodeGroup))
 	workloadObj := f.newAdvancedStatefulSet(consts.ComponentStandalone, nodeGroup, &template)
+
 	return mustSetControllerReference(f.risingwave, workloadObj, f.scheme)
 }
 
@@ -2280,8 +2315,8 @@ func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 	}
 
 	// Inject additional metadata.
-	frontendSvc.ObjectMeta.Labels = mergeMap(frontendSvc.ObjectMeta.Labels, f.risingwave.Spec.AdditionalFrontendServiceMetadata.Labels)
-	frontendSvc.ObjectMeta.Annotations = mergeMap(frontendSvc.ObjectMeta.Annotations, f.risingwave.Spec.AdditionalFrontendServiceMetadata.Annotations)
+	frontendSvc.Labels = mergeMap(frontendSvc.Labels, f.risingwave.Spec.AdditionalFrontendServiceMetadata.Labels)
+	frontendSvc.Annotations = mergeMap(frontendSvc.Annotations, f.risingwave.Spec.AdditionalFrontendServiceMetadata.Annotations)
 
 	return mustSetControllerReference(f.risingwave, frontendSvc, f.scheme)
 }
@@ -2341,6 +2376,7 @@ func convertAppsV1StatefulSetPersistentVolumeClaimRetentionPolicyToKruise(retent
 	if retentionPolicy == nil {
 		return nil
 	}
+
 	return &kruiseappsv1beta1.StatefulSetPersistentVolumeClaimRetentionPolicy{
 		WhenDeleted: kruiseappsv1beta1.PersistentVolumeClaimRetentionPolicyType(retentionPolicy.WhenDeleted),
 		WhenScaled:  kruiseappsv1beta1.PersistentVolumeClaimRetentionPolicyType(retentionPolicy.WhenScaled),
@@ -2399,6 +2435,7 @@ func buildUpgradeStrategyForAdvancedStatefulSet(strategy risingwavev1alpha1.Risi
 	advancedStatefulSetUpgradeStrategy.RollingUpdate = &kruiseappsv1beta1.RollingUpdateStatefulSetStrategy{
 		MaxUnavailable: rollingUpdateOrDefault(strategy.RollingUpdate).MaxUnavailable,
 	}
+
 	if strategy.InPlaceUpdateStrategy != nil {
 		advancedStatefulSetUpgradeStrategy.RollingUpdate.InPlaceUpdateStrategy = strategy.InPlaceUpdateStrategy.DeepCopy()
 	}
@@ -2406,10 +2443,11 @@ func buildUpgradeStrategyForAdvancedStatefulSet(strategy risingwavev1alpha1.Risi
 	if rollingUpdateOrDefault(strategy.RollingUpdate).Partition != nil {
 		// Change a percentage to an integer, partition only accepts int pointers for advanced stateful sets
 		if rollingUpdateOrDefault(strategy.RollingUpdate).Partition.Type != intstr.Int {
-			intValue, err := strconv.Atoi(strings.Replace((strategy.RollingUpdate).Partition.StrVal, "%", "", -1))
+			intValue, err := strconv.Atoi(strings.ReplaceAll((strategy.RollingUpdate).Partition.StrVal, "%", ""))
 			if err != nil {
 				panic(err)
 			}
+
 			advancedStatefulSetUpgradeStrategy.RollingUpdate.Partition = ptr.To(int32(intValue))
 		} else {
 			advancedStatefulSetUpgradeStrategy.RollingUpdate.Partition = ptr.To(rollingUpdateOrDefault(strategy.RollingUpdate).Partition.IntVal)
@@ -2448,6 +2486,7 @@ func (f *RisingWaveObjectFactory) NewConfigConfigMap(val string) *corev1.ConfigM
 			risingWaveConfigMapKey: val,
 		},
 	}
+
 	return mustSetControllerReference(f.risingwave, risingwaveConfigConfigMap, f.scheme)
 }
 

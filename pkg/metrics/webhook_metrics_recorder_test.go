@@ -16,7 +16,7 @@ package metrics
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -43,6 +43,7 @@ func (p *panicValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Obj
 
 func Test_MetricsValidatingWebhookPanic(t *testing.T) {
 	ResetMetrics()
+
 	risingwave := &risingwavev1alpha1.RisingWave{}
 	panicWebhook := NewValidatingWebhookMetricsRecorder(&panicValWebhook{})
 
@@ -84,6 +85,7 @@ func (s *successfulValWebhook) ValidateUpdate(ctx context.Context, oldObj runtim
 
 func Test_MetricsValidatingWebhookSuccess(t *testing.T) {
 	ResetMetrics()
+
 	risingwave := &risingwavev1alpha1.RisingWave{}
 	successWebhook := NewValidatingWebhookMetricsRecorder(&successfulValWebhook{})
 
@@ -112,19 +114,20 @@ func Test_MetricsValidatingWebhookSuccess(t *testing.T) {
 type errorValWebhook struct{}
 
 func (e *errorValWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
-	return nil, fmt.Errorf("validateCreate err")
+	return nil, errors.New("validateCreate err")
 }
 
 func (e *errorValWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
-	return nil, fmt.Errorf("validateDelete err")
+	return nil, errors.New("validateDelete err")
 }
 
 func (e *errorValWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (warnings admission.Warnings, err error) {
-	return nil, fmt.Errorf("validateUpdate err")
+	return nil, errors.New("validateUpdate err")
 }
 
 func Test_MetricsValidatingWebhookError(t *testing.T) {
 	ResetMetrics()
+
 	risingwave := &risingwavev1alpha1.RisingWave{}
 	errorWebhook := NewValidatingWebhookMetricsRecorder(&errorValWebhook{})
 
@@ -158,6 +161,7 @@ func (p *panicMutWebhook) Default(ctx context.Context, obj runtime.Object) error
 
 func Test_MetricsMutatingWebhookPanic(t *testing.T) {
 	ResetMetrics()
+
 	risingwave := &risingwavev1alpha1.RisingWave{}
 
 	panicWebhook := NewMutatingWebhookMetricsRecorder(&panicMutWebhook{})
@@ -175,6 +179,7 @@ func (s *successfulMutWebhook) Default(ctx context.Context, obj runtime.Object) 
 
 func Test_MetricsMutatingWebhookSuccess(t *testing.T) {
 	ResetMetrics()
+
 	risingwave := &risingwavev1alpha1.RisingWave{}
 
 	successWebhook := NewMutatingWebhookMetricsRecorder(&successfulMutWebhook{})
@@ -189,11 +194,12 @@ func Test_MetricsMutatingWebhookSuccess(t *testing.T) {
 type errorMutWebhook struct{}
 
 func (e *errorMutWebhook) Default(ctx context.Context, obj runtime.Object) error {
-	return fmt.Errorf("test error")
+	return errors.New("test error")
 }
 
 func Test_MetricsMutatingWebhookError(t *testing.T) {
 	ResetMetrics()
+
 	risingwave := &risingwavev1alpha1.RisingWave{}
 
 	errorWebhook := NewMutatingWebhookMetricsRecorder(&errorMutWebhook{})

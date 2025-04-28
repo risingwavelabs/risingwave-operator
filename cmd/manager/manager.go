@@ -74,6 +74,7 @@ var (
 func requireKubernetesVersion(serverVersion *version.Info, minMajor, minMinor int) {
 	major, _ := strconv.Atoi(serverVersion.Major)
 	minor, _ := strconv.Atoi(strings.TrimRight(serverVersion.Minor, "+"))
+
 	if major < minMajor || (major == minMajor && minor < minMinor) {
 		setupLog.Error(nil, "Kubernetes version is too low", "expected", fmt.Sprintf("%d.%d+", minMajor, minMinor),
 			"actual", serverVersion.GitVersion)
@@ -89,6 +90,7 @@ func main() {
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false, "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
 	flag.StringVar(&featureGates, "feature-gates", "", "The feature gates arguments for the operator.")
+
 	opts := zap.Options{
 		Development: true,
 	}
@@ -122,6 +124,7 @@ func main() {
 		setupLog.Error(err, "Unable to get Kubernetes version")
 		os.Exit(1)
 	}
+
 	requireKubernetesVersion(kubernetesVersion, 1, 21)
 
 	if err = risingwavewebhook.SetupWebhooksWithManager(mgr, featureManager.IsFeatureEnabled(features.EnableOpenKruiseFeature)); err != nil {
@@ -161,12 +164,14 @@ func main() {
 		setupLog.Error(err, "unable to set up health check")
 		os.Exit(1)
 	}
+
 	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
 
 	setupLog.Info("starting manager")
+
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)

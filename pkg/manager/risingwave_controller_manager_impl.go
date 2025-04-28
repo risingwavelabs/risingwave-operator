@@ -81,11 +81,13 @@ func getStandaloneStatusUtil(rw *risingwavev1alpha1.RisingWave, logger logr.Logg
 
 func getStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSet *appsv1.StatefulSet, logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
 	readyReplicas := lo.If(isObjectNil(standaloneStatefulSet), int32(0)).Else(standaloneStatefulSet.Status.ReadyReplicas)
+
 	return getStandaloneStatusUtil(rw, logger, readyReplicas)
 }
 
 func getOpenKruiseStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSet *kruiseappsv1beta1.StatefulSet, logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
 	readyReplicas := lo.If(isObjectNil(standaloneStatefulSet), int32(0)).Else(standaloneStatefulSet.Status.ReadyReplicas)
+
 	return getStandaloneStatusUtil(rw, logger, readyReplicas)
 }
 
@@ -104,9 +106,11 @@ func buildNodeGroupStatus[T any, TP ptrAsObject[T], G any](groups []G, nameAndRe
 	}
 
 	foundGroups := make(map[string]int)
+
 	for _, obj := range workloads {
 		group, readyReplicas := groupAndReadyReplicas(&obj)
 		foundGroups[group] = 1
+
 		status.Running += readyReplicas
 		if replicas, ok := expectedGroups[group]; ok {
 			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
@@ -195,7 +199,6 @@ func buildStateStoreType(stateStore *risingwavev1alpha1.RisingWaveStateStoreBack
 
 // CollectOpenKruiseRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaAdvancedStatefulSets []kruiseappsv1beta1.StatefulSet, frontendCloneSets []kruiseappsv1alpha1.CloneSet, computeStatefulSets []kruiseappsv1beta1.StatefulSet, compactorCloneSets []kruiseappsv1alpha1.CloneSet, configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
-
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	componentsSpec := &risingwave.Spec.Components
@@ -217,6 +220,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 		Compute:    buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
 		Standalone: risingwavev1alpha1.ComponentReplicasStatus{Target: 0, Running: 0},
 	}
+
 	mgr.risingwaveManager.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
 		// Report meta storage status.
 		metaStore := &risingwave.Spec.MetaStore
@@ -295,7 +299,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 
 		// Set the message for Unhealthy event when it's Running.
 		if mgr.risingwaveManager.DoesConditionExistAndEqual(risingwavev1alpha1.RisingWaveConditionRunning, true) {
-			mgr.eventMessageStore.SetMessage(consts.RisingWaveEventTypeUnhealthy.Name, fmt.Sprintf("Found components broken or missing: %s", strings.Join(brokenOrMissingComponents, ",")))
+			mgr.eventMessageStore.SetMessage(consts.RisingWaveEventTypeUnhealthy.Name, "Found components broken or missing: "+strings.Join(brokenOrMissingComponents, ","))
 		}
 	}
 
@@ -408,7 +412,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 
 		// Set the message for Unhealthy event when it's Running.
 		if mgr.risingwaveManager.DoesConditionExistAndEqual(risingwavev1alpha1.RisingWaveConditionRunning, true) {
-			mgr.eventMessageStore.SetMessage(consts.RisingWaveEventTypeUnhealthy.Name, fmt.Sprintf("Found components broken or missing: %s", strings.Join(brokenOrMissingComponents, ",")))
+			mgr.eventMessageStore.SetMessage(consts.RisingWaveEventTypeUnhealthy.Name, "Found components broken or missing: "+strings.Join(brokenOrMissingComponents, ","))
 		}
 	}
 
@@ -420,6 +424,7 @@ type ptrAsObject[T any] interface {
 	*T
 }
 
+//nolint:gocritic
 func syncComponentGroupWorkloads[T any, TP ptrAsObject[T]](
 	mgr *risingWaveControllerManagerImpl,
 	ctx context.Context,
@@ -441,10 +446,12 @@ func syncComponentGroupWorkloads[T any, TP ptrAsObject[T]](
 	toDelete := make([]TP, 0)
 	toSyncGroupObjects := make(map[string]TP, 0)
 	foundGroups := make(map[string]int)
+
 	for i := range objects {
 		workloadObjPtr := TP(&objects[i])
 		group := workloadObjPtr.GetLabels()[consts.LabelRisingWaveGroup]
 		foundGroups[group] = 1
+
 		if _, exists := observedGroupSet[group]; exists {
 			logger.Info("Duplicate group found, mark as to delete", "group", group, "workload", workloadObjPtr.GetName())
 			toDelete = append(toDelete, workloadObjPtr)
@@ -458,6 +465,7 @@ func syncComponentGroupWorkloads[T any, TP ptrAsObject[T]](
 				}
 			}
 		}
+
 		observedGroupSet[group] = 1
 	}
 
@@ -473,6 +481,7 @@ func syncComponentGroupWorkloads[T any, TP ptrAsObject[T]](
 		group := workloadObj.GetLabels()[consts.LabelRisingWaveGroup]
 		if err := mgr.client.Delete(ctx, workloadObj, client.PropagationPolicy(metav1.DeletePropagationBackground)); client.IgnoreNotFound(err) != nil {
 			logger.Error(err, "Failed to delete object", "workload", workloadObj.GetName(), "group", group)
+
 			return ctrlkit.RequeueIfErrorAndWrap("unable to delete object", err)
 		}
 	}
@@ -497,10 +506,12 @@ func getNameFromNodeGroup(g *risingwavev1alpha1.RisingWaveNodeGroup) string {
 
 func buildKeyMapFromList[Elem any](list []Elem, key func(*Elem) string) map[string]int {
 	r := make(map[string]int)
+
 	for _, group := range list {
 		name := key(&group)
 		r[name] = 1
 	}
+
 	return r
 }
 
@@ -589,17 +600,21 @@ func waitComponentGroupWorkloadsReady[T any, TP ptrAsObject[T]](ctx context.Cont
 	logger = logger.WithValues("component", component)
 
 	foundGroups := make(map[string]int)
+
 	for _, workloadObj := range objects {
 		group := TP(&workloadObj).GetLabels()[consts.LabelRisingWaveGroup]
 		foundGroups[group] = 1
+
 		_, expectGroup := groups[group]
 		if !expectGroup {
 			logger.Info("Found unexpected group, keep waiting...", "group", group)
+
 			return ctrlkit.Exit()
 		}
 
 		if !isReady(&workloadObj) {
 			logger.Info("Found not-ready groups, keep waiting...", "group", group)
+
 			return ctrlkit.Exit()
 		}
 	}
@@ -607,6 +622,7 @@ func waitComponentGroupWorkloadsReady[T any, TP ptrAsObject[T]](ctx context.Cont
 	for group := range groups {
 		if _, found := foundGroups[group]; !found {
 			logger.Info("Workload object not found, keep waiting...", "group", group)
+
 			return ctrlkit.Exit()
 		}
 	}
@@ -728,6 +744,7 @@ func (mgr *risingWaveControllerManagerImpl) isObjectSynced(obj client.Object) bo
 	return observedGeneration >= currentGeneration
 }
 
+//nolint:gocritic
 func ensureTheSameObject(obj, newObj client.Object) client.Object {
 	// Ensure that they are the same object in Kubernetes.
 	if !isObjectNil(obj) && !isObjectNil(newObj) {
@@ -755,7 +772,9 @@ func isObjectNil(obj client.Object) bool {
 	if obj == nil {
 		return true
 	}
+
 	v := reflect.ValueOf(obj)
+
 	return v.IsNil()
 }
 
@@ -768,6 +787,7 @@ func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj 
 		if err != nil {
 			return fmt.Errorf("unable to build new object: %w", err)
 		}
+
 		newObj = ensureTheSameObject(obj, newObj)
 
 		gvk, err := apiutil.GVKForObject(newObj, scheme)
@@ -775,8 +795,9 @@ func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj 
 			return err
 		}
 
-		logger.Info(fmt.Sprintf("Create an object of %s", gvk.Kind), "object", utils.GetNamespacedName(newObj))
+		logger.Info("Create an object of "+gvk.Kind, "object", utils.GetNamespacedName(newObj))
 		err = mgr.client.Create(ctx, newObj)
+
 		return client.IgnoreAlreadyExists(err)
 	}
 
@@ -791,14 +812,17 @@ func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj 
 		if err != nil {
 			return fmt.Errorf("unable to build new object: %w", err)
 		}
+
 		newObj = ensureTheSameObject(obj, newObj)
 		// Set the resource version for update.
 		newObj.SetResourceVersion(obj.GetResourceVersion())
-		logger.Info(fmt.Sprintf("Update the object of %s", gvk.Kind), "object", utils.GetNamespacedName(newObj),
+		logger.Info("Update the object of "+gvk.Kind, "object", utils.GetNamespacedName(newObj),
 			"generation", mgr.risingwaveManager.RisingWave().Generation)
+
 		if err = mgr.client.Update(ctx, newObj); err == nil {
 			return nil
 		}
+
 		if !apierrors.IsInvalid(err) {
 			return err
 		}
@@ -809,14 +833,18 @@ func (mgr *risingWaveControllerManagerImpl) syncObject(ctx context.Context, obj 
 		if !mgr.forceUpdateEnabled && operatorVersionUnchanged {
 			return err
 		}
+
 		if err := mgr.client.Delete(ctx, obj); err != nil {
 			return err
 		}
+
 		newObj.SetResourceVersion("")
+
 		if err := mgr.client.Create(ctx, newObj); err != nil {
 			return client.IgnoreAlreadyExists(err)
 		}
 	}
+
 	return nil
 }
 
@@ -831,12 +859,16 @@ func syncObject[T client.Object](mgr *risingWaveControllerManagerImpl, ctx conte
 func (mgr *risingWaveControllerManagerImpl) SyncCompactorService(ctx context.Context, logger logr.Logger, compactorService *corev1.Service) (reconcile.Result, error) {
 	if !mgr.risingwaveManager.IsStandaloneModeEnabled() {
 		err := syncObject(mgr, ctx, compactorService, mgr.objectFactory.NewCompactorService, logger)
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to sync compactor service", err)
 	}
+
 	if compactorService != nil {
 		err := mgr.client.Delete(ctx, compactorService, client.Preconditions{UID: &compactorService.UID})
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to sync compactor service", err)
 	}
+
 	return ctrlkit.NoRequeue()
 }
 
@@ -844,18 +876,23 @@ func (mgr *risingWaveControllerManagerImpl) SyncCompactorService(ctx context.Con
 func (mgr *risingWaveControllerManagerImpl) SyncComputeService(ctx context.Context, logger logr.Logger, computeService *corev1.Service) (reconcile.Result, error) {
 	if !mgr.risingwaveManager.IsStandaloneModeEnabled() {
 		err := syncObject(mgr, ctx, computeService, mgr.objectFactory.NewComputeService, logger)
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to sync compute service", err)
 	}
+
 	if computeService != nil {
 		err := mgr.client.Delete(ctx, computeService, client.Preconditions{UID: &computeService.UID})
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to sync compute service", err)
 	}
+
 	return ctrlkit.NoRequeue()
 }
 
 // SyncFrontendService implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncFrontendService(ctx context.Context, logger logr.Logger, frontendService *corev1.Service) (reconcile.Result, error) {
 	err := syncObject(mgr, ctx, frontendService, mgr.objectFactory.NewFrontendService, logger)
+
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync frontend service", err)
 }
 
@@ -863,12 +900,16 @@ func (mgr *risingWaveControllerManagerImpl) SyncFrontendService(ctx context.Cont
 func (mgr *risingWaveControllerManagerImpl) SyncMetaService(ctx context.Context, logger logr.Logger, metaService *corev1.Service) (reconcile.Result, error) {
 	if !mgr.risingwaveManager.IsStandaloneModeEnabled() {
 		err := syncObject(mgr, ctx, metaService, mgr.objectFactory.NewMetaService, logger)
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to sync meta service", err)
 	}
+
 	if metaService != nil {
 		err := mgr.client.Delete(ctx, metaService, client.Preconditions{UID: &metaService.UID})
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to sync meta service", err)
 	}
+
 	return ctrlkit.NoRequeue()
 }
 
@@ -878,13 +919,18 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeMetaServiceIsAvailable(ctx
 		if mgr.isObjectSynced(metaService) {
 			return ctrlkit.NoRequeue()
 		}
+
 		logger.Info("Meta service hasn't been ready")
+
 		return ctrlkit.Exit()
 	}
+
 	if metaService != nil {
 		logger.Info("Meta service hasn't been deleted")
+
 		return ctrlkit.Exit()
 	}
+
 	return ctrlkit.NoRequeue()
 }
 
@@ -893,12 +939,14 @@ func (mgr *risingWaveControllerManagerImpl) SyncConfigConfigMap(ctx context.Cont
 	err := syncObject(mgr, ctx, configConfigMap, func() *corev1.ConfigMap {
 		return mgr.objectFactory.NewConfigConfigMap("")
 	}, logger)
+
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync config configmap", err)
 }
 
 // SyncServiceMonitor implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncServiceMonitor(ctx context.Context, logger logr.Logger, serviceMonitor *monitoringv1.ServiceMonitor) (reconcile.Result, error) {
 	err := syncObject(mgr, ctx, serviceMonitor, mgr.objectFactory.NewServiceMonitor, logger)
+
 	return ctrlkit.RequeueIfErrorAndWrap("unable to sync service monitor", err)
 }
 
@@ -906,14 +954,17 @@ func (mgr *risingWaveControllerManagerImpl) SyncServiceMonitor(ctx context.Conte
 func (mgr *risingWaveControllerManagerImpl) SyncStandaloneService(ctx context.Context, logger logr.Logger, standaloneService *corev1.Service) (ctrl.Result, error) {
 	if mgr.risingwaveManager.IsStandaloneModeEnabled() {
 		err := syncObject(mgr, ctx, standaloneService, mgr.objectFactory.NewStandaloneService, logger)
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to sync standalone service", err)
 	} else if standaloneService != nil {
 		err := mgr.client.Delete(ctx, standaloneService, client.Preconditions{UID: &standaloneService.UID})
 		if err != nil {
 			logger.Error(err, "Failed to delete standalone service!", "service", standaloneService.Name)
 		}
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to sync standalone service", err)
 	}
+
 	return ctrlkit.NoRequeue()
 }
 
@@ -921,14 +972,17 @@ func (mgr *risingWaveControllerManagerImpl) SyncStandaloneService(ctx context.Co
 func (mgr *risingWaveControllerManagerImpl) SyncStandaloneStatefulSet(ctx context.Context, logger logr.Logger, standaloneStatefulSet *appsv1.StatefulSet) (ctrl.Result, error) {
 	if mgr.risingwaveManager.IsStandaloneModeEnabled() && !mgr.risingwaveManager.IsOpenKruiseEnabled() {
 		err := syncObject(mgr, ctx, standaloneStatefulSet, mgr.objectFactory.NewStandaloneStatefulSet, logger)
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to sync standalone statefulset", err)
 	} else if standaloneStatefulSet != nil {
 		err := mgr.client.Delete(ctx, standaloneStatefulSet, client.Preconditions{UID: &standaloneStatefulSet.UID})
 		if err != nil {
 			logger.Error(err, "Failed to delete standalone statefulset!", "sts", standaloneStatefulSet.Name)
 		}
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to sync standalone statefulset", err)
 	}
+
 	return ctrlkit.NoRequeue()
 }
 
@@ -936,14 +990,17 @@ func (mgr *risingWaveControllerManagerImpl) SyncStandaloneStatefulSet(ctx contex
 func (mgr *risingWaveControllerManagerImpl) SyncStandaloneAdvancedStatefulSet(ctx context.Context, logger logr.Logger, standaloneAdvancedStatefulSet *kruiseappsv1beta1.StatefulSet) (ctrl.Result, error) {
 	if mgr.risingwaveManager.IsStandaloneModeEnabled() && mgr.risingwaveManager.IsOpenKruiseEnabled() {
 		err := syncObject(mgr, ctx, standaloneAdvancedStatefulSet, mgr.objectFactory.NewStandaloneAdvancedStatefulSet, logger)
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to sync standalone statefulset", err)
 	} else if standaloneAdvancedStatefulSet != nil {
 		err := mgr.client.Delete(ctx, standaloneAdvancedStatefulSet, client.Preconditions{UID: &standaloneAdvancedStatefulSet.UID})
 		if err != nil {
 			logger.Error(err, "Failed to delete standalone statefulset!", "sts", standaloneAdvancedStatefulSet.Name)
 		}
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to sync standalone statefulset", err)
 	}
+
 	return ctrlkit.NoRequeue()
 }
 
@@ -953,12 +1010,16 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeStandaloneStatefulSetReady
 		if mgr.isObjectSynced(standaloneStatefulSet) && utils.IsStatefulSetRolledOut(standaloneStatefulSet) {
 			return ctrlkit.NoRequeue()
 		}
+
 		logger.Info("Standalone StatefulSet hasn't been ready!")
+
 		return ctrlkit.Exit()
 	} else if standaloneStatefulSet != nil {
 		logger.Info("Standalone StatefulSet hasn't been deleted!")
+
 		return ctrlkit.Exit()
 	}
+
 	return ctrlkit.NoRequeue()
 }
 
@@ -968,12 +1029,16 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeStandaloneAdvancedStateful
 		if mgr.isObjectSynced(standaloneAdvancedStatefulSet) && utils.IsAdvancedStatefulSetRolledOut(standaloneAdvancedStatefulSet) {
 			return ctrlkit.NoRequeue()
 		}
+
 		logger.Info("Standalone advanced StatefulSet hasn't been ready!")
+
 		return ctrlkit.Exit()
 	} else if standaloneAdvancedStatefulSet != nil {
 		logger.Info("Standalone advanced StatefulSet hasn't been deleted!")
+
 		return ctrlkit.Exit()
 	}
+
 	return ctrlkit.NoRequeue()
 }
 
@@ -1036,7 +1101,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 
 		// Set the message for Unhealthy event when it's Running.
 		if mgr.risingwaveManager.DoesConditionExistAndEqual(risingwavev1alpha1.RisingWaveConditionRunning, true) {
-			mgr.eventMessageStore.SetMessage(consts.RisingWaveEventTypeUnhealthy.Name, fmt.Sprintf("Found components broken or missing: %s", strings.Join(brokenOrMissingComponents, ",")))
+			mgr.eventMessageStore.SetMessage(consts.RisingWaveEventTypeUnhealthy.Name, "Found components broken or missing: "+strings.Join(brokenOrMissingComponents, ","))
 		}
 	}
 
@@ -1107,7 +1172,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 
 		// Set the message for Unhealthy event when it's Running.
 		if mgr.risingwaveManager.DoesConditionExistAndEqual(risingwavev1alpha1.RisingWaveConditionRunning, true) {
-			mgr.eventMessageStore.SetMessage(consts.RisingWaveEventTypeUnhealthy.Name, fmt.Sprintf("Found components broken or missing: %s", strings.Join(brokenOrMissingComponents, ",")))
+			mgr.eventMessageStore.SetMessage(consts.RisingWaveEventTypeUnhealthy.Name, "Found components broken or missing: "+strings.Join(brokenOrMissingComponents, ","))
 		}
 	}
 

@@ -434,6 +434,7 @@ func Test_SortEnvVarSlice(t *testing.T) {
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			TopologicalSort(tc.envVar)
+
 			if !equality.Semantic.DeepEqual(tc.envVar, tc.expectEnvVar) {
 				t.Fail()
 			}

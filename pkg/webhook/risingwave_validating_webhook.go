@@ -69,10 +69,13 @@ func (v *RisingWaveValidatingWebhook) isBypassed(obj client.Object) bool {
 	if !ok {
 		return false
 	}
+
 	boolVal, _ := strconv.ParseBool(val)
+
 	return boolVal
 }
 
+//nolint:gocognit
 func (v *RisingWaveValidatingWebhook) validateNodeGroup(path *field.Path, nodeGroup *risingwavev1alpha1.RisingWaveNodeGroup, openKruiseEnabled bool) field.ErrorList {
 	fieldErrs := field.ErrorList{}
 
@@ -92,12 +95,14 @@ func (v *RisingWaveValidatingWebhook) validateNodeGroup(path *field.Path, nodeGr
 		}
 	}
 
+	//nolint:gocritic
 	// Validate upgrade strategy type when open kruise is not enabled.
 	if !openKruiseEnabled {
 		if nodeGroup.UpgradeStrategy.Type == risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceOnly ||
 			nodeGroup.UpgradeStrategy.Type == risingwavev1alpha1.RisingWaveUpgradeStrategyTypeInPlaceIfPossible {
 			fieldErrs = append(fieldErrs, field.Invalid(path.Child("upgradeStrategy", "type"), nodeGroup.UpgradeStrategy.Type, "invalid upgrade strategy type"))
 		}
+
 		if nodeGroup.UpgradeStrategy.InPlaceUpdateStrategy != nil {
 			fieldErrs = append(fieldErrs, field.Forbidden(path.Child("upgradeStrategy", "inPlaceUpdateStrategy"), "not allowed"))
 		}
@@ -112,7 +117,8 @@ func (v *RisingWaveValidatingWebhook) validateNodeGroup(path *field.Path, nodeGr
 	// Validate the partition value if it exists.
 	if nodeGroupPartitionExistAndIsString(nodeGroup) {
 		partitionVal := nodeGroup.UpgradeStrategy.RollingUpdate.Partition.StrVal
-		_, err := strconv.Atoi(strings.Replace(partitionVal, "%", "", -1))
+
+		_, err := strconv.Atoi(strings.ReplaceAll(partitionVal, "%", ""))
 		if err != nil {
 			fieldErrs = append(fieldErrs,
 				field.Invalid(path.Child("upgradeStrategy", "rollingUpdate", "partition"),
@@ -157,6 +163,7 @@ func (v *RisingWaveValidatingWebhook) validateNodeGroup(path *field.Path, nodeGr
 
 func ptrValueNotZero[T any](ptr *T) bool {
 	var zero T
+
 	return ptr != nil && !reflect.DeepEqual(ptr, &zero)
 }
 
@@ -191,12 +198,12 @@ func (v *RisingWaveValidatingWebhook) validateMetaStoreAndStateStore(path *field
 	if isStateS3 {
 		if len(stateStore.S3.Endpoint) > 0 {
 			// S3-compatible mode, secretName is required.
-			if stateStore.S3.RisingWaveS3Credentials.SecretName == "" {
+			if stateStore.S3.SecretName == "" {
 				fieldErrs = append(fieldErrs, field.Required(path.Child("stateStore", "s3", "credentials", "secretName"), "secretName is required"))
 			}
 		} else {
 			// AWS S3.
-			if !ptr.Deref(stateStore.S3.UseServiceAccount, false) && stateStore.S3.RisingWaveS3Credentials.SecretName == "" {
+			if !ptr.Deref(stateStore.S3.UseServiceAccount, false) && stateStore.S3.SecretName == "" {
 				fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore", "s3", "credentials"), stateStore.S3.SecretName, "either secretName or useServiceAccount must be specified"))
 			}
 		}
@@ -204,14 +211,14 @@ func (v *RisingWaveValidatingWebhook) validateMetaStoreAndStateStore(path *field
 
 	if isStateAzureBlob {
 		if !ptr.Deref(stateStore.AzureBlob.UseServiceAccount, false) &&
-			stateStore.AzureBlob.RisingWaveAzureBlobCredentials.SecretName == "" {
+			stateStore.AzureBlob.SecretName == "" {
 			fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore", "azureBlob", "credentials"), stateStore.S3.SecretName, "either secretName or useServiceAccount must be specified"))
 		}
 	}
 
 	if isStateGCS {
-		if !ptr.Deref(stateStore.GCS.UseWorkloadIdentity, false) && (stateStore.GCS.RisingWaveGCSCredentials.SecretName == "") {
-			fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore", "gcs", "credentials"), stateStore.GCS.RisingWaveGCSCredentials.SecretName, "either secretName or useWorkloadIdentity must be specified"))
+		if !ptr.Deref(stateStore.GCS.UseWorkloadIdentity, false) && (stateStore.GCS.SecretName == "") {
+			fieldErrs = append(fieldErrs, field.Invalid(path.Child("stateStore", "gcs", "credentials"), stateStore.GCS.SecretName, "either secretName or useWorkloadIdentity must be specified"))
 		}
 	}
 
@@ -245,6 +252,7 @@ func (v *RisingWaveValidatingWebhook) validateConfiguration(path *field.Path, co
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -299,6 +307,7 @@ func (v *RisingWaveValidatingWebhook) validateSecretStore(obj *risingwavev1alpha
 	if obj.Spec.SecretStore.PrivateKey.Value != nil && obj.Spec.SecretStore.PrivateKey.SecretRef != nil {
 		fieldErrs = append(fieldErrs, field.Forbidden(field.NewPath("spec", "secretStore", "privateKey"), "both value and secretRef are set"))
 	}
+
 	return fieldErrs
 }
 
@@ -348,6 +357,7 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 	if len(fieldErrs) > 0 {
 		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, fieldErrs)
 	}
+
 	return nil
 }
 
@@ -358,6 +368,7 @@ func (v *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj ru
 	}
 
 	err = v.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWave))
+
 	return
 }
 
@@ -376,6 +387,7 @@ func (v *RisingWaveValidatingWebhook) isStateStoresTheSame(oldObj, newObj *risin
 
 func pathForGroupReplicas(obj *risingwavev1alpha1.RisingWave, component, group string) *field.Path {
 	index, _ := scaleview.NewRisingWaveScaleViewHelper(obj, component).GetGroupIndex(group)
+
 	return field.NewPath("spec", "components", component, "nodeGroups").Index(index).Child("replicas")
 }
 
@@ -433,6 +445,7 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 		newHelper := scaleview.NewRisingWaveScaleViewHelper(newObj, scaleView.Component)
 
 		unchangedCnt, updateCnt := 0, 0
+
 		for _, lock := range scaleView.GroupLocks {
 			// Ignore the existence of the old group and allow adding locked (but not exist) groups.
 			old, _ := oldHelper.ReadReplicas(lock.Name)
@@ -444,11 +457,12 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 				))
 			} else {
 				// Either
-				if cur == lock.Replicas {
+				switch cur {
+				case lock.Replicas:
 					updateCnt++
-				} else if cur == old {
+				case old:
 					unchangedCnt++
-				} else {
+				default:
 					updateCnt++
 				}
 
@@ -481,6 +495,7 @@ func (v *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj
 	}
 
 	err = v.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWave), newObj.(*risingwavev1alpha1.RisingWave))
+
 	return
 }
 
@@ -488,9 +503,11 @@ func nodeGroupPartitionExistAndIsString(nodeGroup *risingwavev1alpha1.RisingWave
 	if nodeGroup.UpgradeStrategy.RollingUpdate == nil {
 		return false
 	}
+
 	if nodeGroup.UpgradeStrategy.RollingUpdate.Partition == nil {
 		return false
 	}
+
 	return nodeGroup.UpgradeStrategy.RollingUpdate.Partition.Type == intstr.String
 }
 

@@ -24,9 +24,7 @@ import (
 )
 
 func swap[T any](a, b *T) {
-	t := *a
-	*a = *b
-	*b = t
+	*a, *b = *b, *a
 }
 
 type envVarIdxPair struct {
@@ -62,6 +60,7 @@ func (pq *envVarPriorityQueue) Pop() any {
 	item := old[n-1]
 	old[n-1] = nil // avoid memory leak
 	*pq = old[0 : n-1]
+
 	return item
 }
 
@@ -71,9 +70,11 @@ func DependsOn(a, b corev1.EnvVar) bool {
 	if idx == -1 {
 		return false
 	}
+
 	if idx >= 0 {
 		// Count continuous '$' before the index.
 		count := 0
+
 		for i := idx - 1; i >= 0; i-- {
 			if a.Value[i] == '$' {
 				count++
@@ -86,6 +87,7 @@ func DependsOn(a, b corev1.EnvVar) bool {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -96,19 +98,19 @@ func TopologicalSort(e []corev1.EnvVar) {
 	n := len(e)
 
 	// Initialize the dependency graph
-	for i := 0; i < n; i++ {
+	for i := range n {
 		inDegree[i] = 0
 		graph[i] = make([]int, 0)
 	}
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		for j := i; j < n; j++ {
 			if DependsOn(e[i], e[j]) {
 				graph[j] = append(graph[j], i)
-				inDegree[i] = inDegree[i] + 1
+				inDegree[i]++
 			} else if DependsOn(e[j], e[i]) {
 				graph[i] = append(graph[i], j)
-				inDegree[j] = inDegree[j] + 1
+				inDegree[j]++
 			}
 		}
 	}
@@ -130,7 +132,7 @@ func TopologicalSort(e []corev1.EnvVar) {
 		children := graph[vertex.Idx]
 
 		for _, child := range children {
-			inDegree[child] = inDegree[child] - 1
+			inDegree[child]--
 			if inDegree[child] == 0 {
 				heap.Push(&sources, &envVarIdxPair{EnvVarName: e[child].Name, Idx: child})
 			}
@@ -139,6 +141,7 @@ func TopologicalSort(e []corev1.EnvVar) {
 
 	oldEnv := make([]corev1.EnvVar, n)
 	copy(oldEnv, e)
+
 	for idx, correctIdx := range sortedOrder {
 		if idx != correctIdx {
 			e[idx] = oldEnv[correctIdx]

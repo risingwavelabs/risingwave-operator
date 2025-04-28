@@ -69,6 +69,7 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 	}, &targetObj); err != nil {
 		if apierrors.IsNotFound(err) {
 			gvk := obj.GroupVersionKind()
+
 			return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, field.ErrorList{
 				field.Invalid(field.NewPath("spec", "targetRef"), obj.Spec.TargetRef, "target risingwave not found"),
 			})
@@ -88,6 +89,7 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 	// Read the replicas.
 	fieldErrs := field.ErrorList{}
 	replicas := int32(0)
+
 	for i := range obj.Spec.ScalePolicy {
 		scalePolicy := &obj.Spec.ScalePolicy[i]
 		if r, ok := helper.ReadReplicas(scalePolicy.Group); ok {
@@ -98,6 +100,7 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 					"replicas of RisingWave out of range"),
 				)
 			}
+
 			replicas += r
 		} else {
 			fieldErrs = append(fieldErrs, field.Invalid(
@@ -107,6 +110,7 @@ func (w *RisingWaveScaleViewMutatingWebhook) readGroupReplicasFromRisingWave(ctx
 			)
 		}
 	}
+
 	obj.Spec.Replicas = ptr.To(replicas)
 
 	return fieldErrs.ToAggregate()
@@ -116,6 +120,7 @@ func (w *RisingWaveScaleViewMutatingWebhook) setDefault(ctx context.Context, obj
 	// If user manually specified the UID, the webhook rejects the creation.
 	if obj.Spec.TargetRef.UID != "" {
 		gvk := obj.GroupVersionKind()
+
 		return apierrors.NewInvalid(gvk.GroupKind(), obj.Name, field.ErrorList{
 			field.Invalid(field.NewPath("spec", "targetRef", "uid"), obj.Spec.TargetRef.UID, "uid must be empty and set by webhook"),
 		})

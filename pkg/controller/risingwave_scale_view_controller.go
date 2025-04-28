@@ -63,13 +63,17 @@ func (c *RisingWaveScaleViewController) Reconcile(ctx context.Context, request r
 	logger := log.FromContext(ctx)
 
 	var scaleView risingwavev1alpha1.RisingWaveScaleView
+
 	err := c.Client.Get(ctx, request.NamespacedName, &scaleView)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			logger.V(1).Info("Not found, abort")
+
 			return ctrlkit.NoRequeue()
 		}
+
 		logger.Error(err, "Failed to get risingwavescaleview")
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to get risingwavescaleview", err)
 	}
 
@@ -131,6 +135,7 @@ func (c *RisingWaveScaleViewController) SetupWithManager(mgr ctrl.Manager) error
 			// there is change happened on the RisingWave object.
 			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, object client.Object) []reconcile.Request {
 				obj := object.(*risingwavev1alpha1.RisingWave)
+
 				return lo.Map(obj.Status.ScaleViews, func(t risingwavev1alpha1.RisingWaveScaleViewLock, _ int) reconcile.Request {
 					return reconcile.Request{NamespacedName: types.NamespacedName{
 						Namespace: obj.Namespace,

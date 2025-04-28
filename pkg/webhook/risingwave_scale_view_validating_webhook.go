@@ -46,11 +46,14 @@ type RisingWaveScaleViewValidatingWebhook struct {
 
 func getScaleViewMaxConstraints(obj *risingwavev1alpha1.RisingWaveScaleView) int32 {
 	maxValue := int32(0)
+
 	for _, scalePolicy := range obj.Spec.ScalePolicy {
 		if scalePolicy.MaxReplicas == nil {
 			maxValue = math.MaxInt32
+
 			break
 		}
+
 		maxValue += *scalePolicy.MaxReplicas
 	}
 
@@ -64,6 +67,7 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateObject(ctx context.Contex
 	if obj.Spec.TargetRef.Name == "" {
 		fieldErrs = append(fieldErrs, field.Required(targetRefPath.Child("name"), "target name must be provided"))
 	}
+
 	if obj.Spec.TargetRef.UID == "" {
 		fieldErrs = append(fieldErrs, field.Required(targetRefPath.Child("uid"), "uid should be set by mutating webhook"))
 	}
@@ -72,12 +76,14 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateObject(ctx context.Contex
 	if len(obj.Spec.ScalePolicy) == 0 {
 		fieldErrs = append(fieldErrs, field.Required(scalePolicyPath, "must not be empty"))
 	}
+
 	if getScaleViewMaxConstraints(obj) != math.MaxInt32 {
 		fieldErrs = append(fieldErrs, field.Invalid(scalePolicyPath, obj.Spec.ScalePolicy, "at least one unlimited replicas"))
 	}
 
 	if len(fieldErrs) > 0 {
 		gvk := obj.GroupVersionKind()
+
 		return nil, apierrors.NewInvalid(
 			gvk.GroupKind(),
 			obj.Name,
@@ -94,6 +100,7 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateCreate(ctx context.Contex
 	}
 
 	var risingwave risingwavev1alpha1.RisingWave
+
 	err = w.client.Get(ctx, types.NamespacedName{
 		Namespace: obj.Namespace,
 		Name:      obj.Spec.TargetRef.Name,
@@ -109,6 +116,7 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateCreate(ctx context.Contex
 	// Try grab the lock to see if there are conflicts.
 	if err := object.NewScaleViewLockManager(&risingwave).GrabScaleViewLockFor(obj); err != nil {
 		gvk := obj.GroupVersionKind()
+
 		return nil, apierrors.NewConflict(
 			schema.GroupResource{Group: gvk.Group, Resource: gvk.Kind},
 			obj.Name,
@@ -144,8 +152,10 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateUpdate(ctx context.Contex
 
 	oldGroupList := lo.Map(oldObj.Spec.ScalePolicy, func(t risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy, _ int) string { return t.Group })
 	newGroupList := lo.Map(newObj.Spec.ScalePolicy, func(t risingwavev1alpha1.RisingWaveScaleViewSpecScalePolicy, _ int) string { return t.Group })
+
 	sort.Strings(oldGroupList)
 	sort.Strings(newGroupList)
+
 	if !slices.Equal(oldGroupList, newGroupList) {
 		fieldErrs = append(fieldErrs, field.Forbidden(
 			field.NewPath("spec", "scalePolicy"),
@@ -168,6 +178,7 @@ func (w *RisingWaveScaleViewValidatingWebhook) ValidateUpdate(ctx context.Contex
 	}
 
 	err = w.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWaveScaleView), newObj.(*risingwavev1alpha1.RisingWaveScaleView))
+
 	return nil, err
 }
 

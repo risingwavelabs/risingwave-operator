@@ -37,6 +37,7 @@ func (svl *ScaleViewLockManager) getScaleViewLockIndex(sv *risingwavev1alpha1.Ri
 			return i, &scaleViews[i]
 		}
 	}
+
 	return 0, nil
 }
 
@@ -44,6 +45,7 @@ func (svl *ScaleViewLockManager) getScaleViewLockIndex(sv *risingwavev1alpha1.Ri
 // nil when not found.
 func (svl *ScaleViewLockManager) GetScaleViewLock(sv *risingwavev1alpha1.RisingWaveScaleView) *risingwavev1alpha1.RisingWaveScaleViewLock {
 	_, r := svl.getScaleViewLockIndex(sv)
+
 	return r
 }
 
@@ -65,6 +67,7 @@ func (svl *ScaleViewLockManager) GrabScaleViewLockFor(sv *risingwavev1alpha1.Ris
 		if s.Name == sv.Name && s.UID != sv.UID {
 			return errors.New("scale view found but uid mismatch")
 		}
+
 		if s.Name == sv.Name && s.UID == sv.UID {
 			return errors.New("already grabbed")
 		}
@@ -105,6 +108,7 @@ func (svl *ScaleViewLockManager) GrabOrUpdateScaleViewLockFor(sv *risingwavev1al
 		if err != nil {
 			return false, err
 		}
+
 		return true, nil
 	}
 
@@ -120,6 +124,7 @@ func (svl *ScaleViewLockManager) GrabOrUpdateScaleViewLockFor(sv *risingwavev1al
 			Replicas: groupReplicas[t.Group],
 		}
 	})
+
 	return true, nil
 }
 
@@ -129,8 +134,10 @@ func (svl *ScaleViewLockManager) ReleaseLockFor(sv *risingwavev1alpha1.RisingWav
 	i, lock := svl.getScaleViewLockIndex(sv)
 	if lock != nil {
 		svl.risingwave.Status.ScaleViews = append(svl.risingwave.Status.ScaleViews[:i], svl.risingwave.Status.ScaleViews[i+1:]...)
+
 		return true
 	}
+
 	return false
 }
 

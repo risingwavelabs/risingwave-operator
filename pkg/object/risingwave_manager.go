@@ -78,12 +78,14 @@ func (r *RisingWaveReader) GetCondition(conditionType risingwavev1alpha1.RisingW
 			return cond.DeepCopy()
 		}
 	}
+
 	return nil
 }
 
 // DoesConditionExistAndEqual returns true if the condition is found and its value equals to the given one.
 func (r *RisingWaveReader) DoesConditionExistAndEqual(conditionType risingwavev1alpha1.RisingWaveConditionType, value bool) bool {
 	cond := r.GetCondition(conditionType)
+
 	return cond != nil && (cond.Status == metav1.ConditionTrue) == value
 }
 
@@ -114,6 +116,7 @@ func (r *RisingWaveReader) GetNodeGroup(component, group string) *risingwavev1al
 			return nodeGroup.DeepCopy()
 		}
 	}
+
 	return nil
 }
 
@@ -156,6 +159,7 @@ func (mgr *RisingWaveManager) RemoveCondition(conditionType risingwavev1alpha1.R
 			// Remove it.
 			conditions = append(conditions[:i], conditions[i+1:]...)
 			mgr.mutableRisingWave.Status.Conditions = conditions
+
 			return
 		}
 	}
@@ -178,6 +182,7 @@ func (mgr *RisingWaveManager) UpdateCondition(condition risingwavev1alpha1.Risin
 	_, curIndex, found := lo.FindIndexOf(conditions, func(cond risingwavev1alpha1.RisingWaveCondition) bool {
 		return cond.Type == condition.Type
 	})
+
 	if found {
 		conditions[curIndex] = condition
 	} else {
@@ -214,7 +219,8 @@ func (mgr *RisingWaveManager) IsOpenKruiseAvailable() bool {
 
 // IsOpenKruiseEnabled returns true when the OpenKruise is available and enabled on the target RisingWave.
 func (mgr *RisingWaveManager) IsOpenKruiseEnabled() bool {
-	risingwave := mgr.RisingWaveReader.RisingWave()
+	risingwave := mgr.RisingWave()
+
 	return mgr.IsOpenKruiseAvailable() && risingwave.Spec.EnableOpenKruise != nil && *risingwave.Spec.EnableOpenKruise
 }
 

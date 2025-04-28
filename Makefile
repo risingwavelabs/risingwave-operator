@@ -236,7 +236,7 @@ envtest: ## Download envtest-setup locally if necessary.
 GOLANGCI-LINT = $(shell pwd)/bin/$(OS)/golangci-lint
 golangci-lint: ## Download envtest-setup locally if necessary.
 # $(call get-golangci-lint)
-	$(call go-get-tool,$(GOLANGCI-LINT),github.com/golangci/golangci-lint/cmd/golangci-lint@v1.60.1)
+	$(call go-get-tool,$(GOLANGCI-LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.2)
 
 CTRLKIT-GEN = $(shell pwd)/bin/$(OS)/ctrlkit-gen
 ctrlkit-gen: ## Download ctrlkit locally if necessary.
@@ -333,7 +333,7 @@ catalog-build: opm ## Build a catalog image.
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
 
-CI_RUNNER_IMAGE := public.ecr.aws/w6q9k3j5/rw-operator-ci-runner:$(shell date +'%Y%m%d')
+CI_RUNNER_IMAGE := public.ecr.aws/q7q2v8s0/ci/rw-operator-ci-runner:$(shell date +'%Y%m%d')
 
 build-ci-runner-image:
 	docker buildx build --platform linux/amd64,linux/arm64 -f ci/runner/Dockerfile -t $(CI_RUNNER_IMAGE) . --push

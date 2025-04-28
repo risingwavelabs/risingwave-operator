@@ -52,8 +52,10 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) isTargetObjMatched(targetOb
 func (mgr *risingWaveScaleViewControllerManagerImpl) UpdateScaleViewStatus(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
 	if mgr.isStatusChanged() {
 		err := mgr.client.Status().Update(ctx, mgr.scaleView)
+
 		return ctrlkit.RequeueIfErrorAndWrap("unable to update status of risingwavescaleview", err)
 	}
+
 	return ctrlkit.Continue()
 }
 
@@ -79,12 +81,16 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) GrabOrUpdateScaleViewLock(c
 	// the current captured object or fails with a conflict error.
 	if updated {
 		logger.Info("Lock grabbed(updated) in memory! Try updating the remote...")
+
 		if err := mgr.client.Status().Update(ctx, targetObj); err != nil {
 			return ctrlkit.RequeueIfErrorAndWrap("unable to update the status of RisingWave", err)
 		}
+
 		mgr.scaleView.Status.Locked = true
+
 		return ctrlkit.RequeueImmediately()
 	}
+
 	return ctrlkit.Continue()
 }
 
@@ -103,12 +109,14 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasToRisingWa
 	lockObj := object.NewScaleViewLockManager(targetObj).GetScaleViewLock(mgr.scaleView)
 	if lockObj == nil || lockObj.Generation != mgr.scaleView.Generation {
 		logger.Info("Lock is outdated, retry...")
+
 		return ctrlkit.RequeueAfter(5 * time.Millisecond)
 	}
 
 	helper := scaleview.NewRisingWaveScaleViewHelper(targetObj, mgr.scaleView.Spec.TargetRef.Component)
 
 	changed := false
+
 	for _, group := range lockObj.GroupLocks {
 		updated := helper.WriteReplicas(group.Name, group.Replicas)
 		changed = changed || updated
@@ -128,18 +136,23 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasToRisingWa
 
 func readRunningReplicas(obj *risingwavev1alpha1.RisingWave, component, group string) int32 {
 	pred := func(g risingwavev1alpha1.ComponentGroupReplicasStatus) bool { return g.Name == group }
+
 	switch component {
 	case consts.ComponentMeta:
 		g, _ := lo.Find(obj.Status.ComponentReplicas.Meta.Groups, pred)
+
 		return g.Running
 	case consts.ComponentFrontend:
 		g, _ := lo.Find(obj.Status.ComponentReplicas.Frontend.Groups, pred)
+
 		return g.Running
 	case consts.ComponentCompactor:
 		g, _ := lo.Find(obj.Status.ComponentReplicas.Compactor.Groups, pred)
+
 		return g.Running
 	case consts.ComponentCompute:
 		g, _ := lo.Find(obj.Status.ComponentReplicas.Compute.Groups, pred)
+
 		return g.Running
 	case consts.ComponentStandalone:
 		panic("not supported")
@@ -153,15 +166,20 @@ func (mgr *risingWaveScaleViewControllerManagerImpl) SyncGroupReplicasStatusFrom
 	if !mgr.isTargetObjMatched(targetObj) {
 		mgr.scaleView.Status.Replicas = ptr.To(int32(0))
 		mgr.scaleView.Status.Locked = false
+
 		return ctrlkit.Continue()
 	}
+
 	replicas := int32(0)
+
 	for _, scalePolicy := range mgr.scaleView.Spec.ScalePolicy {
 		group := scalePolicy.Group
 		runningReplicas := readRunningReplicas(targetObj, mgr.scaleView.Spec.TargetRef.Component, group)
 		replicas += runningReplicas
 	}
+
 	mgr.scaleView.Status.Replicas = ptr.To(replicas)
+
 	return ctrlkit.Continue()
 }
 

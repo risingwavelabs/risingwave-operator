@@ -22,6 +22,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/utils/ptr"
@@ -115,11 +116,12 @@ func Test_RisingWaveScaleViewValidatingWebhook_ValidateObject(t *testing.T) {
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			webhook := &RisingWaveScaleViewValidatingWebhook{}
+
 			_, err := webhook.validateObject(context.Background(), tc.object)
 			if tc.returnErr {
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 			} else {
-				assert.Nil(t, err)
+				require.NoError(t, err)
 			}
 		})
 	}
@@ -130,6 +132,7 @@ func risingwaveLockedBy(r *risingwavev1alpha1.RisingWave, v *risingwavev1alpha1.
 	if err != nil {
 		panic(err)
 	}
+
 	return r
 }
 
@@ -195,11 +198,12 @@ func Test_RisingWaveScaleViewValidatingWebhook_ValidateCreate(t *testing.T) {
 					WithObjects(tc.initObjs...).
 					Build(),
 			)
+
 			_, err := webhook.ValidateCreate(context.Background(), tc.scaleView)
 			if tc.returnErr {
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 			} else {
-				assert.Nil(t, err)
+				require.NoError(t, err)
 			}
 		})
 	}
@@ -285,9 +289,9 @@ func Test_RisingWaveScaleViewValidatingWebhook_ValidateUpdate(t *testing.T) {
 
 			_, err := webhook.ValidateUpdate(context.Background(), tc.scaleView, newObj)
 			if tc.returnErr {
-				assert.NotNil(t, err, "error expected")
+				assert.Error(t, err, "error expected")
 			} else {
-				assert.Nil(t, err, "error unexpected")
+				require.NoError(t, err, "error unexpected")
 			}
 		})
 	}
@@ -295,5 +299,5 @@ func Test_RisingWaveScaleViewValidatingWebhook_ValidateUpdate(t *testing.T) {
 
 func Test_RisingWaveScaleViewValidatingWebhook_ValidateDelete(t *testing.T) {
 	_, err := NewRisingWaveScaleViewValidatingWebhook(nil).ValidateDelete(context.Background(), &risingwavev1alpha1.RisingWaveScaleView{})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 }

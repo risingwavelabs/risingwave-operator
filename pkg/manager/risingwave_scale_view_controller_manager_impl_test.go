@@ -22,6 +22,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
@@ -58,8 +59,8 @@ func TestRisingWaveScaleViewControllerManagerImpl_GrabOrUpdateScaleViewLock(t *t
 
 	// Grab the lock.
 	r, err := impl.GrabOrUpdateScaleViewLock(context.Background(), logr.Discard(), risingwave)
-	assert.Nil(t, err, "should be nil")
-	assert.Equal(t, r, ctrl.Result{Requeue: true}, "should requeue immediately")
+	require.NoError(t, err, "should be nil")
+	assert.Equal(t, ctrl.Result{Requeue: true}, r, "should requeue immediately")
 
 	// Checks RisingWave and RisingWaveScaleView
 	_ = client.Get(context.Background(), types.NamespacedName{Namespace: risingwave.Namespace, Name: risingwave.Name}, risingwave)
@@ -70,16 +71,16 @@ func TestRisingWaveScaleViewControllerManagerImpl_GrabOrUpdateScaleViewLock(t *t
 
 	// Run again. Nothing happens.
 	r, err = impl.GrabOrUpdateScaleViewLock(context.Background(), logr.Discard(), risingwave)
-	assert.Nil(t, err, "should be nil")
-	assert.Equal(t, r, ctrl.Result{}, "should be empty")
+	require.NoError(t, err, "should be nil")
+	assert.Equal(t, ctrl.Result{}, r, "should be empty")
 
 	// Change the scale view, try updating lock.
 	scaleView.Generation = 2
 	scaleView.Spec.Replicas = ptr.To(int32(2))
 
 	r, err = impl.GrabOrUpdateScaleViewLock(context.Background(), logr.Discard(), risingwave)
-	assert.Nil(t, err, "should be nil")
-	assert.Equal(t, r, ctrl.Result{Requeue: true}, "should requeue immediately")
+	require.NoError(t, err, "should be nil")
+	assert.Equal(t, ctrl.Result{Requeue: true}, r, "should requeue immediately")
 
 	_ = client.Get(context.Background(), types.NamespacedName{Namespace: risingwave.Namespace, Name: risingwave.Name}, risingwave)
 
@@ -105,8 +106,8 @@ func TestRisingWaveScaleViewControllerManagerImpl_UpdateScaleViewStatus(t *testi
 	scaleView.Status.Locked = !scaleView.Status.Locked
 
 	r, err := impl.UpdateScaleViewStatus(context.Background(), logr.Discard())
-	assert.Nil(t, err, "should be nil")
-	assert.Equal(t, r, ctrl.Result{}, "should be empty")
+	require.NoError(t, err, "should be nil")
+	assert.Equal(t, ctrl.Result{}, r, "should be empty")
 
 	// Checks on the status.
 	var remoteScaleView risingwavev1alpha1.RisingWaveScaleView

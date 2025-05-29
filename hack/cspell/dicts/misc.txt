@@ -60,3 +60,4 @@ errcheck
 gocritic
 gocognit
 promlinter
+staticcheck

@@ -58,7 +58,7 @@ func (r *controllerMetricsRecorder) afterReconcile(ctx context.Context, request 
 		return
 	}
 
-	//nolint:gocritic
+	//nolint:gocritic,staticcheck
 	if *err != nil {
 		IncControllerReconcileRequeueErrorCount(namespace, r.gvk)
 	} else if result.RequeueAfter > 0 {

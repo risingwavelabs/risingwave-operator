@@ -428,7 +428,7 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		path := risingwaveManger.StateStoreRootPath()
 		risingwaveManger.UpdateStatus(func(status *risingwavev1alpha1.RisingWaveStatus) {
 			// Set once and never update.
-			if status.Internal.StateStoreRootPath != "" {
+			if status.Internal.StateStoreRootPath == "" {
 				status.Internal.StateStoreRootPath = path
 			}
 		})

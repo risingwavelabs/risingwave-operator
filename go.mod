@@ -16,7 +16,7 @@ require (
 	github.com/risingwavelabs/ctrlkit v1.0.1
 	github.com/samber/lo v1.50.0
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/mod v0.24.0
+	golang.org/x/mod v0.25.0
 	golang.org/x/time v0.11.0
 	google.golang.org/grpc v1.72.2
 	google.golang.org/protobuf v1.36.6

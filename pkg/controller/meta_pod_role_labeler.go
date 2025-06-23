@@ -19,6 +19,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -177,7 +179,12 @@ func (mpl *MetaPodRoleLabeler) syncRoleLabelForSinglePod(ctx context.Context, po
 
 	// Send a gRPC request and get the current role.
 	role, err := func() (string, error) {
-		ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		timeoutSecond, _ := strconv.Atoi(os.Getenv(envs.MetaRPCTimeoutSecond))
+		timeout := time.Duration(timeoutSecond) * time.Second
+		if timeout <= 0 {
+			timeout = 2 * time.Second // Default timeout.
+		}
+		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
 		return mpl.getMetaRole(ctx, pod.Status.PodIP, uint(svcPort), endpoint)

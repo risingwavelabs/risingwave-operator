@@ -179,7 +179,12 @@ func (mpl *MetaPodRoleLabeler) syncRoleLabelForSinglePod(ctx context.Context, po
 
 	// Send a gRPC request and get the current role.
 	role, err := func() (string, error) {
-		timeoutSecond, _ := strconv.Atoi(os.Getenv(envs.MetaRPCTimeoutSecond))
+		timeoutSecondStr := os.Getenv(envs.MetaRPCTimeoutSecond)
+		timeoutSecond, err := strconv.Atoi(timeoutSecondStr)
+		if err != nil {
+			logger.Info("Failed to parse MetaRPCTimeoutSecond, using default timeout.", "value", timeoutSecondStr, "error", err)
+			timeoutSecond = 2 // Default timeout in seconds.
+		}
 		timeout := time.Duration(timeoutSecond) * time.Second
 		if timeout <= 0 {
 			timeout = 2 * time.Second // Default timeout.

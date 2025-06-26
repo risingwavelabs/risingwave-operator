@@ -21,7 +21,7 @@ const (
 	PodNamespace = "POD_NAMESPACE"
 )
 
-// Oprator config envs.
+// Operator config envs.
 const (
 	MetaRPCTimeoutSecond = "META_RPC_TIMEOUT_SECOND"
 )

@@ -179,9 +179,9 @@ func (v *RisingWaveValidatingWebhook) validateMetaStoreAndStateStore(path *field
 	validMetaStoreTypeCount := lo.CountBy([]bool{isMetaMemory, isMetaEtcd, isMetaSQLite,
 		isMetaMySQL, isMetaPG}, func(x bool) bool { return x })
 	if validMetaStoreTypeCount == 0 {
-		fieldErrs = append(fieldErrs, field.Invalid(path.Child("metaStore"), stateStore, "must configure the meta store"))
+		fieldErrs = append(fieldErrs, field.Invalid(path.Child("metaStore"), metaStore, "must configure the meta store"))
 	} else if validMetaStoreTypeCount > 1 {
-		fieldErrs = append(fieldErrs, field.Invalid(path.Child("metaStore"), stateStore, "multiple meta store types"))
+		fieldErrs = append(fieldErrs, field.Invalid(path.Child("metaStore"), metaStore, "multiple meta store types"))
 	}
 
 	isStateMemory := ptrValueNotZero(stateStore.Memory)

@@ -49,8 +49,8 @@ const (
 	RWPrometheusListenerAddr   = "RW_PROMETHEUS_LISTENER_ADDR"
 	RWParallelism              = "RW_PARALLELISM"
 	RWTotalMemoryBytes         = "RW_TOTAL_MEMORY_BYTES"
-	RWSslCert                  = "RW_SSL_CERT"
-	RWSslKey                   = "RW_SSL_KEY"
+	RWSslCert                  = "RW_SSL_CERT" // Path to the SSL certificate file.
+	RWSslKey                   = "RW_SSL_KEY"  // Path to the SSL key file.
 	RWLicenseKey               = "RW_LICENSE_KEY"
 	RWLicenseKeyPath           = "RW_LICENSE_KEY_PATH"
 	RWSecretStorePrivateKeyHex = "RW_SECRET_STORE_PRIVATE_KEY_HEX"

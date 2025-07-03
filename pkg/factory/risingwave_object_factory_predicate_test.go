@@ -1071,6 +1071,62 @@ func tlsPredicates() []predicate[*corev1.PodTemplateSpec, tlsTestcase] {
 				})
 			},
 		},
+		{
+			Name: "volumes-contain",
+			Fn: func(obj *corev1.PodTemplateSpec, testcase tlsTestcase) bool {
+				if len(testcase.expectedVolumes) == 0 {
+					return true
+				}
+				if len(obj.Spec.Volumes) == 0 {
+					return false
+				}
+				// Contains all expected volumes.
+				return listContainsByKey(obj.Spec.Volumes, testcase.expectedVolumes, func(t *corev1.Volume) string { return t.Name }, deepEqual[corev1.Volume])
+			},
+		},
+		{
+			Name: "volumes-not-contain",
+			Fn: func(obj *corev1.PodTemplateSpec, testcase tlsTestcase) bool {
+				if len(testcase.unexpectedVolumes) == 0 {
+					return true
+				}
+				if len(obj.Spec.Volumes) == 0 {
+					return false
+				}
+				// Contains none of unexpected volumes.
+				return !lo.ContainsBy(obj.Spec.Volumes, func(item corev1.Volume) bool {
+					return lo.Contains(testcase.unexpectedVolumes, item.Name)
+				})
+			},
+		},
+		{
+			Name: "volume-mounts-contain",
+			Fn: func(obj *corev1.PodTemplateSpec, testcase tlsTestcase) bool {
+				if len(testcase.expectedVolumeMounts) == 0 {
+					return true
+				}
+				if len(obj.Spec.Containers) == 0 {
+					return false
+				}
+				// Contains all expected volume mounts.
+				return listContainsByKey(obj.Spec.Containers[0].VolumeMounts, testcase.expectedVolumeMounts, func(t *corev1.VolumeMount) string { return t.Name }, deepEqual[corev1.VolumeMount])
+			},
+		},
+		{
+			Name: "volume-mounts-not-contain",
+			Fn: func(obj *corev1.PodTemplateSpec, testcase tlsTestcase) bool {
+				if len(testcase.unexpectedVolumeMounts) == 0 {
+					return true
+				}
+				if len(obj.Spec.Containers) == 0 {
+					return false
+				}
+				// Contains none of unexpected volume mounts.
+				return !lo.ContainsBy(obj.Spec.Containers[0].VolumeMounts, func(item corev1.VolumeMount) bool {
+					return lo.Contains(testcase.unexpectedVolumeMounts, item.Name)
+				})
+			},
+		},
 	}
 }
 

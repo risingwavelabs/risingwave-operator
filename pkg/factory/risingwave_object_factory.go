@@ -49,12 +49,14 @@ import (
 
 const (
 	risingWaveConfigVolume = "risingwave-config"
+	risingwaveTLSVolume    = "risingwave-tls"
 	risingWaveConfigMapKey = "risingwave.toml"
 
-	risingwaveExecutablePath  = "/risingwave/bin/risingwave"
-	risingwaveConfigMountPath = "/risingwave/config"
-	risingwaveConfigFileName  = "risingwave.toml"
-	risingwaveLicenseKeyPath  = "/license/license.jwt"
+	risingwaveExecutablePath    = "/risingwave/bin/risingwave"
+	risingwaveConfigMountPath   = "/risingwave/config"
+	risingwaveConfigFileName    = "risingwave.toml"
+	risingwaveLicenseKeyPath    = "/license/license.jwt"
+	risingwaveTLSCertsMountPath = "/risingwave/tls"
 )
 
 var (
@@ -828,31 +830,41 @@ func (f *RisingWaveObjectFactory) envsForMetaArgs(image string) []corev1.EnvVar 
 	return envVars
 }
 
+func (f *RisingWaveObjectFactory) volumeAndVolumeMountForTLS() (*corev1.Volume, *corev1.VolumeMount) {
+	tls := f.risingwave.Spec.TLS
+	if tls == nil || tls.SecretName == "" {
+		return nil, nil
+	}
+
+	vol := &corev1.Volume{
+		Name: risingwaveTLSVolume,
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: tls.SecretName,
+			},
+		},
+	}
+
+	volMount := &corev1.VolumeMount{
+		Name:      risingwaveTLSVolume,
+		MountPath: risingwaveTLSCertsMountPath,
+		ReadOnly:  true,
+	}
+
+	return vol, volMount
+}
+
 func (f *RisingWaveObjectFactory) envsForTLS() []corev1.EnvVar {
 	tls := f.risingwave.Spec.TLS
 	if tls != nil && tls.SecretName != "" {
 		return []corev1.EnvVar{
 			{
-				Name: envs.RWSslKey,
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: tls.SecretName,
-						},
-						Key: corev1.TLSPrivateKeyKey,
-					},
-				},
+				Name:  envs.RWSslKey,
+				Value: path.Join(risingwaveTLSCertsMountPath, corev1.TLSPrivateKeyKey),
 			},
 			{
-				Name: envs.RWSslCert,
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: tls.SecretName,
-						},
-						Key: corev1.TLSCertKey,
-					},
-				},
+				Name:  envs.RWSslCert,
+				Value: path.Join(risingwaveTLSCertsMountPath, corev1.TLSCertKey),
 			},
 		}
 	}
@@ -1948,6 +1960,16 @@ func (f *RisingWaveObjectFactory) setupFrontendContainer(podSpec *corev1.PodSpec
 	container.Env = mergedVars
 	container.Ports = f.portsForFrontendContainer()
 
+	if vol, volMount := f.volumeAndVolumeMountForTLS(); vol != nil && volMount != nil {
+		// Add or override the volume and volume mount for TLS.
+		podSpec.Volumes = mergeListWhenKeyEquals(podSpec.Volumes, *vol, func(a, b *corev1.Volume) bool {
+			return a.Name == b.Name
+		})
+		container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, *volMount, func(a, b *corev1.VolumeMount) bool {
+			return a.MountPath == b.MountPath
+		})
+	}
+
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(), func(a, b *corev1.VolumeMount) bool {
 		return a.MountPath == b.MountPath
 	})
@@ -2183,6 +2205,16 @@ func (f *RisingWaveObjectFactory) setupStandaloneContainer(podSpec *corev1.PodSp
 	for _, env := range f.envsForMetaStore() {
 		container.Env = mergeListWhenKeyEquals(container.Env, env,
 			func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
+	}
+
+	if vol, volMount := f.volumeAndVolumeMountForTLS(); vol != nil && volMount != nil {
+		// Add or override the volume and volume mount for TLS.
+		podSpec.Volumes = mergeListWhenKeyEquals(podSpec.Volumes, *vol, func(a, b *corev1.Volume) bool {
+			return a.Name == b.Name
+		})
+		container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, *volMount, func(a, b *corev1.VolumeMount) bool {
+			return a.MountPath == b.MountPath
+		})
 	}
 
 	container.VolumeMounts = mergeListWhenKeyEquals(container.VolumeMounts, f.volumeMountForConfig(),

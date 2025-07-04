@@ -3993,10 +3993,14 @@ func metaStoreTestCases() map[string]metaStoreTestCase {
 }
 
 type tlsTestcase struct {
-	standalone     bool
-	tls            *risingwavev1alpha1.RisingWaveTLSConfiguration
-	expectedEnvs   []corev1.EnvVar
-	unexpectedEnvs []string
+	standalone             bool
+	tls                    *risingwavev1alpha1.RisingWaveTLSConfiguration
+	expectedEnvs           []corev1.EnvVar
+	unexpectedEnvs         []string
+	expectedVolumes        []corev1.Volume
+	expectedVolumeMounts   []corev1.VolumeMount
+	unexpectedVolumes      []string
+	unexpectedVolumeMounts []string
 }
 
 func tlsTestcases() map[string]tlsTestcase {
@@ -4007,6 +4011,8 @@ func tlsTestcases() map[string]tlsTestcase {
 				"RW_SSL_KEY",
 				"RW_SSL_CERT",
 			},
+			unexpectedVolumes:      []string{"risingwave-tls"},
+			unexpectedVolumeMounts: []string{"risingwave-tls"},
 		},
 		"tls-disabled-empty": {
 			tls: &risingwavev1alpha1.RisingWaveTLSConfiguration{
@@ -4016,6 +4022,8 @@ func tlsTestcases() map[string]tlsTestcase {
 				"RW_SSL_KEY",
 				"RW_SSL_CERT",
 			},
+			unexpectedVolumes:      []string{"risingwave-tls"},
+			unexpectedVolumeMounts: []string{"risingwave-tls"},
 		},
 		"tls-enabled": {
 			tls: &risingwavev1alpha1.RisingWaveTLSConfiguration{
@@ -4023,26 +4031,29 @@ func tlsTestcases() map[string]tlsTestcase {
 			},
 			expectedEnvs: []corev1.EnvVar{
 				{
-					Name: "RW_SSL_KEY",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "tls",
-							},
-							Key: "tls.key",
+					Name:  "RW_SSL_KEY",
+					Value: "/risingwave/tls/tls.key",
+				},
+				{
+					Name:  "RW_SSL_CERT",
+					Value: "/risingwave/tls/tls.crt",
+				},
+			},
+			expectedVolumes: []corev1.Volume{
+				{
+					Name: "risingwave-tls",
+					VolumeSource: corev1.VolumeSource{
+						Secret: &corev1.SecretVolumeSource{
+							SecretName: "tls",
 						},
 					},
 				},
+			},
+			expectedVolumeMounts: []corev1.VolumeMount{
 				{
-					Name: "RW_SSL_CERT",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "tls",
-							},
-							Key: "tls.crt",
-						},
-					},
+					Name:      "risingwave-tls",
+					MountPath: "/risingwave/tls",
+					ReadOnly:  true,
 				},
 			},
 		},
@@ -4053,6 +4064,8 @@ func tlsTestcases() map[string]tlsTestcase {
 				"RW_SSL_KEY",
 				"RW_SSL_CERT",
 			},
+			unexpectedVolumes:      []string{"risingwave-tls"},
+			unexpectedVolumeMounts: []string{"risingwave-tls"},
 		},
 		"tls-disabled-empty-standalone": {
 			standalone: true,
@@ -4063,6 +4076,8 @@ func tlsTestcases() map[string]tlsTestcase {
 				"RW_SSL_KEY",
 				"RW_SSL_CERT",
 			},
+			unexpectedVolumes:      []string{"risingwave-tls"},
+			unexpectedVolumeMounts: []string{"risingwave-tls"},
 		},
 		"tls-enabled-standalone": {
 			standalone: true,
@@ -4071,26 +4086,29 @@ func tlsTestcases() map[string]tlsTestcase {
 			},
 			expectedEnvs: []corev1.EnvVar{
 				{
-					Name: "RW_SSL_KEY",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "tls",
-							},
-							Key: "tls.key",
+					Name:  "RW_SSL_KEY",
+					Value: "/risingwave/tls/tls.key",
+				},
+				{
+					Name:  "RW_SSL_CERT",
+					Value: "/risingwave/tls/tls.crt",
+				},
+			},
+			expectedVolumes: []corev1.Volume{
+				{
+					Name: "risingwave-tls",
+					VolumeSource: corev1.VolumeSource{
+						Secret: &corev1.SecretVolumeSource{
+							SecretName: "tls",
 						},
 					},
 				},
+			},
+			expectedVolumeMounts: []corev1.VolumeMount{
 				{
-					Name: "RW_SSL_CERT",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "tls",
-							},
-							Key: "tls.crt",
-						},
-					},
+					Name:      "risingwave-tls",
+					MountPath: "/risingwave/tls",
+					ReadOnly:  true,
 				},
 			},
 		},

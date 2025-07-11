@@ -1088,14 +1088,14 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 			endpoint = "https://" + endpoint
 		}
 
-		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials)
+		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials, s3Spec.ForcePathStyle)
 	}
 
 	// AWS S3 mode.
 	return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials)
 }
 
-func envsForS3Compatible(region, endpoint, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials) []corev1.EnvVar {
+func envsForS3Compatible(region, endpoint, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials, forcePathStyle bool) []corev1.EnvVar {
 	secretRef := corev1.LocalObjectReference{
 		Name: credentials.SecretName,
 	}
@@ -1152,6 +1152,10 @@ func envsForS3Compatible(region, endpoint, bucket string, credentials risingwave
 		{
 			Name:  envs.S3CompatibleEndpoint,
 			Value: endpoint,
+		},
+		{
+			Name:  envs.S3CompatibleForcePathStyle,
+			Value: strconv.FormatBool(forcePathStyle),
 		},
 	}
 }

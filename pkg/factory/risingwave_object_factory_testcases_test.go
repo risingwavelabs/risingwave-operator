@@ -3222,6 +3222,66 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 				},
 			},
 		},
+		"s3-compatible-http": {
+			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
+				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{
+					Bucket:   "s3-hummock01",
+					Endpoint: "http://oss-cn-hangzhou.aliyuncs.com",
+					RisingWaveS3Credentials: risingwavev1alpha1.RisingWaveS3Credentials{
+						SecretName:         "s3-creds",
+						AccessKeyRef:       consts.SecretKeyAWSS3AccessKeyID,
+						SecretAccessKeyRef: consts.SecretKeyAWSS3SecretAccessKey,
+					},
+				},
+			},
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_STATE_STORE",
+					Value: "hummock+s3://s3-hummock01",
+				},
+				{
+					Name:  "AWS_S3_BUCKET",
+					Value: "s3-hummock01",
+				},
+				{
+					Name:  "RW_S3_ENDPOINT",
+					Value: "http://oss-cn-hangzhou.aliyuncs.com",
+				},
+				{
+					Name: "AWS_ACCESS_KEY_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3AccessKeyID,
+						},
+					},
+				},
+				{
+					Name: "AWS_SECRET_ACCESS_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3SecretAccessKey,
+						},
+					},
+				},
+				{
+					Name: "AWS_REGION",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "s3-creds",
+							},
+							Key: consts.SecretKeyAWSS3Region,
+						},
+					},
+				},
+			},
+		},
 		"s3-compatible-virtual-hosted-style": {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				S3: &risingwavev1alpha1.RisingWaveStateStoreBackendS3{

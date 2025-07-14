@@ -1118,7 +1118,7 @@ func envsForS3Compatible(region, endpoint, bucket string, credentials risingwave
 		}
 	}
 
-	return []corev1.EnvVar{
+	envVars := []corev1.EnvVar{
 		{
 			// Disable auto region loading. Refer to the original source for more information.
 			// https://github.com/awslabs/aws-sdk-rust/blob/main/sdk/aws-config/src/imds/region.rs
@@ -1153,11 +1153,16 @@ func envsForS3Compatible(region, endpoint, bucket string, credentials risingwave
 			Name:  envs.S3CompatibleEndpoint,
 			Value: endpoint,
 		},
-		{
+	}
+
+	if forcePathStyle {
+		envVars = append(envVars, corev1.EnvVar{
 			Name:  envs.S3CompatibleForcePathStyle,
 			Value: strconv.FormatBool(forcePathStyle),
-		},
+		})
 	}
+
+	return envVars
 }
 
 func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {

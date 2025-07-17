@@ -1030,7 +1030,7 @@ func (f *RisingWaveObjectFactory) envsForMinIO() []corev1.EnvVar {
 	}
 }
 
-func envsForAWSS3(region, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials) []corev1.EnvVar {
+func envsForAWSS3(region, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials, forcePathStyle bool) []corev1.EnvVar {
 	envVars := []corev1.EnvVar{
 		{
 			Name:  envs.AWSRegion,
@@ -1069,6 +1069,13 @@ func envsForAWSS3(region, bucket string, credentials risingwavev1alpha1.RisingWa
 		envVars = append(envVars, credentialsEnvVars...)
 	}
 
+	if forcePathStyle {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  envs.AWSForcePathStyle,
+			Value: strconv.FormatBool(forcePathStyle),
+		})
+	}
+
 	return envVars
 }
 
@@ -1092,7 +1099,7 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 	}
 
 	// AWS S3 mode.
-	return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials)
+	return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials, s3Spec.ForcePathStyle)
 }
 
 func envsForS3Compatible(region, endpoint, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials, forcePathStyle bool) []corev1.EnvVar {

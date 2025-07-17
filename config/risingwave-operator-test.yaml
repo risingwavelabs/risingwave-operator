@@ -31058,6 +31058,9 @@ spec:
                           Both HTTP and HTTPS are allowed. The default scheme is HTTPS if not specified.
                         pattern: ^(?:https?://)?(?:[^/.\s]+\.)*(?:[^/\s]+)*$
                         type: string
+                      forcePathStyle:
+                        description: Enforce path style requests.
+                        type: boolean
                       region:
                         default: us-east-1
                         description: Region of AWS S3 service. Defaults to "us-east-1".

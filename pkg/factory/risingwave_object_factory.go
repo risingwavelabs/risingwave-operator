@@ -1084,7 +1084,7 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 		endpoint = strings.ReplaceAll(endpoint, "${REGION}", fmt.Sprintf("$(%s)", envs.S3CompatibleRegion))
 		endpoint = strings.ReplaceAll(endpoint, "${BUCKET}", fmt.Sprintf("$(%s)", envs.S3CompatibleBucket))
 
-		if !strings.HasPrefix(endpoint, "https://") {
+		if !strings.HasPrefix(endpoint, "https://") && !strings.HasPrefix(endpoint, "http://") {
 			endpoint = "https://" + endpoint
 		}
 

@@ -78,6 +78,7 @@ const (
 	AWSSecretAccessKey     = "AWS_SECRET_ACCESS_KEY"
 	AWSS3Bucket            = "AWS_S3_BUCKET"
 	AWSEC2MetadataDisabled = "AWS_EC2_METADATA_DISABLED"
+	AWSForcePathStyle      = "RW_IS_FORCE_PATH_STYLE"
 )
 
 // S3 compatible.
@@ -87,6 +88,7 @@ const (
 	S3CompatibleAccessKeyID     = "AWS_ACCESS_KEY_ID"
 	S3CompatibleSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
 	S3CompatibleEndpoint        = "RW_S3_ENDPOINT"
+	S3CompatibleForcePathStyle  = "RW_IS_FORCE_PATH_STYLE"
 )
 
 // Azure blob.

@@ -5668,6 +5668,18 @@ ${BUCKET}.s3.${REGION}.amazonaws.com
 Both HTTP and HTTPS are allowed. The default scheme is HTTPS if not specified.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>forcePathStyle</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enforce path style requests.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="risingwave.risingwavelabs.com/v1alpha1.RisingWaveStateStoreBackendType">RisingWaveStateStoreBackendType

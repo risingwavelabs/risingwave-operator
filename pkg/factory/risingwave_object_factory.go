@@ -1030,7 +1030,7 @@ func (f *RisingWaveObjectFactory) envsForMinIO() []corev1.EnvVar {
 	}
 }
 
-func envsForAWSS3(region, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials) []corev1.EnvVar {
+func envsForAWSS3(region, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials, forcePathStyle bool) []corev1.EnvVar {
 	envVars := []corev1.EnvVar{
 		{
 			Name:  envs.AWSRegion,
@@ -1069,6 +1069,13 @@ func envsForAWSS3(region, bucket string, credentials risingwavev1alpha1.RisingWa
 		envVars = append(envVars, credentialsEnvVars...)
 	}
 
+	if forcePathStyle {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  envs.AWSForcePathStyle,
+			Value: strconv.FormatBool(forcePathStyle),
+		})
+	}
+
 	return envVars
 }
 
@@ -1088,14 +1095,14 @@ func (f *RisingWaveObjectFactory) envsForS3() []corev1.EnvVar {
 			endpoint = "https://" + endpoint
 		}
 
-		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials)
+		return envsForS3Compatible(s3Spec.Region, endpoint, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials, s3Spec.ForcePathStyle)
 	}
 
 	// AWS S3 mode.
-	return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials)
+	return envsForAWSS3(s3Spec.Region, s3Spec.Bucket, s3Spec.RisingWaveS3Credentials, s3Spec.ForcePathStyle)
 }
 
-func envsForS3Compatible(region, endpoint, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials) []corev1.EnvVar {
+func envsForS3Compatible(region, endpoint, bucket string, credentials risingwavev1alpha1.RisingWaveS3Credentials, forcePathStyle bool) []corev1.EnvVar {
 	secretRef := corev1.LocalObjectReference{
 		Name: credentials.SecretName,
 	}
@@ -1118,7 +1125,7 @@ func envsForS3Compatible(region, endpoint, bucket string, credentials risingwave
 		}
 	}
 
-	return []corev1.EnvVar{
+	envVars := []corev1.EnvVar{
 		{
 			// Disable auto region loading. Refer to the original source for more information.
 			// https://github.com/awslabs/aws-sdk-rust/blob/main/sdk/aws-config/src/imds/region.rs
@@ -1154,6 +1161,15 @@ func envsForS3Compatible(region, endpoint, bucket string, credentials risingwave
 			Value: endpoint,
 		},
 	}
+
+	if forcePathStyle {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  envs.S3CompatibleForcePathStyle,
+			Value: strconv.FormatBool(forcePathStyle),
+		})
+	}
+
+	return envVars
 }
 
 func (f *RisingWaveObjectFactory) envsForGCS() []corev1.EnvVar {

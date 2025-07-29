@@ -20,7 +20,7 @@ spec:
       region: ap-guangzhou
       credentials:
         secretName: cos-credentials
-  image: risingwavelabs/risingwave:v2.4.3
+  image: risingwavelabs/risingwave:v2.5.0
   components:
     meta:
       nodeGroups:

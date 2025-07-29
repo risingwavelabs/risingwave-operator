@@ -139,7 +139,7 @@ kind: RisingWave
 metadata:
   name: risingwave
 spec:
-  image: risingwavelabs/risingwave:v2.4.3
+  image: risingwavelabs/risingwave:v2.5.0
   metaStore:
     postgresql:
       host: postgres

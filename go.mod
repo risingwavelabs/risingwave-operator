@@ -10,7 +10,7 @@ require (
 	github.com/go-logr/logr v1.4.3
 	github.com/google/uuid v1.6.0
 	github.com/openkruise/kruise-api v1.8.0
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.84.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.84.1
 	github.com/prometheus/client_golang v1.23.0
 	github.com/prometheus/client_model v0.6.2
 	github.com/risingwavelabs/ctrlkit v1.0.1

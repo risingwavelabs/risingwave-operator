@@ -31,6 +31,17 @@ spec:
     matchLabels:
       app: postgres
   serviceName: postgres
+  volumeClaimTemplates:
+  - metadata:
+      name: pg-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+  persistentVolumeClaimRetentionPolicy:
+    whenScaled: Retain
+    whenDeleted: Delete
   template:
     metadata:
       labels:
@@ -40,6 +51,9 @@ spec:
       - name: postgres
         image: postgres:17
         imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - mountPath: /var/lib/postgresql
+          name: pg-data
         env:
         - name: POSTGRES_PASSWORD
           valueFrom:

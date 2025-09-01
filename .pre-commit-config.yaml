@@ -9,7 +9,7 @@ repos:
       - spellcheck
     always_run: true
     stages:
-      - commit
+      - pre-commit
   - id: shellcheck
     name: shellcheck
     language: system
@@ -19,7 +19,7 @@ repos:
     - shopt -s globstar; shellcheck -x -e SC1091 -s bash test/**/*.sh
     always_run: true
     stages:
-    - commit
+    - pre-commit
 - repo: https://github.com/arkbriar/pre-commit-golang
   rev: master
   hooks:

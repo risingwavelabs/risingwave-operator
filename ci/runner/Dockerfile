@@ -1,6 +1,6 @@
-FROM golang:1.24
+FROM golang:1.25
 
-ARG KIND_VERSION=v0.18.0
+ARG KIND_VERSION=v0.30.0
 ARG SHELLCHECK_VERSION=v0.10.0
 
 RUN apt-get update && \

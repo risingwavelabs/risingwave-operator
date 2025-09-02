@@ -223,11 +223,11 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 
 CONTROLLER_GEN = $(shell pwd)/bin/$(OS)/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.16.1)
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.19.0)
 
 KUSTOMIZE = $(shell pwd)/bin/$(OS)/kustomize
 kustomize: ## Download kustomize locally if necessary.
-	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.5.5)
+	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.5.7)
 
 ENVTEST = $(shell pwd)/bin/$(OS)/setup-envtest
 envtest: ## Download envtest-setup locally if necessary.
@@ -244,7 +244,7 @@ ctrlkit-gen: ## Download ctrlkit locally if necessary.
 
 GOIMPORTS-REVISER = $(shell pwd)/bin/$(OS)/goimports-reviser
 goimports-reviser: ## Download goimports-reviser locally if necessary.
-	$(call go-get-tool,$(GOIMPORTS-REVISER),github.com/incu6us/goimports-reviser/v3@v3.6.0)
+	$(call go-get-tool,$(GOIMPORTS-REVISER),github.com/incu6us/goimports-reviser/v3@v3.9.1)
 
 GEN_CRD_API_REFERENCE_DOCS = $(shell pwd)/bin/$(OS)/gen-crd-api-reference-docs
 gen-crd-api-reference-docs: ## Download gen-crd-api-reference-docs locally if necessary

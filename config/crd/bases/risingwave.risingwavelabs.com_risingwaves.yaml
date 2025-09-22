@@ -31648,6 +31648,12 @@ spec:
                   Flag to control whether to deploy in standalone mode or distributed mode. If standalone mode is used,
                   spec.components will be ignored. Standalone mode can be turned on/off dynamically.
                 type: boolean
+              enableWebhookListener:
+                default: false
+                description: |-
+                  Flag to control whether to enable the webhook listener. If enabled, the webhook listener will be started
+                  in the frontend nodes to receive the webhook events from external systems, e.g., GitHub.
+                type: boolean
               frontendServiceType:
                 default: ClusterIP
                 description: FrontendServiceType determines the service type of the

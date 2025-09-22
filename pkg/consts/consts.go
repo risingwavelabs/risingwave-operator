@@ -114,6 +114,7 @@ const (
 // Port names of components.
 const (
 	PortService   string = "service"
+	PortHTTP      string = "http"
 	PortMetrics   string = "metrics"
 	PortDashboard string = "dashboard"
 )
@@ -127,6 +128,7 @@ const (
 	ComputeMetricsPort   int32 = 1222
 	FrontendServicePort  int32 = 4567
 	FrontendMetricsPort  int32 = 8080
+	FrontendWebhookPort  int32 = 4560
 	CompactorServicePort int32 = 6660
 	CompactorMetricsPort int32 = 1260
 )

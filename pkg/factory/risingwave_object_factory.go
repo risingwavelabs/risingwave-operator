@@ -872,6 +872,10 @@ func (f *RisingWaveObjectFactory) envsForTLS() []corev1.EnvVar {
 	return nil
 }
 
+func (f *RisingWaveObjectFactory) isWebhookListenerEnabled() bool {
+	return ptr.Deref(f.risingwave.Spec.EnableWebhookListener, false)
+}
+
 func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
 	envVars := []corev1.EnvVar{
 		{
@@ -898,6 +902,13 @@ func (f *RisingWaveObjectFactory) envsForFrontendArgs() []corev1.EnvVar {
 			Name:  envs.RWPrometheusListenerAddr,
 			Value: fmt.Sprintf("0.0.0.0:%d", consts.FrontendMetricsPort),
 		},
+	}
+
+	if f.isWebhookListenerEnabled() {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  envs.RWWebhookListenAddr,
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.FrontendWebhookPort),
+		})
 	}
 
 	return append(envVars, f.envsForTLS()...)
@@ -1912,7 +1923,7 @@ func newWorkloadObjectForComponentNodeGroup[T client.Object](f *RisingWaveObject
 }
 
 func (f *RisingWaveObjectFactory) portsForFrontendContainer() []corev1.ContainerPort {
-	return []corev1.ContainerPort{
+	ports := []corev1.ContainerPort{
 		{
 			Name:          consts.PortService,
 			Protocol:      corev1.ProtocolTCP,
@@ -1924,6 +1935,16 @@ func (f *RisingWaveObjectFactory) portsForFrontendContainer() []corev1.Container
 			ContainerPort: consts.FrontendMetricsPort,
 		},
 	}
+
+	if f.isWebhookListenerEnabled() {
+		ports = append(ports, corev1.ContainerPort{
+			Name:          consts.PortHTTP,
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: consts.FrontendWebhookPort,
+		})
+	}
+
+	return ports
 }
 
 func (f *RisingWaveObjectFactory) isEmbeddedServingModeEnabled() bool {
@@ -2142,8 +2163,7 @@ func (f *RisingWaveObjectFactory) argsForStandaloneV2() []string {
 }
 
 func (f *RisingWaveObjectFactory) portsForStandaloneContainer() []corev1.ContainerPort {
-	// TODO: either expose each metrics port, or combine them into one.
-	return []corev1.ContainerPort{
+	ports := []corev1.ContainerPort{
 		{
 			Name:          consts.PortMetrics,
 			Protocol:      corev1.ProtocolTCP,
@@ -2160,6 +2180,16 @@ func (f *RisingWaveObjectFactory) portsForStandaloneContainer() []corev1.Contain
 			ContainerPort: consts.MetaDashboardPort,
 		},
 	}
+
+	if f.isWebhookListenerEnabled() {
+		ports = append(ports, corev1.ContainerPort{
+			Name:          consts.PortHTTP,
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: consts.FrontendWebhookPort,
+		})
+	}
+
+	return ports
 }
 
 func (f *RisingWaveObjectFactory) setupStandaloneContainer(podSpec *corev1.PodSpec, container *corev1.Container) {
@@ -2223,6 +2253,13 @@ func (f *RisingWaveObjectFactory) setupStandaloneContainer(podSpec *corev1.PodSp
 			func(a, b *corev1.EnvVar) bool { return a.Name == b.Name })
 	}
 
+	if f.isWebhookListenerEnabled() {
+		container.Env = append(container.Env, corev1.EnvVar{
+			Name:  envs.RWWebhookListenAddr,
+			Value: fmt.Sprintf("0.0.0.0:%d", consts.FrontendWebhookPort),
+		})
+	}
+
 	if vol, volMount := f.volumeAndVolumeMountForTLS(); vol != nil && volMount != nil {
 		// Add or override the volume and volume mount for TLS.
 		podSpec.Volumes = mergeListWhenKeyEquals(podSpec.Volumes, *vol, func(a, b *corev1.Volume) bool {
@@ -2280,7 +2317,7 @@ func (f *RisingWaveObjectFactory) NewStandaloneAdvancedStatefulSet() *kruiseapps
 
 // NewStandaloneService creates a Service for standalone component.
 func (f *RisingWaveObjectFactory) NewStandaloneService() *corev1.Service {
-	standaloneSvc := f.newService(consts.ComponentStandalone, corev1.ServiceTypeClusterIP, []corev1.ServicePort{
+	svcPorts := []corev1.ServicePort{
 		{
 			Name:       consts.PortService,
 			Protocol:   corev1.ProtocolTCP,
@@ -2299,7 +2336,18 @@ func (f *RisingWaveObjectFactory) NewStandaloneService() *corev1.Service {
 			Port:       consts.MetaDashboardPort,
 			TargetPort: intstr.FromString(consts.PortDashboard),
 		},
-	})
+	}
+
+	if f.isWebhookListenerEnabled() {
+		svcPorts = append(svcPorts, corev1.ServicePort{
+			Name:       consts.PortHTTP,
+			Protocol:   corev1.ProtocolTCP,
+			Port:       consts.FrontendWebhookPort,
+			TargetPort: intstr.FromString(consts.PortHTTP),
+		})
+	}
+
+	standaloneSvc := f.newService(consts.ComponentStandalone, corev1.ServiceTypeClusterIP, svcPorts)
 
 	return mustSetControllerReference(f.risingwave, standaloneSvc, f.scheme)
 }
@@ -2352,6 +2400,15 @@ func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 			Protocol:   corev1.ProtocolTCP,
 			Port:       consts.FrontendMetricsPort,
 			TargetPort: intstr.FromString(consts.PortMetrics),
+		})
+	}
+
+	if f.isWebhookListenerEnabled() {
+		svcPorts = append(svcPorts, corev1.ServicePort{
+			Name:       consts.PortHTTP,
+			Protocol:   corev1.ProtocolTCP,
+			Port:       consts.FrontendWebhookPort,
+			TargetPort: intstr.FromString(consts.PortHTTP),
 		})
 	}
 

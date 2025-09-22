@@ -36,6 +36,7 @@ func Test_RisingWaveObjectFactory_Services(t *testing.T) {
 
 	for name, tc := range servicesTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+			r.Spec.EnableWebhookListener = tc.enableWebhookListener
 			r.Spec.EnableStandaloneMode = ptr.To(tc.enableStandaloneMode)
 			r.Spec.FrontendServiceType = tc.globalServiceType
 		})
@@ -673,6 +674,42 @@ func TestRisingWaveObjectFactory_SecretStore_Standalone(t *testing.T) {
 
 			template := factory.NewStandaloneStatefulSet().Spec.Template
 			composeAssertions(predicates, t).assertTest(&template, tc)
+		})
+	}
+}
+
+func TestRisingWaveObjectFactory_Webhook(t *testing.T) {
+	for name, tc := range webhookTestcases() {
+		t.Run(name, func(t *testing.T) {
+			factory := NewRisingWaveObjectFactory(newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.MetaStore.Memory = ptr.To(true)
+				r.Spec.StateStore.Memory = ptr.To(true)
+				r.Spec.EnableWebhookListener = ptr.To(tc.webhookEnabled)
+				r.Spec.Components.Frontend.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+					{
+						Name: "",
+					},
+				}
+			}), testutils.Scheme, "")
+
+			template := factory.NewFrontendDeployment("").Spec.Template
+			composeAssertions(webhookPredicates(), t).assertTest(&template, tc)
+		})
+	}
+}
+
+func TestRisingWaveObjectFactory_Webhook_Standalone(t *testing.T) {
+	for name, tc := range webhookTestcases() {
+		t.Run(name, func(t *testing.T) {
+			factory := NewRisingWaveObjectFactory(newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.EnableStandaloneMode = ptr.To(true)
+				r.Spec.MetaStore.Memory = ptr.To(true)
+				r.Spec.StateStore.Memory = ptr.To(true)
+				r.Spec.EnableWebhookListener = ptr.To(tc.webhookEnabled)
+			}), testutils.Scheme, "")
+
+			template := factory.NewStandaloneStatefulSet().Spec.Template
+			composeAssertions(webhookPredicates(), t).assertTest(&template, tc)
 		})
 	}
 }

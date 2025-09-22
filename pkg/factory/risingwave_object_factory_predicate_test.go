@@ -1290,3 +1290,58 @@ func secretStorePredicates() []predicate[*corev1.PodTemplateSpec, secretStoreTes
 		},
 	}
 }
+
+func webhookPredicates() []predicate[*corev1.PodTemplateSpec, webhookTestcase] {
+	return []predicate[*corev1.PodTemplateSpec, webhookTestcase]{
+		{
+			Name: "env-contains",
+			Fn: func(podTemplate *corev1.PodTemplateSpec, tc webhookTestcase) bool {
+				if len(podTemplate.Spec.Containers) == 0 {
+					return false
+				}
+				return listContainsByKey(podTemplate.Spec.Containers[0].Env, tc.envs,
+					func(t *corev1.EnvVar) string { return t.Name }, deepEqual[corev1.EnvVar])
+			},
+		},
+		{
+			Name: "port-contains",
+			Fn: func(podTemplate *corev1.PodTemplateSpec, tc webhookTestcase) bool {
+				if len(podTemplate.Spec.Containers) == 0 {
+					return false
+				}
+				return listContainsByKey(podTemplate.Spec.Containers[0].Ports, tc.containerPorts,
+					func(t *corev1.ContainerPort) string { return t.Name }, deepEqual[corev1.ContainerPort])
+			},
+		},
+		{
+			Name: "env-not-contains",
+			Fn: func(podTemplate *corev1.PodTemplateSpec, tc webhookTestcase) bool {
+				if len(tc.unexpectedEnvs) == 0 {
+					return true
+				}
+				if len(podTemplate.Spec.Containers) == 0 {
+					return false
+				}
+				// Contains none of unexpected envs.
+				return !lo.ContainsBy(podTemplate.Spec.Containers[0].Env, func(item corev1.EnvVar) bool {
+					return lo.Contains(tc.unexpectedEnvs, item.Name)
+				})
+			},
+		},
+		{
+			Name: "port-not-contains",
+			Fn: func(podTemplate *corev1.PodTemplateSpec, tc webhookTestcase) bool {
+				if len(tc.unexpectedPorts) == 0 {
+					return true
+				}
+				if len(podTemplate.Spec.Containers) == 0 {
+					return false
+				}
+				// Contains none of the unexpected ports.
+				return !lo.ContainsBy(podTemplate.Spec.Containers[0].Ports, func(item corev1.ContainerPort) bool {
+					return lo.Contains(tc.unexpectedPorts, item.ContainerPort)
+				})
+			},
+		},
+	}
+}

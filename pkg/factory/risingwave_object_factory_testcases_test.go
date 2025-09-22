@@ -65,7 +65,8 @@ type testCaseType interface {
 		tlsTestcase |
 		legacyLicenseTestCase |
 		licenseTestCase |
-		secretStoreTestCase
+		secretStoreTestCase |
+		webhookTestcase
 }
 
 type kubeObject interface {
@@ -2699,12 +2700,13 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 
 type servicesTestCase struct {
 	baseTestCase
-	component            string
-	selectorComponent    string // Empty means equals to component.
-	ports                map[string]int32
-	enableStandaloneMode bool
-	globalServiceType    corev1.ServiceType
-	expectServiceType    corev1.ServiceType
+	enableWebhookListener *bool
+	component             string
+	selectorComponent     string // Empty means equals to component.
+	ports                 map[string]int32
+	enableStandaloneMode  bool
+	globalServiceType     corev1.ServiceType
+	expectServiceType     corev1.ServiceType
 }
 
 func servicesTestCases() map[string]servicesTestCase {
@@ -2785,6 +2787,30 @@ func servicesTestCases() map[string]servicesTestCase {
 			expectServiceType:    corev1.ServiceTypeNodePort,
 			ports: map[string]int32{
 				consts.PortService: consts.FrontendServicePort,
+			},
+		},
+		"frontend-ports-with-webhook-listener": {
+			enableWebhookListener: ptr.To(true),
+			component:             consts.ComponentFrontend,
+			globalServiceType:     corev1.ServiceTypeClusterIP,
+			expectServiceType:     corev1.ServiceTypeClusterIP,
+			ports: map[string]int32{
+				consts.PortService: consts.FrontendServicePort,
+				consts.PortMetrics: consts.FrontendMetricsPort,
+				consts.PortHTTP:    consts.FrontendWebhookPort,
+			},
+		},
+		"standalone-ports-with-webhook-listener": {
+			component:             consts.ComponentStandalone,
+			enableStandaloneMode:  true,
+			enableWebhookListener: ptr.To(true),
+			globalServiceType:     corev1.ServiceTypeNodePort,
+			expectServiceType:     corev1.ServiceTypeClusterIP,
+			ports: map[string]int32{
+				consts.PortService:   consts.FrontendServicePort,
+				consts.PortMetrics:   consts.MetaMetricsPort,
+				consts.PortDashboard: consts.MetaDashboardPort,
+				consts.PortHTTP:      consts.FrontendWebhookPort,
 			},
 		},
 	}
@@ -4557,6 +4583,42 @@ func secretStoreTestCases() map[string]secretStoreTestCase {
 							Key: "pk-key",
 						},
 					},
+				},
+			},
+		},
+	}
+}
+
+type webhookTestcase struct {
+	webhookEnabled  bool
+	envs            []corev1.EnvVar
+	unexpectedEnvs  []string
+	containerPorts  []corev1.ContainerPort
+	unexpectedPorts []int32
+}
+
+func webhookTestcases() map[string]webhookTestcase {
+	return map[string]webhookTestcase{
+		"webhook-disabled": {
+			webhookEnabled: false,
+			unexpectedEnvs: []string{
+				"RW_WEBHOOK_LISTEN_ADDR",
+			},
+			unexpectedPorts: []int32{4560},
+		},
+		"webhook-enabled": {
+			webhookEnabled: true,
+			envs: []corev1.EnvVar{
+				{
+					Name:  "RW_WEBHOOK_LISTEN_ADDR",
+					Value: "0.0.0.0:4560",
+				},
+			},
+			containerPorts: []corev1.ContainerPort{
+				{
+					Name:          "http",
+					ContainerPort: 4560,
+					Protocol:      corev1.ProtocolTCP,
 				},
 			},
 		},

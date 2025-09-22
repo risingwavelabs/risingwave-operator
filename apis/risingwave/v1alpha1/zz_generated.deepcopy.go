@@ -1301,6 +1301,11 @@ func (in *RisingWaveSpec) DeepCopyInto(out *RisingWaveSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.EnableWebhookListener != nil {
+		in, out := &in.EnableWebhookListener, &out.EnableWebhookListener
+		*out = new(bool)
+		**out = **in
+	}
 	in.AdditionalFrontendServiceMetadata.DeepCopyInto(&out.AdditionalFrontendServiceMetadata)
 	in.MetaStore.DeepCopyInto(&out.MetaStore)
 	in.StateStore.DeepCopyInto(&out.StateStore)

@@ -114,6 +114,12 @@ type RisingWaveSpec struct {
 	// with their IP addresses. This is useful when one wants to avoid the DNS resolution overhead and latency.
 	EnableAdvertisingWithIP *bool `json:"enableAdvertisingWithIP,omitempty"`
 
+	// Flag to control whether to enable the webhook listener. If enabled, the webhook listener will be started
+	// in the frontend nodes to receive the webhook events from external systems, e.g., GitHub.
+	// +optional
+	// +kubebuilder:default=false
+	EnableWebhookListener *bool `json:"enableWebhookListener,omitempty"`
+
 	// Image for RisingWave component.
 	Image string `json:"image"`
 

@@ -628,6 +628,19 @@ with their IP addresses. This is useful when one wants to avoid the DNS resoluti
 </tr>
 <tr>
 <td>
+<code>enableWebhookListener</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to control whether to enable the webhook listener. If enabled, the webhook listener will be started
+in the frontend nodes to receive the webhook events from external systems, e.g., GitHub.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>image</code><br/>
 <em>
 string
@@ -4757,6 +4770,19 @@ bool
 <td>
 <p>Flag to control whether to enable advertising with IP. If enabled, the meta and compute nodes will be advertised
 with their IP addresses. This is useful when one wants to avoid the DNS resolution overhead and latency.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableWebhookListener</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to control whether to enable the webhook listener. If enabled, the webhook listener will be started
+in the frontend nodes to receive the webhook events from external systems, e.g., GitHub.</p>
 </td>
 </tr>
 <tr>

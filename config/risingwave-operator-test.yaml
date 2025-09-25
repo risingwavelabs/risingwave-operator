@@ -93,6 +93,22 @@ spec:
                     description: Labels of the object.
                     type: object
                 type: object
+              additionalMetaServiceMetadata:
+                description: |-
+                  AdditionalMetaServiceMetadata tells the operator to add the specified metadata onto the meta Service.
+                  Note that the system reserved labels and annotations are not valid and will be rejected by the webhook.
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: Annotations of the object.
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: Labels of the object.
+                    type: object
+                type: object
               components:
                 description: |-
                   The spec of ports and some controllers (such as `restartAt`) of each component,

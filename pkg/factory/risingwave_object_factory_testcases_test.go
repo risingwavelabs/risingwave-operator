@@ -2820,6 +2820,7 @@ type serviceMetadataTestCase struct {
 	baseTestCase
 	component         string
 	globalServiceMeta risingwavev1alpha1.PartialObjectMeta
+	metaServiceMeta   risingwavev1alpha1.PartialObjectMeta
 }
 
 func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
@@ -2890,6 +2891,19 @@ func serviceMetadataTestCases() map[string]serviceMetadataTestCase {
 		"random-compactor-annotations": {
 			component: consts.ComponentCompactor,
 			globalServiceMeta: risingwavev1alpha1.PartialObjectMeta{
+				Annotations: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		},
+		"random-meta-labels-and-annotations": {
+			component: consts.ComponentMeta,
+			globalServiceMeta: risingwavev1alpha1.PartialObjectMeta{
+				Labels: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
 				Annotations: map[string]string{
 					"key1": "value1",
 					"key2": "value2",

@@ -21,7 +21,7 @@ spec:
         accessKeyRef: AccessKeyID
         secretAccessKeyRef: SecretAccessKey
       region: ap-southeast-1
-  image: risingwavelabs/risingwave:v2.5.1
+  image: risingwavelabs/risingwave:v2.6.0
   components:
     meta:
       nodeGroups:

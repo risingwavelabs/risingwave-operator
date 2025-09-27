@@ -132,6 +132,17 @@ func hasServiceSelector(svc *corev1.Service, selector map[string]string) bool {
 	return equality.Semantic.DeepEqual(svc.Spec.Selector, selector)
 }
 
+func serviceLabels(risingwave *risingwavev1alpha1.RisingWave, component string, sync bool) map[string]string {
+	labels := componentLabels(risingwave, component, sync)
+	switch component {
+	case consts.ComponentFrontend:
+		labels = mergeMap(labels, risingwave.Spec.AdditionalFrontendServiceMetadata.Labels)
+	case consts.ComponentMeta:
+		labels = mergeMap(labels, risingwave.Spec.AdditionalMetaServiceMetadata.Labels)
+	}
+	return labels
+}
+
 func componentLabels(risingwave *risingwavev1alpha1.RisingWave, component string, sync bool) map[string]string {
 	labels := map[string]string{
 		consts.LabelRisingWaveName:            risingwave.Name,
@@ -142,10 +153,6 @@ func componentLabels(risingwave *risingwavev1alpha1.RisingWave, component string
 		labels[consts.LabelRisingWaveGeneration] = strconv.FormatInt(risingwave.Generation, 10)
 	} else {
 		labels[consts.LabelRisingWaveGeneration] = consts.NoSync
-	}
-
-	if component == consts.ComponentFrontend {
-		labels = mergeMap(labels, risingwave.Spec.AdditionalFrontendServiceMetadata.Labels)
 	}
 
 	return labels

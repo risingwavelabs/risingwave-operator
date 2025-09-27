@@ -1307,6 +1307,7 @@ func (in *RisingWaveSpec) DeepCopyInto(out *RisingWaveSpec) {
 		**out = **in
 	}
 	in.AdditionalFrontendServiceMetadata.DeepCopyInto(&out.AdditionalFrontendServiceMetadata)
+	in.AdditionalMetaServiceMetadata.DeepCopyInto(&out.AdditionalMetaServiceMetadata)
 	in.MetaStore.DeepCopyInto(&out.MetaStore)
 	in.StateStore.DeepCopyInto(&out.StateStore)
 	if in.TLS != nil {

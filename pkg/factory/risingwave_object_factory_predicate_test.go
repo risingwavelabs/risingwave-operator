@@ -918,7 +918,7 @@ func servicesPredicates() []predicate[*corev1.Service, servicesTestCase] {
 		{
 			Name: "service-labels-match",
 			Fn: func(obj *corev1.Service, testcase servicesTestCase) bool {
-				return hasLabels(obj, componentLabels(testcase.risingwave, testcase.component, true), true)
+				return hasLabels(obj, serviceLabels(testcase.risingwave, testcase.component, true), true)
 			},
 		},
 		{
@@ -937,7 +937,7 @@ func serviceMetadataPredicates() []predicate[*corev1.Service, serviceMetadataTes
 		{
 			Name: "service-labels-match",
 			Fn: func(obj *corev1.Service, testcase serviceMetadataTestCase) bool {
-				return hasLabels(obj, componentLabels(testcase.risingwave, testcase.component, true), true)
+				return hasLabels(obj, serviceLabels(testcase.risingwave, testcase.component, true), true)
 			},
 		},
 		{

@@ -680,6 +680,20 @@ Note that the system reserved labels and annotations are not valid and will be r
 </tr>
 <tr>
 <td>
+<code>additionalMetaServiceMetadata</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">
+PartialObjectMeta
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalMetaServiceMetadata tells the operator to add the specified metadata onto the meta Service.
+Note that the system reserved labels and annotations are not valid and will be rejected by the webhook.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>metaStore</code><br/>
 <em>
 <a href="#risingwave.risingwavelabs.com/v1alpha1.RisingWaveMetaStoreBackend">
@@ -4821,6 +4835,20 @@ PartialObjectMeta
 </td>
 <td>
 <p>AdditionalFrontendServiceMetadata tells the operator to add the specified metadata onto the frontend Service.
+Note that the system reserved labels and annotations are not valid and will be rejected by the webhook.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalMetaServiceMetadata</code><br/>
+<em>
+<a href="#risingwave.risingwavelabs.com/v1alpha1.PartialObjectMeta">
+PartialObjectMeta
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalMetaServiceMetadata tells the operator to add the specified metadata onto the meta Service.
 Note that the system reserved labels and annotations are not valid and will be rejected by the webhook.</p>
 </td>
 </tr>

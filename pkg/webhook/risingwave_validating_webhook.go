@@ -329,6 +329,14 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 		}
 	}
 
+	// Validate the additional meta service metadata.
+	for label := range obj.Spec.AdditionalMetaServiceMetadata.Labels {
+		if strings.HasPrefix(label, "risingwave/") {
+			fieldErrs = append(fieldErrs,
+				field.Invalid(field.NewPath("spec", "additionalMetaServiceMetadata", "labels"), label, "Labels with the prefix 'risingwave/' are system reserved"))
+		}
+	}
+
 	// Validate to make sure open kruise cannot be set to true when it is disabled at operator level.
 	if !v.openKruiseAvailable && ptr.Deref(obj.Spec.EnableOpenKruise, false) {
 		fieldErrs = append(fieldErrs, field.Forbidden(field.NewPath("spec", "enableOpenKruise"), "OpenKruise is disabled."))

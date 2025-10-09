@@ -2378,6 +2378,10 @@ func (f *RisingWaveObjectFactory) NewMetaService() *corev1.Service {
 	// Set the ClusterIP to None to make it a headless service.
 	metaSvc.Spec.ClusterIP = corev1.ClusterIPNone
 
+	// Inject additional metadata.
+	metaSvc.Labels = mergeMap(metaSvc.Labels, f.risingwave.Spec.AdditionalMetaServiceMetadata.Labels)
+	metaSvc.Annotations = mergeMap(metaSvc.Annotations, f.risingwave.Spec.AdditionalMetaServiceMetadata.Annotations)
+
 	return mustSetControllerReference(f.risingwave, metaSvc, f.scheme)
 }
 

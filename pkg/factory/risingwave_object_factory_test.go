@@ -72,6 +72,7 @@ func Test_RisingWaveObjectFactory_ServicesMeta(t *testing.T) {
 	for name, tc := range serviceMetadataTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.AdditionalFrontendServiceMetadata = tc.globalServiceMeta
+			r.Spec.AdditionalMetaServiceMetadata = tc.metaServiceMeta
 		})
 
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")

@@ -133,6 +133,10 @@ type RisingWaveSpec struct {
 	// Note that the system reserved labels and annotations are not valid and will be rejected by the webhook.
 	AdditionalFrontendServiceMetadata PartialObjectMeta `json:"additionalFrontendServiceMetadata,omitempty"`
 
+	// AdditionalMetaServiceMetadata tells the operator to add the specified metadata onto the meta Service.
+	// Note that the system reserved labels and annotations are not valid and will be rejected by the webhook.
+	AdditionalMetaServiceMetadata PartialObjectMeta `json:"additionalMetaServiceMetadata,omitempty"`
+
 	// MetaStore determines which backend the meta store will use and the parameters for it. Defaults to memory.
 	// But keep in mind that memory backend is not recommended in production.
 	// +kubebuilder:default={memory: true}

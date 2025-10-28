@@ -19,7 +19,7 @@ spec:
   image: risingwavelabs/risingwave:v2.6.1
   metaStore:
     sqlite:
-      path: /risingwave/data/metastore/risingwave.db
+      path: /var/lib/risingwave/data/risingwave.db
   stateStore:
     localDisk:
       root: /var/lib/risingwave/data

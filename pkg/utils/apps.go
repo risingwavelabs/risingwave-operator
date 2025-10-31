@@ -73,7 +73,15 @@ func IsStatefulSetRolledOut(statefulSet *appsv1.StatefulSet) bool {
 		return false
 	}
 
-	if statefulSet.Status.AvailableReplicas < statefulSet.Status.UpdatedReplicas {
+	// Use availableReplicas if available (K8s 1.22+), otherwise fall back to readyReplicas.
+	// The availableReplicas field was added in K8s 1.22 alpha (KEP-2599).
+	// For backward compatibility with K8s 1.21, we check readyReplicas instead.
+	readyCount := statefulSet.Status.AvailableReplicas
+	if readyCount == 0 && statefulSet.Status.ReadyReplicas > 0 {
+		// availableReplicas is not available (K8s 1.21), use readyReplicas
+		readyCount = statefulSet.Status.ReadyReplicas
+	}
+	if readyCount < statefulSet.Status.UpdatedReplicas {
 		return false
 	}
 
@@ -135,7 +143,14 @@ func IsAdvancedStatefulSetRolledOut(statefulSet *kruiseappsv1beta1.StatefulSet) 
 		return false
 	}
 
-	if statefulSet.Status.AvailableReplicas < statefulSet.Status.UpdatedReplicas {
+	// Use availableReplicas if available, otherwise fall back to readyReplicas.
+	// This ensures compatibility with different OpenKruise versions.
+	readyCount := statefulSet.Status.AvailableReplicas
+	if readyCount == 0 && statefulSet.Status.ReadyReplicas > 0 {
+		// availableReplicas is not available, use readyReplicas
+		readyCount = statefulSet.Status.ReadyReplicas
+	}
+	if readyCount < statefulSet.Status.UpdatedReplicas {
 		return false
 	}
 

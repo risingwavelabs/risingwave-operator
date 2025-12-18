@@ -41,7 +41,7 @@ kind: RisingWave
 metadata:
   name: risingwave
 spec:
-  image: risingwavelabs/risingwave:v2.6.3
+  image: risingwavelabs/risingwave:v2.7.0
   #  metaStore:
   #    etcd:
   #      endpoint: etcd:2388

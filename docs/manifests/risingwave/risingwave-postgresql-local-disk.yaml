@@ -16,7 +16,7 @@ kind: RisingWave
 metadata:
   name: risingwave
 spec:
-  image: risingwavelabs/risingwave:v2.7.0
+  image: risingwavelabs/risingwave:v2.7.1
   metaStore:
     postgresql:
       credentials:

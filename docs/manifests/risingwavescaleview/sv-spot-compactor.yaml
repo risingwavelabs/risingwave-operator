@@ -3,7 +3,7 @@ kind: RisingWave
 metadata:
   name: sv-example
 spec:
-  image: risingwavelabs/risingwave:v2.7.0
+  image: risingwavelabs/risingwave:v2.7.1
   components:
     meta:
       nodeGroups:

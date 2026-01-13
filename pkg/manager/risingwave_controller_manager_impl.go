@@ -80,14 +80,18 @@ func getStandaloneStatusUtil(rw *risingwavev1alpha1.RisingWave, logger logr.Logg
 }
 
 func getStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSet *appsv1.StatefulSet, logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
-	readyReplicas := lo.If(isObjectNil(standaloneStatefulSet), int32(0)).Else(standaloneStatefulSet.Status.ReadyReplicas)
-
+	var readyReplicas = int32(0)
+	if standaloneStatefulSet != nil {
+		readyReplicas = standaloneStatefulSet.Status.ReadyReplicas
+	}
 	return getStandaloneStatusUtil(rw, logger, readyReplicas)
 }
 
 func getOpenKruiseStandaloneStatus(rw *risingwavev1alpha1.RisingWave, standaloneStatefulSet *kruiseappsv1beta1.StatefulSet, logger logr.Logger) risingwavev1alpha1.ComponentReplicasStatus {
-	readyReplicas := lo.If(isObjectNil(standaloneStatefulSet), int32(0)).Else(standaloneStatefulSet.Status.ReadyReplicas)
-
+	var readyReplicas = int32(0)
+	if standaloneStatefulSet != nil {
+		readyReplicas = standaloneStatefulSet.Status.ReadyReplicas
+	}
 	return getStandaloneStatusUtil(rw, logger, readyReplicas)
 }
 

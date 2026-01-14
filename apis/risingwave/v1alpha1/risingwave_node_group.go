@@ -361,6 +361,8 @@ type RisingWaveNodeGroupUpgradeStrategy struct {
 type RisingWaveNodeGroup struct {
 	// Name of the node group.
 	// +kubebuilder:default=""
+	// +kubebuilder:validation:Pattern="^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
+	// +kubebuilder:validation:MaxLength=253
 	Name string `json:"name"`
 
 	// Replicas of Pods in this group.

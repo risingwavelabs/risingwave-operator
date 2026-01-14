@@ -38,6 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
@@ -81,6 +82,16 @@ func (v *RisingWaveValidatingWebhook) validateNodeGroup(path *field.Path, nodeGr
 
 	if nodeGroup == nil {
 		return nil
+	}
+
+	if nodeGroup.Name != "" {
+		if errs := validation.IsDNS1123Subdomain(nodeGroup.Name); len(errs) > 0 {
+			fieldErrs = append(fieldErrs, field.Invalid(
+				path.Child("name"),
+				nodeGroup.Name,
+				fmt.Sprintf("invalid node group name, must be a valid DNS-1123 subdomain: %s", strings.Join(errs, "; ")),
+			))
+		}
 	}
 
 	// Validate the image.

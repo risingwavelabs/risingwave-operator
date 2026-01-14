@@ -158,6 +158,17 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 			},
 			pass: false,
 		},
+		"invalid-node-group-name-fail": {
+			patch: func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.Components.Meta.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+					{
+						Name:     "test_ng",
+						Replicas: 1,
+					},
+				}
+			},
+			pass: false,
+		},
 		"meta-group-pass": {
 			patch: func(r *risingwavev1alpha1.RisingWave) {
 				r.Spec.Components.Meta.NodeGroups[0].Replicas = 0

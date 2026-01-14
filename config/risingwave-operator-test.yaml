@@ -189,6 +189,8 @@ spec:
                             name:
                               default: ""
                               description: Name of the node group.
+                              maxLength: 253
+                              pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                               type: string
                             persistentVolumeClaimRetentionPolicy:
                               description: |-
@@ -6537,6 +6539,8 @@ spec:
                             name:
                               default: ""
                               description: Name of the node group.
+                              maxLength: 253
+                              pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                               type: string
                             persistentVolumeClaimRetentionPolicy:
                               description: |-
@@ -12885,6 +12889,8 @@ spec:
                             name:
                               default: ""
                               description: Name of the node group.
+                              maxLength: 253
+                              pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                               type: string
                             persistentVolumeClaimRetentionPolicy:
                               description: |-
@@ -19233,6 +19239,8 @@ spec:
                             name:
                               default: ""
                               description: Name of the node group.
+                              maxLength: 253
+                              pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                               type: string
                             persistentVolumeClaimRetentionPolicy:
                               description: |-

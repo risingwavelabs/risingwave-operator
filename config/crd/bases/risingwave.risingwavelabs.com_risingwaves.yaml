@@ -31773,7 +31773,7 @@ spec:
                   spec.components will be ignored. Standalone mode can be turned on/off dynamically.
                 type: boolean
               enableWebhookListener:
-                default: false
+                default: true
                 description: |-
                   Flag to control whether to enable the webhook listener. If enabled, the webhook listener will be started
                   in the frontend nodes to receive the webhook events from external systems, e.g., GitHub.

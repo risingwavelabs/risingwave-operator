@@ -117,7 +117,7 @@ type RisingWaveSpec struct {
 	// Flag to control whether to enable the webhook listener. If enabled, the webhook listener will be started
 	// in the frontend nodes to receive the webhook events from external systems, e.g., GitHub.
 	// +optional
-	// +kubebuilder:default=false
+	// +kubebuilder:default=true
 	EnableWebhookListener *bool `json:"enableWebhookListener,omitempty"`
 
 	// Image for RisingWave component.

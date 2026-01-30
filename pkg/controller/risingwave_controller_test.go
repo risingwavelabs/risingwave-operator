@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 
 	"github.com/fatih/color"
 	"github.com/go-logr/logr"
@@ -93,7 +93,7 @@ func newActionAsserts(t *testing.T, asserts map[string]resultErr, mustCover bool
 	}
 }
 
-func takeAndLogEventsFromFakeRecord(t *testing.T, recorder *record.FakeRecorder) {
+func takeAndLogEventsFromFakeRecord(t *testing.T, recorder *events.FakeRecorder) {
 	t.Logf("events: \n")
 
 	for range len(recorder.Events) {
@@ -112,7 +112,7 @@ func Test_RisingWaveController_New(t *testing.T) {
 		Status: risingwavev1alpha1.RisingWaveStatus{},
 	}
 
-	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
+	recorder := events.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Scheme).
@@ -181,7 +181,7 @@ func Test_RisingWaveController_Deleted(t *testing.T) {
 		Status: risingwavev1alpha1.RisingWaveStatus{},
 	}
 
-	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
+	recorder := events.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Scheme).
@@ -225,7 +225,7 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 		},
 	}
 
-	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
+	recorder := events.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Scheme).
@@ -283,7 +283,7 @@ func Test_RisingWaveController_Recovery(t *testing.T) {
 	risingwave := testutils.FakeRisingWave()
 	risingwave.Status.ObservedGeneration = risingwave.Generation
 
-	recorder := record.NewFakeRecorder(defaultRecorderBufferSize)
+	recorder := events.NewFakeRecorder(defaultRecorderBufferSize)
 	controller := &RisingWaveController{
 		Client: fake.NewClientBuilder().
 			WithScheme(testutils.Scheme).

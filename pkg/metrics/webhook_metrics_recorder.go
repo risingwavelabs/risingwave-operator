@@ -21,7 +21,6 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/risingwavelabs/risingwave-operator/pkg/utils"
@@ -51,13 +50,13 @@ func (r *webhookMetricsRecorder) afterInvoke(ctx context.Context, obj runtime.Ob
 	}
 }
 
-type mutatingWebhookMetricsRecorder struct {
+type mutatingWebhookMetricsRecorder[T runtime.Object] struct {
 	webhookMetricsRecorder
-	inner webhook.CustomDefaulter
+	inner admission.Defaulter[T]
 }
 
-// Default implements the webhook.CustomDefaulter.
-func (r *mutatingWebhookMetricsRecorder) Default(ctx context.Context, obj runtime.Object) (err error) {
+// Default implements the admission.Defaulter.
+func (r *mutatingWebhookMetricsRecorder[T]) Default(ctx context.Context, obj T) (err error) {
 	startTime := time.Now()
 
 	r.beforeInvoke(ctx, obj)
@@ -67,20 +66,20 @@ func (r *mutatingWebhookMetricsRecorder) Default(ctx context.Context, obj runtim
 }
 
 // NewMutatingWebhookMetricsRecorder creates a new metrics recorder for the mutating webhook.
-func NewMutatingWebhookMetricsRecorder(inner webhook.CustomDefaulter) webhook.CustomDefaulter {
-	return &mutatingWebhookMetricsRecorder{
+func NewMutatingWebhookMetricsRecorder[T runtime.Object](inner admission.Defaulter[T]) admission.Defaulter[T] {
+	return &mutatingWebhookMetricsRecorder[T]{
 		webhookMetricsRecorder: webhookMetricsRecorder{webhookType: utils.MutatingWebhookType},
 		inner:                  inner,
 	}
 }
 
-type validatingWebhookMetricsRecorder struct {
+type validatingWebhookMetricsRecorder[T runtime.Object] struct {
 	webhookMetricsRecorder
-	inner webhook.CustomValidator
+	inner admission.Validator[T]
 }
 
-// ValidateCreate implements the CustomValidator.
-func (r *validatingWebhookMetricsRecorder) ValidateCreate(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
+// ValidateCreate implements the admission.Validator.
+func (r *validatingWebhookMetricsRecorder[T]) ValidateCreate(ctx context.Context, obj T) (warnings admission.Warnings, err error) {
 	startTime := time.Now()
 
 	r.beforeInvoke(ctx, obj)
@@ -89,8 +88,8 @@ func (r *validatingWebhookMetricsRecorder) ValidateCreate(ctx context.Context, o
 	return r.inner.ValidateCreate(ctx, obj)
 }
 
-// ValidateUpdate implements the CustomValidator.
-func (r *validatingWebhookMetricsRecorder) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (warnings admission.Warnings, err error) {
+// ValidateUpdate implements the admission.Validator.
+func (r *validatingWebhookMetricsRecorder[T]) ValidateUpdate(ctx context.Context, oldObj, newObj T) (warnings admission.Warnings, err error) {
 	startTime := time.Now()
 
 	r.beforeInvoke(ctx, newObj)
@@ -99,8 +98,8 @@ func (r *validatingWebhookMetricsRecorder) ValidateUpdate(ctx context.Context, o
 	return r.inner.ValidateUpdate(ctx, oldObj, newObj)
 }
 
-// ValidateDelete implements the CustomValidator.
-func (r *validatingWebhookMetricsRecorder) ValidateDelete(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
+// ValidateDelete implements the admission.Validator.
+func (r *validatingWebhookMetricsRecorder[T]) ValidateDelete(ctx context.Context, obj T) (warnings admission.Warnings, err error) {
 	startTime := time.Now()
 
 	r.beforeInvoke(ctx, obj)
@@ -110,8 +109,8 @@ func (r *validatingWebhookMetricsRecorder) ValidateDelete(ctx context.Context, o
 }
 
 // NewValidatingWebhookMetricsRecorder creates a new webhook recorder for validating webhook.
-func NewValidatingWebhookMetricsRecorder(inner webhook.CustomValidator) webhook.CustomValidator {
-	return &validatingWebhookMetricsRecorder{
+func NewValidatingWebhookMetricsRecorder[T runtime.Object](inner admission.Validator[T]) admission.Validator[T] {
+	return &validatingWebhookMetricsRecorder[T]{
 		webhookMetricsRecorder: webhookMetricsRecorder{webhookType: utils.ValidatingWebhookType},
 		inner:                  inner,
 	}

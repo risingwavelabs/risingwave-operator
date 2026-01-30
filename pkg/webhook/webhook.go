@@ -26,16 +26,14 @@ import (
 
 // SetupWebhooksWithManager set up the webhooks.
 func SetupWebhooksWithManager(mgr ctrl.Manager, openKruiseAvailable bool) error {
-	if err := ctrl.NewWebhookManagedBy(mgr).
-		For(&risingwavev1alpha1.RisingWave{}).
+	if err := ctrl.NewWebhookManagedBy(mgr, &risingwavev1alpha1.RisingWave{}).
 		WithDefaulter(NewRisingWaveMutatingWebhook()).
 		WithValidator(NewRisingWaveValidatingWebhook(openKruiseAvailable)).
 		Complete(); err != nil {
 		return fmt.Errorf("unable to setup webhooks for risingwave: %w", err)
 	}
 
-	if err := ctrl.NewWebhookManagedBy(mgr).
-		For(&risingwavev1alpha1.RisingWaveScaleView{}).
+	if err := ctrl.NewWebhookManagedBy(mgr, &risingwavev1alpha1.RisingWaveScaleView{}).
 		WithDefaulter(NewRisingWaveScaleViewMutatingWebhook(mgr.GetAPIReader())).
 		WithValidator(NewRisingWaveScaleViewValidatingWebhook(mgr.GetClient())).
 		Complete(); err != nil {

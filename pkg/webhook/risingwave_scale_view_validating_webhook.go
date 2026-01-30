@@ -25,13 +25,11 @@ import (
 	"github.com/samber/lo"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
@@ -127,9 +125,9 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateCreate(ctx context.Contex
 	return nil, nil
 }
 
-// ValidateCreate implements the webhook.CustomValidator.
-func (w *RisingWaveScaleViewValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
-	return w.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWaveScaleView))
+// ValidateCreate implements admission.Validator.
+func (w *RisingWaveScaleViewValidatingWebhook) ValidateCreate(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) (warnings admission.Warnings, err error) {
+	return w.validateCreate(ctx, obj)
 }
 
 func (w *RisingWaveScaleViewValidatingWebhook) validateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWaveScaleView) error {
@@ -170,24 +168,24 @@ func (w *RisingWaveScaleViewValidatingWebhook) validateUpdate(ctx context.Contex
 	return nil
 }
 
-// ValidateUpdate implements the webhook.CustomValidator.
-func (w *RisingWaveScaleViewValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (warnings admission.Warnings, err error) {
+// ValidateUpdate implements admission.Validator.
+func (w *RisingWaveScaleViewValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWaveScaleView) (warnings admission.Warnings, err error) {
 	// Validate the new object first.
-	if warnings, err := w.validateObject(ctx, newObj.(*risingwavev1alpha1.RisingWaveScaleView)); err != nil {
+	if warnings, err := w.validateObject(ctx, newObj); err != nil {
 		return warnings, err
 	}
 
-	err = w.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWaveScaleView), newObj.(*risingwavev1alpha1.RisingWaveScaleView))
+	err = w.validateUpdate(ctx, oldObj, newObj)
 
 	return nil, err
 }
 
-// ValidateDelete implements the webhook.CustomValidator.
-func (w *RisingWaveScaleViewValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
+// ValidateDelete implements admission.Validator.
+func (w *RisingWaveScaleViewValidatingWebhook) ValidateDelete(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) (warnings admission.Warnings, err error) {
 	return nil, nil
 }
 
 // NewRisingWaveScaleViewValidatingWebhook returns a new validator for RisingWaveScaleViews.
-func NewRisingWaveScaleViewValidatingWebhook(client client.Reader) webhook.CustomValidator {
+func NewRisingWaveScaleViewValidatingWebhook(client client.Reader) admission.Validator[*risingwavev1alpha1.RisingWaveScaleView] {
 	return metrics.NewValidatingWebhookMetricsRecorder(&RisingWaveScaleViewValidatingWebhook{client: client})
 }

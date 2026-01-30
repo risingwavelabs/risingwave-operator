@@ -19,7 +19,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/risingwavelabs/risingwave-operator/pkg/consts"
@@ -31,13 +31,13 @@ import (
 
 // RisingWaveEventRecorder is an action hook for recording events.
 type RisingWaveEventRecorder struct {
-	recorder record.EventRecorder
+	recorder events.EventRecorder
 	mgr      *object.RisingWaveManager
 	msgStore *event.MessageStore
 }
 
 // NewEventHook creates an event hook for the given risingwave.
-func NewEventHook(recorder record.EventRecorder, mgr *object.RisingWaveManager, msgStore *event.MessageStore) *RisingWaveEventRecorder {
+func NewEventHook(recorder events.EventRecorder, mgr *object.RisingWaveManager, msgStore *event.MessageStore) *RisingWaveEventRecorder {
 	return &RisingWaveEventRecorder{recorder: recorder, mgr: mgr, msgStore: msgStore}
 }
 
@@ -51,7 +51,7 @@ func (h *RisingWaveEventRecorder) isAfterConditionTrueAndChanged(before, after *
 }
 
 func (h *RisingWaveEventRecorder) recordEvent(event consts.RisingWaveEventType) {
-	h.recorder.Event(h.mgr.RisingWave(), event.Type, event.Name, h.msgStore.MessageFor(event.Name))
+	h.recorder.Eventf(h.mgr.RisingWave(), nil, event.Type, event.Name, event.Name, h.msgStore.MessageFor(event.Name))
 }
 
 func (h *RisingWaveEventRecorder) recordConditionChangingEvents() {

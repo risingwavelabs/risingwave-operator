@@ -21,9 +21,8 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/features"
@@ -34,9 +33,8 @@ import (
 // RisingWaveMutatingWebhook is the mutating webhook for RisingWaves.
 type RisingWaveMutatingWebhook struct{}
 
-// Default implements admission.CustomDefaulter.
-func (m *RisingWaveMutatingWebhook) Default(ctx context.Context, obj runtime.Object) error {
-	risingwave := obj.(*risingwavev1alpha1.RisingWave)
+// Default implements admission.Defaulter.
+func (m *RisingWaveMutatingWebhook) Default(ctx context.Context, risingwave *risingwavev1alpha1.RisingWave) error {
 	risingwave.Spec.StateStore.DataDirectory = strings.TrimRight(strings.TrimSpace(risingwave.Spec.StateStore.DataDirectory), "/")
 
 	if features.GetFeatureManager().IsFeatureEnabled(features.RandomSecretStorePrivateKey) {
@@ -51,6 +49,6 @@ func (m *RisingWaveMutatingWebhook) Default(ctx context.Context, obj runtime.Obj
 }
 
 // NewRisingWaveMutatingWebhook returns a new mutating webhook for RisingWaves.
-func NewRisingWaveMutatingWebhook() webhook.CustomDefaulter {
+func NewRisingWaveMutatingWebhook() admission.Defaulter[*risingwavev1alpha1.RisingWave] {
 	return metrics.NewMutatingWebhookMetricsRecorder(&RisingWaveMutatingWebhook{})
 }

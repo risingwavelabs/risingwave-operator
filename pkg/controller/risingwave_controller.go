@@ -31,7 +31,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -120,7 +120,7 @@ const (
 // RisingWaveController is the controller for RisingWave.
 type RisingWaveController struct {
 	Client              client.Client
-	Recorder            record.EventRecorder
+	Recorder            events.EventRecorder
 	ActionHookFactory   func() ctrlkit.ActionHook
 	forceUpdateEnabled  bool
 	openKruiseAvailable bool
@@ -546,7 +546,7 @@ func (c *RisingWaveController) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 // NewRisingWaveController creates a new RisingWaveController.
-func NewRisingWaveController(client client.Client, recorder record.EventRecorder, openKruiseAvailable, forceUpdateEnabled bool, operatorVersion string) *RisingWaveController {
+func NewRisingWaveController(client client.Client, recorder events.EventRecorder, openKruiseAvailable, forceUpdateEnabled bool, operatorVersion string) *RisingWaveController {
 	return &RisingWaveController{
 		Client:              client,
 		Recorder:            recorder,

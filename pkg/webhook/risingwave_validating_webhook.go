@@ -35,12 +35,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
@@ -380,19 +378,19 @@ func (v *RisingWaveValidatingWebhook) validateCreate(ctx context.Context, obj *r
 	return nil
 }
 
-// ValidateCreate implements admission.CustomValidator.
-func (v *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
-	if v.isBypassed(obj.(client.Object)) {
+// ValidateCreate implements admission.Validator.
+func (v *RisingWaveValidatingWebhook) ValidateCreate(ctx context.Context, obj *risingwavev1alpha1.RisingWave) (warnings admission.Warnings, err error) {
+	if v.isBypassed(obj) {
 		return nil, nil
 	}
 
-	err = v.validateCreate(ctx, obj.(*risingwavev1alpha1.RisingWave))
+	err = v.validateCreate(ctx, obj)
 
 	return
 }
 
-// ValidateDelete implements admission.CustomValidator.
-func (v *RisingWaveValidatingWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) (warnings admission.Warnings, err error) {
+// ValidateDelete implements admission.Validator.
+func (v *RisingWaveValidatingWebhook) ValidateDelete(ctx context.Context, obj *risingwavev1alpha1.RisingWave) (warnings admission.Warnings, err error) {
 	return nil, nil
 }
 
@@ -502,9 +500,9 @@ func (v *RisingWaveValidatingWebhook) validateUpdate(ctx context.Context, oldObj
 	return nil
 }
 
-// ValidateUpdate implements admission.CustomValidator.
-func (v *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (warnings admission.Warnings, err error) {
-	if v.isBypassed(newObj.(client.Object)) {
+// ValidateUpdate implements admission.Validator.
+func (v *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj, newObj *risingwavev1alpha1.RisingWave) (warnings admission.Warnings, err error) {
+	if v.isBypassed(newObj) {
 		return nil, nil
 	}
 
@@ -513,7 +511,7 @@ func (v *RisingWaveValidatingWebhook) ValidateUpdate(ctx context.Context, oldObj
 		return warnings, err
 	}
 
-	err = v.validateUpdate(ctx, oldObj.(*risingwavev1alpha1.RisingWave), newObj.(*risingwavev1alpha1.RisingWave))
+	err = v.validateUpdate(ctx, oldObj, newObj)
 
 	return
 }
@@ -532,6 +530,6 @@ func nodeGroupPartitionExistAndIsString(nodeGroup *risingwavev1alpha1.RisingWave
 
 // NewRisingWaveValidatingWebhook returns a new validator for the RisingWave. The behavior differs on different values of the
 // openKruiseAvailable.
-func NewRisingWaveValidatingWebhook(openKruiseAvailable bool) webhook.CustomValidator {
+func NewRisingWaveValidatingWebhook(openKruiseAvailable bool) admission.Validator[*risingwavev1alpha1.RisingWave] {
 	return metrics.NewValidatingWebhookMetricsRecorder(&RisingWaveValidatingWebhook{openKruiseAvailable: openKruiseAvailable})
 }

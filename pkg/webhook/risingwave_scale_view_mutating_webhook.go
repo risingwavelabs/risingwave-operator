@@ -23,12 +23,11 @@ import (
 
 	"github.com/samber/lo"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	risingwavev1alpha1 "github.com/risingwavelabs/risingwave-operator/apis/risingwave/v1alpha1"
 	"github.com/risingwavelabs/risingwave-operator/pkg/metrics"
@@ -138,12 +137,12 @@ func (w *RisingWaveScaleViewMutatingWebhook) setDefault(ctx context.Context, obj
 	return nil
 }
 
-// Default implements the webhook.CustomDefaulter.
-func (w *RisingWaveScaleViewMutatingWebhook) Default(ctx context.Context, obj runtime.Object) error {
-	return w.setDefault(ctx, obj.(*risingwavev1alpha1.RisingWaveScaleView))
+// Default implements admission.Defaulter.
+func (w *RisingWaveScaleViewMutatingWebhook) Default(ctx context.Context, obj *risingwavev1alpha1.RisingWaveScaleView) error {
+	return w.setDefault(ctx, obj)
 }
 
 // NewRisingWaveScaleViewMutatingWebhook returns a new mutating webhook for RisingWaveScaleViews.
-func NewRisingWaveScaleViewMutatingWebhook(client client.Reader) webhook.CustomDefaulter {
+func NewRisingWaveScaleViewMutatingWebhook(client client.Reader) admission.Defaulter[*risingwavev1alpha1.RisingWaveScaleView] {
 	return metrics.NewMutatingWebhookMetricsRecorder(&RisingWaveScaleViewMutatingWebhook{client: client})
 }

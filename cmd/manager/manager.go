@@ -139,7 +139,7 @@ func main() {
 
 	if err = risingwavecontroller.NewRisingWaveController(
 		mgr.GetClient(),
-		mgr.GetEventRecorderFor("risingwave-controller"),
+		mgr.GetEventRecorder("risingwave-controller"),
 		featureManager.IsFeatureEnabled(features.EnableOpenKruiseFeature),
 		featureManager.IsFeatureEnabled(features.EnableForceUpdate),
 		operatorVersion,

@@ -3443,6 +3443,25 @@ This field is alpha-level and is only honored by servers that enable the UserNam
 <p>Additional containers to run in the same Pod. The containers will be appended to the Pod&rsquo;s containers array in order.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>initContainers</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core">
+[]Kubernetes core/v1.Container
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of initialization containers belonging to the pod.
+Init containers are executed in order prior to containers being started. If any
+init container fails, the pod is considered to have failed and is handled according
+to its restartPolicy. The name for an init container or normal container must be
+unique among all containers.
+More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a></p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -4010,6 +4029,25 @@ This field is alpha-level and is only honored by servers that enable the UserNam
 </td>
 <td>
 <p>Additional containers to run in the same Pod. The containers will be appended to the Pod&rsquo;s containers array in order.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>initContainers</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core">
+[]Kubernetes core/v1.Container
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of initialization containers belonging to the pod.
+Init containers are executed in order prior to containers being started. If any
+init container fails, the pod is considered to have failed and is handled according
+to its restartPolicy. The name for an init container or normal container must be
+unique among all containers.
+More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a></p>
 </td>
 </tr>
 </tbody>

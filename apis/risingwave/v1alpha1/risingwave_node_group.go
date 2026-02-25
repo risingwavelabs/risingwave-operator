@@ -290,6 +290,15 @@ type RisingWaveNodePodTemplateSpec struct {
 	// Additional containers to run in the same Pod. The containers will be appended to the Pod's containers array in order.
 	// + optional
 	AdditionalContainers []corev1.Container `json:"additionalContainers,omitempty"`
+
+	// List of initialization containers belonging to the pod.
+	// Init containers are executed in order prior to containers being started. If any
+	// init container fails, the pod is considered to have failed and is handled according
+	// to its restartPolicy. The name for an init container or normal container must be
+	// unique among all containers.
+	// More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+	// +optional
+	InitContainers []corev1.Container `json:"initContainers,omitempty"`
 }
 
 // RisingWaveNodePodTemplate determines the Pod specs of a RisingWave node.

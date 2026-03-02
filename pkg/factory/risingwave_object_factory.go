@@ -1714,6 +1714,7 @@ func newPodSpecFromNodeGroupTemplate(template *risingwavev1alpha1.RisingWaveNode
 		SetHostnameAsFQDN:             template.Spec.SetHostnameAsFQDN,
 		OS:                            template.Spec.OS,
 		HostUsers:                     template.Spec.HostUsers,
+		InitContainers:                template.Spec.InitContainers,
 	}
 
 	return podTemplateSpec

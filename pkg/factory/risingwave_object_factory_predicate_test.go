@@ -324,7 +324,7 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 		{
 			Name: "labels-equal",
 			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
-				return hasLabels(obj, componentGroupLabels(tc.risingwave, consts.ComponentCompute, &tc.group.Name, true), true)
+				return hasLabels(obj, componentGroupLabels(tc.risingwave, tc.component, &tc.group.Name, true), true)
 			},
 		},
 		{
@@ -343,7 +343,7 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 		{
 			Name: "pod-template-labels-match",
 			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
-				return mapContains(obj.Spec.Template.Labels, podSelector(tc.risingwave, consts.ComponentCompute, &tc.group.Name))
+				return mapContains(obj.Spec.Template.Labels, podSelector(tc.risingwave, tc.component, &tc.group.Name))
 			},
 		},
 		{
@@ -460,6 +460,11 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 // This function returns the predicates used for to compare stateful objects for the compute component.
 // It inherits from the base statefulset predicates and further additional predicates can be added for compute.
 func computeStatefulSetPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestCase] {
+	return getSTSPredicates()
+}
+
+// This function returns the predicates used to compare StatefulSet objects for the frontend component.
+func frontendStatefulSetPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestCase] {
 	return getSTSPredicates()
 }
 
@@ -618,7 +623,7 @@ func getAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, comp
 		{
 			Name: "labels-equal",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
-				return hasLabels(obj, componentGroupLabels(tc.risingwave, consts.ComponentCompute, &tc.group.Name, true), true)
+				return hasLabels(obj, componentGroupLabels(tc.risingwave, tc.component, &tc.group.Name, true), true)
 			},
 		},
 		{
@@ -637,7 +642,7 @@ func getAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, comp
 		{
 			Name: "pod-template-labels-match",
 			Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc computeAdvancedSTSTestCase) bool {
-				return mapContains(obj.Spec.Template.Labels, podSelector(tc.risingwave, consts.ComponentCompute, &tc.group.Name))
+				return mapContains(obj.Spec.Template.Labels, podSelector(tc.risingwave, tc.component, &tc.group.Name))
 			},
 		},
 		{
@@ -754,6 +759,11 @@ func getAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, comp
 // This function returns the predicates used to compare Advanced STS objects for the compute component.
 // It inherits from the base Advanced STS predicates and further additional predicates can be added for compute.
 func computeAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, computeAdvancedSTSTestCase] {
+	return getAdvancedSTSPredicates()
+}
+
+// This function returns the predicates used to compare Advanced StatefulSet objects for the frontend component.
+func frontendAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, computeAdvancedSTSTestCase] {
 	return getAdvancedSTSPredicates()
 }
 

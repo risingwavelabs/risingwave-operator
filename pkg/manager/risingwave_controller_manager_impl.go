@@ -157,6 +157,40 @@ func isGroupMissing(group risingwavev1alpha1.ComponentGroupReplicasStatus) bool 
 	return !group.Exists
 }
 
+func frontendStatefulSetEnabled(rw *risingwavev1alpha1.RisingWave) bool {
+	return ptr.Deref(rw.Spec.EnableFrontendStatefulSet, false)
+}
+
+type frontendWorkloadFamily string
+
+const (
+	frontendWorkloadFamilyNone                frontendWorkloadFamily = "none"
+	frontendWorkloadFamilyDeployment          frontendWorkloadFamily = "deployment"
+	frontendWorkloadFamilyStatefulSet         frontendWorkloadFamily = "statefulset"
+	frontendWorkloadFamilyCloneSet            frontendWorkloadFamily = "cloneset"
+	frontendWorkloadFamilyAdvancedStatefulSet frontendWorkloadFamily = "advancedstatefulset"
+)
+
+func (mgr *risingWaveControllerManagerImpl) expectedFrontendWorkloadFamily() frontendWorkloadFamily {
+	if mgr.risingwaveManager.IsStandaloneModeEnabled() {
+		return frontendWorkloadFamilyNone
+	}
+
+	if mgr.risingwaveManager.IsOpenKruiseEnabled() {
+		if frontendStatefulSetEnabled(mgr.risingwaveManager.RisingWave()) {
+			return frontendWorkloadFamilyAdvancedStatefulSet
+		}
+
+		return frontendWorkloadFamilyCloneSet
+	}
+
+	if frontendStatefulSetEnabled(mgr.risingwaveManager.RisingWave()) {
+		return frontendWorkloadFamilyStatefulSet
+	}
+
+	return frontendWorkloadFamilyDeployment
+}
+
 func buildMetaStoreType(metaStore *risingwavev1alpha1.RisingWaveMetaStoreBackend) risingwavev1alpha1.RisingWaveMetaStoreBackendType {
 	switch {
 	case metaStore.Memory != nil && *metaStore.Memory:
@@ -201,8 +235,103 @@ func buildStateStoreType(stateStore *risingwavev1alpha1.RisingWaveStateStoreBack
 	}
 }
 
+func buildReadyReplicasByGroup[T any](workloads []T, groupAndReadyReplicas func(*T) (string, int32)) map[string]int32 {
+	readyReplicasByGroup := make(map[string]int32)
+
+	for _, workload := range workloads {
+		group, readyReplicas := groupAndReadyReplicas(&workload)
+		readyReplicasByGroup[group] = max(readyReplicasByGroup[group], readyReplicas)
+	}
+
+	return readyReplicasByGroup
+}
+
+func buildFrontendComponentReplicasStatus(
+	groups []risingwavev1alpha1.RisingWaveNodeGroup,
+	statelessWorkloadsReadyReplicas map[string]int32,
+	statefulWorkloadsReadyReplicas map[string]int32,
+	useStatefulWorkloads bool,
+) risingwavev1alpha1.ComponentReplicasStatus {
+	status := risingwavev1alpha1.ComponentReplicasStatus{
+		Running: 0,
+		Target:  0,
+	}
+
+	expectedGroups := make(map[string]int32)
+
+	for _, group := range groups {
+		expectedGroups[group.Name] = group.Replicas
+		status.Target += group.Replicas
+
+		workloadsReadyReplicas := statelessWorkloadsReadyReplicas
+		if useStatefulWorkloads {
+			workloadsReadyReplicas = statefulWorkloadsReadyReplicas
+		}
+
+		if readyReplicas, ok := workloadsReadyReplicas[group.Name]; ok {
+			status.Running += readyReplicas
+			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
+				Name:    group.Name,
+				Target:  group.Replicas,
+				Running: readyReplicas,
+				Exists:  true,
+			})
+		} else {
+			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
+				Name:    group.Name,
+				Target:  group.Replicas,
+				Running: 0,
+				Exists:  false,
+			})
+		}
+	}
+
+	unexpectedGroups := make(map[string]int32)
+	collectUnexpectedGroups := func(workloadsReadyReplicas map[string]int32) {
+		for group, readyReplicas := range workloadsReadyReplicas {
+			if _, ok := expectedGroups[group]; ok {
+				continue
+			}
+
+			unexpectedGroups[group] = max(unexpectedGroups[group], readyReplicas)
+		}
+	}
+
+	collectUnexpectedGroups(statelessWorkloadsReadyReplicas)
+	collectUnexpectedGroups(statefulWorkloadsReadyReplicas)
+
+	for group, readyReplicas := range unexpectedGroups {
+		status.Running += readyReplicas
+		status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
+			Name:    group + "(-)",
+			Target:  0,
+			Running: readyReplicas,
+			Exists:  true,
+		})
+	}
+
+	sort.Slice(status.Groups, func(i, j int) bool {
+		return status.Groups[i].Name < status.Groups[j].Name
+	})
+
+	return status
+}
+
 // CollectOpenKruiseRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaAdvancedStatefulSets []kruiseappsv1beta1.StatefulSet, frontendCloneSets []kruiseappsv1alpha1.CloneSet, computeStatefulSets []kruiseappsv1beta1.StatefulSet, compactorCloneSets []kruiseappsv1alpha1.CloneSet, configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
+func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatus(
+	ctx context.Context,
+	logger logr.Logger,
+	frontendService *corev1.Service,
+	metaService *corev1.Service,
+	computeService *corev1.Service,
+	compactorService *corev1.Service,
+	metaAdvancedStatefulSets []kruiseappsv1beta1.StatefulSet,
+	frontendCloneSets []kruiseappsv1alpha1.CloneSet,
+	frontendAdvancedStatefulSets []kruiseappsv1beta1.StatefulSet,
+	computeStatefulSets []kruiseappsv1beta1.StatefulSet,
+	compactorCloneSets []kruiseappsv1alpha1.CloneSet,
+	configConfigMap *corev1.ConfigMap,
+) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	componentsSpec := &risingwave.Spec.Components
@@ -217,9 +346,11 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 	getGroupAndReadyReplicasForStatefulSet := func(t *kruiseappsv1beta1.StatefulSet) (string, int32) {
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
+	frontendCloneSetReadyReplicasByGroup := buildReadyReplicasByGroup(frontendCloneSets, getGroupAndReadyReplicasForCloneSets)
+	frontendAdvancedStatefulSetReadyReplicasByGroup := buildReadyReplicasByGroup(frontendAdvancedStatefulSets, getGroupAndReadyReplicasForStatefulSet)
 	componentReplicas := risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
 		Meta:       buildNodeGroupStatus(componentsSpec.Meta.NodeGroups, getNameAndReplicasFromNodeGroup, metaAdvancedStatefulSets, getGroupAndReadyReplicasForStatefulSet),
-		Frontend:   buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendCloneSets, getGroupAndReadyReplicasForCloneSets),
+		Frontend:   buildFrontendComponentReplicasStatus(componentsSpec.Frontend.NodeGroups, frontendCloneSetReadyReplicasByGroup, frontendAdvancedStatefulSetReadyReplicasByGroup, frontendStatefulSetEnabled(risingwave)),
 		Compactor:  buildNodeGroupStatus(componentsSpec.Compactor.NodeGroups, getNameAndReplicasFromNodeGroup, compactorCloneSets, getGroupAndReadyReplicasForCloneSets),
 		Compute:    buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
 		Standalone: risingwavev1alpha1.ComponentReplicasStatus{Target: 0, Running: 0},
@@ -276,7 +407,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 		},
 		{
 			cond:      lo.ContainsBy(componentReplicas.Frontend.Groups, isGroupMissing),
-			component: "CloneSets(frontend)",
+			component: "Workloads(frontend)",
 		},
 		{
 			cond:      lo.ContainsBy(componentReplicas.Compute.Groups, isGroupMissing),
@@ -311,12 +442,20 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 }
 
 // CollectRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl.
-func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger,
-	frontendService *corev1.Service, metaService *corev1.Service,
-	computeService *corev1.Service, compactorService *corev1.Service,
-	metaStatefulSets []appsv1.StatefulSet, frontendDeployments []appsv1.Deployment,
-	computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment,
-	configConfigMap *corev1.ConfigMap) (reconcile.Result, error) {
+func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatus(
+	ctx context.Context,
+	logger logr.Logger,
+	frontendService *corev1.Service,
+	metaService *corev1.Service,
+	computeService *corev1.Service,
+	compactorService *corev1.Service,
+	metaStatefulSets []appsv1.StatefulSet,
+	frontendDeployments []appsv1.Deployment,
+	frontendStatefulSets []appsv1.StatefulSet,
+	computeStatefulSets []appsv1.StatefulSet,
+	compactorDeployments []appsv1.Deployment,
+	configConfigMap *corev1.ConfigMap,
+) (reconcile.Result, error) {
 	risingwave := mgr.risingwaveManager.RisingWave()
 
 	componentsSpec := &risingwave.Spec.Components
@@ -330,9 +469,11 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 	getGroupAndReadyReplicasForStatefulSet := func(t *appsv1.StatefulSet) (string, int32) {
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
+	frontendDeploymentReadyReplicasByGroup := buildReadyReplicasByGroup(frontendDeployments, getGroupAndReadyReplicasForDeployment)
+	frontendStatefulSetReadyReplicasByGroup := buildReadyReplicasByGroup(frontendStatefulSets, getGroupAndReadyReplicasForStatefulSet)
 	componentReplicas := risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
 		Meta:       buildNodeGroupStatus(componentsSpec.Meta.NodeGroups, getNameAndReplicasFromNodeGroup, metaStatefulSets, getGroupAndReadyReplicasForStatefulSet),
-		Frontend:   buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendDeployments, getGroupAndReadyReplicasForDeployment),
+		Frontend:   buildFrontendComponentReplicasStatus(componentsSpec.Frontend.NodeGroups, frontendDeploymentReadyReplicasByGroup, frontendStatefulSetReadyReplicasByGroup, frontendStatefulSetEnabled(risingwave)),
 		Compactor:  buildNodeGroupStatus(componentsSpec.Compactor.NodeGroups, getNameAndReplicasFromNodeGroup, compactorDeployments, getGroupAndReadyReplicasForDeployment),
 		Compute:    buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
 		Standalone: risingwavev1alpha1.ComponentReplicasStatus{Target: 0, Running: 0},
@@ -389,7 +530,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 		},
 		{
 			cond:      lo.ContainsBy(componentReplicas.Frontend.Groups, isGroupMissing),
-			component: "Deployments(frontend)",
+			component: "Workloads(frontend)",
 		},
 		{
 			cond:      lo.ContainsBy(componentReplicas.Compute.Groups, isGroupMissing),
@@ -436,15 +577,14 @@ func syncComponentGroupWorkloads[T any, TP ptrAsObject[T]](
 	component string,
 	objects []T,
 	factory func(group string) TP,
-	enabled bool,
+	syncExpectedGroups bool,
 ) (reconcile.Result, error) {
 	logger = logger.WithValues("component", component)
 
 	var expectedGroupSet map[string]int
-	if enabled {
+	if syncExpectedGroups {
 		expectedGroupSet = buildKeyMapFromList(mgr.risingwaveManager.GetNodeGroups(component), getNameFromNodeGroup)
 	}
-
 	// Decide to delete or to sync.
 	observedGroupSet := make(map[string]int)
 	toDelete := make([]TP, 0)
@@ -498,6 +638,29 @@ func syncComponentGroupWorkloads[T any, TP ptrAsObject[T]](
 			}, logger.WithValues("group", group)); err != nil {
 				return ctrlkit.RequeueIfErrorAndWrap("unable to sync object", err)
 			}
+		}
+	}
+
+	return ctrlkit.Continue()
+}
+
+func deleteComponentGroupWorkloads[T any, TP ptrAsObject[T]](
+	mgr *risingWaveControllerManagerImpl,
+	ctx context.Context,
+	logger logr.Logger,
+	component string,
+	objects []T,
+) (reconcile.Result, error) {
+	logger = logger.WithValues("component", component)
+
+	for i := range objects {
+		workloadObjPtr := TP(&objects[i])
+		group := workloadObjPtr.GetLabels()[consts.LabelRisingWaveGroup]
+
+		if err := mgr.client.Delete(ctx, workloadObjPtr, client.PropagationPolicy(metav1.DeletePropagationBackground)); client.IgnoreNotFound(err) != nil {
+			logger.Error(err, "Failed to delete obsolete object", "workload", workloadObjPtr.GetName(), "group", group)
+
+			return ctrlkit.RequeueIfErrorAndWrap("unable to delete obsolete object", err)
 		}
 	}
 
@@ -561,21 +724,57 @@ func (mgr *risingWaveControllerManagerImpl) SyncComputeAdvancedStatefulSets(ctx 
 
 // SyncFrontendDeployments implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncFrontendDeployments(ctx context.Context, logger logr.Logger, frontendDeployments []appsv1.Deployment) (reconcile.Result, error) {
+	frontendDeploymentsSelected := mgr.expectedFrontendWorkloadFamily() == frontendWorkloadFamilyDeployment
+	if !frontendDeploymentsSelected {
+		return deleteComponentGroupWorkloads(mgr, ctx, logger, consts.ComponentFrontend, frontendDeployments)
+	}
+
 	return syncComponentGroupWorkloads(mgr, ctx, logger,
 		consts.ComponentFrontend,
 		frontendDeployments, mgr.objectFactory.NewFrontendDeployment,
-		// Only sync if Open Kruise is disabled.
-		!mgr.risingwaveManager.IsOpenKruiseEnabled() && !mgr.risingwaveManager.IsStandaloneModeEnabled(),
+		frontendDeploymentsSelected,
 	)
 }
 
 // SyncFrontendCloneSets implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) SyncFrontendCloneSets(ctx context.Context, logger logr.Logger, frontendCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
+	frontendCloneSetsSelected := mgr.expectedFrontendWorkloadFamily() == frontendWorkloadFamilyCloneSet
+	if !frontendCloneSetsSelected {
+		return deleteComponentGroupWorkloads(mgr, ctx, logger, consts.ComponentFrontend, frontendCloneSets)
+	}
+
 	return syncComponentGroupWorkloads(mgr, ctx, logger,
 		consts.ComponentFrontend,
 		frontendCloneSets, mgr.objectFactory.NewFrontendCloneSet,
-		// Only sync if Open Kruise is enabled.
-		mgr.risingwaveManager.IsOpenKruiseEnabled() && !mgr.risingwaveManager.IsStandaloneModeEnabled(),
+		frontendCloneSetsSelected,
+	)
+}
+
+// SyncFrontendStatefulSets implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) SyncFrontendStatefulSets(ctx context.Context, logger logr.Logger, frontendStatefulSets []appsv1.StatefulSet) (reconcile.Result, error) {
+	frontendStatefulSetsSelected := mgr.expectedFrontendWorkloadFamily() == frontendWorkloadFamilyStatefulSet
+	if !frontendStatefulSetsSelected {
+		return deleteComponentGroupWorkloads(mgr, ctx, logger, consts.ComponentFrontend, frontendStatefulSets)
+	}
+
+	return syncComponentGroupWorkloads(mgr, ctx, logger,
+		consts.ComponentFrontend,
+		frontendStatefulSets, mgr.objectFactory.NewFrontendStatefulSet,
+		frontendStatefulSetsSelected,
+	)
+}
+
+// SyncFrontendAdvancedStatefulSets implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) SyncFrontendAdvancedStatefulSets(ctx context.Context, logger logr.Logger, frontendStatefulSets []kruiseappsv1beta1.StatefulSet) (reconcile.Result, error) {
+	frontendAdvancedStatefulSetsSelected := mgr.expectedFrontendWorkloadFamily() == frontendWorkloadFamilyAdvancedStatefulSet
+	if !frontendAdvancedStatefulSetsSelected {
+		return deleteComponentGroupWorkloads(mgr, ctx, logger, consts.ComponentFrontend, frontendStatefulSets)
+	}
+
+	return syncComponentGroupWorkloads(mgr, ctx, logger,
+		consts.ComponentFrontend,
+		frontendStatefulSets, mgr.objectFactory.NewFrontendAdvancedStatefulSet,
+		frontendAdvancedStatefulSetsSelected,
 	)
 }
 
@@ -634,6 +833,20 @@ func waitComponentGroupWorkloadsReady[T any, TP ptrAsObject[T]](ctx context.Cont
 	return ctrlkit.Continue()
 }
 
+func waitComponentGroupWorkloadsDeleted[T any, TP ptrAsObject[T]](ctx context.Context, logger logr.Logger, component string, objects []T) (reconcile.Result, error) {
+	logger = logger.WithValues("component", component)
+
+	for i := range objects {
+		workloadObjPtr := TP(&objects[i])
+		group := workloadObjPtr.GetLabels()[consts.LabelRisingWaveGroup]
+		logger.Info("Obsolete workload object still exists, keep waiting...", "group", group, "workload", workloadObjPtr.GetName())
+
+		return ctrlkit.Exit()
+	}
+
+	return ctrlkit.Continue()
+}
+
 func (mgr *risingWaveControllerManagerImpl) buildExpectedGroupSet(component string) map[string]int {
 	return buildKeyMapFromList(mgr.risingwaveManager.GetNodeGroups(component), getNameFromNodeGroup)
 }
@@ -684,9 +897,12 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeComputeAdvancedStatefulSet
 
 // WaitBeforeFrontendDeploymentsReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendDeploymentsReady(ctx context.Context, logger logr.Logger, frontendDeployments []appsv1.Deployment) (reconcile.Result, error) {
+	if mgr.expectedFrontendWorkloadFamily() != frontendWorkloadFamilyDeployment {
+		return waitComponentGroupWorkloadsDeleted[appsv1.Deployment, *appsv1.Deployment](ctx, logger, consts.ComponentFrontend, frontendDeployments)
+	}
+
 	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentFrontend,
-		lo.If(!mgr.risingwaveManager.IsOpenKruiseEnabled() && !mgr.risingwaveManager.IsStandaloneModeEnabled(),
-			mgr.buildExpectedGroupSet(consts.ComponentFrontend)).Else(nil),
+		mgr.buildExpectedGroupSet(consts.ComponentFrontend),
 		frontendDeployments,
 		func(t *appsv1.Deployment) bool { return mgr.isObjectSynced(t) && utils.IsDeploymentRolledOut(t) },
 	)
@@ -694,12 +910,43 @@ func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendDeploymentsReady(c
 
 // WaitBeforeFrontendCloneSetsReady implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendCloneSetsReady(ctx context.Context, logger logr.Logger, frontendCloneSets []kruiseappsv1alpha1.CloneSet) (reconcile.Result, error) {
+	if mgr.expectedFrontendWorkloadFamily() != frontendWorkloadFamilyCloneSet {
+		return waitComponentGroupWorkloadsDeleted[kruiseappsv1alpha1.CloneSet, *kruiseappsv1alpha1.CloneSet](ctx, logger, consts.ComponentFrontend, frontendCloneSets)
+	}
+
 	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentFrontend,
-		lo.If(mgr.risingwaveManager.IsOpenKruiseEnabled() && !mgr.risingwaveManager.IsStandaloneModeEnabled(),
-			mgr.buildExpectedGroupSet(consts.ComponentFrontend)).Else(nil),
+		mgr.buildExpectedGroupSet(consts.ComponentFrontend),
 		frontendCloneSets,
 		func(t *kruiseappsv1alpha1.CloneSet) bool {
 			return mgr.isObjectSynced(t) && utils.IsCloneSetRolledOut(t)
+		},
+	)
+}
+
+// WaitBeforeFrontendStatefulSetsReady implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendStatefulSetsReady(ctx context.Context, logger logr.Logger, frontendStatefulSets []appsv1.StatefulSet) (reconcile.Result, error) {
+	if mgr.expectedFrontendWorkloadFamily() != frontendWorkloadFamilyStatefulSet {
+		return waitComponentGroupWorkloadsDeleted[appsv1.StatefulSet, *appsv1.StatefulSet](ctx, logger, consts.ComponentFrontend, frontendStatefulSets)
+	}
+
+	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentFrontend,
+		mgr.buildExpectedGroupSet(consts.ComponentFrontend),
+		frontendStatefulSets,
+		func(t *appsv1.StatefulSet) bool { return mgr.isObjectSynced(t) && utils.IsStatefulSetRolledOut(t) },
+	)
+}
+
+// WaitBeforeFrontendAdvancedStatefulSetsReady implements RisingWaveControllerManagerImpl.
+func (mgr *risingWaveControllerManagerImpl) WaitBeforeFrontendAdvancedStatefulSetsReady(ctx context.Context, logger logr.Logger, frontendStatefulSets []kruiseappsv1beta1.StatefulSet) (reconcile.Result, error) {
+	if mgr.expectedFrontendWorkloadFamily() != frontendWorkloadFamilyAdvancedStatefulSet {
+		return waitComponentGroupWorkloadsDeleted[kruiseappsv1beta1.StatefulSet, *kruiseappsv1beta1.StatefulSet](ctx, logger, consts.ComponentFrontend, frontendStatefulSets)
+	}
+
+	return waitComponentGroupWorkloadsReady(ctx, logger, consts.ComponentFrontend,
+		mgr.buildExpectedGroupSet(consts.ComponentFrontend),
+		frontendStatefulSets,
+		func(t *kruiseappsv1beta1.StatefulSet) bool {
+			return mgr.isObjectSynced(t) && utils.IsAdvancedStatefulSetRolledOut(t)
 		},
 	)
 }

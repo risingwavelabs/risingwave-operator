@@ -1283,6 +1283,11 @@ func (in *RisingWaveSpec) DeepCopyInto(out *RisingWaveSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.EnableFrontendStatefulSet != nil {
+		in, out := &in.EnableFrontendStatefulSet, &out.EnableFrontendStatefulSet
+		*out = new(bool)
+		**out = **in
+	}
 	if in.EnableDefaultServiceMonitor != nil {
 		in, out := &in.EnableDefaultServiceMonitor, &out.EnableDefaultServiceMonitor
 		*out = new(bool)

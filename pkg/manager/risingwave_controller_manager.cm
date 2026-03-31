@@ -73,6 +73,13 @@ decl RisingWaveControllerManager for RisingWave {
             owned
         }
 
+        // StatefulSets for frontend nodes.
+        frontendStatefulSets []StatefulSet {
+            labels/risingwave/name=${target.Name}
+            labels/risingwave/component=frontend
+            owned
+        }
+
         // StatefulSets for compute nodes.
         computeStatefulSets []StatefulSet {
             labels/risingwave/name=${target.Name}
@@ -95,6 +102,13 @@ decl RisingWaveControllerManager for RisingWave {
 
          // Deployments for frontend nodes.
         frontendCloneSets []CloneSet {
+            labels/risingwave/name=${target.Name}
+            labels/risingwave/component=frontend
+            owned
+        }
+
+        // StatefulSets for frontend nodes.
+        frontendAdvancedStatefulSets []AdvancedStatefulSet {
             labels/risingwave/name=${target.Name}
             labels/risingwave/component=frontend
             owned
@@ -156,14 +170,26 @@ decl RisingWaveControllerManager for RisingWave {
         // SyncFrontendDeployments creates or updates the Deployments for frontend nodes.
         SyncFrontendDeployments(frontendDeployments)
 
+        // SyncFrontendStatefulSets creates or updates the StatefulSets for frontend nodes.
+        SyncFrontendStatefulSets(frontendStatefulSets)
+
         // SyncFrontendCloneSets creates or updates the Deployments for frontend nodes.
         SyncFrontendCloneSets(frontendCloneSets)
+
+        // SyncFrontendAdvancedStatefulSets creates or updates the StatefulSets for frontend nodes.
+        SyncFrontendAdvancedStatefulSets(frontendAdvancedStatefulSets)
 
         // WaitBeforeFrontendDeploymentsReady waits (aborts the workflow) before the frontend Deployments are ready.
         WaitBeforeFrontendDeploymentsReady(frontendDeployments)
 
+        // WaitBeforeFrontendStatefulSetsReady waits (aborts the workflow) before the frontend StatefulSets are ready.
+        WaitBeforeFrontendStatefulSetsReady(frontendStatefulSets)
+
         // WaitBeforeFrontendCloneSetsReady waits (aborts the workflow) before the frontend CloneSets are ready.
         WaitBeforeFrontendCloneSetsReady(frontendCloneSets)
+
+        // WaitBeforeFrontendAdvancedStatefulSetsReady waits (aborts the workflow) before the frontend advanced StatefulSets are ready.
+        WaitBeforeFrontendAdvancedStatefulSetsReady(frontendAdvancedStatefulSets)
 
         // SyncComputeService creates or updates the service for compute nodes.
         SyncComputeService(computeService)
@@ -238,8 +264,8 @@ decl RisingWaveControllerManager for RisingWave {
 
     action {
         // CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
-        CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaStatefulSets, frontendDeployments, computeStatefulSets, compactorDeployments, configConfigMap)
-        CollectOpenKruiseRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaAdvancedStatefulSets, frontendCloneSets, computeAdvancedStatefulSets, compactorCloneSets, configConfigMap)
+        CollectRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaStatefulSets, frontendDeployments, frontendStatefulSets, computeStatefulSets, compactorDeployments, configConfigMap)
+        CollectOpenKruiseRunningStatisticsAndSyncStatus(frontendService, metaService, computeService, compactorService, metaAdvancedStatefulSets, frontendCloneSets, frontendAdvancedStatefulSets, computeAdvancedStatefulSets, compactorCloneSets, configConfigMap)
 
         // CollectRunningStatisticsAndSyncStatusForStandalone collects running statistics and sync them into the status.
         CollectRunningStatisticsAndSyncStatusForStandalone(standaloneService, standaloneStatefulSet, configConfigMap)

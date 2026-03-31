@@ -39714,6 +39714,13 @@ spec:
                   Flag to control whether to enable embedded serving mode. If enabled, the frontend nodes will be created
                   with embedded serving node enabled, and the compute nodes will serve streaming workload only.
                 type: boolean
+              enableFrontendStatefulSet:
+                default: false
+                description: |-
+                  Flag to control whether to deploy frontend nodes as StatefulSets instead of
+                  Deployments. If OpenKruise is enabled, frontend Advanced StatefulSets will
+                  be used instead of CloneSets.
+                type: boolean
               enableFullKubernetesAddr:
                 default: false
                 description: |-

@@ -56,30 +56,34 @@ import (
 //
 //goland:noinspection GoSnakeCaseUsage
 const (
-	RisingWaveAction_SyncMetaService                            = manager.RisingWaveAction_SyncMetaService
-	RisingWaveAction_SyncMetaStatefulSets                       = manager.RisingWaveAction_SyncMetaStatefulSets
-	RisingWaveAction_SyncMetaAdvancedStatefulSets               = manager.RisingWaveAction_SyncMetaAdvancedStatefulSets
-	RisingWaveAction_WaitBeforeMetaServiceIsAvailable           = manager.RisingWaveAction_WaitBeforeMetaServiceIsAvailable
-	RisingWaveAction_WaitBeforeMetaStatefulSetsReady            = manager.RisingWaveAction_WaitBeforeMetaStatefulSetsReady
-	RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady    = manager.RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady
-	RisingWaveAction_SyncFrontendService                        = manager.RisingWaveAction_SyncFrontendService
-	RisingWaveAction_SyncFrontendDeployments                    = manager.RisingWaveAction_SyncFrontendDeployments
-	RisingWaveAction_SyncFrontendCloneSets                      = manager.RisingWaveAction_SyncFrontendCloneSets
-	RisingWaveAction_WaitBeforeFrontendDeploymentsReady         = manager.RisingWaveAction_WaitBeforeFrontendDeploymentsReady
-	RisingWaveAction_WaitBeforeFrontendCloneSetsReady           = manager.RisingWaveAction_WaitBeforeFrontendCloneSetsReady
-	RisingWaveAction_SyncComputeService                         = manager.RisingWaveAction_SyncComputeService
-	RisingWaveAction_SyncComputeStatefulSets                    = manager.RisingWaveAction_SyncComputeStatefulSets
-	RisingWaveAction_SyncComputeAdvancedStatefulSets            = manager.RisingWaveAction_SyncComputeAdvancedStatefulSets
-	RisingWaveAction_WaitBeforeComputeStatefulSetsReady         = manager.RisingWaveAction_WaitBeforeComputeStatefulSetsReady
-	RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady = manager.RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady
-	RisingWaveAction_SyncCompactorService                       = manager.RisingWaveAction_SyncCompactorService
-	RisingWaveAction_SyncCompactorDeployments                   = manager.RisingWaveAction_SyncCompactorDeployments
-	RisingWaveAction_SyncCompactorCloneSets                     = manager.RisingWaveAction_SyncCompactorCloneSets
-	RisingWaveAction_WaitBeforeCompactorDeploymentsReady        = manager.RisingWaveAction_WaitBeforeCompactorDeploymentsReady
-	RisingWaveAction_WaitBeforeCompactorCloneSetsReady          = manager.RisingWaveAction_WaitBeforeCompactorCloneSetsReady
-	RisingWaveAction_SyncConfigConfigMap                        = manager.RisingWaveAction_SyncConfigConfigMap
-	RisingWaveAction_CollectRunningStatisticsAndSyncStatus      = manager.RisingWaveAction_CollectRunningStatisticsAndSyncStatus
-	RisingWaveAction_SyncServiceMonitor                         = manager.RisingWaveAction_SyncServiceMonitor
+	RisingWaveAction_SyncMetaService                             = manager.RisingWaveAction_SyncMetaService
+	RisingWaveAction_SyncMetaStatefulSets                        = manager.RisingWaveAction_SyncMetaStatefulSets
+	RisingWaveAction_SyncMetaAdvancedStatefulSets                = manager.RisingWaveAction_SyncMetaAdvancedStatefulSets
+	RisingWaveAction_WaitBeforeMetaServiceIsAvailable            = manager.RisingWaveAction_WaitBeforeMetaServiceIsAvailable
+	RisingWaveAction_WaitBeforeMetaStatefulSetsReady             = manager.RisingWaveAction_WaitBeforeMetaStatefulSetsReady
+	RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady     = manager.RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady
+	RisingWaveAction_SyncFrontendService                         = manager.RisingWaveAction_SyncFrontendService
+	RisingWaveAction_SyncFrontendDeployments                     = manager.RisingWaveAction_SyncFrontendDeployments
+	RisingWaveAction_SyncFrontendStatefulSets                    = manager.RisingWaveAction_SyncFrontendStatefulSets
+	RisingWaveAction_SyncFrontendCloneSets                       = manager.RisingWaveAction_SyncFrontendCloneSets
+	RisingWaveAction_SyncFrontendAdvancedStatefulSets            = manager.RisingWaveAction_SyncFrontendAdvancedStatefulSets
+	RisingWaveAction_WaitBeforeFrontendDeploymentsReady          = manager.RisingWaveAction_WaitBeforeFrontendDeploymentsReady
+	RisingWaveAction_WaitBeforeFrontendStatefulSetsReady         = manager.RisingWaveAction_WaitBeforeFrontendStatefulSetsReady
+	RisingWaveAction_WaitBeforeFrontendCloneSetsReady            = manager.RisingWaveAction_WaitBeforeFrontendCloneSetsReady
+	RisingWaveAction_WaitBeforeFrontendAdvancedStatefulSetsReady = manager.RisingWaveAction_WaitBeforeFrontendAdvancedStatefulSetsReady
+	RisingWaveAction_SyncComputeService                          = manager.RisingWaveAction_SyncComputeService
+	RisingWaveAction_SyncComputeStatefulSets                     = manager.RisingWaveAction_SyncComputeStatefulSets
+	RisingWaveAction_SyncComputeAdvancedStatefulSets             = manager.RisingWaveAction_SyncComputeAdvancedStatefulSets
+	RisingWaveAction_WaitBeforeComputeStatefulSetsReady          = manager.RisingWaveAction_WaitBeforeComputeStatefulSetsReady
+	RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady  = manager.RisingWaveAction_WaitBeforeComputeAdvancedStatefulSetsReady
+	RisingWaveAction_SyncCompactorService                        = manager.RisingWaveAction_SyncCompactorService
+	RisingWaveAction_SyncCompactorDeployments                    = manager.RisingWaveAction_SyncCompactorDeployments
+	RisingWaveAction_SyncCompactorCloneSets                      = manager.RisingWaveAction_SyncCompactorCloneSets
+	RisingWaveAction_WaitBeforeCompactorDeploymentsReady         = manager.RisingWaveAction_WaitBeforeCompactorDeploymentsReady
+	RisingWaveAction_WaitBeforeCompactorCloneSetsReady           = manager.RisingWaveAction_WaitBeforeCompactorCloneSetsReady
+	RisingWaveAction_SyncConfigConfigMap                         = manager.RisingWaveAction_SyncConfigConfigMap
+	RisingWaveAction_CollectRunningStatisticsAndSyncStatus       = manager.RisingWaveAction_CollectRunningStatisticsAndSyncStatus
+	RisingWaveAction_SyncServiceMonitor                          = manager.RisingWaveAction_SyncServiceMonitor
 )
 
 // Actions defined in controller.
@@ -330,17 +334,21 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 		ctrlkit.ParallelJoin(
 			mgr.SyncFrontendService(),
 			mgr.SyncFrontendDeployments(),
+			mgr.SyncFrontendStatefulSets(),
 			ctrlkit.If(c.openKruiseAvailable, mgr.SyncFrontendCloneSets()),
+			ctrlkit.If(c.openKruiseAvailable, mgr.SyncFrontendAdvancedStatefulSets()),
 		),
 	)
 	otherOpenKruiseComponentsReadyBarrier := ctrlkit.ParallelJoin(
 		mgr.WaitBeforeFrontendCloneSetsReady(),
+		mgr.WaitBeforeFrontendAdvancedStatefulSetsReady(),
 		mgr.WaitBeforeComputeAdvancedStatefulSetsReady(),
 		mgr.WaitBeforeCompactorCloneSetsReady(),
 	)
 
 	otherComponentsReadyBarrier := ctrlkit.Join(
 		mgr.WaitBeforeFrontendDeploymentsReady(),
+		mgr.WaitBeforeFrontendStatefulSetsReady(),
 		mgr.WaitBeforeComputeStatefulSetsReady(),
 		mgr.WaitBeforeCompactorDeploymentsReady(),
 		ctrlkit.If(c.openKruiseAvailable, otherOpenKruiseComponentsReadyBarrier),

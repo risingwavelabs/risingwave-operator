@@ -763,8 +763,18 @@ func computeAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, 
 }
 
 // This function returns the predicates used to compare Advanced StatefulSet objects for the frontend component.
-func frontendAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, computeAdvancedSTSTestCase] {
-	return getAdvancedSTSPredicates()
+func frontendAdvancedSTSPredicates() []predicate[*kruiseappsv1beta1.StatefulSet, frontendAdvancedSTSTestCase] {
+	return lo.Map(
+		getAdvancedSTSPredicates(),
+		func(p predicate[*kruiseappsv1beta1.StatefulSet, computeAdvancedSTSTestCase], _ int) predicate[*kruiseappsv1beta1.StatefulSet, frontendAdvancedSTSTestCase] {
+			return predicate[*kruiseappsv1beta1.StatefulSet, frontendAdvancedSTSTestCase]{
+				Name: p.Name,
+				Fn: func(obj *kruiseappsv1beta1.StatefulSet, tc frontendAdvancedSTSTestCase) bool {
+					return p.Fn(obj, computeAdvancedSTSTestCase(tc))
+				},
+			}
+		},
+	)
 }
 
 // This function returns the predicates used for the meta statefulset predicates.

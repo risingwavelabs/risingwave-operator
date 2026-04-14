@@ -569,9 +569,9 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Flag to control whether to deploy frontend nodes as StatefulSets instead of
-Deployments. If OpenKruise is enabled, frontend Advanced StatefulSets will
-be used instead of CloneSets.</p>
+<p>Flag to control whether to deploy frontend nodes as stateful workloads.
+If disabled, frontend uses Deployment or CloneSet depending on OpenKruise.
+If enabled, frontend uses StatefulSet or OpenKruise Advanced StatefulSet.</p>
 </td>
 </tr>
 <tr>
@@ -4781,9 +4781,9 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Flag to control whether to deploy frontend nodes as StatefulSets instead of
-Deployments. If OpenKruise is enabled, frontend Advanced StatefulSets will
-be used instead of CloneSets.</p>
+<p>Flag to control whether to deploy frontend nodes as stateful workloads.
+If disabled, frontend uses Deployment or CloneSet depending on OpenKruise.
+If enabled, frontend uses StatefulSet or OpenKruise Advanced StatefulSet.</p>
 </td>
 </tr>
 <tr>

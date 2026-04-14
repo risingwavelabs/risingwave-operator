@@ -85,9 +85,9 @@ type RisingWaveSpec struct {
 	// +kubebuilder:default=false
 	EnableOpenKruise *bool `json:"enableOpenKruise,omitempty"`
 
-	// Flag to control whether to deploy frontend nodes as StatefulSets instead of
-	// Deployments. If OpenKruise is enabled, frontend Advanced StatefulSets will
-	// be used instead of CloneSets.
+	// Flag to control whether to deploy frontend nodes as stateful workloads.
+	// If disabled, frontend uses Deployment or CloneSet depending on OpenKruise.
+	// If enabled, frontend uses StatefulSet or OpenKruise Advanced StatefulSet.
 	// +optional
 	// +kubebuilder:default=false
 	EnableFrontendStatefulSet *bool `json:"enableFrontendStatefulSet,omitempty"`

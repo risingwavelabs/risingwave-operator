@@ -54,6 +54,7 @@ type testCaseType interface {
 		cloneSetTestCase |
 		statefulSetTestCase |
 		computeAdvancedSTSTestCase |
+		frontendAdvancedSTSTestCase |
 		servicesTestCase |
 		serviceMetadataTestCase |
 		stateStoresTestCase |
@@ -2696,6 +2697,18 @@ func computeAdvancedSTSTestCases() map[string]computeAdvancedSTSTestCase {
 			},
 		},
 	}
+}
+
+type frontendAdvancedSTSTestCase computeAdvancedSTSTestCase
+
+func frontendAdvancedSTSTestCases() map[string]frontendAdvancedSTSTestCase {
+	testCases := make(map[string]frontendAdvancedSTSTestCase, len(computeAdvancedSTSTestCases()))
+
+	for name, tc := range computeAdvancedSTSTestCases() {
+		testCases[name] = frontendAdvancedSTSTestCase(tc)
+	}
+
+	return testCases
 }
 
 type servicesTestCase struct {

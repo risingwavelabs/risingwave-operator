@@ -336,7 +336,7 @@ func Test_RisingWaveObjectFactory_Compute_AdvancedStatefulSets(t *testing.T) {
 func Test_RisingWaveObjectFactory_Frontend_AdvancedStatefulSets(t *testing.T) {
 	predicates := frontendAdvancedSTSPredicates()
 
-	for name, tc := range computeAdvancedSTSTestCases() {
+	for name, tc := range frontendAdvancedSTSTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.EnableOpenKruise = ptr.To(true)
 			r.Spec.MetaStore.Memory = ptr.To(true)

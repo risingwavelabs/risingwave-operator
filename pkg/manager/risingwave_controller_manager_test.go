@@ -1054,6 +1054,58 @@ func Test_WaitComponentGroupWorkloadsReady(t *testing.T) {
 	}
 }
 
+func TestDeleteComponentGroupWorkloads_SkipsSyncedObjects(t *testing.T) {
+	fakeRisingwave := testutils.FakeRisingWave()
+
+	stale := newGroupObjectFromGroup[appsv1.Deployment, *appsv1.Deployment](
+		fakeRisingwave.Namespace,
+		fakeRisingwave.Name+"-frontend",
+		"",
+		map[string]string{
+			consts.LabelRisingWaveGeneration: strconv.FormatInt(fakeRisingwave.Generation-1, 10),
+		},
+	)
+	newer := newGroupObjectFromGroup[appsv1.Deployment, *appsv1.Deployment](
+		fakeRisingwave.Namespace,
+		fakeRisingwave.Name+"-frontend",
+		"newer",
+		map[string]string{
+			consts.LabelRisingWaveGeneration: strconv.FormatInt(fakeRisingwave.Generation+1, 10),
+		},
+	)
+
+	managerImpl := newRisingWaveControllerManagerImplForTest(
+		fakeRisingwave,
+		&stale,
+		&newer,
+	)
+
+	r, err := deleteComponentGroupWorkloads(
+		managerImpl,
+		context.Background(),
+		logr.Discard(),
+		consts.ComponentFrontend,
+		[]appsv1.Deployment{stale, newer},
+	)
+	if ctrlkit.NeedsRequeue(r, err) {
+		t.Fatalf("delete failed: %v %v", r, err)
+	}
+
+	var current appsv1.DeploymentList
+	if err := managerImpl.client.List(context.Background(), &current); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(current.Items) != 1 {
+		t.Fatalf("expected 1 deployment remaining, got %d", len(current.Items))
+	}
+
+	if current.Items[0].Name != newer.Name {
+		t.Fatalf("expected newer deployment %q to remain, got %q", newer.Name, current.Items[0].Name)
+	}
+}
+
+// cspell:ignore cloneset advancedstatefulset
 func TestRisingWaveControllerManagerImpl_ExpectedFrontendWorkloadFamily(t *testing.T) {
 	testcases := map[string]struct {
 		risingwave           *risingwavev1alpha1.RisingWave

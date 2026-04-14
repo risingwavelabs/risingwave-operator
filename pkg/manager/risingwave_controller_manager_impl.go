@@ -163,6 +163,7 @@ func frontendStatefulSetEnabled(rw *risingwavev1alpha1.RisingWave) bool {
 
 type frontendWorkloadFamily string
 
+// cspell:ignore cloneset advancedstatefulset
 const (
 	frontendWorkloadFamilyNone                frontendWorkloadFamily = "none"
 	frontendWorkloadFamilyDeployment          frontendWorkloadFamily = "deployment"
@@ -582,6 +583,11 @@ func deleteComponentGroupWorkloads[T any, TP ptrAsObject[T]](
 	for i := range objects {
 		workloadObjPtr := TP(&objects[i])
 		group := workloadObjPtr.GetLabels()[consts.LabelRisingWaveGroup]
+
+		if mgr.isObjectSynced(workloadObjPtr) {
+			logger.Info("Skip deleting obsolete object from newer generation", "workload", workloadObjPtr.GetName(), "group", group)
+			continue
+		}
 
 		if err := mgr.client.Delete(ctx, workloadObjPtr, client.PropagationPolicy(metav1.DeletePropagationBackground)); client.IgnoreNotFound(err) != nil {
 			logger.Error(err, "Failed to delete obsolete object", "workload", workloadObjPtr.GetName(), "group", group)

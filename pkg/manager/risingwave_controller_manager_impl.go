@@ -235,88 +235,6 @@ func buildStateStoreType(stateStore *risingwavev1alpha1.RisingWaveStateStoreBack
 	}
 }
 
-func buildReadyReplicasByGroup[T any](workloads []T, groupAndReadyReplicas func(*T) (string, int32)) map[string]int32 {
-	readyReplicasByGroup := make(map[string]int32)
-
-	for _, workload := range workloads {
-		group, readyReplicas := groupAndReadyReplicas(&workload)
-		readyReplicasByGroup[group] = max(readyReplicasByGroup[group], readyReplicas)
-	}
-
-	return readyReplicasByGroup
-}
-
-func buildFrontendComponentReplicasStatus(
-	groups []risingwavev1alpha1.RisingWaveNodeGroup,
-	statelessWorkloadsReadyReplicas map[string]int32,
-	statefulWorkloadsReadyReplicas map[string]int32,
-	useStatefulWorkloads bool,
-) risingwavev1alpha1.ComponentReplicasStatus {
-	status := risingwavev1alpha1.ComponentReplicasStatus{
-		Running: 0,
-		Target:  0,
-	}
-
-	expectedGroups := make(map[string]int32)
-
-	for _, group := range groups {
-		expectedGroups[group.Name] = group.Replicas
-		status.Target += group.Replicas
-
-		workloadsReadyReplicas := statelessWorkloadsReadyReplicas
-		if useStatefulWorkloads {
-			workloadsReadyReplicas = statefulWorkloadsReadyReplicas
-		}
-
-		if readyReplicas, ok := workloadsReadyReplicas[group.Name]; ok {
-			status.Running += readyReplicas
-			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
-				Name:    group.Name,
-				Target:  group.Replicas,
-				Running: readyReplicas,
-				Exists:  true,
-			})
-		} else {
-			status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
-				Name:    group.Name,
-				Target:  group.Replicas,
-				Running: 0,
-				Exists:  false,
-			})
-		}
-	}
-
-	unexpectedGroups := make(map[string]int32)
-	collectUnexpectedGroups := func(workloadsReadyReplicas map[string]int32) {
-		for group, readyReplicas := range workloadsReadyReplicas {
-			if _, ok := expectedGroups[group]; ok {
-				continue
-			}
-
-			unexpectedGroups[group] = max(unexpectedGroups[group], readyReplicas)
-		}
-	}
-
-	collectUnexpectedGroups(statelessWorkloadsReadyReplicas)
-	collectUnexpectedGroups(statefulWorkloadsReadyReplicas)
-
-	for group, readyReplicas := range unexpectedGroups {
-		status.Running += readyReplicas
-		status.Groups = append(status.Groups, risingwavev1alpha1.ComponentGroupReplicasStatus{
-			Name:    group + "(-)",
-			Target:  0,
-			Running: readyReplicas,
-			Exists:  true,
-		})
-	}
-
-	sort.Slice(status.Groups, func(i, j int) bool {
-		return status.Groups[i].Name < status.Groups[j].Name
-	})
-
-	return status
-}
-
 // CollectOpenKruiseRunningStatisticsAndSyncStatus implements RisingWaveControllerManagerImpl.
 func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAndSyncStatus(
 	ctx context.Context,
@@ -346,11 +264,15 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 	getGroupAndReadyReplicasForStatefulSet := func(t *kruiseappsv1beta1.StatefulSet) (string, int32) {
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
-	frontendCloneSetReadyReplicasByGroup := buildReadyReplicasByGroup(frontendCloneSets, getGroupAndReadyReplicasForCloneSets)
-	frontendAdvancedStatefulSetReadyReplicasByGroup := buildReadyReplicasByGroup(frontendAdvancedStatefulSets, getGroupAndReadyReplicasForStatefulSet)
+	var frontendReplicas risingwavev1alpha1.ComponentReplicasStatus
+	if frontendStatefulSetEnabled(risingwave) {
+		frontendReplicas = buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendAdvancedStatefulSets, getGroupAndReadyReplicasForStatefulSet)
+	} else {
+		frontendReplicas = buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendCloneSets, getGroupAndReadyReplicasForCloneSets)
+	}
 	componentReplicas := risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
 		Meta:       buildNodeGroupStatus(componentsSpec.Meta.NodeGroups, getNameAndReplicasFromNodeGroup, metaAdvancedStatefulSets, getGroupAndReadyReplicasForStatefulSet),
-		Frontend:   buildFrontendComponentReplicasStatus(componentsSpec.Frontend.NodeGroups, frontendCloneSetReadyReplicasByGroup, frontendAdvancedStatefulSetReadyReplicasByGroup, frontendStatefulSetEnabled(risingwave)),
+		Frontend:   frontendReplicas,
 		Compactor:  buildNodeGroupStatus(componentsSpec.Compactor.NodeGroups, getNameAndReplicasFromNodeGroup, compactorCloneSets, getGroupAndReadyReplicasForCloneSets),
 		Compute:    buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
 		Standalone: risingwavev1alpha1.ComponentReplicasStatus{Target: 0, Running: 0},
@@ -469,11 +391,15 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 	getGroupAndReadyReplicasForStatefulSet := func(t *appsv1.StatefulSet) (string, int32) {
 		return t.Labels[consts.LabelRisingWaveGroup], t.Status.ReadyReplicas
 	}
-	frontendDeploymentReadyReplicasByGroup := buildReadyReplicasByGroup(frontendDeployments, getGroupAndReadyReplicasForDeployment)
-	frontendStatefulSetReadyReplicasByGroup := buildReadyReplicasByGroup(frontendStatefulSets, getGroupAndReadyReplicasForStatefulSet)
+	var frontendReplicas risingwavev1alpha1.ComponentReplicasStatus
+	if frontendStatefulSetEnabled(risingwave) {
+		frontendReplicas = buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendStatefulSets, getGroupAndReadyReplicasForStatefulSet)
+	} else {
+		frontendReplicas = buildNodeGroupStatus(componentsSpec.Frontend.NodeGroups, getNameAndReplicasFromNodeGroup, frontendDeployments, getGroupAndReadyReplicasForDeployment)
+	}
 	componentReplicas := risingwavev1alpha1.RisingWaveComponentsReplicasStatus{
 		Meta:       buildNodeGroupStatus(componentsSpec.Meta.NodeGroups, getNameAndReplicasFromNodeGroup, metaStatefulSets, getGroupAndReadyReplicasForStatefulSet),
-		Frontend:   buildFrontendComponentReplicasStatus(componentsSpec.Frontend.NodeGroups, frontendDeploymentReadyReplicasByGroup, frontendStatefulSetReadyReplicasByGroup, frontendStatefulSetEnabled(risingwave)),
+		Frontend:   frontendReplicas,
 		Compactor:  buildNodeGroupStatus(componentsSpec.Compactor.NodeGroups, getNameAndReplicasFromNodeGroup, compactorDeployments, getGroupAndReadyReplicasForDeployment),
 		Compute:    buildNodeGroupStatus(componentsSpec.Compute.NodeGroups, getNameAndReplicasFromNodeGroup, computeStatefulSets, getGroupAndReadyReplicasForStatefulSet),
 		Standalone: risingwavev1alpha1.ComponentReplicasStatus{Target: 0, Running: 0},

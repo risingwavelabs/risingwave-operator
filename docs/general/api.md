@@ -562,6 +562,20 @@ and Advanced StatefulSets will be used for compute nodes.</p>
 </tr>
 <tr>
 <td>
+<code>enableFrontendStatefulSet</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to control whether to deploy frontend nodes as StatefulSets instead of
+Deployments. If OpenKruise is enabled, frontend Advanced StatefulSets will
+be used instead of CloneSets.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enableDefaultServiceMonitor</code><br/>
 <em>
 bool
@@ -4756,6 +4770,20 @@ bool
 <p>Flag to indicate if OpenKruise should be enabled for components.
 If enabled, CloneSets will be used for meta/frontend/compactor nodes
 and Advanced StatefulSets will be used for compute nodes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableFrontendStatefulSet</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Flag to control whether to deploy frontend nodes as StatefulSets instead of
+Deployments. If OpenKruise is enabled, frontend Advanced StatefulSets will
+be used instead of CloneSets.</p>
 </td>
 </tr>
 <tr>

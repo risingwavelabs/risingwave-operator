@@ -190,7 +190,7 @@ func Test_RisingWaveObjectFactory_Frontend_CloneSet(t *testing.T) {
 func Test_RisingWaveObjectFactory_Frontend_StatefulSets(t *testing.T) {
 	predicates := frontendStatefulSetPredicates()
 
-	for name, tc := range computeStatefulSetTestCases() {
+	for name, tc := range statefulSetTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.MetaStore.Memory = ptr.To(true)
 			r.Spec.StateStore.Memory = ptr.To(true)
@@ -263,7 +263,7 @@ func Test_RisingWaveObjectFactory_Meta_StatefulSets(t *testing.T) {
 func Test_RisingWaveObjectFactory_Compute_StatefulSets(t *testing.T) {
 	predicates := computeStatefulSetPredicates()
 
-	for name, tc := range computeStatefulSetTestCases() {
+	for name, tc := range statefulSetTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.EnableOpenKruise = ptr.To(true)
 			r.Spec.MetaStore.Memory = ptr.To(true)

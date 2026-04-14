@@ -312,43 +312,43 @@ func metaStatefulSetPredicates() []predicate[*appsv1.StatefulSet, metaStatefulSe
 	}
 }
 
-// This function returns the predicates used for the base statefulset predicates.
-func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestCase] {
-	return []predicate[*appsv1.StatefulSet, computeStatefulSetTestCase]{
+// This function returns the base predicates shared by component StatefulSets.
+func getSTSPredicates() []predicate[*appsv1.StatefulSet, statefulSetTestCase] {
+	return []predicate[*appsv1.StatefulSet, statefulSetTestCase]{
 		{
 			Name: "namespace-equals",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				return obj.Namespace == tc.risingwave.Namespace
 			},
 		},
 		{
 			Name: "labels-equal",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				return hasLabels(obj, componentGroupLabels(tc.risingwave, tc.component, &tc.group.Name, true), true)
 			},
 		},
 		{
 			Name: "annotations-equal",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				return hasAnnotations(obj, componentGroupAnnotations(tc.risingwave, &tc.group.Name), true)
 			},
 		},
 		{
 			Name: "replicas-equal",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				return *obj.Spec.Replicas == tc.group.Replicas
 			},
 		},
 
 		{
 			Name: "pod-template-labels-match",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				return mapContains(obj.Spec.Template.Labels, podSelector(tc.risingwave, tc.component, &tc.group.Name))
 			},
 		},
 		{
 			Name: "pod-template-annotations-match",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				if tc.restartAt != nil {
 					return mapContains(obj.Spec.Template.Annotations, map[string]string{
 						consts.AnnotationRestartAt: tc.restartAt.In(time.UTC).Format("2006-01-02T15:04:05Z"),
@@ -361,13 +361,13 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 		},
 		{
 			Name: "image-pull-policy-match",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				return obj.Spec.Template.Spec.Containers[0].ImagePullPolicy == tc.group.Template.Spec.ImagePullPolicy
 			},
 		},
 		{
 			Name: "image-pull-secrets-match",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				for _, s := range tc.group.Template.Spec.ImagePullSecrets {
 					if !lo.Contains(obj.Spec.Template.Spec.ImagePullSecrets, s) {
 						return false
@@ -379,43 +379,43 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 		},
 		{
 			Name: "resources-match",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Template.Spec.Resources)
 			},
 		},
 		{
 			Name: "node-selector-match",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Containers[0].Resources, tc.group.Template.Spec.Resources)
 			},
 		},
 		{
 			Name: "tolerations-match",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.Tolerations, tc.group.Template.Spec.Tolerations)
 			},
 		},
 		{
 			Name: "priority-class-name-match",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				return obj.Spec.Template.Spec.PriorityClassName == tc.group.Template.Spec.PriorityClassName
 			},
 		},
 		{
 			Name: "security-context-match",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.SecurityContext, tc.group.Template.Spec.SecurityContext)
 			},
 		},
 		{
 			Name: "dns-config-match",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				return equality.Semantic.DeepEqual(obj.Spec.Template.Spec.DNSConfig, tc.group.Template.Spec.DNSConfig)
 			},
 		},
 		{
 			Name: "termination-grace-period-seconds-match",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				if tc.group.Template.Spec.TerminationGracePeriodSeconds != nil {
 					return *obj.Spec.Template.Spec.TerminationGracePeriodSeconds == *tc.group.Template.Spec.TerminationGracePeriodSeconds
 				}
@@ -425,7 +425,7 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 		},
 		{
 			Name: "upgrade-strategy-match",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				if tc.expectedUpgradeStrategy == nil {
 					return equality.Semantic.DeepEqual(obj.Spec.UpdateStrategy, appsv1.StatefulSetUpdateStrategy{})
 				}
@@ -434,7 +434,7 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 			},
 		}, {
 			Name: "first-container-must-have-probes",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				container := &obj.Spec.Template.Spec.Containers[0]
 
 				return container.LivenessProbe != nil && container.ReadinessProbe != nil
@@ -442,13 +442,13 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 		},
 		{
 			Name: "check-volume-mounts",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				return listContainsByKey(obj.Spec.Template.Spec.Containers[0].VolumeMounts, tc.group.Template.Spec.VolumeMounts, func(t *corev1.VolumeMount) string { return t.MountPath }, deepEqual[corev1.VolumeMount])
 			},
 		},
 		{
 			Name: "first-container-must-have-probes",
-			Fn: func(obj *appsv1.StatefulSet, tc computeStatefulSetTestCase) bool {
+			Fn: func(obj *appsv1.StatefulSet, tc statefulSetTestCase) bool {
 				container := &obj.Spec.Template.Spec.Containers[0]
 
 				return container.LivenessProbe != nil && container.ReadinessProbe != nil
@@ -459,12 +459,12 @@ func getSTSPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestC
 
 // This function returns the predicates used for to compare stateful objects for the compute component.
 // It inherits from the base statefulset predicates and further additional predicates can be added for compute.
-func computeStatefulSetPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestCase] {
+func computeStatefulSetPredicates() []predicate[*appsv1.StatefulSet, statefulSetTestCase] {
 	return getSTSPredicates()
 }
 
 // This function returns the predicates used to compare StatefulSet objects for the frontend component.
-func frontendStatefulSetPredicates() []predicate[*appsv1.StatefulSet, computeStatefulSetTestCase] {
+func frontendStatefulSetPredicates() []predicate[*appsv1.StatefulSet, statefulSetTestCase] {
 	return getSTSPredicates()
 }
 

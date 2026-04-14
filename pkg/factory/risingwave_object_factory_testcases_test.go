@@ -52,7 +52,7 @@ type testCaseType interface {
 	baseTestCase |
 		deploymentTestCase |
 		cloneSetTestCase |
-		computeStatefulSetTestCase |
+		statefulSetTestCase |
 		computeAdvancedSTSTestCase |
 		servicesTestCase |
 		serviceMetadataTestCase |
@@ -695,10 +695,10 @@ func metaStatefulSetTestCases() map[string]metaStatefulSetTestCase {
 	}
 }
 
-type computeStatefulSetTestCase testCase[risingwavev1alpha1.RisingWaveNodeGroup, *appsv1.StatefulSetUpdateStrategy]
+type statefulSetTestCase testCase[risingwavev1alpha1.RisingWaveNodeGroup, *appsv1.StatefulSetUpdateStrategy]
 
-func computeStatefulSetTestCases() map[string]computeStatefulSetTestCase {
-	return map[string]computeStatefulSetTestCase{
+func statefulSetTestCases() map[string]statefulSetTestCase {
+	return map[string]statefulSetTestCase{
 		"pods-meta-labels": {
 			group: risingwavev1alpha1.RisingWaveNodeGroup{
 				Name:     "",

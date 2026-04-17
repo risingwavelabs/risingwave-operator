@@ -63,6 +63,7 @@ const (
 	RisingWaveAction_WaitBeforeMetaStatefulSetsReady             = manager.RisingWaveAction_WaitBeforeMetaStatefulSetsReady
 	RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady     = manager.RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady
 	RisingWaveAction_SyncFrontendService                         = manager.RisingWaveAction_SyncFrontendService
+	RisingWaveAction_SyncFrontendHeadlessService                 = manager.RisingWaveAction_SyncFrontendHeadlessService
 	RisingWaveAction_SyncFrontendDeployments                     = manager.RisingWaveAction_SyncFrontendDeployments
 	RisingWaveAction_SyncFrontendStatefulSets                    = manager.RisingWaveAction_SyncFrontendStatefulSets
 	RisingWaveAction_SyncFrontendCloneSets                       = manager.RisingWaveAction_SyncFrontendCloneSets
@@ -331,12 +332,15 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			mgr.SyncCompactorDeployments(),
 			ctrlkit.If(c.openKruiseAvailable, mgr.SyncCompactorCloneSets()),
 		),
-		ctrlkit.ParallelJoin(
+		ctrlkit.Sequential(
 			mgr.SyncFrontendService(),
-			mgr.SyncFrontendDeployments(),
-			mgr.SyncFrontendStatefulSets(),
-			ctrlkit.If(c.openKruiseAvailable, mgr.SyncFrontendCloneSets()),
-			ctrlkit.If(c.openKruiseAvailable, mgr.SyncFrontendAdvancedStatefulSets()),
+			mgr.SyncFrontendHeadlessService(),
+			ctrlkit.ParallelJoin(
+				mgr.SyncFrontendDeployments(),
+				mgr.SyncFrontendStatefulSets(),
+				ctrlkit.If(c.openKruiseAvailable, mgr.SyncFrontendCloneSets()),
+				ctrlkit.If(c.openKruiseAvailable, mgr.SyncFrontendAdvancedStatefulSets()),
+			),
 		),
 	)
 	otherOpenKruiseComponentsReadyBarrier := ctrlkit.ParallelJoin(

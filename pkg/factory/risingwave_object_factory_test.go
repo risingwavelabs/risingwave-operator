@@ -211,6 +211,22 @@ func Test_RisingWaveObjectFactory_Frontend_StatefulSets(t *testing.T) {
 	}
 }
 
+func Test_RisingWaveObjectFactory_FrontendHeadlessService(t *testing.T) {
+	risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+		r.Spec.FrontendServiceType = corev1.ServiceTypeNodePort
+		r.Spec.EnableWebhookListener = ptr.To(true)
+	})
+
+	factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme, "")
+	svc := factory.NewFrontendHeadlessService()
+
+	assert.Equal(t, risingwave.Name+"-frontend-headless", svc.Name)
+	assert.Equal(t, corev1.ServiceTypeClusterIP, svc.Spec.Type)
+	assert.Equal(t, corev1.ClusterIPNone, svc.Spec.ClusterIP)
+	assert.Equal(t, podSelector(risingwave, consts.ComponentFrontend, nil), svc.Spec.Selector)
+	assert.Len(t, svc.Spec.Ports, 3)
+}
+
 func Test_RisingWaveObjectFactory_Compactor_CloneSet(t *testing.T) {
 	predicates := compactorCloneSetPredicates()
 
@@ -356,6 +372,24 @@ func Test_RisingWaveObjectFactory_Frontend_AdvancedStatefulSets(t *testing.T) {
 			composeAssertions(predicates, t).assertTest(sts, tc)
 		})
 	}
+}
+
+func Test_RisingWaveObjectFactory_FrontendStatefulWorkloadsUseHeadlessService(t *testing.T) {
+	risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+		r.Spec.MetaStore.Memory = ptr.To(true)
+		r.Spec.StateStore.Memory = ptr.To(true)
+		r.Spec.EnableOpenKruise = ptr.To(true)
+		r.Spec.Components.Frontend.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+			{
+				Replicas: 1,
+			},
+		}
+	})
+
+	factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme, "")
+
+	assert.Equal(t, risingwave.Name+"-frontend-headless", factory.NewFrontendStatefulSet("").Spec.ServiceName)
+	assert.Equal(t, risingwave.Name+"-frontend-headless", factory.NewFrontendAdvancedStatefulSet("").Spec.ServiceName)
 }
 
 func Test_RisingWaveObjectFactory_StateStores(t *testing.T) {

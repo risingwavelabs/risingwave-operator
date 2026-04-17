@@ -306,6 +306,27 @@ func (s *RisingWaveControllerManagerState) GetFrontendDeployments(ctx context.Co
 	return validated, nil
 }
 
+// GetFrontendHeadlessService gets frontendHeadlessService with name equals to ${target.Name}-frontend-headless.
+func (s *RisingWaveControllerManagerState) GetFrontendHeadlessService(ctx context.Context) (*corev1.Service, error) {
+	var frontendHeadlessService corev1.Service
+
+	err := s.Get(ctx, types.NamespacedName{
+		Namespace: s.target.Namespace,
+		Name:      s.target.Name + "-frontend-headless",
+	}, &frontendHeadlessService)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to get state 'frontendHeadlessService': %w", err)
+	}
+	if !ctrlkit.ValidateOwnership(&frontendHeadlessService, s.target) {
+		return nil, fmt.Errorf("unable to get state 'frontendHeadlessService': object not owned by target")
+	}
+
+	return &frontendHeadlessService, nil
+}
+
 // GetFrontendService gets frontendService with name equals to ${target.Name}-frontend.
 func (s *RisingWaveControllerManagerState) GetFrontendService(ctx context.Context) (*corev1.Service, error) {
 	var frontendService corev1.Service
@@ -547,6 +568,9 @@ type RisingWaveControllerManagerImpl interface {
 	// SyncFrontendService creates or updates the service for frontend nodes.
 	SyncFrontendService(ctx context.Context, logger logr.Logger, frontendService *corev1.Service) (ctrl.Result, error)
 
+	// SyncFrontendHeadlessService creates or updates the headless service for frontend StatefulSets.
+	SyncFrontendHeadlessService(ctx context.Context, logger logr.Logger, frontendHeadlessService *corev1.Service) (ctrl.Result, error)
+
 	// SyncFrontendDeployments creates or updates the Deployments for frontend nodes.
 	SyncFrontendDeployments(ctx context.Context, logger logr.Logger, frontendDeployments []appsv1.Deployment) (ctrl.Result, error)
 
@@ -642,6 +666,7 @@ const (
 	RisingWaveAction_WaitBeforeMetaStatefulSetsReady                              = "WaitBeforeMetaStatefulSetsReady"
 	RisingWaveAction_WaitBeforeMetaAdvancedStatefulSetsReady                      = "WaitBeforeMetaAdvancedStatefulSetsReady"
 	RisingWaveAction_SyncFrontendService                                          = "SyncFrontendService"
+	RisingWaveAction_SyncFrontendHeadlessService                                  = "SyncFrontendHeadlessService"
 	RisingWaveAction_SyncFrontendDeployments                                      = "SyncFrontendDeployments"
 	RisingWaveAction_SyncFrontendStatefulSets                                     = "SyncFrontendStatefulSets"
 	RisingWaveAction_SyncFrontendCloneSets                                        = "SyncFrontendCloneSets"
@@ -855,6 +880,29 @@ func (m *RisingWaveControllerManager) SyncFrontendService() ctrlkit.Action {
 		}
 
 		return m.impl.SyncFrontendService(ctx, logger, frontendService)
+	})
+}
+
+// SyncFrontendHeadlessService generates the action of "SyncFrontendHeadlessService".
+func (m *RisingWaveControllerManager) SyncFrontendHeadlessService() ctrlkit.Action {
+	return ctrlkit.NewAction(RisingWaveAction_SyncFrontendHeadlessService, func(ctx context.Context) (result ctrl.Result, err error) {
+		logger := m.logger.WithValues("action", RisingWaveAction_SyncFrontendHeadlessService)
+
+		// Get states.
+		frontendHeadlessService, err := m.state.GetFrontendHeadlessService(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		// Invoke action.
+		if m.hook != nil {
+			defer func() { m.hook.PostRun(ctx, logger, RisingWaveAction_SyncFrontendHeadlessService, result, err) }()
+			m.hook.PreRun(ctx, logger, RisingWaveAction_SyncFrontendHeadlessService, map[string]runtime.Object{
+				"frontendHeadlessService": frontendHeadlessService,
+			})
+		}
+
+		return m.impl.SyncFrontendHeadlessService(ctx, logger, frontendHeadlessService)
 	})
 }
 

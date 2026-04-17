@@ -231,6 +231,18 @@ func (f *RisingWaveObjectFactory) componentName(component, group string) string 
 	}
 }
 
+func (f *RisingWaveObjectFactory) frontendHeadlessServiceName() string {
+	return f.risingwave.Name + "-frontend-headless"
+}
+
+func (f *RisingWaveObjectFactory) statefulWorkloadServiceName(component string) string {
+	if component == consts.ComponentFrontend {
+		return f.frontendHeadlessServiceName()
+	}
+
+	return f.componentName(component, "")
+}
+
 func (f *RisingWaveObjectFactory) componentAddr(component, group string) string {
 	componentName := f.componentName(component, group)
 	if f.isFullKubernetesAddr() {
@@ -315,6 +327,14 @@ func (f *RisingWaveObjectFactory) newService(component string, serviceType corev
 			Ports:    ports,
 		},
 	}
+}
+
+func (f *RisingWaveObjectFactory) newHeadlessService(name, component string, ports []corev1.ServicePort) *corev1.Service {
+	svc := f.newService(component, corev1.ServiceTypeClusterIP, ports)
+	svc.Name = name
+	svc.Spec.ClusterIP = corev1.ClusterIPNone
+
+	return svc
 }
 
 func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
@@ -1824,7 +1844,7 @@ func (f *RisingWaveObjectFactory) newStatefulSet(component string, nodeGroup *ri
 	return &appsv1.StatefulSet{
 		ObjectMeta: f.getObjectMetaForComponentGroupLevelResources(component, nodeGroup.Name, true),
 		Spec: appsv1.StatefulSetSpec{
-			ServiceName:    f.componentName(component, ""),
+			ServiceName:    f.statefulWorkloadServiceName(component),
 			Replicas:       ptr.To(nodeGroup.Replicas),
 			UpdateStrategy: buildUpgradeStrategyForStatefulSet(nodeGroup.UpgradeStrategy),
 			Selector: &metav1.LabelSelector{
@@ -1849,7 +1869,7 @@ func (f *RisingWaveObjectFactory) newAdvancedStatefulSet(component string, nodeG
 		ObjectMeta: f.getObjectMetaForComponentGroupLevelResources(component, nodeGroup.Name, true),
 		Spec: kruiseappsv1beta1.StatefulSetSpec{
 			Replicas:       ptr.To(nodeGroup.Replicas),
-			ServiceName:    f.componentName(component, ""),
+			ServiceName:    f.statefulWorkloadServiceName(component),
 			UpdateStrategy: buildUpgradeStrategyForAdvancedStatefulSet(nodeGroup.UpgradeStrategy),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: f.podLabelsOrSelectorsForComponentGroup(component, nodeGroup.Name),
@@ -2427,6 +2447,40 @@ func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 	// Inject additional metadata.
 	frontendSvc.Labels = mergeMap(frontendSvc.Labels, f.risingwave.Spec.AdditionalFrontendServiceMetadata.Labels)
 	frontendSvc.Annotations = mergeMap(frontendSvc.Annotations, f.risingwave.Spec.AdditionalFrontendServiceMetadata.Annotations)
+
+	return mustSetControllerReference(f.risingwave, frontendSvc, f.scheme)
+}
+
+// NewFrontendHeadlessService creates a new headless Service used to govern frontend StatefulSets.
+func (f *RisingWaveObjectFactory) NewFrontendHeadlessService() *corev1.Service {
+	svcPorts := []corev1.ServicePort{
+		{
+			Name:       consts.PortService,
+			Protocol:   corev1.ProtocolTCP,
+			Port:       consts.FrontendServicePort,
+			TargetPort: intstr.FromString(consts.PortService),
+		},
+	}
+
+	if !ptr.Deref(f.risingwave.Spec.EnableStandaloneMode, false) {
+		svcPorts = append(svcPorts, corev1.ServicePort{
+			Name:       consts.PortMetrics,
+			Protocol:   corev1.ProtocolTCP,
+			Port:       consts.FrontendMetricsPort,
+			TargetPort: intstr.FromString(consts.PortMetrics),
+		})
+	}
+
+	if f.isWebhookListenerEnabled() {
+		svcPorts = append(svcPorts, corev1.ServicePort{
+			Name:       consts.PortHTTP,
+			Protocol:   corev1.ProtocolTCP,
+			Port:       consts.FrontendWebhookPort,
+			TargetPort: intstr.FromString(consts.PortHTTP),
+		})
+	}
+
+	frontendSvc := f.newHeadlessService(f.frontendHeadlessServiceName(), consts.ComponentFrontend, svcPorts)
 
 	return mustSetControllerReference(f.risingwave, frontendSvc, f.scheme)
 }

@@ -240,6 +240,7 @@ func Test_RisingWaveController_Initializing(t *testing.T) {
 				RisingWaveAction_SyncComputeService:                          newResultErr(ctrlkit.Continue()),
 				RisingWaveAction_SyncCompactorService:                        newResultErr(ctrlkit.Continue()),
 				RisingWaveAction_SyncFrontendService:                         newResultErr(ctrlkit.Continue()),
+				RisingWaveAction_SyncFrontendHeadlessService:                 newResultErr(ctrlkit.Continue()),
 				RisingWaveAction_SyncConfigConfigMap:                         newResultErr(ctrlkit.Continue()),
 				RisingWaveAction_SyncMetaStatefulSets:                        newResultErr(ctrlkit.Continue()),
 				RisingWaveAction_SyncFrontendDeployments:                     newResultErr(ctrlkit.Continue()),

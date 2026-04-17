@@ -35,6 +35,12 @@ decl RisingWaveControllerManager for RisingWave {
             owned
         }
 
+        // Headless Service governing frontend StatefulSets.
+        frontendHeadlessService Service {
+            name=${target.Name}-frontend-headless
+            owned
+        }
+
         // Service for compute nodes.
         computeService Service {
             name=${target.Name}-compute
@@ -166,6 +172,9 @@ decl RisingWaveControllerManager for RisingWave {
 
         // SyncFrontendService creates or updates the service for frontend nodes.
         SyncFrontendService(frontendService)
+
+        // SyncFrontendHeadlessService creates or updates the headless service for frontend StatefulSets.
+        SyncFrontendHeadlessService(frontendHeadlessService)
 
         // SyncFrontendDeployments creates or updates the Deployments for frontend nodes.
         SyncFrontendDeployments(frontendDeployments)

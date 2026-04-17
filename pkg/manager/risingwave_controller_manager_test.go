@@ -423,6 +423,80 @@ func TestRisingWaveControllerManagerImpl_SyncFrontendService(t *testing.T) {
 	)
 }
 
+func TestRisingWaveControllerManagerImpl_SyncFrontendHeadlessService(t *testing.T) {
+	t.Run("create-when-enabled", func(t *testing.T) {
+		risingwave := fakeRisingWaveWithFrontendStatefulSet(false)
+		key := types.NamespacedName{Namespace: risingwave.Namespace, Name: risingwave.Name + "-frontend-headless"}
+		managerImpl := newRisingWaveControllerManagerImplForTest(risingwave)
+
+		r, err := managerImpl.SyncFrontendHeadlessService(context.Background(), logr.Discard(), nil)
+		if ctrlkit.NeedsRequeue(r, err) {
+			t.Fatal("sync failed", r, err)
+		}
+
+		var current corev1.Service
+		if err := managerImpl.client.Get(context.Background(), key, &current); err != nil {
+			t.Fatal(err)
+		}
+
+		if !managerImpl.isObjectSynced(&current) {
+			t.Fatal("frontend headless service not synced after sync")
+		}
+
+		if current.Spec.ClusterIP != corev1.ClusterIPNone {
+			t.Fatalf("got clusterIP %q, want %q", current.Spec.ClusterIP, corev1.ClusterIPNone)
+		}
+	})
+
+	t.Run("delete-when-disabled", func(t *testing.T) {
+		risingwave := testutils.FakeRisingWave()
+		service := &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      risingwave.Name + "-frontend-headless",
+				Namespace: risingwave.Namespace,
+				Labels: map[string]string{
+					consts.LabelRisingWaveGeneration: strconv.FormatInt(risingwave.Generation-1, 10),
+				},
+			},
+		}
+		managerImpl := newRisingWaveControllerManagerImplForTest(risingwave, service)
+
+		r, err := managerImpl.SyncFrontendHeadlessService(context.Background(), logr.Discard(), service)
+		if ctrlkit.NeedsRequeue(r, err) {
+			t.Fatal("sync failed", r, err)
+		}
+
+		var current corev1.Service
+		if err := managerImpl.client.Get(context.Background(), types.NamespacedName{Name: service.Name, Namespace: service.Namespace}, &current); err == nil {
+			t.Fatal("frontend headless service still exists after delete")
+		}
+	})
+
+	t.Run("skip-delete-for-newer-generation", func(t *testing.T) {
+		risingwave := testutils.FakeRisingWave()
+		service := &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      risingwave.Name + "-frontend-headless",
+				Namespace: risingwave.Namespace,
+				Labels: map[string]string{
+					consts.LabelRisingWaveGeneration: strconv.FormatInt(risingwave.Generation, 10),
+				},
+			},
+		}
+		managerImpl := newRisingWaveControllerManagerImplForTest(risingwave, service)
+
+		r, err := managerImpl.SyncFrontendHeadlessService(context.Background(), logr.Discard(), service)
+		if ctrlkit.NeedsRequeue(r, err) {
+			t.Fatal("sync failed", r, err)
+		}
+
+		var current corev1.Service
+		if err := managerImpl.client.Get(context.Background(), types.NamespacedName{Name: service.Name, Namespace: service.Namespace}, &current); err != nil {
+			t.Fatal(err)
+		}
+	})
+}
+
 func TestRisingWaveControllerManagerImpl_SyncComputeService(t *testing.T) {
 	fakeRisingwave := testutils.FakeRisingWave()
 
@@ -1054,8 +1128,8 @@ func Test_WaitComponentGroupWorkloadsReady(t *testing.T) {
 	}
 }
 
-func TestDeleteComponentGroupWorkloads_SkipsSyncedObjects(t *testing.T) {
-	fakeRisingwave := testutils.FakeRisingWave()
+func TestRisingWaveControllerManagerImpl_SyncFrontendDeployments_StatefulSetEnabled_SkipsSyncedObjects(t *testing.T) {
+	fakeRisingwave := fakeRisingWaveWithFrontendStatefulSet(false)
 
 	stale := newGroupObjectFromGroup[appsv1.Deployment, *appsv1.Deployment](
 		fakeRisingwave.Namespace,
@@ -1080,15 +1154,13 @@ func TestDeleteComponentGroupWorkloads_SkipsSyncedObjects(t *testing.T) {
 		&newer,
 	)
 
-	r, err := deleteComponentGroupWorkloads(
-		managerImpl,
+	r, err := managerImpl.SyncFrontendDeployments(
 		context.Background(),
 		logr.Discard(),
-		consts.ComponentFrontend,
 		[]appsv1.Deployment{stale, newer},
 	)
 	if ctrlkit.NeedsRequeue(r, err) {
-		t.Fatalf("delete failed: %v %v", r, err)
+		t.Fatalf("sync failed: %v %v", r, err)
 	}
 
 	var current appsv1.DeploymentList

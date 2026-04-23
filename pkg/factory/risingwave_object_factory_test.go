@@ -187,6 +187,46 @@ func Test_RisingWaveObjectFactory_Frontend_CloneSet(t *testing.T) {
 	}
 }
 
+func Test_RisingWaveObjectFactory_Frontend_StatefulSets(t *testing.T) {
+	predicates := frontendStatefulSetPredicates()
+
+	for name, tc := range statefulSetTestCases() {
+		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+			r.Spec.MetaStore.Memory = ptr.To(true)
+			r.Spec.StateStore.Memory = ptr.To(true)
+			tc.group.RestartAt = tc.restartAt
+			r.Spec.Components.Frontend.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+				tc.group,
+			}
+		})
+
+		tc.component = consts.ComponentFrontend
+
+		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
+		sts := factory.NewFrontendStatefulSet(tc.group.Name)
+
+		t.Run(name, func(t *testing.T) {
+			composeAssertions(predicates, t).assertTest(sts, tc)
+		})
+	}
+}
+
+func Test_RisingWaveObjectFactory_FrontendHeadlessService(t *testing.T) {
+	risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+		r.Spec.FrontendServiceType = corev1.ServiceTypeNodePort
+		r.Spec.EnableWebhookListener = ptr.To(true)
+	})
+
+	factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme, "")
+	svc := factory.NewFrontendHeadlessService()
+
+	assert.Equal(t, risingwave.Name+"-frontend-headless", svc.Name)
+	assert.Equal(t, corev1.ServiceTypeClusterIP, svc.Spec.Type)
+	assert.Equal(t, corev1.ClusterIPNone, svc.Spec.ClusterIP)
+	assert.Equal(t, podSelector(risingwave, consts.ComponentFrontend, nil), svc.Spec.Selector)
+	assert.Empty(t, svc.Spec.Ports)
+}
+
 func Test_RisingWaveObjectFactory_Compactor_CloneSet(t *testing.T) {
 	predicates := compactorCloneSetPredicates()
 
@@ -239,7 +279,7 @@ func Test_RisingWaveObjectFactory_Meta_StatefulSets(t *testing.T) {
 func Test_RisingWaveObjectFactory_Compute_StatefulSets(t *testing.T) {
 	predicates := computeStatefulSetPredicates()
 
-	for name, tc := range computeStatefulSetTestCases() {
+	for name, tc := range statefulSetTestCases() {
 		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
 			r.Spec.EnableOpenKruise = ptr.To(true)
 			r.Spec.MetaStore.Memory = ptr.To(true)
@@ -249,6 +289,8 @@ func Test_RisingWaveObjectFactory_Compute_StatefulSets(t *testing.T) {
 				tc.group,
 			}
 		})
+
+		tc.component = consts.ComponentCompute
 
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 		sts := factory.NewComputeStatefulSet(tc.group.Name)
@@ -296,6 +338,8 @@ func Test_RisingWaveObjectFactory_Compute_AdvancedStatefulSets(t *testing.T) {
 			}
 		})
 
+		tc.component = consts.ComponentCompute
+
 		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
 		asts := factory.NewComputeAdvancedStatefulSet(tc.group.Name)
 
@@ -303,6 +347,49 @@ func Test_RisingWaveObjectFactory_Compute_AdvancedStatefulSets(t *testing.T) {
 			composeAssertions(predicates, t).assertTest(asts, tc)
 		})
 	}
+}
+
+func Test_RisingWaveObjectFactory_Frontend_AdvancedStatefulSets(t *testing.T) {
+	predicates := frontendAdvancedSTSPredicates()
+
+	for name, tc := range frontendAdvancedSTSTestCases() {
+		tc.risingwave = newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+			r.Spec.EnableOpenKruise = ptr.To(true)
+			r.Spec.MetaStore.Memory = ptr.To(true)
+			r.Spec.StateStore.Memory = ptr.To(true)
+			tc.group.RestartAt = tc.restartAt
+			r.Spec.Components.Frontend.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+				tc.group,
+			}
+		})
+
+		tc.component = consts.ComponentFrontend
+
+		factory := NewRisingWaveObjectFactory(tc.risingwave, testutils.Scheme, "")
+		sts := factory.NewFrontendAdvancedStatefulSet(tc.group.Name)
+
+		t.Run(name, func(t *testing.T) {
+			composeAssertions(predicates, t).assertTest(sts, tc)
+		})
+	}
+}
+
+func Test_RisingWaveObjectFactory_FrontendStatefulWorkloadsUseHeadlessService(t *testing.T) {
+	risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+		r.Spec.MetaStore.Memory = ptr.To(true)
+		r.Spec.StateStore.Memory = ptr.To(true)
+		r.Spec.EnableOpenKruise = ptr.To(true)
+		r.Spec.Components.Frontend.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{
+			{
+				Replicas: 1,
+			},
+		}
+	})
+
+	factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme, "")
+
+	assert.Equal(t, risingwave.Name+"-frontend-headless", factory.NewFrontendStatefulSet("").Spec.ServiceName)
+	assert.Equal(t, risingwave.Name+"-frontend-headless", factory.NewFrontendAdvancedStatefulSet("").Spec.ServiceName)
 }
 
 func Test_RisingWaveObjectFactory_StateStores(t *testing.T) {

@@ -85,6 +85,13 @@ type RisingWaveSpec struct {
 	// +kubebuilder:default=false
 	EnableOpenKruise *bool `json:"enableOpenKruise,omitempty"`
 
+	// Flag to control whether to deploy frontend nodes as stateful workloads.
+	// If disabled, frontend uses Deployment or CloneSet depending on OpenKruise.
+	// If enabled, frontend uses StatefulSet or OpenKruise Advanced StatefulSet.
+	// +optional
+	// +kubebuilder:default=false
+	EnableFrontendStatefulSet *bool `json:"enableFrontendStatefulSet,omitempty"`
+
 	// Flag to indicate if a default ServiceMonitor (from Prometheus operator) should be created by the controller.
 	// False and an empty value means the ServiceMonitor won't be created automatically. But even if it's set to true,
 	// the controller will determine if it can create the resource by checking if the CRDs are installed.

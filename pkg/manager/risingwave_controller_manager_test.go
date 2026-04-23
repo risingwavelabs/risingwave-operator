@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -67,6 +68,14 @@ func newRisingWaveControllerManagerImplOpenKruiseAvailableForTest(risingwave *ri
 	risingwaveManager := object.NewRisingWaveManager(fakeClient, risingwave.DeepCopy(), true)
 
 	return newRisingWaveControllerManagerImpl(fakeClient, risingwaveManager, event.NewMessageStore(), false, "")
+}
+
+func fakeRisingWaveWithFrontendStatefulSet(openKruise bool) *risingwavev1alpha1.RisingWave {
+	risingwave := lo.If(openKruise, testutils.FakeRisingWaveOpenKruiseEnabled()).Else(testutils.FakeRisingWave())
+
+	risingwave.Spec.EnableFrontendStatefulSet = ptr.To(true)
+
+	return risingwave
 }
 
 func Test_IsObjectNil(t *testing.T) {
@@ -414,6 +423,80 @@ func TestRisingWaveControllerManagerImpl_SyncFrontendService(t *testing.T) {
 	)
 }
 
+func TestRisingWaveControllerManagerImpl_SyncFrontendHeadlessService(t *testing.T) {
+	t.Run("create-when-enabled", func(t *testing.T) {
+		risingwave := fakeRisingWaveWithFrontendStatefulSet(false)
+		key := types.NamespacedName{Namespace: risingwave.Namespace, Name: risingwave.Name + "-frontend-headless"}
+		managerImpl := newRisingWaveControllerManagerImplForTest(risingwave)
+
+		r, err := managerImpl.SyncFrontendHeadlessService(context.Background(), logr.Discard(), nil)
+		if ctrlkit.NeedsRequeue(r, err) {
+			t.Fatal("sync failed", r, err)
+		}
+
+		var current corev1.Service
+		if err := managerImpl.client.Get(context.Background(), key, &current); err != nil {
+			t.Fatal(err)
+		}
+
+		if !managerImpl.isObjectSynced(&current) {
+			t.Fatal("frontend headless service not synced after sync")
+		}
+
+		if current.Spec.ClusterIP != corev1.ClusterIPNone {
+			t.Fatalf("got clusterIP %q, want %q", current.Spec.ClusterIP, corev1.ClusterIPNone)
+		}
+	})
+
+	t.Run("delete-when-disabled", func(t *testing.T) {
+		risingwave := testutils.FakeRisingWave()
+		service := &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      risingwave.Name + "-frontend-headless",
+				Namespace: risingwave.Namespace,
+				Labels: map[string]string{
+					consts.LabelRisingWaveGeneration: strconv.FormatInt(risingwave.Generation-1, 10),
+				},
+			},
+		}
+		managerImpl := newRisingWaveControllerManagerImplForTest(risingwave, service)
+
+		r, err := managerImpl.SyncFrontendHeadlessService(context.Background(), logr.Discard(), service)
+		if ctrlkit.NeedsRequeue(r, err) {
+			t.Fatal("sync failed", r, err)
+		}
+
+		var current corev1.Service
+		if err := managerImpl.client.Get(context.Background(), types.NamespacedName{Name: service.Name, Namespace: service.Namespace}, &current); err == nil {
+			t.Fatal("frontend headless service still exists after delete")
+		}
+	})
+
+	t.Run("skip-delete-for-newer-generation", func(t *testing.T) {
+		risingwave := testutils.FakeRisingWave()
+		service := &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      risingwave.Name + "-frontend-headless",
+				Namespace: risingwave.Namespace,
+				Labels: map[string]string{
+					consts.LabelRisingWaveGeneration: strconv.FormatInt(risingwave.Generation, 10),
+				},
+			},
+		}
+		managerImpl := newRisingWaveControllerManagerImplForTest(risingwave, service)
+
+		r, err := managerImpl.SyncFrontendHeadlessService(context.Background(), logr.Discard(), service)
+		if ctrlkit.NeedsRequeue(r, err) {
+			t.Fatal("sync failed", r, err)
+		}
+
+		var current corev1.Service
+		if err := managerImpl.client.Get(context.Background(), types.NamespacedName{Name: service.Name, Namespace: service.Namespace}, &current); err != nil {
+			t.Fatal(err)
+		}
+	})
+}
+
 func TestRisingWaveControllerManagerImpl_SyncComputeService(t *testing.T) {
 	fakeRisingwave := testutils.FakeRisingWave()
 
@@ -668,6 +751,22 @@ func TestRisingWaveControllerManagerImpl_SyncFrontendDeployments(t *testing.T) {
 	)
 }
 
+func TestRisingWaveControllerManagerImpl_SyncFrontendDeployments_StatefulSetEnabled(t *testing.T) {
+	fakeRisingwave := fakeRisingWaveWithFrontendStatefulSet(false)
+
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, false, nil, []string{},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentFrontend,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.Deployment) (ctrl.Result, error) {
+			return managerImpl.SyncFrontendDeployments(ctx, logger, obj)
+		},
+		func(tl *appsv1.DeploymentList) []appsv1.Deployment { return tl.Items },
+	)
+}
+
 func TestRisingWaveControllerManagerImpl_SyncFrontendCloneSets(t *testing.T) {
 	fakeRisingwave := testutils.FakeRisingWaveOpenKruiseEnabled()
 
@@ -705,6 +804,90 @@ func TestRisingWaveControllerManagerImpl_SyncFrontendCloneSets(t *testing.T) {
 				t.Fatal("component labels not match")
 			}
 		},
+	)
+}
+
+func TestRisingWaveControllerManagerImpl_SyncFrontendCloneSets_StatefulSetEnabled(t *testing.T) {
+	fakeRisingwave := fakeRisingWaveWithFrontendStatefulSet(true)
+
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentFrontend,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1alpha1.CloneSet) (ctrl.Result, error) {
+			return managerImpl.SyncFrontendCloneSets(ctx, logger, obj)
+		},
+		func(tl *kruiseappsv1alpha1.CloneSetList) []kruiseappsv1alpha1.CloneSet { return tl.Items },
+	)
+}
+
+func TestRisingWaveControllerManagerImpl_SyncFrontendStatefulSets(t *testing.T) {
+	fakeRisingwave := fakeRisingWaveWithFrontendStatefulSet(false)
+
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, false, nil, []string{""},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentFrontend,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.StatefulSet) (ctrl.Result, error) {
+			return managerImpl.SyncFrontendStatefulSets(ctx, logger, obj)
+		},
+		func(tl *appsv1.StatefulSetList) []appsv1.StatefulSet { return tl.Items },
+		func(t *testing.T, obj *appsv1.StatefulSet) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentFrontend {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+
+	fakeRisingwave = fakeRisingWaveWithFrontendStatefulSet(true)
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentFrontend,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []appsv1.StatefulSet) (ctrl.Result, error) {
+			return managerImpl.SyncFrontendStatefulSets(ctx, logger, obj)
+		},
+		func(tl *appsv1.StatefulSetList) []appsv1.StatefulSet { return tl.Items },
+	)
+}
+
+func TestRisingWaveControllerManagerImpl_SyncFrontendAdvancedStatefulSets(t *testing.T) {
+	fakeRisingwave := fakeRisingWaveWithFrontendStatefulSet(true)
+
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{""},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentFrontend,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1beta1.StatefulSet) (ctrl.Result, error) {
+			return managerImpl.SyncFrontendAdvancedStatefulSets(ctx, logger, obj)
+		},
+		func(tl *kruiseappsv1beta1.StatefulSetList) []kruiseappsv1beta1.StatefulSet { return tl.Items },
+		func(t *testing.T, obj *kruiseappsv1beta1.StatefulSet) {
+			if obj.Labels[consts.LabelRisingWaveComponent] != consts.ComponentFrontend {
+				t.Fatal("component labels not match")
+			}
+		},
+	)
+
+	fakeRisingwave = fakeRisingWaveWithFrontendStatefulSet(false)
+	testRisingWaveControllerManagerImplSyncObjectGroups(
+		t, fakeRisingwave, true, nil, []string{},
+		map[string]string{
+			consts.LabelRisingWaveName:      fakeRisingwave.Name,
+			consts.LabelRisingWaveComponent: consts.ComponentFrontend,
+		},
+		func(managerImpl *risingWaveControllerManagerImpl, ctx context.Context, logger logr.Logger, obj []kruiseappsv1beta1.StatefulSet) (ctrl.Result, error) {
+			return managerImpl.SyncFrontendAdvancedStatefulSets(ctx, logger, obj)
+		},
+		func(tl *kruiseappsv1beta1.StatefulSetList) []kruiseappsv1beta1.StatefulSet { return tl.Items },
 	)
 }
 
@@ -940,6 +1123,460 @@ func Test_WaitComponentGroupWorkloadsReady(t *testing.T) {
 			)
 			if ctrlkit.NeedsRequeue(r, err) == tc.ready {
 				t.Fatal("mismatch, expect ", tc.ready)
+			}
+		})
+	}
+}
+
+func TestRisingWaveControllerManagerImpl_SyncFrontendDeployments_StatefulSetEnabled_SkipsSyncedObjects(t *testing.T) {
+	fakeRisingwave := fakeRisingWaveWithFrontendStatefulSet(false)
+
+	stale := newGroupObjectFromGroup[appsv1.Deployment, *appsv1.Deployment](
+		fakeRisingwave.Namespace,
+		fakeRisingwave.Name+"-frontend",
+		"",
+		map[string]string{
+			consts.LabelRisingWaveGeneration: strconv.FormatInt(fakeRisingwave.Generation-1, 10),
+		},
+	)
+	newer := newGroupObjectFromGroup[appsv1.Deployment, *appsv1.Deployment](
+		fakeRisingwave.Namespace,
+		fakeRisingwave.Name+"-frontend",
+		"newer",
+		map[string]string{
+			consts.LabelRisingWaveGeneration: strconv.FormatInt(fakeRisingwave.Generation+1, 10),
+		},
+	)
+
+	managerImpl := newRisingWaveControllerManagerImplForTest(
+		fakeRisingwave,
+		&stale,
+		&newer,
+	)
+
+	r, err := managerImpl.SyncFrontendDeployments(
+		context.Background(),
+		logr.Discard(),
+		[]appsv1.Deployment{stale, newer},
+	)
+	if ctrlkit.NeedsRequeue(r, err) {
+		t.Fatalf("sync failed: %v %v", r, err)
+	}
+
+	var current appsv1.DeploymentList
+	if err := managerImpl.client.List(context.Background(), &current); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(current.Items) != 1 {
+		t.Fatalf("expected 1 deployment remaining, got %d", len(current.Items))
+	}
+
+	if current.Items[0].Name != newer.Name {
+		t.Fatalf("expected newer deployment %q to remain, got %q", newer.Name, current.Items[0].Name)
+	}
+}
+
+func newReadyDeployment(risingwave *risingwavev1alpha1.RisingWave, base, group string) appsv1.Deployment {
+	deployment := newGroupObjectFromGroup[appsv1.Deployment, *appsv1.Deployment](
+		risingwave.Namespace,
+		base,
+		group,
+		map[string]string{
+			consts.LabelRisingWaveGeneration: strconv.FormatInt(risingwave.Generation, 10),
+		},
+	)
+	replicas := int32(1)
+	deployment.Generation = 1
+	deployment.Spec.Replicas = ptr.To(replicas)
+	deployment.Status = appsv1.DeploymentStatus{
+		ObservedGeneration: 1,
+		Replicas:           replicas,
+		UpdatedReplicas:    replicas,
+		AvailableReplicas:  replicas,
+		ReadyReplicas:      replicas,
+	}
+
+	return deployment
+}
+
+func newReadyStatefulSet(risingwave *risingwavev1alpha1.RisingWave, base, group string) appsv1.StatefulSet {
+	statefulSet := newGroupObjectFromGroup[appsv1.StatefulSet, *appsv1.StatefulSet](
+		risingwave.Namespace,
+		base,
+		group,
+		map[string]string{
+			consts.LabelRisingWaveGeneration: strconv.FormatInt(risingwave.Generation, 10),
+		},
+	)
+	replicas := int32(1)
+	statefulSet.Generation = 1
+	statefulSet.Spec.Replicas = ptr.To(replicas)
+	statefulSet.Status = appsv1.StatefulSetStatus{
+		ObservedGeneration: 1,
+		Replicas:           replicas,
+		UpdatedReplicas:    replicas,
+		AvailableReplicas:  replicas,
+		ReadyReplicas:      replicas,
+	}
+
+	return statefulSet
+}
+
+func newReadyCloneSet(risingwave *risingwavev1alpha1.RisingWave, base, group string) kruiseappsv1alpha1.CloneSet {
+	cloneSet := newGroupObjectFromGroup[kruiseappsv1alpha1.CloneSet, *kruiseappsv1alpha1.CloneSet](
+		risingwave.Namespace,
+		base,
+		group,
+		map[string]string{
+			consts.LabelRisingWaveGeneration: strconv.FormatInt(risingwave.Generation, 10),
+		},
+	)
+	replicas := int32(1)
+	cloneSet.Generation = 1
+	cloneSet.Spec.Replicas = ptr.To(replicas)
+	cloneSet.Status = kruiseappsv1alpha1.CloneSetStatus{
+		ObservedGeneration: 1,
+		Replicas:           replicas,
+		UpdatedReplicas:    replicas,
+		AvailableReplicas:  replicas,
+		ReadyReplicas:      replicas,
+	}
+
+	return cloneSet
+}
+
+func newReadyAdvancedStatefulSet(risingwave *risingwavev1alpha1.RisingWave, base, group string) kruiseappsv1beta1.StatefulSet {
+	statefulSet := newGroupObjectFromGroup[kruiseappsv1beta1.StatefulSet, *kruiseappsv1beta1.StatefulSet](
+		risingwave.Namespace,
+		base,
+		group,
+		map[string]string{
+			consts.LabelRisingWaveGeneration: strconv.FormatInt(risingwave.Generation, 10),
+		},
+	)
+	replicas := int32(1)
+	statefulSet.Generation = 1
+	statefulSet.Spec.Replicas = ptr.To(replicas)
+	statefulSet.Status = kruiseappsv1beta1.StatefulSetStatus{
+		ObservedGeneration: 1,
+		Replicas:           replicas,
+		UpdatedReplicas:    replicas,
+		AvailableReplicas:  replicas,
+		ReadyReplicas:      replicas,
+	}
+
+	return statefulSet
+}
+
+func runningConditionStatus(risingwave *risingwavev1alpha1.RisingWave) metav1.ConditionStatus {
+	for _, cond := range risingwave.Status.Conditions {
+		if cond.Type == risingwavev1alpha1.RisingWaveConditionRunning {
+			return cond.Status
+		}
+	}
+
+	return ""
+}
+
+func TestRisingWaveControllerManagerImpl_WaitBeforeFrontendWorkloadsReady(t *testing.T) {
+	testcases := map[string]struct {
+		wantExit bool
+		run      func(t *testing.T) (ctrl.Result, error)
+	}{
+		"deployment-selected-ready": {
+			run: func(t *testing.T) (ctrl.Result, error) {
+				risingwave := testutils.FakeRisingWave()
+				managerImpl := newRisingWaveControllerManagerImplForTest(risingwave)
+
+				return managerImpl.WaitBeforeFrontendDeploymentsReady(
+					context.Background(),
+					logr.Discard(),
+					[]appsv1.Deployment{newReadyDeployment(risingwave, risingwave.Name+"-frontend", "")},
+				)
+			},
+		},
+		"deployment-unselected-waits-for-deletion": {
+			wantExit: true,
+			run: func(t *testing.T) (ctrl.Result, error) {
+				risingwave := fakeRisingWaveWithFrontendStatefulSet(false)
+				managerImpl := newRisingWaveControllerManagerImplForTest(risingwave)
+
+				return managerImpl.WaitBeforeFrontendDeploymentsReady(
+					context.Background(),
+					logr.Discard(),
+					[]appsv1.Deployment{newReadyDeployment(risingwave, risingwave.Name+"-frontend", "")},
+				)
+			},
+		},
+		"cloneset-selected-ready": {
+			run: func(t *testing.T) (ctrl.Result, error) {
+				risingwave := testutils.FakeRisingWaveOpenKruiseEnabled()
+				managerImpl := newRisingWaveControllerManagerImplOpenKruiseAvailableForTest(risingwave)
+
+				return managerImpl.WaitBeforeFrontendCloneSetsReady(
+					context.Background(),
+					logr.Discard(),
+					[]kruiseappsv1alpha1.CloneSet{newReadyCloneSet(risingwave, risingwave.Name+"-frontend", "")},
+				)
+			},
+		},
+		"cloneset-unselected-waits-for-deletion": {
+			wantExit: true,
+			run: func(t *testing.T) (ctrl.Result, error) {
+				risingwave := fakeRisingWaveWithFrontendStatefulSet(true)
+				managerImpl := newRisingWaveControllerManagerImplOpenKruiseAvailableForTest(risingwave)
+
+				return managerImpl.WaitBeforeFrontendCloneSetsReady(
+					context.Background(),
+					logr.Discard(),
+					[]kruiseappsv1alpha1.CloneSet{newReadyCloneSet(risingwave, risingwave.Name+"-frontend", "")},
+				)
+			},
+		},
+		"statefulset-selected-ready": {
+			run: func(t *testing.T) (ctrl.Result, error) {
+				risingwave := fakeRisingWaveWithFrontendStatefulSet(false)
+				managerImpl := newRisingWaveControllerManagerImplForTest(risingwave)
+
+				return managerImpl.WaitBeforeFrontendStatefulSetsReady(
+					context.Background(),
+					logr.Discard(),
+					[]appsv1.StatefulSet{newReadyStatefulSet(risingwave, risingwave.Name+"-frontend", "")},
+				)
+			},
+		},
+		"statefulset-unselected-waits-for-deletion": {
+			wantExit: true,
+			run: func(t *testing.T) (ctrl.Result, error) {
+				risingwave := testutils.FakeRisingWave()
+				managerImpl := newRisingWaveControllerManagerImplForTest(risingwave)
+
+				return managerImpl.WaitBeforeFrontendStatefulSetsReady(
+					context.Background(),
+					logr.Discard(),
+					[]appsv1.StatefulSet{newReadyStatefulSet(risingwave, risingwave.Name+"-frontend", "")},
+				)
+			},
+		},
+		"advanced-statefulset-selected-ready": {
+			run: func(t *testing.T) (ctrl.Result, error) {
+				risingwave := fakeRisingWaveWithFrontendStatefulSet(true)
+				managerImpl := newRisingWaveControllerManagerImplOpenKruiseAvailableForTest(risingwave)
+
+				return managerImpl.WaitBeforeFrontendAdvancedStatefulSetsReady(
+					context.Background(),
+					logr.Discard(),
+					[]kruiseappsv1beta1.StatefulSet{newReadyAdvancedStatefulSet(risingwave, risingwave.Name+"-frontend", "")},
+				)
+			},
+		},
+		"advanced-statefulset-unselected-waits-for-deletion": {
+			wantExit: true,
+			run: func(t *testing.T) (ctrl.Result, error) {
+				risingwave := testutils.FakeRisingWaveOpenKruiseEnabled()
+				managerImpl := newRisingWaveControllerManagerImplOpenKruiseAvailableForTest(risingwave)
+
+				return managerImpl.WaitBeforeFrontendAdvancedStatefulSetsReady(
+					context.Background(),
+					logr.Discard(),
+					[]kruiseappsv1beta1.StatefulSet{newReadyAdvancedStatefulSet(risingwave, risingwave.Name+"-frontend", "")},
+				)
+			},
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			_, err := tc.run(t)
+			if tc.wantExit {
+				if err != ctrlkit.ErrExit {
+					t.Fatalf("expected ErrExit, got %v", err)
+				}
+			} else if err != nil {
+				t.Fatalf("expected nil error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestRisingWaveControllerManagerImpl_CollectRunningStatisticsAndSyncStatus(t *testing.T) {
+	testcases := map[string]struct {
+		risingwave              *risingwavev1alpha1.RisingWave
+		frontendService         *corev1.Service
+		frontendHeadlessService *corev1.Service
+		frontendDeployments     []appsv1.Deployment
+		frontendStatefulSets    []appsv1.StatefulSet
+		wantCondition           metav1.ConditionStatus
+		wantMessage             bool
+	}{
+		"deployment-frontend": {
+			risingwave:          testutils.FakeRisingWave(),
+			frontendService:     &corev1.Service{},
+			frontendDeployments: []appsv1.Deployment{newReadyDeployment(testutils.FakeRisingWave(), "fake-risingwave-frontend", "")},
+			wantCondition:       metav1.ConditionTrue,
+		},
+		"statefulset-frontend-unhealthy": {
+			risingwave:           fakeRisingWaveWithFrontendStatefulSet(false),
+			frontendService:      &corev1.Service{},
+			frontendStatefulSets: []appsv1.StatefulSet{newReadyStatefulSet(fakeRisingWaveWithFrontendStatefulSet(false), "fake-risingwave-frontend", "")},
+			wantCondition:        metav1.ConditionFalse,
+			wantMessage:          true,
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			metaStatefulSet := newReadyStatefulSet(tc.risingwave, tc.risingwave.Name+"-meta", "")
+			computeStatefulSet := newReadyStatefulSet(tc.risingwave, tc.risingwave.Name+"-compute", "")
+			compactorDeployment := newReadyDeployment(tc.risingwave, tc.risingwave.Name+"-compactor", "")
+			managerImpl := newRisingWaveControllerManagerImplForTest(tc.risingwave)
+
+			r, err := managerImpl.CollectRunningStatisticsAndSyncStatus(
+				context.Background(),
+				logr.Discard(),
+				tc.frontendService,
+				tc.frontendHeadlessService,
+				&corev1.Service{},
+				&corev1.Service{},
+				&corev1.Service{},
+				[]appsv1.StatefulSet{metaStatefulSet},
+				tc.frontendDeployments,
+				tc.frontendStatefulSets,
+				[]appsv1.StatefulSet{computeStatefulSet},
+				[]appsv1.Deployment{compactorDeployment},
+				&corev1.ConfigMap{},
+			)
+			if ctrlkit.NeedsRequeue(r, err) {
+				t.Fatalf("unexpected requeue: %v %v", r, err)
+			}
+
+			afterImage := managerImpl.risingwaveManager.RisingWaveAfterImage()
+			if afterImage.Status.ComponentReplicas.Frontend.Running != 1 || afterImage.Status.ComponentReplicas.Frontend.Target != 1 {
+				t.Fatalf("unexpected frontend replicas: %+v", afterImage.Status.ComponentReplicas.Frontend)
+			}
+			if got := runningConditionStatus(afterImage); got != tc.wantCondition {
+				t.Fatalf("expected running condition %s, got %s", tc.wantCondition, got)
+			}
+			if managerImpl.eventMessageStore.IsMessageSet(consts.RisingWaveEventTypeUnhealthy.Name) != tc.wantMessage {
+				t.Fatalf("unexpected unhealthy message state")
+			}
+		})
+	}
+}
+
+func TestRisingWaveControllerManagerImpl_CollectOpenKruiseRunningStatisticsAndSyncStatus(t *testing.T) {
+	testcases := map[string]struct {
+		risingwave                   *risingwavev1alpha1.RisingWave
+		frontendService              *corev1.Service
+		frontendHeadlessService      *corev1.Service
+		frontendCloneSets            []kruiseappsv1alpha1.CloneSet
+		frontendAdvancedStatefulSets []kruiseappsv1beta1.StatefulSet
+		wantCondition                metav1.ConditionStatus
+		wantMessage                  bool
+	}{
+		"cloneset-frontend": {
+			risingwave:        testutils.FakeRisingWaveOpenKruiseEnabled(),
+			frontendService:   &corev1.Service{},
+			frontendCloneSets: []kruiseappsv1alpha1.CloneSet{newReadyCloneSet(testutils.FakeRisingWaveOpenKruiseEnabled(), "fake-risingwave-frontend", "")},
+			wantCondition:     metav1.ConditionTrue,
+		},
+		"advanced-statefulset-frontend-unhealthy": {
+			risingwave:                   fakeRisingWaveWithFrontendStatefulSet(true),
+			frontendService:              &corev1.Service{},
+			frontendAdvancedStatefulSets: []kruiseappsv1beta1.StatefulSet{newReadyAdvancedStatefulSet(fakeRisingWaveWithFrontendStatefulSet(true), "fake-risingwave-frontend", "")},
+			wantCondition:                metav1.ConditionFalse,
+			wantMessage:                  true,
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			metaAdvancedStatefulSet := newReadyAdvancedStatefulSet(tc.risingwave, tc.risingwave.Name+"-meta", "")
+			computeAdvancedStatefulSet := newReadyAdvancedStatefulSet(tc.risingwave, tc.risingwave.Name+"-compute", "")
+			compactorCloneSet := newReadyCloneSet(tc.risingwave, tc.risingwave.Name+"-compactor", "")
+			managerImpl := newRisingWaveControllerManagerImplOpenKruiseAvailableForTest(tc.risingwave)
+
+			r, err := managerImpl.CollectOpenKruiseRunningStatisticsAndSyncStatus(
+				context.Background(),
+				logr.Discard(),
+				tc.frontendService,
+				tc.frontendHeadlessService,
+				&corev1.Service{},
+				&corev1.Service{},
+				&corev1.Service{},
+				[]kruiseappsv1beta1.StatefulSet{metaAdvancedStatefulSet},
+				tc.frontendCloneSets,
+				tc.frontendAdvancedStatefulSets,
+				[]kruiseappsv1beta1.StatefulSet{computeAdvancedStatefulSet},
+				[]kruiseappsv1alpha1.CloneSet{compactorCloneSet},
+				&corev1.ConfigMap{},
+			)
+			if ctrlkit.NeedsRequeue(r, err) {
+				t.Fatalf("unexpected requeue: %v %v", r, err)
+			}
+
+			afterImage := managerImpl.risingwaveManager.RisingWaveAfterImage()
+			if afterImage.Status.ComponentReplicas.Frontend.Running != 1 || afterImage.Status.ComponentReplicas.Frontend.Target != 1 {
+				t.Fatalf("unexpected frontend replicas: %+v", afterImage.Status.ComponentReplicas.Frontend)
+			}
+			if got := runningConditionStatus(afterImage); got != tc.wantCondition {
+				t.Fatalf("expected running condition %s, got %s", tc.wantCondition, got)
+			}
+			if managerImpl.eventMessageStore.IsMessageSet(consts.RisingWaveEventTypeUnhealthy.Name) != tc.wantMessage {
+				t.Fatalf("unexpected unhealthy message state")
+			}
+		})
+	}
+}
+
+// cspell:ignore cloneset advancedstatefulset
+func TestRisingWaveControllerManagerImpl_ExpectedFrontendWorkloadFamily(t *testing.T) {
+	testcases := map[string]struct {
+		risingwave           *risingwavev1alpha1.RisingWave
+		openKruiseAvailable  bool
+		expectedWorkloadType frontendWorkloadFamily
+	}{
+		"deployment": {
+			risingwave:           testutils.FakeRisingWave(),
+			expectedWorkloadType: frontendWorkloadFamilyDeployment,
+		},
+		"statefulset": {
+			risingwave:           fakeRisingWaveWithFrontendStatefulSet(false),
+			expectedWorkloadType: frontendWorkloadFamilyStatefulSet,
+		},
+		"cloneset": {
+			risingwave:           testutils.FakeRisingWaveOpenKruiseEnabled(),
+			openKruiseAvailable:  true,
+			expectedWorkloadType: frontendWorkloadFamilyCloneSet,
+		},
+		"advanced-statefulset": {
+			risingwave:           fakeRisingWaveWithFrontendStatefulSet(true),
+			openKruiseAvailable:  true,
+			expectedWorkloadType: frontendWorkloadFamilyAdvancedStatefulSet,
+		},
+		"standalone": {
+			risingwave: func() *risingwavev1alpha1.RisingWave {
+				rw := testutils.FakeRisingWave()
+				rw.Spec.EnableStandaloneMode = ptr.To(true)
+
+				return rw
+			}(),
+			expectedWorkloadType: frontendWorkloadFamilyNone,
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			var managerImpl *risingWaveControllerManagerImpl
+			if tc.openKruiseAvailable {
+				managerImpl = newRisingWaveControllerManagerImplOpenKruiseAvailableForTest(tc.risingwave)
+			} else {
+				managerImpl = newRisingWaveControllerManagerImplForTest(tc.risingwave)
+			}
+
+			if got := managerImpl.expectedFrontendWorkloadFamily(); got != tc.expectedWorkloadType {
+				t.Fatalf("expected %s, got %s", tc.expectedWorkloadType, got)
 			}
 		})
 	}

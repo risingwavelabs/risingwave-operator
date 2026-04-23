@@ -231,6 +231,18 @@ func (f *RisingWaveObjectFactory) componentName(component, group string) string 
 	}
 }
 
+func (f *RisingWaveObjectFactory) frontendHeadlessServiceName() string {
+	return f.risingwave.Name + "-frontend-headless"
+}
+
+func (f *RisingWaveObjectFactory) statefulWorkloadServiceName(component string) string {
+	if component == consts.ComponentFrontend {
+		return f.frontendHeadlessServiceName()
+	}
+
+	return f.componentName(component, "")
+}
+
 func (f *RisingWaveObjectFactory) componentAddr(component, group string) string {
 	componentName := f.componentName(component, group)
 	if f.isFullKubernetesAddr() {
@@ -1824,7 +1836,7 @@ func (f *RisingWaveObjectFactory) newStatefulSet(component string, nodeGroup *ri
 	return &appsv1.StatefulSet{
 		ObjectMeta: f.getObjectMetaForComponentGroupLevelResources(component, nodeGroup.Name, true),
 		Spec: appsv1.StatefulSetSpec{
-			ServiceName:    f.componentName(component, ""),
+			ServiceName:    f.statefulWorkloadServiceName(component),
 			Replicas:       ptr.To(nodeGroup.Replicas),
 			UpdateStrategy: buildUpgradeStrategyForStatefulSet(nodeGroup.UpgradeStrategy),
 			Selector: &metav1.LabelSelector{
@@ -1849,7 +1861,7 @@ func (f *RisingWaveObjectFactory) newAdvancedStatefulSet(component string, nodeG
 		ObjectMeta: f.getObjectMetaForComponentGroupLevelResources(component, nodeGroup.Name, true),
 		Spec: kruiseappsv1beta1.StatefulSetSpec{
 			Replicas:       ptr.To(nodeGroup.Replicas),
-			ServiceName:    f.componentName(component, ""),
+			ServiceName:    f.statefulWorkloadServiceName(component),
 			UpdateStrategy: buildUpgradeStrategyForAdvancedStatefulSet(nodeGroup.UpgradeStrategy),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: f.podLabelsOrSelectorsForComponentGroup(component, nodeGroup.Name),
@@ -2431,6 +2443,15 @@ func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 	return mustSetControllerReference(f.risingwave, frontendSvc, f.scheme)
 }
 
+// NewFrontendHeadlessService creates a new headless Service used to govern frontend StatefulSets.
+func (f *RisingWaveObjectFactory) NewFrontendHeadlessService() *corev1.Service {
+	frontendSvc := f.newService(consts.ComponentFrontend, corev1.ServiceTypeClusterIP, nil)
+	frontendSvc.Name = f.frontendHeadlessServiceName()
+	frontendSvc.Spec.ClusterIP = corev1.ClusterIPNone
+
+	return mustSetControllerReference(f.risingwave, frontendSvc, f.scheme)
+}
+
 // NewComputeService creates a new Service for the compute nodes.
 func (f *RisingWaveObjectFactory) NewComputeService() *corev1.Service {
 	computeSvc := f.newService(consts.ComponentCompute, corev1.ServiceTypeClusterIP, []corev1.ServicePort{
@@ -2503,9 +2524,19 @@ func (f *RisingWaveObjectFactory) NewFrontendDeployment(group string) *appsv1.De
 	return newWorkloadObjectForComponentNodeGroup(f, consts.ComponentFrontend, group, f.newDeployment)
 }
 
+// NewFrontendStatefulSet creates a new StatefulSet for the frontend component and specified group.
+func (f *RisingWaveObjectFactory) NewFrontendStatefulSet(group string) *appsv1.StatefulSet {
+	return newWorkloadObjectForComponentNodeGroup(f, consts.ComponentFrontend, group, f.newStatefulSet)
+}
+
 // NewFrontendCloneSet creates a new CloneSet for the frontend component and specified group.
 func (f *RisingWaveObjectFactory) NewFrontendCloneSet(group string) *kruiseappsv1alpha1.CloneSet {
 	return newWorkloadObjectForComponentNodeGroup(f, consts.ComponentFrontend, group, f.newCloneSet)
+}
+
+// NewFrontendAdvancedStatefulSet creates a new OpenKruise StatefulSet for the frontend component and specified group.
+func (f *RisingWaveObjectFactory) NewFrontendAdvancedStatefulSet(group string) *kruiseappsv1beta1.StatefulSet {
+	return newWorkloadObjectForComponentNodeGroup(f, consts.ComponentFrontend, group, f.newAdvancedStatefulSet)
 }
 
 // NewCompactorDeployment creates a new Deployment for the compactor component and specified group.

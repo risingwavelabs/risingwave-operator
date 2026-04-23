@@ -1402,12 +1402,13 @@ func TestRisingWaveControllerManagerImpl_WaitBeforeFrontendWorkloadsReady(t *tes
 
 func TestRisingWaveControllerManagerImpl_CollectRunningStatisticsAndSyncStatus(t *testing.T) {
 	testcases := map[string]struct {
-		risingwave           *risingwavev1alpha1.RisingWave
-		frontendService      *corev1.Service
-		frontendDeployments  []appsv1.Deployment
-		frontendStatefulSets []appsv1.StatefulSet
-		wantCondition        metav1.ConditionStatus
-		wantMessage          bool
+		risingwave              *risingwavev1alpha1.RisingWave
+		frontendService         *corev1.Service
+		frontendHeadlessService *corev1.Service
+		frontendDeployments     []appsv1.Deployment
+		frontendStatefulSets    []appsv1.StatefulSet
+		wantCondition           metav1.ConditionStatus
+		wantMessage             bool
 	}{
 		"deployment-frontend": {
 			risingwave:          testutils.FakeRisingWave(),
@@ -1417,6 +1418,7 @@ func TestRisingWaveControllerManagerImpl_CollectRunningStatisticsAndSyncStatus(t
 		},
 		"statefulset-frontend-unhealthy": {
 			risingwave:           fakeRisingWaveWithFrontendStatefulSet(false),
+			frontendService:      &corev1.Service{},
 			frontendStatefulSets: []appsv1.StatefulSet{newReadyStatefulSet(fakeRisingWaveWithFrontendStatefulSet(false), "fake-risingwave-frontend", "")},
 			wantCondition:        metav1.ConditionFalse,
 			wantMessage:          true,
@@ -1434,6 +1436,7 @@ func TestRisingWaveControllerManagerImpl_CollectRunningStatisticsAndSyncStatus(t
 				context.Background(),
 				logr.Discard(),
 				tc.frontendService,
+				tc.frontendHeadlessService,
 				&corev1.Service{},
 				&corev1.Service{},
 				&corev1.Service{},
@@ -1466,6 +1469,7 @@ func TestRisingWaveControllerManagerImpl_CollectOpenKruiseRunningStatisticsAndSy
 	testcases := map[string]struct {
 		risingwave                   *risingwavev1alpha1.RisingWave
 		frontendService              *corev1.Service
+		frontendHeadlessService      *corev1.Service
 		frontendCloneSets            []kruiseappsv1alpha1.CloneSet
 		frontendAdvancedStatefulSets []kruiseappsv1beta1.StatefulSet
 		wantCondition                metav1.ConditionStatus
@@ -1479,6 +1483,7 @@ func TestRisingWaveControllerManagerImpl_CollectOpenKruiseRunningStatisticsAndSy
 		},
 		"advanced-statefulset-frontend-unhealthy": {
 			risingwave:                   fakeRisingWaveWithFrontendStatefulSet(true),
+			frontendService:              &corev1.Service{},
 			frontendAdvancedStatefulSets: []kruiseappsv1beta1.StatefulSet{newReadyAdvancedStatefulSet(fakeRisingWaveWithFrontendStatefulSet(true), "fake-risingwave-frontend", "")},
 			wantCondition:                metav1.ConditionFalse,
 			wantMessage:                  true,
@@ -1496,6 +1501,7 @@ func TestRisingWaveControllerManagerImpl_CollectOpenKruiseRunningStatisticsAndSy
 				context.Background(),
 				logr.Discard(),
 				tc.frontendService,
+				tc.frontendHeadlessService,
 				&corev1.Service{},
 				&corev1.Service{},
 				&corev1.Service{},

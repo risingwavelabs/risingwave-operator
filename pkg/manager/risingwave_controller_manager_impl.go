@@ -241,6 +241,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 	ctx context.Context,
 	logger logr.Logger,
 	frontendService *corev1.Service,
+	frontendHeadlessService *corev1.Service,
 	metaService *corev1.Service,
 	computeService *corev1.Service,
 	compactorService *corev1.Service,
@@ -309,6 +310,10 @@ func (mgr *risingWaveControllerManagerImpl) CollectOpenKruiseRunningStatisticsAn
 			component: "Service(frontend)",
 		},
 		{
+			cond:      frontendStatefulSetEnabled(risingwave) && frontendHeadlessService == nil,
+			component: "Service(frontend-headless)",
+		},
+		{
 			cond:      metaService == nil,
 			component: "Service(meta)",
 		},
@@ -369,6 +374,7 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 	ctx context.Context,
 	logger logr.Logger,
 	frontendService *corev1.Service,
+	frontendHeadlessService *corev1.Service,
 	metaService *corev1.Service,
 	computeService *corev1.Service,
 	compactorService *corev1.Service,
@@ -434,6 +440,10 @@ func (mgr *risingWaveControllerManagerImpl) CollectRunningStatisticsAndSyncStatu
 		{
 			cond:      frontendService == nil,
 			component: "Service(frontend)",
+		},
+		{
+			cond:      frontendStatefulSetEnabled(risingwave) && frontendHeadlessService == nil,
+			component: "Service(frontend-headless)",
 		},
 		{
 			cond:      metaService == nil,

@@ -647,9 +647,9 @@ type RisingWaveControllerManagerImpl interface {
 	SyncServiceMonitor(ctx context.Context, logger logr.Logger, serviceMonitor *monitoringv1.ServiceMonitor) (ctrl.Result, error)
 
 	// CollectRunningStatisticsAndSyncStatus collects running statistics and sync them into the status.
-	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaStatefulSets []appsv1.StatefulSet, frontendDeployments []appsv1.Deployment, frontendStatefulSets []appsv1.StatefulSet, computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
+	CollectRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, frontendHeadlessService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaStatefulSets []appsv1.StatefulSet, frontendDeployments []appsv1.Deployment, frontendStatefulSets []appsv1.StatefulSet, computeStatefulSets []appsv1.StatefulSet, compactorDeployments []appsv1.Deployment, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 
-	CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaAdvancedStatefulSets []appsv1beta1.StatefulSet, frontendCloneSets []appsv1alpha1.CloneSet, frontendAdvancedStatefulSets []appsv1beta1.StatefulSet, computeAdvancedStatefulSets []appsv1beta1.StatefulSet, compactorCloneSets []appsv1alpha1.CloneSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
+	CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx context.Context, logger logr.Logger, frontendService *corev1.Service, frontendHeadlessService *corev1.Service, metaService *corev1.Service, computeService *corev1.Service, compactorService *corev1.Service, metaAdvancedStatefulSets []appsv1beta1.StatefulSet, frontendCloneSets []appsv1alpha1.CloneSet, frontendAdvancedStatefulSets []appsv1beta1.StatefulSet, computeAdvancedStatefulSets []appsv1beta1.StatefulSet, compactorCloneSets []appsv1alpha1.CloneSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
 
 	// CollectRunningStatisticsAndSyncStatusForStandalone collects running statistics and sync them into the status.
 	CollectRunningStatisticsAndSyncStatusForStandalone(ctx context.Context, logger logr.Logger, standaloneService *corev1.Service, standaloneStatefulSet *appsv1.StatefulSet, configConfigMap *corev1.ConfigMap) (ctrl.Result, error)
@@ -1500,6 +1500,11 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 			return ctrlkit.RequeueIfError(err)
 		}
 
+		frontendHeadlessService, err := m.state.GetFrontendHeadlessService(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
 		metaService, err := m.state.GetMetaService(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
@@ -1551,20 +1556,21 @@ func (m *RisingWaveControllerManager) CollectRunningStatisticsAndSyncStatus() ct
 				m.hook.PostRun(ctx, logger, RisingWaveAction_CollectRunningStatisticsAndSyncStatus, result, err)
 			}()
 			m.hook.PreRun(ctx, logger, RisingWaveAction_CollectRunningStatisticsAndSyncStatus, map[string]runtime.Object{
-				"frontendService":      frontendService,
-				"metaService":          metaService,
-				"computeService":       computeService,
-				"compactorService":     compactorService,
-				"metaStatefulSets":     &appsv1.StatefulSetList{Items: metaStatefulSets},
-				"frontendDeployments":  &appsv1.DeploymentList{Items: frontendDeployments},
-				"frontendStatefulSets": &appsv1.StatefulSetList{Items: frontendStatefulSets},
-				"computeStatefulSets":  &appsv1.StatefulSetList{Items: computeStatefulSets},
-				"compactorDeployments": &appsv1.DeploymentList{Items: compactorDeployments},
-				"configConfigMap":      configConfigMap,
+				"frontendService":         frontendService,
+				"frontendHeadlessService": frontendHeadlessService,
+				"metaService":             metaService,
+				"computeService":          computeService,
+				"compactorService":        compactorService,
+				"metaStatefulSets":        &appsv1.StatefulSetList{Items: metaStatefulSets},
+				"frontendDeployments":     &appsv1.DeploymentList{Items: frontendDeployments},
+				"frontendStatefulSets":    &appsv1.StatefulSetList{Items: frontendStatefulSets},
+				"computeStatefulSets":     &appsv1.StatefulSetList{Items: computeStatefulSets},
+				"compactorDeployments":    &appsv1.DeploymentList{Items: compactorDeployments},
+				"configConfigMap":         configConfigMap,
 			})
 		}
 
-		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaStatefulSets, frontendDeployments, frontendStatefulSets, computeStatefulSets, compactorDeployments, configConfigMap)
+		return m.impl.CollectRunningStatisticsAndSyncStatus(ctx, logger, frontendService, frontendHeadlessService, metaService, computeService, compactorService, metaStatefulSets, frontendDeployments, frontendStatefulSets, computeStatefulSets, compactorDeployments, configConfigMap)
 	})
 }
 
@@ -1575,6 +1581,11 @@ func (m *RisingWaveControllerManager) CollectOpenKruiseRunningStatisticsAndSyncS
 
 		// Get states.
 		frontendService, err := m.state.GetFrontendService(ctx)
+		if err != nil {
+			return ctrlkit.RequeueIfError(err)
+		}
+
+		frontendHeadlessService, err := m.state.GetFrontendHeadlessService(ctx)
 		if err != nil {
 			return ctrlkit.RequeueIfError(err)
 		}
@@ -1631,6 +1642,7 @@ func (m *RisingWaveControllerManager) CollectOpenKruiseRunningStatisticsAndSyncS
 			}()
 			m.hook.PreRun(ctx, logger, RisingWaveAction_CollectOpenKruiseRunningStatisticsAndSyncStatus, map[string]runtime.Object{
 				"frontendService":              frontendService,
+				"frontendHeadlessService":      frontendHeadlessService,
 				"metaService":                  metaService,
 				"computeService":               computeService,
 				"compactorService":             compactorService,
@@ -1643,7 +1655,7 @@ func (m *RisingWaveControllerManager) CollectOpenKruiseRunningStatisticsAndSyncS
 			})
 		}
 
-		return m.impl.CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx, logger, frontendService, metaService, computeService, compactorService, metaAdvancedStatefulSets, frontendCloneSets, frontendAdvancedStatefulSets, computeAdvancedStatefulSets, compactorCloneSets, configConfigMap)
+		return m.impl.CollectOpenKruiseRunningStatisticsAndSyncStatus(ctx, logger, frontendService, frontendHeadlessService, metaService, computeService, compactorService, metaAdvancedStatefulSets, frontendCloneSets, frontendAdvancedStatefulSets, computeAdvancedStatefulSets, compactorCloneSets, configConfigMap)
 	})
 }
 

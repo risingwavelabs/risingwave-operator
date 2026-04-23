@@ -224,7 +224,7 @@ func Test_RisingWaveObjectFactory_FrontendHeadlessService(t *testing.T) {
 	assert.Equal(t, corev1.ServiceTypeClusterIP, svc.Spec.Type)
 	assert.Equal(t, corev1.ClusterIPNone, svc.Spec.ClusterIP)
 	assert.Equal(t, podSelector(risingwave, consts.ComponentFrontend, nil), svc.Spec.Selector)
-	assert.Len(t, svc.Spec.Ports, 3)
+	assert.Empty(t, svc.Spec.Ports)
 }
 
 func Test_RisingWaveObjectFactory_Compactor_CloneSet(t *testing.T) {

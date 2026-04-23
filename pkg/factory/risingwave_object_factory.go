@@ -329,14 +329,6 @@ func (f *RisingWaveObjectFactory) newService(component string, serviceType corev
 	}
 }
 
-func (f *RisingWaveObjectFactory) newHeadlessService(name, component string, ports []corev1.ServicePort) *corev1.Service {
-	svc := f.newService(component, corev1.ServiceTypeClusterIP, ports)
-	svc.Name = name
-	svc.Spec.ClusterIP = corev1.ClusterIPNone
-
-	return svc
-}
-
 func (f *RisingWaveObjectFactory) envsForEtcd() []corev1.EnvVar {
 	credentials := f.risingwave.Spec.MetaStore.Etcd.RisingWaveEtcdCredentials
 
@@ -2453,34 +2445,9 @@ func (f *RisingWaveObjectFactory) NewFrontendService() *corev1.Service {
 
 // NewFrontendHeadlessService creates a new headless Service used to govern frontend StatefulSets.
 func (f *RisingWaveObjectFactory) NewFrontendHeadlessService() *corev1.Service {
-	svcPorts := []corev1.ServicePort{
-		{
-			Name:       consts.PortService,
-			Protocol:   corev1.ProtocolTCP,
-			Port:       consts.FrontendServicePort,
-			TargetPort: intstr.FromString(consts.PortService),
-		},
-	}
-
-	if !ptr.Deref(f.risingwave.Spec.EnableStandaloneMode, false) {
-		svcPorts = append(svcPorts, corev1.ServicePort{
-			Name:       consts.PortMetrics,
-			Protocol:   corev1.ProtocolTCP,
-			Port:       consts.FrontendMetricsPort,
-			TargetPort: intstr.FromString(consts.PortMetrics),
-		})
-	}
-
-	if f.isWebhookListenerEnabled() {
-		svcPorts = append(svcPorts, corev1.ServicePort{
-			Name:       consts.PortHTTP,
-			Protocol:   corev1.ProtocolTCP,
-			Port:       consts.FrontendWebhookPort,
-			TargetPort: intstr.FromString(consts.PortHTTP),
-		})
-	}
-
-	frontendSvc := f.newHeadlessService(f.frontendHeadlessServiceName(), consts.ComponentFrontend, svcPorts)
+	frontendSvc := f.newService(consts.ComponentFrontend, corev1.ServiceTypeClusterIP, nil)
+	frontendSvc.Name = f.frontendHeadlessServiceName()
+	frontendSvc.Spec.ClusterIP = corev1.ClusterIPNone
 
 	return mustSetControllerReference(f.risingwave, frontendSvc, f.scheme)
 }

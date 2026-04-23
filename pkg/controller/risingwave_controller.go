@@ -333,8 +333,10 @@ func (c *RisingWaveController) reactiveWorkflow(risingwaveManger *object.RisingW
 			ctrlkit.If(c.openKruiseAvailable, mgr.SyncCompactorCloneSets()),
 		),
 		ctrlkit.Sequential(
-			mgr.SyncFrontendService(),
-			mgr.SyncFrontendHeadlessService(),
+			ctrlkit.ParallelJoin(
+				mgr.SyncFrontendService(),
+				mgr.SyncFrontendHeadlessService(),
+			),
 			ctrlkit.ParallelJoin(
 				mgr.SyncFrontendDeployments(),
 				mgr.SyncFrontendStatefulSets(),

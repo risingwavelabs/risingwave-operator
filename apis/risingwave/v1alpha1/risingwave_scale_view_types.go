@@ -111,7 +111,3 @@ type RisingWaveScaleViewList struct {
 
 	Items []RisingWaveScaleView `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&RisingWaveScaleView{}, &RisingWaveScaleViewList{})
-}

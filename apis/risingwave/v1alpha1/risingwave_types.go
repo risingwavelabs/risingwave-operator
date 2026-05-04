@@ -351,7 +351,3 @@ type RisingWaveList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []RisingWave `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&RisingWave{}, &RisingWaveList{})
-}

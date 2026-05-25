@@ -3,7 +3,7 @@ kind: RisingWave
 metadata:
   name: risingwave-standalone
 spec:
-  image: risingwavelabs/risingwave:v2.8.3
+  image: risingwavelabs/risingwave:v2.8.4
   enableStandaloneMode: true
   components:
     standalone:

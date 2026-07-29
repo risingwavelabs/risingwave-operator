@@ -21,6 +21,7 @@ import (
 
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
@@ -372,6 +373,41 @@ func Test_RisingWaveObjectFactory_Frontend_AdvancedStatefulSets(t *testing.T) {
 			composeAssertions(predicates, t).assertTest(sts, tc)
 		})
 	}
+}
+
+// Test_RisingWaveObjectFactory_StatefulSet_PodManagementPolicy verifies that the
+// frontend StatefulSets use OrderedReady (so replicas are rolled/scaled one at a
+// time and stay available while serving), while the other components keep the
+// faster Parallel policy.
+func Test_RisingWaveObjectFactory_StatefulSet_PodManagementPolicy(t *testing.T) {
+	// The helper drives the decision for every component.
+	for component, expected := range map[string]appsv1.PodManagementPolicyType{
+		consts.ComponentFrontend:   appsv1.OrderedReadyPodManagement,
+		consts.ComponentMeta:       appsv1.ParallelPodManagement,
+		consts.ComponentCompute:    appsv1.ParallelPodManagement,
+		consts.ComponentCompactor:  appsv1.ParallelPodManagement,
+		consts.ComponentStandalone: appsv1.ParallelPodManagement,
+	} {
+		assert.Equal(t, expected, buildPodManagementPolicy(component), "unexpected policy for component %q", component)
+	}
+
+	risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+		r.Spec.MetaStore.Memory = ptr.To(true)
+		r.Spec.StateStore.Memory = ptr.To(true)
+		r.Spec.Components.Frontend.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{{Replicas: 2}}
+		r.Spec.Components.Meta.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{{Replicas: 2}}
+		r.Spec.Components.Compute.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{{Replicas: 2}}
+	})
+
+	factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme, "")
+
+	// Frontend StatefulSets (both regular and OpenKruise) must be OrderedReady.
+	assert.Equal(t, appsv1.OrderedReadyPodManagement, factory.NewFrontendStatefulSet("").Spec.PodManagementPolicy)
+	assert.Equal(t, appsv1.OrderedReadyPodManagement, factory.NewFrontendAdvancedStatefulSet("").Spec.PodManagementPolicy)
+
+	// Other components keep Parallel.
+	assert.Equal(t, appsv1.ParallelPodManagement, factory.NewMetaStatefulSet("").Spec.PodManagementPolicy)
+	assert.Equal(t, appsv1.ParallelPodManagement, factory.NewComputeStatefulSet("").Spec.PodManagementPolicy)
 }
 
 func Test_RisingWaveObjectFactory_FrontendStatefulWorkloadsUseHeadlessService(t *testing.T) {

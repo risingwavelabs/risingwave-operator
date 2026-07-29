@@ -1832,6 +1832,19 @@ func buildPersistentVolumeClaims(claims []risingwavev1alpha1.PersistentVolumeCla
 	return result
 }
 
+// buildPodManagementPolicy returns the PodManagementPolicy for a component's
+// StatefulSet. The frontend serves client SQL traffic, so it uses OrderedReady:
+// pods are rolled/scaled one at a time and each must become Ready before the
+// next is touched, keeping at least one replica serving (HA). Other components
+// use Parallel for faster startup and scaling.
+func buildPodManagementPolicy(component string) appsv1.PodManagementPolicyType {
+	if component == consts.ComponentFrontend {
+		return appsv1.OrderedReadyPodManagement
+	}
+
+	return appsv1.ParallelPodManagement
+}
+
 func (f *RisingWaveObjectFactory) newStatefulSet(component string, nodeGroup *risingwavev1alpha1.RisingWaveNodeGroup, template *corev1.PodTemplateSpec) *appsv1.StatefulSet {
 	return &appsv1.StatefulSet{
 		ObjectMeta: f.getObjectMetaForComponentGroupLevelResources(component, nodeGroup.Name, true),
@@ -1843,7 +1856,7 @@ func (f *RisingWaveObjectFactory) newStatefulSet(component string, nodeGroup *ri
 				MatchLabels: f.podLabelsOrSelectorsForComponentGroup(component, nodeGroup.Name),
 			},
 			Template:                             *template,
-			PodManagementPolicy:                  appsv1.ParallelPodManagement,
+			PodManagementPolicy:                  buildPodManagementPolicy(component),
 			MinReadySeconds:                      nodeGroup.MinReadySeconds,
 			VolumeClaimTemplates:                 buildPersistentVolumeClaims(nodeGroup.VolumeClaimTemplates),
 			PersistentVolumeClaimRetentionPolicy: nodeGroup.PersistentVolumeClaimRetentionPolicy,
@@ -1867,7 +1880,7 @@ func (f *RisingWaveObjectFactory) newAdvancedStatefulSet(component string, nodeG
 				MatchLabels: f.podLabelsOrSelectorsForComponentGroup(component, nodeGroup.Name),
 			},
 			Template:                             *template,
-			PodManagementPolicy:                  appsv1.ParallelPodManagement,
+			PodManagementPolicy:                  buildPodManagementPolicy(component),
 			VolumeClaimTemplates:                 buildPersistentVolumeClaims(nodeGroup.VolumeClaimTemplates),
 			PersistentVolumeClaimRetentionPolicy: convertAppsV1StatefulSetPersistentVolumeClaimRetentionPolicyToKruise(nodeGroup.PersistentVolumeClaimRetentionPolicy),
 		},

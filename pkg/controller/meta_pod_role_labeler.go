@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -53,7 +54,7 @@ type MetaPodRoleLabeler struct {
 // getMetaRole sends a gRPC request to the meta node at host:port to tell its role from the response. The endpoint is used
 // to identify the meta node. If the node isn't found in the response, an unknown will be returned.
 func (mpl *MetaPodRoleLabeler) getMetaRole(ctx context.Context, host string, port uint, endpoint string) (string, error) {
-	addr := fmt.Sprintf("%s:%v", host, port)
+	addr := net.JoinHostPort(host, strconv.FormatUint(uint64(port), 10))
 
 	conn, err := grpc.NewClient(addr, grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
 		var d net.Dialer
@@ -80,7 +81,7 @@ func (mpl *MetaPodRoleLabeler) getMetaRole(ctx context.Context, host string, por
 	}
 
 	logger := log.FromContext(ctx)
-	logger.Info("No role recognized from the current member list!", "members", resp.GetMembers(), "address", fmt.Sprintf("%s:%d", host, port), "endpoint", endpoint)
+	logger.Info("No role recognized from the current member list!", "members", resp.GetMembers(), "address", addr, "endpoint", endpoint)
 
 	return consts.MetaRoleUnknown, nil
 }

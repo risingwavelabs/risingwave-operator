@@ -52,6 +52,9 @@ const (
 	risingwaveTLSVolume    = "risingwave-tls"
 	risingWaveConfigMapKey = "risingwave.toml"
 
+	defaultStartupProbeFailureThreshold = 12
+	computeStartupProbeFailureThreshold = 36
+
 	risingwaveExecutablePath    = "/risingwave/bin/risingwave"
 	risingwaveConfigMountPath   = "/risingwave/config"
 	risingwaveConfigFileName    = "risingwave.toml"
@@ -1552,7 +1555,7 @@ func basicSetupRisingWaveContainer(container *corev1.Container, component *risin
 		InitialDelaySeconds: 5,
 		PeriodSeconds:       5,
 		TimeoutSeconds:      5,
-		FailureThreshold:    12,
+		FailureThreshold:    defaultStartupProbeFailureThreshold,
 		ProbeHandler: corev1.ProbeHandler{
 			TCPSocket: &corev1.TCPSocketAction{
 				Port: intstr.FromString(consts.PortService),
@@ -2056,6 +2059,12 @@ func (f *RisingWaveObjectFactory) portsForComputeContainer() []corev1.ContainerP
 func (f *RisingWaveObjectFactory) setupComputeContainer(podSpec *corev1.PodSpec, container *corev1.Container) {
 	container.Name = "compute"
 	container.Args = []string{"compute-node"}
+
+	// Rebuilding the in-memory index for a persistent file cache can legitimately
+	// take longer than the default startup probe window.
+	if container.StartupProbe != nil {
+		container.StartupProbe.FailureThreshold = computeStartupProbeFailureThreshold
+	}
 
 	if f.isEmbeddedServingModeEnabled() {
 		container.Args = append(container.Args, "--role=streaming")

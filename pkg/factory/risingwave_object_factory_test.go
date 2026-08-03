@@ -115,6 +115,43 @@ func Test_RisingWaveObjectFactory_ConfigMaps(t *testing.T) {
 	}
 }
 
+func Test_BasicSetupRisingWaveContainer_StartupProbe(t *testing.T) {
+	container := &corev1.Container{}
+
+	basicSetupRisingWaveContainer(container, nil)
+
+	probe := container.StartupProbe
+	assert.NotNil(t, probe)
+	assert.Equal(t, int32(5), probe.InitialDelaySeconds)
+	assert.Equal(t, int32(5), probe.PeriodSeconds)
+	assert.Equal(t, int32(5), probe.TimeoutSeconds)
+	assert.Equal(t, int32(12), probe.FailureThreshold)
+	assert.NotNil(t, probe.TCPSocket)
+	assert.Equal(t, consts.PortService, probe.TCPSocket.Port.StrVal)
+}
+
+func Test_RisingWaveObjectFactory_Compute_StartupProbe(t *testing.T) {
+	risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+		r.Spec.MetaStore.Memory = ptr.To(true)
+		r.Spec.StateStore.Memory = ptr.To(true)
+		r.Spec.Components.Compute.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{{
+			Name:     "",
+			Replicas: 1,
+		}}
+	})
+	factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme, "")
+
+	container := factory.NewComputeStatefulSet("").Spec.Template.Spec.Containers[0]
+	probe := container.StartupProbe
+	assert.NotNil(t, probe)
+	assert.Equal(t, int32(5), probe.InitialDelaySeconds)
+	assert.Equal(t, int32(5), probe.PeriodSeconds)
+	assert.Equal(t, int32(5), probe.TimeoutSeconds)
+	assert.Equal(t, int32(36), probe.FailureThreshold)
+	assert.NotNil(t, probe.TCPSocket)
+	assert.Equal(t, consts.PortService, probe.TCPSocket.Port.StrVal)
+}
+
 func Test_RisingWaveObjectFactory_Frontend_Deployments(t *testing.T) {
 	predicates := frontendDeploymentPredicates()
 

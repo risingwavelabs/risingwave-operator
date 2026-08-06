@@ -1991,6 +1991,16 @@ func (f *RisingWaveObjectFactory) setupFrontendContainer(podSpec *corev1.PodSpec
 			fmt.Sprintf("--frontend-opts=--listen-addr 0.0.0.0:%d --advertise-addr $(%s):%d",
 				consts.FrontendServicePort, envs.PodIP, consts.FrontendServicePort),
 		}
+		container.ReadinessProbe.ProbeHandler = corev1.ProbeHandler{
+			Exec: &corev1.ExecAction{
+				Command: []string{
+					"/bin/sh",
+					"-ec",
+					fmt.Sprintf("nc -z 127.0.0.1 %d\nnc -z 127.0.0.1 %d",
+						consts.FrontendServicePort, consts.ComputeServicePort),
+				},
+			},
+		}
 		container.Lifecycle = &corev1.Lifecycle{
 			PreStop: &corev1.LifecycleHandler{
 				Exec: &corev1.ExecAction{

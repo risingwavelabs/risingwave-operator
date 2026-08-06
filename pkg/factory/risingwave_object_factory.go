@@ -1994,9 +1994,9 @@ func (f *RisingWaveObjectFactory) setupFrontendContainer(podSpec *corev1.PodSpec
 		container.ReadinessProbe.ProbeHandler = corev1.ProbeHandler{
 			Exec: &corev1.ExecAction{
 				Command: []string{
-					"/bin/sh",
+					"bash",
 					"-ec",
-					fmt.Sprintf("nc -z 127.0.0.1 %d\nnc -z 127.0.0.1 %d",
+					fmt.Sprintf("</dev/tcp/127.0.0.1/%d\n</dev/tcp/127.0.0.1/%d",
 						consts.FrontendServicePort, consts.ComputeServicePort),
 				},
 			},

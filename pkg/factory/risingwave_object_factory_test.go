@@ -188,9 +188,9 @@ func Test_RisingWaveObjectFactory_Frontend_ReadinessProbe(t *testing.T) {
 				assert.Nil(t, probe.TCPSocket)
 				if assert.NotNil(t, probe.Exec) {
 					assert.Equal(t, []string{
-						"/bin/sh",
+						"bash",
 						"-ec",
-						"nc -z 127.0.0.1 4567\nnc -z 127.0.0.1 5688",
+						"</dev/tcp/127.0.0.1/4567\n</dev/tcp/127.0.0.1/5688",
 					}, probe.Exec.Command)
 				}
 			} else {

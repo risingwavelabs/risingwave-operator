@@ -152,6 +152,57 @@ func Test_RisingWaveObjectFactory_Compute_StartupProbe(t *testing.T) {
 	assert.Equal(t, consts.PortService, probe.TCPSocket.Port.StrVal)
 }
 
+func Test_RisingWaveObjectFactory_Frontend_ReadinessProbe(t *testing.T) {
+	for _, tc := range []struct {
+		name            string
+		embeddedServing bool
+	}{
+		{
+			name:            "default",
+			embeddedServing: false,
+		},
+		{
+			name:            "embedded-serving",
+			embeddedServing: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			risingwave := newTestRisingwave(func(r *risingwavev1alpha1.RisingWave) {
+				r.Spec.MetaStore.Memory = ptr.To(true)
+				r.Spec.StateStore.Memory = ptr.To(true)
+				r.Spec.EnableEmbeddedServingMode = ptr.To(tc.embeddedServing)
+				r.Spec.Components.Frontend.NodeGroups = []risingwavev1alpha1.RisingWaveNodeGroup{{
+					Name:     "",
+					Replicas: 1,
+				}}
+			})
+			factory := NewRisingWaveObjectFactory(risingwave, testutils.Scheme, "")
+
+			container := factory.NewFrontendDeployment("").Spec.Template.Spec.Containers[0]
+			probe := container.ReadinessProbe
+			assert.NotNil(t, probe)
+			assert.Equal(t, int32(2), probe.InitialDelaySeconds)
+			assert.Equal(t, int32(10), probe.PeriodSeconds)
+
+			if tc.embeddedServing {
+				assert.Nil(t, probe.TCPSocket)
+				if assert.NotNil(t, probe.Exec) {
+					assert.Equal(t, []string{
+						"bash",
+						"-ec",
+						"</dev/tcp/127.0.0.1/4567\n</dev/tcp/127.0.0.1/5688",
+					}, probe.Exec.Command)
+				}
+			} else {
+				assert.Nil(t, probe.Exec)
+				if assert.NotNil(t, probe.TCPSocket) {
+					assert.Equal(t, consts.PortService, probe.TCPSocket.Port.StrVal)
+				}
+			}
+		})
+	}
+}
+
 func Test_RisingWaveObjectFactory_Frontend_Deployments(t *testing.T) {
 	predicates := frontendDeploymentPredicates()
 

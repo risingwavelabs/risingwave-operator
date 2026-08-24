@@ -431,7 +431,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 							UseWorkloadIdentity: ptr.To(true),
 						},
 						Bucket: "gcs-bucket",
-						Root:   "gcs-root",
+						Root:   "gcs-root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 					},
 				}
 			},
@@ -446,7 +446,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 							SecretName:          "gcs-creds",
 						},
 						Bucket: "gcs-bucket",
-						Root:   "gcs-root",
+						Root:   "gcs-root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 					},
 				}
 			},
@@ -457,7 +457,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 						Bucket: "gcs-bucket",
-						Root:   "gcs-root",
+						Root:   "gcs-root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 						RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
 							SecretName: "gcs-creds",
 						},
@@ -471,7 +471,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 						Bucket: "gcs-bucket",
-						Root:   "gcs-root",
+						Root:   "gcs-root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 					},
 				}
 			},
@@ -482,7 +482,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 						Bucket: "gcs-bucket",
-						Root:   "gcs-root",
+						Root:   "gcs-root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 						RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
 							SecretName: "",
 						},
@@ -496,7 +496,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
 						Bucket:           "hummock",
-						Root:             "AliyunOSS-root",
+						Root:             "AliyunOSS-root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 						Region:           "cn-hangzhou",
 						InternalEndpoint: false,
 						RisingWaveAliyunOSSCredentials: risingwavev1alpha1.RisingWaveAliyunOSSCredentials{
@@ -512,7 +512,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
 						Container: "hummock",
-						Root:      "azure-blob-root",
+						Root:      "azure-blob-root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 						Endpoint:  "https://accountName.blob.core.windows.net",
 						RisingWaveAzureBlobCredentials: risingwavev1alpha1.RisingWaveAzureBlobCredentials{
 							SecretName: "azure-blob-creds",
@@ -527,7 +527,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					HDFS: &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{
 						NameNode: "test",
-						Root:     "test",
+						Root:     "test", //nolint:staticcheck // Deprecated field is intentionally exercised.
 					},
 				}
 			},
@@ -538,7 +538,7 @@ func Test_RisingWaveValidatingWebhook_ValidateCreate(t *testing.T) {
 				r.Spec.StateStore = risingwavev1alpha1.RisingWaveStateStoreBackend{
 					WebHDFS: &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{
 						NameNode: "test",
-						Root:     "test",
+						Root:     "test", //nolint:staticcheck // Deprecated field is intentionally exercised.
 					},
 				}
 			},

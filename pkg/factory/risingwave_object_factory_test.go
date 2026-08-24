@@ -776,7 +776,7 @@ func TestRisingWaveObjectFactory_DataDirectory(t *testing.T) {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				DataDirectory: "hummock",
 				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
-					Root: "root",
+					Root: "root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 				},
 			},
 			internalRoot: "",
@@ -786,7 +786,7 @@ func TestRisingWaveObjectFactory_DataDirectory(t *testing.T) {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				DataDirectory: "hummock",
 				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
-					Root: "root",
+					Root: "root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 				},
 			},
 			internalRoot: "root",
@@ -812,7 +812,7 @@ func TestRisingWaveObjectFactory_DataDirectory(t *testing.T) {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				DataDirectory: "hummock",
 				AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
-					Root: "root",
+					Root: "root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 				},
 			},
 			internalRoot: "",
@@ -822,7 +822,7 @@ func TestRisingWaveObjectFactory_DataDirectory(t *testing.T) {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				DataDirectory: "hummock",
 				AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
-					Root: "root",
+					Root: "root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 				},
 			},
 			internalRoot: "root",

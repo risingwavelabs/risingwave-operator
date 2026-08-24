@@ -1,6 +1,6 @@
 module github.com/risingwavelabs/risingwave-operator
 
-go 1.26.0
+go 1.27.0
 
 require (
 	github.com/distribution/reference v0.6.0

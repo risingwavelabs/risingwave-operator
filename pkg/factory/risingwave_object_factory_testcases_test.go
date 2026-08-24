@@ -3120,7 +3120,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 						UseWorkloadIdentity: ptr.To(true),
 					},
 					Bucket: "gcs-bucket",
-					Root:   "gcs-root",
+					Root:   "gcs-root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 				},
 			},
 			envs: []corev1.EnvVar{
@@ -3138,7 +3138,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				GCS: &risingwavev1alpha1.RisingWaveStateStoreBackendGCS{
 					Bucket: "gcs-bucket",
-					Root:   "gcs-root",
+					Root:   "gcs-root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 					RisingWaveGCSCredentials: risingwavev1alpha1.RisingWaveGCSCredentials{
 						SecretName:                      "gcs-creds",
 						ServiceAccountCredentialsKeyRef: consts.SecretKeyGCSServiceAccountCredentials,
@@ -3171,7 +3171,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
 					Bucket:           "aliyun-oss-hummock01",
-					Root:             "aliyun-oss-root",
+					Root:             "aliyun-oss-root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 					Region:           "cn-hangzhou",
 					InternalEndpoint: false,
 					RisingWaveAliyunOSSCredentials: risingwavev1alpha1.RisingWaveAliyunOSSCredentials{
@@ -3222,7 +3222,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				AliyunOSS: &risingwavev1alpha1.RisingWaveStateStoreBackendAliyunOSS{
 					Bucket:           "aliyun-oss-hummock01",
-					Root:             "aliyun-oss-root",
+					Root:             "aliyun-oss-root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 					Region:           "cn-hangzhou",
 					InternalEndpoint: true,
 					RisingWaveAliyunOSSCredentials: risingwavev1alpha1.RisingWaveAliyunOSSCredentials{
@@ -3613,7 +3613,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
 					Container: "azure-blob-hummock01",
-					Root:      "/azure-blob-root",
+					Root:      "/azure-blob-root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 					Endpoint:  "https://accountName.blob.core.windows.net",
 					RisingWaveAzureBlobCredentials: risingwavev1alpha1.RisingWaveAzureBlobCredentials{
 						SecretName:     "azure-blob-creds",
@@ -3663,7 +3663,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				AzureBlob: &risingwavev1alpha1.RisingWaveStateStoreBackendAzureBlob{
 					Container: "azure-blob-hummock01",
-					Root:      "/azure-blob-root",
+					Root:      "/azure-blob-root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 					Endpoint:  "https://accountName.blob.core.windows.net",
 					RisingWaveAzureBlobCredentials: risingwavev1alpha1.RisingWaveAzureBlobCredentials{
 						SecretName:        "azure-blob-creds",
@@ -3690,7 +3690,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				HDFS: &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{
 					NameNode: "name-node",
-					Root:     "root",
+					Root:     "root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 				},
 			},
 			envs: []corev1.EnvVar{
@@ -3708,7 +3708,7 @@ func stateStoreTestCases() map[string]stateStoresTestCase {
 			stateStore: risingwavev1alpha1.RisingWaveStateStoreBackend{
 				WebHDFS: &risingwavev1alpha1.RisingWaveStateStoreBackendHDFS{
 					NameNode: "name-node",
-					Root:     "root",
+					Root:     "root", //nolint:staticcheck // Deprecated field is intentionally exercised.
 				},
 			},
 			envs: []corev1.EnvVar{

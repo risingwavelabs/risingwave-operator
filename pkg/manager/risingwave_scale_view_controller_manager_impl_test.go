@@ -60,7 +60,7 @@ func TestRisingWaveScaleViewControllerManagerImpl_GrabOrUpdateScaleViewLock(t *t
 	// Grab the lock.
 	r, err := impl.GrabOrUpdateScaleViewLock(context.Background(), logr.Discard(), risingwave)
 	require.NoError(t, err, "should be nil")
-	assert.Equal(t, ctrl.Result{Requeue: true}, r, "should requeue immediately")
+	assert.Equal(t, ctrl.Result{Requeue: true}, r, "should requeue immediately") //nolint:staticcheck // Deprecated field is intentionally exercised.
 
 	// Checks RisingWave and RisingWaveScaleView
 	_ = client.Get(context.Background(), types.NamespacedName{Namespace: risingwave.Namespace, Name: risingwave.Name}, risingwave)
@@ -80,7 +80,7 @@ func TestRisingWaveScaleViewControllerManagerImpl_GrabOrUpdateScaleViewLock(t *t
 
 	r, err = impl.GrabOrUpdateScaleViewLock(context.Background(), logr.Discard(), risingwave)
 	require.NoError(t, err, "should be nil")
-	assert.Equal(t, ctrl.Result{Requeue: true}, r, "should requeue immediately")
+	assert.Equal(t, ctrl.Result{Requeue: true}, r, "should requeue immediately") //nolint:staticcheck // Deprecated field is intentionally exercised.
 
 	_ = client.Get(context.Background(), types.NamespacedName{Namespace: risingwave.Namespace, Name: risingwave.Name}, risingwave)
 

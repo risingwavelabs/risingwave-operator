@@ -61,7 +61,8 @@ for manifest in "${manifests[@]}"; do
 	# Limit substitution to the manifest placeholders.
 	# shellcheck disable=SC2016
 	objects=$(envsubst '${E2E_NAMESPACE} ${E2E_RISINGWAVE_NAME} ${E2E_RISINGWAVE_IMAGE}' <"${manifest}" |
-		kubectl create --dry-run=client --validate=false -f - -o json)
+		kubectl create --dry-run=client --validate=false -f - -o json |
+		jq -s '{items: map(if .kind == "List" then .items[] else . end)}')
 	bucket=$(jq -er '.items[] | select(.kind == "RisingWave") | .spec.stateStore.minio.bucket' <<<"${objects}")
 	jq '{apiVersion: "v1", kind: "List", items: [.items[] |
     select(.metadata.name == "minio" or .metadata.name == "minio-credentials") |

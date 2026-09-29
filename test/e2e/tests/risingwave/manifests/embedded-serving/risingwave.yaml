@@ -41,15 +41,28 @@ spec:
       labels:
         app: minio
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
       containers:
       - name: minio
-        image: quay.io/minio/minio:latest
+        image: cgr.dev/chainguard/minio@sha256:71674988a1c7ddd5724928633199152b11e4ddefd6c6ce2d60772ff4a8f22ca9
         imagePullPolicy: IfNotPresent
         command:
         - /bin/sh
         args:
-        - -c
-        - mkdir -p /data/hummock001; /usr/bin/docker-entrypoint.sh server --address 0.0.0.0:9301 --console-address 0.0.0.0:9400 /data
+        - -ec
+        - mkdir -p /data/hummock001; exec /usr/bin/minio server --address 0.0.0.0:9301 --console-address 0.0.0.0:9400 /data
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ "ALL" ]
+        readinessProbe:
+          httpGet:
+            path: /minio/health/ready
+            port: service
         env:
         - name: MINIO_ROOT_USER
           valueFrom:
@@ -61,6 +74,9 @@ spec:
             secretKeyRef:
               name: minio-credentials
               key: password
+        volumeMounts:
+        - mountPath: /data
+          name: minio-data
         ports:
         - name: service
           containerPort: 9301
@@ -68,6 +84,9 @@ spec:
         - name: console
           containerPort: 9400
           protocol: TCP
+      volumes:
+      - name: minio-data
+        emptyDir: {}
 ---
 apiVersion: risingwave.risingwavelabs.com/v1alpha1
 kind: RisingWave

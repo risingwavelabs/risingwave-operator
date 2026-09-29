@@ -46,3 +46,6 @@ jobs:
         if: ${{ always() }}
         run: |
           make manifest-test
+      - name: MinIO Image Integration Test
+        timeout-minutes: 15
+        run: bash ci/scripts/test-minio-images.sh

@@ -37,8 +37,9 @@ grype "registry:$image" --platform linux/amd64
 grype "registry:$image" --platform linux/arm64
 ```
 
-The amd64 filesystem scan with Grype 0.119.0 and its 2026-09-29 database found no
-high or critical vulnerabilities. It reported four medium findings in glibc:
+Filesystem scans of both architectures with Grype 0.119.0 and its 2026-09-29
+database found no high or critical vulnerabilities. Each reported the same four
+medium findings in glibc:
 
 | Finding | Relevant behavior |
 | --- | --- |
